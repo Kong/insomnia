@@ -1,6 +1,5 @@
 // Left from @marckong here: slightly modified from this PR - https://github.com/Kong/insomnia-website/pull/41
 import type { PropsWithChildren } from 'react';
-import React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import TrailLines, { type TrailsLineHandle } from './trail-lines';

@@ -274,7 +274,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   // no more to read
   ::CloseHandle(outrd);
 
-  // wait for the process to finish (probably arlready done since the read
+  // wait for the process to finish (probably already done since the read
   // handle is not readable)
   ::WaitForSingleObject(pi.hProcess, INFINITE);
 

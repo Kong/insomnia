@@ -1,5 +1,3 @@
-import React from 'react';
-
 import {
   type Environment,
   type EnvironmentKvPairData,

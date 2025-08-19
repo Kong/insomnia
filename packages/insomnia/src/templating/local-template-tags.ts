@@ -226,18 +226,23 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           placeholder: 'Value to hash',
         },
       ],
-      async run(_context, algorithm: 'md5' | 'sha1' | 'sha256' | 'sha512', encoding, value = '') {
-        if (encoding !== 'hex' && encoding !== 'latin1' && encoding !== 'base64') {
-          throw new Error(`Invalid encoding ${encoding}. Choices are hex, latin1, base64`);
+      async run(context, algorithm: 'md5' | 'sha1' | 'sha256' | 'sha512', encoding: 'hex' | 'base64', value = '') {
+        if (encoding !== 'hex' && encoding !== 'base64') {
+          throw new Error(`Invalid encoding ${encoding}. Choices are hex, base64`);
         }
 
         const valueType = typeof value;
         if (valueType !== 'string') {
           throw new Error(`Cannot hash value of type "${valueType}"`);
         }
+
+        const isMD5 = algorithm.toLowerCase() === 'md5';
+        if (isMD5) {
+          console.warn('MD5 is considered cryptographically broken');
+          return context.util.encode(value, encoding);
+        }
         const supportedAlgorithm: AlgorithmIdentifier =
           {
-            md5: 'SHA-1', //MD5 is considered cryptographically broken
             sha1: 'SHA-1',
             sha256: 'SHA-256',
             sha512: 'SHA-512',
@@ -247,9 +252,6 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         if (encoding === 'base64') {
           return btoa(String.fromCharCode.apply(null, hashArray));
-        }
-        if (encoding === 'latin1') {
-          return String.fromCharCode.apply(null, hashArray);
         }
         // hex
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');

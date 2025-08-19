@@ -1,12 +1,13 @@
+import { useRootLoaderData } from '~/root';
+
 import * as plugins from '../../plugins';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal } from '../components/modals';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
-import { useRootLoaderData } from '../routes/root';
 import { useSettingsPatcher } from './use-request';
 
 export const useGlobalKeyboardShortcuts = () => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const patchSettings = useSettingsPatcher();
 
   useDocBodyKeyboardShortcuts({

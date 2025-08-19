@@ -1,5 +1,4 @@
 import React, { type FC } from 'react';
-import { useRouteLoaderData } from 'react-router';
 
 import type { AuthTypeOAuth1 } from '../../../../models/request';
 import {
@@ -9,8 +8,14 @@ import {
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
 } from '../../../../network/o-auth-1/constants';
-import type { RequestLoaderData } from '../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import type { RequestGroupLoaderData } from '../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
+import {
+  type RequestLoaderData,
+  useRequestLoaderData,
+} from '../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import {
+  type RequestGroupLoaderData,
+  useRequestGroupLoaderData,
+} from '../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthPrivateKeyRow } from './components/auth-private-key-row';
 import { AuthSelectRow } from './components/auth-select-row';
@@ -38,8 +43,8 @@ export const signatureMethodOptions: { name: OAuth1SignatureMethod; value: OAuth
 ];
 
 export const OAuth1Auth: FC = () => {
-  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const reqData = useRequestLoaderData() as RequestLoaderData;
+  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const authentication = (reqData?.activeRequest || groupData.activeRequestGroup).authentication as AuthTypeOAuth1;
 
   const { signatureMethod } = authentication;

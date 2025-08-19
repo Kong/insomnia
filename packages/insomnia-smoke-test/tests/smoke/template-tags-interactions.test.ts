@@ -22,7 +22,7 @@ const templateTagTestCases: Record<string, TemplateTagTestCase[]> = {
   hash: [
     {
       tagPrefix: "{% hash 'md5', 'hex', 'insomnia-test' %}",
-      expectedResult: 'b79b28083768d54575eacc7389e9128624685310',
+      expectedResult: 'b9c076eabf32fa4cdd7573a6df12d33c',
     },
   ],
   jsonPath: [{ tagPrefix: '{% jsonpath', expectedResult: 'bar' }],
@@ -73,6 +73,11 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByLabel('Template Tag Collection').click();
+
+  await page.getByTestId('settings-button').click();
+  await page.getByTestId('dataFolders').fill(getFixturePath('files/template-file.txt'));
+  await page.getByTestId('dataFolders-btn').click();
+  await page.locator('.app').press('Escape');
 
   // test common template tags
   await page.getByLabel('Request Collection').getByTestId('Common Tag').press('Enter');

@@ -1,7 +1,6 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
-import { useRouteLoaderData } from 'react-router';
 
-import type { AUTH_OAUTH_2 } from '../../../../common/constants';
+import { type AUTH_OAUTH_2, getOauthRedirectUrl } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
@@ -18,9 +17,15 @@ import {
 } from '../../../../network/o-auth-2/constants';
 import { getOAuth2Token } from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/get-token';
+import {
+  type RequestLoaderData,
+  useRequestLoaderData,
+} from '../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import {
+  type RequestGroupLoaderData,
+  useRequestGroupLoaderData,
+} from '../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
-import type { RequestLoaderData } from '../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import type { RequestGroupLoaderData } from '../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { Link } from '../../base/link';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
@@ -126,7 +131,24 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: typeof
       label="Redirect URL"
       property="redirectUrl"
       key="redirectUrl"
-      help="This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL."
+      help={
+        authentication.useDefaultBrowser
+          ? 'The callback URL is provided by Insomnia and cannot be modified when authorizing via the default browser.'
+          : 'This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL.'
+      }
+      disabled={authentication.useDefaultBrowser}
+      overrideValueWhenDisabled={getOauthRedirectUrl()}
+      copyBtn={authentication.useDefaultBrowser}
+    />
+  );
+  const useDefaultBrowser = (
+    <AuthToggleRow
+      label="Using default browser"
+      property="useDefaultBrowser"
+      key="useDefaultBrowser"
+      help="You must use the redirect URL provided by Insomnia when using the default browser. You also need to set the redirect URL in your OAuth 2 provider to match the one provided by Insomnia."
+      onTitle="Click to use built-in browser"
+      offTitle="Click to use default browser"
     />
   );
   const state = <AuthInputRow label="State" property="state" key="state" />;
@@ -182,6 +204,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: typeof
     authorizationUrl,
     accessTokenUrl,
     redirectUri,
+    useDefaultBrowser,
     state,
     scope,
     username,
@@ -204,6 +227,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
     authorizationUrl,
     accessTokenUrl,
     redirectUri,
+    useDefaultBrowser,
     state,
     scope,
     username,
@@ -222,7 +246,16 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
   let advanced: ReactNode[] = [];
 
   if (grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
-    basic = [authorizationUrl, accessTokenUrl, clientId, clientSecret, usePkce, pkceMethod, redirectUri];
+    basic = [
+      authorizationUrl,
+      accessTokenUrl,
+      clientId,
+      clientSecret,
+      usePkce,
+      pkceMethod,
+      redirectUri,
+      useDefaultBrowser,
+    ];
 
     advanced = [scope, state, credentialsInBody, tokenPrefix, audience, resource, origin];
   } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
@@ -246,8 +279,8 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
 };
 
 export const OAuth2Auth: FC = () => {
-  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const reqData = useRequestLoaderData() as RequestLoaderData;
+  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const { authentication } = reqData?.activeRequest || groupData.activeRequestGroup;
 
   const { basic, advanced } = getFieldsForGrantType(authentication as AuthTypeOAuth2);
@@ -345,8 +378,8 @@ const OAuth2TokenInput: FC<{
   label: string;
   property: keyof Pick<OAuth2Token, 'accessToken' | 'refreshToken' | 'identityToken'>;
 }> = ({ token, label, property }) => {
-  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const reqData = useRequestLoaderData() as RequestLoaderData;
+  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const { _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const onChange = async ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => {
     if (token) {
@@ -423,8 +456,8 @@ const OAuth2Error: FC<{ token: OAuth2Token | null }> = ({ token }) => {
 };
 
 const OAuth2Tokens: FC = () => {
-  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const reqData = useRequestLoaderData() as RequestLoaderData;
+  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const [token, setToken] = useState<OAuth2Token | null>(null);
   useEffect(() => {

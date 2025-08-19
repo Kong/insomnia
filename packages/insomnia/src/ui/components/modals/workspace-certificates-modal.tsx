@@ -16,21 +16,28 @@ import {
   Tabs,
   ToggleButton,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
+
+import { useCaCertDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.cacert.delete';
+import { useCACertNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.cacert.new';
+import { useCACertUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.cacert.update';
+import { useClientCertDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.clientcert.delete';
+import { useClientCertNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.clientcert.new';
+import { useClientCertUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.clientcert.update';
 
 import type { ClientCertificate } from '../../../models/client-certificate';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Icon } from '../icon';
 import { PasswordViewer } from '../viewers/password-viewer';
 
 const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
-  const { organizationId, projectId, workspaceId } = useParams<{
+  const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
-  }>();
+  };
 
-  const createClientCertificateFetcher = useFetcher();
+  const createClientCertificateFetcher = useClientCertNewActionFetcher();
   const formId = useId();
   const [pfxPath, setPfxPath] = useState<string>('');
   const [certificatePath, setCertificatePath] = useState<string>('');
@@ -81,17 +88,15 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
 
                     const certificate = Object.fromEntries(formData.entries());
 
-                    createClientCertificateFetcher.submit(
-                      {
+                    createClientCertificateFetcher.submit({
+                      organizationId,
+                      projectId,
+                      workspaceId,
+                      patch: {
                         ...certificate,
                         isPrivate: certificate.isPrivate === 'on',
                       },
-                      {
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/new`,
-                        method: 'post',
-                        encType: 'application/json',
-                      },
-                    );
+                    });
                   }}
                 >
                   <Input name="parentId" type="text" value={workspaceId} readOnly className="hidden" />
@@ -236,13 +241,13 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
 };
 
 const ClientCertificateGridListItem = ({ certificate }: { certificate: ClientCertificate }) => {
-  const { organizationId, projectId, workspaceId } = useParams<{
+  const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
-  }>();
-  const updateClientCertificateFetcher = useFetcher();
-  const deleteClientCertificateFetcher = useFetcher();
+  };
+  const updateClientCertificateFetcher = useClientCertUpdateActionFetcher();
+  const deleteClientCertificateFetcher = useClientCertDeleteActionFetcher();
 
   return (
     <GridListItem className="flex flex-col items-center justify-between gap-2 p-4 outline-none ring-inset focus:ring-1 focus:ring-[--hl-md]">
@@ -264,14 +269,15 @@ const ClientCertificateGridListItem = ({ certificate }: { certificate: ClientCer
           <ToggleButton
             data-test-id="client-certificate-toggle"
             onChange={isSelected => {
-              updateClientCertificateFetcher.submit(
-                { ...certificate, disabled: !isSelected },
-                {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/update`,
-                  method: 'post',
-                  encType: 'application/json',
+              updateClientCertificateFetcher.submit({
+                organizationId,
+                projectId,
+                workspaceId,
+                patch: {
+                  ...certificate,
+                  disabled: !isSelected,
                 },
-              );
+              });
             }}
             isSelected={!certificate.disabled}
             className="flex h-full w-[12ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
@@ -289,10 +295,11 @@ const ClientCertificateGridListItem = ({ certificate }: { certificate: ClientCer
           <Button
             isDisabled={deleteClientCertificateFetcher.state !== 'idle'}
             onPress={() => {
-              deleteClientCertificateFetcher.submit(JSON.stringify(certificate), {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/delete`,
-                method: 'delete',
-                encType: 'application/json',
+              deleteClientCertificateFetcher.submit({
+                organizationId,
+                projectId,
+                workspaceId,
+                _id: certificate._id,
               });
             }}
             className="flex aspect-square h-full flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
@@ -306,19 +313,19 @@ const ClientCertificateGridListItem = ({ certificate }: { certificate: ClientCer
 };
 
 export const CertificatesModal = ({ onClose }: { onClose: () => void }) => {
-  const { organizationId, projectId, workspaceId } = useParams<{
+  const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
-  }>();
+  };
 
-  const routeData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const routeData = useWorkspaceLoaderData()!;
 
   const [isAddClientCertificateModalOpen, setIsAddClientCertificateModalOpen] = useState(false);
 
-  const createCertificateFetcher = useFetcher();
-  const deleteCertificateFetcher = useFetcher();
-  const updateCertificateFetcher = useFetcher();
+  const createCertificateFetcher = useCACertNewActionFetcher();
+  const deleteCertificateFetcher = useCaCertDeleteActionFetcher();
+  const updateCertificateFetcher = useCACertUpdateActionFetcher();
 
   const { caCertificate, clientCertificates } = routeData;
 
@@ -367,14 +374,12 @@ export const CertificatesModal = ({ onClose }: { onClose: () => void }) => {
                       <div className="flex h-6 items-center gap-2">
                         <ToggleButton
                           onChange={isSelected => {
-                            updateCertificateFetcher.submit(
-                              { _id: caCertificate._id, disabled: !isSelected },
-                              {
-                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/update`,
-                                method: 'post',
-                                encType: 'application/json',
-                              },
-                            );
+                            updateCertificateFetcher.submit({
+                              organizationId,
+                              projectId,
+                              workspaceId,
+                              patch: { _id: caCertificate._id, disabled: !isSelected },
+                            });
                           }}
                           isSelected={!caCertificate.disabled}
                           className="flex h-full w-[12ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
@@ -392,13 +397,11 @@ export const CertificatesModal = ({ onClose }: { onClose: () => void }) => {
                         <Button
                           isDisabled={deleteCertificateFetcher.state !== 'idle'}
                           onPress={() => {
-                            deleteCertificateFetcher.submit(
-                              {},
-                              {
-                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/delete`,
-                                method: 'delete',
-                              },
-                            );
+                            deleteCertificateFetcher.submit({
+                              organizationId,
+                              projectId,
+                              workspaceId,
+                            });
                           }}
                           className="flex aspect-square h-full flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                         >
@@ -418,14 +421,12 @@ export const CertificatesModal = ({ onClose }: { onClose: () => void }) => {
                           const files = Array.from(fileList);
                           const file = files[0];
 
-                          createCertificateFetcher.submit(
-                            { parentId: workspaceId, path: window.webUtils.getPathForFile(file) },
-                            {
-                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/new`,
-                              method: 'post',
-                              encType: 'application/json',
-                            },
-                          );
+                          createCertificateFetcher.submit({
+                            organizationId,
+                            projectId,
+                            workspaceId,
+                            patch: { parentId: workspaceId, path: window.webUtils.getPathForFile(file) },
+                          });
                         }}
                       >
                         <Button className="flex h-full flex-1 flex-shrink-0 items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-sm] px-2 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]">

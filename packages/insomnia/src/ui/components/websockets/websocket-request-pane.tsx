@@ -1,8 +1,12 @@
 import React, { type FC, Fragment, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton, Toolbar } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useParams, useRouteLoaderData } from 'react-router';
-import { useLocalStorage } from 'react-use';
+import { useParams } from 'react-router';
+import * as reactUse from 'react-use';
+
+import { useRootLoaderData } from '~/root';
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { CONTENT_TYPE_JSON } from '../../../common/constants';
 import * as models from '../../../models';
@@ -10,6 +14,10 @@ import type { Environment } from '../../../models/environment';
 import { type AuthTypes, getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { getAuthObjectOrNull } from '../../../network/authentication';
+import {
+  useRequestLoaderData,
+  type WebSocketRequestLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { RenderError } from '../../../templating/render-error';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import {
@@ -21,10 +29,6 @@ import {
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import type { WebSocketRequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { useRootLoaderData } from '../../routes/root';
-import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
-import { OneLineEditor } from '../codemirror/one-line-editor';
 import { WebSocketPreviewMode } from '../dropdowns/websocket-preview-mode';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { readOnlyWebsocketPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
@@ -179,7 +183,7 @@ interface Props {
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as WebSocketRequestLoaderData;
+  const { activeRequest, activeRequestMeta } = useRequestLoaderData() as WebSocketRequestLoaderData;
 
   const { workspaceId, requestId } = useParams() as {
     organizationId: string;
@@ -188,14 +192,14 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
     requestId: string;
   };
   const readyState = useReadyState({ requestId: activeRequest._id, protocol: 'webSocket' });
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
 
   const disabled = readyState;
 
   const [previewMode, setPreviewMode] = useState(CONTENT_TYPE_JSON);
 
   const webSocketActionBarRef = useRef<WebSocketActionBarHandle>(null);
-  const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
+  const [dismissPathParameterTip, setDismissPathParameterTip] = reactUse.useLocalStorage('dismissPathParameterTip', '');
 
   useEffect(() => {
     let isMounted = true;

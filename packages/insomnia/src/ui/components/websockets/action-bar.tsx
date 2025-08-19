@@ -1,5 +1,11 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import {
+  type ConnectActionParams,
+  useRequestConnectActionFetcher,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
+import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import * as models from '../../../models';
 import type { SocketIORequest } from '../../../models/socket-io-request';
@@ -7,8 +13,6 @@ import type { WebSocketRequest } from '../../../models/websocket-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
-import type { ConnectActionParams } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { OneLineEditor, type OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { DisconnectButton } from './disconnect-button';
 
@@ -32,7 +36,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
       oneLineEditorRef.current?.focusEnd();
     }, []);
 
-    const fetcher = useFetcher();
+    const connectRequestFetcher = useRequestConnectActionFetcher();
     const { organizationId, projectId, workspaceId, requestId } = useParams() as {
       organizationId: string;
       projectId: string;
@@ -44,13 +48,15 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
 
     const connect = useCallback(
       (connectParams: ConnectActionParams) => {
-        fetcher.submit(JSON.stringify(connectParams), {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
-          method: 'post',
-          encType: 'application/json',
+        connectRequestFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          requestId,
+          connectParams,
         });
       },
-      [fetcher, organizationId, projectId, requestId, workspaceId],
+      [connectRequestFetcher, organizationId, projectId, requestId, workspaceId],
     );
 
     const generateConnectParams = useCallback(async () => {

@@ -11,17 +11,15 @@ import {
   ModalOverlay,
   TextField,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRevalidator } from 'react-router';
+import { useParams, useRevalidator } from 'react-router';
+
+import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
+import { useGitProjectDeleteBranchActionFetcher } from '~/routes/git.branch.delete';
+import { useGitProjectNewBranchActionFetcher } from '~/routes/git.branch.new';
+import { useGitProjectBranchesLoaderFetcher } from '~/routes/git.branches';
+import { useGitProjectChangesFetcher } from '~/routes/git.changes';
 
 import type { MergeConflict } from '../../../sync/types';
-import {
-  checkGitCanPush,
-  continueMerge,
-  type CreateNewGitBranchResult,
-  type GitBranchesLoaderData,
-  type GitChangesLoaderData,
-  mergeGitBranch,
-} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.git';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { showModal } from '.';
@@ -31,31 +29,28 @@ import { SyncMergeModal } from './sync-merge-modal';
 const LocalBranchItem = ({
   branch,
   isCurrent,
-  organizationId,
   projectId,
   workspaceId,
   hasUncommittedChanges,
 }: {
   branch: string;
   isCurrent: boolean;
-  organizationId: string;
   projectId: string;
   workspaceId: string;
   hasUncommittedChanges: boolean;
 }) => {
-  const checkoutBranchFetcher = useFetcher<{} | { error: string }>();
-  const mergeBranchFetcher = useFetcher();
-  const deleteBranchFetcher = useFetcher();
+  const checkoutBranchFetcher = useGitProjectCheckoutBranchActionFetcher();
+  const deleteBranchFetcher = useGitProjectDeleteBranchActionFetcher();
 
   useEffect(() => {
     if (
       checkoutBranchFetcher.data &&
-      'error' in checkoutBranchFetcher.data &&
-      checkoutBranchFetcher.data.error &&
+      'errors' in checkoutBranchFetcher.data &&
+      checkoutBranchFetcher.data.errors &&
       checkoutBranchFetcher.state === 'idle'
     ) {
       const error: string =
-        checkoutBranchFetcher.data.error || 'An unexpected error occurred while checking out the branch.';
+        checkoutBranchFetcher.data.errors[0] || 'An unexpected error occurred while checking out the branch.';
       showModal(AlertModal, {
         title: 'Error while checking out branch.',
         message: error,
@@ -65,27 +60,13 @@ const LocalBranchItem = ({
 
   useEffect(() => {
     if (
-      mergeBranchFetcher.data &&
-      'error' in mergeBranchFetcher.data &&
-      mergeBranchFetcher.data.error &&
-      mergeBranchFetcher.state === 'idle'
-    ) {
-      const error: string = mergeBranchFetcher.data.error || 'An unexpected error occurred while merging the branches.';
-      showModal(AlertModal, {
-        title: 'Error while merging branches.',
-        message: error,
-      });
-    }
-  }, [mergeBranchFetcher.data, mergeBranchFetcher.state]);
-
-  useEffect(() => {
-    if (
       deleteBranchFetcher.data &&
-      'error' in deleteBranchFetcher.data &&
-      deleteBranchFetcher.data.error &&
+      'errors' in deleteBranchFetcher.data &&
+      deleteBranchFetcher.data.errors &&
       deleteBranchFetcher.state === 'idle'
     ) {
-      const error: string = deleteBranchFetcher.data.error || 'An unexpected error occurred while deleting the branch.';
+      const error: string =
+        deleteBranchFetcher.data.errors[0] || 'An unexpected error occurred while deleting the branch.';
       showModal(AlertModal, {
         title: 'Error while deleting branch',
         message: error,
@@ -112,15 +93,11 @@ const LocalBranchItem = ({
               disabled={isCurrent || branch === 'master'}
               onClick={() => {
                 setErrorMessage('');
-                deleteBranchFetcher.submit(
-                  {
-                    branch,
-                  },
-                  {
-                    method: 'POST',
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/delete`,
-                  },
-                );
+                deleteBranchFetcher.submit({
+                  projectId,
+                  workspaceId,
+                  branch,
+                });
               }}
             >
               <Icon
@@ -135,16 +112,12 @@ const LocalBranchItem = ({
             isDisabled={isCurrent}
             onPress={() => {
               setErrorMessage('');
-              // file://./../../routes/git-actions.tsx#checkoutGitBranchAction
-              checkoutBranchFetcher.submit(
-                {
-                  branch,
-                },
-                {
-                  method: 'POST',
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/checkout`,
-                },
-              );
+
+              checkoutBranchFetcher.submit({
+                projectId,
+                workspaceId,
+                branch,
+              });
             }}
           >
             <Icon
@@ -169,7 +142,7 @@ const LocalBranchItem = ({
                 );
               }
               try {
-                const result = await mergeGitBranch({
+                const result = await window.main.git.mergeGitBranch({
                   projectId,
                   workspaceId,
                   theirsBranch: branch,
@@ -183,16 +156,17 @@ const LocalBranchItem = ({
                       labels: result.labels,
                       handleDone: (conflicts?: MergeConflict[]) => {
                         if (Array.isArray(conflicts) && conflicts.length > 0) {
-                          continueMerge({
-                            projectId,
-                            workspaceId,
-                            handledMergeConflicts: conflicts,
-                            commitMessage: result.commitMessage,
-                            commitParent: result.commitParent,
-                          })
+                          window.main.git
+                            .continueMerge({
+                              projectId,
+                              workspaceId,
+                              handledMergeConflicts: conflicts,
+                              commitMessage: result.commitMessage,
+                              commitParent: result.commitParent,
+                            })
                             .then(resolve, reject)
                             .finally(() => {
-                              checkGitCanPush({ projectId, workspaceId });
+                              window.main.git.canPushLoader({ projectId, workspaceId });
                               revalidate();
                             });
                         } else {
@@ -217,10 +191,7 @@ const LocalBranchItem = ({
               }
             }}
           >
-            <Icon
-              icon={mergeBranchFetcher.state !== 'idle' ? 'spinner' : 'code-merge'}
-              className={`w-5 ${mergeBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
-            />
+            <Icon icon={'code-merge'} className={`w-5`} />
             Merge
           </PromptButton>
         </div>
@@ -232,32 +203,30 @@ const LocalBranchItem = ({
 
 const RemoteBranchItem = ({
   branch,
-  organizationId,
   projectId,
   workspaceId,
 }: {
   branch: string;
-  isCurrent: boolean;
-  organizationId: string;
   projectId: string;
   workspaceId: string;
 }) => {
-  const pullBranchFetcher = useFetcher();
+  const checkoutBranchFetcher = useGitProjectCheckoutBranchActionFetcher();
 
   useEffect(() => {
     if (
-      pullBranchFetcher.data &&
-      'error' in pullBranchFetcher.data &&
-      pullBranchFetcher.data.error &&
-      pullBranchFetcher.state === 'idle'
+      checkoutBranchFetcher.data &&
+      'errors' in checkoutBranchFetcher.data &&
+      checkoutBranchFetcher.data.errors &&
+      checkoutBranchFetcher.state === 'idle'
     ) {
-      const error: string = pullBranchFetcher.data.error || 'An unexpected error occurred while pulling the branch.';
+      const error: string =
+        checkoutBranchFetcher.data.errors[0] || 'An unexpected error occurred while pulling the branch.';
       showModal(AlertModal, {
         title: 'Error while pulling branch.',
         message: error,
       });
     }
-  }, [pullBranchFetcher.data, pullBranchFetcher.state]);
+  }, [checkoutBranchFetcher.data, checkoutBranchFetcher.state]);
 
   return (
     <div className="flex w-full items-center">
@@ -266,20 +235,16 @@ const RemoteBranchItem = ({
         <Button
           className="flex min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           onPress={() =>
-            pullBranchFetcher.submit(
-              {
-                branch,
-              },
-              {
-                method: 'POST',
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/checkout`,
-              },
-            )
+            checkoutBranchFetcher.submit({
+              projectId,
+              workspaceId,
+              branch,
+            })
           }
         >
           <Icon
-            icon={pullBranchFetcher.state !== 'idle' ? 'spinner' : 'cloud-arrow-down'}
-            className={`w-5 ${pullBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
+            icon={checkoutBranchFetcher.state !== 'idle' ? 'spinner' : 'cloud-arrow-down'}
+            className={`w-5 ${checkoutBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
           />
           Fetch and checkout
         </Button>
@@ -310,8 +275,8 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
     workspaceId: string;
   };
 
-  const branchesFetcher = useFetcher<GitBranchesLoaderData>();
-  const createBranchFetcher = useFetcher<CreateNewGitBranchResult>();
+  const branchesFetcher = useGitProjectBranchesLoaderFetcher();
+  const createBranchFetcher = useGitProjectNewBranchActionFetcher();
 
   const errors = branchesFetcher.data && 'errors' in branchesFetcher.data ? branchesFetcher.data.errors : [];
   const { remoteBranches, branches: localBranches } =
@@ -325,9 +290,10 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
 
   useEffect(() => {
     if (branchesFetcher.state === 'idle' && !branchesFetcher.data) {
-      branchesFetcher.load(
-        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branches`,
-      );
+      branchesFetcher.load({
+        projectId,
+        workspaceId,
+      });
     }
   }, [branchesFetcher, organizationId, projectId, workspaceId]);
 
@@ -336,13 +302,13 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
       ? createBranchFetcher.data.errors[0]
       : null;
 
-  const gitChangesFetcher = useFetcher<GitChangesLoaderData>();
+  const gitChangesFetcher = useGitProjectChangesFetcher();
   useEffect(() => {
     if (gitChangesFetcher.state === 'idle' && !gitChangesFetcher.data) {
-      // file://./../../routes/git-actions.tsx#gitChangesLoader
-      gitChangesFetcher.load(
-        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/changes`,
-      );
+      gitChangesFetcher.load({
+        projectId,
+        workspaceId,
+      });
     }
   }, [organizationId, projectId, workspaceId, gitChangesFetcher]);
 
@@ -380,8 +346,18 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
                   <Icon icon="x" />
                 </Button>
               </div>
-              <createBranchFetcher.Form
-                action={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/new`}
+              <form
+                onSubmit={e => {
+                  e.preventDefault();
+
+                  const formData = new FormData(e.currentTarget);
+                  const branch = formData.get('branch')?.toString().trim() || '';
+                  createBranchFetcher.submit({
+                    branch,
+                    projectId,
+                    workspaceId,
+                  });
+                }}
                 method="POST"
                 className="flex flex-shrink-0 flex-col gap-2"
               >
@@ -416,7 +392,7 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
                     </p>
                   </div>
                 )}
-              </createBranchFetcher.Form>
+              </form>
 
               <div className="flex max-h-96 flex-1 select-none flex-col divide-y divide-solid divide-[--hl-sm] overflow-hidden rounded border border-solid border-[--hl-sm]">
                 <Heading className="p-2 text-sm font-semibold uppercase text-[--hl]">Local Branches</Heading>
@@ -441,7 +417,6 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
                       <LocalBranchItem
                         branch={item.name}
                         isCurrent={item.isCurrent}
-                        organizationId={organizationId}
                         projectId={projectId}
                         workspaceId={workspaceId}
                         hasUncommittedChanges={hasUncommittedChanges}
@@ -476,13 +451,7 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
                       textValue={item.name}
                       className="w-full p-2 transition-colors focus:bg-[--hl-sm] focus:outline-none"
                     >
-                      <RemoteBranchItem
-                        branch={item.name}
-                        isCurrent={item.isCurrent}
-                        organizationId={organizationId}
-                        projectId={projectId}
-                        workspaceId={workspaceId}
-                      />
+                      <RemoteBranchItem branch={item.name} projectId={projectId} workspaceId={workspaceId} />
                     </GridListItem>
                   )}
                 </GridList>

@@ -13,11 +13,12 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 
+import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+
 import { describeByteSize, generateId } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
 import { FileInputButton } from '../base/file-input-button';
 import { PromptButton } from '../base/prompt-button';
-import { OneLineEditor } from '../codemirror/one-line-editor';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { CodePromptModal } from '../modals/code-prompt-modal';

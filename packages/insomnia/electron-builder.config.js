@@ -4,7 +4,7 @@ const BINARY_PREFIX = 'Insomnia.Core';
 
 /**
  * @type {import('electron-builder').Configuration}
- * @see https://www.electron.build/configuration/configuration
+ * @see https://www.electron.build/configuration
  */
 const config = {
   npmRebuild: false,
@@ -33,7 +33,7 @@ const config = {
     },
   ],
   extraMetadata: {
-    main: 'main.min.js', // Override the main path in package.json
+    main: 'entry.main.min.js', // Override the main path in package.json
   },
   fileAssociations: [],
   mac: {

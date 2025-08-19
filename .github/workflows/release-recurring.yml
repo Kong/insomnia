@@ -17,11 +17,13 @@ env:
   PR_NUMBER: ${{ github.event.number }}
 jobs:
   build-and-upload-artifacts:
-    timeout-minutes: 15
+    timeout-minutes: 30
     # Skip jobs for release PRs
     # windows on recurring should be portable
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      packages: read
     strategy:
       fail-fast: false
       matrix:
@@ -44,9 +46,13 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: package-lock.json
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kong'
 
       - name: Install packages
         run: npm ci
+        env: 
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Bump version
         shell: bash
@@ -56,7 +62,7 @@ jobs:
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
 
-      - name: Verify secure wrapper (Windows)
+      - name: Build and verify secure wrapper (Windows)
         if: ${{ matrix.os == 'windows-latest' }}
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' ./build-secure-wrapper.sh

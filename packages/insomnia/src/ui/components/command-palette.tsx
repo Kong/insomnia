@@ -18,34 +18,36 @@ import {
   Popover,
   Text,
 } from 'react-aria-components';
-import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
-import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
-import { fuzzyMatch } from '../../common/misc';
-import { isGrpcRequest } from '../../models/grpc-request';
-import { isRequest } from '../../models/request';
-import { isRequestGroup } from '../../models/request-group';
-import { isWebSocketRequest } from '../../models/websocket-request';
-import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
+import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '~/common/hotkeys';
+import { fuzzyMatch } from '~/common/misc';
+import { isGrpcRequest } from '~/models/grpc-request';
+import { isRequest } from '~/models/request';
+import { isRequestGroup } from '~/models/request-group';
+import { isWebSocketRequest } from '~/models/websocket-request';
+import { useRootLoaderData } from '~/root';
+import { useCommandsLoaderFetcher } from '~/routes/commands';
+import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import {
   scopeToBgColorMap,
   scopeToIconMap,
   scopeToLabelMap,
   scopeToTextColorMap,
-} from '../routes/$organizationId.project.$projectId';
-import type { LoaderResult } from '../routes/commands';
-import type { RemoteFilesLoaderResult } from '../routes/remote-files';
-import type { RootLoaderData } from '../routes/root';
-import { AvatarGroup } from './avatar';
-import { Icon } from './icon';
-import { useDocBodyKeyboardShortcuts } from './keydown-binder';
-import { showModal } from './modals';
-import { AlertModal } from './modals/alert-modal';
-import { getMethodShortHand } from './tags/method-tag';
+} from '~/routes/organization.$organizationId.project.$projectId._index';
+import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
+import { useRemoteFilesLoaderFetcher } from '~/routes/remote-files';
+import { AvatarGroup } from '~/ui/components/avatar';
+import { Icon } from '~/ui/components/icon';
+import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
+import { showModal } from '~/ui/components/modals';
+import { AlertModal } from '~/ui/components/modals/alert-modal';
+import { getMethodShortHand } from '~/ui/components/tags/method-tag';
+import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 
 export const CommandPalette = memo(function CommandPalette({ style = {} }: { style?: React.CSSProperties }) {
   const [isOpen, setIsOpen] = useState(false);
-  const { settings } = useRouteLoaderData('root') as RootLoaderData;
+  const { settings } = useRootLoaderData()!;
 
   useDocBodyKeyboardShortcuts({
     request_quickSwitch: () => {
@@ -94,34 +96,31 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     requestId: string;
   };
 
-  const { userSession } = useRouteLoaderData('root') as RootLoaderData;
+  const { userSession } = useRootLoaderData()!;
   const { presence } = useInsomniaEventStreamContext();
-  const pullFileFetcher = useFetcher();
-  const setActiveEnvironmentFetcher = useFetcher();
+  const pullFileFetcher = useInsomniaSyncPullRemoteFileActionFetcher();
+  const setActiveEnvironmentFetcher = useSetActiveEnvironmentFetcher();
   const navigate = useNavigate();
 
   const accountId = userSession.accountId;
 
-  const commandsLoader = useFetcher<LoaderResult>();
+  const commandsLoader = useCommandsLoaderFetcher();
 
-  const remoteFilesLoader = useFetcher<RemoteFilesLoaderResult>();
+  const remoteFilesLoader = useRemoteFilesLoaderFetcher();
 
   useEffect(() => {
     if (!commandsLoader.data && commandsLoader.state === 'idle') {
-      const searchParams = new URLSearchParams();
-      searchParams.set('organizationId', organizationId);
-      searchParams.set('workspaceId', workspaceId);
-      searchParams.set('projectId', projectId);
-
-      commandsLoader.load(`/commands?${searchParams.toString()}`, {
-        flushSync: true,
+      commandsLoader.load({
+        organizationId,
+        projectId,
+        workspaceId,
       });
     }
   }, [commandsLoader, organizationId, projectId, workspaceId]);
 
   useEffect(() => {
     if (!remoteFilesLoader.data && remoteFilesLoader.state === 'idle') {
-      remoteFilesLoader.load('/remote-files');
+      remoteFilesLoader.load();
     }
   }, [remoteFilesLoader]);
 
@@ -164,13 +163,11 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       ...file,
       action: () => {
         if ('pullUrl' in file && file.pullUrl) {
-          pullFileFetcher.submit(
-            { backendProjectId: file.item.projectId, remoteId: file.item.teamProjectId },
-            {
-              method: 'POST',
-              action: file.pullUrl,
-            },
-          );
+          pullFileFetcher.submit({
+            backendProjectId: file.item.projectId,
+            remoteId: file.item.teamProjectId,
+            organizationId: file.item.organizationId,
+          });
 
           return true;
         }
@@ -184,15 +181,12 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       ...environment,
       id: environment._id,
       action: () => {
-        setActiveEnvironmentFetcher.submit(
-          {
-            environmentId: environment._id,
-          },
-          {
-            method: 'POST',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
-          },
-        );
+        setActiveEnvironmentFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          environmentId: environment._id,
+        });
 
         return true;
       },
@@ -216,13 +210,11 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       ...file,
       action: () => {
         if ('pullUrl' in file && file.pullUrl) {
-          pullFileFetcher.submit(
-            { backendProjectId: file.item.projectId, remoteId: file.item.teamProjectId },
-            {
-              method: 'POST',
-              action: file.pullUrl,
-            },
-          );
+          pullFileFetcher.submit({
+            backendProjectId: file.item.projectId,
+            remoteId: file.item.teamProjectId,
+            organizationId: file.item.organizationId,
+          });
 
           return true;
         }
@@ -456,14 +448,12 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       menuTrigger="focus"
       shouldFocusWrap
       onInputChange={filter => {
-        const searchParams = new URLSearchParams();
-
-        searchParams.set('organizationId', organizationId);
-        searchParams.set('projectId', projectId);
-        searchParams.set('workspaceId', workspaceId);
-        searchParams.set('filter', filter);
-
-        commandsLoader.load(`/commands?${searchParams.toString()}`);
+        commandsLoader.load({
+          organizationId,
+          projectId,
+          workspaceId,
+          filter,
+        });
       }}
       defaultFilter={(textValue, filter) => {
         return Boolean(fuzzyMatch(filter, textValue, { splitSpace: false, loose: true })?.indexes);

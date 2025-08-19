@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import React from 'react';
 import type { Key } from 'react-aria-components';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Text } from 'react-aria-components';
 

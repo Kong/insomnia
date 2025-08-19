@@ -19,12 +19,13 @@ import {
 } from 'react-aria-components';
 import { v4 as uuidv4 } from 'uuid';
 
+import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT } from '../../../common/constants';
 import type { SocketIOPayload } from '../../../models/socket-io-payload';
 import type { SocketIORequest } from '../../../models/socket-io-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { useRequestPayloadPatcher } from '../../hooks/use-request';
-import { CodeEditor } from '../codemirror/code-editor';
 import { Icon } from '../icon';
 
 const contentTypes: {

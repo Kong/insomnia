@@ -22,7 +22,9 @@ import React, { type FC, useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Group, Heading, Toolbar, Tooltip, TooltipTrigger } from 'react-aria-components';
 import ReactDOM from 'react-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useLocalStorage } from 'react-use';
+import * as reactUse from 'react-use';
+
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
@@ -40,7 +42,6 @@ import {
 import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
-import { CodeEditor, type CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import type { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
@@ -48,6 +49,8 @@ import { Icon } from '../../icon';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { TimeFromNow } from '../../time-from-now';
 import { prettifyGraphql } from './prettify-graphql.mjs';
+
+const { useLocalStorage } = reactUse;
 
 // Type guard to ensure loc is non-nullable
 const hasLocation = (

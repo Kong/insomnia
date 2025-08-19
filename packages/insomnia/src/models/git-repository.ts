@@ -1,5 +1,4 @@
 import { database as db } from '../common/database';
-import type { GitCredentials } from '../sync/git/git-vcs';
 import type { BaseModel } from './index';
 
 export type OauthProviderName = 'gitlab' | 'github' | 'custom';
@@ -78,3 +77,32 @@ export function remove(repo: GitRepository) {
 export function all() {
   return db.all<GitRepository>(type);
 }
+export interface GitAuthor {
+  name: string;
+  email: string;
+}
+
+export interface GitRemoteConfig {
+  remote: string;
+  url: string;
+}
+interface GitCredentialsBase {
+  username: string;
+  password: string;
+}
+interface GitCredentialsOAuth {
+  /**
+   * Supported OAuth formats.
+   * This is needed by isomorphic-git to be able to push/pull using an oauth2 token.
+   * https://isomorphic-git.org/docs/en/authentication.html
+   */
+  oauth2format?: 'github' | 'gitlab';
+  username: string;
+  token: string;
+}
+
+export type GitCredentials = GitCredentialsBase | GitCredentialsOAuth;
+
+export const isGitCredentialsOAuth = (credentials: GitCredentials): credentials is GitCredentialsOAuth => {
+  return 'oauth2format' in credentials;
+};

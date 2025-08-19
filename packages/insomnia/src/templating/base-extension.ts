@@ -1,3 +1,5 @@
+import type { BinaryToTextEncoding } from 'node:crypto';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 
@@ -118,16 +120,22 @@ export default class BaseExtension {
           };
         },
         readFile: async (path: string, encoding = 'utf8') => {
+          const allowed = renderContext?.getSettings().dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
+          if (!allowed) {
+            throw `Insomnia cannot access the file ‘${path}’. You can adjust this in Preferences → Security.`;
+          }
+                    
           const content = await fs.promises.readFile(path);
           return encoding === 'utf8' ? content.toString(encoding) : content;
         },
-        decode: async (buffer: Buffer, encoding = 'utf8') => {
-          return iconv.decode(buffer, encoding);
-        },
+        decode: async (buffer: Buffer, encoding = 'utf8') => iconv.decode(buffer, encoding),
+        encode: async (input: string, encoding: BinaryToTextEncoding) =>
+          crypto.createHash('md5').update(input).digest(encoding),
         render: (str: string) =>
           templating.render(str, {
             context: renderContext,
           }),
+        openInBrowser: (url: string) => window.main.openInBrowser(url),
         models: {
           request: {
             getById: models.request.getById,
@@ -138,6 +146,10 @@ export default class BaseExtension {
               ]);
               return ancestors.filter(doc => doc._id !== request._id);
             },
+          },
+          cloudCredential: {
+            getById: models.cloudCredential.getById,
+            update: models.cloudCredential.update,
           },
           workspace: {
             getById: models.workspace.getById,
@@ -153,6 +165,9 @@ export default class BaseExtension {
           response: {
             getLatestForRequestId: models.response.getLatestForRequest,
             getBodyBuffer: models.response.getBodyBuffer,
+          },
+          settings: {
+            get: models.settings.get,
           },
         },
       },

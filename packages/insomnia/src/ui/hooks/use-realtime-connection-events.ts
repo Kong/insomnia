@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useInterval } from 'react-use';
+import * as reactUse from 'react-use';
 
 import type { CurlEvent } from '../../main/network/curl';
 import type { SocketIOEvent } from '../../main/network/socket-io';
@@ -19,7 +19,7 @@ export function useRealtimeConnectionEvents({
   }, [responseId]);
 
   // TODO: use main process events instead of polling
-  useInterval(() => {
+  reactUse.useInterval(() => {
     let isMounted = true;
     const fn = async () => {
       const allEvents = await window.main[protocol].event.findMany({ responseId });

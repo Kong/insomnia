@@ -1,6 +1,5 @@
 import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import { database as db } from '../common/database';
-import type { RunnerSource } from '../ui/routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import type { BaseModel } from './index';
 
 export const name = 'Runner Test Result';
@@ -29,7 +28,7 @@ export interface ResponseInfo {
 export type RunnerResultPerRequestPerIteration = RunnerResultPerRequest[][];
 
 export interface BaseRunnerTestResult {
-  source: RunnerSource;
+  source: 'runner';
   iterations: number;
   duration: number; // millisecond
   avgRespTime: number; // millisecond

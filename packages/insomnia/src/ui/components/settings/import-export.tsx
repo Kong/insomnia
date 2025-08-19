@@ -21,19 +21,23 @@ import { Icon } from 'insomnia/src/ui/components/icon';
 import { showError, showModal } from 'insomnia/src/ui/components/modals';
 import { AskModal } from 'insomnia/src/ui/components/modals/ask-modal';
 import { ExportRequestsModal } from 'insomnia/src/ui/components/modals/export-requests-modal';
-import { ImportModal } from 'insomnia/src/ui/components/modals/import-modal';
+import { ImportModal } from 'insomnia/src/ui/components/modals/import-modal/import-modal';
 import { SelectModal } from 'insomnia/src/ui/components/modals/select-modal';
-import { useOrganizationLoaderData } from 'insomnia/src/ui/routes/organization';
-import { useRootLoaderData } from 'insomnia/src/ui/routes/root';
-import type { UntrackedProjectsLoaderData } from 'insomnia/src/ui/routes/untracked-projects';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
-import { useRouteLoaderData } from 'react-router';
+import { href, useParams } from 'react-router';
 
-import type { ListWorkspacesLoaderData } from '../../routes/$organizationId.project.$projectId';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
-import { AlertModal } from '../modals/alert-modal';
+import { useRootLoaderData } from '~/root';
+import { useOrganizationLoaderData } from '~/routes/organization';
+import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
+import { useProjectMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move';
+import { useProjectMoveWorkspaceActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move-workspace';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
+import { AlertModal } from '~/ui/components/modals/alert-modal';
+import { ImportProjectsModal } from '~/ui/components/modals/import-modal/import-projects-modal';
+import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
+import { usePlanData } from '~/ui/hooks/use-plan';
 
 const VALUE_YAML = 'yaml';
 const VALUE_HAR = 'har';
@@ -419,7 +423,7 @@ const UntrackedProject = ({
   organizationId: string;
   organizations: Organization[];
 }) => {
-  const moveProjectFetcher = useFetcher();
+  const moveProjectFetcher = useProjectMoveActionFetcher();
   const [selectedOrganizationId, setSelectedOrganizationId] = useState<string | null>(null);
 
   return (
@@ -434,7 +438,10 @@ const UntrackedProject = ({
         </p>
       </div>
       <moveProjectFetcher.Form
-        action={`/organization/${organizationId}/project/${project._id}/move`}
+        action={href(`/organization/:organizationId/project/:projectId/move`, {
+          organizationId,
+          projectId: project._id,
+        })}
         method="POST"
         className="group flex items-center gap-2"
       >
@@ -509,7 +516,7 @@ const UntrackedWorkspace = ({
   organizationId: string;
   projects: Project[];
 }) => {
-  const moveWorkspaceFetcher = useFetcher();
+  const moveWorkspaceFetcher = useProjectMoveWorkspaceActionFetcher();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   return (
@@ -521,7 +528,10 @@ const UntrackedWorkspace = ({
         </Heading>
       </div>
       <moveWorkspaceFetcher.Form
-        action={`/organization/${organizationId}/project/${selectedProjectId}/move-workspace`}
+        action={href(`/organization/:organizationId/project/:projectId/move-workspace`, {
+          organizationId,
+          projectId: selectedProjectId || '',
+        })}
         method="POST"
         className="group flex items-center gap-2"
       >
@@ -593,9 +603,10 @@ const UntrackedWorkspace = ({
 
 interface Props {
   hideSettingsModal: () => void;
+  onModalChange?: (isOpen: boolean) => void;
 }
 
-export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
+export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -604,45 +615,60 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const organizationData = useOrganizationLoaderData();
   const organizations = organizationData?.organizations || [];
 
-  const untrackedProjectsFetcher = useFetcher<UntrackedProjectsLoaderData>();
+  const { features } = useOrganizationPermissions();
+  const { isEnterprisePlan } = usePlanData();
+
+  const untrackedProjectsFetcher = useUntrackedProjectsLoaderFetcher();
 
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
     if (isIdleAndUninitialized) {
-      untrackedProjectsFetcher.load('/untracked-projects');
+      untrackedProjectsFetcher.load();
     }
   }, [untrackedProjectsFetcher, organizationId]);
 
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
   const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
 
-  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
+  const workspaceData = useWorkspaceLoaderData();
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
-  const { workspaceCount, userSession } = useRootLoaderData();
-  const workspacesFetcher = useFetcher<ListWorkspacesLoaderData>();
+  const { workspaceCount, userSession } = useRootLoaderData()!;
+  const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
     if (isIdleAndUninitialized && organizationId && projectId && !isScratchpadOrganizationId(organizationId)) {
-      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}/list-workspaces`);
+      workspacesFetcher.load({
+        organizationId,
+        projectId,
+      });
     }
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data;
   const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
-  const projectName = projectLoaderData?.activeProject?.name ?? getProductName();
+  const activeProject = projectLoaderData?.activeProject;
+  const projectName = activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
+  const organizationName =
+    organizationData?.organizations.find(org => org.id === organizationId)?.display_name || 'Organization';
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isImportProjectsModalOpen, setIsImportProjectsModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+  useEffect(() => {
+    onModalChange?.(isImportModalOpen || isImportProjectsModalOpen || isExportModalOpen);
+  }, [isImportModalOpen, isImportProjectsModalOpen, isExportModalOpen, onModalChange]);
 
   const handleExportProjectToFile = () => {
     exportProjectToFile(projectName, workspacesForActiveProject);
     hideSettingsModal();
   };
-  const isLoggedIn = userSession.id || organizationId || projectLoaderData?.activeProject;
+  const isLoggedIn = userSession.id || organizationId || activeProject;
   const isScratchPadWorkspace = isScratchpad(workspaceData?.activeWorkspace);
   const hasUntrackedWorkspaces = untrackedWorkspaces.length > 0;
   const hasUntrackedProjects = untrackedProjects.length > 0;
-  const showImportToProject = !isScratchPadWorkspace;
+  const showImportButtons =
+    !isScratchPadWorkspace && (activeProject || features.bulkImport.enabled || isEnterprisePlan);
   if (!isScratchPadWorkspace && !isLoggedIn) {
     return (
       <Button
@@ -697,21 +723,22 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
             <Icon icon="file-export" /> Export
           </Heading>
           <div className="flex flex-wrap gap-2">
-            {workspaceData?.activeWorkspace ? (
-              <ExportSection
-                workspace={workspaceData.activeWorkspace}
-                projectName={projectName}
-                setIsExportModalOpen={setIsExportModalOpen}
-                handleExportProjectToFile={handleExportProjectToFile}
-              />
-            ) : (
-              <Button
-                className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                onPress={handleExportProjectToFile}
-              >
-                {`Export files from the "${projectName}" ${strings.project.singular}`}
-              </Button>
-            )}
+            {activeProject &&
+              (workspaceData?.activeWorkspace ? (
+                <ExportSection
+                  workspace={workspaceData.activeWorkspace}
+                  projectName={projectName}
+                  setIsExportModalOpen={setIsExportModalOpen}
+                  handleExportProjectToFile={handleExportProjectToFile}
+                />
+              ) : (
+                <Button
+                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  onPress={handleExportProjectToFile}
+                >
+                  {`Export files from the "${projectName}" ${strings.project.singular}`}
+                </Button>
+              ))}
             <Button
               className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
               onPress={async () => {
@@ -764,20 +791,40 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
             </Button>
           </div>
         </div>
-        {showImportToProject && (
+        {showImportButtons && (
           <div className="flex flex-col gap-2 rounded-md border border-solid border-[--hl-md] p-4">
             <Heading className="flex items-center gap-2 text-lg font-bold">
               <Icon icon="file-import" /> Import
             </Heading>
             <div className="flex flex-wrap gap-2">
-              <Button
-                className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
-                onPress={() => setIsImportModalOpen(true)}
-              >
-                <Icon icon="file-import" />
-                {`Import to the "${projectName}" ${strings.project.singular}`}
-              </Button>
+              {activeProject && (
+                <Button
+                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
+                  onPress={() => setIsImportModalOpen(true)}
+                >
+                  <Icon icon="file-import" />
+                  {`Import to the "${projectName}" ${strings.project.singular}`}
+                </Button>
+              )}
+              {features.bulkImport.enabled ? (
+                <Button
+                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
+                  onPress={() => setIsImportProjectsModalOpen(true)}
+                >
+                  <Icon icon="file-import" />
+                  {`Import projects to the "${organizationName}" ${strings.organization.singular}`}
+                </Button>
+              ) : isEnterprisePlan ? (
+                <p className="text-sm">
+                  Need to import many projects at once? Reach out to{' '}
+                  <a className="text-[--color-surprise]" href="mailto:support@insomnia.rest">
+                    support@insomnia.rest
+                  </a>{' '}
+                  to have multi-project import enabled.
+                </p>
+              ) : null}
             </div>
           </div>
         )}
@@ -812,7 +859,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
               </Heading>
               <p className="text-sm text-[--hl]">
                 <Icon icon="info-circle" /> These files are not associated with any project in your account. You can
-                move them to a project in your current organization bellow.
+                move them to a project in your current organization below.
               </p>
             </div>
             <div className="flex flex-col gap-1 divide-y divide-solid divide-[--hl-md] overflow-y-auto">
@@ -838,6 +885,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           defaultProjectId={projectId}
           defaultWorkspaceId={workspaceId}
         />
+      )}
+      {isImportProjectsModalOpen && (
+        <ImportProjectsModal onHide={() => setIsImportProjectsModalOpen(false)} organizationId={organizationId} />
       )}
       {isExportModalOpen && workspaceData?.activeWorkspace && (
         <ExportRequestsModal

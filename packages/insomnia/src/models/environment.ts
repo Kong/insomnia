@@ -108,7 +108,7 @@ export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
   };
 }
 
-// mask vault environment varibale if necessary
+// mask vault environment variable if necessary
 export const maskVaultEnvironmentData = (environment: Environment) => {
   if (environment.isPrivate) {
     const { data, kvPairData } = environment;
@@ -144,7 +144,7 @@ export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWeb
     return encryptedValue;
   }
   try {
-    const jsonWebKey = base64decode(encryptedValue, true);
+    const jsonWebKey = base64decode(encryptedValue, true) as crypt.AESMessage;
     return crypt.decryptAES(symmetricKey, jsonWebKey);
   } catch (error) {
     // return origin value if failed to decrypt

@@ -2,8 +2,12 @@ import { readFile } from 'node:fs/promises';
 
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
-import { useParams, useRouteLoaderData } from 'react-router';
-import { useMount } from 'react-use';
+import { useParams } from 'react-router';
+import * as reactUse from 'react-use';
+
+import { useRootLoaderData } from '~/root';
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { database as db } from '../../../common/database';
@@ -16,6 +20,12 @@ import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspa
 import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
 import { getOrInheritHeaders } from '../../../network/network';
 import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import type { GrpcRequestState } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
+import {
+  type GrpcRequestLoaderData,
+  useRequestLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { RenderError } from '../../../templating/render-error';
 import { getGrpcConnectionErrorDetails } from '../../../utils/grpc';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
@@ -23,13 +33,7 @@ import { setDefaultProtocol } from '../../../utils/url/protocol';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
-import type { GrpcRequestState } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug';
-import type { GrpcRequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { useRootLoaderData } from '../../routes/root';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
-import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
-import { OneLineEditor } from '../codemirror/one-line-editor';
 import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
 import { ErrorBoundary } from '../error-boundary';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
@@ -57,13 +61,13 @@ export const GrpcMethodTypeName = {
 } as const;
 
 export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcState, reloadRequests }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as GrpcRequestLoaderData;
-  const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeRequest } = useRequestLoaderData() as GrpcRequestLoaderData;
+  const { activeEnvironment } = useWorkspaceLoaderData()!;
   const environmentId = activeEnvironment._id;
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
   const { requestMessages, running, methods } = grpcState;
-  useMount(async () => {
+  reactUse.useMount(async () => {
     if (activeRequest.protoFileId) {
       console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
       const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);

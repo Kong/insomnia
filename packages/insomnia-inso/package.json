@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-inso",
-  "version": "11.4.0",
+  "version": "11.5.0-beta.0",
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Insomnia - The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
@@ -19,6 +19,16 @@
   "bin": {
     "inso": "bin/inso"
   },
+  "pkg": {
+    "scripts": [
+      "../../node_modules/@kong/**/*.json",
+      "../../node_modules/@kong/**/*.js"
+    ]
+  },
+  "//": [
+    "pkg attributes is used to manually include modules in the packing process of pkg",
+    "See: https://github.com/yao-pkg/pkg?tab=readme-ov-file#config"
+  ],
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "test:unit": "cross-env NO_COLOR=1 vitest run --exclude '**/cli.test.ts'",
@@ -53,5 +63,8 @@
     "picocolors": "^1.1.1",
     "string-argv": "^0.3.2",
     "yaml": "^2.7.1"
+  },
+  "optionalDependencies": {
+    "@kong/insomnia-plugin-external-vault": "0.1.0-alpha.2"
   }
 }

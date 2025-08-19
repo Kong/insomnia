@@ -1,13 +1,14 @@
 import React, { type FC, useCallback } from 'react';
-import { useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
+
+import {
+  useMockRouteLoaderData,
+  useMockRoutePatcher,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import type { RequestHeader } from '../../../models/request';
-import {
-  type MockRouteLoaderData,
-  useMockRoutePatcher,
-} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
-import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
@@ -17,7 +18,7 @@ interface Props {
 }
 
 export const MockResponseHeadersEditor: FC<Props> = ({ bulk, isDisabled, onBlur }) => {
-  const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
+  const { mockRoute } = useMockRouteLoaderData()!;
   const patchMockRoute = useMockRoutePatcher();
 
   const { mockRouteId } = useParams() as { mockRouteId: string };

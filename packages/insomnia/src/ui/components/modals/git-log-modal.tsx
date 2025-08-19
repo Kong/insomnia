@@ -14,9 +14,10 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
-import type { GitLogLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.git';
+import { useGitProjectLogLoaderFetcher } from '~/routes/git.log';
+
 import { Icon } from '../icon';
 import { TimeFromNow } from '../time-from-now';
 
@@ -31,14 +32,16 @@ export const GitLogModal: FC<Props> = ({ onClose }) => {
     workspaceId: string;
   };
 
-  const gitLogFetcher = useFetcher<GitLogLoaderData>();
+  const gitLogFetcher = useGitProjectLogLoaderFetcher();
 
   const isLoading = gitLogFetcher.state !== 'idle';
 
   useEffect(() => {
     if (gitLogFetcher.state === 'idle' && !gitLogFetcher.data) {
-      // file://./../../routes/git-actions.tsx#gitLogLoader
-      gitLogFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/log`);
+      gitLogFetcher.load({
+        projectId,
+        workspaceId,
+      });
     }
   }, [organizationId, projectId, workspaceId, gitLogFetcher]);
 

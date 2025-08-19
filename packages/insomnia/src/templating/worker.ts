@@ -1,8 +1,10 @@
-import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 import type { Environment } from 'nunjucks';
-import nunjucks from 'nunjucks/browser/nunjucks';
 
-import BaseExtensionWorker from './base-extension-worker';
+import { localTemplateTags } from '~/templating/local-template-tags';
+import { nunjucks } from '~/templating/nunjucks.client';
+
+import type { TemplateTag } from '../plugins';
+import BaseExtensionWorker, { fetchFromTemplateWorkerDatabase } from './base-extension-worker';
 import { extractUndefinedVariableKey, RenderError } from './render-error';
 
 // Some constants
@@ -173,7 +175,19 @@ async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: bool
   nunjucksEnvironment.addGlobal('range', undefined);
   nunjucksEnvironment.addGlobal('cycler', undefined);
   nunjucksEnvironment.addGlobal('joiner', undefined);
-  const allExtensions = [...localTemplateTags];
+  const bundlePluginTemplateTags = (await fetchFromTemplateWorkerDatabase(
+    'plugin.getBundlePluginTemplateTags',
+    {},
+  )) as TemplateTag[];
+  bundlePluginTemplateTags.forEach(tag => {
+    const { templateTag, plugin } = tag;
+    const pluginName = plugin.name;
+    const tagName = templateTag.name;
+    // default run method to send context, parsed args, plugin name, and tag name to main for execution
+    templateTag.run = async (context, ...args) =>
+      await fetchFromTemplateWorkerDatabase('plugin.executeBundlePluginTag', { context, args, pluginName, tagName });
+  });
+  const allExtensions = [...localTemplateTags, ...bundlePluginTemplateTags];
 
   for (const extension of allExtensions) {
     const { templateTag, plugin } = extension;

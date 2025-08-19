@@ -1,23 +1,25 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
-import { useFetcher } from 'react-router';
-import { useInterval } from 'react-use';
+import * as reactUse from 'react-use';
 
-import { getProductName } from '../../../common/constants';
-import { decryptVaultKeyFromSession, deleteVaultKeyFromStorage, saveVaultKeyIfNecessary } from '../../../utils/vault';
-import { useRootLoaderData } from '../../routes/root';
-import { CopyButton } from '../base/copy-button';
-import { HelpTooltip } from '../help-tooltip';
-import { Icon } from '../icon';
-import { showError, showModal } from '../modals';
-import { AskModal } from '../modals/ask-modal';
-import { InputVaultKeyModal } from '../modals/input-vault-key-modal';
+import { getProductName } from '~/common/constants';
+import { useRootLoaderData } from '~/root';
+import { useCreateVaultKeyFetcher } from '~/routes/auth.create-vault-key';
+import { useUpdateVaultSaltFetcher } from '~/routes/auth.update-vault-salt';
+import { CopyButton } from '~/ui/components/base/copy-button';
+import { HelpTooltip } from '~/ui/components/help-tooltip';
+import { Icon } from '~/ui/components/icon';
+import { showError, showModal } from '~/ui/components/modals';
+import { AskModal } from '~/ui/components/modals/ask-modal';
+import { InputVaultKeyModal } from '~/ui/components/modals/input-vault-key-modal';
+import { decryptVaultKeyFromSession, deleteVaultKeyFromStorage, saveVaultKeyIfNecessary } from '~/utils/vault';
+
 import { BooleanSetting } from './boolean-setting';
 
 export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
   const [showCopyConfirmation, setShowCopyConfirmation] = useState(false);
 
-  useInterval(() => {
+  reactUse.useInterval(() => {
     setShowCopyConfirmation(false);
   }, 2000);
 
@@ -71,14 +73,14 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
 };
 
 export const VaultKeyPanel = () => {
-  const { userSession, settings } = useRootLoaderData();
+  const { userSession, settings } = useRootLoaderData()!;
   const { saveVaultKeyLocally } = settings;
   const [isGenerating, setGenerating] = useState(false);
   const [vaultKeyValue, setVaultKeyValue] = useState('');
   const [showInputVaultKeyModal, setShowModal] = useState(false);
   const { accountId, vaultKey, vaultSalt } = userSession;
-  const vaultKeyFetcher = useFetcher();
-  const vaultSaltFetcher = useFetcher();
+  const createVaultKeyFetcher = useCreateVaultKeyFetcher();
+  const updateVaultSaltFetcher = useUpdateVaultSaltFetcher();
   const vaultSaltExists = typeof vaultSalt === 'string' && vaultSalt.length > 0;
   const vaultKeyExists = typeof vaultKey === 'string' && vaultKey.length > 0;
 
@@ -97,22 +99,19 @@ export const VaultKeyPanel = () => {
   }, [showVaultKey, vaultKeyExists]);
 
   useEffect(() => {
-    if (vaultKeyFetcher.data && !vaultKeyFetcher.data.error && vaultKeyFetcher.state === 'idle') {
+    if (createVaultKeyFetcher.data && !createVaultKeyFetcher.data.error && createVaultKeyFetcher.state === 'idle') {
       setGenerating(false);
-      setVaultKeyValue(vaultKeyFetcher.data);
+      setVaultKeyValue(createVaultKeyFetcher.data.key || '');
     }
-  }, [vaultKeyFetcher.data, vaultKeyFetcher.state]);
+  }, [createVaultKeyFetcher.data, createVaultKeyFetcher.state]);
 
   useEffect(() => {
-    if (vaultKeyFetcher.data && vaultKeyFetcher.data.error && vaultKeyFetcher.state === 'idle') {
+    if (createVaultKeyFetcher.data && createVaultKeyFetcher.data.error && createVaultKeyFetcher.state === 'idle') {
       setGenerating(false);
       // user has created vault key in another device;
-      if (vaultKeyFetcher.data.error.toLowerCase().includes('conflict')) {
+      if (createVaultKeyFetcher.data.error.toLowerCase().includes('conflict')) {
         // get vault salt from server
-        vaultSaltFetcher.submit('', {
-          action: '/auth/update-vault-salt',
-          method: 'POST',
-        });
+        updateVaultSaltFetcher.submit();
         showModal(AskModal, {
           title: 'Vault Key Already Exists',
           message: 'You have generated the vault key in other device. Please input your vault key',
@@ -122,19 +121,16 @@ export const VaultKeyPanel = () => {
       } else {
         showError({
           title: 'Can not generate vault key',
-          message: vaultKeyFetcher.data.error,
+          message: createVaultKeyFetcher.data.error,
         });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- vaultSaltFetcher should only be triggered once
-  }, [vaultKeyFetcher.data, vaultKeyFetcher.state]);
+  }, [createVaultKeyFetcher.data, createVaultKeyFetcher.state]);
 
   const generateVaultKey = async () => {
     setGenerating(true);
-    vaultKeyFetcher.submit('', {
-      action: '/auth/create-vault-key',
-      method: 'POST',
-    });
+    createVaultKeyFetcher.submit();
   };
 
   const handleModalClose = (newVaultKey?: string) => {

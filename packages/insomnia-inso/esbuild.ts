@@ -1,11 +1,14 @@
-import { build, type BuildOptions, context } from 'esbuild';
+import fs from 'node:fs';
 
+import { analyzeMetafile, build, type BuildOptions, context } from 'esbuild';
 const isProd = Boolean(process.env.NODE_ENV === 'production');
 const watch = Boolean(process.env.ESBUILD_WATCH);
+const isDebug = Boolean(process.env.DEBUG);
 const version = process.env.VERSION || 'dev';
 const config: BuildOptions = {
   outfile: './dist/index.js',
   bundle: true,
+  metafile: isDebug,
   platform: 'node',
   minify: isProd,
   target: 'node22',
@@ -44,5 +47,18 @@ if (watch) {
   }
   watch();
 } else {
+  if (isDebug) {
+    async function buildWithDebug() {
+      const result = await build(config);
+
+      if (result.metafile) {
+        fs.mkdirSync('./artifacts', { recursive: true });
+        fs.writeFileSync('./artifacts/meta.json', JSON.stringify(result.metafile));
+        fs.writeFileSync('./artifacts/bundle-analysis.log', await analyzeMetafile(result.metafile));
+      }
+    }
+
+    buildWithDebug();
+  }
   build(config);
 }

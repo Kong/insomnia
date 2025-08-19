@@ -1,14 +1,20 @@
 import React, { type FC, type ReactNode, useCallback } from 'react';
-import { useRouteLoaderData } from 'react-router';
 
-import { toKebabCase } from '../../../../../common/misc';
-import { invariant } from '../../../../../utils/invariant';
-import { useNunjucks } from '../../../../context/nunjucks/use-nunjucks';
-import { useRequestGroupPatcher, useRequestPatcher } from '../../../../hooks/use-request';
-import type { RequestLoaderData } from '../../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import type { RequestGroupLoaderData } from '../../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
-import { showModal } from '../../../modals';
-import { CodePromptModal } from '../../../modals/code-prompt-modal';
+import { toKebabCase } from '~/common/misc';
+import {
+  type RequestLoaderData,
+  useRequestLoaderData,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import {
+  type RequestGroupLoaderData,
+  useRequestGroupLoaderData,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
+import { showModal } from '~/ui/components/modals';
+import { CodePromptModal } from '~/ui/components/modals/code-prompt-modal';
+import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
+import { useRequestGroupPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
+import { invariant } from '~/utils/invariant';
+
 import { AuthRow } from './auth-row';
 
 const PRIVATE_KEY_PLACEHOLDER = `
@@ -31,8 +37,8 @@ interface Props {
 }
 
 export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help }) => {
-  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const reqData = useRequestLoaderData() as RequestLoaderData;
+  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const patchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
   const patcher = reqData ? patchRequest : patchRequestGroup;

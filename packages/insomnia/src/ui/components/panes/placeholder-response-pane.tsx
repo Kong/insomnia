@@ -1,13 +1,14 @@
 import React, { type FC, type PropsWithChildren } from 'react';
 
+import { useRootLoaderData } from '~/root';
+
 import { keyboardShortcutDescriptions } from '../../../common/hotkeys';
 import type { KeyboardShortcut } from '../../../common/settings';
-import { useRootLoaderData } from '../../routes/root';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
 export const PlaceholderResponsePane: FC<PropsWithChildren<{}>> = ({ children }) => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
   return (
     <Pane type="response">

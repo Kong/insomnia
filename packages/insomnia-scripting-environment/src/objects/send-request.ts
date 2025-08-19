@@ -33,7 +33,7 @@ export async function sendRequest(
           cb(undefined, transformedOutput);
           resolve(transformedOutput);
         })
-        .catch(e => {
+        .catch((e: string | undefined) => {
           cb(e, undefined);
           resolve(undefined);
         });

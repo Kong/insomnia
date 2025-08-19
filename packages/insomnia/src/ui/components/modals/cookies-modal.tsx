@@ -17,17 +17,19 @@ import {
   Tabs,
   TextField,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
+
+import { useUpdateCookieJarActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-cookie-jar';
+import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { cookieToString } from '../../../common/cookies';
 import { fuzzyMatch } from '../../../common/misc';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { PromptButton } from '../base/prompt-button';
-import { OneLineEditor } from '../codemirror/one-line-editor';
 import { Icon } from '../icon';
 import { RenderedText } from '../rendered-text';
 
@@ -51,23 +53,26 @@ interface Props {
 export const CookiesModal = ({ setIsOpen }: Props) => {
   const { handleRender } = useNunjucks();
 
-  const { organizationId, projectId, workspaceId } = useParams<{
+  const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
-  }>();
-  const { activeCookieJar } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const updateCookieJarFetcher = useFetcher<CookieJar>();
+  };
+
+  const { activeCookieJar } = useWorkspaceLoaderData()!;
+  const updateCookieJarFetcher = useUpdateCookieJarActionFetcher();
 
   const [page, setPage] = useState(0);
   const [filter, setFilter] = useState<string>('');
   const [filteredCookies, setFilteredCookies] = useState<Cookie[][]>(chunkArray(activeCookieJar?.cookies || []));
 
   const updateCookieJar = (cookieJarId: string, patch: CookieJar) => {
-    updateCookieJarFetcher.submit(JSON.stringify({ patch, cookieJarId }), {
-      encType: 'application/json',
-      method: 'post',
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/update-cookie-jar`,
+    updateCookieJarFetcher.submit({
+      organizationId,
+      projectId,
+      workspaceId,
+      patch,
+      cookieJarId,
     });
 
     setFilteredCookies(chunkArray(patch.cookies));

@@ -19,7 +19,7 @@ exports.default = async function (configuration) {
     return;
   }
 
-  // Note: Avoid changing the lines bellow. Risk of breaking the windows code-signing process.
+  // Note: Avoid changing the lines below. Risk of breaking the windows code-signing process.
   // Feedback loop > 15 mins. Requires a branch on origin, a PR, and a separate dummy release pipeline to test changes.
   // sslcom/codesigner-win has large image size (>1GB) and requires docker within windows-latest host.
   const rawPath = configuration.path.replace(/(\r\n|\n|\r)/gm, ''); // remove /n and other crap from path

@@ -51,29 +51,29 @@ export class PropertyBase {
     const parents: PropertyBase[] = [];
 
     while (queue.length > 0) {
-      const ancester = queue.shift();
-      if (!ancester) {
+      const ancestor = queue.shift();
+      if (!ancestor) {
         continue;
       }
 
       // TODO: check options
-      const cloned = clone(ancester);
+      const cloned = clone(ancestor);
       const keepIterating = iterator(cloned);
       parents.push(cloned);
       if (!keepIterating) {
         break;
       }
 
-      const olderAncester = ancester.parent();
-      if (olderAncester) {
-        queue.push(olderAncester);
+      const olderAncestor = ancestor.parent();
+      if (olderAncestor) {
+        queue.push(olderAncestor);
       }
     }
 
     return parents;
   }
 
-  findInParents(property: string, customizer?: (ancester: PropertyBase) => boolean): PropertyBase | undefined {
+  findInParents(property: string, customizer?: (ancestor: PropertyBase) => boolean): PropertyBase | undefined {
     const currentParent = this.parent();
     if (!currentParent) {
       return;
@@ -82,12 +82,12 @@ export class PropertyBase {
     const queue: PropertyBase[] = [currentParent];
 
     while (queue.length > 0) {
-      const ancester = queue.shift();
-      if (!ancester) {
+      const ancestor = queue.shift();
+      if (!ancestor) {
         continue;
       }
 
-      const cloned = clone(ancester);
+      const cloned = clone(ancestor);
       const hasProperty = Object.keys(cloned.meta()).includes(property);
       if (!hasProperty) {
         // keep traversing until parent has the property
@@ -105,9 +105,9 @@ export class PropertyBase {
         }
       }
 
-      const olderAncester = ancester.parent();
-      if (olderAncester) {
-        queue.push(olderAncester);
+      const olderAncestor = ancestor.parent();
+      if (olderAncestor) {
+        queue.push(olderAncestor);
       }
     }
 

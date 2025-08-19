@@ -1,6 +1,9 @@
 import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useParams } from 'react-router';
+import { href, useParams } from 'react-router';
+
+import { useOrganizationLoaderData } from '~/routes/organization';
+import { useWorkspaceMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.move';
 
 import { database } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
@@ -13,8 +16,7 @@ import {
   scopeToBgColorMap,
   scopeToIconMap,
   scopeToTextColorMap,
-} from '../../routes/$organizationId.project.$projectId';
-import { useOrganizationLoaderData } from '../../routes/organization';
+} from '../../../routes/organization.$organizationId.project.$projectId._index';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -27,8 +29,11 @@ interface WorkspaceDuplicateModalProps extends ModalProps {
 }
 
 export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ workspace, onHide }) => {
-  const { organizationId, projectId: currentProjectId } = useParams();
-  const { organizations } = useOrganizationLoaderData();
+  const { organizationId, projectId: currentProjectId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+  };
+  const organizationData = useOrganizationLoaderData();
   const [selectedOrgId, setSelectedOrgId] = useState(organizationId);
   const [projectOptions, setProjectOptions] = useState<models.BaseModel[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
@@ -42,7 +47,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
       setSelectedProjectId(organizationProjects[0]?._id || '');
     })();
   }, [selectedOrgId]);
-  const fetcher = useFetcher();
+  const fetcher = useWorkspaceMoveActionFetcher();
 
   const modalRef = useRef<ModalHandle>(null);
   useEffect(() => {
@@ -67,7 +72,10 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
             <span className="text-[--hl]">{getWorkspaceLabel(workspace).singular}</span>
           </div>
           <fetcher.Form
-            action={`/organization/${organizationId}/project/${workspace.parentId}/workspace/${workspace._id}/duplicate`}
+            action={href('/organization/:organizationId/project/:projectId/workspace/move', {
+              organizationId,
+              projectId: workspace.parentId,
+            })}
             method="post"
             id="workspace-duplicate-form"
             className="wide pad"
@@ -93,7 +101,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
               <label>
                 Organization:
                 <select name="orgId" value={selectedOrgId} onChange={e => setSelectedOrgId(e.target.value)}>
-                  {organizations.map(({ id, display_name }) => (
+                  {organizationData?.organizations.map(({ id, display_name }) => (
                     <option key={id} value={id}>
                       {display_name}
                     </option>

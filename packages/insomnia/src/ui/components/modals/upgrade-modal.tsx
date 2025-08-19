@@ -1,7 +1,8 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 
+import type { PersonalPlanType } from '~/models/organization';
+
 import { getAppWebsiteBaseURL } from '../../../common/constants';
-import type { PersonalPlanType } from '../../organization-utils';
 import { type ModalProps } from '../base/modal';
 import { AskModal, type AskModalHandle, type AskModalOptions } from './ask-modal';
 

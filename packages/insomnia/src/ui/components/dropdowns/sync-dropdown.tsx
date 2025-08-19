@@ -12,12 +12,20 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
-import { useInterval } from 'react-use';
+import { useParams } from 'react-router';
+import * as reactUse from 'react-use';
+
+import { useInsomniaSyncBranchCheckoutActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.checkout';
+import { useInsomniaSyncPullActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.pull';
+import { useInsomniaSyncPushActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.push';
+import { useInsomniaSyncRollbackActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.rollback';
+import {
+  useInsomniaSyncDataActionFetcher,
+  useInsomniaSyncDataLoaderFetcher,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.sync-data';
 
 import type { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
-import type { SyncDataLoaderData } from '../../routes/$organizationId.project.$projectId.remote-collections';
 import { Icon } from '../icon';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
@@ -34,11 +42,11 @@ const ONE_MINUTE_IN_MS = 1000 * 60;
 const cloudSyncIcon = 'earth-americas';
 
 export const SyncDropdown: FC<Props> = () => {
-  const { organizationId, projectId, workspaceId } = useParams<{
+  const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
-  }>();
+  };
 
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
   const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
@@ -47,30 +55,26 @@ export const SyncDropdown: FC<Props> = () => {
   const [isWindowFocused, setIsWindowFocused] = useState(true);
   const [operationError, setOperationError] = useState<string | null>(null);
 
-  const pushFetcher = useFetcher();
-  const pullFetcher = useFetcher();
-  const rollbackFetcher = useFetcher();
-  const checkoutFetcher = useFetcher();
-  const syncDataLoaderFetcher = useFetcher<SyncDataLoaderData>();
-  const syncDataActionFetcher = useFetcher();
+  const pushFetcher = useInsomniaSyncPushActionFetcher();
+  const pullFetcher = useInsomniaSyncPullActionFetcher();
+  const rollbackFetcher = useInsomniaSyncRollbackActionFetcher();
+  const checkoutFetcher = useInsomniaSyncBranchCheckoutActionFetcher();
+  const syncDataLoaderFetcher = useInsomniaSyncDataLoaderFetcher();
+  const syncDataActionFetcher = useInsomniaSyncDataActionFetcher();
 
   useEffect(() => {
     if (syncDataLoaderFetcher.state === 'idle' && !syncDataLoaderFetcher.data) {
-      syncDataLoaderFetcher.load(
-        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
-      );
+      syncDataLoaderFetcher.load({
+        organizationId,
+        projectId,
+        workspaceId,
+      });
     }
   }, [organizationId, projectId, syncDataLoaderFetcher, workspaceId]);
 
   const triggerSync = useCallback(() => {
     const submit = syncDataActionFetcher.submit;
-    submit(
-      {},
-      {
-        method: 'POST',
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
-      },
-    );
+    submit({ organizationId, projectId, workspaceId });
   }, [organizationId, projectId, syncDataActionFetcher.submit, workspaceId]);
 
   useEffect(() => {
@@ -147,14 +151,23 @@ export const SyncDropdown: FC<Props> = () => {
     }
   }, [rollbackFetcher.data]);
 
-  useInterval(
+  reactUse.useInterval(
     () => {
       triggerSync();
     },
     isWindowFocused ? ONE_MINUTE_IN_MS : null,
   );
 
-  let syncData: Extract<SyncDataLoaderData, { historyCount: number }> = {
+  const {
+    status,
+    localBranches = [],
+    remoteBranches = [],
+    currentBranch = '',
+    historyCount = 0,
+    history = [],
+    syncItems = [],
+    compare = { ahead: 0, behind: 0 },
+  } = syncDataLoaderFetcher.data || {
     status: {
       stage: {},
       unstaged: {},
@@ -169,32 +182,18 @@ export const SyncDropdown: FC<Props> = () => {
     compare: { ahead: 0, behind: 0 },
   };
 
-  if (syncDataLoaderFetcher.data && !('error' in syncDataLoaderFetcher.data)) {
-    syncData = syncDataLoaderFetcher.data;
-  }
+  const canCreateSnapshot =
+    Object.keys(status?.stage || {}).length > 0 || Object.keys(status?.unstaged || {}).length > 0;
 
-  const {
-    status,
-    localBranches,
-    remoteBranches,
-    currentBranch,
-    historyCount,
-    history,
-    syncItems,
-    compare: { ahead, behind },
-  } = syncData;
-
-  const canCreateSnapshot = Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0;
-
-  const pullCount = behind;
-  const pushCount = ahead;
-  const canPush = ahead > 0;
-  const canPull = behind > 0;
+  const pullCount = compare?.behind || 0;
+  const pushCount = compare?.ahead || 0;
+  const canPush = compare?.ahead && compare.ahead > 0;
+  const canPull = compare?.behind && compare.behind > 0;
   const pullToolTipMsg = canPull
-    ? `There ${behind === 1 ? 'is' : 'are'} ${behind} commit${behind === 1 ? '' : 's'} to pull`
+    ? `There ${compare.behind === 1 ? 'is' : 'are'} ${compare.behind} commit${compare.behind === 1 ? '' : 's'} to pull`
     : 'No changes to pull';
   const pushToolTipMsg = canPush
-    ? `There ${ahead === 1 ? 'is' : 'are'} ${ahead} commit${ahead === 1 ? '' : 's'} to push`
+    ? `There ${compare.ahead === 1 ? 'is' : 'are'} ${compare.ahead} commit${compare.ahead === 1 ? '' : 's'} to push`
     : 'No changes to push';
 
   const localBranchesActionList: {
@@ -212,15 +211,12 @@ export const SyncDropdown: FC<Props> = () => {
     action: () => {
       setOperationError(null);
       showToast({ icon: cloudSyncIcon, title: `Checking out branch ${branch}` });
-      checkoutFetcher.submit(
-        {
-          branch,
-        },
-        {
-          method: 'POST',
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/checkout`,
-        },
-      );
+      checkoutFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        branch,
+      });
     },
   }));
 
@@ -253,13 +249,11 @@ export const SyncDropdown: FC<Props> = () => {
         setOperationError(null);
         showToast({ icon: cloudSyncIcon, title: `Rollback started` });
 
-        rollbackFetcher.submit(
-          {},
-          {
-            method: 'POST',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/rollback`,
-          },
-        );
+        rollbackFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+        });
       },
     },
     {
@@ -274,11 +268,11 @@ export const SyncDropdown: FC<Props> = () => {
       name:
         pullFetcher.state !== 'idle'
           ? 'Pulling...'
-          : behind > 0
-            ? `Pull ${behind || ''} Commit${behind === 1 ? '' : 's'}`
+          : compare.behind > 0
+            ? `Pull ${compare.behind || ''} Commit${compare.behind === 1 ? '' : 's'}`
             : 'Pull',
       icon: pullFetcher.state !== 'idle' ? 'refresh' : 'cloud-download',
-      isDisabled: behind === 0 || pullFetcher.state !== 'idle',
+      isDisabled: compare.behind === 0 || pullFetcher.state !== 'idle',
       action: () => {
         setOperationError(null);
         showToast({
@@ -286,13 +280,11 @@ export const SyncDropdown: FC<Props> = () => {
           title: `Pull failed`,
           status: 'error',
         });
-        pullFetcher.submit(
-          {},
-          {
-            method: 'POST',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/pull`,
-          },
-        );
+        pullFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+        });
       },
     },
     {
@@ -300,22 +292,20 @@ export const SyncDropdown: FC<Props> = () => {
       name:
         pushFetcher.state !== 'idle'
           ? 'Pushing...'
-          : ahead > 0
-            ? `Push ${ahead || ''} Commit${ahead === 1 ? '' : 's'}`
+          : compare.ahead > 0
+            ? `Push ${compare.ahead || ''} Commit${compare.ahead === 1 ? '' : 's'}`
             : 'Push',
       icon: pushFetcher.state !== 'idle' ? 'refresh' : 'cloud-upload',
-      isDisabled: ahead === 0 || pushFetcher.state !== 'idle',
+      isDisabled: compare.ahead === 0 || pushFetcher.state !== 'idle',
       action: () => {
         setOperationError(null);
         showToast({ icon: cloudSyncIcon, title: `Push started` });
 
-        pushFetcher.submit(
-          {},
-          {
-            method: 'POST',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/push`,
-          },
-        );
+        pushFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+        });
       },
     },
   ];
@@ -474,7 +464,7 @@ export const SyncDropdown: FC<Props> = () => {
           }}
         />
       )}
-      {isSyncStagingModalOpen && (
+      {isSyncStagingModalOpen && status && (
         <SyncStagingModal
           branch={currentBranch}
           status={status}

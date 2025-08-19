@@ -1,18 +1,22 @@
 import React, { type FC, Fragment } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useParams, useRouteLoaderData } from 'react-router';
-import { useLocalStorage } from 'react-use';
+import { useParams } from 'react-router';
+import * as reactUse from 'react-use';
+
+import { useRootLoaderData } from '~/root';
+import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import type { Environment } from '../../../models/environment';
 import { getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
+import {
+  type SocketIORequestLoaderData,
+  useRequestLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import type { SocketIORequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { useRootLoaderData } from '../../routes/root';
-import { OneLineEditor } from '../codemirror/one-line-editor';
 import { readOnlyWebsocketPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
@@ -46,9 +50,7 @@ interface Props {
 }
 
 export const SocketIORequestPane: FC<Props> = ({ environment }) => {
-  const { activeRequest, activeRequestMeta, requestPayload } = useRouteLoaderData(
-    'request/:requestId',
-  ) as SocketIORequestLoaderData;
+  const { activeRequest, activeRequestMeta, requestPayload } = useRequestLoaderData() as SocketIORequestLoaderData;
 
   const { requestId } = useParams() as {
     organizationId: string;
@@ -57,9 +59,9 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
     requestId: string;
   };
 
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
 
-  const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
+  const [dismissPathParameterTip, setDismissPathParameterTip] = reactUse.useLocalStorage('dismissPathParameterTip', '');
 
   // Path parameters are path segments that start with a colon (:)
   const pathParameters = getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters || []);

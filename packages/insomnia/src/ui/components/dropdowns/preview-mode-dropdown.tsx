@@ -2,15 +2,17 @@ import fs from 'node:fs';
 
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router';
 
 import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import * as models from '../../../models';
 import { isRequest } from '../../../models/request';
 import { isResponse } from '../../../models/response';
+import {
+  type RequestLoaderData,
+  useRequestLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
 interface Props {
@@ -19,9 +21,7 @@ interface Props {
 }
 
 export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) => {
-  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData(
-    'request/:requestId',
-  ) as RequestLoaderData;
+  const { activeRequest, activeRequestMeta, activeResponse } = useRequestLoaderData() as RequestLoaderData;
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const patchRequestMeta = useRequestMetaPatcher();
   const handleDownloadPrettify = useCallback(() => download(true), [download]);

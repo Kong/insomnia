@@ -1,12 +1,12 @@
 import { useCallback } from 'react';
-import { useRouteLoaderData } from 'react-router';
 
-import { getRenderContext, getRenderContextAncestors, render } from '../../../common/render';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
-import type { HandleRender, RenderContextOptions } from '../../../templating/types';
-import { getKeys } from '../../../templating/utils';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
-import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { getRenderContext, getRenderContextAncestors, render } from '~/common/render';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/templating';
+import type { HandleRender, RenderContextOptions } from '~/templating/types';
+import { getKeys } from '~/templating/utils';
+
 let getRenderContextPromiseCache: any = {};
 
 export interface UseNunjucksOptions {
@@ -22,8 +22,8 @@ initializeNunjucksRenderPromiseCache();
  * Access to functions useful for Nunjucks rendering
  */
 export const useNunjucks = (options?: UseNunjucksOptions) => {
-  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData | undefined;
-  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const requestData = useRequestLoaderData();
+  const workspaceData = useWorkspaceLoaderData();
 
   const fetchRenderContext = useCallback(async () => {
     const ancestors = await getRenderContextAncestors(requestData?.activeRequest || workspaceData?.activeWorkspace);

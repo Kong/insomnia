@@ -23,6 +23,7 @@ import { typedKeys } from '../utils';
 import * as _apiSpec from './api-spec';
 import * as _caCertificate from './ca-certificate';
 import * as _clientCertificate from './client-certificate';
+import * as _cloudCredential from './cloud-credential';
 import * as _cookieJar from './cookie-jar';
 import * as _environment from './environment';
 import * as _gitCredentials from './git-credentials';
@@ -110,6 +111,7 @@ export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
 export * as organization from './organization';
 export const userSession = _userSession;
+export const cloudCredential = _cloudCredential;
 
 export function all() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
@@ -153,6 +155,7 @@ export function all() {
     socketIORequest,
     socketIOPayload,
     socketIOResponse,
+    cloudCredential,
   ] as const;
 }
 
@@ -266,6 +269,7 @@ export const WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP: Record<string, string[]> = {
     request.type,
     grpcRequest.type,
     webSocketRequest.type,
+    socketIORequest.type,
     cookieJar.type,
     environment.type,
     apiSpec.type,
@@ -274,7 +278,7 @@ export const WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP: Record<string, string[]> = {
     protoDirectory.type,
     protoFile.type,
   ],
-  [requestGroup.type]: [requestGroup.type, request.type, grpcRequest.type, webSocketRequest.type],
+  [requestGroup.type]: [requestGroup.type, request.type, grpcRequest.type, webSocketRequest.type, socketIORequest.type],
   [webSocketRequest.type]: [webSocketPayload.type],
   [mockServer.type]: [mockRoute.type],
   [environment.type]: [environment.type],

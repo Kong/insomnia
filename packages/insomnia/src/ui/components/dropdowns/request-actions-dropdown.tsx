@@ -1,7 +1,11 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useCallback, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import { useRootLoaderData } from '~/root';
+import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
+import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
@@ -21,7 +25,6 @@ import * as pluginData from '../../../plugins/context/data';
 import * as pluginNetwork from '../../../plugins/context/network';
 import * as pluginStore from '../../../plugins/context/store';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
@@ -53,11 +56,12 @@ export const RequestActionsDropdown = ({
   onOpenChange,
   onRename,
 }: Props) => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const patchRequestMeta = useRequestMetaPatcher();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
-  const requestFetcher = useFetcher();
+  const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
+  const deleteRequestFetcher = useRequestDeleteActionFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -83,14 +87,13 @@ export const RequestActionsDropdown = ({
       label: 'New Name',
       selectText: true,
       onComplete: (name: string) =>
-        requestFetcher.submit(
-          { name },
-          {
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request?._id}/duplicate`,
-            method: 'post',
-            encType: 'application/json',
-          },
-        ),
+        duplicateRequestFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          requestId: request._id,
+          name,
+        }),
     });
   };
 
@@ -151,13 +154,12 @@ export const RequestActionsDropdown = ({
       onDone: async (isYes: boolean) => {
         if (isYes) {
           incrementDeletedRequests();
-          requestFetcher.submit(
-            { id: request._id },
-            {
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
-              method: 'post',
-            },
-          );
+          deleteRequestFetcher.submit({
+            organizationId,
+            projectId,
+            workspaceId,
+            id: request._id,
+          });
         }
       },
     });

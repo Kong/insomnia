@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useRouteLoaderData } from 'react-router';
 import {
   createKeybindingsHandler as _createKeybindingsHandler,
   type KeyBindingHandlerOptions,
@@ -7,10 +6,11 @@ import {
   tinykeys,
 } from 'tinykeys';
 
+import { useRootLoaderData } from '~/root';
+
 import { getPlatformKeyCombinations } from '../../common/hotkeys';
 import { keyboardKeys } from '../../common/keyboard-keys';
 import type { KeyboardShortcut, KeyCombination } from '../../common/settings';
-import type { RootLoaderData } from '../routes/root';
 
 const keyCombinationToTinyKeyString = ({ ctrl, alt, shift, meta, keyCode }: KeyCombination): string =>
   `${meta ? 'Meta+' : ''}${alt ? 'Alt+' : ''}${ctrl ? 'Control+' : ''}${shift ? 'Shift+' : ''}` +
@@ -20,7 +20,7 @@ export function useKeyboardShortcuts(
   getTarget: () => HTMLElement,
   listeners: Partial<Record<KeyboardShortcut, (event: KeyboardEvent) => any>>,
 ) {
-  const { settings } = useRouteLoaderData('root') as RootLoaderData;
+  const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
 
   useEffect(() => {

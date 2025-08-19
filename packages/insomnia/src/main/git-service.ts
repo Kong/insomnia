@@ -8,6 +8,8 @@ import { Errors, type HeadStatus, type PromiseFsClient, type StageStatus, type W
 import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
 
+import { type GitCredentials } from '~/models/git-repository';
+
 import {
   getApiBaseURL,
   getAppWebsiteBaseURL,
@@ -31,7 +33,9 @@ import GitVCS, {
   GIT_INSOMNIA_DIR,
   GIT_INSOMNIA_DIR_NAME,
   GIT_INTERNAL_DIR,
-  type GitCredentials,
+  type GitFileStatus,
+  type GitFileStatusSymbol,
+  GitVCSOperationErrors,
   MergeConflictError,
 } from '../sync/git/git-vcs';
 import { MemClient } from '../sync/git/mem-client';
@@ -76,6 +80,12 @@ function getErrorMessage(error: unknown): string {
       message.includes('net::ERR_NAME_NOT_RESOLVED')
     ) {
       return 'A network error occurred.';
+    }
+
+    // Isomorphic-git return this error when it cannot find the remote branch
+    // TODO: Handle this error more gracefully
+    if (message.includes("Cannot read properties of null (reading 'length')")) {
+      return 'Cannot find remote branch.';
     }
 
     // Default fallback
@@ -336,10 +346,16 @@ export interface GitChangesLoaderData {
     staged: {
       name: string;
       path: string;
+      status: [HeadStatus, WorkdirStatus, StageStatus];
+      type: GitFileStatus;
+      symbol: GitFileStatusSymbol;
     }[];
     unstaged: {
       name: string;
       path: string;
+      status: [HeadStatus, WorkdirStatus, StageStatus];
+      type: GitFileStatus;
+      symbol: GitFileStatusSymbol;
     }[];
   };
   branch: string;
@@ -593,18 +609,14 @@ export const initGitRepoCloneAction = async ({
   uri,
   authorName,
   authorEmail,
-  token,
-  username,
-  oauth2format,
+  credentials,
   ref,
 }: {
   organizationId: string;
   uri: string;
   authorName: string;
   authorEmail: string;
-  token: string;
-  username: string;
-  oauth2format?: string;
+  credentials: GitCredentials;
   ref?: string;
 }): Promise<
   | {
@@ -630,23 +642,19 @@ export const initGitRepoCloneAction = async ({
   };
 
   // Git Credentials
-  if (oauth2format) {
-    invariant(oauth2format === 'gitlab' || oauth2format === 'github', 'OAuth2 format is required');
-
-    repoSettingsPatch.credentials = {
-      username,
-      token,
-      oauth2format,
-    };
+  if ('oauth2format' in credentials) {
+    invariant(
+      credentials.oauth2format === 'gitlab' || credentials.oauth2format === 'github',
+      'OAuth2 format is required',
+    );
+  } else if ('password' in credentials) {
+    invariant(typeof credentials.username === 'string', 'Username is required');
+    invariant(typeof credentials.password === 'string', 'Password is required');
   } else {
-    invariant(typeof token === 'string', 'Token is required');
-    invariant(typeof username === 'string', 'Username is required');
-
-    repoSettingsPatch.credentials = {
-      password: token,
-      username,
-    };
+    throw new Error('Invalid credentials');
   }
+
+  repoSettingsPatch.credentials = credentials;
 
   repoSettingsPatch.needsFullClone = true;
 
@@ -704,53 +712,41 @@ export const cloneGitRepoAction = async ({
   cloneIntoProjectId,
   name,
   uri,
-  authorName,
-  authorEmail,
-  token,
-  username,
-  oauth2format,
+  author,
+  credentials,
   ref,
 }: {
   organizationId: string;
   projectId?: string;
   cloneIntoProjectId?: string;
+  author: {
+    name: string;
+    email: string;
+  };
+  credentials: GitCredentials;
   name?: string;
   uri: string;
-  authorName: string;
-  authorEmail: string;
-  token: string;
-  username: string;
-  oauth2format?: string;
   ref?: string;
 }) => {
   try {
+    const repoSettingsPatch: Partial<GitRepository> = {};
+    repoSettingsPatch.uri = parseGitToHttpsURL(uri);
+    repoSettingsPatch.author = author;
+
+    // Git Credentials
+    if ('oauth2format' in credentials) {
+      invariant(
+        credentials.oauth2format === 'gitlab' || credentials.oauth2format === 'github',
+        'OAuth2 format is required',
+      );
+    } else if ('password' in credentials) {
+      invariant(typeof credentials.password === 'string', 'Password is required');
+      invariant(typeof credentials.username === 'string', 'Username is required');
+    }
+
+    repoSettingsPatch.credentials = credentials;
+
     if (!projectId) {
-      const repoSettingsPatch: Partial<GitRepository> = {};
-      repoSettingsPatch.uri = parseGitToHttpsURL(uri);
-      repoSettingsPatch.author = {
-        name: authorName,
-        email: authorEmail,
-      };
-
-      // Git Credentials
-      if (oauth2format) {
-        invariant(oauth2format === 'gitlab' || oauth2format === 'github', 'OAuth2 format is required');
-
-        repoSettingsPatch.credentials = {
-          username,
-          token,
-          oauth2format,
-        };
-      } else {
-        invariant(typeof token === 'string', 'Token is required');
-        invariant(typeof username === 'string', 'Username is required');
-
-        repoSettingsPatch.credentials = {
-          password: token,
-          username,
-        };
-      }
-
       trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'clone'));
       repoSettingsPatch.needsFullClone = true;
 
@@ -880,32 +876,6 @@ export const cloneGitRepoAction = async ({
 
     const project = await models.project.getById(projectId);
     invariant(project, 'Project not found');
-
-    const repoSettingsPatch: Partial<GitRepository> = {};
-    repoSettingsPatch.uri = parseGitToHttpsURL(uri);
-    repoSettingsPatch.author = {
-      name: authorName,
-      email: authorEmail,
-    };
-
-    // Git Credentials
-    if (oauth2format) {
-      invariant(oauth2format === 'gitlab' || oauth2format === 'github', 'OAuth2 format is required');
-
-      repoSettingsPatch.credentials = {
-        username,
-        token,
-        oauth2format,
-      };
-    } else {
-      invariant(typeof token === 'string', 'Token is required');
-      invariant(typeof username === 'string', 'Username is required');
-
-      repoSettingsPatch.credentials = {
-        password: token,
-        username,
-      };
-    }
 
     trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'clone'));
     repoSettingsPatch.needsFullClone = true;
@@ -1099,22 +1069,19 @@ export const cloneGitRepoAction = async ({
 export const updateGitRepoAction = async ({
   projectId,
   workspaceId,
-  authorEmail,
-  authorName,
+  author,
+  credentials,
   uri,
-  oauth2format,
-  username,
-  token,
   ref,
 }: {
   projectId: string;
   workspaceId?: string;
-  authorName: string;
-  authorEmail: string;
+  author: {
+    name: string;
+    email: string;
+  };
+  credentials: GitCredentials;
   uri: string;
-  oauth2format?: string;
-  username: string;
-  token: string;
   ref?: string;
 }) => {
   try {
@@ -1138,26 +1105,21 @@ export const updateGitRepoAction = async ({
     repoSettingsPatch.uri = parseGitToHttpsURL(uri);
 
     // Author
-    repoSettingsPatch.author = {
-      name: authorName,
-      email: authorEmail,
-    };
+    repoSettingsPatch.author = author;
 
     // Git Credentials
-    if (oauth2format) {
-      invariant(oauth2format === 'gitlab' || oauth2format === 'github', 'OAuth2 format is required');
-
-      repoSettingsPatch.credentials = {
-        username,
-        token,
-        oauth2format,
-      };
-    } else {
-      repoSettingsPatch.credentials = {
-        password: token,
-        username,
-      };
+    // Git Credentials
+    if ('oauth2format' in credentials) {
+      invariant(
+        credentials.oauth2format === 'gitlab' || credentials.oauth2format === 'github',
+        'OAuth2 format is required',
+      );
+    } else if ('password' in credentials) {
+      invariant(typeof credentials.password === 'string', 'Password is required');
+      invariant(typeof credentials.username === 'string', 'Username is required');
     }
+
+    repoSettingsPatch.credentials = credentials;
 
     async function setupGitRepository() {
       if (gitRepositoryId && gitRepositoryId !== 'empty') {
@@ -1370,9 +1332,7 @@ export const commitAndPushToGitRepoAction = async ({
   } catch (err: unknown) {
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
       return {
-        errors: [
-          'Push Rejected. It seems that the remote repository has changes that you do not have locally. Please pull the changes and try again.',
-        ],
+        errors: [GitVCSOperationErrors.RequiredPullRemoteChangesError],
       };
     }
 
@@ -1494,7 +1454,7 @@ export const checkoutGitBranchAction = async ({
       };
     }
 
-    const errorMessage = err instanceof Error ? err.message : err;
+    const errorMessage = err instanceof Error ? err.message : err.toString();
 
     return {
       errors: [errorMessage],
@@ -1684,9 +1644,8 @@ export const pushToGitRemoteAction = async ({
   } catch (err: unknown) {
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
       return {
-        errors: [
-          'Push Rejected. It seems that the remote repository has changes that you do not have locally. Please pull the changes and try again.',
-        ],
+        errors: [GitVCSOperationErrors.RequiredPullRemoteChangesError],
+
         gitRepository,
       };
     }
@@ -1748,7 +1707,7 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     const gitRepository = await getGitRepository({ projectId, workspaceId });
     const providerName = getOauth2FormatName(gitRepository.credentials);
     const bufferId = await database.bufferChanges();
-    await GitVCS.pull(gitRepository.credentials);
+    await GitVCS.pullWithConflictSupport(gitRepository.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'pull'),
       providerName,
@@ -1765,7 +1724,9 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
 
     await database.flushChanges(bufferId);
 
-    return {};
+    return {
+      success: true,
+    };
   } catch (err: unknown) {
     if (err instanceof MergeConflictError) {
       return err.data;
@@ -1776,9 +1737,11 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     if (err instanceof Errors.HttpError) {
       errorMessage = `${err.message}, ${err.data.response}`;
     }
+
     trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'pull', errorMessage));
 
     return {
+      success: false,
       errors: [errorMessage],
     };
   }
@@ -1853,6 +1816,7 @@ export const discardChangesAction = async ({
   workspaceId?: string;
   paths: string[];
 }): Promise<{
+  success?: boolean;
   errors?: string[];
 }> => {
   try {
@@ -1867,10 +1831,13 @@ export const discardChangesAction = async ({
       cachedGitLastCommitTime: Date.now(),
     });
 
-    return {};
+    return {
+      success: true,
+    };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while rolling back changes';
     return {
+      success: false,
       errors: [errorMessage],
     };
   }

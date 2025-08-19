@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { OneLineEditor } from '../../codemirror/one-line-editor';
+import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 export interface PasswordInputProps {
   value: string;

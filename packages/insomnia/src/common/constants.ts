@@ -12,6 +12,7 @@ export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
 export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
 export const INSOMNIA_GITLAB_API_URL = env.INSOMNIA_GITLAB_API_URL;
 export const PLAYWRIGHT = env.PLAYWRIGHT;
+
 // App Stuff
 export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
 export const getInsomniaSession = () => env.INSOMNIA_SESSION;
@@ -28,6 +29,7 @@ export const getAppDefaultDarkTheme = () => appConfig.darkTheme;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
 export const getAppPlatform = () => process.platform;
+export const getAppBundlePlugins = () => appConfig.bundlePlugins;
 export const isMac = () => getAppPlatform() === 'darwin';
 export const isLinux = () => getAppPlatform() === 'linux';
 export const isWindows = () => getAppPlatform() === 'win32';
@@ -130,6 +132,9 @@ export enum UpdateURL {
   windows = 'https://updates.insomnia.rest/updates/win',
 }
 
+// Oauth redirect URL
+export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.insomnia.rest/oauth/redirect';
+
 // API
 export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
 export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://mock.insomnia.run';
@@ -171,23 +176,19 @@ export const DEFAULT_SIDEBAR_SIZE = 25;
 
 // Activities
 export type GlobalActivity = 'spec' | 'debug' | 'unittest' | 'home';
-export const ACTIVITY_SPEC: GlobalActivity = 'spec';
-export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
-export const ACTIVITY_UNIT_TEST: GlobalActivity = 'unittest';
-export const ACTIVITY_HOME: GlobalActivity = 'home';
 
 export const isWorkspaceActivity = (activity?: string): activity is GlobalActivity =>
   isDesignActivity(activity) || isCollectionActivity(activity);
 
 export const isDesignActivity = (activity?: string): activity is GlobalActivity => {
   switch (activity) {
-    case ACTIVITY_SPEC:
-    case ACTIVITY_DEBUG:
-    case ACTIVITY_UNIT_TEST: {
+    case 'spec':
+    case 'debug':
+    case 'unittest': {
       return true;
     }
 
-    case ACTIVITY_HOME:
+    case 'home':
     default: {
       return false;
     }
@@ -196,13 +197,13 @@ export const isDesignActivity = (activity?: string): activity is GlobalActivity 
 
 export const isCollectionActivity = (activity?: string): activity is GlobalActivity => {
   switch (activity) {
-    case ACTIVITY_DEBUG: {
+    case 'debug': {
       return true;
     }
 
-    case ACTIVITY_SPEC:
-    case ACTIVITY_UNIT_TEST:
-    case ACTIVITY_HOME:
+    case 'spec':
+    case 'unittest':
+    case 'home':
     default: {
       return false;
     }
@@ -211,10 +212,10 @@ export const isCollectionActivity = (activity?: string): activity is GlobalActiv
 
 export const isValidActivity = (activity: string): activity is GlobalActivity => {
   switch (activity) {
-    case ACTIVITY_SPEC:
-    case ACTIVITY_DEBUG:
-    case ACTIVITY_UNIT_TEST:
-    case ACTIVITY_HOME: {
+    case 'spec':
+    case 'debug':
+    case 'unittest':
+    case 'home': {
       return true;
     }
 
@@ -356,6 +357,8 @@ export const sortOrderName: Record<SortOrder, string> = {
   [SORT_TYPE_DESC]: 'Folders First',
   [SORT_TYPE_ASC]: 'Requests First',
 };
+
+export const EXTERNAL_VAULT_PLUGIN_NAME = getAppBundlePlugins()[0].name;
 
 export type DashboardSortOrder = 'name-asc' | 'name-desc' | 'created-asc' | 'created-desc' | 'modified-desc';
 

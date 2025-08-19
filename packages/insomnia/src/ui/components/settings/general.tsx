@@ -1,5 +1,7 @@
 import React, { type FC, Fragment } from 'react';
 
+import { useRootLoaderData } from '~/root';
+
 import {
   EditorKeyMap,
   isMac,
@@ -13,17 +15,17 @@ import { docsKeyMaps } from '../../../common/documentation';
 import { type HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
 import { strings } from '../../../common/strings';
 import { initNewOAuthSession } from '../../../network/o-auth-2/get-token';
-import { useRootLoaderData } from '../../routes/root';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
 import { NumberSetting } from './number-setting';
+import { TextArraySetting } from './text-array-setting';
 import { TextSetting } from './text-setting';
 import { VaultKeyPanel } from './vault-key-panel';
 
 export const General: FC = () => {
-  const { settings, userSession } = useRootLoaderData();
+  const { settings, userSession } = useRootLoaderData()!;
   const isLoggedIn = Boolean(userSession.id);
 
   return (
@@ -240,6 +242,15 @@ export const General: FC = () => {
         />
       </div>
       {isLoggedIn && <VaultKeyPanel />}
+
+      <div className="form-row pad-top-sm">
+        <TextArraySetting
+          label="What folders can Insomnia access?"
+          setting="dataFolders"
+          help="This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to."
+          placeholder=""
+        />
+      </div>
 
       {updatesSupported() && (
         <Fragment>

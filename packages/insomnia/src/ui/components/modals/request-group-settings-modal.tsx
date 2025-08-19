@@ -1,13 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
+
+import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
+import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 
 import { isNotNullOrUndefined } from '../../../common/misc';
 import type { RequestGroup } from '../../../models/request-group';
+import { revalidateWorkspaceActiveRequestByFolder } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
-import type { ListWorkspacesLoaderData } from '../../routes/$organizationId.project.$projectId';
-import { revalidateWorkspaceActiveRequestByFolder } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -29,11 +31,14 @@ export const RequestGroupSettingsModal = ({
     projectId: string;
     workspaceId: string;
   };
-  const workspacesFetcher = useFetcher<ListWorkspacesLoaderData>();
+  const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
     if (isIdleAndUninitialized) {
-      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}/list-workspaces`);
+      workspacesFetcher.load({
+        organizationId,
+        projectId,
+      });
     }
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data;
@@ -44,13 +49,15 @@ export const RequestGroupSettingsModal = ({
       .filter(w => w.scope !== 'mock-server') || [];
   const [workspaceToCopyTo, setWorkspaceToCopyTo] = useState('');
   const patchRequestGroup = useRequestGroupPatcher();
-  const requestFetcher = useFetcher();
 
-  const duplicateRequestGroup = (r: Partial<RequestGroup>) => {
-    requestFetcher.submit(JSON.stringify(r), {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/duplicate`,
-      method: 'post',
-      encType: 'application/json',
+  const duplicateRequestGroupFetcher = useRequestGroupDuplicateActionFetcher();
+
+  const duplicateRequestGroup = (requestGroupData: Partial<RequestGroup>) => {
+    duplicateRequestGroupFetcher.submit({
+      organizationId,
+      projectId,
+      workspaceId,
+      requestGroupData,
     });
   };
   useEffect(() => {

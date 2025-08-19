@@ -1,6 +1,8 @@
 import iconv from 'iconv-lite';
 import React, { Fragment, useCallback, useRef, useState } from 'react';
 
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+
 import {
   HUGE_RESPONSE_MB,
   LARGE_RESPONSE_MB,
@@ -8,7 +10,6 @@ import {
   PREVIEW_MODE_RAW,
 } from '../../../common/constants';
 import { unescapeForwardSlash } from '../../../common/misc';
-import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { ResponseCSVViewer } from './response-csv-viewer';
 import { ResponseErrorViewer } from './response-error-viewer';

@@ -1,8 +1,10 @@
 import React, { type FC, Fragment, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useParams, useRouteLoaderData } from 'react-router';
-import { useLocalStorage } from 'react-use';
+import { useParams } from 'react-router';
+import * as reactUse from 'react-use';
+
+import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
 import * as models from '../../../models';
@@ -10,12 +12,14 @@ import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspa
 import { getCombinedPathParametersFromUrl, type RequestParameter } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
 import { getAuthObjectOrNull } from '../../../network/authentication';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import {
+  type RequestLoaderData,
+  useRequestLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
-import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { OneLineEditor } from '../codemirror/one-line-editor';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
 import { readOnlyHttpPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
@@ -37,7 +41,7 @@ interface Props {
 }
 
 export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => {
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const { activeRequest, activeRequestMeta } = useRequestLoaderData() as RequestLoaderData;
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
 
   const patchSettings = useSettingsPatcher();
@@ -45,7 +49,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const patchRequest = useRequestPatcher();
 
   const requestUrlBarRef = useRef<RequestUrlBarHandle>(null);
-  const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
+  const [dismissPathParameterTip, setDismissPathParameterTip] = reactUse.useLocalStorage('dismissPathParameterTip', '');
   const handleImportQueryFromUrl = () => {
     let query;
 
@@ -73,7 +77,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
 
-  const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeEnvironment } = useWorkspaceLoaderData()!;
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
 

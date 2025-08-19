@@ -1,7 +1,18 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData, useSearchParams } from 'react-router';
-import { useInterval } from 'react-use';
+import { useParams, useSearchParams } from 'react-router';
+import * as reactUse from 'react-use';
+
+import { useRootLoaderData } from '~/root';
+import {
+  type ConnectActionParams,
+  useRequestConnectActionFetcher,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
+import {
+  type SendActionParams,
+  useDebugRequestSendActionFetcher,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
+import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -10,6 +21,11 @@ import type { Request } from '../../models/request';
 import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../models/request-group';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/network';
+import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import {
+  type RequestLoaderData,
+  useRequestLoaderData,
+} from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
@@ -18,15 +34,7 @@ import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestPatcher } from '../hooks/use-request';
 import { useRequestMetaPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import type { WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace.$workspaceId';
-import type {
-  ConnectActionParams,
-  RequestLoaderData,
-  SendActionParams,
-} from '../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { useRootLoaderData } from '../routes/root';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
-import { OneLineEditor, type OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { showModal } from './modals';
@@ -51,7 +59,7 @@ export interface RequestUrlBarHandle {
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
   ({ handleAutocompleteUrls, uniquenessKey, onPaste }, ref) => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const { userSession } = useRootLoaderData();
+    const { userSession } = useRootLoaderData()!;
     const { vaultKey } = userSession;
     const [showEnvVariableMissingModal, setShowEnvVariableMissingModal] = useState(false);
     const [showInputVaultKeyModal, setShowInputVaultKeyModal] = useState(false);
@@ -81,13 +89,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       setSearchParams({});
     }
 
-    const { activeWorkspace, activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-    const { settings } = useRootLoaderData();
+    const { activeWorkspace, activeEnvironment } = useWorkspaceLoaderData()!;
+    const { settings } = useRootLoaderData()!;
     const { hotKeyRegistry } = settings;
     const {
       activeRequest,
       activeRequestMeta: { downloadPath },
-    } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+    } = useRequestLoaderData()! as RequestLoaderData;
     const patchRequestMeta = useRequestMetaPatcher();
     const methodDropdownRef = useRef<DropdownHandle>(null);
     const dropdownRef = useRef<DropdownHandle>(null);
@@ -114,7 +122,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
 
     const [currentInterval, setCurrentInterval] = useState<number | null>(null);
     const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
-    const fetcher = useFetcher();
+    const connectRequestFetcher = useRequestConnectActionFetcher();
+    const sendRequestFetcher = useDebugRequestSendActionFetcher();
 
     const { updateTabById } = useInsomniaTabContext();
 
@@ -124,26 +133,31 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       workspaceId: string;
       requestId: string;
     };
+    const connectSubmit = connectRequestFetcher.submit;
     const connect = useCallback(
       (connectParams: ConnectActionParams) => {
-        fetcher.submit(JSON.stringify(connectParams), {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
-          method: 'post',
-          encType: 'application/json',
+        connectSubmit({
+          organizationId,
+          projectId,
+          workspaceId,
+          requestId,
+          connectParams,
         });
       },
-      [fetcher, organizationId, projectId, requestId, workspaceId],
+      [connectSubmit, organizationId, projectId, requestId, workspaceId],
     );
+    const sendRequestSubmit = sendRequestFetcher.submit;
     const send = useCallback(
-      (sendParams: SendActionParams) => {
-        // file://./../routes/request.tsx#sendAction
-        fetcher.submit(JSON.stringify(sendParams), {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/send`,
-          method: 'post',
-          encType: 'application/json',
+      (params: SendActionParams) => {
+        sendRequestSubmit({
+          organizationId,
+          projectId,
+          workspaceId,
+          requestId,
+          params,
         });
       },
-      [fetcher, organizationId, projectId, requestId, workspaceId],
+      [organizationId, projectId, requestId, sendRequestSubmit, workspaceId],
     );
 
     const sendOrConnect = useCallback(
@@ -201,13 +215,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         try {
           send({ requestId, shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable });
         } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : String(err);
           showModal(AlertModal, {
             title: 'Unexpected Request Failure',
             message: (
               <div>
                 <p>The request failed due to an unhandled error:</p>
                 <code className="wide selectable">
-                  <pre>{err.message}</pre>
+                  <pre>{errorMessage}</pre>
                 </code>
               </div>
             ),
@@ -242,7 +257,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       };
     }, [sendOrConnect]);
 
-    useInterval(sendOrConnect, currentInterval && fetcher.state === 'idle' ? currentInterval : null);
+    reactUse.useInterval(
+      sendOrConnect,
+      currentInterval && connectRequestFetcher.state === 'idle' ? currentInterval : null,
+    );
     useTimeoutWhen(sendOrConnect, currentTimeout, !!currentTimeout);
     const patchRequest = useRequestPatcher();
 

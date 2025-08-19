@@ -1,0 +1,95 @@
+import { useCallback } from 'react';
+import { href, useFetcher } from 'react-router';
+
+import * as models from '~/models';
+import * as requestOperations from '~/models/helpers/request-operations';
+import { isSocketIORequestId } from '~/models/socket-io-request';
+import { isWebSocketRequestId } from '~/models/websocket-request';
+import { invariant } from '~/utils/invariant';
+
+import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete';
+
+export async function clientAction({ request, params }: Route.ClientActionArgs) {
+  const { workspaceId, requestId } = params;
+
+  const req = await requestOperations.getById(requestId);
+  invariant(req, 'Request not found');
+
+  const { responseId } = await request.json();
+  invariant(typeof responseId === 'string', 'Response ID is required');
+
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  invariant(workspaceMeta, 'Active workspace meta not found');
+
+  if (isWebSocketRequestId(requestId)) {
+    const res = await models.webSocketResponse.getById(responseId);
+    invariant(res, 'Response not found');
+    await models.webSocketResponse.remove(res);
+    const response = await models.webSocketResponse.getLatestForRequest(requestId, workspaceMeta.activeEnvironmentId);
+    if (response?.requestVersionId) {
+      await models.requestVersion.restore(response.requestVersionId);
+    }
+    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: response?._id || null });
+  } else if (isSocketIORequestId(requestId)) {
+    const res = await models.socketIOResponse.getById(responseId);
+    invariant(res, 'Response not found');
+    await models.socketIOResponse.remove(res);
+    const response = await models.socketIOResponse.getLatestForRequest(requestId, workspaceMeta.activeEnvironmentId);
+    if (response?.requestVersionId) {
+      await models.requestVersion.restore(response.requestVersionId);
+    }
+    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: response?._id || null });
+  } else {
+    const res = await models.response.getById(responseId);
+    invariant(res, 'Response not found');
+    await models.response.remove(res);
+    const response = await models.response.getLatestForRequest(requestId, workspaceMeta.activeEnvironmentId);
+    if (response?.requestVersionId) {
+      await models.requestVersion.restore(response.requestVersionId);
+    }
+    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: response?._id || null });
+  }
+
+  return null;
+}
+
+export function useRequestResponseDeleteActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
+  const {
+    submit: fetcherSubmit,
+    ...fetcherRest
+  } = useFetcher<typeof clientAction>(args);
+
+  const submit = useCallback((
+    {
+      organizationId,
+      projectId,
+      workspaceId,
+      requestId,
+      responseId,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      requestId: string;
+      responseId: string;
+    }
+  ) => {
+    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/response/delete', {
+      organizationId,
+      projectId,
+      workspaceId,
+      requestId,
+    });
+
+    return fetcherSubmit(JSON.stringify({ responseId }), {
+      action: url,
+      method: 'POST',
+      encType: 'application/json',
+    });
+  }, [fetcherSubmit]);
+
+  return {
+    ...fetcherRest,
+    submit,
+  };
+}

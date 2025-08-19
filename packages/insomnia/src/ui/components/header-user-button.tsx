@@ -1,11 +1,10 @@
-import React from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
-import { useFetcher } from 'react-router';
 
-import { getAppWebsiteBaseURL } from '../../common/constants';
-import type { CurrentPlan, PersonalPlanType, UserProfileResponse } from '../organization-utils';
-import { Avatar } from './avatar';
-import { Icon } from './icon';
+import { getAppWebsiteBaseURL } from '~/common/constants';
+import type { CurrentPlan, PersonalPlanType, UserProfileResponse } from '~/models/organization';
+import { useLogoutFetcher } from '~/routes/auth.logout';
+import { Avatar } from '~/ui/components/avatar';
+import { Icon } from '~/ui/components/icon';
 
 const formatCurrentPlanType = (type: PersonalPlanType) => {
   switch (type) {
@@ -70,7 +69,7 @@ interface UserButtonProps {
   isMinimal?: boolean;
 }
 export const HeaderUserButton = ({ user, currentPlan, isMinimal = false }: UserButtonProps) => {
-  const logoutFetcher = useFetcher();
+  const logoutFetcher = useLogoutFetcher();
 
   return (
     <MenuTrigger>
@@ -93,13 +92,7 @@ export const HeaderUserButton = ({ user, currentPlan, isMinimal = false }: UserB
           className="focus:outline-none"
           onAction={action => {
             if (action === 'logout') {
-              logoutFetcher.submit(
-                {},
-                {
-                  action: '/auth/logout',
-                  method: 'POST',
-                },
-              );
+              logoutFetcher.submit();
             }
 
             if (action === 'account-settings') {

@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useRouteLoaderData } from 'react-router';
 
 import { strings } from '../../../common/strings';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import type { VCS } from '../../../sync/vcs/vcs';
 import { Button } from '../../components/themed-button';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -25,7 +24,7 @@ export const SyncDeleteModal = ({ vcs, onHide }: Props) => {
     error: '',
     workspaceName: '',
   });
-  const { activeWorkspace } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeWorkspace } = useWorkspaceLoaderData()!;
 
   useEffect(() => {
     modalRef.current?.show();

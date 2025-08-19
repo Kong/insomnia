@@ -3,41 +3,16 @@ import path from 'node:path';
 import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
+import type { GitAuthor, GitCredentials, GitRemoteConfig } from '~/models/git-repository';
+
 import type { MergeConflict } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
 import { getAuthorFromGitRepository, gitCallbacks } from './utils';
 
-export interface GitAuthor {
-  name: string;
-  email: string;
-}
-
-export interface GitRemoteConfig {
-  remote: string;
-  url: string;
-}
-
-interface GitCredentialsBase {
-  username: string;
-  password: string;
-}
-
-interface GitCredentialsOAuth {
-  /**
-   * Supported OAuth formats.
-   * This is needed by isomorphic-git to be able to push/pull using an oauth2 token.
-   * https://isomorphic-git.org/docs/en/authentication.html
-   */
-  oauth2format?: 'github' | 'gitlab';
-  username: string;
-  token: string;
-}
-
-export type GitCredentials = GitCredentialsBase | GitCredentialsOAuth;
-
-export const isGitCredentialsOAuth = (credentials: GitCredentials): credentials is GitCredentialsOAuth => {
-  return 'oauth2format' in credentials;
+export const GitVCSOperationErrors = {
+  UncommittedChangesError: 'UncommittedChangesError',
+  RequiredPullRemoteChangesError: 'RequiredPullRemoteChangesError',
 };
 
 export type GitHash = string;
@@ -83,6 +58,26 @@ interface InitFromCloneOptions {
   repoId: string;
 }
 
+export type GitFileStatus = 'untracked' | 'added' | 'modified' | 'deleted' | 'clean' | 'unknown';
+
+export enum GitFileType {
+  Added = 'added',
+  Modified = 'modified',
+  Deleted = 'deleted',
+  Renamed = 'renamed',
+  Copied = 'copied',
+  Untracked = 'untracked',
+  Ignored = 'ignored',
+  Conflicted = 'conflicted',
+}
+
+export type GitFileStatusSymbol = 'U' | 'A' | 'M' | 'D' | '-';
+
+interface FileStatus {
+  type: GitFileStatus;
+  symbol: GitFileStatusSymbol;
+}
+
 /**
  * isomorphic-git internally will default an empty ('') clone directory to '.'
  *
@@ -123,6 +118,12 @@ interface BaseOpts {
   repoId: string;
   legacyDiff?: boolean;
   ref?: string;
+}
+
+interface ConflictPaths {
+  bothModified: string[];
+  deleteByUs: string[];
+  deleteByTheirs: string[];
 }
 
 export class GitVCS {
@@ -528,9 +529,61 @@ export class GitVCS {
     return status;
   }
 
+  classifyStatus(head: git.StageStatus, workdir: git.WorkdirStatus, stage: git.StageStatus): FileStatus {
+    // Untracked
+    if (head === 0 && stage === 0 && workdir === 2) {
+      return { type: 'untracked', symbol: 'U' };
+    }
+
+    // Added (staged new file)
+    if (head === 0 && (stage === 2 || stage === 3)) {
+      return { type: 'added', symbol: 'A' };
+    }
+
+    // Modified (unstaged)
+    if (head === 1 && stage === 1 && workdir === 2) {
+      return { type: 'modified', symbol: 'M' };
+    }
+
+    // Staged modification
+    if (head === 1 && stage === 2) {
+      return { type: 'modified', symbol: 'M' };
+    }
+
+    // Deleted (unstaged)
+    if (head === 1 && stage === 1 && workdir === 0) {
+      return { type: 'deleted', symbol: 'D' };
+    }
+
+    // Staged deletion
+    if (head === 1 && stage === 0 && workdir === 0) {
+      return { type: 'deleted', symbol: 'D' };
+    }
+
+    // Clean
+    if (head === 1 && stage === 1 && workdir === 1) {
+      return { type: 'clean', symbol: '-' };
+    }
+
+    // Default (unknown state)
+    return { type: 'unknown', symbol: '-' };
+  }
+
   async status(): Promise<{
-    staged: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus]; name: string }[];
-    unstaged: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus]; name: string }[];
+    staged: {
+      path: string;
+      status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus];
+      name: string;
+      type: GitFileStatus;
+      symbol: GitFileStatusSymbol;
+    }[];
+    unstaged: {
+      path: string;
+      status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus];
+      name: string;
+      type: GitFileStatus;
+      symbol: GitFileStatusSymbol;
+    }[];
   }> {
     const status = await this.statusWithContent();
 
@@ -538,16 +591,28 @@ export class GitVCS {
     const stagedChanges = status.filter(({ head, stage }) => stage.status !== head.status);
 
     return {
-      staged: stagedChanges.map(({ filepath, head, workdir, stage }) => ({
-        path: filepath,
-        status: [head.status, workdir.status, stage.status],
-        name: stage.name || head.name || workdir.name || '',
-      })),
-      unstaged: unstagedChanges.map(({ filepath, head, workdir, stage }) => ({
-        path: filepath,
-        status: [head.status, workdir.status, stage.status],
-        name: workdir.name || stage.name || head.name || '',
-      })),
+      staged: stagedChanges.map(({ filepath, head, workdir, stage }) => {
+        const classification = this.classifyStatus(head.status, workdir.status, stage.status);
+
+        return {
+          path: filepath,
+          status: [head.status, workdir.status, stage.status],
+          type: classification.type,
+          symbol: classification.symbol,
+          name: stage.name || head.name || workdir.name || '',
+        };
+      }),
+      unstaged: unstagedChanges.map(({ filepath, head, workdir, stage }) => {
+        const classification = this.classifyStatus(head.status, workdir.status, stage.status);
+
+        return {
+          path: filepath,
+          status: [head.status, workdir.status, stage.status],
+          type: classification.type,
+          symbol: classification.symbol,
+          name: workdir.name || stage.name || head.name || '',
+        };
+      }),
     };
   }
 
@@ -677,37 +742,303 @@ export class GitVCS {
     throw new Error('Push failed with unknown error. Please try again.');
   }
 
-  async _hasUncommittedChanges() {
+  async hasUncommittedChanges() {
     const changes = await this.status();
     return changes.staged.length > 0 || changes.unstaged.length > 0;
   }
 
-  async pull(gitCredentials?: GitCredentials | null) {
-    const hasUncommittedChanges = await this._hasUncommittedChanges();
+  async getBranchPair() {
+    const oursBranch = await this.getCurrentBranch();
+    const theirsBranch = `origin/${oursBranch}`;
+    return { oursBranch, theirsBranch };
+  }
+
+  async pullWithConflictSupport(gitCredentials?: GitCredentials | null) {
+    const hasUncommittedChanges = await this.hasUncommittedChanges();
+
     if (hasUncommittedChanges) {
-      throw new Error('Cannot pull with uncommitted changes, please commit local changes first.');
+      throw new Error(GitVCSOperationErrors.UncommittedChangesError);
     }
-    console.log('[git] Pull remote=origin', await this.getCurrentBranch());
-    return git
-      .pull({
+
+    try {
+      // Try to pull changes from the remote repository
+      await git.pull({
         ...this._baseOpts,
         ...gitCallbacks(gitCredentials),
         remote: 'origin',
         singleBranch: true,
-      })
-      .catch(async err => {
-        if (err instanceof git.Errors.MergeConflictError) {
-          const oursBranch = await this.getCurrentBranch();
-          const theirsBranch = `origin/${oursBranch}`;
-
-          return await this._collectMergeConflicts(err, oursBranch, theirsBranch);
-        }
-        throw err;
       });
+
+      return { success: true };
+    } catch (err) {
+      const { oursBranch, theirsBranch } = await this.getBranchPair();
+
+      // merge conflict from pull
+      if (err instanceof git.Errors.MergeConflictError) {
+        return await this.collectMergeConflicts(err, oursBranch, theirsBranch);
+      }
+
+      // merge not supported by native pull: fallback
+      if (err instanceof git.Errors.MergeNotSupportedError) {
+        console.log('[git] Falling back to manual diff UI (merge driver not supported)');
+        try {
+          await this.fetch({
+            singleBranch: true,
+            depth: 1,
+            credentials: gitCredentials,
+          });
+
+          await git.merge({
+            ...this._baseOpts,
+            ours: oursBranch,
+            theirs: theirsBranch,
+            abortOnConflict: false,
+          });
+
+          return { success: true };
+        } catch (mergeErr) {
+          // If the merge operation reported conflicts, collect them
+          if (mergeErr instanceof git.Errors.MergeConflictError) {
+            return await this.collectMergeConflicts(mergeErr, oursBranch, theirsBranch);
+          }
+
+          // If still MergeNotSupportedError or unexpected, fall back to manual detection and UI
+          if (mergeErr instanceof git.Errors.MergeNotSupportedError) {
+            console.log('[git] Falling back to manual diff UI (merge driver not supported)');
+            return await this.buildManualResolutionFromTrees();
+          }
+        }
+
+        const statusMatrix = await git.statusMatrix({ fs: this._baseOpts.fs, dir: this._baseOpts.dir });
+        const conflicted = statusMatrix.filter(row => row[3] === 3).map(row => row[0]);
+
+        const conflictData = [];
+
+        for (const filepath of conflicted) {
+          const fullPath = path.join(this._baseOpts.dir, filepath);
+          // @ts-expect-error -- TSCONVERSION
+          const content = await this._baseOpts.fs.promises.readFile(fullPath, 'utf8');
+          const conflict = this.extractConflictParts(content);
+
+          if (conflict) {
+            conflictData.push({
+              filepath,
+              fullContent: content,
+              ...conflict,
+            });
+          }
+        }
+
+        const oursHeadCommitOid = await git.resolveRef({
+          ...this._baseOpts,
+          ref: oursBranch,
+        });
+
+        const theirsHeadCommitOid = await git.resolveRef({
+          ...this._baseOpts,
+          ref: theirsBranch,
+        });
+
+        return {
+          success: false,
+          conflicts: conflictData,
+          labels: {
+            ours: oursBranch,
+            theirs: theirsBranch,
+          },
+          commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
+          commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
+        };
+      }
+
+      console.error('[git] Pull failed with unexpected error', err);
+      throw err;
+    }
+  }
+
+  async buildManualResolutionFromTrees() {
+    const { oursBranch, theirsBranch } = await this.getBranchPair();
+    const mergeConflicts: MergeConflict[] = [];
+    const conflictPathsObj = await this.findConflictLikeChanges(oursBranch, theirsBranch);
+
+    const conflictTypeList: (keyof ConflictPaths)[] = ['bothModified', 'deleteByUs', 'deleteByTheirs'];
+
+    const oursHeadCommitOid = await git.resolveRef({
+      ...this._baseOpts,
+      ref: oursBranch,
+    });
+
+    const theirsHeadCommitOid = await git.resolveRef({
+      ...this._baseOpts,
+      ref: theirsBranch,
+    });
+
+    const _baseOpts = this._baseOpts;
+
+    function readBlob(filepath: string, oid: string) {
+      return git
+        .readBlob({
+          ..._baseOpts,
+          oid,
+          filepath,
+        })
+        .then(({ blob, oid: blobId }) => ({
+          blobContent: parse(Buffer.from(blob).toString('utf8')),
+          blobId,
+        }));
+    }
+
+    function readOursBlob(filepath: string) {
+      return readBlob(filepath, oursHeadCommitOid);
+    }
+
+    function readTheirsBlob(filepath: string) {
+      return readBlob(filepath, theirsHeadCommitOid);
+    }
+
+    for (const conflictType of conflictTypeList) {
+      const conflictPaths = conflictPathsObj[conflictType];
+      const message = {
+        bothModified: 'both modified',
+        deleteByUs: 'you deleted and they modified',
+        deleteByTheirs: 'they deleted and you modified',
+      }[conflictType];
+      for (const conflictPath of conflictPaths) {
+        let mineBlobContent = null;
+        let mineBlobId = null;
+
+        let theirsBlobContent = null;
+        let theirsBlobId = null;
+
+        if (conflictType !== 'deleteByUs') {
+          const { blobContent, blobId } = await readOursBlob(conflictPath);
+          mineBlobContent = blobContent;
+          mineBlobId = blobId;
+        }
+
+        if (conflictType !== 'deleteByTheirs') {
+          const { blobContent, blobId } = await readTheirsBlob(conflictPath);
+          theirsBlobContent = blobContent;
+          theirsBlobId = blobId;
+        }
+        const name = mineBlobContent?.name || theirsBlobContent?.name || '';
+
+        mergeConflicts.push({
+          key: conflictPath,
+          name,
+          message,
+          mineBlob: mineBlobId,
+          theirsBlob: theirsBlobId,
+          choose: mineBlobId || theirsBlobId,
+          mineBlobContent,
+          theirsBlobContent,
+        });
+      }
+    }
+
+    throw new MergeConflictError('Need to solve merge conflicts first', {
+      conflicts: mergeConflicts,
+      labels: {
+        ours: `${oursBranch} ${oursHeadCommitOid}`,
+        theirs: `${theirsBranch} ${theirsHeadCommitOid}`,
+      },
+      commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
+      commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
+    });
+  }
+
+  /**
+   * Returns an object indicating which files were:
+   * - modified by both local and remote
+   * - deleted by local or remote side
+   */
+  async findConflictLikeChanges(oursBranch: string, theirsBranch: string): Promise<ConflictPaths> {
+    const result: ConflictPaths = {
+      bothModified: [],
+      deleteByUs: [],
+      deleteByTheirs: [],
+    };
+
+    const localOid = await git.resolveRef({
+      ...this._baseOpts,
+      ref: oursBranch,
+    });
+
+    const remoteOid = await git.resolveRef({
+      ...this._baseOpts,
+      ref: theirsBranch,
+    });
+
+    const localTree = await this.getTreeMap(localOid);
+    const remoteTree = await this.getTreeMap(remoteOid);
+
+    for (const [file, localBlob] of Object.entries(localTree)) {
+      const remoteBlob = remoteTree[file];
+
+      if (remoteBlob) {
+        // Exists in both
+        if (localBlob.oid !== remoteBlob.oid) {
+          result.bothModified.push(file);
+        }
+      } else {
+        // Deleted by remote
+        result.deleteByTheirs.push(file);
+      }
+    }
+
+    for (const [file] of Object.entries(remoteTree)) {
+      const localBlob = localTree[file];
+      if (!localBlob) {
+        // Deleted by us
+        result.deleteByUs.push(file);
+      }
+    }
+
+    return result;
+  }
+
+  async getTreeMap(oid: string): Promise<Record<string, git.TreeEntry>> {
+    const { commit } = await git.readCommit({ ...this._baseOpts, oid });
+    const { tree } = await git.readTree({ ...this._baseOpts, oid: commit.tree });
+
+    const treeMap: Record<string, git.TreeEntry> = {};
+
+    const baseOpts = this._baseOpts;
+
+    async function walkTree(entries: ArrayIterator<git.TreeEntry>, prefix = '') {
+      for (const entry of entries) {
+        const filepath = path.join(prefix, entry.path);
+        if (entry.type === 'tree') {
+          const { tree: subtree } = await git.readTree({ ...baseOpts, oid: entry.oid });
+          await walkTree(subtree.values(), filepath);
+        } else if (entry.type === 'blob') {
+          treeMap[filepath] = entry;
+        }
+      }
+    }
+
+    await walkTree(tree.values());
+
+    // Return the tree map with file paths as keys and git.TreeEntry as values
+    // This allows us to easily check for conflicts between local and remote trees
+    // and to extract file contents when needed
+    return treeMap;
+  }
+
+  extractConflictParts(content: any) {
+    const regex = /^<<<<<<< .*\n([\s\S]*?)^=======\n([\s\S]*?)^>>>>>>> .*/gm;
+    const match = regex.exec(content);
+
+    if (!match) return null;
+
+    return {
+      ours: match[1].trim(),
+      theirs: match[2].trim(),
+    };
   }
 
   // Collect merge conflict details from isomorphic-git git.Errors.MergeConflictError and throw a MergeConflictError which will be used to display the conflicts in the SyncMergeModal
-  async _collectMergeConflicts(
+  async collectMergeConflicts(
     mergeConflictError: InstanceType<typeof git.Errors.MergeConflictError>,
     oursBranch: string,
     theirsBranch: string,
@@ -855,7 +1186,7 @@ export class GitVCS {
     allowUncommittedChangesBeforeMerge?: boolean;
   }) {
     if (!allowUncommittedChangesBeforeMerge) {
-      const hasUncommittedChanges = await this._hasUncommittedChanges();
+      const hasUncommittedChanges = await this.hasUncommittedChanges();
       if (hasUncommittedChanges) {
         throw new Error('There are uncommitted changes on current branch. Please commit them before merging.');
       }
@@ -871,7 +1202,7 @@ export class GitVCS {
       })
       .catch(async err => {
         if (err instanceof git.Errors.MergeConflictError) {
-          return await this._collectMergeConflicts(err, oursBranch, theirsBranch);
+          return await this.collectMergeConflicts(err, oursBranch, theirsBranch);
         }
 
         if (err instanceof git.Errors.MergeNotSupportedError) {

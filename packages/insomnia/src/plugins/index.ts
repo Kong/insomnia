@@ -4,6 +4,8 @@ import path from 'node:path';
 import electron from 'electron';
 
 import type { ParsedApiSpec } from '../common/api-specs';
+import { getAppBundlePlugins } from '../common/constants';
+import { database as db } from '../common/database';
 import type { PluginConfigMap } from '../common/settings';
 import * as models from '../models';
 import type { GrpcRequest } from '../models/grpc-request';
@@ -12,7 +14,10 @@ import type { RequestGroup } from '../models/request-group';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
-import type { PluginTemplateTag } from '../templating/types';
+import * as pluginApp from '../plugins/context/app';
+import * as pluginNetwork from '../plugins/context/network';
+import * as pluginStore from '../plugins/context/store';
+import type { PluginTemplateTag, RenderPurpose } from '../templating/types';
 import type { PluginTheme } from './misc';
 import themes from './themes';
 
@@ -31,6 +36,8 @@ export interface Plugin {
     requestActions?: OmitInternal<RequestAction>[];
     workspaceActions?: OmitInternal<WorkspaceAction>[];
     documentActions?: OmitInternal<DocumentAction>[];
+    // Plugin actions which will be executed in main process(node integration) context. For internal use only, not for public plugins
+    unsafePluginMainActions?: OmitInternal<PluginAction>[];
   };
 }
 
@@ -80,6 +87,12 @@ export type DocumentAction = { plugin: Plugin } & {
   action: (context: Record<string, any>, documents: ParsedApiSpec) => void | Promise<void>;
   label: string;
   hideAfterClick?: boolean;
+};
+
+export type PluginAction = { plugin: Plugin } & {
+  name: string;
+  description?: string;
+  action: (context: Record<string, any>, params?: any) => Promise<any>;
 };
 
 type RequestHookCallback = (context: any) => void;
@@ -201,7 +214,6 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
       process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'),
       'plugins',
     );
-    fs.mkdirSync(pluginPath, { recursive: true });
 
     // Also look in node_modules folder in each directory
     const basePaths = [pluginPath, ...extraPaths];
@@ -211,19 +223,57 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
     // Store plugins in a map so that plugins with the same name only get added once
     const pluginMap: Record<string, Plugin> = {};
     await traversePluginPath(pluginMap, allPaths, allConfigs);
-
-    plugins = Object.keys(pluginMap).map(name => pluginMap[name]);
+    const bundlePluginMap = getBundlePluginMap();
+    const fullPluginMap = { ...pluginMap, ...bundlePluginMap };
+    plugins = Object.keys(fullPluginMap).map(name => fullPluginMap[name]);
   }
 
   return plugins;
+}
+
+export function getBundlePluginMap() {
+  const appBundlePlugins = getAppBundlePlugins();
+  const bundlePluginMap: Record<string, Plugin> = {};
+  appBundlePlugins.forEach(({ name: pluginName }) => {
+    try {
+      const isExecutedInInso = !process.type;
+      // In Insomnia, the packagePath is just the pluginName
+      let bundlePluginPath = pluginName;
+      if (isExecutedInInso) {
+        // When executed in Inso, the __dirname points to <packageRoot>/packages/insomnia-inso/dist
+        // The bundle plugin module is placed under <packageRoot>/node_module
+        const rootNodeModuleDir = path.resolve(__dirname, '..', '..', '..', 'node_modules');
+        // use require.resolve to reliably get the absolute path to the plugin's entry point
+        bundlePluginPath = require.resolve(pluginName, { paths: [rootNodeModuleDir] });
+      }
+      console.log('[plugin] Loading bundled plugin %s from %s', pluginName, bundlePluginPath);
+      const module = global.require(bundlePluginPath);
+      bundlePluginMap[pluginName] = {
+        name: pluginName,
+        description: `Insomnia bundled plugin for ${pluginName}`,
+        version: 'unknown',
+        directory: '',
+        config: { disabled: false },
+        module: module,
+      };
+    } catch (err) {
+      console.error(`[plugin] Failed to load bundled plugin ${pluginName}`, err);
+    }
+  });
+  return bundlePluginMap;
 }
 
 export async function reloadPlugins() {
   await getPlugins(true);
 }
 
-async function getActivePlugins(): Promise<Plugin[]> {
+export async function getActivePlugins(): Promise<Plugin[]> {
   return (await getPlugins()).filter(p => !p.config.disabled);
+}
+
+export async function getBundlePlugins(): Promise<Plugin[]> {
+  const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
+  return (await getActivePlugins()).filter(p => p.directory === '' && appBundlePluginNames.includes(p.name));
 }
 
 export async function getRequestGroupActions(): Promise<RequestGroupAction[]> {
@@ -309,6 +359,83 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
   }
 
   return extensions;
+}
+
+export function getPluginCommonContext({
+  plugin,
+  renderPurpose,
+}: {
+  plugin: Pick<Plugin, 'name'>;
+  renderPurpose?: RenderPurpose;
+}) {
+  return {
+    ...pluginApp.init(renderPurpose),
+    ...pluginStore.init(plugin),
+    ...pluginNetwork.init(),
+    util: {
+      openInBrowser: (url: string) => window.main.openInBrowser(url),
+      models: {
+        request: {
+          getById: models.request.getById,
+          getAncestors: async (request: any) => {
+            const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(request, [
+              models.requestGroup.type,
+              models.workspace.type,
+            ]);
+            return ancestors.filter(doc => doc._id !== request._id);
+          },
+        },
+        cloudCredential: {
+          getById: models.cloudCredential.getById,
+          update: models.cloudCredential.update,
+        },
+        workspace: {
+          getById: models.workspace.getById,
+        },
+        oAuth2Token: {
+          getByRequestId: models.oAuth2Token.getByParentId,
+        },
+        cookieJar: {
+          getOrCreateForParentId: (parentId: string) => {
+            return models.cookieJar.getOrCreateForParentId(parentId);
+          },
+        },
+        response: {
+          getLatestForRequestId: models.response.getLatestForRequest,
+          getBodyBuffer: models.response.getBodyBuffer,
+        },
+        settings: {
+          get: models.settings.get,
+        },
+      },
+    },
+  };
+}
+
+// This is for insomnia UI to reach out to bundled plugin functions and executed under main process(node integration) context
+// It should only be available to bundled plugins, not for public plugins
+export async function executePluginMainAction({
+  pluginName,
+  actionName,
+  context,
+  params,
+}: {
+  pluginName: string;
+  actionName: string;
+  context?: Record<string, any>;
+  params?: Record<string, any>;
+}): Promise<any> {
+  const bundlePlugins = await getBundlePlugins();
+  const plugin = bundlePlugins.find(p => p.name === pluginName);
+  if (!plugin) {
+    throw new Error(`Plugin ${pluginName} not found`);
+  }
+  const action = plugin.module.unsafePluginMainActions?.find(p => p.name === actionName);
+  if (!action) {
+    throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
+  }
+  const commonContext = getPluginCommonContext({ plugin });
+  return action.action({ ...commonContext, ...context }, params);
 }
 
 export async function getRequestHooks(): Promise<RequestHook[]> {

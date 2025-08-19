@@ -72,7 +72,7 @@ const StatusIconMap: Record<Status, IconProp> = {
 
 // Render a <ToastRegion> in the root of your app.
 export const Toaster = () => (
-  <ToastRegion queue={queue} className="fixed bottom-4 right-4 flex flex-col gap-2 rounded-lg outline-none">
+  <ToastRegion queue={queue} className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 rounded-lg outline-none">
     {({ toast }) => (
       <Toast
         toast={toast}

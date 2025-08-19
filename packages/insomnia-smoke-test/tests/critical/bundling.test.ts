@@ -3,7 +3,12 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('can use node-libcurl, httpsnippet, hidden browser window', async ({ app, page }) => {
+test('can use bundled plugins, node-libcurl, httpsnippet, hidden browser window', async ({ app, page }) => {
+  await page.getByTestId('settings-button').click();
+  await page.getByRole('tab', { name: 'Cloud Credentials' }).click();
+  await page.getByRole('button', { name: 'Create Credential' }).click();
+  await page.getByRole('dialog').press('Escape');
+
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.locator('[data-testid="CodeEditor"]:visible', {
     has: page.locator('.CodeMirror-activeline'),
@@ -32,6 +37,10 @@ test('can use node-libcurl, httpsnippet, hidden browser window', async ({ app, p
   await page.getByRole('button', { name: 'Done' }).click();
 
   await page.getByLabel('Request Collection').getByTestId('sends request with pre-request script').press('Enter');
+  await expect
+    .soft(page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText(`http://127.0.0.1:4010/echo`))
+    .toBeVisible();
+
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
   await page.getByRole('tab', { name: 'Console' }).click();

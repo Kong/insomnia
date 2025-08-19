@@ -72,6 +72,7 @@ export interface AuthTypeOAuth2 {
   username?: string;
   password?: string;
   redirectUrl?: string;
+  useDefaultBrowser?: boolean;
   credentialsInBody?: boolean;
   state?: string;
   code?: string;

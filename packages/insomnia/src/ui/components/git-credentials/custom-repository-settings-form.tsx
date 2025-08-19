@@ -57,7 +57,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
           autoFocus
           defaultValue={uri}
           onChange={e => setUri(e.currentTarget.value)}
-          disabled={Boolean(uri)}
+          disabled={Boolean(defaultValues.uri)}
           placeholder="https://github.com/org/repo.git"
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
@@ -67,7 +67,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
           <Label className="text-start text-sm font-semibold">Author Name</Label>
           <Input
             placeholder="Name"
-            disabled={Boolean(uri)}
+            disabled={Boolean(defaultValues.uri)}
             defaultValue={author?.name}
             className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
           />
@@ -76,7 +76,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
           <Label className="text-start text-sm font-semibold">Author Email</Label>
           <Input
             placeholder="Email"
-            disabled={Boolean(uri)}
+            disabled={Boolean(defaultValues.uri)}
             defaultValue={author?.email}
             className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
           />
@@ -87,7 +87,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
           <Label className="text-start text-sm font-semibold">Username</Label>
           <Input
             placeholder="MyUser"
-            disabled={Boolean(uri)}
+            disabled={Boolean(defaultValues.uri)}
             defaultValue={credentials?.username}
             onChange={e => setCredentials({ ...credentials, username: e.currentTarget.value })}
             className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
@@ -112,7 +112,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
           </Label>
           <Input
             type="password"
-            disabled={Boolean(uri)}
+            disabled={Boolean(defaultValues.uri)}
             onChange={e => setCredentials({ ...credentials, password: e.currentTarget.value })}
             defaultValue={'password' in credentials ? credentials?.password : ''}
             placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
@@ -126,7 +126,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
           username: credentials.username,
         }}
         url={uri || ''}
-        isDisabled={Boolean(uri)}
+        isDisabled={Boolean(defaultValues.uri)}
       />
     </form>
   );

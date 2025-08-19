@@ -120,7 +120,7 @@ export const database = {
     return database.update<T>(doc, false, patches);
   },
 
-  /** duplicate doc and its decendents recursively */
+  /** duplicate doc and its descendents recursively */
   duplicate: async function <T extends BaseModel>(originalDoc: T, patch: Patch<T> = {}) {
     if (db._empty) {
       return _send<T>('duplicate', ...arguments);

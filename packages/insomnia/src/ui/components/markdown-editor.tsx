@@ -1,7 +1,8 @@
 import React, { forwardRef, type ReactElement, useCallback, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
-import { CodeEditor, type CodeEditorHandle } from './codemirror/code-editor';
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+
 import { ErrorBoundary } from './error-boundary';
 import { MarkdownPreview } from './markdown-preview';
 

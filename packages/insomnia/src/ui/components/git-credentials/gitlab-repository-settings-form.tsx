@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
-import { useFetcher } from 'react-router';
 
-import type { GitCredentials } from '../../../models/git-credentials';
-import type { GitRepository } from '../../../models/git-repository';
-import { PromptButton } from '../base/prompt-button';
-import { Icon } from '../icon';
+import type { GitCredentials } from '~/models/git-credentials';
+import type { GitRepository } from '~/models/git-repository';
+import { useGitLabCredentialsFetcher } from '~/routes/git-credentials.gitlab';
+import { useGitLabCompleteSignInFetcher } from '~/routes/git-credentials.gitlab.complete-sign-in';
+import { useInitSignInToGitLabFetcher } from '~/routes/git-credentials.gitlab.init-sign-in';
+import { useGitLabSignOutFetcher } from '~/routes/git-credentials.gitlab.sign-out';
+import { PromptButton } from '~/ui/components/base/prompt-button';
+import { Icon } from '~/ui/components/icon';
+
 import { GitRemoteBranchSelect } from './git-remote-branch-select';
 
 interface Props {
@@ -15,11 +19,11 @@ interface Props {
 
 export const GitLabRepositorySetupFormGroup = (props: Props) => {
   const { onSubmit, uri } = props;
-  const gitlabTokenLoader = useFetcher<GitCredentials>();
+  const gitlabTokenLoader = useGitLabCredentialsFetcher();
 
   useEffect(() => {
     if (!gitlabTokenLoader.data && gitlabTokenLoader.state === 'idle') {
-      gitlabTokenLoader.load('/git-credentials/gitlab');
+      gitlabTokenLoader.load();
     }
   }, [gitlabTokenLoader]);
 
@@ -69,7 +73,7 @@ interface GitLabRepositoryFormProps {
 const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFormProps) => {
   const [error, setError] = useState('');
   const [gitlabUri, setGitlabUri] = useState(uri || '');
-  const signOutFetcher = useFetcher();
+  const signOutFetcher = useGitLabSignOutFetcher();
 
   return (
     <form
@@ -101,7 +105,7 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
         </div>
         <PromptButton
           onClick={() => {
-            signOutFetcher.submit({}, { action: '/git-credentials/gitlab/sign-out', method: 'POST' });
+            signOutFetcher.submit();
           }}
         >
           Disconnect
@@ -143,8 +147,8 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
 const GitLabSignInForm = () => {
   const [error, setError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const initSignInFetcher = useFetcher();
-  const completeSignInFetcher = useFetcher();
+  const initSignInFetcher = useInitSignInToGitLabFetcher();
+  const completeSignInFetcher = useGitLabCompleteSignInFetcher();
 
   return (
     <div className="flex flex-col items-center justify-center border border-solid border-[--hl-sm] p-4">
@@ -154,7 +158,7 @@ const GitLabSignInForm = () => {
         isDisabled={isAuthenticating}
         onPress={() => {
           setIsAuthenticating(true);
-          initSignInFetcher.submit({}, { action: '/git-credentials/gitlab/init-sign-in', method: 'POST' });
+          initSignInFetcher.submit();
         }}
       >
         <Icon icon={['fab', 'gitlab']} />
@@ -185,10 +189,7 @@ const GitLabSignInForm = () => {
                 return;
               }
 
-              completeSignInFetcher.submit(
-                { code, state },
-                { action: '/git-credentials/gitlab/complete-sign-in', method: 'POST', encType: 'application/json' },
-              );
+              completeSignInFetcher.submit({ code, state });
             }
           }}
         >

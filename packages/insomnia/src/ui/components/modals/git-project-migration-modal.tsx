@@ -12,7 +12,9 @@ import {
   TableBody,
   TableHeader,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import { useGitProjectMigrateLegacyInsomniaFolderActionFetcher } from '~/routes/git.migrate-legacy-insomnia-folder-to-file';
 
 import type { WorkspaceScope } from '../../../models/workspace';
 import {
@@ -20,30 +22,23 @@ import {
   scopeToIconMap,
   scopeToLabelMap,
   scopeToTextColorMap,
-} from '../../routes/$organizationId.project.$projectId';
+} from '../../../routes/organization.$organizationId.project.$projectId._index';
 import { Icon } from '../icon';
 
 export const GitProjectMigrationModal: FC<{
   onClose: () => void;
   legacyFile: { name: string; scope: WorkspaceScope; path: string };
 }> = ({ onClose, legacyFile }) => {
-  const { organizationId, projectId } = useParams() as {
-    organizationId: string;
+  const { projectId } = useParams() as {
     projectId: string;
-    workspaceId: string;
   };
 
-  const migrateLegacyWorkspaceFetcher = useFetcher();
+  const migrateLegacyWorkspaceFetcher = useGitProjectMigrateLegacyInsomniaFolderActionFetcher();
 
   const migrateLegacyWorkspace = () => {
-    migrateLegacyWorkspaceFetcher.submit(
-      {},
-      {
-        method: 'POST',
-        action: `/organization/${organizationId}/project/${projectId}/git/migrate-legacy-insomnia-folder-to-file`,
-        encType: 'application/json',
-      },
-    );
+    migrateLegacyWorkspaceFetcher.submit({
+      projectId,
+    });
   };
 
   return (

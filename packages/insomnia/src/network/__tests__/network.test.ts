@@ -1035,7 +1035,7 @@ describe('getSetCookiesFromResponseHeaders', () => {
     const headers = [{ name: 'Set-Cookie', value: 'monster' }];
     expect(getSetCookiesFromResponseHeaders(headers)).toEqual(['monster']);
   });
-  it('gets two case-insenstive set-cookies', () => {
+  it('gets two case-insensitive set-cookies', () => {
     const headers = [
       { name: 'Set-Cookie', value: 'monster' },
       { name: 'set-cookie', value: 'mash' },

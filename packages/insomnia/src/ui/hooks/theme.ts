@@ -1,22 +1,22 @@
 import { useCallback, useState } from 'react';
-import { useAsync } from 'react-use';
+import * as reactUse from 'react-use';
+
+import { useRootLoaderData } from '~/root';
 
 import type { ThemeSettings } from '../../models/settings';
 import { type ColorScheme, getThemes } from '../../plugins';
 import { applyColorScheme, type PluginTheme } from '../../plugins/misc';
-import { useRootLoaderData } from '../routes/root';
 import { useSettingsPatcher } from './use-request';
 
 export const useThemes = () => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const { lightTheme, darkTheme, autoDetectColorScheme, theme, pluginConfig } = settings;
 
   const [themes, setThemes] = useState<PluginTheme[]>([]);
 
-  useAsync(async () => {
+  reactUse.useAsync(async () => {
     const pluginThemes = await getThemes();
     setThemes(pluginThemes.map(({ theme }) => theme));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reload themes if pluginConfig changes
   }, [pluginConfig]);
 
   // Check if the theme is active

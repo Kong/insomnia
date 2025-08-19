@@ -1,15 +1,20 @@
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
-import { useFetcher, useParams, useRevalidator, useRouteLoaderData } from 'react-router';
-import { useLatest } from 'react-use';
+import { useParams, useRevalidator } from 'react-router';
+import * as reactUse from 'react-use';
 
-import { CDN_INVALIDATION_TTL } from '../../../common/constants';
-import type { Organization } from '../../../models/organization';
-import { VCSInstance } from '../../../sync/vcs/insomnia-sync';
-import { insomniaFetch } from '../../../ui/insomniaFetch';
-import { avatarImageCache } from '../../hooks/image-cache';
-import type { ProjectIdLoaderData } from '../../routes/$organizationId.project.$projectId';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
-import { useRootLoaderData } from '../../routes/root';
+import { CDN_INVALIDATION_TTL } from '~/common/constants';
+import type { Organization } from '~/models/organization';
+import { useRootLoaderData } from '~/root';
+import { useClearVaultKeyFetcher } from '~/routes/auth.clear-vault-key';
+import { useProjectIndexLoaderData } from '~/routes/organization.$organizationId.project.$projectId._index';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useInsomniaSyncDataActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.sync-data';
+import { useStorageRulesActionFetcher } from '~/routes/organization.$organizationId.storage-rules';
+import { useOrganizationSyncProjectsActionFetcher } from '~/routes/organization.$organizationId.sync-projects';
+import { useOrganizationSyncActionFetcher } from '~/routes/organization.sync';
+import { VCSInstance } from '~/sync/vcs/insomnia-sync';
+import { avatarImageCache } from '~/ui/hooks/image-cache';
+import { insomniaFetch } from '~/ui/insomniaFetch';
 
 const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];
@@ -99,21 +104,21 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     workspaceId: string;
   };
 
-  const { userSession } = useRootLoaderData();
-  const projectData = useRouteLoaderData('/project/:projectId') as ProjectIdLoaderData | null;
-  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
+  const { userSession } = useRootLoaderData()!;
+  const projectData = useProjectIndexLoaderData();
+  const workspaceData = useWorkspaceLoaderData();
   const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
-  const syncOrganizationsFetcher = useFetcher();
-  const syncStorageRuleFetcher = useFetcher();
-  const syncProjectsFetcher = useFetcher();
-  const syncDataFetcher = useFetcher();
-  const clearVaultKeyFetcher = useFetcher();
+  const { submit: syncOrganizationsSubmit } = useOrganizationSyncActionFetcher();
+  const { submit: syncStorageRulesSubmit } = useStorageRulesActionFetcher();
+  const { submit: syncProjectsSubmit } = useOrganizationSyncProjectsActionFetcher();
+  const { submit: syncDataSubmit } = useInsomniaSyncDataActionFetcher();
+  const { submit: clearVaultKeySubmit } = useClearVaultKeyFetcher();
 
-  const latestProjectId = useLatest(projectId);
-  const latestWorkspaceId = useLatest(workspaceId);
-  const latestRemoteId = useLatest(remoteId);
+  const latestProjectId = reactUse.useLatest(projectId);
+  const latestWorkspaceId = reactUse.useLatest(workspaceId);
+  const latestRemoteId = reactUse.useLatest(remoteId);
 
   // Update presence when the user switches org, projects, workspaces
   useEffect(() => {
@@ -189,33 +194,15 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               if (event.avatar) {
                 window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
               }
-              const submit = syncOrganizationsFetcher.submit;
-              submit(
-                {},
-                {
-                  action: '/organization/sync',
-                  method: 'POST',
-                },
-              );
+              syncOrganizationsSubmit();
             } else if (event.type === 'StorageRuleChanged' && event.team && event.team.includes('org_')) {
-              const orgId = event.team;
-              const submit = syncStorageRuleFetcher.submit;
-              submit(
-                {},
-                {
-                  action: `/organization/${orgId}/storage-rules`,
-                  method: 'POST',
-                },
-              );
+              syncStorageRulesSubmit({
+                organizationId: event.team,
+              });
             } else if (event.type === 'TeamProjectChanged' && event.team === organizationId) {
-              const submit = syncProjectsFetcher.submit;
-              submit(
-                {},
-                {
-                  action: `/organization/${organizationId}/sync-projects`,
-                  method: 'POST',
-                },
-              );
+              syncProjectsSubmit({
+                organizationId,
+              });
             } else if (
               event.type === 'FileDeleted' &&
               event.team === organizationId &&
@@ -230,18 +217,10 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               const organizations = JSON.parse(
                 localStorage.getItem(`${accountId}:organizations`) || '[]',
               ) as Organization[];
-              const submit = clearVaultKeyFetcher.submit;
-              submit(
-                {
-                  organizations: organizations?.map(org => org.id) || [],
-                  sessionId: event.sessionId,
-                },
-                {
-                  action: '/auth/clear-vault-key',
-                  method: 'POST',
-                  encType: 'application/json',
-                },
-              );
+              clearVaultKeySubmit({
+                organizations: organizations?.map(org => org.id) || [],
+                sessionId: event.sessionId,
+              });
             } else if (
               (event.type === 'FileChanged' || event.type === 'BranchDeleted') &&
               event.team === organizationId &&
@@ -250,14 +229,11 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
             ) {
               // If the file changed is the current workspace, we need to sync it
               if (isSameWorkspaceWithRemote(latestWorkspaceId.current, event.file)) {
-                const submit = syncDataFetcher.submit;
-                submit(
-                  {},
-                  {
-                    method: 'POST',
-                    action: `/organization/${organizationId}/project/${latestProjectId.current}/workspace/${latestWorkspaceId.current}/insomnia-sync/sync-data`,
-                  },
-                );
+                syncDataSubmit({
+                  organizationId: organizationId,
+                  projectId: latestProjectId.current,
+                  workspaceId: latestWorkspaceId.current,
+                });
               } else if (event.type === 'FileChanged' && !latestWorkspaceId.current) {
                 // FileChanged could be a new file has been added, we need to revalidate the workspace list
                 revalidate();
@@ -277,16 +253,16 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     }
     return;
   }, [
-    clearVaultKeyFetcher.submit,
+    clearVaultKeySubmit,
     latestProjectId,
     latestRemoteId,
     latestWorkspaceId,
     organizationId,
     revalidate,
-    syncDataFetcher.submit,
-    syncOrganizationsFetcher.submit,
-    syncProjectsFetcher.submit,
-    syncStorageRuleFetcher.submit,
+    syncDataSubmit,
+    syncOrganizationsSubmit,
+    syncProjectsSubmit,
+    syncStorageRulesSubmit,
     userSession.accountId,
     userSession.id,
   ]);

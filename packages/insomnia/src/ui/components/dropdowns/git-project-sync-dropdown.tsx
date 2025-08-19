@@ -1,5 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Collection,
@@ -12,28 +12,26 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRevalidator } from 'react-router';
-import { useInterval } from 'react-use';
+import { useParams, useRevalidator } from 'react-router';
+import * as reactUse from 'react-use';
+
+import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
+import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
+import { useGitProjectPushActionFetcher } from '~/routes/git.push';
+import { useGitProjectRepoFetcher } from '~/routes/git.repo';
+import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
 
 import type { GitRepository } from '../../../models/git-repository';
+import { GitVCSOperationErrors } from '../../../sync/git/git-vcs';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import type { MergeConflict } from '../../../sync/types';
-import {
-  checkGitCanPush,
-  checkGitChanges,
-  continueMerge,
-  type GitFetchLoaderData,
-  type GitRepoLoaderData,
-  type GitStatusResult,
-  pullFromGitRemote,
-  type PushToGitRemoteResult,
-} from '../../routes/$organizationId.project.$projectId.git';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { GitProjectBranchesModal } from '../modals/git-project-branches-modal';
 import { GitProjectLogModal } from '../modals/git-project-log-modal';
 import { GitProjectMigrationModal } from '../modals/git-project-migration-modal';
-import { GitProjectStagingModal } from '../modals/git-project-staging-modal';
+import { GitProjectStagingModal, type StagingModalMode, StagingModalModes } from '../modals/git-project-staging-modal';
+import { GitPullRequiredModal } from '../modals/git-pull-required-modal';
 import { GitProjectRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncMergeModal } from '../modals/sync-merge-modal';
 import { showToast } from '../toast-notification';
@@ -51,20 +49,24 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   const [isGitBranchesModalOpen, setIsGitBranchesModalOpen] = useState(false);
   const [isGitLogModalOpen, setIsGitLogModalOpen] = useState(false);
   const [isGitStagingModalOpen, setIsGitStagingModalOpen] = useState(false);
+  const [isGitPullRequiredModalOpen, setIsGitPullRequiredModalOpen] = useState(false);
+  const [stagingMode, setStagingMode] = useState<StagingModalMode>(StagingModalModes.default);
   const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
+  const prevHadPullError = useRef(false);
 
-  const gitPushFetcher = useFetcher<PushToGitRemoteResult>();
-  const gitCheckoutFetcher = useFetcher();
-  const gitRepoDataFetcher = useFetcher<GitRepoLoaderData>();
-  const gitFetchFetcher = useFetcher<GitFetchLoaderData>();
-  const gitIntervalFetchFetcher = useFetcher<GitFetchLoaderData>();
-  const gitStatusFetcher = useFetcher<GitStatusResult>();
+  const [pushCount, setPushCount] = useState(0);
+  const gitPushFetcher = useGitProjectPushActionFetcher({ key: `push-${pushCount}` });
+  const gitCheckoutFetcher = useGitProjectCheckoutBranchActionFetcher();
+  const gitRepoDataFetcher = useGitProjectRepoFetcher();
+  const gitFetchFetcher = useGitProjectFetchActionFetcher();
+  const gitIntervalFetchFetcher = useGitProjectFetchActionFetcher();
+  const gitStatusFetcher = useGitProjectStatusActionFetcher();
 
   const [isPulling, setIsPulling] = useState(false);
   const [operationError, setOperationError] = useState<string | null>(null);
 
   const providerName = getOauth2FormatName(gitRepository?.credentials);
-
+  const { revalidate } = useRevalidator();
   const icon: IconProp = useMemo(() => {
     if (providerName === 'github') {
       return ['fab', 'github'];
@@ -76,8 +78,9 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
   useEffect(() => {
     if (gitRepository?.uri && gitRepository?._id && gitRepoDataFetcher.state === 'idle' && !gitRepoDataFetcher.data) {
-      // file://./../../routes/git-actions.tsx#gitRepoLoader
-      gitRepoDataFetcher.load(`/organization/${organizationId}/project/${projectId}/git/repo`);
+      gitRepoDataFetcher.load({
+        projectId,
+      });
     }
   }, [gitRepoDataFetcher, gitRepository?.uri, gitRepository?._id, organizationId, projectId]);
 
@@ -97,6 +100,12 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
       gitRepoDataFetcher.data,
   );
 
+  const fetchStatus = () => {
+    gitStatusFetcher.submit({
+      projectId,
+    });
+  };
+
   useEffect(() => {
     if (
       gitRepoDataFetcher.data &&
@@ -109,53 +118,54 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
   useEffect(() => {
     if (shouldFetchGitRepoStatus) {
-      // file://./../../routes/git-actions.tsx#gitStatusAction
-      gitStatusFetcher.submit(
-        {},
-        {
-          action: `/organization/${organizationId}/project/${projectId}/git/status`,
-          method: 'post',
-        },
-      );
+      gitStatusFetcher.submit({
+        projectId,
+      });
     }
-  }, [gitStatusFetcher, organizationId, projectId, shouldFetchGitRepoStatus]);
+  }, [gitStatusFetcher, projectId, shouldFetchGitRepoStatus]);
 
   useEffect(() => {
-    // update committed state on unmount
-    // this is a sync action which is responsible for cheaply updating a piece of state representing the existence of a diff
-    // ideally this would not be needed and a diff would be cheaper to find.
-    return () => {
-      checkGitChanges(projectId);
-    };
-  }, [projectId]);
+    const data = gitPushFetcher.data;
+    if (!data) return;
 
-  useEffect(() => {
-    if (shouldFetchGitRepoStatus) {
-      checkGitCanPush(projectId);
-    }
-  }, [gitRepoDataFetcher.data, gitRepository?._id, gitRepository?.uri, projectId, shouldFetchGitRepoStatus]);
+    const errors = data.errors ?? [];
 
-  useEffect(() => {
-    const errors = [...(gitPushFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
+      setPushCount(prev => prev + 1);
+
+      if (errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
+        if (!prevHadPullError.current && !isGitPullRequiredModalOpen && !isPulling) {
+          setIsGitPullRequiredModalOpen(true);
+          prevHadPullError.current = false;
+        }
+        return;
+      }
+
+      prevHadPullError.current = false;
+
+      // Other errors
       showToast({
         icon,
-        title: `Push failed`,
+        title: 'Push failed',
         status: 'error',
       });
       setOperationError(errors.join('\n'));
-    } else if (gitPushFetcher.data && 'success' in gitPushFetcher.data && gitPushFetcher.data.success) {
+      return;
+    }
+
+    // Success
+    if ('success' in data && data.success && !isPulling) {
       showToast({
         icon,
-        title: `Push completed`,
+        title: 'Push completed',
         status: 'success',
       });
     }
-  }, [gitPushFetcher.data, icon]);
+  }, [gitPushFetcher.data, icon, isGitPullRequiredModalOpen, isPulling]);
 
   useEffect(() => {
     const gitRepoDataErrors =
-      gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data ? gitRepoDataFetcher.data.errors : [];
+      gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data ? (gitRepoDataFetcher.data.errors ?? []) : [];
     const errors = [...gitRepoDataErrors];
     if (errors.length > 0) {
       setOperationError(errors.join('\n'));
@@ -205,15 +215,10 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
       title: `Push started`,
     });
 
-    gitPushFetcher.submit(
-      {
-        force: `${force}`,
-      },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/git/push`,
-        method: 'post',
-      },
-    );
+    gitPushFetcher.submit({
+      projectId,
+      force,
+    });
   }
 
   const isPushing = gitPushFetcher.state !== 'idle';
@@ -231,7 +236,132 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
       ? gitRepoDataFetcher.data
       : { branches: [], branch: '' };
 
-  const { revalidate } = useRevalidator();
+  const handlePull = async () => {
+    try {
+      setIsPulling(true);
+      setOperationError(null);
+      showToast({
+        icon,
+        title: `Pull started`,
+      });
+
+      const pullResult = await window.main.git.pullFromGitRemote({ projectId });
+
+      if (
+        'errors' in pullResult &&
+        pullResult.errors &&
+        pullResult.errors.includes(GitVCSOperationErrors.UncommittedChangesError)
+      ) {
+        setIsPulling(false);
+        setStagingMode(StagingModalModes.commitAndPull);
+        setIsGitStagingModalOpen(true);
+      } else if ('errors' in pullResult && pullResult.errors) {
+        showToast({
+          icon,
+          title: `Pull failed`,
+          status: 'error',
+        });
+        setOperationError(pullResult.errors.join('\n'));
+        setIsPulling(false);
+
+        return {
+          success: false,
+        };
+      } else if ('conflicts' in pullResult) {
+        showToast({
+          icon,
+          title: 'Merge conflicts detected',
+          status: 'warning',
+        });
+
+        showModal(SyncMergeModal, {
+          conflicts: pullResult.conflicts,
+          labels: pullResult.labels,
+          handleDone: (conflicts?: MergeConflict[]) => {
+            if (Array.isArray(conflicts) && conflicts.length > 0) {
+              setIsPulling(true);
+              window.main.git
+                .continueMerge({
+                  projectId,
+                  handledMergeConflicts: conflicts,
+                  commitMessage: pullResult.commitMessage,
+                  commitParent: pullResult.commitParent,
+                })
+                .then(() => {
+                  showToast({
+                    icon,
+                    title: 'Resolved merge conflicts, pull completed',
+                    status: 'success',
+                  });
+
+                  return { success: true };
+                })
+                .catch(error => {
+                  showToast({
+                    icon,
+                    title: 'Failed to resolve merge conflicts',
+                    description: error.message || 'An error occurred during merge.',
+                    status: 'error',
+                  });
+
+                  return { success: false };
+                })
+                .finally(() => {
+                  setIsPulling(false);
+                  revalidate();
+                });
+            } else {
+              // user aborted merge, do nothing
+            }
+          },
+          handleClose: () => {
+            setIsGitStagingModalOpen(false);
+            setIsPulling(false);
+            showToast({
+              icon,
+              title: `Merge aborted`,
+              status: 'error',
+            });
+            revalidate();
+            return { success: false };
+          },
+        });
+
+        return {
+          success: false,
+        };
+      } else {
+        setIsPulling(false);
+        showToast({
+          icon,
+          title: `Pull completed`,
+          status: 'success',
+        });
+        revalidate();
+
+        return {
+          success: false,
+        };
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An error occurred while pulling';
+      setOperationError(message);
+
+      showToast({
+        icon,
+        title: `Pull failed`,
+        status: 'error',
+      });
+
+      return {
+        success: false,
+      };
+    }
+
+    return { success: true };
+  };
+
+  const status = gitStatusFetcher.data?.status;
 
   const currentBranchActions: {
     id: string;
@@ -244,7 +374,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
         {
           id: 'commit',
           icon: 'check',
-          isDisabled: false,
+          isDisabled: status?.localChanges === 0,
           label: 'Commit',
           action: () => setIsGitStagingModalOpen(true),
         },
@@ -253,66 +383,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
           icon: isPulling ? 'refresh' : 'cloud-download',
           label: 'Pull',
           isDisabled: false,
-          action: async () => {
-            try {
-              setIsPulling(true);
-              setOperationError(null);
-              showToast({
-                icon,
-                title: `Pull started`,
-              });
-
-              const pullResult = await pullFromGitRemote({ projectId });
-
-              if ('errors' in pullResult && pullResult.errors) {
-                showToast({
-                  icon,
-                  title: `Pull failed`,
-                  status: 'error',
-                });
-                setOperationError(pullResult.errors.join('\n'));
-                setIsPulling(false);
-              } else if ('conflicts' in pullResult) {
-                showModal(SyncMergeModal, {
-                  conflicts: pullResult.conflicts,
-                  labels: pullResult.labels,
-                  handleDone: (conflicts?: MergeConflict[]) => {
-                    if (Array.isArray(conflicts) && conflicts.length > 0) {
-                      setIsPulling(true);
-                      continueMerge({
-                        projectId,
-                        handledMergeConflicts: conflicts,
-                        commitMessage: pullResult.commitMessage,
-                        commitParent: pullResult.commitParent,
-                      }).finally(() => {
-                        setIsPulling(false);
-                        revalidate();
-                      });
-                    } else {
-                      // user aborted merge, do nothing
-                    }
-                  },
-                });
-              } else {
-                setIsPulling(false);
-                showToast({
-                  icon,
-                  title: `Pull completed`,
-                  status: 'success',
-                });
-                revalidate();
-              }
-            } catch (err) {
-              const message = err instanceof Error ? err.message : 'An error occurred while pulling';
-              setOperationError(message);
-
-              showToast({
-                icon,
-                title: `Pull failed`,
-                status: 'error',
-              });
-            }
-          },
+          action: async () => handlePull(),
         },
         {
           id: 'push',
@@ -339,13 +410,9 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
               icon,
               title: `Fetch started`,
             });
-            gitFetchFetcher.submit(
-              {},
-              {
-                action: `/organization/${organizationId}/project/${projectId}/git/fetch`,
-                method: 'post',
-              },
-            );
+            gitFetchFetcher.submit({
+              projectId,
+            });
           },
         },
       ]
@@ -357,47 +424,31 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     icon: IconName;
     isDisabled?: boolean;
     action: () => void;
-  }[] = isSynced
-    ? [
-        {
-          id: 'repository-settings',
-          label: 'Repository Settings',
-          isDisabled: false,
-          icon: 'wrench',
-          action: () => setIsGitRepoSettingsModalOpen(true),
-        },
-        {
-          id: 'branches',
-          label: 'Branches',
-          isDisabled: false,
-          icon: 'code-branch',
-          action: () => setIsGitBranchesModalOpen(true),
-        },
-      ]
-    : [
-        {
-          id: 'connect',
-          label: 'Connect Repository',
-          icon: 'plug',
-          isDisabled: false,
-          action: () => setIsGitRepoSettingsModalOpen(true),
-        },
-      ];
+  }[] = [
+    {
+      id: 'repository-settings',
+      label: 'Repository Settings',
+      isDisabled: false,
+      icon: 'wrench',
+      action: () => setIsGitRepoSettingsModalOpen(true),
+    },
+    {
+      id: 'branches',
+      label: 'Branches',
+      isDisabled: false,
+      icon: 'code-branch',
+      action: () => setIsGitBranchesModalOpen(true),
+    },
+  ];
 
-  useInterval(
+  reactUse.useInterval(
     () => {
-      gitIntervalFetchFetcher.submit(
-        {},
-        {
-          action: `/organization/${organizationId}/project/${projectId}/git/fetch`,
-          method: 'post',
-        },
-      );
+      gitIntervalFetchFetcher.submit({
+        projectId,
+      });
     },
     1000 * 60 * 5,
   );
-
-  const status = gitStatusFetcher.data?.status;
 
   const branchesActionList: {
     id: string;
@@ -406,7 +457,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     isDisabled?: boolean;
     isActive: boolean;
     action: () => void;
-  }[] = isSynced
+  }[] = branches
     ? branches.map(branch => ({
         id: branch,
         label: branch,
@@ -417,16 +468,10 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
           showToast({
             title: `Switching to branch ${branch}`,
           });
-          // file://./../../routes/git-actions.tsx#gitCheckoutAction
-          gitCheckoutFetcher.submit(
-            {
-              branch,
-            },
-            {
-              action: `/organization/${organizationId}/project/${projectId}/git/branch/checkout`,
-              method: 'post',
-            },
-          );
+          gitCheckoutFetcher.submit({
+            projectId,
+            branch,
+          });
         },
       }))
     : [];
@@ -464,19 +509,19 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
           </div>
         </div>
       ) : (
-        <MenuTrigger>
+        <MenuTrigger
+          onOpenChange={isOpen => {
+            isOpen && setOperationError(null);
+          }}
+        >
           <TooltipTrigger
             delay={0}
             onOpenChange={isOpen => {
               const shouldFetchGitRepoStatus = isOpen && gitStatusFetcher.state === 'idle';
               shouldFetchGitRepoStatus &&
-                gitStatusFetcher.submit(
-                  {},
-                  {
-                    action: `/organization/${organizationId}/project/${projectId}/git/status`,
-                    method: 'post',
-                  },
-                );
+                gitStatusFetcher.submit({
+                  projectId,
+                });
             }}
           >
             <Button
@@ -586,7 +631,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
           onHide={() => setIsGitRepoSettingsModalOpen(false)}
         />
       )}
-      {isGitBranchesModalOpen && gitRepository && (
+      {isGitBranchesModalOpen && gitRepository && currentBranch && (
         <GitProjectBranchesModal
           onClose={() => setIsGitBranchesModalOpen(false)}
           currentBranch={currentBranch}
@@ -595,13 +640,62 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
       )}
       {isGitLogModalOpen && gitRepository && <GitProjectLogModal onClose={() => setIsGitLogModalOpen(false)} />}
       {isGitStagingModalOpen && gitRepository && (
-        <GitProjectStagingModal onClose={() => setIsGitStagingModalOpen(false)} />
+        <GitProjectStagingModal
+          mode={stagingMode}
+          onPullAfterCommit={async () => {
+            setIsGitStagingModalOpen(false);
+            setStagingMode(StagingModalModes.default);
+            await handlePull();
+            fetchStatus();
+          }}
+          onPushAfterPull={async () => {
+            setIsGitPullRequiredModalOpen(false);
+
+            const pullResult = await handlePull();
+
+            if (pullResult && pullResult.success) {
+              handlePush({ force: false });
+            }
+
+            prevHadPullError.current = true;
+            fetchStatus();
+          }}
+          onClose={() => {
+            prevHadPullError.current = false;
+
+            setIsGitStagingModalOpen(false);
+            setStagingMode(StagingModalModes.default);
+            fetchStatus();
+          }}
+        />
       )}
       {isMigrationModalOpen && gitRepository && legacyInsomniaWorkspace && (
         <GitProjectMigrationModal
           legacyFile={legacyInsomniaWorkspace}
           onClose={() => {
             setIsMigrationModalOpen(false);
+          }}
+        />
+      )}
+      {isGitPullRequiredModalOpen && (
+        <GitPullRequiredModal
+          title="Pull Required"
+          message="Your local branch is behind the remote. Pull the latest changes before pushing."
+          okLabel="Pull & Push"
+          onConfirm={async () => {
+            setIsGitPullRequiredModalOpen(false);
+            const pullResult = await handlePull();
+
+            if (pullResult && pullResult.success) {
+              handlePush({ force: false });
+            }
+
+            prevHadPullError.current = true;
+            fetchStatus();
+          }}
+          onClose={() => {
+            prevHadPullError.current = false;
+            setIsGitPullRequiredModalOpen(false);
           }}
         />
       )}

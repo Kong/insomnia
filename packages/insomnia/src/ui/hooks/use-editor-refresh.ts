@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
-import { usePrevious } from 'react-use';
+import * as reactUse from 'react-use';
 
-import { useRootLoaderData } from '../routes/root';
+import { useRootLoaderData } from '~/root';
 
 export const useEditorRefresh = (callback: () => void) => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const { showVariableSourceAndValue, nunjucksPowerUserMode } = settings;
-  const previousShowVariableSourceAndValue = usePrevious(showVariableSourceAndValue);
-  const previousNunjucksPowerUserMode = usePrevious(nunjucksPowerUserMode);
+  const previousShowVariableSourceAndValue = reactUse.usePrevious(showVariableSourceAndValue);
+  const previousNunjucksPowerUserMode = reactUse.usePrevious(nunjucksPowerUserMode);
 
   useEffect(() => {
     if (previousShowVariableSourceAndValue === undefined || previousNunjucksPowerUserMode === undefined) {
