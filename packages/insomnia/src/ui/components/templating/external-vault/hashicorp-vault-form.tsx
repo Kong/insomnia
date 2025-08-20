@@ -83,7 +83,10 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
           <div className="form-row">
             <div className="form-control">
               <label>
-                Secret Engine Name:
+                Secret Mount Path:
+                <HelpTooltip className="space-left">
+                  The path where the secrets engine is mounted. It is displayed as the engine name in the UI.
+                </HelpTooltip>
                 <input
                   name="secretEnginePath"
                   defaultValue={secretEnginePath}
@@ -96,6 +99,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
             <div className="form-control">
               <label>
                 Secret Path:
+                <HelpTooltip className="space-left">The path of the secret to read</HelpTooltip>
                 <input
                   name="secretName"
                   defaultValue={secretName}
