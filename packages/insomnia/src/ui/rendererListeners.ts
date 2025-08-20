@@ -74,3 +74,5 @@ window.main.on('reload-plugins', async () => {
 window.main.on('toggle-preferences-shortcuts', () => {
   showModal(SettingsModal, { tab: TAB_INDEX_SHORTCUTS });
 });
+
+window.main.onMemoryDump();

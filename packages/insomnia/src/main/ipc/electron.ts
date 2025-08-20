@@ -152,7 +152,8 @@ export type RendererOnChannels =
   | 'toggle-preferences'
   | 'toggle-sidebar'
   | 'updaterStatus'
-  | 'mainWindowFocusChange';
+  | 'mainWindowFocusChange'
+  | 'create-memory-dump';
 
 export const ipcMainOn = (
   channel: MainOnChannels,

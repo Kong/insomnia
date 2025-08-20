@@ -175,6 +175,11 @@ const main: Window['main'] = {
   },
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
+  onMemoryDump: () => {
+    ipcRenderer.on('create-memory-dump', (_event, filePath: string) => {
+      process.takeHeapSnapshot(filePath);
+    });
+  },
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {

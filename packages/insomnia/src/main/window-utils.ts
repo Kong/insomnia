@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import * as os from 'node:os';
 import path from 'node:path';
 
+import { format } from 'date-fns';
 import {
   app,
   BrowserWindow,
@@ -664,6 +665,27 @@ export function createWindow(): ElectronBrowserWindow {
           }
 
           w.webContents.send('reload-plugins');
+        },
+      },
+      {
+        label: 'Create memory dump',
+        click: () => {
+          const directory = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
+          const dumpDirectory = path.join(directory, 'memory-dump');
+
+          if (!fs.existsSync(dumpDirectory)) {
+            fs.mkdirSync(dumpDirectory, { recursive: true });
+          }
+
+          const timeStr = format(new Date(), 'yyyy-MM-dd-HH-mm');
+          const res = process.takeHeapSnapshot(
+            `${dumpDirectory}/insomnia-main-${getAppVersion()}-${timeStr}.heapsnapshot`,
+          );
+          mainBrowserWindow.webContents.send(
+            'create-memory-dump',
+            `${dumpDirectory}/insomnia-renderer-${getAppVersion()}-${timeStr}.heapsnapshot`,
+          );
+          console.log('dump created:', res);
         },
       },
     ],

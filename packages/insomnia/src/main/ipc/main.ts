@@ -103,6 +103,7 @@ export interface RendererToMainBridgeAPI {
   completeExecutionStep: (options: { requestId: string }) => void;
   updateLatestStepName: (options: { requestId: string; stepName: string }) => void;
   extractJsonFileFromPostmanDataDumpArchive: (archivePath: string) => Promise<any>;
+  onMemoryDump: () => void;
 }
 
 export function registerMainHandlers() {
