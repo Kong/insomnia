@@ -77,7 +77,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             <div>
               <p>The request failed due to an unhandled error:</p>
               <code className="wide selectable">
-                <pre>{searchParams.get('error')}</pre>
+                <pre className="w-full overflow-y-auto text-wrap" >{searchParams.get('error')}</pre>
               </code>
             </div>
           ),
