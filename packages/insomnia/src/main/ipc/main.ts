@@ -15,8 +15,6 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
-import { isDevelopment } from '~/common/constants';
-
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
 import type { PluginTemplateTag } from '../../templating/types';
@@ -175,11 +173,7 @@ export function registerMainHandlers() {
         lintProcess.kill();
       }
 
-      const lintProcessPath = isDevelopment()
-        ? path.join(__dirname, '..', '..', 'entry.lint-process.min.js')
-        : path.join(__dirname, 'entry.lint-process.min.js');
-
-      lintProcess = utilityProcess.fork(lintProcessPath);
+      lintProcess = utilityProcess.fork(path.join(__dirname, 'main/lint-process.mjs'));
 
       let process: UtilityProcess | null = lintProcess!;
 

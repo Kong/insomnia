@@ -91,19 +91,6 @@ export default async function build(options: Options) {
     ],
   };
 
-  const lintProcessBuildOptions: BuildOptions = {
-    entryPoints: ['./src/main/entry.lint-process.ts'],
-    outfile: path.join(outdir, 'entry.lint-process.min.js'),
-    bundle: true,
-    platform: 'node',
-    sourcemap: true,
-    format: 'cjs',
-    define: env,
-    loader: {
-      '.node': 'copy',
-    },
-  };
-
   let electronProcess: ChildProcess;
   const startElectron = () => {
     electronProcess = spawn('electron', [`--inspect=${inspectPort}`, '.'], {
@@ -150,10 +137,6 @@ export default async function build(options: Options) {
       ...mainBuildOptions,
       plugins: [restartElectronPlugin('main')],
     });
-    const lintProcessContext = await esbuild.context({
-      ...lintProcessBuildOptions,
-      plugins: [restartElectronPlugin('lint-process')],
-    });
     const hiddenPreloadContext = await esbuild.context({
       ...hiddenBrowserWindowPreloadBuildOptions,
       plugins: [restartElectronPlugin('hidden-browser-window-preload')],
@@ -176,16 +159,14 @@ export default async function build(options: Options) {
     const preloadWatch = await preloadContext.watch();
     const hiddenWindowWatch = await hiddenBrowserWindowContext.watch();
     const mainWatch = await mainContext.watch();
-    const lintProcessWatch = await lintProcessContext.watch();
     const hiddenWindowPreloadWatch = await hiddenPreloadContext.watch();
-    return Promise.all([preloadWatch, hiddenWindowPreloadWatch, mainWatch, hiddenWindowWatch, lintProcessWatch]);
+    return Promise.all([preloadWatch, hiddenWindowPreloadWatch, mainWatch, hiddenWindowWatch]);
   }
   const preload = esbuild.build(preloadBuildOptions);
-  const lintProcess = esbuild.build(lintProcessBuildOptions);
   const hiddenBrowserWindow = esbuild.build(hiddenBrowserWindowBuildOptions);
   const hiddenBrowserWindowPreload = esbuild.build(hiddenBrowserWindowPreloadBuildOptions);
   const main = esbuild.build(mainBuildOptions);
-  return Promise.all([main, preload, hiddenBrowserWindow, hiddenBrowserWindowPreload, lintProcess]).catch(err => {
+  return Promise.all([main, preload, hiddenBrowserWindow, hiddenBrowserWindowPreload]).catch(err => {
     console.error('[Build] Build failed:', err);
   });
 }
