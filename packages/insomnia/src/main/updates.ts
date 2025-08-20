@@ -111,12 +111,16 @@ export const init = async () => {
       })
       .then(returnValue => {
         if (returnValue.response === 0) {
-          const updateExe = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');
-          spawn(updateExe, ['--processStartAndWait', 'Insomnia.exe'], {
-            detached: true,
-            windowsHide: true,
-          });
-          app.quit();
+          if (process.platform === 'win32') {
+            const updateExe = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');
+            spawn(updateExe, ['--processStartAndWait', 'Insomnia.exe'], {
+              detached: true,
+              windowsHide: true,
+            });
+            app.quit();
+          } else {
+            autoUpdater.quitAndInstall();
+          }
         }
       });
   });
