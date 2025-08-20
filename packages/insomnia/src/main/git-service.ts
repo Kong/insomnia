@@ -140,6 +140,10 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(project.gitRepositoryId, 'Project is not linked to a git repository');
+  invariant(
+    project.gitRepositoryId && project.gitRepositoryId !== 'empty',
+    'Project is not linked to a git repository',
+  );
   const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
   invariant(gitRepository, 'Git Repository not found');
   return gitRepository;
@@ -2040,6 +2044,20 @@ const getRepositoryDirectoryTree = async ({
   repositoryTree: FileTree;
   folderList: Record<string, string[]>;
 }> => {
+  const project = await models.project.getById(projectId);
+
+  if (project?.gitRepositoryId === 'empty') {
+    return {
+      repositoryTree: {
+        id: '',
+        name: 'Repository',
+        type: 'root',
+        children: [],
+      },
+      folderList: {},
+    };
+  }
+
   const gitRepository = await getGitRepository({ projectId });
   const fs = await getGitFSClient({ projectId, gitRepositoryId: gitRepository._id });
 
