@@ -4,6 +4,7 @@ import { href, redirect, useFetcher } from 'react-router';
 import { projectLock } from '~/common/project';
 import * as models from '~/models';
 import type { GitCredentials, OauthProviderName } from '~/models/git-repository';
+import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
 import { SegmentEvent } from '~/ui/analytics';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
@@ -48,7 +49,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
         const project = await models.project.create({
           name: newProjectData.name,
           parentId: organizationId,
-          gitRepositoryId: 'empty',
+          gitRepositoryId: EMPTY_GIT_PROJECT_ID,
         });
 
         return project._id;
