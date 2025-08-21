@@ -90,11 +90,18 @@ async function decryptProjectKeys(
   return decrypted;
 }
 
+export interface StartInviteProgress {
+  current: number;
+  total: number;
+  message: string;
+}
+
 interface StartInviteParams {
   teamIds: string[];
   organizationId: string;
   emails: string[];
   roleId: string;
+  onProgress?: (progress: StartInviteProgress) => void;
 }
 
 interface ProjectKey {
@@ -132,9 +139,18 @@ interface CollaboratorInstructionItem {
 
 type CollaboratorInstruction = Record<string, CollaboratorInstructionItem>;
 
-export async function startInvite({ emails, teamIds, organizationId, roleId }: StartInviteParams) {
+export async function startInvite({ emails, teamIds, organizationId, roleId, onProgress }: StartInviteParams) {
   const sessionId = await getCurrentSessionId();
   invariant(sessionId, 'Session ID is required');
+
+  onProgress?.({
+    current: 0,
+    total: 5,
+    message: 'Initializing invite process...'
+  });
+
+   // TODO remove
+  await new Promise(resolve => setTimeout(resolve, 500));
 
   // we are merging these endpoints into one as it has grown onto several types over time.
   // this way, we can also offload the complex logic to the API
@@ -146,6 +162,15 @@ export async function startInvite({ emails, teamIds, organizationId, roleId }: S
     onlyResolveOnSuccess: true,
   });
 
+  onProgress?.({
+    current: 1,
+    total: 5,
+    message: 'Fetching and decrypting project keys...'
+  });
+
+   // TODO remove
+  await new Promise(resolve => setTimeout(resolve, 500));
+
   const myKeysInfo = await insomniaFetch<ResponseGetMyProjectKeys>({
     method: 'GET',
     path: `/v1/organizations/${organizationId}/my-project-keys`,
@@ -156,6 +181,15 @@ export async function startInvite({ emails, teamIds, organizationId, roleId }: S
   let memberKeys: MemberProjectKey[] = [];
   const keyMap: Record<string, string> = {};
   const projectKeys = await decryptProjectKeys(await getPrivateKey(), myKeysInfo.projectKeys || []);
+
+  onProgress?.({
+    current: 2,
+    total: 5,
+    message: 'Processing member keys...'
+  });
+
+   // TODO remove
+  await new Promise(resolve => setTimeout(resolve, 500));
 
   if (myKeysInfo.members?.length) {
     projectKeys.reduce((keyMap: Record<string, string>, key: DecryptedProjectKey) => {
@@ -187,12 +221,21 @@ export async function startInvite({ emails, teamIds, organizationId, roleId }: S
   const keys: Record<string, Record<string, CollaboratorInviteKey>> = {};
 
   if (projectKeys.length) {
+    const totalEncryptions = accountIds.length * projectKeys.length;
+    let currentEncryption = 0;
+
+    onProgress?.({
+      current: 3,
+      total: 5,
+      message: `Re-encrypting keys (0/${totalEncryptions})...`
+    });
+
     for (const acctId in instruction) {
       if (!keys[acctId]) {
         keys[acctId] = {};
       }
 
-      projectKeys.forEach(key => {
+      for (const key of projectKeys) {
         const pubKey = instruction[acctId].publicKey;
         const newKey = buildMemberProjectKey(acctId, key.projectId, pubKey, key.symmetricKey);
 
@@ -203,9 +246,30 @@ export async function startInvite({ emails, teamIds, organizationId, roleId }: S
             encKey: newKey.encSymmetricKey,
           };
         }
-      });
+
+        currentEncryption++;
+        onProgress?.({
+          current: 3,
+          total: 5,
+          message: `Re-encrypting keys (${currentEncryption}/${totalEncryptions})...`
+        });
+
+        // TODO remove
+        if (currentEncryption % 5 === 0 || currentEncryption === totalEncryptions) {
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+      }
     }
   }
+
+  onProgress?.({
+    current: 4,
+    total: 5,
+    message: 'Finalizing invitations...'
+  });
+
+  // TODO remove
+  await new Promise(resolve => setTimeout(resolve, 500));
 
   await insomniaFetch({
     method: 'POST',
@@ -214,4 +278,13 @@ export async function startInvite({ emails, teamIds, organizationId, roleId }: S
     sessionId,
     onlyResolveOnSuccess: true,
   });
+
+  onProgress?.({
+    current: 5,
+    total: 5,
+    message: 'Invitations sent successfully!'
+  });
+
+   // TODO remove
+  await new Promise(resolve => setTimeout(resolve, 1000));
 }

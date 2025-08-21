@@ -16,7 +16,7 @@ import { useCollaboratorsSearchLoaderFetcher } from '~/routes/organization.$orga
 import { SegmentEvent } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 
-import { startInvite } from './encryption';
+import { startInvite, type StartInviteProgress } from './encryption';
 import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
 
 export function getSearchParamsString(
@@ -67,6 +67,7 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
   const [error, setError] = useState('');
   const [emails, setEmails] = useState<EmailInput[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [inviteProgress, setInviteProgress] = useState<StartInviteProgress | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -248,6 +249,7 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
               teamIds: groupsToInvite,
               organizationId,
               roleId: selectedRoleRef.current.id,
+              onProgress: setInviteProgress,
             })
               .then(
                 () => {
@@ -269,6 +271,7 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
               )
               .finally(() => {
                 setLoading(false);
+                setInviteProgress(null);
               });
           }}
         >
@@ -322,6 +325,24 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
         </Popover>
       </div>
       {error && <p className="text-red-500">{error}</p>}
+      {inviteProgress && (
+        <div className="mt-2 rounded-md bg-[--hl-xs] p-3">
+          <div className="mb-2 flex items-center justify-between text-sm">
+            <span className="text-[--color-font]">{inviteProgress.message}</span>
+            <span className="text-[--color-font-surprise]">
+              {inviteProgress.current}/{inviteProgress.total}
+            </span>
+          </div>
+          <div className="h-2 w-full rounded-full bg-[--hl-sm]">
+            <div
+              className="h-full rounded-full bg-[#4000bf] transition-all duration-300 ease-out"
+              style={{
+                width: `${(inviteProgress.current / inviteProgress.total) * 100}%`,
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
