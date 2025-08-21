@@ -9,6 +9,7 @@ import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
 
 import { type GitCredentials } from '~/models/git-repository';
+import { EMPTY_GIT_PROJECT_ID, isEmptyGitProject } from '~/models/project';
 
 import {
   getApiBaseURL,
@@ -140,10 +141,7 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(project.gitRepositoryId, 'Project is not linked to a git repository');
-  invariant(
-    project.gitRepositoryId && project.gitRepositoryId !== 'empty',
-    'Project is not linked to a git repository',
-  );
+  invariant(project.gitRepositoryId && !isEmptyGitProject(project), 'Project is not linked to a git repository');
   const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
   invariant(gitRepository, 'Git Repository not found');
   return gitRepository;
@@ -1126,7 +1124,7 @@ export const updateGitRepoAction = async ({
     repoSettingsPatch.credentials = credentials;
 
     async function setupGitRepository() {
-      if (gitRepositoryId && gitRepositoryId !== 'empty') {
+      if (gitRepositoryId && gitRepositoryId !== EMPTY_GIT_PROJECT_ID) {
         const gitRepository = await models.gitRepository.getById(gitRepositoryId);
         invariant(gitRepository, 'GitRepository not found');
         await models.gitRepository.update(gitRepository, repoSettingsPatch);
@@ -1201,7 +1199,7 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
     const project = await models.project.getById(projectId);
     invariant(project, 'Project not found');
     await models.project.update(project, {
-      gitRepositoryId: 'empty',
+      gitRepositoryId: EMPTY_GIT_PROJECT_ID,
     });
   }
 
@@ -2046,7 +2044,7 @@ const getRepositoryDirectoryTree = async ({
 }> => {
   const project = await models.project.getById(projectId);
 
-  if (project?.gitRepositoryId === 'empty') {
+  if (project && isEmptyGitProject(project)) {
     return {
       repositoryTree: {
         id: '',
