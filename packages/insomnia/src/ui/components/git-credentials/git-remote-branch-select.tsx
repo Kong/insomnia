@@ -1,6 +1,5 @@
 import React, { useDeferredValue, useEffect } from 'react';
 import { Button, ComboBox, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
-import { useParams } from 'react-router';
 
 import type { GitCredentials } from '~/models/git-repository';
 import { useGitRemoteBranchesActionFetcher } from '~/routes/git.remote-branches';
@@ -18,22 +17,42 @@ export const GitRemoteBranchSelect = ({
 }) => {
   const uri = useDeferredValue(url);
   const remoteBranchesFetcher = useGitRemoteBranchesActionFetcher({ key: `branch-select:${uri}` });
-  const { organizationId } = useParams() as { organizationId: string };
-
+  const remoteBranches = remoteBranchesFetcher.data?.branches || [];
   const isLoadingRemoteBranches = remoteBranchesFetcher.state !== 'idle';
+  const isComboboxDisabled = remoteBranches.length === 0 || isLoadingRemoteBranches || !url || isDisabled;
+  const essentialInputsAvailable = uri && ('oauth2format' in credentials || (credentials.username && 'password' in credentials && credentials.password));
 
   useEffect(() => {
-    if (uri && remoteBranchesFetcher.state === 'idle' && !remoteBranchesFetcher.data) {
+    if (!essentialInputsAvailable) {
+      return;
+    }
+
+    // There's no need to fetch branches automatically if they've already been loaded. The user has the
+    // option to manually trigger a reload via the GUI.
+    if (remoteBranchesFetcher.data?.branches?.length) {
+      return;
+    }
+
+    // Automatic fetching of branches can return errors in some legitimate cases, like if the user is
+    // typing the URL or their credentials very slowly. Disable the progressive enhancement of
+    // automatically populating branches in this case and let the user manually fetch branches when
+    // they're ready.
+    //
+    // Note: This also removes the need to explicitly show branch fetch errors in the GUI when we're
+    // fetching *automatically*.
+    //
+    // @TODO Show errors in GUI if a manually triggered fetch errors out.
+    if (remoteBranchesFetcher.data?.errors?.length) {
+      return;
+    }
+
+    if (!isLoadingRemoteBranches) {
       remoteBranchesFetcher.submit({
         uri,
         credentials,
       });
     }
-  }, [organizationId, remoteBranchesFetcher, uri, credentials]);
-
-  const remoteBranches = remoteBranchesFetcher.data?.branches || [];
-
-  const isComboboxDisabled = remoteBranches.length === 0 || isLoadingRemoteBranches || !url || isDisabled;
+  }, [uri, credentials, essentialInputsAvailable, isLoadingRemoteBranches, remoteBranchesFetcher]);
 
   return (
     <Label className="flex flex-col">
@@ -87,11 +106,11 @@ export const GitRemoteBranchSelect = ({
         </ComboBox>
         <Button
           type="button"
-          isDisabled={isComboboxDisabled}
+          isDisabled={!remoteBranchesFetcher.data?.errors?.length && (!essentialInputsAvailable || isLoadingRemoteBranches)} // Button is enabled in case of errors so user can manually recover when possible
           className="m-2 flex aspect-square size-[--line-height-xs] items-center justify-center gap-2 truncate rounded-sm border border-solid border-[--hl-sm] p-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-30 aria-pressed:bg-[--hl-sm]"
           aria-label="Refresh repositories"
           onPress={() => {
-            if (uri && remoteBranchesFetcher.state === 'idle') {
+            if (uri && !isLoadingRemoteBranches) {
               remoteBranchesFetcher.submit({
                 uri,
                 credentials,
