@@ -225,8 +225,6 @@ export async function buildRenderContext({
       if (renderResult === finalRenderContext[key]) {
         skipNextTime[key] = true;
         continue;
-      } else {
-        console.log(`[templating] Rendered ${key} to ${renderResult}`);
       }
 
       finalRenderContext[key] = renderResult;
@@ -320,7 +318,7 @@ export async function render<T>(renderOptions: {
           ? (await import('../ui/worker/templating-handler')).renderInWorker
           : renderInThisProcess;
         if (hasNunjucksCustomTagSymbols && !shouldRenderTag) {
-          console.log(`Skipping rendering ${input} in ${path}`);
+          // console.log(`Skipping rendering ${input} in ${path}`);
           return input;
         }
         // @ts-expect-error -- TSCONVERSION
