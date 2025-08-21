@@ -79,7 +79,7 @@ export const useNunjucks = (options?: UseNunjucksOptions) => {
       setTimeout(() => delete getRenderContextPromiseCache[contextCacheKey], 5000);
       // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
       const context = await getRenderContextPromiseCache[contextCacheKey];
-      return render(obj, context);
+      return render({ obj, context });
     },
     [fetchRenderContext],
   );

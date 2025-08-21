@@ -143,13 +143,12 @@ export async function buildRenderContext({
         if (isSelfRecursive) {
           // If we're overwriting a variable that contains itself, make sure we
           // render it first
-          subContext[key] = await render(
-            subObject[key],
-            subContext, // Only render with key being overwritten
-            null,
-            'keep',
-            'Environment',
-          );
+          subContext[key] = await render({
+            obj: subContext[key],
+            context: subContext, // Only render with key being overwritten
+            errorMode: 'keep',
+            name: key,
+          });
         } else {
           // Otherwise it's just a regular replacement
           subContext[key] = subObject[key];
@@ -214,13 +213,20 @@ export async function buildRenderContext({
       if (skipNextTime[key]) {
         continue;
       }
-
-      const renderResult = await render(finalRenderContext[key], finalRenderContext, null, 'keep', 'Environment');
+      const renderResult = await render({
+        obj: finalRenderContext[key],
+        context: finalRenderContext,
+        errorMode: 'keep',
+        name: key,
+        shouldRenderTagPaths: baseContext.getUsedKeys?.(),
+      });
 
       // Result didn't change, so skip
       if (renderResult === finalRenderContext[key]) {
         skipNextTime[key] = true;
         continue;
+      } else {
+        console.log(`[templating] Rendered ${key} to ${renderResult}`);
       }
 
       finalRenderContext[key] = renderResult;
@@ -236,6 +242,7 @@ const renderInThisProcess = async (input: RenderInputType) => {
     ignoreUndefinedEnvVariable: input.ignoreUndefinedEnvVariable,
   });
 };
+
 /**
  * Recursively render any JS object and return a new one
  * @param {*} obj - object to render
@@ -245,14 +252,24 @@ const renderInThisProcess = async (input: RenderInputType) => {
  * @param name - name to include in error message
  * @return {Promise.<*>}
  */
-export async function render<T>(
-  obj: T,
-  context: BaseRenderContext,
-  blacklistPathRegex: RegExp | null = null,
-  errorMode: 'keep' | 'throw' = 'throw',
-  name = '',
-  ignoreUndefinedEnvVariable = false,
-) {
+export async function render<T>(renderOptions: {
+  obj: T;
+  context: BaseRenderContext;
+  blacklistPathRegex?: RegExp | null;
+  shouldRenderTagPaths?: string[];
+  errorMode?: 'keep' | 'throw';
+  name?: string;
+  ignoreUndefinedEnvVariable?: boolean;
+}) {
+  const {
+    obj,
+    context,
+    blacklistPathRegex = null,
+    errorMode = 'throw',
+    name = '',
+    shouldRenderTagPaths,
+    ignoreUndefinedEnvVariable = false,
+  } = renderOptions;
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);
 
@@ -280,6 +297,7 @@ export async function render<T>(
       const hasNunjucksInterpolationSymbols = input.includes('{{') && input.includes('}}');
       const hasNunjucksCustomTagSymbols = input.includes('{%') && input.includes('%}');
       const hasNunjucksCommentSymbols = input.includes('{#') && input.includes('#}');
+      const shouldRenderTag = Array.isArray(shouldRenderTagPaths) ? shouldRenderTagPaths.includes(path) : true;
 
       if (!hasNunjucksInterpolationSymbols && !hasNunjucksCustomTagSymbols && !hasNunjucksCommentSymbols) {
         return input;
@@ -294,7 +312,6 @@ export async function render<T>(
         // plugins will not function correctly when rendering in a separate process or thread. The user can
         // explicitly configure rendering to happen on the same thread/process as the rest of the app, in
         // which case it's okay to render locally.
-
         const settings = await models.settings.get();
         const pluginsAreRestrictedToRunInWorker = settings?.pluginsAllowElevatedAccess === false;
         const currentProcessIsRendererAndPluginsAreRestricted =
@@ -302,7 +319,10 @@ export async function render<T>(
         const renderFork = currentProcessIsRendererAndPluginsAreRestricted
           ? (await import('../ui/worker/templating-handler')).renderInWorker
           : renderInThisProcess;
-
+        if (hasNunjucksCustomTagSymbols && !shouldRenderTag) {
+          console.log(`Skipping rendering ${input} in ${path}`);
+          return input;
+        }
         // @ts-expect-error -- TSCONVERSION
         input = await renderFork({ input, context, path, ignoreUndefinedEnvVariable });
 
@@ -310,7 +330,7 @@ export async function render<T>(
         // case for environment variables:
         //   {{ foo }} => {% uuid 'v4' %} => dd265685-16a3-4d76-a59c-e8264c16835a
         // @ts-expect-error -- TSCONVERSION
-        if (input.includes('{%')) {
+        if (input.includes('{%') && shouldRenderTag) {
           // @ts-expect-error -- TSCONVERSION
           input = await renderFork({ input, context, path, ignoreUndefinedEnvVariable });
         }
@@ -378,7 +398,8 @@ export async function getRenderContext({
   ancestors: _ancestors,
   purpose,
   extraInfo,
-}: RenderContextOptions): Promise<BaseRenderContext> {
+  usedContextKeys,
+}: RenderContextOptions & { usedContextKeys?: string[] }): Promise<BaseRenderContext> {
   const ancestors = _ancestors || (await getRenderContextAncestors(request));
 
   const project = ancestors.find(isProject);
@@ -496,6 +517,7 @@ export async function getRenderContext({
     // It is possible for a project to not exist because this code path can be reached via Inso which has no concept of a project.
     getProjectId: () => project?._id,
     getSettings: () => ({ dataFolders: settings.dataFolders }),
+    getUsedKeys: () => usedContextKeys,
   };
 
   // Generate the context we need to render
@@ -525,8 +547,16 @@ export async function getRenderedGrpcRequest({
   // Ignore body by default and only include if specified to
   const ignorePathRegex = skipBody ? /^body.*/ : null;
   // Render all request properties
-  const renderedRequest: GrpcRequest = await render(request, renderContext, ignorePathRegex);
-  renderedRequest.description = await render(description, renderContext, null, 'keep');
+  const renderedRequest: GrpcRequest = await render({
+    obj: request,
+    context: renderContext,
+    blacklistPathRegex: ignorePathRegex,
+  });
+  renderedRequest.description = await render({
+    obj: description,
+    context: renderContext,
+    errorMode: 'keep',
+  });
   return renderedRequest;
 }
 
@@ -538,7 +568,10 @@ export async function getRenderedGrpcRequestMessage({
 }: BaseRenderContextOptions & { request: GrpcRequest }) {
   const renderContext = await getRenderContext({ request, environment, purpose, extraInfo });
   // Render request body
-  const renderedBody: GrpcRequestBody = await render(request.body, renderContext);
+  const renderedBody: GrpcRequestBody = await render({
+    obj: request.body,
+    context: renderContext,
+  });
   return renderedBody;
 }
 
@@ -561,6 +594,14 @@ export async function getRenderedRequestAndContext({
 
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
+  const requestRenderObject = {
+    _request: request,
+    _cookieJar: cookieJar,
+  };
+
+  const requestUsedContextKeys = templatingUtils.getObjectUsedContextKeys(requestRenderObject);
+  console.log(`requestUsedContextKeys`, requestUsedContextKeys.join(', '));
+
   const renderContext = await getRenderContext({
     request,
     environment,
@@ -570,6 +611,7 @@ export async function getRenderedRequestAndContext({
     baseEnvironment,
     userUploadEnvironment,
     transientVariables,
+    usedContextKeys: requestUsedContextKeys,
   });
 
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
@@ -589,21 +631,22 @@ export async function getRenderedRequestAndContext({
   request.headers = getOrInheritHeaders({ request, requestGroups });
   request.authentication = getOrInheritAuthentication({ request, requestGroups });
   // Render all request properties
-  const renderResult = await render(
-    {
-      _request: request,
-      _cookieJar: cookieJar,
-    },
-    renderContext,
-    request.settingDisableRenderRequestBody ? /^body.*/ : null,
-    'throw',
-    '',
+  const renderResult = await render({
+    obj: requestRenderObject,
+    context: renderContext,
+    blacklistPathRegex: request.settingDisableRenderRequestBody ? /^body.*/ : null,
+    errorMode: 'throw',
+    name: '',
     ignoreUndefinedEnvVariable,
-  );
+  });
 
   const renderedRequest = renderResult._request;
   const renderedCookieJar = renderResult._cookieJar;
-  renderedRequest.description = await render(description, renderContext, null, 'keep');
+  renderedRequest.description = await render({
+    obj: description,
+    context: renderContext,
+    errorMode: 'keep',
+  });
   const userAgentHeaders = request.headers.filter(h => h.name.toLowerCase() === 'user-agent');
   const noUserAgents = userAgentHeaders.length === 0;
   const allUserAgentHeadersDisabled = userAgentHeaders.every(h => h.disabled === true);
