@@ -6,6 +6,7 @@ import { projectLock } from '~/common/project';
 import * as models from '~/models';
 import type { OauthProviderName } from '~/models/git-credentials';
 import type { GitCredentials } from '~/models/git-repository';
+import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { SegmentEvent } from '~/ui/analytics';
 import { insomniaFetch } from '~/ui/insomniaFetch';
@@ -222,7 +223,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       }
 
       if (projectData.connectRepositoryLater) {
-        await models.project.update(project, { name, gitRepositoryId: 'empty' });
+        await models.project.update(project, { name, gitRepositoryId: EMPTY_GIT_PROJECT_ID });
       } else {
         let credentials: GitCredentials | undefined = undefined;
         if (projectData.oauth2format) {
