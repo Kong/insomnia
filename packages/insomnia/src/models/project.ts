@@ -12,13 +12,20 @@ export const canSync = false;
 
 export const SCRATCHPAD_PROJECT_ID = `${prefix}_scratchpad`;
 
+// This is used to identify Git Projects that are not connected to a remote yet
+export const EMPTY_GIT_PROJECT_ID = 'empty';
+
+export function isEmptyGitProject(project: Project) {
+  return project.gitRepositoryId === EMPTY_GIT_PROJECT_ID;
+}
+
 export const isScratchpadProject = (project: Pick<Project, '_id'>) => project._id === SCRATCHPAD_PROJECT_ID;
 export const isLocalProject = (project: Pick<Project, 'remoteId'>): project is LocalProject =>
   project.remoteId === null;
 export const isRemoteProject = (project: Pick<Project, 'remoteId'>): project is RemoteProject =>
   !isLocalProject(project);
 export const isGitProject = (project: Project): project is GitProject =>
-  'gitRepositoryId' in project && (project.gitRepositoryId !== null || project.gitRepositoryId === 'empty');
+  'gitRepositoryId' in project && (project.gitRepositoryId !== null || isEmptyGitProject(project));
 export const projectHasSettings = (project: Pick<Project, '_id'>) => !isScratchpadProject(project);
 
 interface CommonProject {
