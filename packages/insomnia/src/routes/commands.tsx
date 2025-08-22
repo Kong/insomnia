@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useFetcher } from 'react-router';
+import { href, useFetcher } from 'react-router';
 
 import { database } from '~/common/database';
 import { fuzzyMatch } from '~/common/misc';
@@ -312,9 +312,7 @@ export function useCommandsLoaderFetcher() {
         params.set('filter', filter);
       }
 
-      return fetcherLoad(`/commands?${params.toString()}`, {
-        flushSync: true,
-      });
+      return fetcherLoad(`${href('/commands')}?${params.toString()}`);
     },
     [fetcherLoad],
   );
