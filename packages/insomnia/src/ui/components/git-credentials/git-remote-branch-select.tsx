@@ -1,10 +1,13 @@
 import React, { useDeferredValue, useEffect } from 'react';
 import { Button, ComboBox, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
+import { z } from 'zod/v4';
 
 import type { GitCredentials } from '~/models/git-repository';
 import { useGitRemoteBranchesActionFetcher } from '~/routes/git.remote-branches';
 
 import { Icon } from '../icon';
+
+const GitRemoteURISchema = z.url().endsWith('.git');
 
 export const GitRemoteBranchSelect = ({
   url,
@@ -19,11 +22,15 @@ export const GitRemoteBranchSelect = ({
   const remoteBranchesFetcher = useGitRemoteBranchesActionFetcher({ key: `branch-select:${uri}` });
   const remoteBranches = remoteBranchesFetcher.data?.branches || [];
   const isLoadingRemoteBranches = remoteBranchesFetcher.state !== 'idle';
-  const isComboboxDisabled = remoteBranches.length === 0 || isLoadingRemoteBranches || !url || isDisabled;
-  const essentialInputsAvailable = uri && ('oauth2format' in credentials || (credentials.username && 'password' in credentials && credentials.password));
+  const isComboboxDisabled = remoteBranches.length === 0 || isLoadingRemoteBranches || !uri || isDisabled;
+  const areEssentialInputsAvailable = Boolean(
+    uri &&
+      GitRemoteURISchema.safeParse(uri).success &&
+      ('oauth2format' in credentials || (credentials.username && 'password' in credentials && credentials.password)),
+  );
 
   useEffect(() => {
-    if (!essentialInputsAvailable) {
+    if (!areEssentialInputsAvailable) {
       return;
     }
 
@@ -52,7 +59,11 @@ export const GitRemoteBranchSelect = ({
         credentials,
       });
     }
-  }, [uri, credentials, essentialInputsAvailable, isLoadingRemoteBranches, remoteBranchesFetcher]);
+  }, [uri, credentials, areEssentialInputsAvailable, isLoadingRemoteBranches, remoteBranchesFetcher]);
+
+  // The re-fetch button is enabled in case of errors so user can manually recover when possible
+  const isRefetchButtonDisabled =
+    !remoteBranchesFetcher.data?.errors?.length && (!areEssentialInputsAvailable || isLoadingRemoteBranches);
 
   return (
     <Label className="flex flex-col">
@@ -106,7 +117,7 @@ export const GitRemoteBranchSelect = ({
         </ComboBox>
         <Button
           type="button"
-          isDisabled={!remoteBranchesFetcher.data?.errors?.length && (!essentialInputsAvailable || isLoadingRemoteBranches)} // Button is enabled in case of errors so user can manually recover when possible
+          isDisabled={isRefetchButtonDisabled}
           className="m-2 flex aspect-square size-[--line-height-xs] items-center justify-center gap-2 truncate rounded-sm border border-solid border-[--hl-sm] p-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-30 aria-pressed:bg-[--hl-sm]"
           aria-label="Refresh repositories"
           onPress={() => {
