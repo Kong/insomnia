@@ -19,6 +19,8 @@ test('Can invite users in app', async ({ page }) => {
     await organizationMembersSelector.getByRole('option').nth(i).click();
   }
 
+  await page.getByPlaceholder('Enter more emails').press('Escape');
+
   await page.getByText('Invite collaborators').click();
 
   await page.getByRole('button', { name: 'Invite', exact: true }).click();
