@@ -1,5 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   GridList,
@@ -548,23 +548,17 @@ const Component = () => {
 
   const filteredFiles = allFiles
     .filter(w => (workspaceListScope !== 'all' ? w.scope === workspaceListScope : true))
-    .filter(workspace =>
-      workspaceListFilter
-        ? Boolean(
-            fuzzyMatchAll(
-              workspaceListFilter,
-              // Use the filter string to match against these properties
-              [
-                workspace.name,
-                workspace.scope === 'design' ? 'document' : 'collection',
-                workspace.branch || '',
-                workspace.oasFormat || '',
-              ],
-              { splitSpace: true, loose: true },
-            )?.indexes,
-          )
-        : true,
-    )
+    .filter(workspace => {
+      if (!workspaceListFilter) return true;
+      const filterStr = workspaceListFilter.toLowerCase();
+      const props = [
+        workspace.name?.toLowerCase() || '',
+        workspace.branch?.toLowerCase() || '',
+        workspace.oasFormat?.toLowerCase() || '',
+      ];
+      const result = fuzzyMatchAll(filterStr, props, { splitSpace: true, loose: true });
+      return Boolean(result?.indexes);
+    })
     .sort((a, b) => sortMethodMap[workspaceListSortOrder as DashboardSortOrder](a, b));
 
   const filesWithPresence = filteredFiles
