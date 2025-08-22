@@ -81,6 +81,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
           name: newProjectData.authorName || '',
           email: newProjectData.authorEmail || '',
         },
+        name: newProjectData.name,
         credentials: credentials || {
           username: '',
           password: '',
