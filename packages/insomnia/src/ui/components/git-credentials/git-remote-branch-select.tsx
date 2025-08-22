@@ -1,5 +1,6 @@
-import React, { useDeferredValue, useEffect } from 'react';
+import React, { useDeferredValue } from 'react';
 import { Button, ComboBox, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
+import * as reactUse from 'react-use';
 import { z } from 'zod/v4';
 
 import type { GitCredentials } from '~/models/git-repository';
@@ -29,37 +30,42 @@ export const GitRemoteBranchSelect = ({
       ('oauth2format' in credentials || (credentials.username && 'password' in credentials && credentials.password)),
   );
 
-  useEffect(() => {
-    if (!areEssentialInputsAvailable) {
-      return;
-    }
+  // Debounce calling submit
+  reactUse.useDebounce(
+    () => {
+      if (!areEssentialInputsAvailable) {
+        return;
+      }
 
-    // There's no need to fetch branches automatically if they've already been loaded. The user has the
-    // option to manually trigger a reload via the GUI.
-    if (remoteBranchesFetcher.data?.branches?.length) {
-      return;
-    }
+      // There's no need to fetch branches automatically if they've already been loaded. The user has the
+      // option to manually trigger a reload via the GUI.
+      if (remoteBranchesFetcher.data?.branches?.length) {
+        return;
+      }
 
-    // Automatic fetching of branches can return errors in some legitimate cases, like if the user is
-    // typing the URL or their credentials very slowly. Disable the progressive enhancement of
-    // automatically populating branches in this case and let the user manually fetch branches when
-    // they're ready.
-    //
-    // Note: This also removes the need to explicitly show branch fetch errors in the GUI when we're
-    // fetching *automatically*.
-    //
-    // @TODO Show errors in GUI if a manually triggered fetch errors out.
-    if (remoteBranchesFetcher.data?.errors?.length) {
-      return;
-    }
+      // Automatic fetching of branches can return errors in some legitimate cases, like if the user is
+      // typing the URL or their credentials very slowly. Disable the progressive enhancement of
+      // automatically populating branches in this case and let the user manually fetch branches when
+      // they're ready.
+      //
+      // Note: This also removes the need to explicitly show branch fetch errors in the GUI when we're
+      // fetching *automatically*.
+      //
+      // @TODO Show errors in GUI if a manually triggered fetch errors out.
+      if (remoteBranchesFetcher.data?.errors?.length) {
+        return;
+      }
 
-    if (!isLoadingRemoteBranches) {
-      remoteBranchesFetcher.submit({
-        uri,
-        credentials,
-      });
-    }
-  }, [uri, credentials, areEssentialInputsAvailable, isLoadingRemoteBranches, remoteBranchesFetcher]);
+      if (!isLoadingRemoteBranches) {
+        remoteBranchesFetcher.submit({
+          uri,
+          credentials,
+        });
+      }
+    },
+    300,
+    [uri, credentials, areEssentialInputsAvailable, isLoadingRemoteBranches, remoteBranchesFetcher],
+  );
 
   // The re-fetch button is enabled in case of errors so user can manually recover when possible
   const isRefetchButtonDisabled =
