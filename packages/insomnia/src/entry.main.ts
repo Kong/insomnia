@@ -332,7 +332,7 @@ async function _trackStats() {
     console.log('[main] App update detected', currentVersion, lastVersion);
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
-      url: 'https://github.com/Kong/insomnia/releases',
+      url: 'https://insomnia.rest/changelog',
       cta: "See What's New",
       message: `Updated to ${currentVersion}`,
     };
