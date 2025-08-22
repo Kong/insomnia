@@ -1,4 +1,4 @@
-import React, { useDeferredValue, useEffect } from 'react';
+import { useDeferredValue, useEffect } from 'react';
 import { Button, ComboBox, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
@@ -37,7 +37,7 @@ export const GitRemoteBranchSelect = ({
 
   return (
     <Label className="flex flex-col">
-      <span className="text-sm font-semibold">Branch</span>
+      <Label className={`text-start text-sm font-semibold ${isDisabled ? 'opacity-50' : ''}`}>Branch</Label>
       <div className="flex items-center gap-2">
         <ComboBox
           key={`${url}:${remoteBranches[0]}:branch-select`}
@@ -56,7 +56,7 @@ export const GitRemoteBranchSelect = ({
               name="branch"
               aria-label="Search branches"
               placeholder={isLoadingRemoteBranches ? 'Fetching remote branches...' : 'Default branch'}
-              className="w-full py-1 pl-2 pr-7 placeholder:italic"
+              className="w-full py-1 pl-2 pr-7 text-sm placeholder:italic"
             />
             <Button
               type="button"

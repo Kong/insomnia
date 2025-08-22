@@ -1,5 +1,5 @@
 import React, { type FunctionComponent } from 'react';
-import { Input, Label, TextField } from 'react-aria-components';
+import { FieldError, Input, Label, TextField } from 'react-aria-components';
 
 import { docsGitAccessToken } from '../../../common/documentation';
 import type { GitRepository } from '../../../models/git-repository';
@@ -12,23 +12,33 @@ export interface Props {
   onSubmit: (args: Partial<GitRepository>) => void;
 }
 
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = new RegExp(
+    /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+  );
+
+  return emailRegex.test(email);
+};
+
 export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gitRepository, onSubmit }) => {
   const linkIcon = <i className="fa fa-external-link-square" />;
-  const defaultValues = gitRepository || {
-    uri: '',
-    credentials: { username: '', password: '' },
-    author: { name: '', email: '' },
-  };
 
-  const [credentials, setCredentials] = React.useState({
-    username: defaultValues.credentials?.username || '',
-    password:
-      defaultValues.credentials && 'password' in defaultValues.credentials ? defaultValues.credentials.password : '',
+  const [state, setState] = React.useState({
+    uri: gitRepository?.uri || '',
+    credentials: {
+      username: gitRepository?.credentials?.username || '',
+      password:
+        gitRepository?.credentials && 'password' in gitRepository.credentials ? gitRepository.credentials.password : '',
+    },
+    author: {
+      name: gitRepository?.author?.name || '',
+      email: gitRepository?.author?.email || '',
+    },
   });
 
-  const [uri, setUri] = React.useState(defaultValues.uri || '');
+  const { uri, credentials, author } = state;
 
-  const author = defaultValues.author;
+  const isFormDisabled = !state.uri;
 
   return (
     <form
@@ -36,65 +46,76 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
       className="flex flex-col gap-4"
       onSubmit={event => {
         event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        onSubmit({
-          uri: (formData.get('uri') as string) || '',
-          credentials: {
-            username: (formData.get('username') as string) || '',
-            token: (formData.get('token') as string) || '',
-          },
-          author: {
-            name: (formData.get('authorName') as string) || '',
-            email: (formData.get('authorEmail') as string) || '',
-          },
-        });
+        onSubmit(state);
       }}
     >
-      <TextField name="uri" className="flex w-full flex-col gap-1 px-0.5" isRequired>
+      <TextField
+        name="uri"
+        className="flex w-full flex-col gap-1 px-0.5 text-sm"
+        isRequired
+        validate={value => {
+          console.log({ value }, value.startsWith('http') && value.endsWith('.git'));
+          return value.startsWith('http') && value.endsWith('.git')
+            ? ''
+            : 'Please enter a valid Git https URI (including .git suffix)';
+        }}
+      >
         <Label className="text-start text-sm font-semibold">Git URI (https, including .git suffix)</Label>
         <Input
           type="url"
           autoFocus
-          defaultValue={uri}
-          onChange={e => setUri(e.currentTarget.value)}
-          disabled={Boolean(defaultValues.uri)}
+          value={uri}
+          onChange={e => setState({ ...state, uri: e.currentTarget.value })}
           placeholder="https://github.com/org/repo.git"
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
+        <FieldError className="text-xs text-[--color-danger]" />
       </TextField>
       <div className="flex items-center justify-between gap-2">
-        <TextField name="authorName" className="flex w-full flex-col gap-1 px-0.5" isRequired>
-          <Label className="text-start text-sm font-semibold">Author Name</Label>
+        <TextField name="authorName" className="flex w-full flex-col gap-1 px-0.5 text-sm" isRequired>
+          <Label className={`text-start text-sm font-semibold ${isFormDisabled ? 'opacity-50' : ''}`}>
+            Author Name
+          </Label>
           <Input
             placeholder="Name"
-            disabled={Boolean(defaultValues.uri)}
-            defaultValue={author?.name}
+            disabled={isFormDisabled}
+            onChange={e => setState({ ...state, author: { ...author, name: e.currentTarget.value } })}
+            value={author?.name}
             className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
           />
         </TextField>
-        <TextField name="authorEmail" className="flex w-full flex-col gap-1 px-0.5" isRequired>
-          <Label className="text-start text-sm font-semibold">Author Email</Label>
+        <TextField
+          name="authorEmail"
+          className="flex w-full flex-col gap-1 px-0.5 text-sm"
+          isRequired
+          validate={value => (isValidEmail(value) ? '' : 'Please enter a valid email address')}
+        >
+          <Label className={`text-start text-sm font-semibold ${isFormDisabled ? 'opacity-50' : ''}`}>
+            Author Email
+          </Label>
           <Input
             placeholder="Email"
-            disabled={Boolean(defaultValues.uri)}
-            defaultValue={author?.email}
+            disabled={isFormDisabled}
+            onChange={e => setState({ ...state, author: { ...author, email: e.currentTarget.value } })}
+            value={author?.email}
             className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
           />
+          <FieldError className="text-xs text-[--color-danger]" />
         </TextField>
       </div>
       <div className="flex items-center justify-between gap-2">
-        <TextField name="username" className="flex w-full flex-col gap-1 px-0.5" isRequired>
-          <Label className="text-start text-sm font-semibold">Username</Label>
+        <TextField name="username" className="flex w-full flex-col gap-1 px-0.5 text-sm" isRequired>
+          <Label className={`text-start text-sm font-semibold ${isFormDisabled ? 'opacity-50' : ''}`}>Username</Label>
           <Input
             placeholder="MyUser"
-            disabled={Boolean(defaultValues.uri)}
-            defaultValue={credentials?.username}
-            onChange={e => setCredentials({ ...credentials, username: e.currentTarget.value })}
+            disabled={isFormDisabled}
+            value={credentials?.username}
+            onChange={e => setState({ ...state, credentials: { ...credentials, username: e.currentTarget.value } })}
             className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
           />
         </TextField>
-        <TextField name="token" className="flex w-full flex-col gap-1 px-0.5" isRequired>
-          <Label className="text-start text-sm font-semibold">
+        <TextField name="token" className="flex w-full flex-col gap-1 px-0.5 text-sm" isRequired>
+          <Label className={`text-start text-sm font-semibold ${isFormDisabled ? 'opacity-50' : ''}`}>
             Authentication Token
             <HelpTooltip className="space-left">
               Create a personal access token
@@ -112,9 +133,9 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
           </Label>
           <Input
             type="password"
-            disabled={Boolean(defaultValues.uri)}
-            onChange={e => setCredentials({ ...credentials, password: e.currentTarget.value })}
-            defaultValue={'password' in credentials ? credentials?.password : ''}
+            disabled={isFormDisabled}
+            onChange={e => setState({ ...state, credentials: { ...credentials, password: e.currentTarget.value } })}
+            value={'password' in credentials ? credentials?.password : ''}
             placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
             className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
           />
@@ -122,11 +143,11 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
       </div>
       <GitRemoteBranchSelect
         credentials={{
-          password: credentials.password,
-          username: credentials.username,
+          password: credentials && 'password' in credentials ? credentials?.password : '',
+          username: credentials?.username || '',
         }}
         url={uri || ''}
-        isDisabled={Boolean(defaultValues.uri)}
+        isDisabled={isFormDisabled}
       />
     </form>
   );
