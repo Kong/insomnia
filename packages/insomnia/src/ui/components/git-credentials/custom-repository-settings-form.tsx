@@ -71,7 +71,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
         />
         <FieldError className="text-xs text-[--color-danger]" />
       </TextField>
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-start justify-between gap-2">
         <TextField name="authorName" className="flex w-full flex-col gap-1 px-0.5 text-sm" isRequired>
           <Label className={`text-start text-sm font-semibold ${isFormDisabled ? 'opacity-50' : ''}`}>
             Author Name
