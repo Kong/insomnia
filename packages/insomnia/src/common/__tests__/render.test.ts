@@ -20,31 +20,40 @@ describe('render tests', () => {
 
   describe('render()', () => {
     it('renders hello world', async () => {
-      const rendered = await renderUtils.render('Hello {{ msg }}!', {
-        msg: 'World',
+      const rendered = await renderUtils.render({
+        obj: 'Hello {{ msg }}!',
+        context: {
+          msg: 'World',
+        },
       });
       expect(rendered).toBe('Hello World!');
     });
 
     it('renders custom tag: uuid', async () => {
-      const rendered = await renderUtils.render('Hello {% uuid %}!');
+      const rendered = await renderUtils.render({ obj: 'Hello {% uuid %}!' });
       expect(rendered).toMatch(/Hello [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}!/);
     });
 
     it('renders nested object', async () => {
-      const rendered = await renderUtils.render('Hello {{ users[0].name }}!', {
-        users: [
-          {
-            name: 'FooBar',
-          },
-        ],
+      const rendered = await renderUtils.render({
+        obj: 'Hello {{ users[0].name }}!',
+        context: {
+          users: [
+            {
+              name: 'FooBar',
+            },
+          ],
+        },
       });
       expect(rendered).toBe('Hello FooBar!');
     });
 
     it('returns invalid template', async () => {
-      const rendered = await renderUtils.render('Hello {{ msg }!', {
-        msg: 'World',
+      const rendered = await renderUtils.render({
+        obj: 'Hello {{ msg }!',
+        context: {
+          msg: 'World',
+        },
       });
       expect(rendered).toBe('Hello {{ msg }!');
     });
@@ -71,7 +80,7 @@ describe('render tests', () => {
       });
       // In runtime, this context is used to render, which re-evaluates the expression for replaced in the rootEnvironment by using the built context
       // Regression test from issue 1917 - https://github.com/Kong/insomnia/issues/1917
-      const renderExpression = await renderUtils.render(rootEnvironment.data.replaced, context);
+      const renderExpression = await renderUtils.render({ obj: rootEnvironment.data.replaced, context });
       expect(renderExpression).toBe('cat');
     });
   });
@@ -98,7 +107,6 @@ describe('render tests', () => {
 
     it('rendered recursive should not infinite loop', async () => {
       const ancestors = [reqGroupBuilder.environment({ recursive: '{{ recursive }}/hello' }).build()];
-
       const context = await renderUtils.buildRenderContext({ ancestors });
       // This is longer than 3 because it multiplies every time (1 -> 2 -> 4 -> 8)
       expect(context).toEqual({
@@ -267,8 +275,8 @@ describe('render tests', () => {
           .build(),
       ];
       const context = await renderUtils.buildRenderContext({ ancestors });
-      expect(await renderUtils.render('{{ urls.admin }}/foo', context)).toBe('https://parent.com/admin/foo');
-      expect(await renderUtils.render('{{ urls.test }}/foo', context)).toBe('https://parent.com/test/foo');
+      expect(await renderUtils.render({ obj: '{{ urls.admin }}/foo', context })).toBe('https://parent.com/admin/foo');
+      expect(await renderUtils.render({ obj: '{{ urls.test }}/foo', context })).toBe('https://parent.com/test/foo');
     });
 
     it('renders child environment variables', async () => {
@@ -499,17 +507,17 @@ describe('render tests', () => {
 
   describe('render()', () => {
     it('correctly renders simple Object', async () => {
-      const newObj = await renderUtils.render(
-        {
+      const newObj = await renderUtils.render({
+        obj: {
           foo: '{{ foo }}',
           bar: 'bar',
           baz: '{{ bad }}',
         },
-        {
+        context: {
           foo: 'bar',
           bad: 'hi',
         },
-      );
+      });
       expect(newObj).toEqual({
         foo: 'bar',
         bar: 'bar',
@@ -531,8 +539,11 @@ describe('render tests', () => {
           arr: [1, 2, '{{ foo }}'],
         },
       };
-      const newObj = await renderUtils.render(obj, {
-        foo: 'bar',
+      const newObj = await renderUtils.render({
+        obj,
+        context: {
+          foo: 'bar',
+        },
       });
       expect(newObj).toEqual({
         foo: 'bar',
@@ -554,16 +565,16 @@ describe('render tests', () => {
 
     it('fails on bad template', async () => {
       try {
-        await renderUtils.render(
-          {
+        await renderUtils.render({
+          obj: {
             foo: '{{ foo }',
             bar: 'bar',
             baz: '{{ bad }}',
           },
-          {
+          context: {
             foo: 'bar',
           },
-        );
+        });
         fail('Render should have failed');
       } catch (err) {
         expect(err.message).toContain('Failed to render environment variables');
@@ -575,11 +586,15 @@ describe('render tests', () => {
       const context = {
         foo: 'bar',
       };
-      const resultOnlyVars = await renderUtils.render(template, context, null, 'keep');
+      const resultOnlyVars = await renderUtils.render({
+        obj: template,
+        context,
+        errorMode: 'keep',
+      });
       expect(resultOnlyVars).toBe('{{ foo }} {% invalid "hi" %}');
 
       try {
-        await renderUtils.render(template, context, null);
+        await renderUtils.render({ obj: template, context });
         fail('Render should not have succeeded');
       } catch (err) {
         expect(err.message).toBe('unknown block tag: invalid');
@@ -596,7 +611,7 @@ describe('render tests', () => {
       };
 
       try {
-        await renderUtils.render(template);
+        await renderUtils.render({ obj: template });
         fail('Should have failed to render');
       } catch (err) {
         expect(err.path).toBe('foo[0].bar');
@@ -613,7 +628,7 @@ describe('render tests', () => {
       };
 
       try {
-        await renderUtils.render(template);
+        await renderUtils.render({ obj: template });
         fail('Should have failed to render');
       } catch (err) {
         expect(err.path).toBe('_bar.baz');
@@ -737,4 +752,5 @@ describe('render tests', () => {
       );
     });
   });
+  describe('On-demand rendering customized tag for requests', () => {});
 });

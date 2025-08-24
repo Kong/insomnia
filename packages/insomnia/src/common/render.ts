@@ -144,7 +144,7 @@ export async function buildRenderContext({
           // If we're overwriting a variable that contains itself, make sure we
           // render it first
           subContext[key] = await render({
-            obj: subContext[key],
+            obj: subObject[key],
             context: subContext, // Only render with key being overwritten
             errorMode: 'keep',
             name: key,
@@ -218,7 +218,7 @@ export async function buildRenderContext({
         context: finalRenderContext,
         errorMode: 'keep',
         name: key,
-        shouldRenderTagPaths: baseContext.getUsedKeys?.(),
+        shouldRenderTagPaths: baseContext?.getUsedKeys?.(),
       });
 
       // Result didn't change, so skip
