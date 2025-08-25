@@ -1699,7 +1699,7 @@ export async function fetchGitRemoteBranches({
 
     return { branches };
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Error while fetching remote branches';
+    const errorMessage = `Could not fetch remote branches: ${getErrorMessage(err)}`;
     return { branches: [], errors: [errorMessage] };
   }
 }
