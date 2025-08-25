@@ -318,7 +318,7 @@ export async function render<T>(renderOptions: {
           ? (await import('../ui/worker/templating-handler')).renderInWorker
           : renderInThisProcess;
         if (hasNunjucksCustomTagSymbols && !shouldRenderTag) {
-          // Skip rendering tag when the tag variable path is in shouldRenderTagPaths, which means request has not used this variable
+          // Skip rendering tag when the variable path is not in shouldRenderTagPaths, which means the request has not used this variable
           return input;
         }
         // @ts-expect-error -- TSCONVERSION
