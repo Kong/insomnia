@@ -71,11 +71,16 @@ export const GitRemoteBranchSelect = ({
   const isRefetchButtonDisabled =
     !remoteBranchesFetcher.data?.errors?.length && (!areEssentialInputsAvailable || isLoadingRemoteBranches);
 
+  const remoteBranchesFetchErrors = remoteBranchesFetcher.data?.errors?.length
+    ? remoteBranchesFetcher.data?.errors.join(', ')
+    : null;
+
   return (
     <Label className="flex flex-col">
       <span className="text-sm font-semibold">Branch</span>
       <div className="flex items-center gap-2">
         <ComboBox
+          isInvalid={!!remoteBranchesFetchErrors}
           key={`${url}:${remoteBranches[0]}:branch-select`}
           aria-label="Branch to clone"
           allowsCustomValue={false}
@@ -101,6 +106,9 @@ export const GitRemoteBranchSelect = ({
               <Icon icon="caret-down" className="w-5 flex-shrink-0" />
             </Button>
           </div>
+          <p className="hidden text-xs text-[--color-danger] group-valid/form:inline-flex">
+            {remoteBranchesFetchErrors}
+          </p>
           <Popover
             className="grid w-[--trigger-width] min-w-max select-none grid-flow-col divide-x divide-solid divide-[--hl-md] overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-sm shadow-lg focus:outline-none"
             placement="bottom start"
