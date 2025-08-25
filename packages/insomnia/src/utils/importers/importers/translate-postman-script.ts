@@ -134,7 +134,7 @@ const DEFAULT_PREPROCESS_RULES: TransformRule[] = [
     replacement: 'pm.environment.unset($1)',
   },
   // From: postman.clearEnvironmentVariable()
-  // To: pm.environment.unset('var-name')
+  // To: pm.environment.clear()
   {
     pattern: /(?<![\.\$\-"'])\bpostman\.clearEnvironmentVariable\s*\(\s*\)/g,
     replacement: 'pm.environment.clear()',
