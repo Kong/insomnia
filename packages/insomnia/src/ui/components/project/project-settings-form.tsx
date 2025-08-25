@@ -431,7 +431,10 @@ export const ProjectSettingsForm: FC<Props> = ({
           <div className="flex w-full items-center justify-end gap-2 pb-10">
             <div className="flex items-center gap-2">
               <Button
-                onPress={() => setActiveView('project')}
+                onPress={() => {
+                  setError(null);
+                  setActiveView('project');
+                }}
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
               >
                 Back
@@ -576,8 +579,8 @@ export const ProjectSettingsForm: FC<Props> = ({
             <Button
               isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
               onPress={() => {
-                setTab('github');
                 setActiveView('git-clone');
+                setError(null);
               }}
               className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
             >
@@ -715,7 +718,10 @@ export const ProjectSettingsForm: FC<Props> = ({
           <div className="flex items-center justify-end gap-2 px-10 pb-10">
             <div className="flex items-center gap-2">
               <Button
-                onPress={() => setActiveView('project')}
+                onPress={() => {
+                  setError(null);
+                  setActiveView('project');
+                }}
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
               >
                 Back
