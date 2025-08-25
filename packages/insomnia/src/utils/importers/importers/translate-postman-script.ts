@@ -1,7 +1,5 @@
 export interface TransformRule {
-  name?: string;
-  description?: string;
-  pattern: string | RegExp;
+  pattern: RegExp;
   replacement: string;
 }
 
@@ -197,10 +195,9 @@ export const translateHandlersInScript = (scriptContent: string) => {
 
   for (const rule of rules) {
     try {
-      const regex = rule.pattern instanceof RegExp ? rule.pattern : new RegExp(rule.pattern, 'g');
-      translated = translated.replaceAll(regex, rule.replacement);
+      translated = translated.replaceAll(rule.pattern, rule.replacement);
     } catch (error) {
-      console.warn(`Failed to apply postprocess rule "${rule.name}":`, error);
+      console.warn(`Failed to apply postprocess rule "${rule.pattern}":`, error);
     }
   }
 
