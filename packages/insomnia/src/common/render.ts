@@ -391,6 +391,8 @@ export async function getRenderContext({
   request,
   environment,
   baseEnvironment,
+  rootGlobalEnvironment: rootGlobalEnvironmentFromOption,
+  subGlobalEnvironment: subGlobalEnvironmentFromOption,
   userUploadEnvironment,
   transientVariables,
   ancestors: _ancestors,
@@ -411,7 +413,10 @@ export async function getRenderContext({
   let rootGlobalEnvironment: Environment | null = null;
   let subGlobalEnvironment: Environment | null = null;
 
-  if (workspaceMeta?.activeGlobalEnvironmentId) {
+  if (rootGlobalEnvironmentFromOption && subGlobalEnvironmentFromOption) {
+    rootGlobalEnvironment = rootGlobalEnvironmentFromOption;
+    subGlobalEnvironment = subGlobalEnvironmentFromOption;
+  } else if (workspaceMeta?.activeGlobalEnvironmentId) {
     const activeGlobalEnvironment = await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId);
 
     if (activeGlobalEnvironment) {
@@ -598,7 +603,6 @@ export async function getRenderedRequestAndContext({
   };
 
   const requestUsedContextKeys = templatingUtils.getObjectUsedContextKeys(requestRenderObject);
-  console.log(`requestUsedContextKeys`, requestUsedContextKeys.join(', '));
 
   const renderContext = await getRenderContext({
     request,

@@ -1,14 +1,22 @@
+import os from 'node:os';
+
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import * as models from '../../models';
-import { environmentModelSchema, requestGroupModelSchema } from '../../models/__schemas__/model-schemas';
+import {
+  environmentModelSchema,
+  requestGroupModelSchema,
+  requestModelSchema,
+} from '../../models/__schemas__/model-schemas';
 import type { Environment } from '../../models/environment';
 import type { Workspace } from '../../models/workspace';
+import { getObjectUsedContextKeys } from '../../templating/utils';
 import * as renderUtils from '../render';
 
 const envBuilder = createBuilder(environmentModelSchema);
 const reqGroupBuilder = createBuilder(requestGroupModelSchema);
+const requestBuilder = createBuilder(requestModelSchema);
 
 describe('render tests', () => {
   beforeEach(async () => {
@@ -752,5 +760,99 @@ describe('render tests', () => {
       );
     });
   });
-  describe('On-demand rendering customized tag for requests', () => {});
+  describe('On-demand rendering customized tag for requests', () => {
+    const rootEnvironment = envBuilder
+      .data({
+        foo: 'bar',
+        base: true,
+      })
+      .build();
+    const subEnvironment = envBuilder
+      .data({
+        foo: 'bar-sub',
+        faker: "{% faker 'randomPhoneNumber' %}",
+      })
+      .build();
+    const commonBaseContext = {
+      getMeta: () => ({
+        requestId: 'request-id-ut',
+        workspaceId: 'workspace-id-ut',
+      }),
+      getKeysContext: () => ({
+        keyContext: {},
+      }),
+      getPurpose: () => undefined,
+      getExtraInfo: () => undefined,
+      getEnvironmentId: () => undefined,
+      getGlobalEnvironmentId: () => undefined,
+      getProjectId: () => undefined,
+      getSettings: () => {},
+    };
+    it('Unused tag in environments should not be rendered', async () => {
+      const requestObj = requestBuilder
+        .name('Request')
+        .url('https://insomnia.rest')
+        .description('Description')
+        .body({
+          text: 'Body',
+        })
+        .build();
+      const requestUsedContextKeys = getObjectUsedContextKeys(requestObj);
+      expect(requestUsedContextKeys).toEqual([]);
+      const renderContext = await renderUtils.buildRenderContext({
+        rootEnvironment: rootEnvironment,
+        subEnvironment: subEnvironment,
+        ancestors: [],
+        baseContext: {
+          ...commonBaseContext,
+          getUsedKeys: () => requestUsedContextKeys,
+        },
+      });
+      expect(renderContext.faker).toEqual(subEnvironment.data.faker);
+      expect(renderContext.foo).toEqual(subEnvironment.data.foo);
+    });
+    it('Used tag in environments should be rendered', async () => {
+      const requestObj = requestBuilder
+        .name('Request')
+        .url('https://{{ _.url }} - {{ uuid }}')
+        .description('Description')
+        .body({
+          text: JSON.stringify({
+            os: '{{ _.nested.level1.level2.level3.os[0] }}',
+          }),
+        })
+        .build();
+      const rootGlobalEnvironment = envBuilder
+        .data({
+          url: "{% base64 'encode', 'normal', 'test' %}",
+          uuid: "{% uuid 'v4' %}",
+          nested: {
+            level1: {
+              uuid_unused: "{% uuid 'v4' %}",
+              level2: {
+                level3: {
+                  os: ["{% os 'arch', '' %}"],
+                },
+              },
+            },
+          },
+        })
+        .build();
+      const requestUsedContextKeys = getObjectUsedContextKeys(requestObj);
+      const renderContext = await renderUtils.buildRenderContext({
+        rootEnvironment: rootEnvironment,
+        subEnvironment: subEnvironment,
+        rootGlobalEnvironment: rootGlobalEnvironment,
+        ancestors: [],
+        baseContext: {
+          ...commonBaseContext,
+          getUsedKeys: () => requestUsedContextKeys,
+        },
+      });
+      expect(renderContext.url).not.toEqual(rootGlobalEnvironment.data.url);
+      expect(renderContext.uuid).not.toEqual(rootGlobalEnvironment.data.uuid);
+      expect(renderContext.nested.level1.uuid_unused).toEqual(rootGlobalEnvironment.data.nested.level1.uuid_unused);
+      expect(renderContext.nested.level1.level2.level3.os[0]).toEqual(os.arch());
+    });
+  });
 });
