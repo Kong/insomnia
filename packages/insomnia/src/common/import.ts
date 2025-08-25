@@ -1,5 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
+import { z, type ZodError } from 'zod/v4';
+
 import type { CurrentPlan } from '~/models/organization';
 
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
@@ -22,7 +24,7 @@ import type { ImportEntry } from '../utils/importers/entities';
 import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
 import { database as db } from './database';
-import { importInsomniaV5Data } from './insomnia-v5';
+import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
 
 export interface ExportedModel extends BaseModel {
@@ -121,9 +123,11 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
       const oriFileName = importEntry.oriFileName || '';
 
       let result: ConvertResult | null = null;
+      let v5Error = null;
 
       try {
-        const insomnia5Import = importInsomniaV5Data(contentStr);
+        const { data: insomnia5Import, error } = tryImportV5Data(contentStr);
+        v5Error = error;
         if (insomnia5Import.length > 0) {
           result = {
             type: {
@@ -140,6 +144,16 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
           result = (await convert(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {
+        if (v5Error) {
+          const messages = extractErrorMessages(v5Error);
+          if (messages.length) {
+            return {
+              oriFileName,
+              // only report first 5 errors to avoid overflow
+              errors: messages.slice(0, 5),
+            };
+          }
+        }
         if (err instanceof Error) {
           return {
             oriFileName,
@@ -204,6 +218,38 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
           errors: [retObj.reason.toString()],
         },
   );
+}
+
+type ZodTreeifiedError = ReturnType<typeof z.treeifyError<any>>;
+
+function extractErrorMessages(v5Error: ZodError | any): string[] {
+  const messages: [string, string[]][] = [];
+  function walkError(err: ZodTreeifiedError, path = '') {
+    if (err.errors.length > 0) {
+      messages.push([path, err.errors]);
+    }
+    if ('properties' in err) {
+      for (const [key, value] of Object.entries(err.properties!)) {
+        if (value) {
+          walkError(value, path ? `${path}.${key}` : key);
+        }
+      }
+    }
+    if ('items' in err) {
+      (err.items as (ZodTreeifiedError | undefined)[]).forEach((item, index) => {
+        if (item) {
+          walkError(item, path ? `${path}.${index}` : String(index));
+        }
+      });
+    }
+  }
+
+  if ('issues' in v5Error) {
+    const errors = z.treeifyError(v5Error);
+    walkError(errors);
+    return messages.map(([path, errs]) => `"${path}": ${errs.join('; ')}`);
+  }
+  return 'message' in v5Error ? [v5Error.message] : typeof v5Error === 'string' ? [v5Error] : [];
 }
 
 export async function importResourcesToProject({

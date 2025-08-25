@@ -442,30 +442,42 @@ function getCollection(
   return [];
 }
 
+function importData(rawData: string) {
+  const file = InsomniaFileSchema.parse(parse(rawData));
+
+  if (file.type === 'collection.insomnia.rest/5.0') {
+    return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
+  }
+
+  if (file.type === 'spec.insomnia.rest/5.0') {
+    return [
+      getWorkspace(file),
+      ...getEnvironments(file),
+      ...getCookieJar(file),
+      ...getCollection(file),
+      ...getApiSpec(file),
+      ...getTestSuites(file),
+    ];
+  }
+
+  if (file.type === 'environment.insomnia.rest/5.0') {
+    return [getWorkspace(file), ...getEnvironments(file)];
+  }
+  return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
+}
+
+export function tryImportV5Data(rawData: string) {
+  try {
+    return { data: importData(rawData) };
+  } catch (error) {
+    console.error('Failed to import Insomnia v5 data', error);
+    return { data: [], error };
+  }
+}
+
 export function importInsomniaV5Data(rawData: string) {
   try {
-    const file = InsomniaFileSchema.parse(parse(rawData));
-
-    if (file.type === 'collection.insomnia.rest/5.0') {
-      return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
-    }
-
-    if (file.type === 'spec.insomnia.rest/5.0') {
-      return [
-        getWorkspace(file),
-        ...getEnvironments(file),
-        ...getCookieJar(file),
-        ...getCollection(file),
-        ...getApiSpec(file),
-        ...getTestSuites(file),
-      ];
-    }
-
-    if (file.type === 'environment.insomnia.rest/5.0') {
-      return [getWorkspace(file), ...getEnvironments(file)];
-    }
-
-    return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
+    return importData(rawData);
   } catch (err) {
     console.error('Failed to import Insomnia v5 data', err);
     return [];
