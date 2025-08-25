@@ -13,6 +13,7 @@ import {
 } from 'react-aria-components';
 
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+import { translateHandlersInScript } from '~/utils/importers/importers/translate-postman-script';
 
 import {
   CookieObject,
@@ -28,7 +29,6 @@ import {
 } from '../../../../../insomnia-scripting-environment/src/objects';
 import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
 import type { Settings } from '../../../models/settings';
-import { translateHandlersInScript } from '../../../utils/importers/importers/postman';
 import { Icon } from '../icon';
 
 interface Props {
