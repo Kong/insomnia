@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Input, Label, TextField } from 'react-aria-components';
+import { Button, FieldError, Form, Input, Label, TextField } from 'react-aria-components';
 
 import type { GitCredentials } from '~/models/git-credentials';
 import type { GitRepository } from '~/models/git-repository';
@@ -76,7 +76,7 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
   const signOutFetcher = useGitLabSignOutFetcher();
 
   return (
-    <form
+    <Form
       id="gitlab"
       className="flex flex-col gap-6"
       onSubmit={event => {
@@ -115,12 +115,20 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
         <Label className="text-start text-sm font-semibold">Git URI (https, including .git suffix)</Label>
         <Input
           type="url"
+          pattern="https?://.*\.git"
           defaultValue={uri}
           onChange={e => setGitlabUri(e.currentTarget.value)}
           disabled={Boolean(uri)}
           placeholder="https://gitlab.com/org/repo.git"
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
+        <FieldError className="text-xs text-[--color-danger]">
+          {({ validationDetails, defaultChildren }) =>
+            validationDetails.patternMismatch
+              ? 'Please ensure the URL is valid and ends with a .git suffix.'
+              : defaultChildren
+          }
+        </FieldError>
       </TextField>
       <GitRemoteBranchSelect
         credentials={{
@@ -140,7 +148,7 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
           {error}
         </p>
       )}
-    </form>
+    </Form>
   );
 };
 
