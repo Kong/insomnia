@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import * as models from '../../models';
 import {
+  cookieJarModelSchema,
   environmentModelSchema,
   requestGroupModelSchema,
   requestModelSchema,
@@ -17,6 +18,7 @@ import * as renderUtils from '../render';
 const envBuilder = createBuilder(environmentModelSchema);
 const reqGroupBuilder = createBuilder(requestGroupModelSchema);
 const requestBuilder = createBuilder(requestModelSchema);
+const cookieJarBuilder = createBuilder(cookieJarModelSchema);
 
 describe('render tests', () => {
   beforeEach(async () => {
@@ -827,6 +829,7 @@ describe('render tests', () => {
           url: "{% base64 'encode', 'normal', 'test' %}",
           uuid: "{% uuid 'v4' %}",
           nested: {
+            cookieValue: "{% os 'platform', '' %}",
             level1: {
               uuid_unused: "{% uuid 'v4' %}",
               level2: {
@@ -838,7 +841,24 @@ describe('render tests', () => {
           },
         })
         .build();
-      const requestUsedContextKeys = getObjectUsedContextKeys(requestObj);
+      const reqCookeJar = cookieJarBuilder
+        .cookies([
+          {
+            domain: 'domain.com',
+            expires: '2038-01-18T19:14:00.000Z',
+            httpOnly: false,
+            id: '1f254c7d-5e65-46c6-85de-5cd10b8bf648',
+            key: 'foo',
+            path: '/',
+            secure: false,
+            value: '{{ _.nested.cookieValue }}',
+          },
+        ])
+        .build();
+      const requestUsedContextKeys = getObjectUsedContextKeys({
+        _req: requestObj,
+        _cookieJar: reqCookeJar,
+      });
       const renderContext = await renderUtils.buildRenderContext({
         rootEnvironment: rootEnvironment,
         subEnvironment: subEnvironment,
@@ -853,6 +873,7 @@ describe('render tests', () => {
       expect(renderContext.uuid).not.toEqual(rootGlobalEnvironment.data.uuid);
       expect(renderContext.nested.level1.uuid_unused).toEqual(rootGlobalEnvironment.data.nested.level1.uuid_unused);
       expect(renderContext.nested.level1.level2.level3.os[0]).toEqual(os.arch());
+      expect(renderContext.nested.cookieValue).toEqual(os.platform());
     });
   });
 });
