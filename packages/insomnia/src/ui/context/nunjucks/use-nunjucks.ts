@@ -68,7 +68,6 @@ export const useNunjucks = (options?: UseNunjucksOptions) => {
     workspaceData?.activeGlobalEnvironment,
     workspaceData?.activeEnvironment,
     options?.renderContext,
-    activeRequestGroup,
   ]);
 
   const handleGetRenderContext = useCallback(async () => {
