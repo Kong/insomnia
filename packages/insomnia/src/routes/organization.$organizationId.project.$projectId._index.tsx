@@ -491,7 +491,7 @@ const Component = () => {
       console.log('[remote files] remote files loaded for project ui', remoteFiles.length);
     }
   }, [activeProject?.remoteId, remoteFiles]);
-  const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(projectsSyncStatusPromise);
+  const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(projectsSyncStatusPromise, projectId);
 
   const allFiles = useMemo(() => {
     return remoteFiles ? [...localFiles, ...remoteFiles] : localFiles;
@@ -520,7 +520,7 @@ const Component = () => {
 
   const { storagePromise } = storageRuleFetcher.data || {};
 
-  const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise);
+  const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
 
   const [projectListFilter, setProjectListFilter] = reactUse.useLocalStorage(
     `${organizationId}:project-list-filter`,
