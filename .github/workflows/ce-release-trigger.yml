@@ -19,12 +19,37 @@ on:
 env:
   RELEASE_VERSION: ${{ github.event.inputs.version }}
   RELEASE_BRANCH: release/${{ github.event.inputs.version }}
-  ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
+  RELEASE_CHANNEL: ${{ github.event.inputs.channel }}
 
 jobs:
+  start-release:
+    timeout-minutes: 10
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Start Release
+        run: |
+          gh workflow run release-start.yml -f channel=${{ env.RELEASE_CHANNEL }} -f version=${{ env.RELEASE_VERSION }} --repo Kong/insomnia
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+      - name: Wait for Release to complete
+        run: sleep 60 # wait for a minute to ensure the run is created
+      - name: Get latest run ID from Kong/insomnia
+        run: |
+          RUN_ID=$(gh run list --repo Kong/insomnia --workflow "Release Start" --limit 1 --json databaseId -q '.[0].databaseId')
+          echo "RUN_ID=${RUN_ID}" >> $GITHUB_ENV
+          echo "Triggered run ID: $RUN_ID"
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+      - name: Wait for completion
+        run: |
+          gh run watch ${{ env.RUN_ID }} --repo Kong/insomnia
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+
   create-pr:
     timeout-minutes: 5
     runs-on: ubuntu-22.04
+    needs: [start-release]
     steps:
       - name: Create Pull Request in CE
         run: |
@@ -33,48 +58,15 @@ jobs:
           --head ${{ env.RELEASE_BRANCH }} \
           --title ":rocket: ${{ env.RELEASE_VERSION}}" \
           --repo kong/insomnia \
-          --body "$(cat <<EOF
-          # WARNING: <ins>Do not merge</ins> this PR. Use the "Publish" workflow.
-
-          ## Publish workflow:
-
-          When ready to publish, trigger [Publish](https://github.com/Kong/insomnia/actions/workflows/release-publish.yml) workflow with these variables:
-          - Release version (\`version\`): \`${{ env.RELEASE_VERSION}}\`
-
-          Alternatively, you can trigger the workflow from [GitHub CLI](https://cli.github.com/):
-          \`\`\`bash
-          gh workflow run release-publish.yml -f version=${{ env.RELEASE_VERSION}} --repo Kong/insomnia
-          \`\`\`
-
-          > Release notes will be generated automatically based on the commit messages during publish. Remove any unwanted notes manually afterwards.
-
-          <details>
-          <summary>Merge branch step failed on the publish workflow? Try this...</summary>
-
-          Run locally:
-
-          \`\`\`bash
-          # Make sure git remote is Kong/insomnia...
-
-          git checkout develop
-          git merge --no-ff release/${{ env.RELEASE_VERSION}}
-
-          # Solve merge conflicts ...
-          # If there's package-lock conflicts, run \`npm install\` and commit the package-lock changes
-
-          git push
-          \`\`\`
-          </details>
-          EOF
-          )"
+          --body "**Automated pull request**"
         env:
           GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
 
   trigger-release-build:
     timeout-minutes: 5
     runs-on: ubuntu-22.04
+    needs: [start-release]
     steps:
-
       - name: Checkout branch
         uses: actions/checkout@v4
         with:
@@ -86,7 +78,7 @@ jobs:
         id: configure_git_user
         uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
         with:
-          username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
+          username: insomnia-infra
 
       - name: Git Commit
         run: git commit -am "Trigger release/${{ env.RELEASE_VERSION}} build" --allow-empty
@@ -96,7 +88,12 @@ jobs:
           remote_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/kong/insomnia.git"
           git push "${remote_repo}" --follow-tags
         env:
+          GITHUB_ACTOR: insomnia-infra
           GITHUB_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
-      
 
-
+      # NOTE: Approve the PR with jay.wu@konghq.com's token
+      - name: Approve Pull Request
+        run: |
+          gh pr review ${{ env.RELEASE_BRANCH }} --approve --repo kong/insomnia
+        env:
+          GITHUB_TOKEN: ${{ secrets.CE_PR_APPROVE_TOKEN }}
