@@ -30,9 +30,11 @@ export const useLoaderDeferData = <T>(
         if (!abortController.signal.aborted) {
           setIsPending(false);
           setData(data);
+          setError(undefined);
         }
       } catch (err) {
         if (!abortController.signal.aborted) {
+          setIsPending(false);
           setError(err);
           console.warn('Failed to load deferred data', err);
         }
