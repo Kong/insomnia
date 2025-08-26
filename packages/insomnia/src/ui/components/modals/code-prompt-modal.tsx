@@ -28,7 +28,6 @@ interface CodePromptModalOptions {
   hint?: string;
   mode: string;
   hideMode?: boolean;
-  enableRender: boolean;
   showCopyButton?: boolean;
   onChange: (value: string) => void;
   onModeChange?: (value: string) => void;
@@ -50,7 +49,6 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
     hint: '',
     mode: 'text/plain',
     hideMode: false,
-    enableRender: false,
     showCopyButton: false,
     onChange: () => {},
     onModeChange: () => {},
@@ -75,8 +73,7 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
     [],
   );
 
-  const { submitName, title, placeholder, defaultValue, hint, mode, hideMode, enableRender, showCopyButton, onChange } =
-    state;
+  const { submitName, title, placeholder, defaultValue, hint, mode, hideMode, showCopyButton, onChange } = state;
 
   return (
     <Modal ref={modalRef} tall>

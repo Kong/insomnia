@@ -120,7 +120,6 @@ export const Row: FC<Props> = ({
                   title: `Edit ${pair.name}`,
                   defaultValue: pair.value,
                   onChange: (value: string) => onChange({ ...pair, value }),
-                  enableRender: true,
                   mode: pair.multiline && typeof pair.multiline === 'string' ? pair.multiline : 'text/plain',
                   onModeChange: (mode: string) => onChange({ ...pair, multiline: mode }),
                 })
