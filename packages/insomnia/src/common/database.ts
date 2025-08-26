@@ -435,7 +435,7 @@ export const database = {
 
     // Don't really need to wait for this to be over;
     types.map(t =>
-      nedbBucket[t]?.remove(
+      nedbBucket[t].remove(
         {
           _id: {
             $in: docIds,
@@ -464,7 +464,7 @@ export const database = {
 
       // Don't really need to wait for this to be over;
       types.map(t =>
-        nedbBucket[t]?.remove(
+        nedbBucket[t].remove(
           {
             _id: {
               $in: docIds,
