@@ -79,8 +79,8 @@ export const OAuthAuthorizationStatusModal: FC = () => {
               </button>
             </div>
             <p className="text-[rgba(var(--color-font-rgb),0.8))] text-start">
-              If the Insomnia app doesn’t open automatically after you complete the authorization in your browser,
-              please copy the full redirect URL showed in the redirect page and paste it below.
+              Please copy the full redirect URL showed in the redirect page and paste it below after you complete the
+              authorization in your browser.
             </p>
             <form
               onSubmit={e => {
