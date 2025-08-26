@@ -3,7 +3,6 @@ import { Button } from 'react-aria-components';
 
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
-import { NunjucksEnabledProvider } from '../../context/nunjucks/nunjucks-enabled-context';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
@@ -97,37 +96,35 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
               }
         }
       >
-        <NunjucksEnabledProvider disable={!enableRender}>
-          {showCopyButton ? (
-            <div className="pad-top-sm pad-right-sm">
-              <CopyButton content={defaultValue} className="pull-right" />
-            </div>
-          ) : null}
-          {mode === 'text/x-markdown' ? (
-            <div className="pad-sm tall">
-              <MarkdownEditor
-                tall
-                defaultValue={defaultValue}
-                placeholder={placeholder}
-                onChange={onChange}
-                mode={mode}
-              />
-            </div>
-          ) : (
-            <div className="tall rounded bg-[--hl-xs]">
-              <CodeEditor
-                id="code-prompt-modal"
-                hideLineNumbers
-                showPrettifyButton
-                defaultValue={defaultValue}
-                placeholder={placeholder}
-                onChange={onChange}
-                mode={mode}
-                enableNunjucks
-              />
-            </div>
-          )}
-        </NunjucksEnabledProvider>
+        {showCopyButton ? (
+          <div className="pad-top-sm pad-right-sm">
+            <CopyButton content={defaultValue} className="pull-right" />
+          </div>
+        ) : null}
+        {mode === 'text/x-markdown' ? (
+          <div className="pad-sm tall">
+            <MarkdownEditor
+              tall
+              defaultValue={defaultValue}
+              placeholder={placeholder}
+              onChange={onChange}
+              mode={mode}
+            />
+          </div>
+        ) : (
+          <div className="tall rounded bg-[--hl-xs]">
+            <CodeEditor
+              id="code-prompt-modal"
+              hideLineNumbers
+              showPrettifyButton
+              defaultValue={defaultValue}
+              placeholder={placeholder}
+              onChange={onChange}
+              mode={mode}
+              enableNunjucks
+            />
+          </div>
+        )}
       </ModalBody>
       <ModalFooter>
         {!hideMode ? (

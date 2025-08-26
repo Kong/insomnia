@@ -148,9 +148,6 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
     }
   };
 
-  // TODO(@dmarby): Wrap the CodeEditor in a NunjucksEnabledProvider here?
-  // To allow for disabling rendering of messages based on a per-request setting.
-  // Same as with regular requests
   return (
     <form
       id="websocketMessageForm"

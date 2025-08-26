@@ -16,7 +16,6 @@ import {
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { describeByteSize, generateId } from '../../../common/misc';
-import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
 import { FileInputButton } from '../base/file-input-button';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
@@ -75,7 +74,7 @@ export const KeyValueEditor: FC<Props> = ({
   readOnlyPairs,
 }) => {
   const [showDescription, setShowDescription] = React.useState(false);
-  const { enabled: nunjucksEnabled } = useNunjucksEnabled();
+  const nunjucksEnabled = true;
   let pairsListItems = useMemo(
     () =>
       pairs.length > 0 ? pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) : [createEmptyPair()],
