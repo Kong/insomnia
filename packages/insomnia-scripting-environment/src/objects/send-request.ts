@@ -15,11 +15,11 @@ export async function sendRequest(
   cb: (error?: string, response?: Response) => void,
   settings: Settings,
 ): Promise<Response | undefined> {
-  return new Promise<Response | undefined>(async resolve => {
+  return new Promise<Response | undefined>(async (resolve, reject) => {
     // TODO(george): enable cascading cancellation later as current solution just adds complexity
-    const requestOptions = requestToCurlOptions(request, settings);
-
     try {
+      const requestOptions = requestToCurlOptions(request, settings);
+
       const nodejsCurlRequest =
         process.type === 'renderer'
           ? window.bridge.curlRequest
@@ -30,20 +30,32 @@ export async function sendRequest(
           return curlOutputToResponse(output, request);
         })
         .then((transformedOutput: Response) => {
-          cb(undefined, transformedOutput);
+          if (cb) {
+            cb(undefined, transformedOutput);
+          }
           resolve(transformedOutput);
         })
         .catch((e: string | undefined) => {
-          cb(e, undefined);
-          resolve(undefined);
+          if (cb) {
+            cb(e, undefined);
+          } else {
+            reject(e);
+          }
         });
     } catch (err: any) {
       if (err.name === 'AbortError') {
-        cb(`Request was cancelled: ${err.message}`, undefined);
+        if (cb) {
+          cb(`Request was cancelled: ${err.message}`, undefined);
+        } else {
+          reject(err);
+        }
       } else {
-        cb(`Something went wrong: ${err.message}`, undefined);
+        if (cb) {
+          cb(`Something went wrong: ${err.message}`, undefined);
+        } else {
+          reject(err);
+        }
       }
-      resolve(undefined);
     }
   });
 }
@@ -107,7 +119,8 @@ function requestToCurlOptions(req: string | Request | RequestOptions, settings: 
           break;
         }
         default: {
-          throw new Error(`unknown body mode: ${finalReq.body.mode}`);
+          // it could be empty body and which is valid
+          mimeType = 'text/plain';
         }
       }
     }
@@ -175,23 +188,23 @@ function requestToCurlOptions(req: string | Request | RequestOptions, settings: 
       settings,
       certificates: finalReq.certificate
         ? [
-            {
-              host: finalReq.certificate?.name || '',
-              passphrase: finalReq.certificate?.passphrase || '',
-              cert: finalReq.certificate?.cert?.src || '',
-              key: finalReq.certificate?.key?.src || '',
-              pfx: finalReq.certificate?.pfx?.src || '',
-              // unused fields because they are not persisted
-              disabled: false,
-              isPrivate: false,
-              _id: '',
-              type: '',
-              parentId: '',
-              modified: 0,
-              created: 0,
-              name: '',
-            },
-          ]
+          {
+            host: finalReq.certificate?.name || '',
+            passphrase: finalReq.certificate?.passphrase || '',
+            cert: finalReq.certificate?.cert?.src || '',
+            key: finalReq.certificate?.key?.src || '',
+            pfx: finalReq.certificate?.pfx?.src || '',
+            // unused fields because they are not persisted
+            disabled: false,
+            isPrivate: false,
+            _id: '',
+            type: '',
+            parentId: '',
+            modified: 0,
+            created: 0,
+            name: '',
+          },
+        ]
         : [],
       caCertficatePath: null, // the request in pre-request script doesn't support customizing ca yet
       socketPath: undefined,
