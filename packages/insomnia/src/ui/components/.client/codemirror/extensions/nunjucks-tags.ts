@@ -56,8 +56,10 @@ async function _highlightNunjucksTags(
   showVariableSourceAndValue: boolean,
   editorId: string,
 ) {
-  const renderString = (text: any) => render(text);
-  const renderContextWithCacheKey = () => renderContext();
+  const renderCacheKey = Math.random() + '';
+
+  const renderString = (text: any) => render(text, renderCacheKey);
+  const renderContextWithCacheKey = () => renderContext(renderCacheKey);
 
   const activeMarks: CodeMirror.TextMarker[] = [];
   const doc: CodeMirror.Doc = this.getDoc();

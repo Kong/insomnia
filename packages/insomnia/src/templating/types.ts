@@ -63,7 +63,7 @@ export interface RenderContextAndKeys {
   }[];
 }
 
-export type HandleRender = <T>(whatever: T) => Promise<T>;
+export type HandleRender = <T>(whatever: T, contextCacheKey?: string | null) => Promise<T>;
 
 export interface BaseRenderContextOptions {
   environment?: string | Environment;

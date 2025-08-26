@@ -1,34 +1,26 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
 
 import { getRenderContext, getRenderContextAncestors, render } from '~/common/render';
-import { environment } from '~/models';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/templating';
-import type { BaseRenderContext, HandleRender, RenderContextOptions } from '~/templating/types';
+import type { HandleRender, RenderContextOptions } from '~/templating/types';
 import { getKeys } from '~/templating/utils';
 
-interface CacheOptions {
-  //If true, will cache the render context
-  enableCache?: boolean;
+let getRenderContextPromiseCache: any = {};
+
+export interface UseNunjucksOptions {
+  renderContext: Pick<Partial<RenderContextOptions>, 'purpose' | 'extraInfo'>;
 }
-export type UseNunjucksOptions = {
-  renderContext?: Pick<Partial<RenderContextOptions>, 'purpose' | 'extraInfo'>;
-} & CacheOptions;
+export const initializeNunjucksRenderPromiseCache = () => {
+  getRenderContextPromiseCache = {};
+};
+
+initializeNunjucksRenderPromiseCache();
 
 /**
- *
- * Customized hook simplifies template rendering in React components by:
- * - Retrieving render context based on current request/folder/workspace
- * - Providing optional caching to optimize performance and avoid race conditions
- * - Clear cache automatically when any of the environments change
- *
- * @param options - Configuration options for rendering and caching
- * @param options.renderContext.purpose - Purpose of the render operation (e.g., 'send', 'preview')
- * @param options.renderContext.extraInfo - Additional information to include in render context
- * @param options.enableCache - Whether to cache the render context. Mainly used for editors with many nunjucks to render
- *
+ * Access to functions useful for Nunjucks rendering
  */
 export const useNunjucks = (options?: UseNunjucksOptions) => {
   // for all types of requests
@@ -36,84 +28,61 @@ export const useNunjucks = (options?: UseNunjucksOptions) => {
   // for request group (folder)
   const { activeRequestGroup } = useRequestGroupLoaderData() || {};
   const workspaceData = useWorkspaceLoaderData();
-  const { enableCache = false } = options || {};
-  const renderContextPromiseCache = useRef<Promise<BaseRenderContext>>();
 
   const fetchRenderContext = useCallback(async () => {
     const ancestors = await getRenderContextAncestors(
       requestData?.activeRequest || activeRequestGroup || workspaceData?.activeWorkspace,
     );
-    const baseEnvironment = workspaceData?.baseEnvironment;
-    const activeGlobalEnvironment = workspaceData?.activeGlobalEnvironment;
-    const isActiveGlobalBaseEnvironment = activeGlobalEnvironment?._id.startsWith('wrk_');
-
     return getRenderContext({
       request: requestData?.activeRequest || undefined,
-      environment: workspaceData?.activeEnvironment,
-      baseEnvironment,
-      ...(activeGlobalEnvironment && {
-        rootGlobalEnvironment: isActiveGlobalBaseEnvironment
-          ? activeGlobalEnvironment
-          : (await environment.getById(activeGlobalEnvironment.parentId))!,
-        subGlobalEnvironment: isActiveGlobalBaseEnvironment ? undefined : activeGlobalEnvironment,
-      }),
+      environment: workspaceData?.activeEnvironment._id,
       ancestors,
       ...options?.renderContext,
     });
   }, [
     requestData?.activeRequest,
-    activeRequestGroup,
     workspaceData?.activeWorkspace,
-    workspaceData?.baseEnvironment,
-    workspaceData?.activeGlobalEnvironment,
-    workspaceData?.activeEnvironment,
+    workspaceData?.activeEnvironment._id,
     options?.renderContext,
+    activeRequestGroup,
   ]);
 
-  const handleGetRenderContext = useCallback(async () => {
-    const context =
-      enableCache && renderContextPromiseCache.current
-        ? await renderContextPromiseCache.current
-        : await fetchRenderContext();
-    const keys = getKeys(context, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME);
-    return { context, keys };
-  }, [enableCache, fetchRenderContext]);
+  const handleGetRenderContext = useCallback(
+    async (contextCacheKey?: string) => {
+      const context =
+        contextCacheKey && getRenderContextPromiseCache[contextCacheKey]
+          ? await getRenderContextPromiseCache[contextCacheKey]
+          : await fetchRenderContext();
+      const keys = getKeys(context, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME);
+      return { context, keys };
+    },
+    [fetchRenderContext],
+  );
   /**
    * Heavily optimized render function
    *
    * @param text - template to render
+   * @param contextCacheKey - if rendering multiple times in parallel, set this
    * @returns {Promise}
    * @private
    */
   const handleRender: HandleRender = useCallback(
-    async <T>(obj: T) => {
-      let getOrCreateRenderContext: ReturnType<typeof fetchRenderContext>;
-      // Implement cache invalidation strategy for performance optimization:
-      // 1. Cache the render context to avoid expensive re-computation for multiple nunjucks
-      // 2. This pattern is mainly used for editors that render many nunjucks simultaneously
-      //    (For example: code-editor, one-line-editor)
-      // 3. With this approach, all templates rendered during the cache window share the same
-      //    context promise, avoiding redundant context creation and race conditions
-      if (enableCache) {
-        if (!renderContextPromiseCache.current) {
-          renderContextPromiseCache.current = fetchRenderContext();
-        }
-        getOrCreateRenderContext = renderContextPromiseCache.current;
-      } else {
-        getOrCreateRenderContext = fetchRenderContext();
+    async <T>(obj: T, contextCacheKey: string | null = null) => {
+      if (!contextCacheKey || !getRenderContextPromiseCache[contextCacheKey]) {
+        // NOTE: We're caching promises here to avoid race conditions
+        // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
+        getRenderContextPromiseCache[contextCacheKey] = fetchRenderContext();
       }
-      const context = await getOrCreateRenderContext;
+
+      // Set timeout to delete the key eventually
+      // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
+      setTimeout(() => delete getRenderContextPromiseCache[contextCacheKey], 5000);
+      // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
+      const context = await getRenderContextPromiseCache[contextCacheKey];
       return render({ obj, context });
     },
-    [enableCache, fetchRenderContext],
+    [fetchRenderContext],
   );
-
-  useEffect(() => {
-    // Clean up the cache when fetchRenderContext changes
-    // fetchRenderContext will change when any of the environment changes
-    // This includes collection environment, global environment and folder environment
-    renderContextPromiseCache.current = undefined;
-  }, [enableCache, fetchRenderContext]);
 
   return {
     handleRender,
