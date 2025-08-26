@@ -188,23 +188,23 @@ function requestToCurlOptions(req: string | Request | RequestOptions, settings: 
       settings,
       certificates: finalReq.certificate
         ? [
-          {
-            host: finalReq.certificate?.name || '',
-            passphrase: finalReq.certificate?.passphrase || '',
-            cert: finalReq.certificate?.cert?.src || '',
-            key: finalReq.certificate?.key?.src || '',
-            pfx: finalReq.certificate?.pfx?.src || '',
-            // unused fields because they are not persisted
-            disabled: false,
-            isPrivate: false,
-            _id: '',
-            type: '',
-            parentId: '',
-            modified: 0,
-            created: 0,
-            name: '',
-          },
-        ]
+            {
+              host: finalReq.certificate?.name || '',
+              passphrase: finalReq.certificate?.passphrase || '',
+              cert: finalReq.certificate?.cert?.src || '',
+              key: finalReq.certificate?.key?.src || '',
+              pfx: finalReq.certificate?.pfx?.src || '',
+              // unused fields because they are not persisted
+              disabled: false,
+              isPrivate: false,
+              _id: '',
+              type: '',
+              parentId: '',
+              modified: 0,
+              created: 0,
+              name: '',
+            },
+          ]
         : [],
       caCertficatePath: null, // the request in pre-request script doesn't support customizing ca yet
       socketPath: undefined,
