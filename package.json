@@ -65,7 +65,7 @@
     "type-fest": "^4.15.0",
     "typescript": "5.8.3",
     "typescript-eslint": "^8.29.0",
-    "vitest": "^3.1.1"
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "@getinsomnia/node-libcurl": "3.0.0"
