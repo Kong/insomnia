@@ -649,9 +649,8 @@ export const database = {
           promises.push(promise);
         }
 
-        for (const more of await Promise.all(promises)) {
-          foundDocs = [...foundDocs, ...more];
-        }
+        const docBatches = await Promise.all(promises);
+        foundDocs = [...foundDocs, ...docBatches.flat()];
       }
 
       if (foundDocs.length === 0) {
