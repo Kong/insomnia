@@ -621,7 +621,7 @@ export const database = {
 
     let docsToReturn: BaseModel[] = [doc];
 
-    const queryTypesDescendantMap = types.length ? models.generateDescendantMap(types) : models.DESCENDANT_MAP;
+    const queryTypesDescendantMap = types.length ? models.generateDescendantMap(types) : models.getAllDescendantMap();
     async function findDescendants(docs: BaseModel[]): Promise<BaseModel[]> {
       let foundDocs: BaseModel[] = [];
 
