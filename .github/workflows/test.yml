@@ -19,6 +19,9 @@ jobs:
   Test:
     timeout-minutes: 20
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -45,3 +48,61 @@ jobs:
 
       - name: Unit Tests
         run: npm test
+
+      - name: Check Circular References
+        run: npm run check-circular-references
+        working-directory: packages/insomnia
+
+      - name: Comment Circular References Report on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const reportPath = path.join(process.cwd(), 'circular-references.md');
+            
+            if (fs.existsSync(reportPath)) {
+              const report = fs.readFileSync(reportPath, 'utf8');
+              
+              try {
+                // Find previous comments
+                const { data: comments } = await github.rest.issues.listComments({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                });
+                
+                const botComment = comments.find(comment => 
+                  comment.user?.type === 'Bot' && 
+                  comment.body?.includes('# Circular References Report')
+                );
+                
+                if (botComment) {
+                  // Update existing comment
+                  await github.rest.issues.updateComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    comment_id: botComment.id,
+                    body: report
+                  });
+                  console.log('Updated existing comment');
+                } else {
+                  // Create new comment
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: context.issue.number,
+                    body: report
+                  });
+                  console.log('Created new comment');
+                }
+              } catch (error) {
+                console.error('Error posting comment:', error);
+                // Don't let comment failure affect the entire CI
+              }
+            } else {
+              console.log('No circular references report found');
+            }
