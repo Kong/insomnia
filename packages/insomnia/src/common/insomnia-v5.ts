@@ -491,7 +491,7 @@ export async function getInsomniaV5DataExport({
     const workspaceDescendants = await database.getWithDescendants(workspace, models.EXPORTABLE_TYPES);
 
     const exportableResources = workspaceDescendants.filter(resource => {
-      if ((models.EXPORTABLE_TYPES as string[]).includes(resource.type)) {
+      if (models.EXPORTABLE_TYPES.includes(resource.type as models.ModelTypes[number])) {
         return true;
       }
 
