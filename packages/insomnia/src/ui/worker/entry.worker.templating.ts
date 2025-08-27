@@ -1,4 +1,4 @@
-import * as templating from '../../templating/worker';
+import { render } from './template-rendering';
 
 async function performJob(input: {
   input: string;
@@ -6,7 +6,7 @@ async function performJob(input: {
   path: string;
   ignoreUndefinedEnvVariable: boolean;
 }) {
-  return templating.render(input.input, {
+  return render(input.input, {
     context: input.context,
     path: input.path,
     ignoreUndefinedEnvVariable: input.ignoreUndefinedEnvVariable,

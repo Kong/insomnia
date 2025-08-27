@@ -1,17 +1,15 @@
 import type { Environment } from 'nunjucks';
 
+import type { TemplateTag } from '~/plugins';
 import { localTemplateTags } from '~/templating/local-template-tags';
 import { nunjucks } from '~/templating/nunjucks.client';
-
-import type { TemplateTag } from '../plugins';
-import BaseExtensionWorker, { fetchFromTemplateWorkerDatabase } from './base-extension-worker';
-import { extractUndefinedVariableKey, RenderError } from './render-error';
+import { extractUndefinedVariableKey, RenderError } from '~/templating/render-error';
+import { fetchFromTemplateWorkerDatabase, NunjucksExtension } from '~/ui/worker/nunjucks-extension';
 
 // Some constants
 export const RENDER_ALL = 'all';
 export const RENDER_VARS = 'variables';
 export const RENDER_TAGS = 'tags';
-export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
 
 type NunjucksEnvironment = Environment & {
   extensions: Record<string, any>;
@@ -49,7 +47,7 @@ export function render(
   // context needs to exist on the root for the old templating syntax, and in _ for the new templating syntax
   // old: {{ arr[0].prop }}
   // new: {{ _['arr-name-with-dash'][0].prop }}
-  const templatingContext = { ...context, [NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME]: context };
+  const templatingContext = { ...context, ['_']: context };
   const path = config.path || null;
   const renderMode = config.renderMode || RENDER_ALL;
   return new Promise<string | null>(async (resolve, reject) => {
@@ -192,7 +190,7 @@ async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: bool
   for (const extension of allExtensions) {
     const { templateTag, plugin } = extension;
     templateTag.priority = templateTag.priority || allExtensions.indexOf(extension);
-    const instance = new BaseExtensionWorker(templateTag, plugin);
+    const instance = new NunjucksExtension(templateTag, plugin);
     nunjucksEnvironment.addExtension(instance.getTag() || '', instance);
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`

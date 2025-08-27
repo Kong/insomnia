@@ -17,7 +17,7 @@ import { isRequestGroup, type RequestGroup } from '../../../models/request-group
 import type { Workspace } from '../../../models/workspace';
 import * as plugins from '../../../plugins';
 import * as pluginStore from '../../../plugins/context/store';
-import * as templating from '../../../templating';
+import * as templating from '../../../templating/template-rendering';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../../../templating/types';
 import { sanitizeStrForWin32 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';

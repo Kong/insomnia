@@ -16,8 +16,8 @@ import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
-import * as templating from '../templating';
 import { RenderError } from '../templating/render-error';
+import { render as templateRendering } from '../templating/template-rendering';
 import type {
   BaseRenderContext,
   BaseRenderContextOptions,
@@ -230,7 +230,7 @@ export async function buildRenderContext({
   return finalRenderContext;
 }
 const renderInThisProcess = async (input: RenderInputType) => {
-  return templating.render(input.input, {
+  return templateRendering(input.input, {
     context: input.context,
     path: input.path,
     ignoreUndefinedEnvVariable: input.ignoreUndefinedEnvVariable,
@@ -300,7 +300,7 @@ export async function render<T>(
         const currentProcessIsRendererAndPluginsAreRestricted =
           process.type === 'renderer' && pluginsAreRestrictedToRunInWorker;
         const renderFork = currentProcessIsRendererAndPluginsAreRestricted
-          ? (await import('../ui/worker/templating-handler')).renderInWorker
+          ? (await import('../ui/worker/create-templating-worker')).renderInWorker
           : renderInThisProcess;
 
         // @ts-expect-error -- TSCONVERSION
@@ -442,7 +442,7 @@ export async function getRenderContext({
     }
   }
 
-  const inKey = templating.NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
+  const inKey = '_';
 
   if (rootGlobalEnvironment) {
     getKeySource(rootGlobalEnvironment.data || {}, inKey, 'rootGlobal');
@@ -580,7 +580,7 @@ export async function getRenderedRequestAndContext({
       o.query = o.query.replace(/#}/g, '# }');
       request.body.text = JSON.stringify(o);
     }
-  } catch (err) { }
+  } catch (err) {}
 
   // Render description separately because it's lower priority
   const description = request.description;

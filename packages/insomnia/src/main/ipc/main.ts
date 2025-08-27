@@ -173,12 +173,12 @@ export function registerMainHandlers() {
         lintProcess.kill();
       }
 
-      lintProcess = utilityProcess.fork(path.join(__dirname, 'main/lint-process.mjs'));
+      lintProcess = utilityProcess.fork(path.join(__dirname, 'entry.utility.spectral.mjs'));
 
       let process: UtilityProcess | null = lintProcess!;
 
       process.on('exit', code => {
-        console.log('[lint-process] exited with code:', code);
+        console.log('[main] utilityProcess exited with code:', code);
         resolve({ cancelled: true });
       });
 
@@ -189,7 +189,7 @@ export function registerMainHandlers() {
       });
 
       process.on('error', err => {
-        console.error('[lint-process] error:', err);
+        console.error('[main] utilityProcess error:', err);
         reject({ error: err.toString() });
       });
 

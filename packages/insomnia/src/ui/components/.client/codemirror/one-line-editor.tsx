@@ -11,7 +11,7 @@ import * as misc from '~/common/misc';
 import type { KeyCombination } from '~/common/settings';
 import { getTemplateTags } from '~/plugins';
 import { useRootLoaderData } from '~/root';
-import { getTagDefinitions } from '~/templating/index';
+import { getTagDefinitions } from '~/templating/template-rendering';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/templating/types';
 import { extractNunjucksTagFromCoords } from '~/templating/utils';
 import { showModal } from '~/ui/components/modals';

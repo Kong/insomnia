@@ -3,7 +3,7 @@ import { database } from '../common/database';
 import * as models from '../models';
 import * as plugins from '../plugins';
 import * as themes from '../plugins/misc';
-import * as templating from '../templating';
+import * as templating from '../templating/template-rendering';
 import { showModal } from './components/modals';
 import { AskModal } from './components/modals/ask-modal';
 import { SelectModal } from './components/modals/select-modal';

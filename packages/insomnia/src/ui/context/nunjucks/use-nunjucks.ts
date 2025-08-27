@@ -4,7 +4,6 @@ import { getRenderContext, getRenderContextAncestors, render } from '~/common/re
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/templating';
 import type { HandleRender, RenderContextOptions } from '~/templating/types';
 import { getKeys } from '~/templating/utils';
 
@@ -53,7 +52,7 @@ export const useNunjucks = (options?: UseNunjucksOptions) => {
         contextCacheKey && getRenderContextPromiseCache[contextCacheKey]
           ? await getRenderContextPromiseCache[contextCacheKey]
           : await fetchRenderContext();
-      const keys = getKeys(context, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME);
+      const keys = getKeys(context, '_');
       return { context, keys };
     },
     [fetchRenderContext],

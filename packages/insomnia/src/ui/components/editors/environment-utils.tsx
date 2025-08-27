@@ -6,7 +6,6 @@ import {
   vaultEnvironmentPath,
   vaultEnvironmentRuntimePath,
 } from '../../../models/environment';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
@@ -20,8 +19,8 @@ export const ensureKeyIsValid = (key: string, isRoot: boolean): string | null =>
     return `"${key}" cannot begin with '$' or contain a '.'`;
   }
 
-  if (key === NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME && isRoot) {
-    return `"${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}" is a reserved key`;
+  if (key === '_' && isRoot) {
+    return `"_" is a reserved key`;
   }
 
   if (key === vaultEnvironmentPath && isRoot) {

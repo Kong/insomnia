@@ -14,13 +14,13 @@ import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
 import type { Plugin } from '../plugins/index';
-import * as templating from './index';
+import { render as templateRendering } from './template-rendering';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import { decodeEncoding } from './utils';
 
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 
-export default class BaseExtension {
+export class NunjucksExtension {
   _ext: PluginTemplateTag | null = null;
   _plugin: Plugin | null = null;
   tags: PluginTemplateTag['name'][] = [];
@@ -120,11 +120,13 @@ export default class BaseExtension {
           };
         },
         readFile: async (path: string, encoding = 'utf8') => {
-          const allowed = renderContext?.getSettings().dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
+          const allowed = renderContext
+            ?.getSettings()
+            .dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
           if (!allowed) {
             throw `Insomnia cannot access the file ‘${path}’. You can adjust this in Preferences → Security.`;
           }
-                    
+
           const content = await fs.promises.readFile(path);
           return encoding === 'utf8' ? content.toString(encoding) : content;
         },
@@ -132,7 +134,7 @@ export default class BaseExtension {
         encode: async (input: string, encoding: BinaryToTextEncoding) =>
           crypto.createHash('md5').update(input).digest(encoding),
         render: (str: string) =>
-          templating.render(str, {
+          templateRendering(str, {
             context: renderContext,
           }),
         openInBrowser: (url: string) => window.main.openInBrowser(url),

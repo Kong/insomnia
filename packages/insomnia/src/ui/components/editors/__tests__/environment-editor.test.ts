@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../../templating';
 import { checkNestedKeys, ensureKeyIsValid } from '../environment-utils';
 
 describe('ensureKeyIsValid()', () => {
@@ -21,28 +20,11 @@ describe('ensureKeyIsValid()', () => {
     expect(ensureKeyIsValid(key, true)).toBe(`"${key}" is a reserved key`);
   });
 
-  it.each([
-    '_',
-    'a',
-    'ab',
-    'a$',
-    'a$b',
-    'a-b',
-    `a${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}b`,
-    `${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}ab`,
-  ])('"%s" should be valid as a nested key', key => {
+  it.each(['_', 'a', 'ab', 'a$', 'a$b', 'a-b', `a_b`, `_ab`])('"%s" should be valid as a nested key', key => {
     expect(ensureKeyIsValid(key, false)).toBe(null);
   });
 
-  it.each([
-    'a',
-    'ab',
-    'a$',
-    'a$b',
-    'a-b',
-    `a${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}b`,
-    `${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}ab`,
-  ])('"%s" should be valid as a root value', key => {
+  it.each(['a', 'ab', 'a$', 'a$b', 'a-b', `a_b`, `_ab`])('"%s" should be valid as a root value', key => {
     expect(ensureKeyIsValid(key, true)).toBe(null);
   });
 });

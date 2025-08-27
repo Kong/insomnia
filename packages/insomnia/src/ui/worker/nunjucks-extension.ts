@@ -1,13 +1,19 @@
-import packageJson from '../../package.json';
-import type { CloudProviderCredential } from '../models/cloud-credential';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { Response } from '../models/response';
-import type { Workspace } from '../models/workspace';
-import type { NodeCurlRequestOptions } from '../plugins/context/network';
-import type { Plugin } from '../plugins/index';
-import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';
-import * as templating from './worker';
+import packageJson from '~/../package.json';
+import type { CloudProviderCredential } from '~/models/cloud-credential';
+import type { Request } from '~/models/request';
+import type { RequestGroup } from '~/models/request-group';
+import type { Response } from '~/models/response';
+import type { Workspace } from '~/models/workspace';
+import type { NodeCurlRequestOptions } from '~/plugins/context/network';
+import type { Plugin } from '~/plugins/index';
+import type {
+  BaseRenderContext,
+  PluginTemplateTag,
+  PluginTemplateTagContext,
+  PluginToMainAPIPaths,
+} from '~/templating/types';
+
+import { render as templateRender } from './template-rendering';
 export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
     return value;
@@ -42,7 +48,7 @@ export const fetchFromTemplateWorkerDatabase = async (path: PluginToMainAPIPaths
 };
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 const legacyModeErrorMessage = `This version improves the security around plugins by limiting scope of access by default. This may break some plugins which rely on having the same kind of access Insomnia does. You can still grant elevated access to plugins, should your workflow absolutely require it, by navigating to Preferences > Plugins and checking the box enabling elevated access for plugins.`;
-export default class BaseExtension {
+export class NunjucksExtension {
   _ext: PluginTemplateTag | null = null;
   _plugin: Plugin | null = null;
   tags: PluginTemplateTag['name'][] = [];
@@ -180,7 +186,9 @@ export default class BaseExtension {
       renderPurpose,
       util: {
         readFile: async (path: string, encoding?: string) => {
-          const allowed = renderContext?.getSettings().dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
+          const allowed = renderContext
+            ?.getSettings()
+            .dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
           if (!allowed) {
             throw `Insomnia cannot access the file ‘${path}’. You can adjust this in Preferences → Security.`;
           }
@@ -191,7 +199,7 @@ export default class BaseExtension {
           fetchFromTemplateWorkerDatabase('decode', { buffer, encoding }),
         encode: async (input: string, encoding?: string) =>
           fetchFromTemplateWorkerDatabase('encode', { input, encoding }),
-        render: (str: string) => templating.render(str, { context: renderContext }),
+        render: (str: string) => templateRender(str, { context: renderContext }),
         openInBrowser: (url: string) => fetchFromTemplateWorkerDatabase('openInBrowser', { url }),
         models: {
           request: {

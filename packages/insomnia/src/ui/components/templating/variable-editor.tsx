@@ -1,7 +1,6 @@
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { vaultEnvironmentMaskValue, vaultEnvironmentRuntimePath } from '../../../models/environment';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import type { RenderPurpose } from '../../../templating/types';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 
@@ -23,11 +22,7 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {
   const [error, setError] = useState('');
   const isVaultVariable =
     selected &&
-    selected
-      .replace('{{', '')
-      .replace('}}', '')
-      .trim()
-      .startsWith(`${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}.${vaultEnvironmentRuntimePath}`) &&
+    selected.replace('{{', '').replace('}}', '').trim().startsWith(`_.${vaultEnvironmentRuntimePath}`) &&
     preview === vaultEnvironmentMaskValue;
 
   useEffect(() => {
