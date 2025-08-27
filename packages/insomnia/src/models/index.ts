@@ -264,56 +264,65 @@ export const MODELS_BY_EXPORT_TYPE: Record<string, ReturnType<typeof all>[number
 
 export const EXPORTABLE_TYPES = Object.values(MODELS_BY_EXPORT_TYPE).map(m => m.type);
 
-export const DESCENDANT_MAP: Record<string, string[]> = {
-  [workspace.type]: [
-    requestGroup.type,
-    request.type,
-    grpcRequest.type,
-    webSocketRequest.type,
-    socketIORequest.type,
-    cookieJar.type,
-    environment.type,
-    apiSpec.type,
-    mockServer.type,
-    unitTestSuite.type,
-    protoDirectory.type,
-    protoFile.type,
-    workspaceMeta.type,
-    runnerTestResult.type,
-    caCertificate.type,
-    clientCertificate.type,
-  ],
-  [requestGroup.type]: [
-    requestGroup.type,
-    request.type,
-    grpcRequest.type,
-    webSocketRequest.type,
-    socketIORequest.type,
-    runnerTestResult.type,
-    requestGroupMeta.type,
-    oAuth2Token.type,
-  ],
-  [request.type]: [requestMeta.type, response.type, requestVersion.type, oAuth2Token.type],
-  [grpcRequest.type]: [grpcRequestMeta.type],
-  [webSocketRequest.type]: [webSocketPayload.type, webSocketResponse.type, requestMeta.type],
-  [socketIORequest.type]: [socketIOPayload.type, socketIOResponse.type, requestMeta.type],
-  [mockServer.type]: [mockRoute.type],
-  [environment.type]: [environment.type],
-  [unitTestSuite.type]: [unitTest.type, unitTestResult.type],
-  [unitTest.type]: [unitTestResult.type],
-  [protoDirectory.type]: [protoDirectory.type, protoFile.type],
+// Use function instead of object to avoid issues with circular dependencies
+export const getAllDescendantMap = (): Record<string, string[]> => {
+  return {
+    [workspace.type]: [
+      requestGroup.type,
+      request.type,
+      grpcRequest.type,
+      webSocketRequest.type,
+      socketIORequest.type,
+      cookieJar.type,
+      environment.type,
+      apiSpec.type,
+      mockServer.type,
+      unitTestSuite.type,
+      protoDirectory.type,
+      protoFile.type,
+      workspaceMeta.type,
+      runnerTestResult.type,
+      caCertificate.type,
+      clientCertificate.type,
+    ],
+    [requestGroup.type]: [
+      requestGroup.type,
+      request.type,
+      grpcRequest.type,
+      webSocketRequest.type,
+      socketIORequest.type,
+      runnerTestResult.type,
+      requestGroupMeta.type,
+      oAuth2Token.type,
+    ],
+    [request.type]: [requestMeta.type, response.type, requestVersion.type, oAuth2Token.type],
+    [grpcRequest.type]: [grpcRequestMeta.type],
+    [webSocketRequest.type]: [webSocketPayload.type, webSocketResponse.type, requestMeta.type],
+    [socketIORequest.type]: [socketIOPayload.type, socketIOResponse.type, requestMeta.type],
+    [mockServer.type]: [mockRoute.type],
+    [environment.type]: [environment.type],
+    [unitTestSuite.type]: [unitTest.type, unitTestResult.type],
+    [unitTest.type]: [unitTestResult.type],
+    [protoDirectory.type]: [protoDirectory.type, protoFile.type],
+  };
 };
 
-const CHILD_TO_PARENT_MAP = (() => {
+let childToParentMap: Record<string, string[]> | undefined = undefined;
+
+const getChildToParentMap = () => {
+  if (childToParentMap) {
+    return childToParentMap;
+  }
   const childToParents: Record<string, string[]> = {};
-  for (const [parent, children] of Object.entries(DESCENDANT_MAP)) {
+  for (const [parent, children] of Object.entries(getAllDescendantMap())) {
     for (const child of children) {
       if (!childToParents[child]) childToParents[child] = [];
       childToParents[child].push(parent);
     }
   }
+  childToParentMap = childToParents;
   return childToParents;
-})();
+};
 
 export const generateDescendantMap = (queryTypes: ModelTypes): Record<string, string[]> => {
   const result: Record<string, string[]> = {};
@@ -324,7 +333,8 @@ export const generateDescendantMap = (queryTypes: ModelTypes): Record<string, st
       return;
     }
     visited.add(child);
-    const parents = CHILD_TO_PARENT_MAP[child];
+    const parentMap = getChildToParentMap();
+    const parents = parentMap[child];
     if (parents?.length) {
       for (const p of parents) {
         if (!result[p]) {
