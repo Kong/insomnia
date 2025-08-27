@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
@@ -763,8 +763,9 @@ describe('getWithDescendants()', () => {
       parentId: environment1._id,
     });
 
-    await expect(db.getWithDescendants(workspace), 'Should return workspace with all descendants').resolves.toEqual(
-      expect.arrayContaining([
+    assert.sameDeepMembers(
+      await db.getWithDescendants(workspace),
+      [
         workspace,
         folder1,
         folder2,
@@ -777,33 +778,25 @@ describe('getWithDescendants()', () => {
         cookieJar2,
         environment1,
         environment2,
-      ]),
+      ],
+      'Should return workspace with all descendants',
     );
 
-    await expect(
-      db.getWithDescendants(workspace, [models.requestGroup.type]),
+    assert.sameDeepMembers(
+      await db.getWithDescendants(workspace, [models.requestGroup.type]),
+      [workspace, folder1, folder2],
       'Should return workspace with all request groups',
-    ).resolves.toEqual(expect.arrayContaining([workspace, folder1, folder2]));
+    );
 
-    await expect(
-      db.getWithDescendants(workspace, [
+    assert.sameDeepMembers(
+      await db.getWithDescendants(workspace, [
         models.request.type,
         models.grpcRequest.type,
         models.webSocketRequest.type,
         models.socketIORequest.type,
       ]),
+      [workspace, folder1, request1, folder2, request2, grpcRequest1, websocketRequest1, socketIORequest1],
       'Should return workspace with all request groups and requests',
-    ).resolves.toEqual(
-      expect.arrayContaining([
-        workspace,
-        folder1,
-        request1,
-        folder2,
-        request2,
-        grpcRequest1,
-        websocketRequest1,
-        socketIORequest1,
-      ]),
     );
   });
 });
