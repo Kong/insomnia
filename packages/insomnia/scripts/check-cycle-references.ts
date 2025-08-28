@@ -14,18 +14,18 @@ madge(path.join(__dirname, '../src'), {
 
     console.log(`Found ${count} circular references`);
 
-    // Exit with error if in CI environment and exceeds limit
-    if (process.env.CI && count > MAX_CIRCULAR_REFERENCES) {
-      console.error(`❌ Circular references count (${count}) exceeds the limit (${MAX_CIRCULAR_REFERENCES})`);
-      process.exit(1);
-    }
-
     // Generate detailed report for CI environment
     if (process.env.CI) {
       const outputPath = path.join(__dirname, '../../../circular-references.md');
       const markdownContent = generateMarkdownReport(circularReferences, count);
       fs.writeFileSync(outputPath, markdownContent);
       console.log(`📝 Circular references report saved to ${outputPath}`);
+
+      // Exit with error if exceeds limit
+      if (count > MAX_CIRCULAR_REFERENCES) {
+        console.error(`❌ Circular references count (${count}) exceeds the limit (${MAX_CIRCULAR_REFERENCES})`);
+        process.exit(1);
+      }
     } else {
       // Output to console for local development
       circularReferences.forEach(cycle => console.log(cycle.join(' -> ')));
