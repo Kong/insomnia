@@ -545,7 +545,7 @@ export const database = {
    * @param types - Only query specified types, if provided
    * @returns A promise that resolves to an array of documents
    */
-  getWithDescendants: async function <T extends BaseModel>(doc: T, types: models.ModelTypes = []) {
+  getWithDescendants: async function <T extends BaseModel>(doc: T, types: AllTypes[] = []) {
     if (process.type === 'renderer') {
       return _send<T[]>('getWithDescendants', ...arguments);
     }

@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import { z, type ZodError } from 'zod/v4';
 
+import type { AllExportTypes } from '~/common/constants';
 import type { CurrentPlan } from '~/models/organization';
 
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
@@ -28,7 +29,7 @@ import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
 
 export interface ExportedModel extends BaseModel {
-  _type: models.AllTypes;
+  _type: AllExportTypes;
 }
 
 interface ConvertResult {

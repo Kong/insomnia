@@ -1,4 +1,5 @@
 import {
+  type AllExportTypes,
   EXPORT_TYPE_API_SPEC,
   EXPORT_TYPE_COOKIE_JAR,
   EXPORT_TYPE_ENVIRONMENT,
@@ -200,8 +201,6 @@ export type AllTypes =
   | 'Workspace'
   | 'WorkspaceMeta';
 
-export type ModelTypes = ReturnType<typeof types>;
-
 export const isValidType = (type: string): type is AllTypes => {
   return types().includes(type as AllTypes);
 };
@@ -283,7 +282,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   return migratedDoc as T;
 }
 
-export const MODELS_BY_EXPORT_TYPE: Record<string, AllTypes> = {
+export const MODELS_BY_EXPORT_TYPE: Record<AllExportTypes, AllTypes> = {
   [EXPORT_TYPE_REQUEST]: 'Request',
   [EXPORT_TYPE_WEBSOCKET_PAYLOAD]: 'WebSocketPayload',
   [EXPORT_TYPE_WEBSOCKET_REQUEST]: 'WebSocketRequest',
@@ -365,7 +364,7 @@ const getChildToParentMap = () => {
   return childToParents;
 };
 
-export const generateDescendantMap = (queryTypes: ModelTypes): Partial<Record<AllTypes, AllTypes[]>> => {
+export const generateDescendantMap = (queryTypes: AllTypes[]): Partial<Record<AllTypes, AllTypes[]>> => {
   const result: Partial<Record<AllTypes, AllTypes[]>> = {};
 
   const visited = new Set<string>();
