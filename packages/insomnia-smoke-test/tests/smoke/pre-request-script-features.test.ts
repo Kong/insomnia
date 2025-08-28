@@ -201,9 +201,9 @@ test.describe('pre-request features tests', () => {
       },
     },
   ];
-
-  for (const tc of testCases) {
-    test(tc.name, async ({ page }) => {
+  test('run test cases', async ({ page }) => {
+    for (const tc of testCases) {
+      console.log(`Running test case: ${tc.name}`);
       const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
       const responseBody = page.getByTestId('response-pane').getByTestId('CodeEditor').locator('.CodeMirror-line');
 
@@ -227,9 +227,8 @@ test.describe('pre-request features tests', () => {
       if (tc.customVerify) {
         tc.customVerify(bodyJson);
       }
-    });
-  }
-
+    }
+  });
   test('send request with content type', async ({ page }) => {
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     const responseBody = page.getByTestId('response-pane').getByTestId('CodeEditor').locator('.CodeMirror-line');
@@ -250,95 +249,95 @@ test.describe('pre-request features tests', () => {
     await page.getByRole('tab', { name: 'Scripts' }).click();
     const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
     await preRequestScriptEditor.fill(`
-        const rawReq = {
-            url: 'http://127.0.0.1:4010/echo',
-            method: 'POST',
-            header: {
-                'Content-Type': 'text/plain',
-            },
-            body: {
-                mode: 'raw',
-                raw: 'rawContent',
-            },
-        };
-        const urlencodedReq = {
-            url: 'http://127.0.0.1:4010/echo',
-            method: 'POST',
-            header: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: {
-                mode: 'urlencoded',
-                urlencoded: [
-                    { key: 'k1', value: 'v1' },
-                    { key: 'k2', value: 'v2' },
-                ],
-            },
-        };
-        const gqlReq = {
-            url: 'http://127.0.0.1:4010/echo',
-            method: 'POST',
-            header: {
-                'Content-Type': 'application/graphql',
-            },
-            body: {
-                mode: 'graphql',
-                graphql: {
-                    query: 'query',
-                    operationName: 'operation',
-                    variables: 'var',
-                },
-            },
-        };
-        const fileReq = {
-            url: 'http://127.0.0.1:4010/echo',
-            method: 'POST',
-            header: {
-                'Content-Type': 'application/octet-stream',
-            },
-            body: {
-                mode: 'file',
-                file: "${getFixturePath('files/rawfile.txt')}",
-            },
-        };
-        const formdataReq = {
-            url: 'http://127.0.0.1:4010/echo',
-            method: 'POST',
-            header: {
-                // TODO: try to understand why this breaks the test
-                // 'Content-Type': 'multipart/form-data',
-            },
-            body: {
-                mode: 'formdata',
-                formdata: [
-                    { key: 'k1', type: 'text', value: 'v1' },
-                    { key: 'k2', type: 'file', value: "${getFixturePath('files/rawfile.txt')}" },
-                ],
-            },
-        };
-        const promises = [rawReq, urlencodedReq, gqlReq, fileReq, formdataReq].map(req => {
-            return new Promise((resolve, reject) => {
-                insomnia.sendRequest(
-                    req,
-                    (err, resp) => {
-                        if (err != null) {
-                            reject(err);
-                        } else {
-                            resolve(resp);
-                        }
-                    }
-                );
-            });
-        });
-        // send request
-        const resps = await Promise.all(promises);
-        // set envs
-        insomnia.environment.set('rawBody', resps[0].body);
-        insomnia.environment.set('urlencodedBody', resps[1].body);
-        insomnia.environment.set('gqlBody', resps[2].body);
-        insomnia.environment.set('fileBody', resps[3].body);
-        insomnia.environment.set('formdataBody', resps[4].body);
-        `);
+          const rawReq = {
+              url: 'http://127.0.0.1:4010/echo',
+              method: 'POST',
+              header: {
+                  'Content-Type': 'text/plain',
+              },
+              body: {
+                  mode: 'raw',
+                  raw: 'rawContent',
+              },
+          };
+          const urlencodedReq = {
+              url: 'http://127.0.0.1:4010/echo',
+              method: 'POST',
+              header: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: {
+                  mode: 'urlencoded',
+                  urlencoded: [
+                      { key: 'k1', value: 'v1' },
+                      { key: 'k2', value: 'v2' },
+                  ],
+              },
+          };
+          const gqlReq = {
+              url: 'http://127.0.0.1:4010/echo',
+              method: 'POST',
+              header: {
+                  'Content-Type': 'application/graphql',
+              },
+              body: {
+                  mode: 'graphql',
+                  graphql: {
+                      query: 'query',
+                      operationName: 'operation',
+                      variables: 'var',
+                  },
+              },
+          };
+          const fileReq = {
+              url: 'http://127.0.0.1:4010/echo',
+              method: 'POST',
+              header: {
+                  'Content-Type': 'application/octet-stream',
+              },
+              body: {
+                  mode: 'file',
+                  file: "${getFixturePath('files/rawfile.txt')}",
+              },
+          };
+          const formdataReq = {
+              url: 'http://127.0.0.1:4010/echo',
+              method: 'POST',
+              header: {
+                  // TODO: try to understand why this breaks the test
+                  // 'Content-Type': 'multipart/form-data',
+              },
+              body: {
+                  mode: 'formdata',
+                  formdata: [
+                      { key: 'k1', type: 'text', value: 'v1' },
+                      { key: 'k2', type: 'file', value: "${getFixturePath('files/rawfile.txt')}" },
+                  ],
+              },
+          };
+          const promises = [rawReq, urlencodedReq, gqlReq, fileReq, formdataReq].map(req => {
+              return new Promise((resolve, reject) => {
+                  insomnia.sendRequest(
+                      req,
+                      (err, resp) => {
+                          if (err != null) {
+                              reject(err);
+                          } else {
+                              resolve(resp);
+                          }
+                      }
+                  );
+              });
+          });
+          // send request
+          const resps = await Promise.all(promises);
+          // set envs
+          insomnia.environment.set('rawBody', resps[0].body);
+          insomnia.environment.set('urlencodedBody', resps[1].body);
+          insomnia.environment.set('gqlBody', resps[2].body);
+          insomnia.environment.set('fileBody', resps[3].body);
+          insomnia.environment.set('formdataBody', resps[4].body);
+          `);
 
     // TODO: wait for body and pre - request script are persisted to the disk
     // should improve this part, we should avoid sync this state through db as it introduces race condition
@@ -644,8 +643,8 @@ test.describe('unhappy paths', () => {
     {
       name: 'custom error is returned',
       preReqScript: `
-          throw Error('my custom error');
-          `,
+            throw Error('my custom error');
+            `,
       context: {
         insomnia: {},
       },
@@ -656,8 +655,8 @@ test.describe('unhappy paths', () => {
     {
       name: 'syntax error',
       preReqScript: `
-          insomnia.INVALID_FIELD.set('', '')
-          `,
+            insomnia.INVALID_FIELD.set('', '')
+            `,
       context: {
         insomnia: {},
       },
