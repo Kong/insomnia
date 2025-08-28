@@ -3,12 +3,10 @@ import path from 'node:path';
 import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
 
-import { invariant } from '~/utils/invariant';
-
 import { database as db } from '../../common/database';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import { isWorkspace, type Workspace } from '../../models/workspace';
+import { isWorkspace } from '../../models/workspace';
 import { resetKeys } from '../ignore-keys';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';

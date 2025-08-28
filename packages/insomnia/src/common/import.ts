@@ -28,7 +28,7 @@ import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
 
 export interface ExportedModel extends BaseModel {
-  _type: string;
+  _type: models.AllTypes;
 }
 
 interface ConvertResult {
@@ -175,7 +175,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
         .filter(r => r._type)
         .map(r => {
           const { _type, ...model } = r;
-          return { ...model, type: models.MODELS_BY_EXPORT_TYPE[_type].type };
+          return { ...model, type: models.MODELS_BY_EXPORT_TYPE[_type] };
         });
 
       resourceCacheList.push({

@@ -283,27 +283,27 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   return migratedDoc as T;
 }
 
-export const MODELS_BY_EXPORT_TYPE: Record<string, ReturnType<typeof all>[number]> = {
-  [EXPORT_TYPE_REQUEST]: request,
-  [EXPORT_TYPE_WEBSOCKET_PAYLOAD]: webSocketPayload,
-  [EXPORT_TYPE_WEBSOCKET_REQUEST]: webSocketRequest,
-  [EXPORT_TYPE_SOCKETIO_PAYLOAD]: socketIOPayload,
-  [EXPORT_TYPE_SOCKETIO_REQUEST]: socketIORequest,
-  [EXPORT_TYPE_MOCK_SERVER]: mockServer,
-  [EXPORT_TYPE_MOCK_ROUTE]: mockRoute,
-  [EXPORT_TYPE_GRPC_REQUEST]: grpcRequest,
-  [EXPORT_TYPE_REQUEST_GROUP]: requestGroup,
-  [EXPORT_TYPE_UNIT_TEST_SUITE]: unitTestSuite,
-  [EXPORT_TYPE_UNIT_TEST]: unitTest,
-  [EXPORT_TYPE_WORKSPACE]: workspace,
-  [EXPORT_TYPE_COOKIE_JAR]: cookieJar,
-  [EXPORT_TYPE_ENVIRONMENT]: environment,
-  [EXPORT_TYPE_API_SPEC]: apiSpec,
-  [EXPORT_TYPE_PROTO_FILE]: protoFile,
-  [EXPORT_TYPE_PROTO_DIRECTORY]: protoDirectory,
+export const MODELS_BY_EXPORT_TYPE: Record<string, AllTypes> = {
+  [EXPORT_TYPE_REQUEST]: 'Request',
+  [EXPORT_TYPE_WEBSOCKET_PAYLOAD]: 'WebSocketPayload',
+  [EXPORT_TYPE_WEBSOCKET_REQUEST]: 'WebSocketRequest',
+  [EXPORT_TYPE_SOCKETIO_PAYLOAD]: 'SocketIOPayload',
+  [EXPORT_TYPE_SOCKETIO_REQUEST]: 'SocketIORequest',
+  [EXPORT_TYPE_MOCK_SERVER]: 'MockServer',
+  [EXPORT_TYPE_MOCK_ROUTE]: 'MockRoute',
+  [EXPORT_TYPE_GRPC_REQUEST]: 'GrpcRequest',
+  [EXPORT_TYPE_REQUEST_GROUP]: 'RequestGroup',
+  [EXPORT_TYPE_UNIT_TEST_SUITE]: 'UnitTestSuite',
+  [EXPORT_TYPE_UNIT_TEST]: 'UnitTest',
+  [EXPORT_TYPE_WORKSPACE]: 'Workspace',
+  [EXPORT_TYPE_COOKIE_JAR]: 'CookieJar',
+  [EXPORT_TYPE_ENVIRONMENT]: 'Environment',
+  [EXPORT_TYPE_API_SPEC]: 'ApiSpec',
+  [EXPORT_TYPE_PROTO_FILE]: 'ProtoFile',
+  [EXPORT_TYPE_PROTO_DIRECTORY]: 'ProtoDirectory',
 };
 
-export const EXPORTABLE_TYPES = Object.values(MODELS_BY_EXPORT_TYPE).map(m => m.type);
+export const EXPORTABLE_TYPES = Object.values(MODELS_BY_EXPORT_TYPE);
 
 // Use function instead of object to avoid issues with circular dependencies
 export const getAllDescendantMap = (): Partial<Record<AllTypes, AllTypes[]>> => {
