@@ -4,14 +4,7 @@ import { join as pathJoin, resolve as pathResolve } from 'node:path';
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import {
-  AUTH_AWS_IAM,
-  AUTH_BASIC,
-  AUTH_NETRC,
-  CONTENT_TYPE_FILE,
-  CONTENT_TYPE_FORM_DATA,
-  CONTENT_TYPE_FORM_URLENCODED,
-} from '../../common/constants';
+import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
 import { HttpVersions } from '../../common/settings';
@@ -91,7 +84,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       },
       url: 'http://localhost',
       authentication: {
-        type: AUTH_BASIC,
+        type: 'basic',
         username: 'user',
         password: 'pass',
       },
@@ -272,7 +265,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       },
       url: 'http://localhost',
       authentication: {
-        type: AUTH_BASIC,
+        type: 'basic',
         username: 'user',
         password: 'pass',
       },
@@ -620,7 +613,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       _id: 'req_123',
       parentId: workspace._id,
       authentication: {
-        type: AUTH_NETRC,
+        type: 'netrc',
       },
     });
     const renderedRequest = await getRenderedRequest({ request });
@@ -723,7 +716,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       },
       url: 'http://localhost',
       authentication: {
-        type: AUTH_BASIC,
+        type: 'basic',
         username: 'user',
         password: 'pass',
       },
@@ -810,7 +803,7 @@ describe('sendCurlAndWriteTimeline()', () => {
 describe('_getAwsAuthHeaders', () => {
   it('should generate expected headers', () => {
     const authentication = {
-      type: AUTH_AWS_IAM,
+      type: 'iam',
       accessKeyId: 'AKIA99999999',
       secretAccessKey: 'SAK9999999999999',
       sessionToken: 'ST99999999999999',
@@ -836,7 +829,7 @@ describe('_getAwsAuthHeaders', () => {
 
   it('should handle sparse request', () => {
     const authentication = {
-      type: AUTH_AWS_IAM,
+      type: 'iam',
       accessKeyId: 'AKIA99999999',
       secretAccessKey: 'SAK9999999999999',
       sessionToken: 'ST99999999999999',

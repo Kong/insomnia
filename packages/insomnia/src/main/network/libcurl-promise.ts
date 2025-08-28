@@ -159,7 +159,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       if (requestBodyPath) {
         // AWS IAM file upload not supported
         const isAWSIAM = 'type' in authentication && authentication.type === 'iam';
-        invariant(isAWSIAM, 'AWS authentication not supported for provided body type');
+        invariant(!isAWSIAM, 'AWS authentication not supported for provided body type');
         const { size: contentLength } = fs.statSync(requestBodyPath);
         curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
         curl.setOpt(Curl.option.UPLOAD, 1);

@@ -427,7 +427,7 @@ function migrateAuthType(request: Request) {
   // @ts-expect-error -- old model
   if (isAuthSet && !request.authentication.type) {
     // @ts-expect-error -- old model
-    request.authentication.type = AUTH_BASIC;
+    request.authentication.type = 'basic';
   }
 
   return request;

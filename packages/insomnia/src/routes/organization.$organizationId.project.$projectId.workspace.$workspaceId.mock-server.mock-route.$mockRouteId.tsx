@@ -9,6 +9,7 @@ import {
   CONTENT_TYPE_PLAINTEXT,
   CONTENT_TYPE_XML,
   CONTENT_TYPE_YAML,
+  type ContentTypes,
   contentTypesMap,
   getMockServiceBinURL,
   getMockServiceURL,
@@ -319,7 +320,9 @@ export const MockRouteRoute = () => {
                 aria-label="Change Body Type"
                 triggerButton={
                   <Button>
-                    {mockRoute.mimeType ? 'Mock ' + contentTypesMap[mockRoute.mimeType]?.[0] : 'Mock Body'}
+                    {mockRoute.mimeType
+                      ? 'Mock ' + contentTypesMap[mockRoute.mimeType as ContentTypes]?.[0]
+                      : 'Mock Body'}
                     <i className="fa fa-caret-down space-left" />
                   </Button>
                 }
