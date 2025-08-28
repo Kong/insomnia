@@ -51,8 +51,10 @@ jobs:
         run: npm test
 
       - name: Check Circular References
+        id: circular-check
         run: npm run check-circular-references
         working-directory: packages/insomnia
+        continue-on-error: true
 
       - name: Comment Circular References Report on PR
         if: github.event_name == 'pull_request' && always()
@@ -64,6 +66,7 @@ jobs:
             const path = require('path');
             
             const reportPath = path.join(process.cwd(), 'circular-references.md');
+            const checkPassed = '${{ steps.circular-check.outcome }}' === 'success';
             
             if (fs.existsSync(reportPath)) {
               const report = fs.readFileSync(reportPath, 'utf8');
@@ -106,4 +109,9 @@ jobs:
               }
             } else {
               console.log('No circular references report found');
+            }
+            
+            // Fail the workflow if circular reference check failed
+            if (!checkPassed) {
+              core.setFailed('Circular references check failed - please check the report in the PR comment');
             }

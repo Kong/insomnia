@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import madge from 'madge';
 
-const MAX_CIRCULAR_REFERENCES = 200;
+const MAX_CIRCULAR_REFERENCES = 100;
 
 madge(path.join(__dirname, '../src'), {
   fileExtensions: ['ts', 'tsx'],
