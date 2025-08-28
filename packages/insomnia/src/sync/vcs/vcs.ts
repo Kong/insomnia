@@ -64,7 +64,8 @@ export function chunkArray<T>(arr: T[], chunkSize: number) {
 export class VCS {
   async getVersion(): Promise<string> {
     const branch = await this._getCurrentBranch();
-    return branch.modified.toISOString();
+    // branch can be null if there is no backend project
+    return branch?.modified.toISOString();
   }
   _store: Store;
   _driver: BaseDriver;
