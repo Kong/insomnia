@@ -1,23 +1,3 @@
-import {
-  type AllExportTypes,
-  EXPORT_TYPE_API_SPEC,
-  EXPORT_TYPE_COOKIE_JAR,
-  EXPORT_TYPE_ENVIRONMENT,
-  EXPORT_TYPE_GRPC_REQUEST,
-  EXPORT_TYPE_MOCK_ROUTE,
-  EXPORT_TYPE_MOCK_SERVER,
-  EXPORT_TYPE_PROTO_DIRECTORY,
-  EXPORT_TYPE_PROTO_FILE,
-  EXPORT_TYPE_REQUEST,
-  EXPORT_TYPE_REQUEST_GROUP,
-  EXPORT_TYPE_SOCKETIO_PAYLOAD,
-  EXPORT_TYPE_SOCKETIO_REQUEST,
-  EXPORT_TYPE_UNIT_TEST,
-  EXPORT_TYPE_UNIT_TEST_SUITE,
-  EXPORT_TYPE_WEBSOCKET_PAYLOAD,
-  EXPORT_TYPE_WEBSOCKET_REQUEST,
-  EXPORT_TYPE_WORKSPACE,
-} from '../common/constants';
 import { generateId } from '../common/misc';
 import { typedKeys } from '../utils';
 import * as _apiSpec from './api-spec';
@@ -281,28 +261,6 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
 
   return migratedDoc as T;
 }
-
-export const MODELS_BY_EXPORT_TYPE: Record<AllExportTypes, AllTypes> = {
-  [EXPORT_TYPE_REQUEST]: 'Request',
-  [EXPORT_TYPE_WEBSOCKET_PAYLOAD]: 'WebSocketPayload',
-  [EXPORT_TYPE_WEBSOCKET_REQUEST]: 'WebSocketRequest',
-  [EXPORT_TYPE_SOCKETIO_PAYLOAD]: 'SocketIOPayload',
-  [EXPORT_TYPE_SOCKETIO_REQUEST]: 'SocketIORequest',
-  [EXPORT_TYPE_MOCK_SERVER]: 'MockServer',
-  [EXPORT_TYPE_MOCK_ROUTE]: 'MockRoute',
-  [EXPORT_TYPE_GRPC_REQUEST]: 'GrpcRequest',
-  [EXPORT_TYPE_REQUEST_GROUP]: 'RequestGroup',
-  [EXPORT_TYPE_UNIT_TEST_SUITE]: 'UnitTestSuite',
-  [EXPORT_TYPE_UNIT_TEST]: 'UnitTest',
-  [EXPORT_TYPE_WORKSPACE]: 'Workspace',
-  [EXPORT_TYPE_COOKIE_JAR]: 'CookieJar',
-  [EXPORT_TYPE_ENVIRONMENT]: 'Environment',
-  [EXPORT_TYPE_API_SPEC]: 'ApiSpec',
-  [EXPORT_TYPE_PROTO_FILE]: 'ProtoFile',
-  [EXPORT_TYPE_PROTO_DIRECTORY]: 'ProtoDirectory',
-};
-
-export const EXPORTABLE_TYPES = Object.values(MODELS_BY_EXPORT_TYPE);
 
 // Use function instead of object to avoid issues with circular dependencies
 export const getAllDescendantMap = (): Partial<Record<AllTypes, AllTypes[]>> => {

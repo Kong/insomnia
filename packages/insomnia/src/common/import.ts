@@ -2,14 +2,13 @@ import { readFile } from 'node:fs/promises';
 
 import { z, type ZodError } from 'zod/v4';
 
-import type { AllExportTypes } from '~/common/constants';
 import type { CurrentPlan } from '~/models/organization';
 
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';
 import { type BaseEnvironment, type Environment, isEnvironment } from '../models/environment';
 import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
-import { type BaseModel, getModel, userSession } from '../models/index';
+import { type AllTypes, type BaseModel, getModel, userSession } from '../models/index';
 import * as models from '../models/index';
 import { isMockRoute, type MockRoute } from '../models/mock-route';
 import { isGitProject } from '../models/project';
@@ -28,6 +27,24 @@ import { database as db } from './database';
 import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
 
+export type AllExportTypes =
+  | 'request'
+  | 'grpc_request'
+  | 'websocket_request'
+  | 'websocket_payload'
+  | 'socketio_request'
+  | 'socketio_payload'
+  | 'mock'
+  | 'mock_route'
+  | 'request_group'
+  | 'unit_test_suite'
+  | 'unit_test'
+  | 'workspace'
+  | 'cookie_jar'
+  | 'environment'
+  | 'api_spec'
+  | 'proto_file'
+  | 'proto_directory';
 export interface ExportedModel extends BaseModel {
   _type: AllExportTypes;
 }
@@ -116,6 +133,26 @@ interface ResourceCacheType {
 
 let resourceCacheList: ResourceCacheType[] = [];
 
+export const MODELS_BY_EXPORT_TYPE: Record<AllExportTypes, AllTypes> = {
+  request: 'Request',
+  websocket_payload: 'WebSocketPayload',
+  websocket_request: 'WebSocketRequest',
+  socketio_payload: 'SocketIOPayload',
+  socketio_request: 'SocketIORequest',
+  mock: 'MockServer',
+  mock_route: 'MockRoute',
+  grpc_request: 'GrpcRequest',
+  request_group: 'RequestGroup',
+  unit_test_suite: 'UnitTestSuite',
+  unit_test: 'UnitTest',
+  workspace: 'Workspace',
+  cookie_jar: 'CookieJar',
+  environment: 'Environment',
+  api_spec: 'ApiSpec',
+  proto_file: 'ProtoFile',
+  proto_directory: 'ProtoDirectory',
+};
+
 export async function scanResources(importEntries: ImportEntry[]): Promise<ScanResult[]> {
   resourceCacheList = [];
   const results = await Promise.allSettled(
@@ -176,7 +213,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
         .filter(r => r._type)
         .map(r => {
           const { _type, ...model } = r;
-          return { ...model, type: models.MODELS_BY_EXPORT_TYPE[_type] };
+          return { ...model, type: MODELS_BY_EXPORT_TYPE[_type] };
         });
 
       resourceCacheList.push({
