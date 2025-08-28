@@ -97,6 +97,8 @@ export const GitProjectStagingModal: FC<{
   const commitFetcher = useGitProjectCommitActionFetcher();
 
   const [message, setMessage] = useState('');
+  // Add this state at the top of your component
+  const [committingAction, setCommittingAction] = useState<'commit' | 'commit-push' | null>(null);
 
   function diffChanges({ path, staged }: { path: string; staged: boolean }) {
     diffChangesFetcher.load({
@@ -228,6 +230,8 @@ export const GitProjectStagingModal: FC<{
                         const message = formData.get('message')?.toString() || '';
                         const push = Boolean(formData.get('push') === 'true');
 
+                        setCommittingAction(push ? 'commit-push' : 'commit');
+
                         commitFetcher.submit({
                           projectId,
                           message,
@@ -253,7 +257,6 @@ export const GitProjectStagingModal: FC<{
                           <Button
                             type="submit"
                             isDisabled={isCommitting || changes.staged.length === 0}
-                            formAction={`/organization/${organizationId}/project/${projectId}/git/commit`}
                             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                           >
                             {canCommitAndPull ? (
@@ -297,26 +300,28 @@ export const GitProjectStagingModal: FC<{
                         <div className="flex flex-shrink-0 items-center justify-stretch gap-2">
                           <Button
                             type="submit"
-                            isDisabled={isCommitting || changes.staged.length === 0}
-                            formAction={`/organization/${organizationId}/project/${projectId}/git/commit`}
+                            isDisabled={(committingAction === 'commit' && isCommitting) || changes.staged.length === 0}
                             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                           >
                             <Icon
-                              icon={isCommitting ? 'spinner' : 'check'}
-                              className={`w-5 ${isCommitting ? 'animate-spin' : ''}`}
+                              icon={committingAction === 'commit' && isCommitting ? 'spinner' : 'check'}
+                              className={`w-5 ${committingAction === 'commit' && isCommitting ? 'animate-spin' : ''}`}
                             />{' '}
                             Commit
                           </Button>
 
                           <Button
                             type="submit"
-                            isDisabled={isCommitting || changes.staged.length === 0}
-                            formAction={`/organization/${organizationId}/project/${projectId}/git/commit-and-push`}
+                            isDisabled={
+                              (committingAction === 'commit-push' && isCommitting) || changes.staged.length === 0
+                            }
+                            name="push"
+                            value="true"
                             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                           >
                             <Icon
-                              icon={isCommitting ? 'spinner' : 'cloud-arrow-up'}
-                              className={`w-5 ${isCommitting ? 'animate-spin' : ''}`}
+                              icon={committingAction === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
+                              className={`w-5 ${committingAction === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
                             />{' '}
                             Commit and push
                           </Button>
