@@ -88,6 +88,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       url: rendered.url,
       headers: rendered.headers,
       cookieJar: rendered.cookieJar,
+      authentication: rendered.authentication,
       query: rendered.query || {},
     });
   }

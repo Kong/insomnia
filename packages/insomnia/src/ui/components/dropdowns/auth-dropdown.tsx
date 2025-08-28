@@ -145,9 +145,15 @@ interface Props {
   authentication?: RequestAuthentication | {};
   authTypes?: AuthTypes[];
   disabled?: boolean;
+  hideOthers?: boolean;
 }
 
-export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTypes, disabled = false }) => {
+export const AuthDropdown: FC<Props> = ({
+  authentication,
+  authTypes = defaultTypes,
+  disabled = false,
+  hideOthers = false,
+}) => {
   const { requestId, requestGroupId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -221,9 +227,13 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
       id: 'netrc',
       name: 'Netrc',
     },
+    {
+      id: 'singleToken',
+      name: 'token',
+    },
   ];
 
-  const authTypeSections: {
+  interface Section {
     id: string;
     icon: IconName;
     name: string;
@@ -231,29 +241,35 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
       id: AuthTypes | 'inherit';
       name: string;
     }[];
-  }[] = [
-    {
-      id: 'Other',
-      name: 'Other',
-      icon: 'ellipsis-h',
-      items: [
+  }
+
+  const commonSections: Section = {
+    id: 'Auth Types',
+    name: 'Auth Types',
+    icon: 'lock',
+    items: authTypesItems.filter(item => authTypes.includes(item.id)),
+  };
+
+  const authTypeSections: Section[] = hideOthers
+    ? [commonSections]
+    : [
         {
-          id: 'inherit',
-          name: 'Inherit from parent',
+          id: 'Other',
+          name: 'Other',
+          icon: 'ellipsis-h',
+          items: [
+            {
+              id: 'inherit',
+              name: 'Inherit from parent',
+            },
+            {
+              id: 'none',
+              name: 'None',
+            },
+          ],
         },
-        {
-          id: 'none',
-          name: 'None',
-        },
-      ],
-    },
-    {
-      id: 'Auth Types',
-      name: 'Auth Types',
-      icon: 'lock',
-      items: authTypesItems.filter(item => authTypes.includes(item.id)),
-    },
-  ];
+        commonSections,
+      ];
 
   return (
     <Select
@@ -273,7 +289,7 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
         </SelectValue>
         <Icon icon="caret-down" />
       </Button>
-      <Popover className="flex min-w-max flex-col overflow-y-hidden">
+      <Popover className="flex min-w-[17ch] flex-col overflow-y-hidden">
         <ListBox
           items={authTypeSections}
           className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"

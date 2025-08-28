@@ -11,6 +11,7 @@ import type {
   AUTH_NONE,
   AUTH_NTLM,
   AUTH_OAUTH_1,
+  AUTH_SINGLE_TOKEN,
   HAWK_ALGORITHM_SHA1,
   HAWK_ALGORITHM_SHA256,
 } from '../common/constants';
@@ -42,7 +43,8 @@ export type AuthTypes =
   | 'hawk'
   | 'iam'
   | 'netrc'
-  | 'asap';
+  | 'asap'
+  | 'singleToken';
 
 export interface AuthTypeBasic {
   type: typeof AUTH_BASIC;
@@ -155,6 +157,13 @@ export interface AuthTypeNone {
   type: typeof AUTH_NONE;
   disabled?: boolean;
 }
+
+export interface AuthTypeSingleToken {
+  type: typeof AUTH_SINGLE_TOKEN;
+  token?: string;
+  disabled?: boolean;
+}
+
 export type RequestAuthentication =
   | AuthTypeOAuth2
   | AuthTypeBasic
@@ -167,7 +176,8 @@ export type RequestAuthentication =
   | AuthTypeAsap
   | AuthTypeNone
   | AuthTypeAPIKey
-  | AuthTypeNTLM;
+  | AuthTypeNTLM
+  | AuthTypeSingleToken;
 
 export type OAuth2ResponseType = 'code' | 'id_token' | 'id_token token' | 'none' | 'token';
 

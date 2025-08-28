@@ -295,6 +295,7 @@ export const AUTH_HAWK = 'hawk';
 export const AUTH_AWS_IAM = 'iam';
 export const AUTH_NETRC = 'netrc';
 export const AUTH_ASAP = 'asap';
+export const AUTH_SINGLE_TOKEN = 'singleToken';
 export const HAWK_ALGORITHM_SHA256 = 'sha256';
 export const HAWK_ALGORITHM_SHA1 = 'sha1';
 

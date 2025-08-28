@@ -1,6 +1,8 @@
 import React, { type FC, type ReactNode } from 'react';
 import { Toolbar } from 'react-aria-components';
 
+import { SingleTokenAuth } from '~/ui/components/editors/auth/single-token-auth';
+
 import {
   AUTH_API_KEY,
   AUTH_ASAP,
@@ -13,6 +15,7 @@ import {
   AUTH_NTLM,
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
+  AUTH_SINGLE_TOKEN,
 } from '../../../../common/constants';
 import type { AuthTypes, RequestAuthentication } from '../../../../models/request';
 import { getAuthObjectOrNull } from '../../../../network/authentication';
@@ -33,7 +36,8 @@ export const AuthWrapper: FC<{
   authentication?: RequestAuthentication | {};
   disabled?: boolean;
   authTypes?: AuthTypes[];
-}> = ({ authentication, disabled = false, authTypes }) => {
+  hideOthers?: boolean;
+}> = ({ authentication, disabled = false, authTypes, hideOthers }) => {
   const type = getAuthObjectOrNull(authentication)?.type || '';
   let authBody: ReactNode = null;
 
@@ -59,6 +63,8 @@ export const AuthWrapper: FC<{
     authBody = <NetrcAuth />;
   } else if (type === AUTH_ASAP) {
     authBody = <AsapAuth />;
+  } else if (type === AUTH_SINGLE_TOKEN) {
+    authBody = <SingleTokenAuth disabled={disabled} />;
   } else {
     authBody = (
       <div className="flex h-full w-full select-none items-center justify-center">
@@ -81,7 +87,7 @@ export const AuthWrapper: FC<{
   return (
     <>
       <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
-        <AuthDropdown authentication={authentication} authTypes={authTypes} />
+        <AuthDropdown authentication={authentication} authTypes={authTypes} hideOthers={hideOthers} />
       </Toolbar>
       <div className="flex-1 overflow-y-auto">{authBody}</div>
     </>
