@@ -19,15 +19,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const apiSpec = await models.apiSpec.getByParentId(workspaceId);
 
   invariant(apiSpec, 'API Spec not found');
-  await database.update(
-    {
-      ...apiSpec,
-      modified: Date.now(),
-      created: fromTemplate ? Date.now() : apiSpec.created,
-      contents,
-    },
-    fromTemplate,
-  );
+  await database.update({
+    ...apiSpec,
+    modified: Date.now(),
+    created: fromTemplate ? Date.now() : apiSpec.created,
+    contents,
+  });
 
   return null;
 }
