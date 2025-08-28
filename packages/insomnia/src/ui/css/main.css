@@ -3463,3 +3463,7 @@ input.editable {
 .pane-two {
   z-index: 0;
 }
+
+.mismerge {
+  height: 100%;
+}

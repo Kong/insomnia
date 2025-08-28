@@ -260,7 +260,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
 
 type ZodTreeifiedError = ReturnType<typeof z.treeifyError<any>>;
 
-function extractErrorMessages(v5Error: ZodError | any): string[] {
+export function extractErrorMessages(v5Error: ZodError | any): string[] {
   const messages: [string, string[]][] = [];
   function walkError(err: ZodTreeifiedError, path = '') {
     if (err.errors.length > 0) {

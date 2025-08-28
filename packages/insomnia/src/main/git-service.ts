@@ -1845,6 +1845,10 @@ export const discardChangesAction = async ({
   }
 };
 
+export const abortMergeAction = async () => {
+  return GitVCS.abortMerge();
+};
+
 export interface GitStatusResult {
   status: {
     localChanges: number;
@@ -2501,6 +2505,7 @@ export interface GitServiceAPI {
   pullFromGitRemote: typeof pullFromGitRemote;
   continueMerge: typeof continueMerge;
   discardChanges: typeof discardChangesAction;
+  abortMerge: typeof abortMergeAction;
   gitStatus: typeof gitStatusAction;
   stageChanges: typeof stageChangesAction;
   unstageChanges: typeof unstageChangesAction;
@@ -2571,6 +2576,7 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.discardChanges', (_, options: Parameters<typeof discardChangesAction>[0]) =>
     discardChangesAction(options),
   );
+  ipcMainHandle('git.abortMerge', _ => abortMergeAction());
   ipcMainHandle('git.gitStatus', (_, options: Parameters<typeof gitStatusAction>[0]) => gitStatusAction(options));
   ipcMainHandle('git.stageChanges', (_, options: Parameters<typeof stageChangesAction>[0]) =>
     stageChangesAction(options),
