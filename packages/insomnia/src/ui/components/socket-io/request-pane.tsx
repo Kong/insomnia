@@ -7,6 +7,7 @@ import * as reactUse from 'react-use';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { AuthWrapper } from '~/ui/components/editors/auth/auth-wrapper';
 
 import type { Environment } from '../../../models/environment';
 import { getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
@@ -155,6 +156,12 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
           </Tab>
           <Tab
             className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="auth"
+          >
+            <span>Auth</span>
+          </Tab>
+          <Tab
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
             id="headers"
           >
             <span>Headers</span>
@@ -279,6 +286,15 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="events">
           <SocketIOEventTabPane request={activeRequest} eventListeners={activeRequest.eventListeners} />
+        </TabPanel>
+        <TabPanel className="w-full flex-1 overflow-y-auto" id="auth">
+          <AuthWrapper
+            key={uniqueKey}
+            authentication={activeRequest.authentication}
+            disabled={readyState}
+            authTypes={['singleToken']}
+            hideOthers
+          />
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="headers">
           {disabled && <PaneReadOnlyBanner />}
