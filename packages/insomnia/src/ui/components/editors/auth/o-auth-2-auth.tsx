@@ -1,6 +1,6 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { type AUTH_OAUTH_2, getOauthRedirectUrl } from '../../../../common/constants';
+import { getOauthRedirectUrl } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
@@ -95,7 +95,7 @@ const credentialsInBodyOptions = [
   },
 ];
 
-const getFields = (authentication: Extract<RequestAuthentication, { type: typeof AUTH_OAUTH_2 }>) => {
+const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth2' }>) => {
   const clientId = <AuthInputRow label="Client ID" property="clientId" key="clientId" />;
   const clientSecret = <AuthInputRow label="Client Secret" property="clientSecret" key="clientSecret" mask />;
   const usePkce = (
@@ -218,7 +218,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: typeof
   };
 };
 
-const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { type: typeof AUTH_OAUTH_2 }>) => {
+const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { type: 'oauth2' }>) => {
   const {
     clientId,
     clientSecret,

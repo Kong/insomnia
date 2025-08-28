@@ -282,40 +282,26 @@ export const contentTypesMap: Record<string, string[]> = {
   [CONTENT_TYPE_YAML]: ['YAML', 'YAML'],
 };
 
-// Auth Types
-export const AUTH_NONE = 'none';
-export const AUTH_API_KEY = 'apikey';
-export const AUTH_OAUTH_2 = 'oauth2';
-export const AUTH_OAUTH_1 = 'oauth1';
-export const AUTH_BASIC = 'basic';
-export const AUTH_DIGEST = 'digest';
-export const AUTH_BEARER = 'bearer';
-export const AUTH_NTLM = 'ntlm';
-export const AUTH_HAWK = 'hawk';
-export const AUTH_AWS_IAM = 'iam';
-export const AUTH_NETRC = 'netrc';
-export const AUTH_ASAP = 'asap';
+export type AuthTypes =
+  | 'none'
+  | 'apikey'
+  | 'oauth2'
+  | 'oauth1'
+  | 'basic'
+  | 'digest'
+  | 'bearer'
+  | 'ntlm'
+  | 'hawk'
+  | 'iam'
+  | 'netrc'
+  | 'asap';
+
 export const HAWK_ALGORITHM_SHA256 = 'sha256';
 export const HAWK_ALGORITHM_SHA1 = 'sha1';
 
 // json-order constants
 export const JSON_ORDER_PREFIX = '&';
 export const JSON_ORDER_SEPARATOR = '~|';
-
-const authTypesMap: Record<string, string[]> = {
-  [AUTH_API_KEY]: ['API Key', 'API Key Auth'],
-  [AUTH_BASIC]: ['Basic', 'Basic Auth'],
-  [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
-  [AUTH_NTLM]: ['NTLM', 'Microsoft NTLM'],
-  [AUTH_BEARER]: ['Bearer', 'Bearer Token'],
-  [AUTH_OAUTH_1]: ['OAuth 1', 'OAuth 1.0'],
-  [AUTH_OAUTH_2]: ['OAuth 2', 'OAuth 2.0'],
-  [AUTH_HAWK]: ['Hawk', 'Hawk'],
-  [AUTH_AWS_IAM]: ['AWS', 'AWS IAM v4'],
-  [AUTH_ASAP]: ['ASAP', 'Atlassian ASAP'],
-  [AUTH_NETRC]: ['Netrc', 'Netrc File'],
-  [AUTH_NONE]: ['None', 'No Auth'],
-};
 
 // Sort Orders
 export type SortOrder =
@@ -402,13 +388,6 @@ export function getContentTypeName(contentType?: string | null, useLong = false)
   }
 
   return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
-}
-
-export function getAuthTypeName(authType?: string, useLong = false) {
-  if (authType && authType in authTypesMap) {
-    return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
-  }
-  return 'Auth';
 }
 
 export function getContentTypeFromHeaders(headers: any[], defaultValue: string | null = null) {

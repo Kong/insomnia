@@ -178,7 +178,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     const response = await curlRequest({
       requestId: `no-sideEffects-request-${requestId}`,
       req: {
-        authentication: {},
+        authentication: { type: 'none' },
         body: {},
         cookieJar: {
           cookies: [],

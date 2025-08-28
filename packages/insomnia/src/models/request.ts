@@ -1,20 +1,6 @@
 import { OperationTypeNode } from 'graphql';
 
-import type {
-  AUTH_API_KEY,
-  AUTH_ASAP,
-  AUTH_AWS_IAM,
-  AUTH_BEARER,
-  AUTH_DIGEST,
-  AUTH_HAWK,
-  AUTH_NETRC,
-  AUTH_NONE,
-  AUTH_NTLM,
-  AUTH_OAUTH_1,
-  HAWK_ALGORITHM_SHA1,
-  HAWK_ALGORITHM_SHA256,
-} from '../common/constants';
-import { AUTH_BASIC, CONTENT_TYPE_FORM_URLENCODED, getContentTypeFromHeaders, METHOD_GET } from '../common/constants';
+import { CONTENT_TYPE_FORM_URLENCODED, getContentTypeFromHeaders, METHOD_GET } from '../common/constants';
 import { database as db } from '../common/database';
 import type { OAuth1SignatureMethod } from '../network/o-auth-1/constants';
 import { getOperationType } from '../utils/graph-ql';
@@ -30,29 +16,16 @@ export const prefix = 'req';
 export const canDuplicate = true;
 
 export const canSync = true;
-export type AuthTypes =
-  | 'none'
-  | 'apikey'
-  | 'oauth2'
-  | 'oauth1'
-  | 'basic'
-  | 'digest'
-  | 'bearer'
-  | 'ntlm'
-  | 'hawk'
-  | 'iam'
-  | 'netrc'
-  | 'asap';
 
 export interface AuthTypeBasic {
-  type: typeof AUTH_BASIC;
+  type: 'basic';
   useISO88591?: boolean;
   disabled?: boolean;
   username?: string;
   password?: string;
 }
 export interface AuthTypeAPIKey {
-  type: typeof AUTH_API_KEY;
+  type: 'apikey';
   disabled?: boolean;
   key?: string;
   value?: string;
@@ -85,16 +58,16 @@ export interface AuthTypeOAuth2 {
   origin?: string;
 }
 export interface AuthTypeHawk {
-  type: typeof AUTH_HAWK;
+  type: 'hawk';
   disabled?: boolean;
-  algorithm: typeof HAWK_ALGORITHM_SHA256 | typeof HAWK_ALGORITHM_SHA1;
+  algorithm: 'sha1' | 'sha256';
   id: string;
   key: string;
   ext?: string;
   validatePayload?: boolean;
 }
 export interface AuthTypeOAuth1 {
-  type: typeof AUTH_OAUTH_1;
+  type: 'oauth1';
   disabled?: boolean;
   signatureMethod?: OAuth1SignatureMethod;
   consumerKey?: string;
@@ -111,25 +84,25 @@ export interface AuthTypeOAuth1 {
   includeBodyHash?: boolean;
 }
 export interface AuthTypeDigest {
-  type: typeof AUTH_DIGEST;
+  type: 'digest';
   disabled?: boolean;
   username?: string;
   password?: string;
 }
 export interface AuthTypeNTLM {
-  type: typeof AUTH_NTLM;
+  type: 'ntlm';
   disabled?: boolean;
   username?: string;
   password?: string;
 }
 export interface AuthTypeBearer {
-  type: typeof AUTH_BEARER;
+  type: 'bearer';
   disabled?: boolean;
   token?: string;
   prefix?: string;
 }
 export interface AuthTypeAwsIam {
-  type: typeof AUTH_AWS_IAM;
+  type: 'iam';
   disabled?: boolean;
   accessKeyId?: string;
   secretAccessKey?: string;
@@ -138,11 +111,11 @@ export interface AuthTypeAwsIam {
   service?: string;
 }
 export interface AuthTypeNetrc {
-  type: typeof AUTH_NETRC;
+  type: 'netrc';
   disabled?: boolean;
 }
 export interface AuthTypeAsap {
-  type: typeof AUTH_ASAP;
+  type: 'asap';
   disabled?: boolean;
   issuer: string;
   subject?: string;
@@ -152,7 +125,7 @@ export interface AuthTypeAsap {
   privateKey: string;
 }
 export interface AuthTypeNone {
-  type: typeof AUTH_NONE;
+  type: 'none';
   disabled?: boolean;
 }
 export type RequestAuthentication =

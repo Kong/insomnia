@@ -13,13 +13,12 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { HAWK_ALGORITHM_SHA256 } from '../../../common/constants';
+import { type AuthTypes, HAWK_ALGORITHM_SHA256 } from '../../../common/constants';
 import type {
   AuthTypeAPIKey,
   AuthTypeAwsIam,
   AuthTypeBasic,
   AuthTypeNTLM,
-  AuthTypes,
   RequestAuthentication,
 } from '../../../models/request';
 import { getAuthObjectOrNull } from '../../../network/authentication';

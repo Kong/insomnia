@@ -9,10 +9,10 @@ import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.pr
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
-import { CONTENT_TYPE_JSON } from '../../../common/constants';
+import { type AuthTypes, CONTENT_TYPE_JSON } from '../../../common/constants';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
-import { type AuthTypes, getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
+import { getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import {

@@ -12,7 +12,6 @@ import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSoc
 
 import { database } from '~/common/database';
 
-import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { webSocketRequest } from '../../models';
@@ -159,12 +158,12 @@ const openWebSocketConnection = async (
     let url = options.url;
     let authCookie = null;
     if (!options.authentication.disabled) {
-      if (options.authentication.type === AUTH_BASIC) {
+      if (options.authentication.type === 'basic') {
         const { username, password, useISO88591 } = options.authentication;
         const encoding = useISO88591 ? 'latin1' : 'utf8';
         headers.push(getBasicAuthHeader(username, password, encoding));
       }
-      if (options.authentication.type === AUTH_API_KEY) {
+      if (options.authentication.type === 'apikey') {
         const { key = '', value = '', addTo } = options.authentication; // Ensure key is not undefined
         if (addTo === HEADER) {
           headers.push({ name: key, value: value });
@@ -179,7 +178,7 @@ const openWebSocketConnection = async (
           url = joinUrlAndQueryString(options.url, qs);
         }
       }
-      if (options.authentication.type === AUTH_BEARER && options.authentication.token) {
+      if (options.authentication.type === 'bearer' && options.authentication.token) {
         const { token, prefix } = options.authentication;
         headers.push(getBearerAuthHeader(token, prefix));
       }
