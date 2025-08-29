@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 
-export function useReadyState({ requestId, protocol }: { requestId: string; protocol: 'curl' | 'webSocket' }): boolean {
+export function useReadyState({
+  requestId,
+  protocol,
+}: {
+  requestId: string;
+  protocol: 'curl' | 'webSocket' | 'socketIO';
+}): boolean {
   const [readyState, setReadyState] = useState<boolean>(false);
 
   // get readyState when requestId or protocol changes

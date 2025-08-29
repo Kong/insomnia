@@ -47,7 +47,7 @@ describe('test generate table preview data ', () => {
       [1, 2, 3],
       null,
     ];
-    // @ts-expect-error test inalid input
+    // @ts-expect-error test invalid input
     const { data, headers } = genPreviewTableData(uploadData);
     expect(headers).toEqual(['position', 'value']);
     expect(data).toEqual([
@@ -60,7 +60,7 @@ describe('test generate table preview data ', () => {
 
   it('test invalid json input', () => {
     const uploadData = ['invalid', [1, 2, 3], undefined, null];
-    // @ts-expect-error test inalid input
+    // @ts-expect-error test invalid input
     const { data, headers } = genPreviewTableData(uploadData);
     expect(headers.length).toBe(0);
     expect(data.length).toBe(0);

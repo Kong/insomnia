@@ -1,10 +1,13 @@
 type EventHandler = (...args: any[]) => void;
 
-type UIEventType = 'CLOSE_TAB' | 'CHANGE_ACTIVE_ENV';
+export const OAUTH2_AUTHORIZATION_STATUS_CHANGE = 'OAUTH2_AUTHORIZATION_STATUS_CHANGE';
+
+type UIEventType = 'CLOSE_TAB' | 'CHANGE_ACTIVE_ENV' | typeof OAUTH2_AUTHORIZATION_STATUS_CHANGE;
 class EventBus {
   private events: Record<UIEventType, EventHandler[]> = {
     CLOSE_TAB: [],
     CHANGE_ACTIVE_ENV: [],
+    [OAUTH2_AUTHORIZATION_STATUS_CHANGE]: [],
   };
 
   // Subscribe to event

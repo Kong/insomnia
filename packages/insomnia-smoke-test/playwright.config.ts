@@ -43,5 +43,6 @@ const config: PlaywrightTestConfig = {
     timeout: process.env.CI ? 25 * 1000 : 10 * 1000,
   },
   workers: 1,
+  globalTimeout: 20 * 60 * 1000,
 };
 export default config;

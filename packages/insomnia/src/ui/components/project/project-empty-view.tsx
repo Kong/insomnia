@@ -1,6 +1,7 @@
 import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
 
+import { SegmentEvent } from '../../analytics';
 import { Icon } from '../icon';
 
 interface Props {
@@ -38,7 +39,16 @@ export const ProjectEmptyView: FC<Props> = ({
         <Button
           aria-label="Import"
           className="flex w-full max-w-[180px] flex-col items-center justify-center gap-[var(--padding-xs)] rounded-md border border-solid border-[--hl-sm] px-12 py-8 text-[var(--font-size-sm)] shadow-sm transition-all duration-100 hover:bg-[--color-bg] sm:gap-[var(--padding-sm)]"
-          onPress={onImportFrom}
+          onPress={() => {
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.importStarted,
+              properties: {
+                source: 'home-page',
+              },
+            });
+
+            onImportFrom();
+          }}
         >
           <Icon icon="file-import" className="text-[var(--font-size-xl)]" />
           Import

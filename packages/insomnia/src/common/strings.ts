@@ -7,6 +7,7 @@ type StringId =
   | 'collection'
   | 'mock'
   | 'document'
+  | 'organization'
   | 'project'
   | 'workspace'
   | 'defaultProject'
@@ -26,6 +27,10 @@ export const strings: Record<StringId, StringInfo> = {
   document: {
     singular: 'Document',
     plural: 'Documents',
+  },
+  organization: {
+    singular: 'Organization',
+    plural: 'Organizations',
   },
   project: {
     singular: 'Project',

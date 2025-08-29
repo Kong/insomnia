@@ -40,14 +40,19 @@ import {
 } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
 import type { Settings } from '../models/settings';
+import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
-import * as pluginContexts from '../plugins/context/index';
+import * as pluginApp from '../plugins/context/app';
+import * as pluginData from '../plugins/context/data';
+import * as pluginNetwork from '../plugins/context/network';
+import * as pluginRequest from '../plugins/context/request';
+import * as pluginResponse from '../plugins/context/response';
+import * as pluginStore from '../plugins/context/store';
 import * as plugins from '../plugins/index';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
-import { defaultSendActionRuntime, type SendActionRuntime } from '../ui/routes/request';
 import { invariant } from '../utils/invariant';
 import { serializeNDJSON } from '../utils/ndjson';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
@@ -57,11 +62,15 @@ import { filterClientCertificates } from './certificate';
 import { runScriptConcurrently, type TransformedExecuteScriptContext } from './concurrency';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
+export interface SendActionRuntime {
+  appendTimeline: (timelinePath: string, logs: string[]) => Promise<void>;
+}
+
 export const getOrInheritAuthentication = ({
   request,
   requestGroups,
 }: {
-  request: Request | WebSocketRequest;
+  request: Request | WebSocketRequest | SocketIORequest;
   requestGroups: RequestGroup[];
 }): RequestAuthentication | {} => {
   const hasValidAuth = getAuthObjectOrNull(request.authentication) && isAuthEnabled(request.authentication);
@@ -69,9 +78,9 @@ export const getOrInheritAuthentication = ({
     return request.authentication;
   }
   const hasParentFolders = requestGroups.length > 0;
-  const closestParentFolderWithAuth = requestGroups.find(
-    ({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication),
-  );
+  const closestParentFolderWithAuth = [...requestGroups]
+    .reverse()
+    .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
   const closestAuth = getAuthObjectOrNull(closestParentFolderWithAuth?.authentication);
   const shouldCheckFolderAuth = hasParentFolders && closestAuth;
   if (shouldCheckFolderAuth) {
@@ -152,8 +161,13 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
   return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
+
 // Intended to gather all required database objects and initialize ids
-export const fetchRequestData = async (requestId: string) => {
+export const fetchRequestData = async (
+  requestId: string,
+  // Override the active environment id to use for the request
+  overrideEnvironmentId?: string,
+) => {
   const request = await models.request.getById(requestId);
   invariant(request, 'failed to find request ' + requestId);
   const ancestors = await db.withAncestors<Request | RequestGroup | Workspace | Project | MockRoute | MockServer>(
@@ -167,21 +181,23 @@ export const fetchRequestData = async (requestId: string) => {
       models.mockServer.type,
     ],
   );
+
   const workspaceDoc = ancestors.find(isWorkspace);
   invariant(workspaceDoc?._id, 'failed to find workspace');
   const workspaceId = workspaceDoc._id;
 
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-  // fallback to base environment
-  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+
+  const activeEnvironmentId = overrideEnvironmentId ?? workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  // no active environment in workspaceMeta, fallback to workspace root environment as active environment
-  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(workspace._id));
-  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  // no active environment in workspaceMeta, fallback to workspace root environment as active environment
+  const environment = activeEnvironment || baseEnvironment;
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
+
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
   let activeGlobalEnvironment: Environment | undefined = undefined;
@@ -202,9 +218,11 @@ export const fetchRequestData = async (requestId: string) => {
   invariant(settings, 'failed to create settings');
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await models.caCertificate.findByParentId(workspaceId);
+
   const responseId = generateId('res');
   const responsesDir = pathJoin(
-    (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
+    process.env['INSOMNIA_DATA_PATH'] ||
+      (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
     'responses',
   );
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
@@ -213,13 +231,14 @@ export const fetchRequestData = async (requestId: string) => {
     request,
     environment,
     baseEnvironment,
-    cookieJar,
     activeGlobalEnvironment,
     activeGlobalBaseEnvironment,
+    activeEnvironmentId: environment._id,
     settings,
     clientCertificates,
     caCert,
-    activeEnvironmentId: activeEnvironmentId || environment._id,
+    cookieJar,
+    workspace,
     timelinePath,
     responseId,
     ancestors,
@@ -347,7 +366,7 @@ export const tryToExecutePreRequestScript = async (
 
 // savePatchesMadeByScript persists entities
 // The rule for the global environment:
-//  - If no global environment is seleted, no operation
+//  - If no global environment is selected, no operation
 //  - If one global environment is selected, it persists content to the selected global environment (base or sub).
 export async function savePatchesMadeByScript(patches: {
   mutatedContext: TransformedExecuteScriptContext;
@@ -409,7 +428,7 @@ export async function savePatchesMadeByScript(patches: {
   }
 
   if (activeGlobalBaseEnvironment) {
-    invariant(mutatedContext.baseGlobals, 'global base env must be defined when there is selected one');
+    invariant(mutatedContext.baseGlobals, 'baseGlobals must be defined when there is active global base environment');
     await updateEnvironment(activeGlobalBaseEnvironment, mutatedContext.baseGlobals);
   }
 
@@ -498,8 +517,16 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         },
         response,
         vault,
-        globals: globals?.data || undefined,
-        baseGlobals: baseGlobals?.data || undefined,
+        globals: globals && {
+          id: globals._id,
+          name: globals.name,
+          data: globals.data || {},
+        },
+        baseGlobals: baseGlobals && {
+          id: baseGlobals._id,
+          name: baseGlobals.name,
+          data: baseGlobals.data || {},
+        },
         iterationData: userUploadEnvironment
           ? {
               name: userUploadEnvironment.name,
@@ -537,21 +564,21 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
 
     if (globals) {
       const globalEnvPropertyOrder = orderedJSON.parse(
-        JSON.stringify(output.globals || {}),
+        JSON.stringify(output.globals?.data || {}),
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
-      globals.data = output.globals || {};
+      globals.data = output.globals?.data || {};
       globals.dataPropertyOrder = globalEnvPropertyOrder.map;
     }
 
     if (baseGlobals) {
       const globalBaseEnvPropertyOrder = orderedJSON.parse(
-        JSON.stringify(output.baseGlobals || {}),
+        JSON.stringify(output.baseGlobals?.data || {}),
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
-      baseGlobals.data = output.baseGlobals || {};
+      baseGlobals.data = output.baseGlobals?.data || {};
       baseGlobals.dataPropertyOrder = globalBaseEnvPropertyOrder.map;
     }
 
@@ -755,7 +782,7 @@ export const tryToTransformRequestWithPlugins = async (renderResult: {
   const { request, context } = renderResult;
   try {
     return await _applyRequestPluginHooks(request, context);
-  } catch (err) {
+  } catch {
     throw new Error(`Failed to transform request with plugins: ${request._id}`);
   }
 };
@@ -785,7 +812,7 @@ export interface sendCurlAndWriteTimelineResponse extends ResponsePatch {
 export async function sendCurlAndWriteTimeline(
   renderedRequest: RenderedRequest,
   clientCertificates: ClientCertificate[],
-  caCert: CaCertificate | null,
+  caCert: CaCertificate | undefined,
   settings: Settings,
   timelinePath: string,
   responseId: string,
@@ -978,7 +1005,7 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
   }
   try {
     return new URL(location.value, finalUrl).toString();
-  } catch (error) {
+  } catch {
     return finalUrl;
   }
 };
@@ -988,11 +1015,11 @@ async function _applyRequestPluginHooks(renderedRequest: RenderedRequest, render
 
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
-      ...(pluginContexts.app.init('no-render') as Record<string, any>),
-      ...pluginContexts.data.init(renderedContext.getProjectId()),
-      ...(pluginContexts.store.init(plugin) as Record<string, any>),
-      ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
-      ...(pluginContexts.network.init() as Record<string, any>),
+      ...(pluginApp.init() as Record<string, any>),
+      ...pluginData.init(renderedContext.getProjectId()),
+      ...(pluginStore.init(plugin) as Record<string, any>),
+      ...(pluginRequest.init(newRenderedRequest, renderedContext) as Record<string, any>),
+      ...(pluginNetwork.init() as Record<string, any>),
     };
 
     try {
@@ -1014,14 +1041,15 @@ async function _applyResponsePluginHooks(
   try {
     const newResponse = clone(response);
     const newRequest = clone(renderedRequest);
+
     for (const { plugin, hook } of await plugins.getResponseHooks()) {
       const context = {
-        ...(pluginContexts.app.init('no-render') as Record<string, any>),
-        ...pluginContexts.data.init(renderedContext.getProjectId()),
-        ...(pluginContexts.store.init(plugin) as Record<string, any>),
-        ...(pluginContexts.response.init(newResponse) as Record<string, any>),
-        ...(pluginContexts.request.init(newRequest, renderedContext, true) as Record<string, any>),
-        ...(pluginContexts.network.init() as Record<string, any>),
+        ...(pluginApp.init() as Record<string, any>),
+        ...pluginData.init(renderedContext.getProjectId()),
+        ...(pluginStore.init(plugin) as Record<string, any>),
+        ...(pluginResponse.init(newResponse) as Record<string, any>),
+        ...(pluginRequest.init(newRequest, renderedContext, true) as Record<string, any>),
+        ...(pluginNetwork.init() as Record<string, any>),
       };
 
       try {
@@ -1045,3 +1073,8 @@ async function _applyResponsePluginHooks(
     };
   }
 }
+export const defaultSendActionRuntime = {
+  appendTimeline: async (timelinePath: string, logs: string[]) => {
+    await fs.promises.appendFile(timelinePath, logs.join('\n'));
+  },
+};

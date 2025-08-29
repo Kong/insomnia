@@ -1,8 +1,8 @@
+import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 import type { Environment } from 'nunjucks';
-import nunjucks from 'nunjucks/browser/nunjucks';
 
-import { localTemplateTags } from '../ui/components/templating/local-template-tags';
 import BaseExtension from './base-extension';
+import { nunjucks } from './nunjucks.client';
 import { extractUndefinedVariableKey, RenderError } from './render-error';
 
 // Some constants
@@ -170,6 +170,9 @@ async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: bool
   // Create Env with Extensions //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   const nunjucksEnvironment = nunjucks.configure(config) as NunjucksEnvironment;
+  nunjucksEnvironment.addGlobal('range', undefined);
+  nunjucksEnvironment.addGlobal('cycler', undefined);
+  nunjucksEnvironment.addGlobal('joiner', undefined);
   const pluginTemplateTags = await (await import('../plugins')).getTemplateTags();
 
   const allExtensions = [

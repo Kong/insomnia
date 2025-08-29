@@ -1,0 +1,70 @@
+import { useCallback } from 'react';
+import { href, redirect, useFetcher } from 'react-router';
+
+import * as models from '~/models';
+import { SegmentEvent } from '~/ui/analytics';
+import { invariant } from '~/utils/invariant';
+
+import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.delete';
+
+export async function clientAction({ params }: Route.ClientActionArgs) {
+  const { organizationId, workspaceId, projectId, testSuiteId } = params;
+
+  const unitTestSuite = await models.unitTestSuite.getById(testSuiteId);
+
+  invariant(unitTestSuite, 'Test Suite not found');
+
+  await models.unitTestSuite.remove(unitTestSuite);
+
+  window.main.trackSegmentEvent({ event: SegmentEvent.testSuiteDelete });
+
+  return redirect(
+    href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/test`, {
+      organizationId,
+      projectId,
+      workspaceId,
+    }),
+  );
+}
+
+export function useTestSuiteDeleteActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
+
+  const submit = useCallback(
+    ({
+      organizationId,
+      projectId,
+      workspaceId,
+      testSuiteId,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      testSuiteId: string;
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/:testSuiteId/delete',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+          testSuiteId,
+        },
+      );
+
+      return fetcherSubmit(
+        {},
+        {
+          action: url,
+          method: 'POST',
+        },
+      );
+    },
+    [fetcherSubmit],
+  );
+
+  return {
+    ...fetcherRest,
+    submit,
+  };
+}

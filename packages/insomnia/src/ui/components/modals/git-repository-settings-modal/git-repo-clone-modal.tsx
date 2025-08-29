@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import { useGitCloneActionFetcher } from '~/routes/git.clone';
 
 import { docsGitSync } from '../../../../common/documentation';
 import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
@@ -14,12 +16,13 @@ import { CustomRepositorySettingsFormGroup } from '../../git-credentials/custom-
 import { GitHubRepositorySetupFormGroup } from '../../git-credentials/github-repository-settings-form';
 import { GitLabRepositorySetupFormGroup } from '../../git-credentials/gitlab-repository-settings-form';
 import { HelpTooltip } from '../../help-tooltip';
-import { showAlert } from '..';
+import { showModal } from '..';
+import { AlertModal } from '../alert-modal';
 
 export const GitRepositoryCloneModal = (props: ModalProps) => {
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
   const modalRef = useRef<ModalHandle>(null);
-  const cloneGitRepositoryFetcher = useFetcher();
+  const cloneGitRepositoryFetcher = useGitCloneActionFetcher();
 
   const [selectedTab, setTab] = useState<OauthProviderName>('github');
 
@@ -28,22 +31,21 @@ export const GitRepositoryCloneModal = (props: ModalProps) => {
   }, []);
 
   const onSubmit = (gitRepositoryPatch: Partial<GitRepository>) => {
-    const { author, credentials, created, modified, isPrivate, needsFullClone, uriNeedsMigration, ...repoPatch } =
-      gitRepositoryPatch;
+    const { author, credentials, uri } = gitRepositoryPatch;
 
-    cloneGitRepositoryFetcher.submit(
-      {
-        ...repoPatch,
-        authorName: author?.name || '',
-        authorEmail: author?.email || '',
-        ...credentials,
+    cloneGitRepositoryFetcher.submit({
+      organizationId,
+      projectId,
+      uri: uri || '',
+      author: {
+        name: author?.name || '',
+        email: author?.email || '',
       },
-      {
-        // file://./../../../routes/git-actions.tsx#cloneGitRepoAction
-        action: `/organization/${organizationId}/project/${projectId}/git/clone`,
-        method: 'post',
+      credentials: credentials || {
+        username: '',
+        password: '',
       },
-    );
+    });
   };
 
   const isSubmitting = cloneGitRepositoryFetcher.state === 'submitting';
@@ -52,7 +54,7 @@ export const GitRepositoryCloneModal = (props: ModalProps) => {
     if (errors && errors.length) {
       const errorMessage = errors.map(e => (e instanceof Error ? e.message : typeof e === 'string' && e)).join(', ');
 
-      showAlert({
+      showModal(AlertModal, {
         title: 'Error Cloning Repository',
         message: errorMessage,
       });

@@ -33,13 +33,13 @@ export default class FileSystemDriver implements BaseDriver {
   }
 
   async setItem(key: string, value: Buffer) {
-    console.log(`[FileSystemDriver] Writing to ${key}`);
+    console.debug(`[FileSystemDriver] Writing to ${key}`);
     const finalPath = await this._getKeyPath(key);
     // Temp path contains randomness to avoid race-condition collisions. This
     // doesn't actually avoid race conditions but at least it won't fail.
 
     const tmpPath = `${finalPath}.${crypto.randomUUID()}.tmp`;
-    console.log(`[FileSystemDriver] Writing to ${tmpPath} then renaming to ${finalPath}`);
+    console.debug(`[FileSystemDriver] Writing to ${tmpPath} then renaming to ${finalPath}`);
     // This method implements atomic writes by first writing to a temporary
     // file (non-atomic) then renaming the file to the final value (atomic)
     try {

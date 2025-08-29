@@ -1,14 +1,24 @@
 import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
 
+import { isSocketIORequestId } from '../../../models/socket-io-request';
+import { isWebSocketRequestId } from '../../../models/websocket-request';
 import { Dropdown as OriginalDropdown, DropdownItem, ItemContent } from '../base/dropdown';
 
 export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
   const handleCloseThisRequest = () => {
-    window.main.webSocket.close({ requestId });
+    if (isWebSocketRequestId(requestId)) {
+      window.main.webSocket.close({ requestId });
+    } else if (isSocketIORequestId(requestId)) {
+      window.main.socketIO.close({ requestId });
+    }
   };
   const handleCloseAllRequests = () => {
-    window.main.webSocket.closeAll();
+    if (isWebSocketRequestId(requestId)) {
+      window.main.webSocket.closeAll();
+    } else if (isSocketIORequestId(requestId)) {
+      window.main.socketIO.closeAll();
+    }
   };
   return (
     <div

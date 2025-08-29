@@ -2,12 +2,12 @@ import classnames from 'classnames';
 import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
 
+import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+
 import { describeByteSize } from '../../../common/misc';
-import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { FileInputButton } from '../base/file-input-button';
 import { PromptButton } from '../base/prompt-button';
-import { OneLineEditor } from '../codemirror/one-line-editor';
 import { CodePromptModal } from '../modals/code-prompt-modal';
 import { showModal } from '../modals/index';
 
@@ -64,8 +64,6 @@ export const Row: FC<Props> = ({
   showDescription,
   onBlur,
 }) => {
-  const { enabled } = useNunjucksEnabled();
-
   const classes = classnames(className, {
     'key-value-editor__row-wrapper': true,
     'key-value-editor__row-wrapper--disabled': pair.disabled,
@@ -122,7 +120,6 @@ export const Row: FC<Props> = ({
                   title: `Edit ${pair.name}`,
                   defaultValue: pair.value,
                   onChange: (value: string) => onChange({ ...pair, value }),
-                  enableRender: enabled,
                   mode: pair.multiline && typeof pair.multiline === 'string' ? pair.multiline : 'text/plain',
                   onModeChange: (mode: string) => onChange({ ...pair, multiline: mode }),
                 })

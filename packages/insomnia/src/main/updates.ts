@@ -1,10 +1,15 @@
-import { autoUpdater, BrowserWindow, dialog } from 'electron';
+import { spawn } from 'node:child_process';
+import { promises as fsPromise } from 'node:fs';
+import path from 'node:path';
+
+import { app, autoUpdater, BrowserWindow, dialog } from 'electron';
 
 import { CHECK_FOR_UPDATES_INTERVAL, getAppId, getAppVersion, isDevelopment, UpdateURL } from '../common/constants';
 import { delay } from '../common/misc';
 import * as models from '../models/index';
 import { invariant } from '../utils/invariant';
 import { ipcMainOn } from './ipc/electron';
+import { initNsisUpdater } from './nsisUpdate';
 
 export type UpdateStatus =
   | 'Update Error'
@@ -16,7 +21,7 @@ export type UpdateStatus =
   | 'Updates Not Supported'
   | 'Check Now';
 
-const isUpdateSupported = () => {
+export const isUpdateSupported = () => {
   if (process.platform === 'linux') {
     console.log('[updater] Not supported on this platform', process.platform);
     return false;
@@ -45,13 +50,40 @@ const getUpdateUrl = (updateChannel: string): string | null => {
   return fullUrl.toString();
 };
 
-const _sendUpdateStatus = (status: UpdateStatus) => {
+export const _sendUpdateStatus = (status: UpdateStatus) => {
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send('updaterStatus', status);
   }
 };
 
+const isNsisInstaller = async () => {
+  if (process.platform !== 'win32') {
+    return false;
+  }
+  try {
+    const installDir = path.dirname(process.execPath);
+    // we inject this file(nsisInstall.nsh) during the NSIS build process to indicate the installer type
+    const flagFilePath = path.join(installDir, 'installer-info.json');
+
+    const content = await fsPromise.readFile(flagFilePath, 'utf-8');
+    const json = JSON.parse(content);
+    console.log('installer type', json.installer);
+    return json.installer === 'nsis';
+  } catch (err) {
+    console.warn('Failed to read installer-info.json:', err);
+    return false;
+  }
+};
+
 export const init = async () => {
+  // use different update logic for windows nsis installer
+  if (process.platform === 'win32') {
+    const isNsis = await isNsisInstaller();
+    if (isNsis) {
+      initNsisUpdater();
+      return;
+    }
+  }
   autoUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
     _sendUpdateStatus('Update Error');
@@ -79,7 +111,16 @@ export const init = async () => {
       })
       .then(returnValue => {
         if (returnValue.response === 0) {
-          autoUpdater.quitAndInstall();
+          if (process.platform === 'win32') {
+            const updateExe = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');
+            spawn(updateExe, ['--processStartAndWait', 'Insomnia.exe'], {
+              detached: true,
+              windowsHide: true,
+            });
+            app.quit();
+          } else {
+            autoUpdater.quitAndInstall();
+          }
         }
       });
   });

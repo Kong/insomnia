@@ -1,4 +1,4 @@
-import { exportWorkspacesHAR } from '../../common/export';
+import { exportWorkspacesHAR } from '../../common/har';
 import { fetchImportContentFromURI, importResourcesToProject, scanResources } from '../../common/import';
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
 import * as models from '../../models';

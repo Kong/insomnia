@@ -1,19 +1,25 @@
+import { exportRequestsToFile } from 'insomnia/src/ui/components/settings/import-export';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { Button, Checkbox, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
-import { exportRequestsToFile } from '../../../common/export';
 import { requestGroup } from '../../../models';
 import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, type Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
+import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
-import type { Child, WorkspaceLoaderData } from '../../routes/workspace';
+import {
+  type Child,
+  useWorkspaceLoaderFetcher,
+  type WorkspaceLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { SegmentEvent } from '../../analytics';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
 
 export interface Node {
-  doc: Request | WebSocketRequest | GrpcRequest | RequestGroup;
+  doc: Request | WebSocketRequest | GrpcRequest | RequestGroup | SocketIORequest;
   children: Node[];
   collapsed: boolean;
   totalRequests: number;
@@ -76,7 +82,7 @@ export const RequestGroupRow: FC<{
 export const RequestRow: FC<{
   handleSetItemSelected: (...args: any[]) => any;
   isSelected: boolean;
-  request: Request | WebSocketRequest | GrpcRequest;
+  request: Request | WebSocketRequest | GrpcRequest | SocketIORequest;
 }> = ({ handleSetItemSelected, request, isSelected }) => {
   return (
     <li className="flex items-center gap-2 p-2">
@@ -124,6 +130,11 @@ export const RequestRow: FC<{
             gRPC
           </span>
         )}
+        {isSocketIORequest(request) && (
+          <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-[--color-font-notice]">
+            IO
+          </span>
+        )}
         <span>{request.name}</span>
       </div>
     </li>
@@ -140,7 +151,7 @@ export const Tree: FC<{
       return null;
     }
 
-    if (isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc)) {
+    if (isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc) || isSocketIORequest(node.doc)) {
       return (
         <RequestRow
           key={node.doc._id}
@@ -182,7 +193,7 @@ export const ExportRequestsModal = ({
   onClose: () => void;
 }) => {
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
-  const workspaceFetcher = useFetcher();
+  const workspaceFetcher = useWorkspaceLoaderFetcher();
   const [state, setState] = useState<{
     treeRoot: Node | null;
   }>();
@@ -190,14 +201,22 @@ export const ExportRequestsModal = ({
   useEffect(() => {
     const isIdleAndUninitialized = workspaceFetcher.state === 'idle' && !workspaceFetcher.data;
     if (isIdleAndUninitialized) {
-      workspaceFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceIdToExport}`);
+      workspaceFetcher.load({
+        organizationId,
+        projectId,
+        workspaceId: workspaceIdToExport,
+      });
     }
   }, [organizationId, projectId, workspaceFetcher, workspaceIdToExport]);
   const workspaceLoaderData = workspaceFetcher?.data as WorkspaceLoaderData;
 
   useEffect(() => {
     const createTreeNode = (child: Child): Node => {
-      const docIsRequest = isRequest(child.doc) || isWebSocketRequest(child.doc) || isGrpcRequest(child.doc);
+      const docIsRequest =
+        isRequest(child.doc) ||
+        isWebSocketRequest(child.doc) ||
+        isGrpcRequest(child.doc) ||
+        isSocketIORequest(child.doc);
       const children = child.children.map((child: Child) => createTreeNode(child));
       const totalRequests = +docIsRequest + children.reduce((acc, { totalRequests }) => acc + totalRequests, 0);
       return {
@@ -239,7 +258,8 @@ export const ExportRequestsModal = ({
   }
 
   const getSelectedRequestIds = (node: Node): string[] => {
-    const docIsRequest = isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc);
+    const docIsRequest =
+      isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc) || isSocketIORequest(node.doc);
     if (docIsRequest && node.selectedRequests === node.totalRequests) {
       return [node.doc._id];
     }
@@ -330,6 +350,15 @@ export const ExportRequestsModal = ({
                 </Button>
                 <Button
                   onPress={() => {
+                    if (state?.treeRoot) {
+                      window.main.trackSegmentEvent({
+                        event: SegmentEvent.exportRequestsChosen,
+                        properties: {
+                          totalRequests: state.treeRoot.totalRequests,
+                          exported_requests: state.treeRoot.selectedRequests,
+                        },
+                      });
+                    }
                     state?.treeRoot && exportRequestsToFile(workspaceIdToExport, getSelectedRequestIds(state.treeRoot));
                     close();
                   }}

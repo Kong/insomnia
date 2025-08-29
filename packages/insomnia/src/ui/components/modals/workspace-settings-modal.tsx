@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -13,7 +13,12 @@ import {
   RadioGroup,
   TextField,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
+
+import type { StorageRules } from '~/models/organization';
+import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
+import { useOrganizationLoaderData } from '~/routes/organization';
+import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
@@ -22,14 +27,8 @@ import type { MockServer } from '../../../models/mock-server';
 import { isGitProject, type Project } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isEnvironment, isMockServer, isScratchpad, type Workspace } from '../../../models/workspace';
-import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../routes/actions';
-import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
-import {
-  DEFAULT_STORAGE_RULES,
-  fetchAndCacheOrganizationStorageRule,
-  type OrganizationLoaderData,
-  type StorageRules,
-} from '../../routes/organization';
+import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
+import { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule } from '../../organization-utils';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
@@ -49,23 +48,23 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
     projectId: string;
     workspaceId: string;
   };
-  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  const organizationData = useOrganizationLoaderData();
   const [orgStorageRules, setOrgStorageRules] = useState<StorageRules>(DEFAULT_STORAGE_RULES);
   const [description, setDescription] = useState<string>(workspace.description);
   useEffect(() => {
     fetchAndCacheOrganizationStorageRule(organizationId as string).then(setOrgStorageRules);
   }, [organizationId]);
 
-  const gitRepoTreeFetcher = useFetcher<GetRepositoryDirectoryTreeResult>();
+  const gitRepoTreeFetcher = useGitProjectRepositoryTreeLoaderFetcher();
 
   useEffect(() => {
     if (project && isGitProject(project) && gitRepoTreeFetcher.state === 'idle' && !gitRepoTreeFetcher.data) {
-      gitRepoTreeFetcher.load(`/organization/${organizationId}/project/${project._id}/git/repository-tree`);
+      gitRepoTreeFetcher.load({ projectId: project._id });
     }
-  }, [project, gitRepoTreeFetcher, organizationId]);
+  }, [project, gitRepoTreeFetcher]);
 
   const isLocalProject = !project?.remoteId;
-  const isEnterprise = currentPlan?.type.includes('enterprise');
+  const isEnterprise = organizationData?.currentPlan?.type.includes('enterprise');
   const isSelfHostedDisabled = !isEnterprise || !orgStorageRules.enableLocalVault;
   const isCloudProjectDisabled = isLocalProject || !orgStorageRules.enableCloudSync;
 
@@ -73,17 +72,17 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
 
   const activeWorkspaceName = workspace.name;
 
-  const workspaceFetcher = useFetcher();
+  const workspaceFetcher = useWorkspaceUpdateActionFetcher();
 
   const workspacePatcher = (workspaceId: string, patch: Partial<Workspace>) => {
-    workspaceFetcher.submit(
-      { ...patch, workspaceId },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/update`,
-        method: 'post',
-        encType: 'application/json',
+    workspaceFetcher.submit({
+      organizationId,
+      projectId,
+      patch: {
+        ...patch,
+        workspaceId,
       },
-    );
+    });
   };
 
   useEffect(() => {
@@ -206,7 +205,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                         <Heading>Actions</Heading>
                         <PromptButton
                           onClick={async () => {
-                            const docs = await db.withDescendants(workspace, models.request.type);
+                            const docs = await db.getWithDescendants(workspace, [models.request.type]);
                             const requests = docs.filter(isRequest);
                             for (const req of requests) {
                               await models.response.removeForRequest(req._id);

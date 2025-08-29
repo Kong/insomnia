@@ -246,7 +246,7 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
       const isVaultEnabled = !!vaultSalt;
       if (isVaultEnabled && vaultKey) {
         const symmetricKey = (await decryptVaultKeyFromSession(vaultKey, true)) as JsonWebKey;
-        // decrypt all secert values under vaultEnvironmentPath property in context
+        // decrypt all secret values under vaultEnvironmentPath property in context
         Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
           const encryptedValue = vaultEnvironmentData[vaultContextKey];
           vaultEnvironmentData[vaultContextKey] = decryptSecretValue(encryptedValue, symmetricKey);
@@ -256,7 +256,7 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
         vaultEnvironmentData = {};
       }
     } else {
-      // mask all secert values under vaultEnvironmentPath property in context
+      // mask all secret values under vaultEnvironmentPath property in context
       Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
         vaultEnvironmentData[vaultContextKey] = vaultEnvironmentMaskValue;
       });
@@ -279,7 +279,7 @@ export function extractNunjucksTagFromCoords(
       const range = textMarker.find() as MarkerRange;
       return {
         range,
-        // @ts-expect-error __template shoule be property of nunjucks tag markText
+        // @ts-expect-error __template should be property of nunjucks tag markText
         template: textMarker.__template || '',
       };
     }

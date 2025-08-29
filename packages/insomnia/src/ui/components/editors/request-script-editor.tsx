@@ -12,6 +12,9 @@ import {
   Toolbar,
 } from 'react-aria-components';
 
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+import { translateHandlersInScript } from '~/utils/importers/importers/translate-postman-script';
+
 import {
   CookieObject,
   Environment,
@@ -19,14 +22,13 @@ import {
   InsomniaObject,
   Request as ScriptRequest,
   RequestInfo,
+  Response as ScriptResponse,
   Url,
   Variables,
   Vault,
 } from '../../../../../insomnia-scripting-environment/src/objects';
 import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
 import type { Settings } from '../../../models/settings';
-import { translateHandlersInScript } from '../../../utils/importers/importers/postman';
-import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
 import { Icon } from '../icon';
 
 interface Props {
@@ -546,6 +548,9 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
     editorRef.current?.setCursorLine(cursorRow + snippet.split('\n').length);
   };
 
+  const req = new ScriptRequest({
+    url: new Url('http://placeholder.com'),
+  });
   // TODO(george): Add more to this object to provide improved autocomplete
   const requestScriptSnippets = getRequestScriptSnippets(
     new InsomniaObject({
@@ -564,14 +569,28 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
         localVars: new Environment('data', {}),
       }),
       vault: settings.enableVaultInScripts ? new Vault('vault', {}, settings.enableVaultInScripts) : undefined,
-      request: new ScriptRequest({
-        url: new Url('http://placeholder.com'),
+      request: req,
+      response: new ScriptResponse({
+        code: 200,
+        reason: 'OK',
+        header: [
+          { key: 'header1', value: 'val1' },
+          { key: 'header2', value: 'val2' },
+        ],
+        cookie: [
+          { key: 'header1', value: 'val1' },
+          { key: 'header2', value: 'val2' },
+        ],
+        body: '{"key": 888}',
+        stream: undefined,
+        responseTime: 100,
+        originalRequest: req,
       }),
       settings,
       clientCertificates: [],
       cookies: new CookieObject({
         _id: '',
-        type: '',
+        type: 'CookieJar',
         parentId: '',
         modified: 0,
         created: 0,

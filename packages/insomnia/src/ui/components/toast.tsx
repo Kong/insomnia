@@ -2,11 +2,12 @@ import classnames from 'classnames';
 import type { IpcRendererEvent } from 'electron';
 import React, { type FC, useEffect, useState } from 'react';
 
+import { useRootLoaderData } from '~/root';
+
 import { getAppId, getAppPlatform, getAppVersion, getProductName, updatesSupported } from '../../common/constants';
 import * as models from '../../models/index';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import imgSrcCore from '../images/insomnia-logo.svg';
-import { useRootLoaderData } from '../routes/root';
 import { Link } from './base/link';
 
 const INSOMNIA_NOTIFICATIONS_SEEN = 'insomnia::notifications::seen';
@@ -21,7 +22,7 @@ export interface ToastNotification {
 type SeenNotifications = Record<string, boolean>;
 
 export const Toast: FC = () => {
-  const { userSession } = useRootLoaderData();
+  const { userSession } = useRootLoaderData()!;
   const [notification, setNotification] = useState<ToastNotification | null>(null);
   const [visible, setVisible] = useState(false);
   const handleNotification = (notification: ToastNotification | null | undefined) => {

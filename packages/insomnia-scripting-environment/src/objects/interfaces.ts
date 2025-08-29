@@ -24,8 +24,8 @@ export interface RequestContext {
   vault?: IEnvironment;
   collectionVariables?: object;
   // globals are optional because they are activated only when selected
-  globals?: object;
-  baseGlobals?: object;
+  globals?: IEnvironment;
+  baseGlobals?: IEnvironment;
   iterationData?: Omit<IEnvironment, 'id'>;
   timeout: number;
   settings: Settings;

@@ -18,13 +18,15 @@ import {
   TreeItem,
   TreeItemContent,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import type { StorageRules } from '~/models/organization';
+import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
+import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 
 import { isGitProject, type Project } from '../../../models/project';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
-import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../routes/actions';
-import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
-import type { StorageRules } from '../../routes/organization';
+import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { Icon } from '../icon';
 
 const titleByScope: Record<WorkspaceScope, string> = {
@@ -81,20 +83,21 @@ export const NewWorkspaceModal = ({
     mockServerUrl: '',
   });
 
-  const createNewWorkspaceFetcher = useFetcher<{ error?: string }>();
+  const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
 
-  const gitRepoTreeFetcher = useFetcher<GetRepositoryDirectoryTreeResult>();
+  const gitRepoTreeFetcher = useGitProjectRepositoryTreeLoaderFetcher();
 
   useEffect(() => {
     if (isGitProject(project) && isOpen && gitRepoTreeFetcher.state === 'idle' && !gitRepoTreeFetcher.data) {
-      gitRepoTreeFetcher.load(`/organization/${organizationId}/project/${project._id}/git/repository-tree`);
+      gitRepoTreeFetcher.load({ projectId: project._id });
     }
-  }, [gitRepoTreeFetcher, isOpen, organizationId, project]);
+  }, [gitRepoTreeFetcher, isOpen, project]);
 
   const createNewWorkspace = () => {
-    createNewWorkspaceFetcher.submit(workspaceData, {
-      action: `/organization/${organizationId}/project/${project._id}/workspace/new`,
-      method: 'POST',
+    createNewWorkspaceFetcher.submit({
+      organizationId,
+      projectId: project._id,
+      ...workspaceData,
     });
   };
 
@@ -170,7 +173,7 @@ export const NewWorkspaceModal = ({
                   />
                   <FieldError className="text-xs text-red-500" />
                 </TextField>
-                {isGitProject(project) && gitRepoTreeFetcher.data && (
+                {isGitProject(project) && (
                   <>
                     <TextField
                       name="fileName"
@@ -205,19 +208,29 @@ export const NewWorkspaceModal = ({
                     <Label className="text-sm text-[--hl]">
                       Folder where the file will be saved in the repository:
                     </Label>
+
                     <Tree
                       className="grid max-h-52 gap-0 overflow-auto rounded-sm border border-solid border-[--hl-sm]"
-                      defaultSelectedKeys={[gitRepoTreeFetcher.data.repositoryTree.id]}
+                      defaultSelectedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
                       disallowEmptySelection
-                      defaultExpandedKeys={[gitRepoTreeFetcher.data.repositoryTree.id]}
+                      defaultExpandedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
                       onSelectionChange={selection => {
                         if (selection !== 'all') {
-                          setWorkspaceData({ ...workspaceData, folderPath: selection.values().next().value as string });
+                          setWorkspaceData({
+                            ...workspaceData,
+                            folderPath: selection.values().next().value as string,
+                          });
                         }
                       }}
                       aria-label="Files"
                       selectionMode="single"
-                      items={[gitRepoTreeFetcher.data.repositoryTree]}
+                      items={gitRepoTreeFetcher.data?.repositoryTree ? [gitRepoTreeFetcher.data?.repositoryTree] : []}
+                      renderEmptyState={() => (
+                        <div className="flex h-full items-center justify-center gap-2 p-2 text-sm text-[--hl]">
+                          <Icon icon="spinner" className="size-5 animate-spin" />
+                          Loading files...
+                        </div>
+                      )}
                     >
                       {function renderItem(item) {
                         return (
@@ -329,14 +342,14 @@ export const NewWorkspaceModal = ({
                 <div className="flex items-center gap-2">
                   <Button
                     onPress={close}
-                    isDisabled={createNewWorkspaceFetcher.state !== 'idle'}
+                    isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
                     className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
-                    isDisabled={createNewWorkspaceFetcher.state !== 'idle'}
+                    isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
                     className="flex w-[10ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-center text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
                   >
                     {createNewWorkspaceFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}

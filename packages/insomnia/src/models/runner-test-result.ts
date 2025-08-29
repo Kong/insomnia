@@ -1,6 +1,5 @@
 import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import { database as db } from '../common/database';
-import type { RunnerSource } from '../ui/routes/request';
 import type { BaseModel } from './index';
 
 export const name = 'Runner Test Result';
@@ -29,7 +28,7 @@ export interface ResponseInfo {
 export type RunnerResultPerRequestPerIteration = RunnerResultPerRequest[][];
 
 export interface BaseRunnerTestResult {
-  source: RunnerSource;
+  source: 'runner';
   iterations: number;
   duration: number; // millisecond
   avgRespTime: number; // millisecond
@@ -71,21 +70,17 @@ export function update(testResult: RunnerTestResult, patch: Partial<RunnerTestRe
 }
 
 export function getByParentId(parentId: string) {
-  return db.getWhere<RunnerTestResult>(type, { parentId });
-}
-
-export function getLatestByParentId(parentId: string) {
-  return db.getMostRecentlyModified<RunnerTestResult>(type, { parentId });
+  return db.findOne<RunnerTestResult>(type, { parentId });
 }
 
 export function getById(_id: string) {
-  return db.getWhere<RunnerTestResult>(type, {
+  return db.findOne<RunnerTestResult>(type, {
     _id,
   });
 }
 
 export function all() {
-  return db.all<RunnerTestResult>(type);
+  return db.find<RunnerTestResult>(type);
 }
 
 export function remove(item: RunnerTestResult) {

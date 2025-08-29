@@ -1,5 +1,5 @@
 import React, { type FC, useCallback, useState } from 'react';
-import { useInterval } from 'react-use';
+import * as reactUse from 'react-use';
 
 import { Button, type ButtonProps } from '../themed-button';
 
@@ -15,24 +15,28 @@ export const CopyButton: FC<Props> = ({
   confirmMessage,
   showConfirmation: showConfirmationProp = false,
   content,
+  onClick: onClickProp,
   title,
   ...buttonProps
 }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const onClick = useCallback(
-    async (event: React.MouseEvent) => {
+    async (event: React.MouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
       event.stopPropagation();
 
       if (content) {
         window.clipboard.writeText(content);
       }
+      if (onClickProp) {
+        onClickProp(event);
+      }
       setShowConfirmation(true);
     },
-    [content],
+    [content, onClickProp],
   );
 
-  useInterval(() => {
+  reactUse.useInterval(() => {
     setShowConfirmation(false);
   }, 2000);
 

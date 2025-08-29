@@ -24,6 +24,8 @@ export interface ModalProps {
   onHide?: () => void;
   children?: ReactNode;
   className?: string;
+  maskClosable?: boolean;
+  keyboardClosable?: boolean;
 }
 
 export interface ModalHandle {
@@ -33,7 +35,21 @@ export interface ModalHandle {
   isOpen: () => boolean;
 }
 export const Modal = forwardRef<ModalHandle, ModalProps>(
-  ({ centered, children, className, onHide: onHideProp, onShow, skinny, tall, wide }, ref) => {
+  (
+    {
+      centered,
+      children,
+      className,
+      onHide: onHideProp,
+      onShow,
+      skinny,
+      tall,
+      wide,
+      maskClosable = true,
+      keyboardClosable = true,
+    },
+    ref,
+  ) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [open, setOpen] = useState(false);
     const [zIndex, setZIndex] = useState(globalZIndex);
@@ -85,13 +101,23 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
       for (const element of closeElements || []) {
         element.addEventListener('click', hide);
       }
-    }, [hide, open]);
+
+      return () => {
+        for (const element of closeElements || []) {
+          element.removeEventListener('click', hide);
+        }
+      };
+    }, [hide, open, maskClosable, keyboardClosable]);
 
     const handleKeydown = createKeybindingsHandler({
       Escape: () => {
+        if (!keyboardClosable) {
+          return;
+        }
         hide();
       },
     });
+
     useEffect(() => {
       document.body.addEventListener('keydown', handleKeydown);
 
@@ -111,7 +137,10 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
           aria-hidden={false}
           role="dialog"
         >
-          <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
+          <div
+            className="modal__backdrop overlay theme--transparent-overlay"
+            {...(maskClosable ? { 'data-close-modal': true } : {})}
+          />
           <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
             <div className="modal__content">{children}</div>
           </div>

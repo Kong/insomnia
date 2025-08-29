@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
 
-import { database as db } from '../../common/database';
+import { database, database as db } from '../../common/database';
 import type { InsomniaFile } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '../../common/insomnia-v5';
 import * as models from '../../models';
@@ -89,8 +89,15 @@ export class GitProjectNeDBClient {
     const workspace = dataToImport.find(isWorkspace) as Workspace | undefined;
 
     const isExistingWorkspace = workspace && (await models.workspace.getById(workspace._id));
-    // Remove the workspace if it already exists to clean up any descendants that might have been removed.
-    isExistingWorkspace && (await models.workspace.remove(workspace));
+
+    if (isExistingWorkspace) {
+      const originDocs = await database.getWithDescendants(workspace);
+      // If the workspace already exists, we need to remove any documents that are not in the new data
+      const deletedDocs = originDocs.filter(originDoc => !dataToImport.some(doc => doc._id === originDoc._id));
+      deletedDocs.forEach(async doc => {
+        db.unsafeRemove(doc);
+      });
+    }
 
     for (const doc of dataToImport) {
       if (isWorkspace(doc)) {
@@ -107,7 +114,7 @@ export class GitProjectNeDBClient {
         await models.workspaceMeta.update(workspaceMeta, { gitFilePath: filePath });
       }
 
-      await db.upsert(doc, true);
+      await db.update(doc);
     }
 
     await db.flushChanges(bufferId);
@@ -121,13 +128,13 @@ export class GitProjectNeDBClient {
       throw this._errMissing(filePath);
     }
 
-    const doc = await db.get(models.workspace.type, workspaceId);
+    const doc = await db.findOne(models.workspace.type, { _id: workspaceId });
 
     if (!doc) {
       return;
     }
 
-    await db.unsafeRemove(doc, true);
+    await db.unsafeRemove(doc);
   }
 
   async readdir(filePath: string) {
@@ -230,8 +237,15 @@ export class GitProjectNeDBClient {
   async getWorkspaceIdFromFilePath(filePath: string) {
     filePath = path.normalize(filePath);
 
+    const workspaces = await db.find<Workspace>(models.workspace.type, {
+      parentId: this._projectId,
+    });
+
     const workspaceMeta = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
       gitFilePath: filePath,
+      parentId: {
+        $in: workspaces.map(w => w._id),
+      },
     });
 
     if (workspaceMeta.length === 0) {

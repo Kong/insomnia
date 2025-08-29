@@ -8,14 +8,16 @@ import { gitCallbacks } from './utils';
 interface Options {
   fsClient: git.FsClient;
   gitRepository: Pick<GitRepository, 'credentials' | 'uri'>;
+  ref?: string;
 }
 
 /**
  * Create a shallow clone into the provided FS plugin.
  * */
-export const shallowClone = async ({ fsClient, gitRepository }: Options) => {
+export const shallowClone = async ({ fsClient, gitRepository, ref = undefined }: Options) => {
   await git.clone({
     ...gitCallbacks(gitRepository.credentials),
+    ...(ref ? { ref } : {}),
     fs: fsClient,
     http: httpClient,
     dir: GIT_CLONE_DIR,

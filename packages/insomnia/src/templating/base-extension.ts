@@ -1,9 +1,18 @@
+import type { BinaryToTextEncoding } from 'node:crypto';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+
+import iconv from 'iconv-lite';
+
 import { database as db } from '../common/database';
 import * as models from '../models/index';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Workspace } from '../models/workspace';
-import * as pluginContexts from '../plugins/context';
+import * as pluginApp from '../plugins/context/app';
+import * as pluginNetwork from '../plugins/context/network';
+import * as pluginStore from '../plugins/context/store';
 import type { Plugin } from '../plugins/index';
 import * as templating from './index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
@@ -91,18 +100,44 @@ export default class BaseExtension {
       .map(decodeEncoding);
     // Define a helper context with utils
     const helperContext: PluginTemplateTagContext = {
-      ...pluginContexts.app.init(renderPurpose),
+      ...pluginApp.init(),
       // @ts-expect-error -- TSCONVERSION
-      ...pluginContexts.store.init(this._plugin),
-      ...pluginContexts.network.init(),
+      ...pluginStore.init(this._plugin),
+      ...pluginNetwork.init(),
       context: renderContext,
       meta: renderMeta,
       renderPurpose,
       util: {
+        nodeOS: async () => {
+          return {
+            arch: os.arch(),
+            platform: os.platform(),
+            release: os.release(),
+            cpus: os.cpus(),
+            hostname: os.hostname(),
+            freemem: os.freemem(),
+            userInfo: os.userInfo(),
+          };
+        },
+        readFile: async (path: string, encoding = 'utf8') => {
+          const allowed = renderContext
+            ?.getSettings()
+            .dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
+          if (!allowed) {
+            throw `Insomnia cannot access the file ‘${path}’. You can adjust this in Preferences → Security.`;
+          }
+
+          const content = await fs.promises.readFile(path);
+          return encoding === 'utf8' ? content.toString(encoding) : content;
+        },
+        decode: async (buffer: Buffer, encoding = 'utf8') => iconv.decode(buffer, encoding),
+        encode: async (input: string, encoding: BinaryToTextEncoding) =>
+          crypto.createHash('md5').update(input).digest(encoding),
         render: (str: string) =>
           templating.render(str, {
             context: renderContext,
           }),
+        openInBrowser: (url: string) => window.main.openInBrowser(url),
         models: {
           request: {
             getById: models.request.getById,
@@ -113,6 +148,10 @@ export default class BaseExtension {
               ]);
               return ancestors.filter(doc => doc._id !== request._id);
             },
+          },
+          cloudCredential: {
+            getById: models.cloudCredential.getById,
+            update: models.cloudCredential.update,
           },
           workspace: {
             getById: models.workspace.getById,
@@ -126,8 +165,11 @@ export default class BaseExtension {
             },
           },
           response: {
-            getLatestForRequestId: models.response.getLatestForRequest,
+            getLatestForRequestId: models.response.getLatestForRequestId,
             getBodyBuffer: models.response.getBodyBuffer,
+          },
+          settings: {
+            get: models.settings.get,
           },
         },
       },

@@ -10,7 +10,9 @@ import {
   type Selection,
   useDragAndDrop,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
@@ -56,7 +58,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   const [leftScrollDisable, setLeftScrollDisable] = useState(false);
   const [rightScrollDisable, setRightScrollDisable] = useState(false);
 
-  const requestFetcher = useFetcher();
+  const newRequestFetcher = useRequestNewActionFetcher();
   const { organizationId, projectId } = useParams();
 
   const {
@@ -182,11 +184,13 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
               url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${doc._id}`,
             });
           } else if (isRequestGroup(doc)) {
-            const folderEntities = await database.withDescendants(doc, models.request.type, [
+            const folderEntities = await database.getWithDescendants(doc, [
               models.request.type,
+              models.grpcRequest.type,
+              models.webSocketRequest.type,
+              models.socketIORequest.type,
               models.requestGroup.type,
             ]);
-            console.log('folderEntities:', folderEntities);
             const batchUpdates = [doc, ...folderEntities].map(entity => {
               return {
                 id: entity._id,
@@ -209,24 +213,22 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
   useEffect(() => {
     // sync tabList with database
-    const callback = async (changes: ChangeBufferEvent[]) => {
+    const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
-        const changeType = change[0];
-        const doc = change[1];
+        const [changeType, doc, patches] = change;
+
         if (needHandleChange(changeType, doc.type)) {
           if (changeType === 'remove') {
             handleDelete(doc._id, doc.type);
           } else if (changeType === 'update') {
-            const patches = change[3];
             handleUpdate(doc, patches);
           }
         }
       }
-    };
-    database.onChange(callback);
+    });
 
     return () => {
-      database.offChange(callback);
+      unsubscribe();
     };
   }, [handleDelete, handleUpdate]);
 
@@ -234,14 +236,13 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     const currentTab = tabList.find(tab => tab.id === activeTabId);
     if (currentTab) {
       const { organizationId, projectId, workspaceId } = currentTab;
-      requestFetcher.submit(
-        { requestType: 'HTTP', parentId: workspaceId },
-        {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
-          method: 'post',
-          encType: 'application/json',
-        },
-      );
+      newRequestFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        requestType: 'HTTP',
+        parentId: workspaceId,
+      });
     }
   };
 

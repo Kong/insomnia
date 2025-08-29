@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import * as os from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 import {
   app,
@@ -27,10 +26,10 @@ import {
   MNEMONIC_SYM,
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
-import * as log from '../common/log';
 import { invariant } from '../utils/invariant';
 import ElectronStorage from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
+import { getLogDirectory } from './log';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
@@ -82,6 +81,7 @@ export async function createHiddenBrowserWindow() {
     // if window crashed
     const windowWasClosedUnexpectedly = hiddenWindowIsBusy && !isRunning;
     if (windowWasClosedUnexpectedly) {
+      console.log('[main] hidden window was closed unexpectedly');
       hiddenWindowIsBusy = false;
     }
 
@@ -94,11 +94,12 @@ export async function createHiddenBrowserWindow() {
     // if window froze
     const isRunningButUnhealthy = isRunning && !isHealthy;
     if (isRunningButUnhealthy) {
+      console.log('[main] hidden window is busy, stopping it');
       // stop and wait for window close event and sync the map and busy status
       await stopAndWaitForHiddenBrowserWindow(runningHiddenBrowserWindow);
     }
 
-    console.log('[main] hidden window is down, restarting');
+    console.log('[main] hidden window is not running, starting it');
     const hiddenBrowserWindow = new BrowserWindow({
       show: false,
       title: 'HiddenBrowserWindow',
@@ -109,7 +110,7 @@ export async function createHiddenBrowserWindow() {
       webPreferences: {
         contextIsolation: false,
         nodeIntegration: true,
-        preload: path.join(__dirname, 'hidden-window-preload.js'),
+        preload: path.join(__dirname, 'entry.hidden-window-preload.min.js'),
         spellcheck: false,
         devTools: process.env.NODE_ENV === 'development',
       },
@@ -119,16 +120,15 @@ export async function createHiddenBrowserWindow() {
       if (browserWindows.get('HiddenBrowserWindow')) {
         console.log('[main] closing hidden browser window');
         browserWindows.delete('HiddenBrowserWindow');
-        // @TODO: This should be set when the window closed is event is emmited so it's guaranteed to be realiable
+        // @TODO: This should be set when the window closed is event is emitted so it's guaranteed to be reliable
         // There might be other events we need to listen to also
         hiddenWindowIsBusy = false;
       }
     });
 
     const hiddenBrowserWindowPath = path.resolve(__dirname, 'hidden-window.html');
-    const hiddenBrowserWindowUrl = process.env.HIDDEN_BROWSER_WINDOW_URL || pathToFileURL(hiddenBrowserWindowPath).href;
-    hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
-    console.log(`[main] Loading ${hiddenBrowserWindowUrl}`);
+    hiddenBrowserWindow.loadFile(hiddenBrowserWindowPath);
+    console.log(`[main] Loading ${hiddenBrowserWindowPath}`);
 
     ipcMain.removeHandler('renderer-listener-ready');
     const hiddenWinListenerReady = new Promise<void>(resolve => {
@@ -209,10 +209,10 @@ export function createWindow(): ElectronBrowserWindow {
     acceptFirstMouse: true,
     icon: path.resolve(__dirname, appLogo),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'entry.preload.min.js'),
       zoomFactor: getZoomFactor(),
       nodeIntegration: true,
-      nodeIntegrationInWorker: true,
+      nodeIntegrationInWorker: false, // must remain false to ensure the nunjucks web worker sandbox does not have access to Node.js APIs
       webviewTag: true,
       // TODO: enable context isolation
       contextIsolation: false,
@@ -254,8 +254,7 @@ export function createWindow(): ElectronBrowserWindow {
   });
 
   // Load the html of the app.
-  const appPath = path.resolve(__dirname, './index.html');
-  const appUrl = process.env.APP_RENDER_URL || pathToFileURL(appPath).href;
+  const appUrl = process.env.APP_RENDER_URL || 'https://insomnia-app.local';
 
   console.log(`[main] Loading ${appUrl}`);
 
@@ -494,7 +493,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: `Show App ${MNEMONIC_SYM}Logs Folder`,
         click: () => {
-          const directory = log.getLogDirectory();
+          const directory = getLogDirectory();
           shell.showItemInFolder(directory);
         },
       },
@@ -607,18 +606,6 @@ export function createWindow(): ElectronBrowserWindow {
             const dir = app.getPath('desktop');
             fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
           });
-        },
-      },
-      {
-        label: `${MNEMONIC_SYM}Clear a model`,
-        click: () => {
-          mainBrowserWindow.webContents?.send('clear-model');
-        },
-      },
-      {
-        label: `Clear ${MNEMONIC_SYM}all models`,
-        click: () => {
-          mainBrowserWindow.webContents?.send('clear-all-models');
         },
       },
       {

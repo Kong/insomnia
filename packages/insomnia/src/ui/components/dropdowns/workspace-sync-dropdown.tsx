@@ -1,26 +1,31 @@
-import { type FC } from 'react';
-import React from 'react';
-import { useRouteLoaderData } from 'react-router';
+import React, { type FC } from 'react';
+
+import { useRootLoaderData } from '~/root';
 
 import { isGitProject, isRemoteProject } from '../../../models/project';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
-import { useRootLoaderData } from '../../routes/root';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { GitProjectSyncDropdown } from './git-project-sync-dropdown';
 import { GitSyncDropdown } from './git-sync-dropdown';
+import { LocalProjectBar } from './local-project-bar';
 import { SyncDropdown } from './sync-dropdown';
 
 export const WorkspaceSyncDropdown: FC = () => {
-  const { activeProject, activeWorkspace, gitRepository, activeWorkspaceMeta } = useRouteLoaderData(
-    ':workspaceId',
-  ) as WorkspaceLoaderData;
+  const { activeProject, activeWorkspace, gitRepository, activeWorkspaceMeta } = useWorkspaceLoaderData()!;
 
-  const { userSession } = useRootLoaderData();
+  const { userSession } = useRootLoaderData()!;
 
   const { features } = useOrganizationPermissions();
 
   if (!userSession.id) {
     return null;
+  }
+
+  const isLocalProject =
+    !isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId && !isGitProject(activeProject);
+
+  if (isLocalProject) {
+    return <LocalProjectBar />;
   }
 
   const shouldShowCloudSyncDropdown = isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId;

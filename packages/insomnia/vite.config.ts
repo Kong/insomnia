@@ -1,7 +1,7 @@
 import { builtinModules } from 'node:module';
 import path from 'node:path';
 
-import react from '@vitejs/plugin-react';
+import { reactRouter } from '@react-router/dev/vite';
 import { defineConfig } from 'vite';
 
 import pkg from './package.json';
@@ -11,9 +11,6 @@ export default defineConfig(({ mode }) => {
   const __DEV__ = mode !== 'production';
 
   return {
-    mode,
-    root: path.join(__dirname, 'src'),
-    base: __DEV__ ? '/' : './',
     define: {
       '__DEV__': JSON.stringify(__DEV__),
       'process.env.NODE_ENV': JSON.stringify(mode),
@@ -21,36 +18,34 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: pkg.dev['dev-server-port'],
-      fs: {
-        strict: true,
+      warmup: {
+        clientFiles: [
+          // https://github.com/remix-run/react-router/issues/12786#issuecomment-2634033513
+          './src/components/**/*',
+          './src/entry.client.tsx',
+          './src/root.tsx',
+          './src/routes/**/*',
+          '!**/*.server.ts',
+        ],
       },
     },
+
     build: {
+      target: 'esnext',
       sourcemap: true,
-      outDir: path.join(__dirname, 'build'),
-      assetsDir: './',
-      brotliSize: false,
-      emptyOutDir: false,
       rollupOptions: {
-        input: {
-          mainWindow: path.join(__dirname, 'src/index.html'),
-          hiddenBrowserWindow: path.join(__dirname, 'src/hidden-window.html'),
-        },
         external: ['@getinsomnia/node-libcurl'],
       },
     },
     optimizeDeps: {
       exclude: ['@getinsomnia/node-libcurl'],
-      // these packages are only used in web worker, Vite won't be able to discover the import on the initial scan，so we need to include them here to let vite pre-bundle them
-      // https://vitejs.dev/guide/dep-pre-bundling.html#customizing-the-behavior
-      include: [
-        '@stoplight/spectral-core',
-        '@stoplight/spectral-ruleset-bundler/with-loader',
-        '@stoplight/spectral-rulesets',
-        'codemirror-graphql/utils/SchemaReference',
-        'openapi-types',
-      ],
-      force: true,
+      force: true, // wipe vite cache
+      include: ['codemirror-graphql/utils/SchemaReference', '@stoplight/spectral-core', 'isomorphic-git'],
+    },
+    resolve: {
+      alias: {
+        '~': path.resolve(__dirname, './src'),
+      },
     },
     plugins: [
       // Allows us to import modules that will be resolved by Node's require() function.
@@ -64,15 +59,10 @@ export default defineConfig(({ mode }) => {
           ...builtinModules.map(m => `node:${m}`),
         ],
       }),
-      react(),
+      reactRouter(),
     ],
     worker: {
       format: 'es',
-      plugins: () => [
-        electronNodeRequire({
-          modules: ['fs'],
-        }),
-      ],
     },
   };
 });

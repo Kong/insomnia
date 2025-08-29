@@ -11,6 +11,9 @@ declare global {
     shell: Pick<Electron.Shell, 'showItemInFolder'>;
     clipboard: Pick<Electron.Clipboard, 'readText' | 'writeText' | 'clear'>;
     webUtils: Pick<Electron.WebUtils, 'getPathForFile'>;
+    showAlert: (options?: Record<string, any>) => void;
+    showWrapper: (options?: Record<string, any>) => void;
+    showPrompt: (options?: Record<string, any>) => void;
   }
 }
 

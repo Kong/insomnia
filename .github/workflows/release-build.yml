@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'release/**'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -50,9 +51,9 @@ jobs:
           - os: ubuntu-22.04
             csc_link_secret: ''
             csc_key_password_secret: ''
-          - os: ubuntu-22.04-arm
-            csc_link_secret: ''
-            csc_key_password_secret: ''
+          # - os: ubuntu-22.04-arm
+          #   csc_link_secret: ''
+          #   csc_key_password_secret: ''
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -63,9 +64,13 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: package-lock.json
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kong'
 
       - name: Install packages
         run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Inso CLI version env var
         shell: bash
@@ -145,7 +150,7 @@ jobs:
           Remove-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -Recurse -Force
           Remove-Item -Path "packages/insomnia/dist/win-unpacked/signed" -Recurse -Force
 
-      # re-packages the now code-signed electron-builder contents into a squirrel installer
+      # re-packages the now code-signed electron-builder contents into the installer
       - name: Package dist app (Windows only)
         if: runner.os == 'Windows'
         shell: bash
@@ -166,6 +171,18 @@ jobs:
           npm run package -w insomnia-inso
         env:
           VERSION: ${{ env.INSO_VERSION }}
+
+      - name: Code-sign inso exe (Windows only)
+        if: runner.os == 'Windows'
+        uses: sslcom/esigner-codesign@3b2dc3b6075c05ef889d88b761a1fd0183b28c6a # develop
+        with:
+          command: sign
+          username: ${{secrets.ES_USERNAME}}
+          password: ${{secrets.ES_PASSWORD}}
+          credential_id: ${{secrets.ES_CREDENTIAL_ID}}
+          totp_secret: ${{secrets.ES_TOTP_SECRET}}
+          file_path: packages/insomnia-inso/binaries/inso.exe
+          override: true
 
       - name: Code-sign & create Inso CLI installer (macOS only)
         if: runner.os == 'macOS'
@@ -244,6 +261,7 @@ jobs:
           name: ${{ runner.os }}-${{ runner.arch }}-artifacts
           path: |
             packages/insomnia/dist/*.exe
+            packages/insomnia/dist/*.yml
             packages/insomnia/dist/squirrel-windows/*
             packages/insomnia/dist/*.zip
             packages/insomnia/dist/*.dmg

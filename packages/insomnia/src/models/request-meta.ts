@@ -51,18 +51,15 @@ export function create(patch: Partial<RequestMeta> = {}) {
     throw new Error('New RequestMeta missing `parentId` ' + JSON.stringify(patch));
   }
 
-  // expectParentToBeRequest(patch.parentId);
   return db.docCreate<RequestMeta>(type, patch);
 }
 
 export function update(requestMeta: RequestMeta, patch: Partial<RequestMeta>) {
-  // expectParentToBeRequest(patch.parentId || requestMeta.parentId);
   return db.docUpdate<RequestMeta>(requestMeta, patch);
 }
 
-export function getByParentId(parentId: string): Promise<RequestMeta | null> {
-  // expectParentToBeRequest(parentId);
-  return db.getWhere<RequestMeta>(type, { parentId });
+export function getByParentId(parentId: string): Promise<RequestMeta | undefined> {
+  return db.findOne<RequestMeta>(type, { parentId });
 }
 
 export async function getOrCreateByParentId(parentId: string) {
@@ -91,5 +88,5 @@ export async function updateOrCreateByParentId(parentId: string, patch: Partial<
 }
 
 export function all() {
-  return db.all<RequestMeta>(type);
+  return db.find<RequestMeta>(type);
 }

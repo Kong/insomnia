@@ -1,20 +1,24 @@
 import React, { useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router';
-import { useInterval } from 'react-use';
+import * as reactUse from 'react-use';
+
+import { useRootLoaderData } from '~/root';
+import {
+  useMockRouteLoaderData,
+  useMockRoutePatcher,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import type { OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { getMockServiceBinURL, HTTP_METHODS } from '../../../common/constants';
 import * as models from '../../../models';
 import { useTimeoutWhen } from '../../hooks/useTimeoutWhen';
-import { type MockRouteLoaderData, useMockRoutePatcher } from '../../routes/mock-route';
-import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import type { OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
-import { showModal, showPrompt } from '../modals';
+import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
+import { PromptModal } from '../modals/prompt-modal';
 
 export const MockUrlBar = ({
   onPathUpdate,
@@ -23,8 +27,8 @@ export const MockUrlBar = ({
   onPathUpdate: (path: string) => void;
   onSend: (path: string) => void;
 }) => {
-  const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
-  const { settings } = useRootLoaderData();
+  const { mockServer, mockRoute } = useMockRouteLoaderData()!;
+  const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
   const patchMockRoute = useMockRoutePatcher();
   const [pathInput, setPathInput] = useState<string>(mockRoute.name);
@@ -37,7 +41,7 @@ export const MockUrlBar = ({
     setCurrentTimeout(undefined);
     onSend(pathInput);
   };
-  useInterval(send, currentInterval ? currentInterval : null);
+  reactUse.useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);
   useDocBodyKeyboardShortcuts({
     request_focusUrl: () => {
@@ -171,7 +175,7 @@ export const MockUrlBar = ({
                 icon="clock-o"
                 label="Send After Delay"
                 onClick={() =>
-                  showPrompt({
+                  showModal(PromptModal, {
                     inputType: 'decimal',
                     title: 'Send After Delay',
                     label: 'Delay in seconds',
@@ -188,7 +192,7 @@ export const MockUrlBar = ({
                 icon="repeat"
                 label="Repeat on Interval"
                 onClick={() =>
-                  showPrompt({
+                  showModal(PromptModal, {
                     inputType: 'decimal',
                     title: 'Send on Interval',
                     label: 'Interval in seconds',

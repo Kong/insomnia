@@ -1,9 +1,11 @@
 import { database as db } from '../common/database';
 import { isGrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
+import * as models from './index';
 import type { Project } from './project';
 import { isRequest } from './request';
 import type { RequestGroup } from './request-group';
+import { isSocketIORequest } from './socket-io-request';
 import { isWebSocketRequest } from './websocket-request';
 import type { Workspace } from './workspace';
 
@@ -59,16 +61,16 @@ export async function update(patch: Partial<Stats>) {
 }
 
 export async function get() {
-  const results = (await db.all<Stats>(type)) || [];
+  const result = await db.findOne<Stats>(type);
 
-  if (results.length === 0) {
+  if (!result) {
     return create();
   }
-  return results[0];
+  return result;
 }
 
 export function all() {
-  return db.all<Stats>(type) || [];
+  return db.find<Stats>(type) || [];
 }
 
 export async function incrementRequestStats({ createdRequests, deletedRequests, executedRequests }: Partial<Stats>) {
@@ -105,16 +107,28 @@ export async function incrementExecutedRequests() {
 }
 
 export async function incrementCreatedRequestsForDescendents(doc: Workspace | RequestGroup) {
-  const docs = await db.withDescendants(doc);
-  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc));
+  const docs = await db.getWithDescendants(doc, [
+    models.request.type,
+    models.grpcRequest.type,
+    models.webSocketRequest.type,
+    models.socketIORequest.type,
+  ]);
+  const requests =
+    docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc)) || isSocketIORequest(doc);
   await incrementRequestStats({
     createdRequests: requests.length,
   });
 }
 
 export async function incrementDeletedRequestsForDescendents(doc: Workspace | RequestGroup | Project) {
-  const docs = await db.withDescendants(doc);
-  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc));
+  const docs = await db.getWithDescendants(doc, [
+    models.request.type,
+    models.grpcRequest.type,
+    models.webSocketRequest.type,
+    models.socketIORequest.type,
+  ]);
+  const requests =
+    docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc)) || isSocketIORequest(doc);
   await incrementRequestStats({
     deletedRequests: requests.length,
   });

@@ -1,5 +1,5 @@
 {
-  "json.schemas": [],
+  "typescript.preferences.importModuleSpecifier": "non-relative",
   "files.associations": {
     "*.db": "ndjson",
     "*.jsonl": "ndjson",

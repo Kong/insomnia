@@ -32,13 +32,13 @@ test.describe('test hidden window handling', () => {
     await page.click('text=Request was cancelled');
 
     await page.getByText('Special template tag format').click();
-    await expect.soft(page.getByText(`{{ _['examplehost']}}`)).toBeVisible();
+    await expect.soft(page.getByText(`_['examplehost']`)).toBeVisible();
 
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     await page.getByText('200 OK').click();
 
     await page.getByText('Multiple template tags format').click();
-    await expect.soft(page.getByText(`{{_['a']['b']['c']['url']}}`)).toBeVisible();
+    await expect.soft(page.getByText(`_['a']['b']['c']['url']`)).toBeVisible();
 
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     await page.getByText('200 OK').click();

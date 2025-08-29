@@ -58,10 +58,15 @@ export function chunkArray<T>(arr: T[], chunkSize: number) {
 }
 
 // Stage/Unstage
-// Staged items are about to be commited
+// Staged items are about to be committed
 // Unstaged items have changed compared to staged or not and can be staged
 //
 export class VCS {
+  async getVersion(): Promise<string> {
+    const branch = await this._getCurrentBranch();
+    // branch can be null if there is no backend project
+    return branch?.modified.toISOString();
+  }
   _store: Store;
   _driver: BaseDriver;
   // stored by key `/projects/${project.id}/meta.json`
@@ -85,7 +90,7 @@ export class VCS {
 
   async setBackendProject(backendProject: BackendProject) {
     this._backendProject = backendProject;
-    console.log(`[sync] Activated project ${backendProject.id}`);
+    console.debug(`[sync] Activated project ${backendProject.id}`);
     // Store it because it might not be yet
     await this._storeBackendProject(backendProject);
   }
@@ -149,6 +154,9 @@ export class VCS {
   }
 
   async remoteBackendProjects({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
+    console.log(
+      `[remoteBackendProjects] Fetching remote workspaces for teamId=${teamId} teamProjectId=${teamProjectId}`,
+    );
     const { projects } = await this._runGraphQL<{ projects: BackendProjectWithTeams[] }>(
       `
         query ($teamId: ID, $teamProjectId: ID) {
@@ -169,6 +177,8 @@ export class VCS {
       },
       'projects',
     );
+
+    console.log(`[remoteBackendProjects] Fetched ${projects.length} remote workspaces`);
 
     return projects.map(backend => ({
       id: backend.id,
@@ -1582,6 +1592,10 @@ export class VCS {
 
   async _hasBlob(blobId: string) {
     return this._store.hasItem(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`);
+  }
+
+  getActiveBackendProject() {
+    return this._backendProject;
   }
 }
 

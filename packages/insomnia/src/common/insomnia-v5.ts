@@ -1,5 +1,7 @@
 import { parse, stringify } from 'yaml';
 
+import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
+
 import * as models from '../models';
 import type { ApiSpec } from '../models/api-spec';
 import type { CookieJar } from '../models/cookie-jar';
@@ -9,37 +11,26 @@ import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
+import type { SocketIORequest } from '../models/socket-io-request';
 import type { UnitTest } from '../models/unit-test';
 import type { UnitTestSuite } from '../models/unit-test-suite';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace, WorkspaceScope } from '../models/workspace';
-import {
-  EXPORT_TYPE_API_SPEC,
-  EXPORT_TYPE_COOKIE_JAR,
-  EXPORT_TYPE_ENVIRONMENT,
-  EXPORT_TYPE_GRPC_REQUEST,
-  EXPORT_TYPE_MOCK_ROUTE,
-  EXPORT_TYPE_MOCK_SERVER,
-  EXPORT_TYPE_REQUEST,
-  EXPORT_TYPE_REQUEST_GROUP,
-  EXPORT_TYPE_UNIT_TEST,
-  EXPORT_TYPE_UNIT_TEST_SUITE,
-  EXPORT_TYPE_WEBSOCKET_REQUEST,
-  EXPORT_TYPE_WORKSPACE,
-} from './constants';
 import { database } from './database';
 import {
+  type Insomnia_GRPCRequest,
+  type Insomnia_Request,
+  type Insomnia_RequestGroup,
+  type Insomnia_SocketIORequest,
+  type Insomnia_WebsocketRequest,
   type InsomniaFile,
-  insomniaFileSchema,
+  InsomniaFileSchema,
   type Meta,
+  SocketIORequestSchema,
   WebsocketRequestSchema,
-  type Z_GRPCRequest,
-  type Z_Request,
-  type Z_RequestGroup,
-  type Z_WebsocketRequest,
 } from './import-v5-parser';
 
-type WithExportType<T extends models.BaseModel> = T & { _type: string };
+type WithExportType<T extends models.BaseModel> = T & { _type: AllExportTypes };
 
 function filterEmptyValue(value: string | number | boolean | null | undefined) {
   return value !== null && value !== undefined && !(typeof value === 'object' && Object.keys(value).length === 0);
@@ -99,7 +90,7 @@ function getWorkspace(file: InsomniaFile): WithExportType<Workspace> {
       },
     ),
     type: 'Workspace',
-    _type: EXPORT_TYPE_WORKSPACE,
+    _type: 'workspace',
     name: file.name || 'Imported Collection',
     parentId: '',
     scope: insomniaSchemaTypeToScope(file.type),
@@ -115,7 +106,7 @@ function getEnvironments(file: InsomniaFile): Environment[] {
         },
       ),
       type: 'Environment',
-      _type: EXPORT_TYPE_ENVIRONMENT,
+      _type: 'environment',
       parentId: file.meta?.id || '__WORKSPACE_ID__',
       color: file.environments.color || null,
       data: (file.environments.data as Record<string, any>) || {},
@@ -131,7 +122,7 @@ function getEnvironments(file: InsomniaFile): Environment[] {
           },
         ),
         type: 'Environment',
-        _type: EXPORT_TYPE_ENVIRONMENT,
+        _type: 'environment',
         color: environment.color || null,
         data: (environment.data as Record<string, any>) || {},
         dataPropertyOrder: (environment.dataPropertyOrder as Record<string, any>) || undefined,
@@ -154,7 +145,7 @@ function getCookieJar(file: InsomniaFile): [CookieJar] | [] {
         },
       ),
       type: 'CookieJar',
-      _type: EXPORT_TYPE_COOKIE_JAR,
+      _type: 'cookie_jar',
       name: file.cookieJar.name || 'Imported Cookie Jar',
       parentId: file.meta?.id || '__WORKSPACE_ID__',
       cookies: file.cookieJar.cookies || [],
@@ -177,7 +168,7 @@ function getApiSpec(file: InsomniaFile): [WithExportType<ApiSpec>] | [] {
         ),
         type: 'ApiSpec',
         name: file.name || 'Api Spec',
-        _type: EXPORT_TYPE_API_SPEC,
+        _type: 'api_spec',
         fileName: 'file' in file.spec ? file.spec.file : '',
         contentType: 'json',
         contents: 'contents' in file.spec && file.spec.contents ? stringify(file.spec.contents) : '',
@@ -198,7 +189,7 @@ function getMockServer(file: InsomniaFile): WithExportType<MockServer> {
         },
       ),
       type: 'MockServer',
-      _type: EXPORT_TYPE_MOCK_SERVER,
+      _type: 'mock',
       name: file.name || 'Imported Mock Server',
       parentId: file.meta?.id || '__WORKSPACE_ID__',
       url: file.server?.url || '',
@@ -219,7 +210,7 @@ function getMockRoutes(file: InsomniaFile): WithExportType<MockRoute>[] {
           },
         ),
         type: 'MockRoute',
-        _type: EXPORT_TYPE_MOCK_ROUTE,
+        _type: 'mock_route',
         name: mock.name || 'Imported Mock Route',
         parentId: file.server?.meta?.id || '__MOCK_SERVER_ID__',
         body: mock.body || '',
@@ -247,7 +238,7 @@ function getTestSuites(file: InsomniaFile): (UnitTestSuite | UnitTest)[] {
           },
         ),
         type: 'UnitTestSuite',
-        _type: EXPORT_TYPE_UNIT_TEST_SUITE,
+        _type: 'unit_test_suite',
         name: testSuite.name || 'Imported Test Suite',
         parentId: file.meta?.id || '__WORKSPACE_ID__',
         metaSortKey: testSuite.meta?.sortKey ?? index,
@@ -263,7 +254,7 @@ function getTestSuites(file: InsomniaFile): (UnitTestSuite | UnitTest)[] {
             },
           ),
           type: 'UnitTest',
-          _type: EXPORT_TYPE_UNIT_TEST,
+          _type: 'unit_test',
           name: test.name || 'Imported Test',
           parentId: suite._id,
           requestId: test.requestId,
@@ -280,9 +271,11 @@ function getTestSuites(file: InsomniaFile): (UnitTestSuite | UnitTest)[] {
   return [];
 }
 
-function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRequest | RequestGroup)[] {
+function getCollection(
+  file: InsomniaFile,
+): (Request | WebSocketRequest | SocketIORequest | GrpcRequest | RequestGroup)[] {
   if (file.type === 'collection.insomnia.rest/5.0' || file.type === 'spec.insomnia.rest/5.0') {
-    const resources: (Request | WebSocketRequest | GrpcRequest | RequestGroup)[] = [];
+    const resources: (Request | WebSocketRequest | SocketIORequest | GrpcRequest | RequestGroup)[] = [];
 
     function walkCollection(
       collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'],
@@ -297,9 +290,10 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
               },
             ),
             type: 'RequestGroup',
-            _type: EXPORT_TYPE_REQUEST_GROUP,
+            _type: 'request_group',
             name: item.name || 'Imported Folder',
             parentId,
+            headers: item.headers?.map(({ name, value }) => ({ name: name || '', value: value || '' })) || [],
             preRequestScript: item.scripts?.preRequest || '',
             afterResponseScript: item.scripts?.afterResponse || '',
             authentication: item.authentication || {},
@@ -319,7 +313,7 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
               },
             ),
             type: 'Request',
-            _type: EXPORT_TYPE_REQUEST,
+            _type: 'request',
             name: item.name || 'Imported Request',
             parentId,
             url: item.url,
@@ -349,7 +343,7 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
               },
             ),
             type: 'GrpcRequest',
-            _type: EXPORT_TYPE_GRPC_REQUEST,
+            _type: 'grpc_request',
             name: item.name || 'Imported gRPC Request',
             parentId,
             url: item.url,
@@ -378,7 +372,7 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
                 },
               ),
               type: 'WebSocketRequest',
-              _type: EXPORT_TYPE_WEBSOCKET_REQUEST,
+              _type: 'websocket_request',
               name: item.name || 'Imported WebSocket Request',
               parentId,
               url: data.url,
@@ -394,6 +388,34 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
             };
 
             resources.push(websocketRequest);
+          } else {
+            const socketIORequest = SocketIORequestSchema.safeParse(item);
+            if (socketIORequest.success) {
+              const data = socketIORequest.data;
+              const socketIO: WithExportType<SocketIORequest> = {
+                ...mapMetaToInsomniaMeta(
+                  data.meta || {
+                    id: '__SOCKET_IO_REQUEST_ID__',
+                  },
+                ),
+                type: 'SocketIORequest',
+                _type: 'socketio_request',
+                name: item.name || 'Imported Socket.IO Request',
+                parentId,
+                url: data.url,
+                authentication: data.authentication || {},
+                metaSortKey: item.meta?.sortKey ?? 0,
+                headers: data.headers || [],
+                parameters: data.parameters || [],
+                settingEncodeUrl: data.settings.encodeUrl,
+                settingSendCookies: data.settings.cookies.send,
+                settingStoreCookies: data.settings.cookies.store,
+                pathParameters: data.pathParameters || [],
+                eventListeners: data.eventListeners || [],
+              };
+
+              resources.push(socketIO);
+            }
           }
         }
       });
@@ -407,30 +429,42 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
   return [];
 }
 
+function importData(rawData: string) {
+  const file = InsomniaFileSchema.parse(parse(rawData));
+
+  if (file.type === 'collection.insomnia.rest/5.0') {
+    return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
+  }
+
+  if (file.type === 'spec.insomnia.rest/5.0') {
+    return [
+      getWorkspace(file),
+      ...getEnvironments(file),
+      ...getCookieJar(file),
+      ...getCollection(file),
+      ...getApiSpec(file),
+      ...getTestSuites(file),
+    ];
+  }
+
+  if (file.type === 'environment.insomnia.rest/5.0') {
+    return [getWorkspace(file), ...getEnvironments(file)];
+  }
+  return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
+}
+
+export function tryImportV5Data(rawData: string) {
+  try {
+    return { data: importData(rawData) };
+  } catch (error) {
+    console.error('Failed to import Insomnia v5 data', error);
+    return { data: [], error };
+  }
+}
+
 export function importInsomniaV5Data(rawData: string) {
   try {
-    const file = insomniaFileSchema.parse(parse(rawData));
-
-    if (file.type === 'collection.insomnia.rest/5.0') {
-      return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
-    }
-
-    if (file.type === 'spec.insomnia.rest/5.0') {
-      return [
-        getWorkspace(file),
-        ...getEnvironments(file),
-        ...getCookieJar(file),
-        ...getCollection(file),
-        ...getApiSpec(file),
-        ...getTestSuites(file),
-      ];
-    }
-
-    if (file.type === 'environment.insomnia.rest/5.0') {
-      return [getWorkspace(file), ...getEnvironments(file)];
-    }
-
-    return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
+    return importData(rawData);
   } catch (err) {
     console.error('Failed to import Insomnia v5 data', err);
     return [];
@@ -452,10 +486,8 @@ export async function getInsomniaV5DataExport({
     if (!workspace) {
       throw new Error('Workspace not found');
     }
-
-    const workspaceDescendants = await database.withDescendants(workspace);
-
-    const exportableTypes = Object.values(models.MODELS_BY_EXPORT_TYPE).map(model => model.type);
+    const exportableTypes = Object.values(MODELS_BY_EXPORT_TYPE);
+    const workspaceDescendants = await database.getWithDescendants(workspace, exportableTypes);
 
     const exportableResources = workspaceDescendants.filter(resource => {
       if (exportableTypes.includes(resource.type)) {
@@ -466,7 +498,7 @@ export async function getInsomniaV5DataExport({
     });
 
     function getCollectionFromResources(
-      resources: (Request | RequestGroup | WebSocketRequest | GrpcRequest)[],
+      resources: (Request | RequestGroup | WebSocketRequest | GrpcRequest | SocketIORequest)[],
       parentId: string,
     ): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] {
       const collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] = [];
@@ -482,7 +514,7 @@ export async function getInsomniaV5DataExport({
         .filter(resource => resource.parentId === parentId)
         .forEach(resource => {
           if (models.request.isRequest(resource)) {
-            const request: Z_Request = {
+            const request: Insomnia_Request = {
               url: resource.url,
               name: resource.name,
               meta: {
@@ -498,10 +530,7 @@ export async function getInsomniaV5DataExport({
               parameters: resource.parameters,
               headers: resource.headers,
               authentication: resource.authentication,
-              scripts: {
-                preRequest: resource.preRequestScript,
-                afterResponse: resource.afterResponseScript,
-              },
+              scripts: getScriptFromResources(resource),
               settings: {
                 renderRequestBody: !resource.settingDisableRenderRequestBody,
                 encodeUrl: resource.settingEncodeUrl,
@@ -516,7 +545,7 @@ export async function getInsomniaV5DataExport({
             };
             collection.push(request);
           } else if (models.requestGroup.isRequestGroup(resource)) {
-            const requestGroup: Z_RequestGroup = {
+            const requestGroup: Insomnia_RequestGroup = {
               name: resource.name,
               meta: {
                 id: resource._id,
@@ -527,10 +556,7 @@ export async function getInsomniaV5DataExport({
                 description: resource.description,
               },
               children: getCollectionFromResources(resources, resource._id),
-              scripts: {
-                afterResponse: resource.afterResponseScript,
-                preRequest: resource.preRequestScript,
-              },
+              scripts: getScriptFromResources(resource),
               authentication: resource.authentication,
               environment: resource.environment,
               environmentPropertyOrder: resource.environmentPropertyOrder,
@@ -538,7 +564,7 @@ export async function getInsomniaV5DataExport({
             };
             collection.push(requestGroup);
           } else if (models.webSocketRequest.isWebSocketRequest(resource)) {
-            const webSocketRequest: Z_WebsocketRequest = {
+            const webSocketRequest: Insomnia_WebsocketRequest = {
               url: resource.url,
               name: resource.name,
               meta: {
@@ -563,8 +589,34 @@ export async function getInsomniaV5DataExport({
               pathParameters: resource.pathParameters,
             };
             collection.push(webSocketRequest);
+          } else if (models.socketIORequest.isSocketIORequest(resource)) {
+            const socketIORequest: Insomnia_SocketIORequest = {
+              url: resource.url,
+              name: resource.name,
+              meta: {
+                id: resource._id,
+                created: resource.created,
+                modified: resource.modified,
+                isPrivate: resource.isPrivate,
+                description: resource.description,
+                sortKey: resource.metaSortKey,
+              },
+              settings: {
+                encodeUrl: resource.settingEncodeUrl,
+                cookies: {
+                  send: resource.settingSendCookies,
+                  store: resource.settingStoreCookies,
+                },
+              },
+              authentication: resource.authentication,
+              headers: resource.headers,
+              parameters: resource.parameters,
+              pathParameters: resource.pathParameters,
+              eventListeners: resource.eventListeners,
+            };
+            collection.push(socketIORequest);
           } else if (models.grpcRequest.isGrpcRequest(resource)) {
-            const grpcRequest: Z_GRPCRequest = {
+            const grpcRequest: Insomnia_GRPCRequest = {
               url: resource.url,
               name: resource.name,
               meta: {
@@ -587,6 +639,25 @@ export async function getInsomniaV5DataExport({
         });
 
       return collection;
+    }
+
+    function getScriptFromResources(resource: Request | RequestGroup) {
+      const hasPreRequest = !!resource?.preRequestScript;
+      const hasAfterResponse = !!resource?.afterResponseScript;
+
+      if (!hasPreRequest && !hasAfterResponse) {
+        return undefined;
+      }
+
+      const scripts: { preRequest?: string; afterResponse?: string } = {};
+      if (hasPreRequest) {
+        scripts.preRequest = resource.preRequestScript;
+      }
+      if (hasAfterResponse) {
+        scripts.afterResponse = resource.afterResponseScript;
+      }
+
+      return scripts;
     }
 
     function getEnvironmentsFromResources(
@@ -747,7 +818,8 @@ export async function getInsomniaV5DataExport({
               models.requestGroup.isRequestGroup(resource) ||
               models.request.isRequest(resource) ||
               models.webSocketRequest.isWebSocketRequest(resource) ||
-              models.grpcRequest.isGrpcRequest(resource),
+              models.grpcRequest.isGrpcRequest(resource) ||
+              models.socketIORequest.isSocketIORequest(resource),
           ),
           workspace._id,
         ),

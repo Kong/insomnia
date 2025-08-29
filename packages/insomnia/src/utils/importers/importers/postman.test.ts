@@ -477,4 +477,64 @@ describe('postman', () => {
       });
     });
   });
+
+  describe('url', () => {
+    it('should return path parameters from request URL', () => {
+      const request: Request1 = {
+        method: 'GET',
+        header: [],
+        url: {
+          raw: 'https://httpbin.org/anything/:path',
+          protocol: 'https',
+          host: ['httpbin', 'org'],
+          path: ['anything', ':path'],
+          variable: [
+            {
+              key: 'path',
+              value: 'value',
+            },
+          ],
+        },
+      };
+      const schema = postmanSchema({ requests: [request], version: 'v2.1.0' });
+      const postman = new ImportPostman(schema);
+      const { pathParameters } = postman.importRequestItem({ request: request }, 'n/a');
+
+      expect(pathParameters).toEqual([
+        {
+          name: 'path',
+          value: 'value',
+        },
+      ]);
+    });
+
+    it('should return path parameters with nunjucks from request URL', () => {
+      const request: Request1 = {
+        method: 'GET',
+        header: [],
+        url: {
+          raw: 'https://httpbin.org/anything/:path',
+          protocol: 'https',
+          host: ['httpbin', 'org'],
+          path: ['anything', ':path'],
+          variable: [
+            {
+              key: 'path',
+              value: '{{$guid}}',
+            },
+          ],
+        },
+      };
+      const schema = postmanSchema({ requests: [request], version: 'v2.1.0' });
+      const postman = new ImportPostman(schema);
+      const { pathParameters } = postman.importRequestItem({ request: request }, 'n/a');
+
+      expect(pathParameters).toEqual([
+        {
+          name: 'path',
+          value: "{% faker 'guid' %}",
+        },
+      ]);
+    });
+  });
 });

@@ -32,6 +32,7 @@ if [ ! $BUILD_CONTEXT ]; then
 fi
 
 cp $DEST_DIR/Insomnia.exe $DEST_DIR/insomnia.dll
+cp $DEST_DIR/Insomnia.exe $DEST_DIR/Insomnia-origin-$VERSION.exe
 cp $SRC_DIR/icons/icon.ico $CPP_DIR/insomnia.ico
 
 echo "Injecting version strings..."
@@ -51,7 +52,7 @@ g++ -lkernel32 -mwindows -c $CPP_DIR/final.cpp -o $CPP_DIR/insomnia.o
 echo "Linking Insomnia..."
 g++ -O2 -static -static-libgcc -static-libstdc++ -mwindows -lwinpthread $CPP_DIR/insomnia.o $CPP_DIR/res.o -o $DEST_EXE
 
-echo "Secure wapper built successfully."
+echo "Secure wrapper built successfully."
 
 if [ ! $BUILD_CONTEXT ]; then
   echo "Packaging distributables..."

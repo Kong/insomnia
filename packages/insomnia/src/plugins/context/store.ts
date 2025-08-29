@@ -15,7 +15,7 @@ export interface PluginStore {
   >;
 }
 
-export function init(plugin: Plugin): { store: PluginStore } {
+export function init(plugin: Pick<Plugin, 'name'>): { store: PluginStore } {
   return {
     store: {
       async hasItem(key: string) {

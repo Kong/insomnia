@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   Test:
-    timeout-minutes: 15
+    timeout-minutes: 40
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout branch
@@ -29,9 +29,13 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: package-lock.json
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kong'
 
       - name: Install packages
         run: npm ci
+        env: 
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build app for smoke tests
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build

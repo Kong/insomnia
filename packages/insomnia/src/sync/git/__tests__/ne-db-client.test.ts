@@ -20,7 +20,7 @@ describe('NeDBClient', () => {
   beforeEach(async () => {
     workspaceBuilder.reset();
     setupDateMocks();
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
+    await db.init({ inMemoryOnly: true }, true, () => {});
     // Create some sample models
     await models.project.create({
       _id: 'proj_1',
@@ -61,6 +61,8 @@ describe('NeDBClient', () => {
         models.protoFile.type,
         models.request.type,
         models.requestGroup.type,
+        models.socketIOPayload.type,
+        models.socketIORequest.type,
         models.unitTest.type,
         models.unitTestSuite.type,
         models.webSocketPayload.type,
@@ -119,7 +121,7 @@ describe('NeDBClient', () => {
   describe('writeFile()', () => {
     it('should ignore files not in GIT_INSOMNIA_DIR directory', async () => {
       // Arrange
-      const upsertSpy = vi.spyOn(db, 'upsert');
+      const updateSpy = vi.spyOn(db, 'update');
       const workspaceId = 'wrk_1';
       const neDbClient = new NeDBClient(workspaceId, 'proj_1');
       const env = {
@@ -131,16 +133,16 @@ describe('NeDBClient', () => {
       // Act
       await neDbClient.writeFile(filePath, YAML.stringify(env));
       // Assert
-      expect(upsertSpy).not.toBeCalled();
+      expect(updateSpy).not.toBeCalled();
       // Cleanup
-      upsertSpy.mockRestore();
+      updateSpy.mockRestore();
     });
 
     it('should write files in GIT_INSOMNIA_DIR directory to db', async () => {
       // Arrange
       const workspaceId = 'wrk_1';
       const neDbClient = new NeDBClient(workspaceId, 'proj_1');
-      const upsertSpy = vi.spyOn(db, 'upsert');
+      const updateSpy = vi.spyOn(db, 'update');
       const env = {
         _id: 'env_1',
         type: models.environment.type,
@@ -150,10 +152,10 @@ describe('NeDBClient', () => {
       // Act
       await neDbClient.writeFile(filePath, YAML.stringify(env));
       // Assert
-      expect(upsertSpy).toHaveBeenCalledTimes(1);
-      expect(upsertSpy).toHaveBeenCalledWith(env, true);
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+      expect(updateSpy).toHaveBeenCalledWith(env);
       // Cleanup
-      upsertSpy.mockRestore();
+      updateSpy.mockRestore();
     });
 
     it('should set workspace parentId to the project', async () => {
@@ -161,7 +163,7 @@ describe('NeDBClient', () => {
       const workspaceId = 'wrk_1';
       const projectId = `${models.project.prefix}_1`;
       const neDbClient = new NeDBClient(workspaceId, projectId);
-      const upsertSpy = vi.spyOn(db, 'upsert');
+      const updateSpy = vi.spyOn(db, 'update');
 
       workspaceBuilder._id(workspaceId).scope('design').certificates(null);
 
@@ -175,11 +177,11 @@ describe('NeDBClient', () => {
       await neDbClient.writeFile(filePath, YAML.stringify(workspaceInFile));
 
       // Assert
-      expect(upsertSpy).toHaveBeenCalledTimes(1);
-      expect(upsertSpy).toHaveBeenCalledWith(workspaceInDb, true);
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+      expect(updateSpy).toHaveBeenCalledWith(workspaceInDb);
 
       // Cleanup
-      upsertSpy.mockRestore();
+      updateSpy.mockRestore();
     });
 
     it('should throw error if id does not match', async () => {

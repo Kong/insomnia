@@ -3,9 +3,12 @@ import fs from 'node:fs';
 import type * as Har from 'har-format';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router';
-import { useFetcher } from 'react-router';
-import { useInterval } from 'react-use';
+import * as reactUse from 'react-use';
+
+import { useRootLoaderData } from '~/root';
+import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
+import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import {
   getMockServiceURL,
@@ -24,10 +27,7 @@ import { cancelRequestById } from '../../../network/cancellation';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
-import type { MockRouteLoaderData } from '../../routes/mock-route';
-import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import { CodeEditor } from '../codemirror/code-editor';
 import { Pane, PaneHeader } from '../panes/pane';
 import { PlaceholderResponsePane } from '../panes/placeholder-response-pane';
 import { ResponseTimer } from '../response-timer';
@@ -38,6 +38,8 @@ import { getTimeFromNow } from '../time-from-now';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
+
+const { useInterval } = reactUse;
 
 interface MockbinLogOutput {
   log: {
@@ -57,11 +59,11 @@ interface MockbinLogOutput {
 }
 
 export const MockResponsePane = () => {
-  const { mockServer, mockRoute, activeResponse } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
-  const { settings } = useRootLoaderData();
+  const { mockServer, mockRoute, activeResponse } = useMockRouteLoaderData()!;
+  const { settings } = useRootLoaderData()!;
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [previewMode, setPreviewMode] = useState<PreviewMode>(PREVIEW_MODE_FRIENDLY);
-  const requestFetcher = useFetcher({ key: 'mock-request-fetcher' });
+  const requestFetcher = useRequestNewMockSendActionFetcher({ key: 'mock-request-fetcher' });
   const { steps } = useExecutionState({ requestId: activeResponse?.parentId });
 
   useEffect(() => {
@@ -181,7 +183,7 @@ const HistoryViewWrapperComponentFactory = ({
 }) => {
   const [logs, setLogs] = useState<MockbinLogOutput | null>(null);
   const [logEntryId, setLogEntryId] = useState<number | null>(null);
-  const { userSession } = useRootLoaderData();
+  const { userSession } = useRootLoaderData()!;
 
   const fetchLogs = useCallback(async () => {
     const compoundId = mockRoute.parentId + mockRoute.name;
@@ -202,7 +204,7 @@ const HistoryViewWrapperComponentFactory = ({
       }
       console.log('[mock] Error: fetching logs from remote', { mockbinUrl, res });
     } catch (e) {
-      // network erros will be managed by the upsert trigger, so we can ignore them here
+      // network errors will be managed by the upsert trigger, so we can ignore them here
       console.log({ mockbinUrl, e });
     }
   }, [
@@ -213,7 +215,7 @@ const HistoryViewWrapperComponentFactory = ({
     mockServer.useInsomniaCloud,
     userSession.id,
   ]);
-  // refetches logs whenever the path changes, or a response is recieved, or tenseconds elapses or history tab is click
+  // refetches logs whenever the path changes, or a response is received, or tenseconds elapses or history tab is click
   // chatgpt: answer my called
   useInterval(() => {
     fetchLogs();

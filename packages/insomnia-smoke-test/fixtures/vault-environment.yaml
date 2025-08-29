@@ -19,7 +19,7 @@ resources:
     created: 1735021392123
     name: Base Environment
     data:
-      from: global env with secert vault
+      from: global env with secret vault
     dataPropertyOrder: null
     color: null
     isPrivate: false
@@ -28,7 +28,7 @@ resources:
     kvPairData:
       - id: envPair_1eefc750fae74ab0870d8e77b31023f6
         name: from
-        value: global env with secert vault
+        value: global env with secret vault
         type: str
         enabled: true
       - id: envPair_c2edecbf93744867acae6b9846c2fb48

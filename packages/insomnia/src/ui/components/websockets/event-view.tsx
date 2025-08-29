@@ -1,18 +1,20 @@
 import fs from 'node:fs';
 
 import React, { type FC, useCallback } from 'react';
-import { useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
+
+import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import type { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
+import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent, WebSocketMessageEvent } from '../../../main/network/websocket';
+import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import type { RequestLoaderData } from '../../routes/request';
-import { CodeEditor } from '../codemirror/code-editor';
 import { showError } from '../modals';
 import { WebSocketPreviewModeDropdown } from './websocket-preview-dropdown';
 
-interface Props<T extends WebSocketEvent> {
+interface Props<T> {
   event: T;
 }
 
@@ -67,8 +69,8 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   } catch {
     // Can't parse as JSON.
   }
-  const { activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
+  const { activeRequestMeta } = useRequestLoaderData()!;
+  const previewMode = ('previewMode' in activeRequestMeta && activeRequestMeta.previewMode) || PREVIEW_MODE_SOURCE;
   return (
     <div className="flex h-full flex-col">
       <div className="box-border flex h-8 flex-row border-b border-gray-300 p-2">
@@ -93,7 +95,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   );
 };
 
-export const EventView: FC<Props<CurlEvent | WebSocketEvent>> = ({ event }) => {
+export const EventView: FC<Props<CurlEvent | WebSocketEvent | SocketIOEvent>> = ({ event }) => {
   if (event.type === 'message') {
     return <MessageEventView event={event} />;
   }

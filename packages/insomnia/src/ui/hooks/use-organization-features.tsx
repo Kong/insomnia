@@ -1,8 +1,13 @@
 import { useEffect } from 'react';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import {
+  fallbackBilling,
+  fallbackFeatures,
+  useOrganizationPermissionsLoaderFetcher,
+} from '~/routes/organization.$organizationId.permissions';
 
 import { isScratchpadOrganizationId } from '../../models/organization';
-import type { OrganizationFeatureLoaderData } from '../routes/organization';
 import { useLoaderDeferData } from './use-loader-defer-data';
 
 export function useOrganizationPermissions() {
@@ -12,32 +17,23 @@ export function useOrganizationPermissions() {
 
   // Fetch organization permissions and features using the organization ID as the key.
   // This will ensure that the data is cached and shared across components in the same page.
-  const permissionsFetcher = useFetcher<OrganizationFeatureLoaderData>({ key: `permissions:${organizationId}` });
+  const permissionsFetcher = useOrganizationPermissionsLoaderFetcher({ key: `permissions:${organizationId}` });
 
   // Load organization permissions and features if they are not already loaded.
   useEffect(() => {
     const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
     if (!isScratchpadOrganizationId(organizationId) && isIdleAndUninitialized) {
-      permissionsFetcher.load(`/organization/${organizationId}/permissions`);
+      permissionsFetcher.load({
+        organizationId,
+      });
     }
   }, [organizationId, permissionsFetcher]);
 
   const { featuresPromise, billingPromise } = permissionsFetcher.data || {};
   // Features and billing return a promise using react-router's defer() so we need to wait for the data to be available.
-  const [
-    features = {
-      gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-    },
-  ] = useLoaderDeferData(featuresPromise);
+  const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise, organizationId);
 
-  const [
-    billing = {
-      isActive: true,
-      expirationErrorMessage: '',
-      expirationWarningMessage: '',
-      accessDenied: false,
-    },
-  ] = useLoaderDeferData(billingPromise);
+  const [billing = fallbackBilling] = useLoaderDeferData(billingPromise, organizationId);
 
   return { features, billing };
 }

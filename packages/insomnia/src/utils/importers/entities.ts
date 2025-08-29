@@ -28,6 +28,11 @@ export interface Parameter extends Comment {
   type?: 'file' | string;
 }
 
+export interface PathParameters {
+  name: string;
+  value?: string;
+}
+
 export type Body =
   | string
   | {
@@ -68,6 +73,7 @@ export interface ImportRequest extends Comment {
   data?: object;
   description?: string;
   parameters?: Parameter[];
+  pathParameters?: PathParameters[];
   parentId?: string | null;
   postData?: Har.PostData;
   variable?: any;

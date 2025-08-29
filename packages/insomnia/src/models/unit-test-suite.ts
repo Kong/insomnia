@@ -47,15 +47,15 @@ export function remove(unitTestSuite: UnitTestSuite) {
 }
 
 export function getByParentId(parentId: string) {
-  return db.getWhere<UnitTestSuite>(type, { parentId });
+  return db.findOne<UnitTestSuite>(type, { parentId });
 }
 
 export function findByParentId(parentId: string) {
   return db.find<UnitTestSuite>(type, { parentId });
 }
 
-export const getById = (_id: string) => db.getWhere<UnitTestSuite>(type, { _id });
+export const getById = (_id: string) => db.findOne<UnitTestSuite>(type, { _id });
 
 export function all() {
-  return db.all<UnitTestSuite>(type);
+  return db.find<UnitTestSuite>(type);
 }

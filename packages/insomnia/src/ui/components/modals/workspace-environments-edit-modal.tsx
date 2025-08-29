@@ -18,7 +18,13 @@ import {
   ToggleButton,
   useDragAndDrop,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
+
+import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
+import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
+import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
+import { useEnvironmentUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.update';
+import { invariant } from '~/utils/invariant';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
 import {
@@ -29,15 +35,16 @@ import {
   getDataFromKVPair,
 } from '../../../models/environment';
 import { isRemoteProject } from '../../../models/project';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { responseTagRegex } from '../../../templating/utils';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { EditableInput } from '../editable-input';
 import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../editors/environment-editor';
 import { EnvironmentKVEditor } from '../editors/environment-key-value-editor/key-value-editor';
 import { handleToggleEnvironmentType } from '../editors/environment-utils';
 import { Icon } from '../icon';
-import { showAlert } from '.';
+import { showModal } from '.';
+import { AlertModal } from './alert-modal';
 
 export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => void }) => {
   const { organizationId, projectId, workspaceId } = useParams<{
@@ -45,15 +52,20 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
     projectId: string;
     workspaceId: string;
   }>();
-  const routeData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+
+  invariant(organizationId, 'Organization ID is required');
+  invariant(projectId, 'Project ID is required');
+  invariant(workspaceId, 'Workspace ID is required');
+
+  const routeData = useWorkspaceLoaderData()!;
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
 
   const { features } = useOrganizationPermissions();
 
-  const createEnvironmentFetcher = useFetcher();
-  const deleteEnvironmentFetcher = useFetcher();
-  const updateEnvironmentFetcher = useFetcher();
-  const duplicateEnvironmentFetcher = useFetcher();
+  const createEnvironmentFetcher = useEnvironmentCreateActionFetcher();
+  const deleteEnvironmentFetcher = useEnvironmentDeleteActionFetcher();
+  const updateEnvironmentFetcher = useEnvironmentUpdateActionFetcher();
+  const duplicateEnvironmentFetcher = useEnvironmentDuplicateActionFetcher();
 
   const { baseEnvironment, activeEnvironment, subEnvironments, activeProject, activeWorkspaceMeta } = routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
@@ -83,15 +95,12 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
       name: 'Duplicate',
       icon: 'copy',
       action: async (environment: Environment) => {
-        duplicateEnvironmentFetcher.submit(
-          {
-            environmentId: environment._id,
-          },
-          {
-            method: 'post',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/duplicate`,
-          },
-        );
+        duplicateEnvironmentFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          environmentId: environment._id,
+        });
       },
     },
     {
@@ -99,21 +108,18 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
       name: 'Delete',
       icon: 'trash',
       action: async (environment: Environment) => {
-        showAlert({
+        showModal(AlertModal, {
           title: 'Delete Environment',
           message: `Are you sure you want to delete "${environment.name}"?`,
           addCancel: true,
           okLabel: 'Delete',
           onConfirm: async () => {
-            deleteEnvironmentFetcher.submit(
-              {
-                environmentId: environment._id,
-              },
-              {
-                method: 'post',
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/delete`,
-              },
-            );
+            deleteEnvironmentFetcher.submit({
+              organizationId,
+              projectId,
+              workspaceId,
+              environmentId: environment._id,
+            });
 
             setSelectedEnvironmentId(baseEnvironment._id);
           },
@@ -135,16 +141,14 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
       description: `${isUsingGitSync ? 'Synced with Git Sync and exportable' : isUsingInsomniaCloudSync ? 'Synced with Insomnia Sync and exportable' : 'Exportable'}`,
       icon: isUsingGitSync ? ['fab', 'git-alt'] : isUsingInsomniaCloudSync ? 'globe-americas' : 'file-arrow-down',
       action: async () => {
-        createEnvironmentFetcher.submit(
-          {
+        createEnvironmentFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          params: {
             isPrivate: false,
           },
-          {
-            method: 'post',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/create`,
-            encType: 'application/json',
-          },
-        );
+        });
       },
     },
     {
@@ -153,16 +157,14 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
       description: 'Local and not exportable',
       icon: 'lock',
       action: async () => {
-        createEnvironmentFetcher.submit(
-          {
+        createEnvironmentFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          params: {
             isPrivate: true,
           },
-          {
-            method: 'post',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/create`,
-            encType: 'application/json',
-          },
-        );
+        });
       },
     },
   ];
@@ -171,41 +173,33 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
     if (environmentEditorRef.current?.isValid() && selectedEnvironment) {
       const { object, propertyOrder } = value;
 
-      updateEnvironmentFetcher.submit(
-        {
-          patch: {
-            data: object,
-            dataPropertyOrder: propertyOrder,
-          },
-          environmentId: selectedEnvironment._id,
+      updateEnvironmentFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        patch: {
+          data: object,
+          dataPropertyOrder: propertyOrder,
         },
-        {
-          method: 'post',
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-          encType: 'application/json',
-        },
-      );
+        environmentId: selectedEnvironment._id,
+      });
     }
   };
 
   const handleKVPairChange = (kvPairData: EnvironmentKvPairData[]) => {
     if (selectedEnvironment) {
       const environmentData = getDataFromKVPair(kvPairData);
-      updateEnvironmentFetcher.submit(
-        JSON.stringify({
-          patch: {
-            data: environmentData.data,
-            dataPropertyOrder: environmentData.dataPropertyOrder,
-            kvPairData,
-          },
-          environmentId: selectedEnvironment._id,
-        }),
-        {
-          method: 'post',
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-          encType: 'application/json',
+      updateEnvironmentFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        patch: {
+          data: environmentData.data,
+          dataPropertyOrder: environmentData.dataPropertyOrder,
+          kvPairData,
         },
-      );
+        environmentId: selectedEnvironment._id,
+      });
     }
   };
   const environmentsDragAndDrop = useDragAndDrop({
@@ -237,17 +231,13 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
         }
       }
 
-      updateEnvironmentFetcher.submit(
-        {
-          patch: { metaSortKey: sourceEnv.metaSortKey },
-          environmentId: sourceEnv._id,
-        },
-        {
-          method: 'post',
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-          encType: 'application/json',
-        },
-      );
+      updateEnvironmentFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        patch: { metaSortKey: sourceEnv.metaSortKey },
+        environmentId: sourceEnv._id,
+      });
     },
     renderDropIndicator(target) {
       if (target.type === 'item') {
@@ -340,19 +330,15 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                             className="flex-1 px-1 hover:!bg-transparent"
                             onSubmit={name => {
                               name &&
-                                updateEnvironmentFetcher.submit(
-                                  {
-                                    patch: {
-                                      name,
-                                    },
-                                    environmentId: item._id,
+                                updateEnvironmentFetcher.submit({
+                                  organizationId,
+                                  projectId,
+                                  workspaceId,
+                                  patch: {
+                                    name,
                                   },
-                                  {
-                                    method: 'post',
-                                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-                                    encType: 'application/json',
-                                  },
-                                );
+                                  environmentId: item._id,
+                                });
                             }}
                           />
                           {item.parentId !== workspaceId && (
@@ -455,19 +441,15 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                         className="flex-1 px-1"
                         onSubmit={name => {
                           name &&
-                            updateEnvironmentFetcher.submit(
-                              {
-                                patch: {
-                                  name,
-                                },
-                                environmentId: selectedEnvironmentId,
+                            updateEnvironmentFetcher.submit({
+                              organizationId,
+                              projectId,
+                              workspaceId,
+                              patch: {
+                                name,
                               },
-                              {
-                                method: 'post',
-                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-                                encType: 'application/json',
-                              },
-                            );
+                              environmentId: selectedEnvironmentId,
+                            });
                         }}
                       />
                     </Heading>
@@ -477,19 +459,15 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                         <input
                           onChange={e => {
                             const color = e.target.value;
-                            updateEnvironmentFetcher.submit(
-                              {
-                                patch: {
-                                  color,
-                                },
-                                environmentId: selectedEnvironment._id,
+                            updateEnvironmentFetcher.submit({
+                              organizationId,
+                              projectId,
+                              workspaceId,
+                              patch: {
+                                color,
                               },
-                              {
-                                method: 'post',
-                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-                                encType: 'application/json',
-                              },
-                            );
+                              environmentId: selectedEnvironment._id,
+                            });
                           }}
                           type="color"
                           value={selectedEnvironment?.color || ''}
@@ -503,20 +481,16 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                             newEnvironmentType: EnvironmentType,
                             kvPairData: EnvironmentKvPairData[],
                           ) => {
-                            updateEnvironmentFetcher.submit(
-                              JSON.stringify({
-                                patch: {
-                                  environmentType: newEnvironmentType,
-                                  kvPairData: kvPairData,
-                                },
-                                environmentId: selectedEnvironment._id,
-                              }),
-                              {
-                                method: 'post',
-                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-                                encType: 'application/json',
+                            updateEnvironmentFetcher.submit({
+                              organizationId,
+                              projectId,
+                              workspaceId,
+                              patch: {
+                                environmentType: newEnvironmentType,
+                                kvPairData: kvPairData,
                               },
-                            );
+                              environmentId: selectedEnvironment._id,
+                            });
                           };
                           const isValidJSON = !!environmentEditorRef.current?.isValid();
                           handleToggleEnvironmentType(

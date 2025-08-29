@@ -11,23 +11,23 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRevalidator } from 'react-router';
-import { useInterval } from 'react-use';
+import { useParams, useRevalidator } from 'react-router';
+import * as reactUse from 'react-use';
+
+import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
+import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
+import { useGitProjectPushActionFetcher } from '~/routes/git.push';
+import { useGitProjectRepoFetcher } from '~/routes/git.repo';
+import { useGitProjectResetActionFetcher } from '~/routes/git.reset';
+import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
 
 import type { GitRepository } from '../../../models/git-repository';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import type { MergeConflict } from '../../../sync/types';
-import {
-  continueMerge,
-  type GitFetchLoaderData,
-  type GitRepoLoaderData,
-  type GitStatusResult,
-  pullFromGitRemote,
-  type PushToGitRemoteResult,
-} from '../../routes/git-actions';
 import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';
-import { showAlert, showModal } from '../modals';
+import { showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 import { GitBranchesModal } from '../modals/git-branches-modal';
 import { GitLogModal } from '../modals/git-log-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
@@ -52,12 +52,12 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   const [isGitLogModalOpen, setIsGitLogModalOpen] = useState(false);
   const [isGitStagingModalOpen, setIsGitStagingModalOpen] = useState(false);
 
-  const gitPushFetcher = useFetcher<PushToGitRemoteResult>();
-  const gitCheckoutFetcher = useFetcher();
-  const gitRepoDataFetcher = useFetcher<GitRepoLoaderData>();
-  const gitFetchFetcher = useFetcher<GitFetchLoaderData>();
-  const gitStatusFetcher = useFetcher<GitStatusResult>();
-  const resetGitStatusFetcher = useFetcher();
+  const gitPushFetcher = useGitProjectPushActionFetcher();
+  const gitCheckoutFetcher = useGitProjectCheckoutBranchActionFetcher();
+  const gitRepoDataFetcher = useGitProjectRepoFetcher();
+  const gitFetchFetcher = useGitProjectFetchActionFetcher();
+  const gitStatusFetcher = useGitProjectStatusActionFetcher();
+  const resetGitStatusFetcher = useGitProjectResetActionFetcher();
 
   const loadingPush = gitPushFetcher.state === 'loading';
   const loadingFetch = gitFetchFetcher.state === 'loading';
@@ -67,8 +67,10 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
 
   useEffect(() => {
     if (gitRepository?.uri && gitRepository?._id && gitRepoDataFetcher.state === 'idle' && !gitRepoDataFetcher.data) {
-      // file://./../../routes/git-actions.tsx#gitRepoLoader
-      gitRepoDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/repo`);
+      gitRepoDataFetcher.load({
+        projectId,
+        workspaceId,
+      });
     }
   }, [gitRepoDataFetcher, gitRepository?.uri, gitRepository?._id, organizationId, projectId, workspaceId]);
 
@@ -83,21 +85,17 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
 
   useEffect(() => {
     if (shouldFetchGitRepoStatus) {
-      // file://./../../routes/git-actions.tsx#gitStatusAction
-      gitStatusFetcher.submit(
-        {},
-        {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/status`,
-          method: 'post',
-        },
-      );
+      gitStatusFetcher.submit({
+        projectId,
+        workspaceId,
+      });
     }
   }, [gitStatusFetcher, organizationId, projectId, shouldFetchGitRepoStatus, workspaceId]);
 
   useEffect(() => {
     const errors = [...(gitPushFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
-      showAlert({
+      showModal(AlertModal, {
         title: 'Push Failed',
         message: (
           <>
@@ -111,14 +109,16 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
 
   useEffect(() => {
     const gitRepoDataErrors =
-      gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data ? gitRepoDataFetcher.data.errors : [];
+      gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data && gitRepoDataFetcher.data.errors
+        ? gitRepoDataFetcher.data.errors
+        : [];
     const errors = [...gitRepoDataErrors];
     if (errors.length > 0) {
       if (isGitRepoSettingsModalOpen) {
         // user just clicked 'Reset'
         return;
       }
-      showAlert({
+      showModal(AlertModal, {
         title: 'Loading of Git Repository Failed',
         message: errors.join('\n'),
       });
@@ -128,7 +128,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   useEffect(() => {
     const errors = [...(gitCheckoutFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
-      showAlert({
+      showModal(AlertModal, {
         title: 'Checkout Failed',
         message: errors.join('\n'),
       });
@@ -136,15 +136,11 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   }, [gitCheckoutFetcher.data?.errors]);
 
   async function handlePush({ force }: { force: boolean }) {
-    gitPushFetcher.submit(
-      {
-        force: `${force}`,
-      },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/push`,
-        method: 'post',
-      },
-    );
+    gitPushFetcher.submit({
+      projectId,
+      workspaceId,
+      force,
+    });
   }
 
   let iconClassName: IconProp = ['fab', 'git-alt'];
@@ -195,10 +191,11 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
           action: async () => {
             try {
               setIsPulling(true);
-              await pullFromGitRemote({ projectId, workspaceId })
+              await window.main.git
+                .pullFromGitRemote({ projectId, workspaceId })
                 .then(result => {
                   if ('errors' in result && result.errors) {
-                    showAlert({
+                    showModal(AlertModal, {
                       title: 'Pull Failed',
                       message: (
                         <>
@@ -216,16 +213,18 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                       handleDone: (conflicts?: MergeConflict[]) => {
                         if (Array.isArray(conflicts) && conflicts.length > 0) {
                           setIsPulling(true);
-                          continueMerge({
-                            projectId,
-                            workspaceId,
-                            handledMergeConflicts: conflicts,
-                            commitMessage: result.commitMessage,
-                            commitParent: result.commitParent,
-                          }).finally(() => {
-                            setIsPulling(false);
-                            revalidate();
-                          });
+                          window.main.git
+                            .continueMerge({
+                              projectId,
+                              workspaceId,
+                              handledMergeConflicts: conflicts,
+                              commitMessage: result.commitMessage,
+                              commitParent: result.commitParent,
+                            })
+                            .finally(() => {
+                              setIsPulling(false);
+                              revalidate();
+                            });
                         } else {
                           // user aborted merge, do nothing
                         }
@@ -239,7 +238,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                 });
             } catch (err) {
               const errorMessage = err instanceof Error ? err.message : 'An error occurred while pulling';
-              showAlert({
+              showModal(AlertModal, {
                 title: 'Pull Failed',
                 message: (
                   <>
@@ -272,13 +271,10 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
           isDisabled: false,
           label: 'Fetch',
           action: () => {
-            gitFetchFetcher.submit(
-              {},
-              {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/fetch`,
-                method: 'post',
-              },
-            );
+            gitFetchFetcher.submit({
+              projectId,
+              workspaceId,
+            });
           },
         },
       ]
@@ -317,15 +313,12 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
         },
       ];
 
-  useInterval(
+  reactUse.useInterval(
     () => {
-      gitFetchFetcher.submit(
-        {},
-        {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/fetch`,
-          method: 'post',
-        },
-      );
+      gitFetchFetcher.submit({
+        projectId,
+        workspaceId,
+      });
     },
     1000 * 60 * 5,
   );
@@ -347,13 +340,10 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
           label: 'Switch to Insomnia Sync',
           icon: 'cloud',
           action: async () => {
-            resetGitStatusFetcher.submit(
-              {},
-              {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/reset`,
-                method: 'post',
-              },
-            );
+            resetGitStatusFetcher.submit({
+              projectId,
+              workspaceId,
+            });
           },
         },
       ]
@@ -366,26 +356,22 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     isDisabled?: boolean;
     isActive: boolean;
     action: () => void;
-  }[] = isSynced
-    ? branches.map(branch => ({
-        id: branch,
-        label: branch,
-        isActive: branch === currentBranch,
-        icon: 'code-branch',
-        action: async () => {
-          // file://./../../routes/git-actions.tsx#gitCheckoutAction
-          gitCheckoutFetcher.submit(
-            {
+  }[] =
+    isSynced && branches
+      ? branches.map(branch => ({
+          id: branch,
+          label: branch,
+          isActive: branch === currentBranch,
+          icon: 'code-branch',
+          action: async () => {
+            gitCheckoutFetcher.submit({
+              projectId,
+              workspaceId,
               branch,
-            },
-            {
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/checkout`,
-              method: 'post',
-            },
-          );
-        },
-      }))
-    : [];
+            });
+          },
+        }))
+      : [];
 
   const allSyncMenuActionList = [
     ...switchToInsomniaSyncList,
@@ -523,8 +509,8 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       {isGitBranchesModalOpen && gitRepository && (
         <GitBranchesModal
           onClose={() => setIsGitBranchesModalOpen(false)}
-          currentBranch={currentBranch}
-          branches={branches}
+          currentBranch={currentBranch ?? ''}
+          branches={branches ?? []}
         />
       )}
       {isGitLogModalOpen && gitRepository && <GitLogModal onClose={() => setIsGitLogModalOpen(false)} />}

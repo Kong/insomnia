@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Button,
   Cell,
@@ -12,10 +11,12 @@ import {
   TableBody,
   TableHeader,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import { useRootLoaderData } from '~/root';
+import { useInsomniaSyncRestoreActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.restore';
 
 import type { Snapshot } from '../../../sync/types';
-import { useRootLoaderData } from '../../routes/root';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
@@ -33,22 +34,19 @@ const RestoreButton = ({ snapshot }: { snapshot: Snapshot }) => {
     organizationId: string;
   };
 
-  const restoreChangesFetcher = useFetcher();
+  const restoreChangesFetcher = useInsomniaSyncRestoreActionFetcher();
 
   return (
     <PromptButton
       className="flex min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
       confirmMessage="Confirm"
       onClick={() => {
-        restoreChangesFetcher.submit(
-          {
-            id: snapshot.id,
-          },
-          {
-            method: 'POST',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/restore`,
-          },
-        );
+        restoreChangesFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          id: snapshot.id,
+        });
       }}
     >
       Restore
@@ -57,7 +55,7 @@ const RestoreButton = ({ snapshot }: { snapshot: Snapshot }) => {
 };
 
 export const SyncHistoryModal = ({ history, onClose }: Props) => {
-  const { userSession } = useRootLoaderData();
+  const { userSession } = useRootLoaderData()!;
   const authorName = (snapshot: Snapshot) => {
     let fullName = '';
     if (snapshot.authorAccount) {

@@ -1,14 +1,13 @@
 import React, { type FC, useRef, useState } from 'react';
 import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router';
 
 import { type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from '../../../models/environment';
 import type { Settings } from '../../../models/settings';
 import { getAuthObjectOrNull } from '../../../network/authentication';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useRequestGroupLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
-import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import type { RequestGroupLoaderData } from '../../routes/request-group';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
+import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { EnvironmentEditor, type EnvironmentEditorHandle } from '../editors/environment-editor';
 import { EnvironmentKVEditor } from '../editors/environment-key-value-editor/key-value-editor';
@@ -21,13 +20,12 @@ import { MarkdownEditor } from '../markdown-editor';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 
 export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
-  const { activeRequestGroup } = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
-  const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeRequestGroup } = useRequestGroupLoaderData()!;
+  const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
   const [isRequestGroupSettingsModalOpen, setIsRequestGroupSettingsModalOpen] = useState(false);
   const patchRequestGroup = useRequestGroupPatcher();
   const gitVersion = useGitVCSVersion();
-  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
-  const uniqueKey = `${activeEnvironment?.modified}::${activeRequestGroup._id}::${gitVersion}::${activeRequestSyncVersion}`;
+  const uniqueKey = `${activeEnvironment?.modified}::${activeRequestGroup._id}::${gitVersion}::${vcsVersion}`;
   const folderHeaders = activeRequestGroup?.headers || [];
   const headersCount = folderHeaders.filter(h => !h.disabled)?.length || 0;
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
@@ -65,7 +63,16 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
 
   return (
     <>
-      <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
+      <Tabs
+        aria-label="Request group tabs"
+        className="flex h-full w-full flex-1 flex-col"
+        onSelectionChange={key => {
+          // Save environment changes when nav away from environment tab.
+          if (key !== 'environment' && environmentEditorRef) {
+            saveChanges();
+          }
+        }}
+      >
         <TabList
           className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
           aria-label="Request pane tabs"

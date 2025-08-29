@@ -1,8 +1,9 @@
 import React, { type ChangeEventHandler, type FC, type InputHTMLAttributes, useCallback } from 'react';
 
+import { useRootLoaderData } from '~/root';
+
 import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
 import { HelpTooltip } from '../help-tooltip';
 
 export const TextSetting: FC<{
@@ -12,7 +13,7 @@ export const TextSetting: FC<{
   placeholder?: InputHTMLAttributes<HTMLInputElement>['placeholder'];
   setting: SettingsOfType<string | null>;
 }> = ({ disabled, help, label, placeholder, setting }) => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   if (!Object.prototype.hasOwnProperty.call(settings, setting)) {
     throw new Error(`Invalid setting name ${setting}`);
   }

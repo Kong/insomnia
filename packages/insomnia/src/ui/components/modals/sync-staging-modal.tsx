@@ -13,8 +13,12 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import { stringify } from 'yaml';
+
+import { useInsomniaSyncCreateSnapshotActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.create-snapshot';
+import { useInsomniaSyncStageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.stage';
+import { useInsomniaSyncUnstageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.unstage';
 
 import { all } from '../../../models';
 import type { StageEntry, Status, StatusCandidate } from '../../../sync/types';
@@ -113,47 +117,37 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
     id: `unstaged-${key}`,
   }));
 
-  const stageChangesFetcher = useFetcher();
+  const stageChangesFetcher = useInsomniaSyncStageActionFetcher();
+  const unstageChangesFetcher = useInsomniaSyncUnstageActionFetcher();
 
   const stageChanges = (keys: string[]) => {
-    stageChangesFetcher.submit(
-      {
-        keys,
-      },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/stage`,
-        method: 'POST',
-        encType: 'application/json',
-      },
-    );
+    stageChangesFetcher.submit({
+      organizationId,
+      projectId,
+      workspaceId,
+      keys,
+    });
   };
 
   const unstageChanges = (keys: string[]) => {
-    stageChangesFetcher.submit(
-      {
-        keys,
-      },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/unstage`,
-        method: 'POST',
-        encType: 'application/json',
-      },
-    );
+    unstageChangesFetcher.submit({
+      keys,
+      organizationId,
+      projectId,
+      workspaceId,
+    });
   };
 
   const allChanges = [...stagedChanges, ...unstagedChanges];
   const allChangesLength = allChanges.length;
-  const { Form, formAction, state, data } = useFetcher();
-  const error = data?.error;
 
-  const isPushing = state !== 'idle' && formAction?.endsWith('create-snapshot-and-push');
-  const isCreatingSnapshot = state !== 'idle' && formAction?.endsWith('create-snapshot');
+  const createSnapshotFetcher = useInsomniaSyncCreateSnapshotActionFetcher();
 
   useEffect(() => {
-    if (allChangesLength === 0 && !error) {
+    if (allChangesLength === 0 && !createSnapshotFetcher.data?.error) {
       onClose();
     }
-  }, [allChangesLength, onClose, error]);
+  }, [allChangesLength, onClose, createSnapshotFetcher.data?.error]);
 
   const [selectedItemId, setSelectedItemId] = useState<string>('');
 
@@ -192,7 +186,25 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
               </div>
               <div className="grid h-full gap-2 divide-x divide-solid divide-[--hl-md] overflow-hidden [grid-template-columns:300px_1fr]">
                 <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-                  <Form method="POST" className="flex flex-col gap-2">
+                  <form
+                    onSubmit={e => {
+                      e.preventDefault();
+                      const submitter = e.nativeEvent instanceof SubmitEvent ? e.nativeEvent.submitter : null;
+                      const formData = new FormData(e.currentTarget, submitter);
+                      const message = formData.get('message')?.toString().trim() || '';
+                      const push = Boolean(formData.get('push') === 'true');
+                      if (message) {
+                        createSnapshotFetcher.submit({
+                          organizationId,
+                          projectId,
+                          workspaceId,
+                          message,
+                          push,
+                        });
+                      }
+                    }}
+                    className="flex flex-col gap-2"
+                  >
                     <TextField className="flex flex-shrink-0 flex-col gap-2">
                       <Label className="font-bold">Message</Label>
                       <TextArea
@@ -207,35 +219,36 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                     <div className="flex flex-shrink-0 items-center justify-stretch gap-2">
                       <Button
                         type="submit"
-                        isDisabled={state !== 'idle'}
+                        isDisabled={createSnapshotFetcher.state !== 'idle'}
                         formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot`}
                         className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                       >
                         <Icon
-                          icon={isCreatingSnapshot ? 'spinner' : 'check'}
-                          className={`w-5 ${isCreatingSnapshot ? 'animate-spin' : ''}`}
+                          icon={createSnapshotFetcher.state !== 'idle' ? 'spinner' : 'check'}
+                          className={`w-5 ${createSnapshotFetcher.state === 'idle' ? '' : 'animate-spin'}`}
                         />{' '}
                         Commit
                       </Button>
                       <Button
                         type="submit"
-                        isDisabled={state !== 'idle'}
-                        formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot-and-push`}
+                        isDisabled={createSnapshotFetcher.state !== 'idle'}
+                        name="push"
+                        value="true"
                         className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                       >
                         <Icon
-                          icon={isPushing ? 'spinner' : 'cloud-arrow-up'}
-                          className={`w-5 ${isPushing ? 'animate-spin' : ''}`}
+                          icon={createSnapshotFetcher.state !== 'idle' ? 'spinner' : 'cloud-arrow-up'}
+                          className={`w-5 ${createSnapshotFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
                         />{' '}
                         Commit and push
                       </Button>
                     </div>
-                    {data?.error && (
+                    {createSnapshotFetcher.data?.error && (
                       <p className="rounded-sm bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))] bg-opacity-20 p-2 text-sm text-[--color-font-danger]">
-                        <Icon icon="exclamation-triangle" /> {data.error}
+                        <Icon icon="exclamation-triangle" /> {createSnapshotFetcher.data.error}
                       </p>
                     )}
-                  </Form>
+                  </form>
 
                   <div className="grid auto-rows-auto gap-2 overflow-y-auto">
                     <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">

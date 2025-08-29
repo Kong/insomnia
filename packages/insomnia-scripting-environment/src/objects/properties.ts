@@ -1,6 +1,5 @@
 import clone from 'clone';
 import equal from 'deep-equal';
-import _ from 'lodash';
 
 import { getInterpolator } from './interpolator';
 
@@ -26,7 +25,7 @@ export class PropertyBase {
   }
 
   static propertyUnprefixMeta(_value: any, key: string) {
-    return _.trimStart(key, '_');
+    return key.startsWith('_') ? key.slice(1) : key;
   }
 
   // TODO: temporarily disable this
@@ -52,29 +51,29 @@ export class PropertyBase {
     const parents: PropertyBase[] = [];
 
     while (queue.length > 0) {
-      const ancester = queue.shift();
-      if (!ancester) {
+      const ancestor = queue.shift();
+      if (!ancestor) {
         continue;
       }
 
       // TODO: check options
-      const cloned = clone(ancester);
+      const cloned = clone(ancestor);
       const keepIterating = iterator(cloned);
       parents.push(cloned);
       if (!keepIterating) {
         break;
       }
 
-      const olderAncester = ancester.parent();
-      if (olderAncester) {
-        queue.push(olderAncester);
+      const olderAncestor = ancestor.parent();
+      if (olderAncestor) {
+        queue.push(olderAncestor);
       }
     }
 
     return parents;
   }
 
-  findInParents(property: string, customizer?: (ancester: PropertyBase) => boolean): PropertyBase | undefined {
+  findInParents(property: string, customizer?: (ancestor: PropertyBase) => boolean): PropertyBase | undefined {
     const currentParent = this.parent();
     if (!currentParent) {
       return;
@@ -83,12 +82,12 @@ export class PropertyBase {
     const queue: PropertyBase[] = [currentParent];
 
     while (queue.length > 0) {
-      const ancester = queue.shift();
-      if (!ancester) {
+      const ancestor = queue.shift();
+      if (!ancestor) {
         continue;
       }
 
-      const cloned = clone(ancester);
+      const cloned = clone(ancestor);
       const hasProperty = Object.keys(cloned.meta()).includes(property);
       if (!hasProperty) {
         // keep traversing until parent has the property
@@ -106,9 +105,9 @@ export class PropertyBase {
         }
       }
 
-      const olderAncester = ancester.parent();
-      if (olderAncester) {
-        queue.push(olderAncester);
+      const olderAncestor = ancestor.parent();
+      if (olderAncestor) {
+        queue.push(olderAncestor);
       }
     }
 
@@ -350,6 +349,9 @@ export class PropertyList<T extends Property> {
     for (let i = this.list.length - 1; i >= 0; i--) {
       const record = this.list[i] as Record<string, any>;
       if (record[indexFieldName] === id) {
+        if ('valueOf' in this.list[i] && typeof this.list[i].valueOf === 'function') {
+          return this.list[i].valueOf();
+        }
         return this.list[i];
       }
     }

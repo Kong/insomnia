@@ -1,3 +1,6 @@
+import type { BinaryToTextEncoding } from 'node:crypto';
+
+import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
 import type { GrpcRequest } from '../models/grpc-request';
@@ -5,15 +8,42 @@ import type { OAuth2Token } from '../models/o-auth-2-token';
 import type { Project } from '../models/project';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
-import type { Response } from '../models/response';
-import type { getBodyBuffer, getLatestForRequest } from '../models/response';
+import type { getBodyBuffer, getLatestForRequestId, Response } from '../models/response';
+import type { get as getSettings } from '../models/settings';
+import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
-import type { PluginStore } from '../plugins/context';
-import type { PromptModalOptions } from '../ui/components/modals/prompt-modal';
+import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
+import type { PluginStore } from '../plugins/context/store';
 import type { extractNunjucksTagFromCoords } from './utils';
 
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
+export type PluginToMainAPIPaths =
+  | 'readFile'
+  | 'nodeOS'
+  | 'decode'
+  | 'encode'
+  | 'request.getById'
+  | 'request.getAncestors'
+  | 'workspace.getById'
+  | 'oAuth2Token.getByRequestId'
+  | 'cookieJar.getOrCreateForParentId'
+  | 'response.getLatestForRequestId'
+  | 'response.getBodyBuffer'
+  | 'pluginData.hasItem'
+  | 'pluginData.setItem'
+  | 'pluginData.getItem'
+  | 'pluginData.removeItem'
+  | 'pluginData.clear'
+  | 'pluginData.all'
+  | 'cloudCredential.getById'
+  | 'cloudCredential.update'
+  | 'settings.get'
+  | 'openInBrowser'
+  | 'network.sendRequest'
+  | 'network.sendRequestWithoutSideEffects'
+  | 'plugin.getBundlePluginTemplateTags'
+  | 'plugin.executeBundlePluginTag';
 
 export type RenderedRequest = Request & {
   cookies: {
@@ -46,10 +76,17 @@ export interface BaseRenderContextOptions {
   extraInfo?: { requestChain: string[] };
   ignoreUndefinedEnvVariable?: boolean;
 }
-export type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project;
+export type RenderContextAncestor =
+  | Request
+  | GrpcRequest
+  | WebSocketRequest
+  | SocketIORequest
+  | RequestGroup
+  | Workspace
+  | Project;
 
 export type RenderContextOptions = BaseRenderContextOptions &
-  Partial<BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest }> & {
+  Partial<BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest | SocketIORequest }> & {
     ancestors?: RenderContextAncestor[];
   };
 
@@ -163,6 +200,24 @@ export interface BaseRenderContext {
   getProjectId: () => string | undefined;
   [key: string]: any;
 }
+
+interface PromptModalOptions {
+  title: string;
+  defaultValue?: string;
+  submitName?: string;
+  selectText?: boolean;
+  upperCase?: boolean;
+  hint?: string;
+  inputType?: string;
+  placeholder?: string;
+  validate?: (arg0: string) => string;
+  label?: string;
+  hints?: string[];
+  onComplete?: (arg0: string) => Promise<void> | void;
+  onHide?: () => void;
+  onDeleteHint?: (arg0?: string) => void;
+}
+
 export interface AppContext {
   alert: (title: string, message?: string) => void;
   dialog: (
@@ -183,7 +238,14 @@ export interface PluginTemplateTagContext {
   app: AppContext;
   store: PluginStore;
   network: {
-    sendRequest(request: Request, extraInfo?: { requestChain: string[] }): Promise<Response>;
+    sendRequest(
+      request: Request,
+      extraInfo?: {
+        requestChain: string[];
+        environmentId?: string;
+      },
+    ): Promise<Response>;
+    sendRequestWithoutSideEffects(options: NodeCurlRequestOptions): Promise<NodeCurlResponseType>;
   };
   context: BaseRenderContext & {
     value: string | number;
@@ -191,18 +253,37 @@ export interface PluginTemplateTagContext {
   meta: { requestId?: string; workspaceId?: string };
   renderPurpose?: RenderPurpose;
   util: {
+    nodeOS: () => Promise<{
+      arch: string;
+      platform: NodeJS.Platform;
+      release: string;
+    }>;
+    readFile: (path: string, encoding?: string) => Promise<string | Buffer>;
+    decode: (buffer: Buffer, encoding?: string) => Promise<string>;
+    encode: (input: string, encoding: BinaryToTextEncoding) => Promise<string>;
     render: (str: string) => string | Promise<string | null>;
+    openInBrowser?: (url: string) => void;
     models: {
       request: {
-        getById: (id: string) => Promise<Request | null>;
+        getById: (id: string) => Promise<Request | undefined>;
         getAncestors: (request: Request) => Promise<(Request | RequestGroup | Workspace)[]>;
       };
-      workspace: { getById: (id: string) => Promise<Workspace | null> };
-      oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | null> };
+      cloudCredential: {
+        getById: (id: string) => Promise<CloudProviderCredential | undefined>;
+        update: (
+          originCredential: CloudProviderCredential,
+          patch: Partial<CloudProviderCredential>,
+        ) => Promise<CloudProviderCredential>;
+      };
+      workspace: { getById: (id: string) => Promise<Workspace | undefined> };
+      oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | undefined> };
       cookieJar: { getOrCreateForParentId: (parentId: string) => Promise<CookieJar> };
       response: {
-        getLatestForRequestId: typeof getLatestForRequest;
+        getLatestForRequestId: typeof getLatestForRequestId;
         getBodyBuffer: typeof getBodyBuffer;
+      };
+      settings: {
+        get: typeof getSettings;
       };
     };
   };
@@ -229,6 +310,12 @@ export interface PluginTemplateTag {
   actions?: NunjucksActionTag[];
   run: (context: PluginTemplateTagContext, ...arg: any[]) => Promise<any> | any;
   deprecated?: boolean;
-  validate?: (value: any) => string | null;
+  validate?: (value: any) => string | null | boolean;
   priority?: number;
+}
+export interface RenderInputType {
+  input: string;
+  context: BaseRenderContext;
+  path: string;
+  ignoreUndefinedEnvVariable: boolean;
 }

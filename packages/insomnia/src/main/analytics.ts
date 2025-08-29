@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 
 import { Analytics } from '@segment/analytics-node';
+import * as Sentry from '@sentry/electron/main';
 import { net } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -82,7 +83,10 @@ export async function trackSegmentEvent(event: SegmentEvent, properties?: Record
       analytics.track(
         {
           event,
-          properties,
+          properties: {
+            ...properties,
+            platform: 'app',
+          },
           context,
           anonymousId,
           userId: userSession?.hashedAccountId || '',
@@ -95,6 +99,18 @@ export async function trackSegmentEvent(event: SegmentEvent, properties?: Record
       );
     } catch (error: unknown) {
       console.warn('[analytics] Unexpected error while sending segment event', error);
+    } finally {
+      if (!userSession?.hashedAccountId && [SegmentEvent.unitTestRun, SegmentEvent.unitTestRunAll].includes(event)) {
+        Sentry.captureException(`Run tests by anonymous`, {
+          tags: {
+            source: 'main/analytics',
+          },
+          extra: {
+            organizationId: properties?.organizationId || '',
+            projectId: properties?.projectId || '',
+          },
+        });
+      }
     }
   }
 }

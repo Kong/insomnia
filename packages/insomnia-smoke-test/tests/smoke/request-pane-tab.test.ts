@@ -4,8 +4,6 @@ test('Request tabs', async ({ page }) => {
   // Create new collection
   await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
-  await page.getByLabel('Create in collection').click();
-  await page.getByRole('menuitemradio', { name: 'HTTP Request' }).press('Enter');
   await page.getByRole('tab', { name: 'Body' }).click();
   await page.getByRole('button', { name: 'Body' }).click();
   await page.getByRole('option', { name: 'JSON' }).click();

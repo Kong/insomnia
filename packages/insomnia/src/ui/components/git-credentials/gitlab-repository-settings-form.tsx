@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Input, Label, TextField } from 'react-aria-components';
-import { useFetcher } from 'react-router';
+import { Button, FieldError, Form, Input, Label, TextField } from 'react-aria-components';
 
-import type { GitCredentials } from '../../../models/git-credentials';
-import type { GitRepository } from '../../../models/git-repository';
-import { Icon } from '../icon';
-import { showAlert } from '../modals';
+import type { GitCredentials } from '~/models/git-credentials';
+import type { GitRepository } from '~/models/git-repository';
+import { useGitLabCredentialsFetcher } from '~/routes/git-credentials.gitlab';
+import { useGitLabCompleteSignInFetcher } from '~/routes/git-credentials.gitlab.complete-sign-in';
+import { useInitSignInToGitLabFetcher } from '~/routes/git-credentials.gitlab.init-sign-in';
+import { useGitLabSignOutFetcher } from '~/routes/git-credentials.gitlab.sign-out';
+import { PromptButton } from '~/ui/components/base/prompt-button';
+import { Icon } from '~/ui/components/icon';
+
+import { GitRemoteBranchSelect } from './git-remote-branch-select';
 
 interface Props {
   uri?: string;
@@ -14,11 +19,11 @@ interface Props {
 
 export const GitLabRepositorySetupFormGroup = (props: Props) => {
   const { onSubmit, uri } = props;
-  const gitlabTokenLoader = useFetcher<GitCredentials>();
+  const gitlabTokenLoader = useGitLabCredentialsFetcher();
 
   useEffect(() => {
     if (!gitlabTokenLoader.data && gitlabTokenLoader.state === 'idle') {
-      gitlabTokenLoader.load('/git-credentials/gitlab');
+      gitlabTokenLoader.load();
     }
   }, [gitlabTokenLoader]);
 
@@ -67,11 +72,11 @@ interface GitLabRepositoryFormProps {
 
 const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFormProps) => {
   const [error, setError] = useState('');
-
-  const signOutFetcher = useFetcher();
+  const [gitlabUri, setGitlabUri] = useState(uri || '');
+  const signOutFetcher = useGitLabSignOutFetcher();
 
   return (
-    <form
+    <Form
       id="gitlab"
       className="flex flex-col gap-6"
       onSubmit={event => {
@@ -98,33 +103,43 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
             <span className="text-sm text-[--hl]">{credentials.author.email || 'Signed in'}</span>
           </div>
         </div>
-        <Button
-          type="button"
-          onPress={() => {
-            showAlert({
-              title: 'Sign out of GitLab',
-              message:
-                'Are you sure you want to sign out? You will need to re-authenticate with GitLab to use this feature.',
-              okLabel: 'Sign out',
-              onConfirm: () => {
-                signOutFetcher.submit({}, { action: '/git-credentials/gitlab/sign-out', method: 'POST' });
-              },
-            });
+        <PromptButton
+          onClick={() => {
+            signOutFetcher.submit();
           }}
         >
-          Sign out
-        </Button>
+          Disconnect
+        </PromptButton>
       </div>
       <TextField autoFocus name="uri" className="flex w-full flex-col gap-1 px-0.5" isRequired>
         <Label className="text-start text-sm font-semibold">Git URI (https, including .git suffix)</Label>
         <Input
           type="url"
+          pattern="https?://.*\.git"
           defaultValue={uri}
+          onChange={e => setGitlabUri(e.currentTarget.value)}
           disabled={Boolean(uri)}
-          placeholder="https://github.com/org/repo.git"
+          placeholder="https://gitlab.com/org/repo.git"
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
+        <FieldError className="text-xs text-[--color-danger]">
+          {({ validationDetails, defaultChildren }) =>
+            validationDetails.patternMismatch
+              ? 'Please ensure the URL is valid and ends with a .git suffix.'
+              : defaultChildren
+          }
+        </FieldError>
       </TextField>
+      <GitRemoteBranchSelect
+        credentials={{
+          oauth2format: 'gitlab',
+          token: '',
+          password: '',
+          username: '',
+        }}
+        url={gitlabUri || ''}
+        isDisabled={Boolean(uri)}
+      />
       {error && (
         <p className="notice error margin-bottom-sm">
           <button className="pull-right icon" onClick={() => setError('')}>
@@ -133,15 +148,15 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
           {error}
         </p>
       )}
-    </form>
+    </Form>
   );
 };
 
 const GitLabSignInForm = () => {
   const [error, setError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const initSignInFetcher = useFetcher();
-  const completeSignInFetcher = useFetcher();
+  const initSignInFetcher = useInitSignInToGitLabFetcher();
+  const completeSignInFetcher = useGitLabCompleteSignInFetcher();
 
   return (
     <div className="flex flex-col items-center justify-center border border-solid border-[--hl-sm] p-4">
@@ -151,7 +166,7 @@ const GitLabSignInForm = () => {
         isDisabled={isAuthenticating}
         onPress={() => {
           setIsAuthenticating(true);
-          initSignInFetcher.submit({}, { action: '/git-credentials/gitlab/init-sign-in', method: 'POST' });
+          initSignInFetcher.submit();
         }}
       >
         <Icon icon={['fab', 'gitlab']} />
@@ -182,10 +197,7 @@ const GitLabSignInForm = () => {
                 return;
               }
 
-              completeSignInFetcher.submit(
-                { code, state },
-                { action: '/git-credentials/gitlab/complete-sign-in', method: 'POST', encType: 'application/json' },
-              );
+              completeSignInFetcher.submit({ code, state });
             }
           }}
         >

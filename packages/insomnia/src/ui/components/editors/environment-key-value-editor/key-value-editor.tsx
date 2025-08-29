@@ -13,6 +13,8 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 
+import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+
 import { generateId } from '../../../../common/misc';
 import {
   decryptSecretValue,
@@ -22,7 +24,6 @@ import {
 } from '../../../../models/environment';
 import { base64decode } from '../../../../utils/vault';
 import { PromptButton } from '../../base/prompt-button';
-import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { Icon } from '../../icon';
 import { showModal } from '../../modals';
 import { AskModal } from '../../modals/ask-modal';
@@ -130,7 +131,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
     const changedItemIdx = kvPairs.findIndex(p => p.id === id);
     if (changedItemIdx !== -1) {
       const changedItem = kvPairs[changedItemIdx];
-      // enable item since user modifies the item unless manual disbale it
+      // enable item since user modifies the item unless manual disable it
       changedItem['enabled'] = true;
       changedItem[changedPropertyName] = newValue;
       // update value to emptfy object json string when switch to json type and current value is empty string
@@ -268,7 +269,6 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
                   modalRef.show({
                     submitName: 'Done',
                     title: `Edit ${name} value`,
-                    enableRender: true,
                     defaultValue: value.toString(),
                     mode: 'application/json',
                     onChange: (value: string) => {

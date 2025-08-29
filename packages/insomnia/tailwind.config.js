@@ -5,6 +5,8 @@ module.exports = {
     extend: {
       animation: {
         'text-slide-4': 'text-slide-4 7s cubic-bezier(0.83, 0, 0.17, 1) infinite',
+        'up-loop': 'up-loop 1s linear infinite',
+        'down-loop': 'down-loop 1s linear infinite',
       },
       keyframes: {
         'text-slide-4': {
@@ -23,6 +25,18 @@ module.exports = {
           '100%': {
             transform: 'translateY(-80%)',
           },
+        },
+        'up-loop': {
+          '0%': { transform: 'translateY(10px)', opacity: '0' },
+          '20%': { opacity: '1' },
+          '80%': { opacity: '1' },
+          '100%': { transform: 'translateY(-10px)', opacity: '0' },
+        },
+        'down-loop': {
+          '0%': { transform: 'translateY(-10px)', opacity: '0' },
+          '20%': { opacity: '1' },
+          '80%': { opacity: '1' },
+          '100%': { transform: 'translateY(10px)', opacity: '0' },
         },
       },
     },

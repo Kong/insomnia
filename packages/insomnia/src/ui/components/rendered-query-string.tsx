@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useState } from 'react';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -10,15 +10,17 @@ import {
   type RequestParameter,
 } from '../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../models/request-group';
+import type { SocketIORequest } from '../../models/socket-io-request';
 import type { WebSocketRequest } from '../../models/websocket-request';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../network/authentication';
 import { getOrInheritAuthentication } from '../../network/network';
+import { RenderError } from '../../templating/render-error';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../utils/url/querystring';
 import { useNunjucks } from '../context/nunjucks/use-nunjucks';
 import { CopyButton } from './base/copy-button';
 
 interface Props {
-  request: Request | WebSocketRequest;
+  request: Request | WebSocketRequest | SocketIORequest;
 }
 
 const defaultPreview = '...';
@@ -30,14 +32,16 @@ const addApiKeyToParams = (requestAuth: RequestAuthentication) => {
     : [];
 };
 
-async function getQueryParamsFromAuth(request: Request | WebSocketRequest): Promise<RequestParameter[]> {
+async function getQueryParamsFromAuth(
+  request: Request | WebSocketRequest | SocketIORequest,
+): Promise<RequestParameter[]> {
   const requestAuth = getAuthObjectOrNull(request.authentication);
   const hasAuthSetOnRequest = requestAuth !== null && isAuthEnabled(request.authentication);
   if (hasAuthSetOnRequest) {
     return addApiKeyToParams(requestAuth);
   }
 
-  const ancestors = await db.withAncestors<Request | WebSocketRequest | RequestGroup>(request, [
+  const ancestors = await db.withAncestors<Request | WebSocketRequest | SocketIORequest | RequestGroup>(request, [
     models.requestGroup.type,
   ]);
   const requestGroups = ancestors.filter(isRequestGroup);
@@ -49,8 +53,11 @@ async function getQueryParamsFromAuth(request: Request | WebSocketRequest): Prom
   return addApiKeyToParams(closestAuth);
 }
 
+const MAX_URL_LENGTH = 10 * 1024;
+
 export const RenderedQueryString: FC<Props> = ({ request }) => {
   const [previewString, setPreviewString] = useState(defaultPreview);
+  const [tooLong, setTooLong] = useState(false);
   const { handleRender } = useNunjucks();
 
   useEffect(() => {
@@ -90,12 +97,23 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
 
         const mergedParams = [...parameters, ...renderedAuthQueryParams];
         const qs = buildQueryStringFromParams(mergedParams, false, { encodeParams: request.settingEncodeUrl });
-        const fullUrl = joinUrlAndQueryString(url, qs);
+        let fullUrl = joinUrlAndQueryString(url, qs);
+        if (fullUrl.length > MAX_URL_LENGTH) {
+          setTooLong(true);
+          fullUrl = fullUrl.slice(0, MAX_URL_LENGTH);
+        } else {
+          setTooLong(false);
+        }
         const encoded = smartEncodeUrl(fullUrl, request.settingEncodeUrl, { strictNullHandling: true });
         setPreviewString(encoded === '' ? defaultPreview : encoded);
       } catch (error: unknown) {
         console.warn(error);
-        setPreviewString(defaultPreview);
+        setTooLong(false);
+        if (typeof error === 'object' && error instanceof RenderError) {
+          setPreviewString(error.message);
+        } else {
+          setPreviewString(defaultPreview);
+        }
       }
     };
     fn();
@@ -109,6 +127,15 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
     request,
   ]);
 
+  const showTooLongWarning = useCallback(async () => {
+    if (tooLong) {
+      window.showAlert({
+        title: 'URL Too Long',
+        message: `Your URL is quite long, so only the first ${MAX_URL_LENGTH} characters were copied.`,
+      });
+    }
+  }, [tooLong]);
+
   const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
 
   return (
@@ -121,6 +148,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         disabled={previewString === defaultPreview}
         title="Copy URL"
         confirmMessage=""
+        onClick={showTooLongWarning}
         className="sticky top-0 self-start"
       >
         <i className="fa fa-copy" />

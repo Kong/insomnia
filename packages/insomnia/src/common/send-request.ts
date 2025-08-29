@@ -1,29 +1,26 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { type BaseModel, types as modelTypes } from '../models';
+import { type BaseModel } from '../models';
 import * as models from '../models';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
 import { getBodyBuffer } from '../models/response';
 import type { Settings } from '../models/settings';
-import { isWorkspace, type Workspace } from '../models/workspace';
 import {
+  fetchRequestData,
   responseTransform,
   sendCurlAndWriteTimeline,
   tryToExecuteAfterResponseScript,
   tryToExecutePreRequestScript,
   tryToInterpolateRequest,
 } from '../network/network';
-import { defaultSendActionRuntime } from '../ui/routes/request';
-import { invariant } from '../utils/invariant';
+import { defaultSendActionRuntime } from '../network/network';
 import { database } from './database';
-import { generateId } from './misc';
+import { isFsAccessingAllowed } from './validators';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
-type SettingsOverride = Pick<Settings, 'validateSSL'>;
+type SettingsOverride = Pick<Settings, 'validateSSL' | 'dataFolders'>;
 const wrapAroundIterationOverIterationData = (
   list?: UserUploadEnvironment[],
   currentIteration?: number,
@@ -47,12 +44,10 @@ export async function getSendRequestCallbackMemDb(
 ) {
   // Initialize the DB in-memory and fill it with data if we're given one
   await database.init(
-    modelTypes(),
     {
       inMemoryOnly: true,
     },
     true,
-    () => {},
   );
   const docs: BaseModel[] = [];
 
@@ -64,83 +59,16 @@ export async function getSendRequestCallbackMemDb(
       docs.push(doc);
     }
   }
-
+  // init database with the provided documents
+  // TODO: this could be done with database.init instead
   await database.batchModifyDocs({
     upsert: docs,
     remove: [],
   });
-  // This is separate to the fetchRequestData because it overrides environmentId
-  const fetchInsoRequestData = async (requestId: string, overrideEnvironmentId: string) => {
-    const request = await models.request.getById(requestId);
-    invariant(request, 'failed to find request');
-    const ancestors = await database.withAncestors<Request | RequestGroup | Workspace>(request, [
-      models.request.type,
-      models.requestGroup.type,
-      models.workspace.type,
-    ]);
-
-    const workspaceDoc = ancestors.find(isWorkspace);
-    const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
-    const workspace = await models.workspace.getById(workspaceId);
-    invariant(workspace, 'failed to find workspace');
-
-    const settings = await models.settings.get();
-    invariant(settings, 'failed to create settings');
-    const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
-    const caCert = await models.caCertificate.findByParentId(workspaceId);
-
-    const environment = await models.environment.getById(overrideEnvironmentId);
-    invariant(environment, 'failed to find environment ' + overrideEnvironmentId);
-    const activeEnvironmentId = overrideEnvironmentId;
-
-    const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
-    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-
-    const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-    let activeGlobalEnvironment: Environment | undefined = undefined;
-    let activeGlobalBaseEnvironment: Environment | undefined = undefined;
-    if (workspaceMeta?.activeGlobalEnvironmentId) {
-      activeGlobalEnvironment =
-        (await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId)) || undefined;
-      const activeGlobalEnvironmentParentId = activeGlobalEnvironment?.parentId || '';
-      if (activeGlobalEnvironmentParentId.startsWith('wrk_')) {
-        // activeGlobalEnvironment is a base global environment
-        activeGlobalBaseEnvironment = activeGlobalEnvironment;
-      } else if (activeGlobalEnvironmentParentId.startsWith('env_')) {
-        // activeGlobalEnvironment is a sub global environment
-        activeGlobalBaseEnvironment = (await models.environment.getById(activeGlobalEnvironmentParentId)) || undefined;
-      }
-    }
-
-    const responseId = generateId('res');
-    const responsesDir = path.join(
-      process.env['INSOMNIA_DATA_PATH'] ||
-        (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
-      'responses',
-    );
-    const timelinePath = path.join(responsesDir, responseId + '.timeline');
-
-    return {
-      request,
-      settings,
-      clientCertificates,
-      caCert,
-      environment,
-      baseEnvironment,
-      cookieJar,
-      activeGlobalEnvironment,
-      activeGlobalBaseEnvironment,
-      activeEnvironmentId,
-      workspace,
-      timelinePath,
-      responseId,
-      ancestors,
-    };
-  };
 
   // Return callback helper to send requests
   return async function sendRequest(requestId: string, iteration?: number) {
-    const requestData = await fetchInsoRequestData(requestId, environmentId);
+    const requestData = await fetchRequestData(requestId, environmentId);
     const getCurrentRowOfIterationData = wrapAroundIterationOverIterationData(iterationData, iteration);
     await fs.mkdir(path.dirname(requestData.timelinePath), { recursive: true });
 
@@ -168,6 +96,14 @@ export async function getSendRequestCallbackMemDb(
     });
     // skip plugins
     const renderedRequest = renderedResult.request;
+
+    isFsAccessingAllowed(
+      renderedRequest,
+      mutatedContext.settings,
+      mutatedContext.clientCertificates,
+      requestData.caCert,
+      true,
+    );
 
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,

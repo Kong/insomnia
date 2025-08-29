@@ -4,6 +4,7 @@ import React, { type FC, useRef } from 'react';
 import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
 
 import type { CurlEvent } from '../../../main/network/curl';
+import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
 import { type IconId, SvgIcon } from '../svg-icon';
 
@@ -13,12 +14,16 @@ const Timestamp: FC<{ time: Date | number }> = ({ time }) => {
 };
 
 interface Props {
-  events: (WebSocketEvent | CurlEvent)[];
+  events: (WebSocketEvent | CurlEvent | SocketIOEvent)[];
   selectionId?: string;
-  onSelect: (event: WebSocketEvent | CurlEvent) => void;
+  onSelect: (event: WebSocketEvent | CurlEvent | SocketIOEvent) => void;
 }
 
-function getIcon(event: WebSocketEvent | CurlEvent): IconId {
+const isSocketIOEvent = (event: WebSocketEvent | CurlEvent | SocketIOEvent): event is SocketIOEvent => {
+  return 'eventName' in event && typeof event.eventName === 'string';
+};
+
+function getIcon(event: WebSocketEvent | CurlEvent | SocketIOEvent): IconId {
   switch (event.type) {
     case 'message': {
       if (event.direction === 'OUTGOING') {
@@ -35,15 +40,37 @@ function getIcon(event: WebSocketEvent | CurlEvent): IconId {
     case 'error': {
       return 'error';
     }
+    case 'addEvent': {
+      return 'info';
+    }
+    case 'removeEvent': {
+      return 'info';
+    }
+    case 'info': {
+      return 'info';
+    }
     default: {
       return 'bug';
     }
   }
 }
 
-const getMessage = (event: WebSocketEvent | CurlEvent): string => {
+const getMessage = (event: WebSocketEvent | CurlEvent | SocketIOEvent): string | JSX.Element => {
   switch (event.type) {
     case 'message': {
+      if (isSocketIOEvent(event)) {
+        return (
+          <div className="flex items-center">
+            <span className="bg-success mr-2 rounded-sm px-2 py-1">{event.eventName}</span>
+            <span className="flex-shrink">{event?.data?.[0]?.toString()}</span>
+            {event?.data?.length > 1 && (
+              <span className="bg-info ml-2 rounded-md px-2 py-1">
+                +{event.data.length - 1} {event.data.length - 1 > 1 ? 'Args' : 'Arg'}
+              </span>
+            )}
+          </div>
+        );
+      }
       if ('data' in event && typeof event.data === 'object') {
         return 'Binary data';
       }
@@ -56,6 +83,15 @@ const getMessage = (event: WebSocketEvent | CurlEvent): string => {
       return 'Disconnected';
     }
     case 'error': {
+      return event.message;
+    }
+    case 'addEvent': {
+      return `Listening to event: ${event.eventName}`;
+    }
+    case 'removeEvent': {
+      return `Stopped listening to event: ${event.eventName}`;
+    }
+    case 'info': {
       return event.message;
     }
     default: {

@@ -403,6 +403,17 @@ test.describe('pre-request features tests', () => {
     const responsePane = page.getByTestId('response-pane');
     const fixturePath = getFixturePath('certificates');
 
+    await page.getByTestId('settings-button').click();
+    await page.getByTestId('dataFolders').fill(getFixturePath('fake.pfx'));
+    await page.getByTestId('dataFolders-btn').click();
+    await expect.soft(page.getByText('fake.pfx')).toBeVisible();
+
+    await page.getByTestId('dataFolders').fill('invalid');
+    await page.getByTestId('dataFolders-btn').click();
+    await expect.soft(page.getByText('invalid')).toBeVisible();
+
+    await page.locator('.app').press('Escape');
+
     // update proxy configuration
     await page.locator('text=Add Certificates').click();
     await page.locator('text=Add client certificate').click();
@@ -432,6 +443,12 @@ test.describe('pre-request features tests', () => {
   test('insomnia.request / update clientCertificate', async ({ page }) => {
     const responsePane = page.getByTestId('response-pane');
     await page.getByLabel('Request Collection').getByTestId('test certificate manipulation').press('Enter');
+
+    await page.getByTestId('settings-button').click();
+    await page.getByTestId('dataFolders').fill('invalid');
+    await page.getByTestId('dataFolders-btn').click();
+    await expect.soft(page.getByText('invalid')).toBeVisible();
+    await page.locator('.app').press('Escape');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -484,11 +501,11 @@ test.describe('pre-request features tests', () => {
       __fromScript1: 'baseEnvironment',
       __fromScript2: 'collection',
       __fromScript: 'environment',
-      examplehost: 'https://mock.insomnia.rest',
+      examplehost: 'http://127.0.0.1:4010/echo',
       a: {
         b: {
           c: {
-            url: 'https://mock.insomnia.rest',
+            url: 'http://127.0.0.1:4010/echo',
           },
         },
       },
@@ -532,6 +549,7 @@ test.describe('pre-request features tests', () => {
     expect.soft(globalBaseBodyJson).toEqual({
       // if select global base environment, both globals and baseGlobals set method will point to global base environment
       __env_source: 'base',
+      __fromGlobals: 'selectedGlobal',
       __fromBaseGlobals: 'selectedBaseGlobal',
     });
 
@@ -551,22 +569,13 @@ test.describe('pre-request features tests', () => {
     await page.getByLabel('Manage Environments').click();
     await page.getByLabel('Manage global environment').click();
     await page.getByLabel('Environment name').getByText('Sub Script Env').first().click();
-    let globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
-    let globalSubRows = await globalSubEditor.allInnerTexts();
-    let globalSubBodyJson = JSON.parse(globalSubRows.join(' '));
+    const globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
+    const globalSubRows = await globalSubEditor.allInnerTexts();
+    const globalSubBodyJson = JSON.parse(globalSubRows.join(' '));
     expect.soft(globalSubBodyJson).toEqual({
       // if select global sub environment, globals will point to the selected sub environment
       __env_source: 'sub',
       __fromGlobals: 'selectedGlobal',
-    });
-    await page.getByLabel('Environment name').getByText('Base Script Env').click();
-    globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
-    globalSubRows = await globalSubEditor.allInnerTexts();
-    globalSubBodyJson = JSON.parse(globalSubRows.join(' '));
-    expect.soft(globalSubBodyJson).toEqual({
-      // if select global sub environment, baseGlobals will point to the base environment of the selected one
-      __env_source: 'base',
-      __fromBaseGlobals: 'selectedBaseGlobal',
     });
   });
 

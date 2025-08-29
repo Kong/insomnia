@@ -10,7 +10,8 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import { v4 as uuidV4 } from 'uuid';
 import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSocket } from 'ws';
 
-import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
+import { database } from '~/common/database';
+
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { webSocketRequest } from '../../models';
@@ -157,12 +158,12 @@ const openWebSocketConnection = async (
     let url = options.url;
     let authCookie = null;
     if (!options.authentication.disabled) {
-      if (options.authentication.type === AUTH_BASIC) {
+      if (options.authentication.type === 'basic') {
         const { username, password, useISO88591 } = options.authentication;
         const encoding = useISO88591 ? 'latin1' : 'utf8';
         headers.push(getBasicAuthHeader(username, password, encoding));
       }
-      if (options.authentication.type === AUTH_API_KEY) {
+      if (options.authentication.type === 'apikey') {
         const { key = '', value = '', addTo } = options.authentication; // Ensure key is not undefined
         if (addTo === HEADER) {
           headers.push({ name: key, value: value });
@@ -177,7 +178,7 @@ const openWebSocketConnection = async (
           url = joinUrlAndQueryString(options.url, qs);
         }
       }
-      if (options.authentication.type === AUTH_BEARER && options.authentication.token) {
+      if (options.authentication.type === 'bearer' && options.authentication.token) {
         const { token, prefix } = options.authentication;
         headers.push(getBearerAuthHeader(token, prefix));
       }
@@ -445,7 +446,7 @@ const openWebSocketConnection = async (
   }
 };
 
-// graphql ws protocl message handler. Refer: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md
+// graphql ws protocol message handler. Refer: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md
 const handleGraphQLWsMessage = (data: MessageEvent['data'], request: Request) => {
   const graphqlServerData = parseMessage(data);
   const graphqlServerDataType = graphqlServerData.type;
@@ -467,7 +468,7 @@ const handleGraphQLWsMessage = (data: MessageEvent['data'], request: Request) =>
     });
     sendWebSocketEvent({ payload, requestId });
   } else if (graphqlServerDataType === MessageType.Error || graphqlServerDataType === MessageType.Complete) {
-    // close connection if server responsed with error or complete
+    // close connection if server responded with error or complete
     closeWebSocketConnection({ requestId });
   }
 };
@@ -535,7 +536,13 @@ const sendPayload = async (ws: WebSocket, options: { payload: string; requestId:
   };
 
   eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
-  const response = await models.webSocketResponse.getLatestByParentId(options.requestId);
+  const response = await database.findOne<WebSocketResponse>(
+    'WebSocketResponse',
+    {
+      parentId: options.requestId,
+    },
+    { modified: -1 },
+  );
   if (!response) {
     console.error('something went wrong');
     return;

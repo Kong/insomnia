@@ -11,7 +11,8 @@ import {
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 import { isProject } from '../models/project';
 import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
-import { isRequestGroup } from '../models/request-group';
+import { isRequestGroup, type RequestGroup } from '../models/request-group';
+import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
@@ -23,6 +24,7 @@ import type {
   RenderContextAncestor,
   RenderContextOptions,
   RenderedRequest,
+  RenderInputType,
 } from '../templating/types';
 import * as templatingUtils from '../templating/utils';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
@@ -170,10 +172,14 @@ export async function buildRenderContext({
     finalRenderContext = await renderSubContext(envObject, finalRenderContext);
   }
 
-  finalRenderContext[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(
+  const vaultEnvironmentData = await maskOrDecryptVaultDataIfNecessary(
     finalRenderContext[vaultEnvironmentPath],
     renderContext?.getPurpose(),
   );
+  if (vaultEnvironmentData) {
+    // avoid add undefined data to render context
+    finalRenderContext[vaultEnvironmentPath] = vaultEnvironmentData;
+  }
   // Merge all vault environments under vaultEnvironmentPath to vaultEnvironmentRuntimePath which is more human readable.
   // This will also keep all legacy environment variables defined under the vaultEnvironmentRuntimePath.
   if (finalRenderContext[vaultEnvironmentPath]) {
@@ -223,12 +229,7 @@ export async function buildRenderContext({
 
   return finalRenderContext;
 }
-const renderInThisProcess = async (input: {
-  input: string;
-  context: BaseRenderContext;
-  path: string;
-  ignoreUndefinedEnvVariable: boolean;
-}) => {
+const renderInThisProcess = async (input: RenderInputType) => {
   return templating.render(input.input, {
     context: input.context,
     path: input.path,
@@ -477,6 +478,8 @@ export async function getRenderContext({
     getKeySource(transientVariables.data || {}, inKey, transientVariables.name || 'scriptLocalVariables');
   }
 
+  const settings = await models.settings.get();
+
   // Add meta data helper function
   const baseContext: BaseRenderContext = {
     getMeta: () => ({
@@ -492,6 +495,7 @@ export async function getRenderContext({
     getGlobalEnvironmentId: () => subGlobalEnvironment?._id || rootGlobalEnvironment?._id,
     // It is possible for a project to not exist because this code path can be reached via Inso which has no concept of a project.
     getProjectId: () => project?._id,
+    getSettings: () => ({ dataFolders: settings.dataFolders }),
   };
 
   // Generate the context we need to render
@@ -700,9 +704,9 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): st
 }
 
 export async function getRenderContextAncestors(
-  base?: Request | GrpcRequest | WebSocketRequest | Workspace,
+  base?: Request | GrpcRequest | WebSocketRequest | SocketIORequest | RequestGroup | Workspace,
 ): Promise<RenderContextAncestor[]> {
-  return await db.withAncestors<RenderContextAncestor>(base || null, [
+  return await db.withAncestors<RenderContextAncestor>(base, [
     models.request.type,
     models.grpcRequest.type,
     models.webSocketRequest.type,

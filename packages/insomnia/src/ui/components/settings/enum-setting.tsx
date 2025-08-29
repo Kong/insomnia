@@ -1,8 +1,9 @@
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
+import { useRootLoaderData } from '~/root';
+
 import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
 import { HelpTooltip } from '../help-tooltip';
 interface Props<T> {
   help?: ReactNode;
@@ -20,7 +21,7 @@ export const EnumSetting = <T extends string | number>({
   setting,
   values,
 }: PropsWithChildren<Props<T>>) => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
 
   const patchSettings = useSettingsPatcher();
 

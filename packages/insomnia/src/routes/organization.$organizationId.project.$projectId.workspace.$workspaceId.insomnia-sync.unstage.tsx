@@ -1,0 +1,74 @@
+import { useCallback } from 'react';
+import { href, useFetcher } from 'react-router';
+
+import { isNotNullOrUndefined } from '~/common/misc';
+import { VCSInstance } from '~/sync/vcs/insomnia-sync';
+import { getSyncItems } from '~/ui/sync-utils';
+import { invariant } from '~/utils/invariant';
+
+import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.unstage';
+
+export async function clientAction({ request, params }: Route.ClientActionArgs) {
+  const { workspaceId } = params;
+
+  const data = await request.json();
+  const keys = data.keys;
+  invariant(Array.isArray(keys), 'Keys are required');
+  const { syncItems } = await getSyncItems({ workspaceId });
+  const vcs = VCSInstance();
+  const status = await vcs.status(syncItems);
+  // Staging needs to happen since it creates blobs for the files
+  const itemsToUnstage = keys
+    .map(key => {
+      if (typeof key === 'string') {
+        const item = status.stage[key];
+        return item;
+      }
+
+      return null;
+    })
+    .filter(isNotNullOrUndefined);
+
+  await vcs.unstage(itemsToUnstage);
+
+  return null;
+}
+
+export function useInsomniaSyncUnstageActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
+
+  const submit = useCallback(
+    ({
+      organizationId,
+      projectId,
+      workspaceId,
+      keys,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      keys: string[];
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/unstage',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+        },
+      );
+
+      return fetcherSubmit(JSON.stringify({ keys }), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
+
+  return {
+    ...fetcherRest,
+    submit,
+  };
+}

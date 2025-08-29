@@ -1,20 +1,9 @@
 import React, { type FC, type ReactNode } from 'react';
 import { Toolbar } from 'react-aria-components';
 
-import {
-  AUTH_API_KEY,
-  AUTH_ASAP,
-  AUTH_AWS_IAM,
-  AUTH_BASIC,
-  AUTH_BEARER,
-  AUTH_DIGEST,
-  AUTH_HAWK,
-  AUTH_NETRC,
-  AUTH_NTLM,
-  AUTH_OAUTH_1,
-  AUTH_OAUTH_2,
-} from '../../../../common/constants';
-import type { AuthTypes, RequestAuthentication } from '../../../../models/request';
+import type { AuthTypes } from '~/common/constants';
+
+import type { RequestAuthentication } from '../../../../models/request';
 import { getAuthObjectOrNull } from '../../../../network/authentication';
 import { AuthDropdown } from '../../dropdowns/auth-dropdown';
 import { ApiKeyAuth } from './api-key-auth';
@@ -37,27 +26,27 @@ export const AuthWrapper: FC<{
   const type = getAuthObjectOrNull(authentication)?.type || '';
   let authBody: ReactNode = null;
 
-  if (type === AUTH_BASIC) {
+  if (type === 'basic') {
     authBody = <BasicAuth disabled={disabled} />;
-  } else if (type === AUTH_API_KEY) {
+  } else if (type === 'apikey') {
     authBody = <ApiKeyAuth disabled={disabled} />;
-  } else if (type === AUTH_OAUTH_2) {
+  } else if (type === 'oauth2') {
     authBody = <OAuth2Auth />;
-  } else if (type === AUTH_HAWK) {
+  } else if (type === 'hawk') {
     authBody = <HawkAuth />;
-  } else if (type === AUTH_OAUTH_1) {
+  } else if (type === 'oauth1') {
     authBody = <OAuth1Auth />;
-  } else if (type === AUTH_DIGEST) {
+  } else if (type === 'digest') {
     authBody = <DigestAuth disabled={disabled} />;
-  } else if (type === AUTH_NTLM) {
+  } else if (type === 'ntlm') {
     authBody = <NTLMAuth />;
-  } else if (type === AUTH_BEARER) {
+  } else if (type === 'bearer') {
     authBody = <BearerAuth disabled={disabled} />;
-  } else if (type === AUTH_AWS_IAM) {
+  } else if (type === 'iam') {
     authBody = <AWSAuth />;
-  } else if (type === AUTH_NETRC) {
+  } else if (type === 'netrc') {
     authBody = <NetrcAuth />;
-  } else if (type === AUTH_ASAP) {
+  } else if (type === 'asap') {
     authBody = <AsapAuth />;
   } else {
     authBody = (

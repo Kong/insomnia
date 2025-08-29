@@ -11,11 +11,18 @@ import {
   ModalOverlay,
   TextField,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { href, useParams } from 'react-router';
+
+import { useInsomniaSyncBranchCheckoutActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.checkout';
+import { useInsomniaSyncBranchCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.create';
+import { useInsomniaSyncBranchDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.delete';
+import { useInsomniaSyncBranchMergeActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.merge';
+import { useInsomniaSyncFetchActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.fetch';
 
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
-import { showAlert } from '.';
+import { showModal } from '.';
+import { AlertModal } from './alert-modal';
 
 const LocalBranchItem = ({
   branch,
@@ -30,9 +37,9 @@ const LocalBranchItem = ({
   projectId: string;
   workspaceId: string;
 }) => {
-  const checkoutBranchFetcher = useFetcher<{} | { error: string }>();
-  const mergeBranchFetcher = useFetcher();
-  const deleteBranchFetcher = useFetcher();
+  const checkoutBranchFetcher = useInsomniaSyncBranchCheckoutActionFetcher();
+  const mergeBranchFetcher = useInsomniaSyncBranchMergeActionFetcher();
+  const deleteBranchFetcher = useInsomniaSyncBranchDeleteActionFetcher();
 
   useEffect(() => {
     if (
@@ -43,7 +50,7 @@ const LocalBranchItem = ({
     ) {
       const error: string =
         checkoutBranchFetcher.data.error || 'An unexpected error occurred while checking out the branch.';
-      showAlert({
+      showModal(AlertModal, {
         title: 'Error while checking out branch.',
         message: error,
       });
@@ -58,7 +65,7 @@ const LocalBranchItem = ({
       mergeBranchFetcher.state === 'idle'
     ) {
       const error: string = mergeBranchFetcher.data.error || 'An unexpected error occurred while merging the branches.';
-      showAlert({
+      showModal(AlertModal, {
         title: 'Error while merging branches.',
         message: error,
       });
@@ -73,7 +80,7 @@ const LocalBranchItem = ({
       deleteBranchFetcher.state === 'idle'
     ) {
       const error: string = deleteBranchFetcher.data.error || 'An unexpected error occurred while deleting the branch.';
-      showAlert({
+      showModal(AlertModal, {
         title: 'Error while deleting branch',
         message: error,
       });
@@ -91,15 +98,12 @@ const LocalBranchItem = ({
             doneMessage="Deleted"
             disabled={isCurrent || branch === 'master'}
             onClick={() =>
-              deleteBranchFetcher.submit(
-                {
-                  branch,
-                },
-                {
-                  method: 'POST',
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/delete`,
-                },
-              )
+              deleteBranchFetcher.submit({
+                organizationId,
+                projectId,
+                workspaceId,
+                branch,
+              })
             }
           >
             <Icon
@@ -113,15 +117,12 @@ const LocalBranchItem = ({
           className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           isDisabled={isCurrent}
           onPress={() =>
-            checkoutBranchFetcher.submit(
-              {
-                branch,
-              },
-              {
-                method: 'POST',
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/checkout`,
-              },
-            )
+            checkoutBranchFetcher.submit({
+              organizationId,
+              projectId,
+              workspaceId,
+              branch,
+            })
           }
         >
           <Icon
@@ -136,16 +137,12 @@ const LocalBranchItem = ({
           confirmMessage="Confirm"
           disabled={isCurrent}
           onClick={() => {
-            // file://./../../routes/remote-collections.tsx#mergeBranchAction
-            mergeBranchFetcher.submit(
-              {
-                branch,
-              },
-              {
-                method: 'POST',
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/merge`,
-              },
-            );
+            mergeBranchFetcher.submit({
+              organizationId,
+              projectId,
+              workspaceId,
+              branch,
+            });
           }}
         >
           <Icon
@@ -172,8 +169,8 @@ const RemoteBranchItem = ({
   projectId: string;
   workspaceId: string;
 }) => {
-  const deleteBranchFetcher = useFetcher();
-  const pullBranchFetcher = useFetcher();
+  const deleteBranchFetcher = useInsomniaSyncBranchDeleteActionFetcher();
+  const pullBranchFetcher = useInsomniaSyncFetchActionFetcher();
 
   useEffect(() => {
     if (
@@ -183,7 +180,7 @@ const RemoteBranchItem = ({
       pullBranchFetcher.state === 'idle'
     ) {
       const error: string = pullBranchFetcher.data.error || 'An unexpected error occurred while pulling the branch.';
-      showAlert({
+      showModal(AlertModal, {
         title: 'Error while pulling branch.',
         message: error,
       });
@@ -198,7 +195,7 @@ const RemoteBranchItem = ({
       deleteBranchFetcher.state === 'idle'
     ) {
       const error: string = deleteBranchFetcher.data.error || 'An unexpected error occurred while deleting the branch.';
-      showAlert({
+      showModal(AlertModal, {
         title: 'Error while deleting branch.',
         message: error,
       });
@@ -216,15 +213,12 @@ const RemoteBranchItem = ({
             doneMessage="Deleted"
             disabled={isCurrent || branch === 'master'}
             onClick={() =>
-              deleteBranchFetcher.submit(
-                {
-                  branch,
-                },
-                {
-                  method: 'POST',
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/delete`,
-                },
-              )
+              deleteBranchFetcher.submit({
+                organizationId,
+                projectId,
+                workspaceId,
+                branch,
+              })
             }
           >
             <Icon
@@ -237,15 +231,12 @@ const RemoteBranchItem = ({
         <Button
           className="flex min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           onPress={() =>
-            pullBranchFetcher.submit(
-              {
-                branch,
-              },
-              {
-                method: 'POST',
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/fetch`,
-              },
-            )
+            pullBranchFetcher.submit({
+              organizationId,
+              projectId,
+              workspaceId,
+              branch,
+            })
           }
         >
           <Icon
@@ -273,7 +264,7 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
     workspaceId: string;
   };
 
-  const createBranchFetcher = useFetcher();
+  const createBranchFetcher = useInsomniaSyncBranchCreateActionFetcher();
 
   function sortBranches(branchA: string, branchB: string) {
     if (branchA === 'master') {
@@ -314,7 +305,14 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
                 </Button>
               </div>
               <createBranchFetcher.Form
-                action={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create`}
+                action={href(
+                  `/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/branch/create`,
+                  {
+                    organizationId,
+                    projectId,
+                    workspaceId,
+                  },
+                )}
                 method="POST"
                 className="flex flex-shrink-0 flex-col gap-2"
               >

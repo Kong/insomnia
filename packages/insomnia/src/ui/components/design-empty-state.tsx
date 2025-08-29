@@ -8,7 +8,8 @@ import { documentationLinks } from '../../common/documentation';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
 import { blankSpec as emptySpec, petStoreSpec, todoSpec } from './example-openapi-specs';
 import { Icon } from './icon';
-import { showPrompt } from './modals';
+import { showModal } from './modals';
+import { PromptModal } from './modals/prompt-modal';
 
 interface Props {
   onImport: (contents: string) => void;
@@ -68,7 +69,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
       name: 'Import URL',
       icon: 'link',
       action: async () => {
-        showPrompt({
+        showModal(PromptModal, {
           title: 'Import document from URL',
           submitName: 'Fetch and Import',
           label: 'URL',
@@ -99,7 +100,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
           <span>Enter your OpenAPI specification here</span>
         </Heading>
         <div className="flex w-full flex-1 flex-col items-center justify-between p-[--padding-sm] pt-10">
-          <p className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <div className="flex flex-col items-center gap-6 truncate">
               <span>Or quick start:</span>
               <div className="flex gap-4">
@@ -164,7 +165,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
                 </Button>
               </div>
             </div>
-          </p>
+          </div>
           <ul className="flex flex-col gap-2">
             <li>
               <a

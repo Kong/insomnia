@@ -157,4 +157,6 @@ export interface Settings {
   enableVaultInScripts: boolean;
   saveVaultKeyToOSSecretManager: boolean;
   importOpenApiPathParamsAsVars: boolean;
+  vaultSecretCacheDuration: number;
+  dataFolders: string[];
 }

@@ -6,84 +6,101 @@ import type {
   SaveDialogOptions,
 } from 'electron';
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'electron';
+import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 
 import { fnOrString } from '../../common/misc';
-import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '../../templating/types';
+import {
+  type NunjucksParsedTagArg,
+  type NunjucksTagContextMenuAction,
+  type PluginTemplateTag,
+} from '../../templating/types';
 import type { extractNunjucksTagFromCoords } from '../../templating/utils';
-import { localTemplateTags } from '../../ui/components/templating/local-template-tags';
 import { invariant } from '../../utils/invariant';
 
 export type HandleChannels =
+  | 'authorizeUserInDefaultBrowser'
   | 'authorizeUserInWindow'
   | 'backup'
+  | 'cancelAuthorizationInDefaultBrowser'
   | 'curl.event.findMany'
   | 'curl.open'
   | 'curl.readyState'
   | 'curlRequest'
   | 'database.caCertificate.create'
+  | 'extractJsonFileFromPostmanDataDumpArchive'
   | 'getExecution'
+  | 'getLocalStorageDataFromFileOrigin'
+  | 'git.canPushLoader'
+  | 'git.checkoutGitBranch'
+  | 'git.cloneGitRepo'
+  | 'git.commitAndPushToGitRepo'
+  | 'git.commitToGitRepo'
+  | 'git.completeSignInToGitHub'
+  | 'git.completeSignInToGitLab'
+  | 'git.continueMerge'
+  | 'git.createNewGitBranch'
+  | 'git.deleteGitBranch'
+  | 'git.diffFileLoader'
+  | 'git.discardChanges'
+  | 'git.fetchGitRemoteBranches'
+  | 'git.getGitBranches'
+  | 'git.getGitHubRepositories'
+  | 'git.getGitHubRepository'
+  | 'git.getRepositoryDirectoryTree'
+  | 'git.gitChangesLoader'
+  | 'git.gitFetchAction'
+  | 'git.gitLogLoader'
+  | 'git.gitStatus'
+  | 'git.initGitRepoClone'
+  | 'git.initSignInToGitHub'
+  | 'git.initSignInToGitLab'
+  | 'git.loadGitRepository'
+  | 'git.mergeGitBranch'
+  | 'git.migrateLegacyInsomniaFolderToFile'
+  | 'git.pullFromGitRemote'
+  | 'git.pushToGitRemote'
+  | 'git.resetGitRepo'
+  | 'git.signOutOfGitHub'
+  | 'git.signOutOfGitLab'
+  | 'git.stageChanges'
+  | 'git.unstageChanges'
+  | 'git.updateGitRepo'
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'
   | 'installPlugin'
+  | 'lintSpec'
+  | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
   | 'readCurlResponse'
+  | 'readDir'
+  | 'readFile'
   | 'restoreBackup'
+  | 'secretStorage.decryptString'
+  | 'secretStorage.deleteSecret'
+  | 'secretStorage.encryptString'
+  | 'secretStorage.getSecret'
+  | 'secretStorage.setSecret'
   | 'showOpenDialog'
   | 'showSaveDialog'
+  | 'socketIO.event.findMany'
+  | 'socketIO.event.send'
+  | 'socketIO.open'
+  | 'socketIO.readyState'
   | 'webSocket.event.findMany'
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
-  | 'writeFile'
-  | 'readFile'
-  | 'extractJsonFileFromPostmanDataDumpArchive'
-  | 'secretStorage.setSecret'
-  | 'secretStorage.getSecret'
-  | 'secretStorage.deleteSecret'
-  | 'secretStorage.encryptString'
-  | 'secretStorage.decryptString'
-  | 'git.loadGitRepository'
-  | 'git.getGitBranches'
-  | 'git.gitFetchAction'
-  | 'git.gitLogLoader'
-  | 'git.gitChangesLoader'
-  | 'git.canPushLoader'
-  | 'git.cloneGitRepo'
-  | 'git.initGitRepoClone'
-  | 'git.updateGitRepo'
-  | 'git.resetGitRepo'
-  | 'git.commitToGitRepo'
-  | 'git.commitAndPushToGitRepo'
-  | 'git.createNewGitBranch'
-  | 'git.checkoutGitBranch'
-  | 'git.mergeGitBranch'
-  | 'git.deleteGitBranch'
-  | 'git.pushToGitRemote'
-  | 'git.pullFromGitRemote'
-  | 'git.continueMerge'
-  | 'git.discardChanges'
-  | 'git.gitStatus'
-  | 'git.stageChanges'
-  | 'git.unstageChanges'
-  | 'git.diffFileLoader'
-  | 'git.getRepositoryDirectoryTree'
-  | 'git.migrateLegacyInsomniaFolderToFile'
-  | 'git.initSignInToGitHub'
-  | 'git.completeSignInToGitHub'
-  | 'git.signOutOfGitHub'
-  | 'git.getGitHubRepositories'
-  | 'git.getGitHubRepository'
-  | 'git.initSignInToGitLab'
-  | 'git.completeSignInToGitLab'
-  | 'git.signOutOfGitLab';
+  | 'writeFile';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
   listener: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any,
 ) => ipcMain.handle(channel, listener);
 export type MainOnChannels =
+  | 'addExecutionStep'
   | 'cancelCurlRequest'
   | 'clear'
+  | 'completeExecutionStep'
   | 'curl.close'
   | 'curl.closeAll'
   | 'getAppPath'
@@ -106,35 +123,37 @@ export type MainOnChannels =
   | 'showItemInFolder'
   | 'showOpenDialog'
   | 'showSaveDialog'
+  | 'socketIO.close'
+  | 'socketIO.closeAll'
+  | 'socketIO.event.off'
+  | 'socketIO.event.on'
+  | 'startExecution'
   | 'trackPageView'
   | 'trackSegmentEvent'
+  | 'updateLatestStepName'
   | 'webSocket.close'
   | 'webSocket.closeAll'
-  | 'writeText'
-  | 'addExecutionStep'
-  | 'completeExecutionStep'
-  | 'updateLatestStepName'
-  | 'startExecution';
+  | 'writeText';
 
 export type RendererOnChannels =
-  | 'clear-all-models'
-  | 'clear-model'
-  | 'nunjucks-context-menu-command'
   | 'contextMenuCommand'
+  | 'db.changes'
   | 'grpc.data'
   | 'grpc.end'
   | 'grpc.error'
   | 'grpc.start'
   | 'grpc.status'
   | 'loggedIn'
+  | 'mainWindowFocusChange'
+  | 'nunjucks-context-menu-command'
+  | 'nunjucks-context-menu-command'
   | 'reload-plugins'
   | 'shell:open'
   | 'show-notification'
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
   | 'toggle-sidebar'
-  | 'updaterStatus'
-  | 'mainWindowFocusChange';
+  | 'updaterStatus';
 
 export const ipcMainOn = (
   channel: MainOnChannels,
@@ -158,8 +177,15 @@ const getTemplateValue = (arg: NunjucksParsedTagArg) => {
 export function registerElectronHandlers() {
   ipcMainOn(
     'show-nunjucks-context-menu',
-    (event, options: { key: string; nunjucksTag: ReturnType<typeof extractNunjucksTagFromCoords> }) => {
-      const { key, nunjucksTag } = options;
+    (
+      event,
+      options: {
+        key: string;
+        nunjucksTag: ReturnType<typeof extractNunjucksTagFromCoords>;
+        pluginTemplateTags?: { templateTag: PluginTemplateTag }[];
+      },
+    ) => {
+      const { key, nunjucksTag, pluginTemplateTags = [] } = options;
       const sendNunjuckTagContextMsg = (type: NunjucksTagContextMenuAction) => {
         event.sender.send('nunjucks-context-menu-command', { key, nunjucksTag: { ...nunjucksTag, type } });
       };
@@ -201,7 +227,7 @@ export function registerElectronHandlers() {
               },
               { type: 'separator' },
             ];
-        const localTemplate: MenuItemConstructorOptions[] = localTemplateTags
+        const localTemplate: MenuItemConstructorOptions[] = [...localTemplateTags, ...pluginTemplateTags]
           // sort alphabetically
           .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
           .map(l => {

@@ -14,7 +14,11 @@ export function electronNodeRequire(options: Options): Plugin {
 
   return {
     name: 'vite-plugin-electron-node-require',
-    config(conf) {
+    config(conf, env) {
+      // If the plugin is used in SSR mode, we don't need to do anything
+      if (env.isSsrBuild) {
+        return conf;
+      }
       // Exclude the modules from Vite's dependency optimization (pre-bundling)
       conf.optimizeDeps = {
         ...conf.optimizeDeps,
@@ -35,9 +39,13 @@ export function electronNodeRequire(options: Options): Plugin {
 
       return conf;
     },
-    resolveId(id) {
+    resolveId(id, _importer, options) {
       const externalId = id.split('virtual:external:')[1];
-      if (modules.includes(externalId)) {
+
+      if (externalId && modules.includes(externalId)) {
+        if (options.ssr) {
+          return null;
+        }
         // Return a virtual module ID so that Vite knows to use this plugin to resolve the module
         // The \0 is a special convention by Rollup to indicate that the module is virtual and should not be resolved by other plugins
         return `\0${id}`;
@@ -46,7 +54,7 @@ export function electronNodeRequire(options: Options): Plugin {
       // Return null to indicate that this plugin should not resolve the module
       return null;
     },
-    load(id) {
+    load(id, options) {
       if (id.includes('virtual:external:')) {
         const externalId = id.split('virtual:external:')[1];
 
@@ -78,6 +86,14 @@ export function electronNodeRequire(options: Options): Plugin {
             return false;
           }
         });
+
+        if (options?.ssr) {
+          return [
+            `import requiredModule from '${externalId}';`,
+            `${validExports.map(e => `export const ${e} = requiredModule.${e};`).join('\n')}`,
+            `${exports.includes('default') ? 'export default requiredModule.default;' : 'export default requiredModule'}`,
+          ].join('\n');
+        }
 
         return [
           `const requiredModule = require('${externalId}');`,

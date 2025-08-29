@@ -1,6 +1,6 @@
 import { appendFile } from 'node:fs/promises';
 
-import * as _ from 'lodash';
+import * as _ from 'es-toolkit/compat';
 
 import { initInsomniaObject, InsomniaObject } from '../../insomnia-scripting-environment/src/objects';
 import {
@@ -11,8 +11,8 @@ import {
   mergeSettings,
   type RequestContext,
 } from '../../insomnia-scripting-environment/src/objects';
-import { invariant } from '../src/utils/invariant';
 import { requireInterceptor } from './requireInterceptor';
+import { invariant } from './utils/invariant';
 
 export const runScript = async ({
   script,
@@ -95,7 +95,16 @@ export const runScript = async ({
     settings: updatedSettings,
     clientCertificates: updatedCertificates,
     cookieJar: updatedCookieJar,
-    globals: mutatedContextObject.globals,
+    globals: context.globals && {
+      id: context.environment.id,
+      name: context.environment.name,
+      data: mutatedContextObject.globals,
+    },
+    baseGlobals: context.baseGlobals && {
+      id: context.baseEnvironment.id,
+      name: context.baseEnvironment.name,
+      data: mutatedContextObject.baseGlobals,
+    },
     requestTestResults: mutatedContextObject.requestTestResults,
     execution: mutatedContextObject.execution,
     parentFolders: mutatedContextObject.parentFolders,

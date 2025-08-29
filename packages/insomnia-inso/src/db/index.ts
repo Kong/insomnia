@@ -2,6 +2,7 @@ import { stat } from 'node:fs/promises';
 
 import type { CaCertificate } from 'insomnia/src/models/ca-certificate';
 import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
+import type { CloudProviderCredential } from 'insomnia/src/models/cloud-credential';
 import type { CookieJar } from 'insomnia/src/models/cookie-jar';
 
 import { logger } from '../cli';
@@ -30,6 +31,7 @@ export interface Database {
   ClientCertificate: ClientCertificate[];
   CaCertificate: CaCertificate[];
   CookieJar: CookieJar[];
+  CloudCredential: CloudProviderCredential[];
 }
 
 export const emptyDb = (): Database => ({
@@ -44,6 +46,7 @@ export const emptyDb = (): Database => ({
   ClientCertificate: [],
   CaCertificate: [],
   CookieJar: [],
+  CloudCredential: [],
 });
 
 export type DbAdapter = (dir: string, filterTypes?: (keyof Database)[]) => Promise<Database | null>;
@@ -87,9 +90,23 @@ export const loadDb = async ({ pathToSearch, filterTypes }: Options) => {
   }
 
   logger.warn(
-    `No git, app data store or Insomnia V4 export file found at path "${pathToSearch}",
-     --workingDir/-w should point to a git repository root, an Insomnia export file or a directory containing Insomnia data.
-      re-run with --verbose to see tracing information`,
+    `Error: No data source found at path "${pathToSearch}".
+  TIP: Use "--workingDir/-w" to specify one of the following:
+    - A Git repository root
+    - An Insomnia export file
+    - A directory containing Insomnia data
+  
+  Examples:
+    1. Using a (legacy) Git repository:
+       $ inso run collection --workingDir /path/to/git-repo
+  
+    2. Using an Insomnia export file or inside a Git project:
+       $ inso run collection --workingDir /path/to/insomnia-file.yaml
+  
+    3. Using a directory with Insomnia app data:
+       $ inso run collection --workingDir /path/to/insomnia-data
+  
+  Re-run with "--verbose" for more details.`,
   );
 
   return emptyDb();

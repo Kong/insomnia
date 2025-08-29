@@ -16,6 +16,7 @@ import { startGRPCServer } from './grpc';
 import insomniaApi from './insomnia-api';
 import { mtlsRouter } from './mtls';
 import { oauthRoutes } from './oauth';
+import { startSocketIOServer } from './socket-io';
 import { startWebSocketServer } from './websocket';
 
 const app = express();
@@ -145,5 +146,7 @@ startWebSocketServer(
     console.log(`Listening at wss://localhost:${httpsPort}`);
   }),
 );
+
+startSocketIOServer();
 
 startGRPCServer(grpcPort);

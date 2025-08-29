@@ -69,7 +69,7 @@ test.describe('Dashboard', () => {
     await page.getByLabel('Files').getByLabel('My Design Document').getByRole('button').click();
     await page.getByRole('menuitem', { name: 'Rename' }).click();
     await page.locator('text=Rename DocumentName Rename >> input[type="text"]').fill('test123');
-    await page.click('#root button:has-text("Rename")');
+    await page.getByRole('button', { name: 'Rename' }).click();
     await expect.soft(page.locator('.app')).toContainText('test123');
 
     // Duplicate document
@@ -92,7 +92,7 @@ test.describe('Dashboard', () => {
     await page.click('text=CollectionMy Collectionjust now >> button');
     await page.getByRole('menuitem', { name: 'Rename' }).click();
     await page.locator('text=Rename CollectionName Rename >> input[type="text"]').fill('collection123');
-    await page.click('#root button:has-text("Rename")');
+    await page.getByRole('button', { name: 'Rename' }).click();
     await expect.soft(page.locator('.app')).toContainText('collection123');
 
     // Duplicate collection

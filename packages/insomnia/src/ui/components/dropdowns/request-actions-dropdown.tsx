@@ -1,7 +1,11 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useCallback, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import { useRootLoaderData } from '~/root';
+import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
+import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
@@ -11,28 +15,30 @@ import type { GrpcRequest } from '../../../models/grpc-request';
 import type { Project } from '../../../models/project';
 import { isRequest, type Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
+import type { SocketIORequest } from '../../../models/socket-io-request';
 import { incrementDeletedRequests } from '../../../models/stats';
-// Plugin action related imports
-// Plugin action related imports
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
-import * as pluginContexts from '../../../plugins/context/index';
+import * as pluginApp from '../../../plugins/context/app';
+import * as pluginData from '../../../plugins/context/data';
+import * as pluginNetwork from '../../../plugins/context/network';
+import * as pluginStore from '../../../plugins/context/store';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
-import { showError, showModal, showPrompt } from '../modals';
+import { showError, showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
+import { PromptModal } from '../modals/prompt-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 
 interface Props {
   activeEnvironment: Environment;
   activeProject: Project;
   isPinned: boolean;
-  request: Request | GrpcRequest | WebSocketRequest;
+  request: Request | GrpcRequest | WebSocketRequest | SocketIORequest;
   requestGroup?: RequestGroup;
   isOpen: boolean;
   triggerRef: React.RefObject<HTMLDivElement>;
@@ -50,11 +56,12 @@ export const RequestActionsDropdown = ({
   onOpenChange,
   onRename,
 }: Props) => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const patchRequestMeta = useRequestMetaPatcher();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
-  const requestFetcher = useFetcher();
+  const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
+  const deleteRequestFetcher = useRequestDeleteActionFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -73,31 +80,30 @@ export const RequestActionsDropdown = ({
       return;
     }
 
-    showPrompt({
+    showModal(PromptModal, {
       title: 'Duplicate Request',
       defaultValue: request.name,
       submitName: 'Create',
       label: 'New Name',
       selectText: true,
       onComplete: (name: string) =>
-        requestFetcher.submit(
-          { name },
-          {
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request?._id}/duplicate`,
-            method: 'post',
-            encType: 'application/json',
-          },
-        ),
+        duplicateRequestFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          requestId: request._id,
+          name,
+        }),
     });
   };
 
   const handlePluginClick = async ({ plugin, action }: RequestAction) => {
     try {
       const context = {
-        ...pluginContexts.app.init('no-render'),
-        ...pluginContexts.data.init(activeProject._id),
-        ...pluginContexts.store.init(plugin),
-        ...pluginContexts.network.init(),
+        ...pluginApp.init(),
+        ...pluginData.init(activeProject._id),
+        ...pluginStore.init(plugin),
+        ...pluginNetwork.init(),
       };
       await action(context, {
         request,
@@ -148,13 +154,12 @@ export const RequestActionsDropdown = ({
       onDone: async (isYes: boolean) => {
         if (isYes) {
           incrementDeletedRequests();
-          requestFetcher.submit(
-            { id: request._id },
-            {
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
-              method: 'post',
-            },
-          );
+          deleteRequestFetcher.submit({
+            organizationId,
+            projectId,
+            workspaceId,
+            id: request._id,
+          });
         }
       },
     });

@@ -1,4 +1,5 @@
 import { tmpdir } from 'node:os';
+import path from 'node:path';
 
 import { defineConfig } from 'vitest/config';
 export default defineConfig({
@@ -7,6 +8,10 @@ export default defineConfig({
     hideSkippedTests: true,
     env: {
       INSOMNIA_DATA_PATH: tmpdir(),
+    },
+    exclude: ['src/routes/**.*.tsx', '.react-router'],
+    alias: {
+      '~': path.resolve(__dirname, './src'),
     },
     server: {
       deps: {

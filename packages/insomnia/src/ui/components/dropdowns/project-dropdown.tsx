@@ -1,13 +1,15 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { useFetcher } from 'react-router';
+
+import type { StorageRules } from '~/models/organization';
+import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
 
 import type { GitRepository } from '../../../models/git-repository';
 import { getProjectStorageTypeLabel, isGitProject, isRemoteProject, type Project } from '../../../models/project';
-import { type StorageRules } from '../../routes/organization';
 import { Icon } from '../icon';
-import { showAlert, showModal } from '../modals';
+import { showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 import { ProjectModal } from '../modals/project-modal';
 
@@ -27,8 +29,7 @@ interface ProjectActionItem {
 
 export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRules, isGitSyncEnabled }) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] = useState(false);
-  const deleteProjectFetcher = useFetcher();
-  const updateProjectFetcher = useFetcher();
+  const deleteProjectFetcher = useProjectDeleteActionFetcher();
 
   const isRemoteProjectInconsistent = isRemoteProject(project) && !storageRules.enableCloudSync;
   const isLocalProjectInconsistent =
@@ -62,13 +63,10 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
           color: 'danger',
           onDone: async (isYes: boolean) => {
             if (isYes) {
-              deleteProjectFetcher.submit(
-                {},
-                {
-                  method: 'post',
-                  action: `/organization/${organizationId}/project/${projectId}/delete`,
-                },
-              );
+              deleteProjectFetcher.submit({
+                organizationId,
+                projectId,
+              });
             }
           },
         });
@@ -78,21 +76,12 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
 
   useEffect(() => {
     if (deleteProjectFetcher.data && deleteProjectFetcher.data.error && deleteProjectFetcher.state === 'idle') {
-      showAlert({
+      showModal(AlertModal, {
         title: 'Could not delete project',
         message: deleteProjectFetcher.data.error,
       });
     }
   }, [deleteProjectFetcher.data, deleteProjectFetcher.state]);
-
-  useEffect(() => {
-    if (updateProjectFetcher.data && updateProjectFetcher.data.error && updateProjectFetcher.state === 'idle') {
-      showAlert({
-        title: 'Could not update project',
-        message: updateProjectFetcher.data.error,
-      });
-    }
-  }, [updateProjectFetcher.data, updateProjectFetcher.state]);
 
   return (
     <Fragment>
