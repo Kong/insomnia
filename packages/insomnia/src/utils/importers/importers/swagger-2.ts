@@ -7,6 +7,9 @@ import YAML from 'yaml';
 import type { Converter, Header, ImportRequest } from '../entities';
 import { unthrowableParseJson } from '../utils';
 
+import * as models from '../../../models';
+import type { Settings } from '../../../models/settings';
+
 const SUPPORTED_SWAGGER_VERSION = '2.0';
 const MIMETYPE_JSON = 'application/json';
 const MIMETYPE_URLENCODED = 'application/x-www-form-urlencoded';
@@ -23,16 +26,16 @@ export const description = 'Importer for Swagger 2.0 specification (json/yaml)';
  */
 const importFolderItem =
   (parentId: string) =>
-  (item: OpenAPIV2.TagObject): ImportRequest => {
-    const hash = crypto.createHash('sha1').update(item.name).digest('hex').slice(0, 8);
-    return {
-      parentId,
-      _id: `fld___WORKSPACE_ID__${hash}`,
-      _type: 'request_group',
-      name: item.name || 'Folder {requestGroupCount}',
-      description: item.description || '',
+    (item: OpenAPIV2.TagObject): ImportRequest => {
+      const hash = crypto.createHash('sha1').update(item.name).digest('hex').slice(0, 8);
+      return {
+        parentId,
+        _id: `fld___WORKSPACE_ID__${hash}`,
+        _type: 'request_group',
+        name: item.name || 'Folder {requestGroupCount}',
+        description: item.description || '',
+      };
     };
-  };
 
 /**
  * Parse string data into swagger 2.0 object (https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#swagger-object)
@@ -48,7 +51,7 @@ const parseDocument = (rawData: string) => {
 /**
  * Create request definitions based on swagger document.
  */
-const parseEndpoints = (document: OpenAPIV2.Document) => {
+const parseEndpoints = (document: OpenAPIV2.Document, settings?: Settings) => {
   const defaultParent = WORKSPACE_ID;
   const globalMimeTypes = document.consumes ?? [];
   const endpointsSchemas: OpenAPIV2.OperationObject[] = Object.keys(document.paths).flatMap(
@@ -101,7 +104,7 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
         : `__REQUEST_${requestCount++}__`;
 
       const parentId = folderLookup[tag] || defaultParent;
-      requests.push(importRequest(document, endpointSchema, globalMimeTypes, requestId, parentId));
+      requests.push(importRequest(document, endpointSchema, globalMimeTypes, requestId, parentId, settings));
     });
   });
 
@@ -114,6 +117,7 @@ const importRequest = (
   globalMimeTypes: OpenAPIV2.MimeTypes,
   requestId: string,
   parentId: string,
+  settings?: Settings,
 ): ImportRequest => {
   const name = endpointSchema.summary || `${endpointSchema.method} ${endpointSchema.path}`;
 
@@ -139,7 +143,7 @@ const importRequest = (
     parentId: parentId,
     name,
     method: endpointSchema.method?.toUpperCase(),
-    url: `{{ _.base_url }}${pathWithParamsAsVariables(endpointSchema.path)}`,
+    url: `{{ _.base_url }}${pathWithParamsAsVariables(endpointSchema.path, settings?.importOpenApiPathParamsAsVars)}`,
     body,
     description: endpointSchema.description || '',
     headers,
@@ -272,8 +276,8 @@ const setupAuthentication = (
  *
  * I.e. "/foo/:bar" => "/foo/{{ bar }}"
  */
-const pathWithParamsAsVariables = (path?: string) => {
-  return path?.replace(/{([^}]+)}/g, '{{ _.$1 }}');
+const pathWithParamsAsVariables = (path?: string, importOpenApiParamsAsVars?: boolean) => {
+  return path?.replace(/{([^}]+)}/g, importOpenApiParamsAsVars ? '{{ _.$1 }}' : ':$1');
 };
 
 /**
@@ -492,6 +496,8 @@ const convertParameters = (parameters?: OpenAPIV2.Parameter[]) => {
 export const convert: Converter = async rawData => {
   requestCount = 1; // Validate
 
+  const settings = await models.settings.get();
+
   let api = await parseDocument(rawData);
 
   if (!api || api.swagger !== SUPPORTED_SWAGGER_VERSION) {
@@ -535,7 +541,7 @@ export const convert: Converter = async rawData => {
       host: api.host || '',
     },
   };
-  const endpoints = parseEndpoints(api);
+  const endpoints = parseEndpoints(api, settings);
 
   return [workspace, baseEnv, swaggerEnv, ...endpoints];
 };
