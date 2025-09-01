@@ -1,6 +1,5 @@
 import { generate, runTests, type Test, type TestResults } from 'insomnia-testing';
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import * as models from '~/models';
@@ -8,6 +7,7 @@ import type { UnitTest } from '~/models/unit-test';
 import { getSendRequestCallback } from '~/network/unit-test-feature';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.run';
 
@@ -111,10 +111,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   }
 }
 
-export function useTestRunActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useTestRunActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -139,7 +137,7 @@ export function useTestRunActionFetcher(args?: Parameters<typeof useFetcher>[0])
         },
       );
 
-      return fetcherSubmit(
+      return submit(
         {},
         {
           action: url,
@@ -147,11 +145,5 @@ export function useTestRunActionFetcher(args?: Parameters<typeof useFetcher>[0])
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

@@ -247,7 +247,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
   const hasUntrackedData = untrackedProjects.length > 0 || untrackedWorkspaces.length > 0;
 
-  const [isOrganizationSidebarOpen, setIsOganizationSidebarOpen] = reactUse.useLocalStorage(
+  const [isOrganizationSidebarOpen, setIsOrganizationSidebarOpen] = reactUse.useLocalStorage(
     'organizationSidebarOpen',
     true,
   );
@@ -460,7 +460,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                 <TooltipTrigger>
                   <ToggleButton
                     className="h-[10px] w-[10px] flex-grow-0 gap-2 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
-                    onChange={setIsOganizationSidebarOpen}
+                    onChange={setIsOrganizationSidebarOpen}
                     isSelected={isOrganizationSidebarOpen}
                   >
                     {({ isSelected }) => {

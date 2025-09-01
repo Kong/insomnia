@@ -1,11 +1,9 @@
-import { useCallback } from 'react';
-import { useFetcher } from 'react-router';
-
 import { database } from '~/common/database';
 import { userSession } from '~/models';
 import { type Organization, SCRATCHPAD_ORGANIZATION_ID } from '~/models/organization';
 import type { Project } from '~/models/project';
 import type { Workspace } from '~/models/workspace';
+import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/untracked-projects';
 
@@ -46,15 +44,9 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
   };
 }
 
-export function useUntrackedProjectsLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
-
-  const load = useCallback(() => {
-    return fetcherLoad('/untracked-projects');
-  }, [fetcherLoad]);
-
-  return {
-    ...fetcherRest,
-    load,
-  };
-}
+export const useUntrackedProjectsLoaderFetcher = createFetcherLoadHook(
+  load => () => {
+    return load('/untracked-projects');
+  },
+  clientLoader,
+);

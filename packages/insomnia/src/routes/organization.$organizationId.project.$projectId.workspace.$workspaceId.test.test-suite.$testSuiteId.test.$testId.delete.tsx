@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import * as models from '~/models';
 import type { UnitTest } from '~/models/unit-test';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.delete';
 
@@ -23,10 +23,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   return null;
 }
 
-export function useTestDeleteActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useTestDeleteActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -51,7 +49,7 @@ export function useTestDeleteActionFetcher(args?: Parameters<typeof useFetcher>[
         },
       );
 
-      return fetcherSubmit(
+      return submit(
         {},
         {
           action: url,
@@ -59,11 +57,5 @@ export function useTestDeleteActionFetcher(args?: Parameters<typeof useFetcher>[
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

@@ -1,5 +1,4 @@
-import { useCallback } from 'react';
-import { href, Outlet, useFetcher, useRouteLoaderData } from 'react-router';
+import { href, Outlet, useRouteLoaderData } from 'react-router';
 
 import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
@@ -28,6 +27,7 @@ import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { invariant } from '~/utils/invariant';
+import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
@@ -326,10 +326,8 @@ export function useWorkspaceLoaderData() {
   );
 }
 
-export function useWorkspaceLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
-
-  const load = useCallback(
+export const useWorkspaceLoaderFetcher = createFetcherLoadHook(
+  load =>
     ({
       organizationId,
       projectId,
@@ -339,7 +337,7 @@ export function useWorkspaceLoaderFetcher(args?: Parameters<typeof useFetcher>[0
       projectId: string;
       workspaceId: string;
     }) => {
-      return fetcherLoad(
+      return load(
         href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId`, {
           organizationId,
           projectId,
@@ -347,14 +345,7 @@ export function useWorkspaceLoaderFetcher(args?: Parameters<typeof useFetcher>[0
         }),
       );
     },
-    [fetcherLoad],
-  );
-
-  return {
-    ...fetcherRest,
-    load,
-  };
-}
+);
 
 export const revalidateWorkspaceActiveRequest = async (requestId: string, workspaceId: string) => {
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);

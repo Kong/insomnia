@@ -1,5 +1,4 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import * as models from '~/models';
@@ -7,6 +6,7 @@ import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { getSyncItems, remoteCompareCache, vcsSegmentEventProperties } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.pull';
 
@@ -52,10 +52,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   };
 }
 
-export function useInsomniaSyncPullActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useInsomniaSyncPullActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -65,7 +63,7 @@ export function useInsomniaSyncPullActionFetcher(args?: Parameters<typeof useFet
       projectId: string;
       workspaceId: string;
     }) => {
-      return fetcherSubmit(
+      return submit(
         {},
         {
           action: href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/pull', {
@@ -77,11 +75,5 @@ export function useInsomniaSyncPullActionFetcher(args?: Parameters<typeof useFet
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

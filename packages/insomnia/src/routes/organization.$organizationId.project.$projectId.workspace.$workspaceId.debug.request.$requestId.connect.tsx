@@ -1,6 +1,5 @@
 import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import type { ChangeBufferEvent } from '~/common/database';
 import type { CookieJar } from '~/models/cookie-jar';
@@ -13,6 +12,7 @@ import { isWebSocketRequestId } from '~/models/websocket-request';
 import { getAuthHeader } from '~/network/authentication';
 import type { RenderedRequest } from '~/templating/types';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
 
@@ -105,10 +105,8 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   });
 }
 
-export function useRequestConnectActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useRequestConnectActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -132,17 +130,11 @@ export function useRequestConnectActionFetcher(args?: Parameters<typeof useFetch
         },
       );
 
-      return fetcherSubmit(JSON.stringify(connectParams), {
+      return submit(JSON.stringify(connectParams), {
         action: url,
         method: 'POST',
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

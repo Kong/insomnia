@@ -1,10 +1,10 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { remoteCompareCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.create-snapshot';
 
@@ -47,10 +47,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   return null;
 }
 
-export function useInsomniaSyncCreateSnapshotActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useInsomniaSyncCreateSnapshotActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       message,
       push,
@@ -64,7 +62,7 @@ export function useInsomniaSyncCreateSnapshotActionFetcher(args?: Parameters<typ
       workspaceId: string;
       push?: boolean;
     }) => {
-      return fetcherSubmit(JSON.stringify({ message, push }), {
+      return submit(JSON.stringify({ message, push }), {
         method: 'POST',
         action: href(
           `/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/create-snapshot`,
@@ -77,11 +75,5 @@ export function useInsomniaSyncCreateSnapshotActionFetcher(args?: Parameters<typ
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);
