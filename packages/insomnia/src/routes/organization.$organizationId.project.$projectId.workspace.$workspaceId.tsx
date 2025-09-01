@@ -345,6 +345,7 @@ export const useWorkspaceLoaderFetcher = createFetcherLoadHook(
         }),
       );
     },
+  clientLoader,
 );
 
 export const revalidateWorkspaceActiveRequest = async (requestId: string, workspaceId: string) => {

@@ -145,4 +145,5 @@ export const useProjectListWorkspacesLoaderFetcher = createFetcherLoadHook(
         }),
       );
     },
+  clientLoader,
 );

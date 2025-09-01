@@ -27,4 +27,5 @@ export const useGitProjectBranchesLoaderFetcher = createFetcherLoadHook(
       searchParams.set('projectId', projectId);
       return load(`${href('/git/branches')}?${searchParams.toString()}`);
     },
+  clientLoader,
 );

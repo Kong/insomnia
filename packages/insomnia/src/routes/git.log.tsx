@@ -23,4 +23,5 @@ export const useGitProjectLogLoaderFetcher = createFetcherLoadHook(
       searchParams.set('projectId', projectId);
       return load(`${href('/git/log')}?${searchParams.toString()}`);
     },
+  clientLoader,
 );

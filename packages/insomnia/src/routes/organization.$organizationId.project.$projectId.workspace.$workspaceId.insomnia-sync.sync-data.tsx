@@ -131,6 +131,7 @@ export const useInsomniaSyncDataLoaderFetcher = createFetcherLoadHook(
 
       return load(url);
     },
+  clientLoader,
 );
 
 export const useInsomniaSyncDataActionFetcher = createFetcherSubmitHook(

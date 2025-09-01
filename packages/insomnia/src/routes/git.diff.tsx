@@ -42,4 +42,5 @@ export const useGitProjectDiffLoaderFetcher = createFetcherLoadHook(
 
       return load(`${href('/git/diff')}?${params.toString()}`);
     },
+  clientLoader,
 );

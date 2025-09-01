@@ -43,4 +43,5 @@ export const useCollaboratorsSearchLoaderFetcher = createFetcherLoadHook(
         `${href(`/organization/:organizationId/collaborators-search`, { organizationId })}?${encodeURIComponent(query || '')}`,
       );
     },
+  clientLoader,
 );

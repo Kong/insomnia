@@ -314,4 +314,5 @@ export const useCommandsLoaderFetcher = createFetcherLoadHook(
         flushSync: true,
       });
     },
+  clientLoader,
 );

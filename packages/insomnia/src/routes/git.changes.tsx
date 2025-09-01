@@ -27,4 +27,5 @@ export const useGitProjectChangesFetcher = createFetcherLoadHook(
 
       return load(`${href('/git/changes')}?${searchParams.toString()}`);
     },
+  clientLoader,
 );

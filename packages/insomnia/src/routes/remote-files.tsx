@@ -88,6 +88,9 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
   }
 }
 
-export const useRemoteFilesLoaderFetcher = createFetcherLoadHook(load => () => {
-  return load(href('/remote-files'));
-});
+export const useRemoteFilesLoaderFetcher = createFetcherLoadHook(
+  load => () => {
+    return load(href('/remote-files'));
+  },
+  clientLoader,
+);

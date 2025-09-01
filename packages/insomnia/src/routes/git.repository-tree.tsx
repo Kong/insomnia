@@ -21,4 +21,5 @@ export const useGitProjectRepositoryTreeLoaderFetcher = createFetcherLoadHook(
 
       return load(`${href('/git/repository-tree')}?${searchParams.toString()}`);
     },
+  clientLoader,
 );

@@ -24,4 +24,5 @@ export const useGitProjectRepoFetcher = createFetcherLoadHook(
 
       return load(`${href('/git/repo')}?${searchParams.toString()}`);
     },
+  clientLoader,
 );
