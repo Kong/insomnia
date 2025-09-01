@@ -27,16 +27,20 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
   const { secretName } = formData;
   // onPrem secret config
   const {
-    kvVersion = 'v1',
+    kvVersion = 'v2',
     secretEnginePath,
     secretKey,
+    sendNamespaceViaHeader = true,
   } = formData as HashiCorpVaultKVV1SecretConfig | HashiCorpVaultKVV2SecretConfig;
   // cloud secret config
   const { organizationId, projectId, appName, version: cloudSecretVersion } = formData as HCPSecretConfig;
   const credentialId = activeTagData.args[1].value as string;
   const selectedCredential = cloudCredentials.find(c => c._id === credentialId) as unknown as HashiCorpCredential;
   const credentialType = selectedCredential?.credentials?.type;
-  const handleOnChange = (name: KeysOfUnion<HashiCorpSecretConfig>, newValue: string) => {
+  const handleOnChange = <T extends KeysOfUnion<HashiCorpSecretConfig>>(
+    name: T,
+    newValue: string | boolean | number,
+  ) => {
     const newConfig = {
       ...formData,
       [name]: newValue,
@@ -46,7 +50,8 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
 
   return (
     <>
-      {credentialType === HashiCorpCredentialType.onPrem && (
+      {(credentialType === HashiCorpCredentialType.onPrem ||
+        credentialType === HashiCorpCredentialType.cloudVaultDedicated) && (
         <>
           <div className="form-row">
             <div className="form-control">
@@ -80,6 +85,24 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
               </div>
             </div>
           </div>
+          {credentialType === HashiCorpCredentialType.cloudVaultDedicated && (
+            <div className="form-row">
+              <div className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={sendNamespaceViaHeader}
+                  onChange={e => handleOnChange('sendNamespaceViaHeader', e.target.checked)}
+                />
+                <span>
+                  Send Namespace Via Header
+                  <HelpTooltip className="space-left">
+                    Whether to send the namespace in the request header. Uncheck this to apply namespace via Secret
+                    Mount Path.
+                  </HelpTooltip>
+                </span>
+              </div>
+            </div>
+          )}
           <div className="form-row">
             <div className="form-control">
               <label>
@@ -140,7 +163,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
           </div>
         </>
       )}
-      {credentialType === HashiCorpCredentialType.cloud && (
+      {credentialType === HashiCorpCredentialType.cloudVaultSecrets && (
         <>
           <div className="form-row">
             <div className="form-control">
