@@ -95,4 +95,5 @@ export const useCollaboratorsFetcher = createFetcherLoadHook(
 
       load(`${href(`/organization/:organizationId/collaborators`, { organizationId })}?${queryParams.toString()}`);
     },
+  clientLoader,
 );

@@ -11,6 +11,9 @@ export async function clientLoader(_args: Route.ClientActionArgs) {
   return credentials;
 }
 
-export const useGitLabCredentialsFetcher = createFetcherLoadHook(load => () => {
-  return load(href('/git-credentials/gitlab'));
-});
+export const useGitLabCredentialsFetcher = createFetcherLoadHook(
+  load => () => {
+    return load(href('/git-credentials/gitlab'));
+  },
+  clientLoader,
+);
