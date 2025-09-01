@@ -183,6 +183,9 @@ const setupAuthentication = (
 
   for (const usedDefinition of usedDefinitions) {
     const securityScheme = securityDefinitions[usedDefinition];
+    if (securityScheme === undefined) {
+      throw new Error('Error: security keys must be included in defined security schemes.');
+    }
 
     if (securityScheme.type === 'basic') {
       request.authentication = {

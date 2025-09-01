@@ -38,6 +38,7 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router';
+import { useLocalStorage } from 'react-use';
 
 import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
 import { type ChangeBufferEvent } from '~/common/database';
@@ -113,6 +114,7 @@ import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-reque
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useExecutionState } from '~/ui/hooks/use-execution-state';
+import { useFilteredRequests } from '~/ui/hooks/use-filtered-requests';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 import {
@@ -233,7 +235,7 @@ const Debug = () => {
     caCertificate,
     clientCertificates,
     grpcRequests,
-    collection,
+    collection: _collection,
   } = useWorkspaceLoaderData()!;
 
   const requestData = useRequestLoaderData();
@@ -254,6 +256,9 @@ const Debug = () => {
     requestId?: string;
     requestGroupId?: string;
   };
+
+  const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:collection-list-filter`);
+  const collection = useFilteredRequests(_collection, filter ?? '');
 
   const { activeRequestGroup } = useRequestGroupLoaderData() || {};
 
@@ -861,13 +866,8 @@ const Debug = () => {
               <SearchField
                 aria-label="Request filter"
                 className="group relative flex-1"
-                defaultValue={searchParams.get('filter')?.toString() ?? ''}
-                onChange={filter => {
-                  setSearchParams({
-                    ...Object.fromEntries(searchParams.entries()),
-                    filter,
-                  });
-                }}
+                value={filter ?? ''}
+                onChange={setFilter}
               >
                 <Input
                   placeholder="Filter"
