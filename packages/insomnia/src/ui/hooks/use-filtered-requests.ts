@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 
+import type { BaseModel } from '~/models';
+
 import { fuzzyMatchAll } from '../../common/misc';
 import { isRequestGroup } from '../../models/request-group';
 
@@ -8,7 +10,7 @@ interface SearchableFields {
   description: string;
   url?: string;
   _id: string;
-  type: string;
+  type: BaseModel['type'];
 }
 
 function isMatched(filter: string, doc: SearchableFields): boolean {
