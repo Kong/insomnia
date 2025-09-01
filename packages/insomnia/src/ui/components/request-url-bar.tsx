@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { Button } from 'react-aria-components';
+import { Button, Link } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
@@ -13,6 +13,7 @@ import {
   useDebugRequestSendActionFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -71,13 +72,33 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         setUndefinedEnvironmentVariables(searchParams.get('undefinedEnvironmentVariables')!);
       } else {
         // only for request render error
-        showModal(AlertModal, {
+        const errorMessage = searchParams.get('error') || '';
+        const settingTip = errorMessage.includes('Insomnia cannot access');
+        const close = showModal(AlertModal, {
           title: 'Unexpected Request Failure',
           message: (
             <div>
               <p>The request failed due to an unhandled error:</p>
               <code className="wide selectable">
-                <pre className="w-full overflow-y-auto text-wrap" >{searchParams.get('error')}</pre>
+                <p className="w-full overflow-y-auto text-wrap">
+                  {searchParams.get('error')}
+                  {settingTip && (
+                    <span>
+                      {' '}
+                      You must specify which directories Insomnia can access in{' '}
+                      <Link
+                        className="cursor-pointer text-[--color-surprise]"
+                        onPress={() => {
+                          close();
+                          showSettingsModal({ tab: 'general' });
+                        }}
+                      >
+                        Insomnia’s Preferences → Security
+                      </Link>
+                      .
+                    </span>
+                  )}
+                </p>
               </code>
             </div>
           ),

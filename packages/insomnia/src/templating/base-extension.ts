@@ -124,7 +124,7 @@ export default class BaseExtension {
             ?.getSettings()
             .dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
           if (!allowed) {
-            throw `Insomnia cannot access the file ‘${path}’. You can adjust this in Preferences → Security.`;
+            throw `Insomnia cannot access the file ‘${path}’.`;
           }
 
           const content = await fs.promises.readFile(path);

@@ -225,10 +225,7 @@ export const General: FC = () => {
           help="If checked, clears the OAuth session every time Insomnia is relaunched."
         />
         <button
-          className="pointer h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
-          style={{
-            padding: 0,
-          }}
+          className="pointer h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-sm] hover:bg-[--hl-xs]"
           onClick={initNewOAuthSession}
         >
           Clear OAuth 2 session

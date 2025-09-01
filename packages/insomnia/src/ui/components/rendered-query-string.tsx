@@ -1,5 +1,8 @@
 import classNames from 'classnames';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-aria-components';
+
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -74,6 +77,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         });
 
         if (!result) {
+          setTooLong(false);
           return;
         }
 
@@ -136,11 +140,29 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
     }
   }, [tooLong]);
 
+  const showPreferneces = useCallback(() => {
+    showSettingsModal({ tab: 'general' });
+  }, []);
+
   const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
+  // naive way to detect the access file error
+  const settingTip = previewString.includes('Insomnia cannot access');
 
   return (
     <div className="relative flex h-full w-full justify-between gap-[var(--padding-sm)] overflow-auto">
-      <span className={classNames('my-auto', className)}>{previewString}</span>
+      <span className={classNames('my-auto', className)}>
+        {previewString}
+        {settingTip && (
+          <span>
+            {' '}
+            You must specify which directories Insomnia can access in{' '}
+            <Link className="cursor-pointer text-[--color-surprise]" onPress={showPreferneces}>
+              Insomnia’s Preferences → Security
+            </Link>
+            .
+          </span>
+        )}
+      </span>
 
       <CopyButton
         size="small"
