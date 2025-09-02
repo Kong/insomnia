@@ -216,8 +216,7 @@ test.describe('pre-request features tests', () => {
 
       await page.getByLabel('Request Collection').getByTestId(tc.name).press('Enter');
 
-      // send
-      await page.getByTestId('request-pane').getByLabel('Params').getByText('http://127.0.0.1:4010/echo').click();
+      await page.getByTestId('request-pane').getByLabel('Params').click();
       await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
       // verify
       await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
@@ -343,16 +342,12 @@ test.describe('pre-request features tests', () => {
           insomnia.environment.set('formdataBody', resps[4].body);
           `);
 
-    // TODO: wait for body and pre - request script are persisted to the disk
-    // should improve this part, we should avoid sync this state through db as it introduces race condition
-    await page.waitForTimeout(500);
+    await page.getByRole('tab', { name: 'Body' }).click();
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
-
     await expect.soft(statusTag).toContainText('200 OK');
 
     const rows = await responseBody.allInnerTexts();
@@ -389,10 +384,9 @@ test.describe('pre-request features tests', () => {
     await page.locator('[name="noProxy"]').fill('http://a.com,https://b.com');
     await page.locator('.app').press('Escape');
     // add 1s timeout to ensure noProxy settings is applied - INS-4155
-    await page.waitForTimeout(1000);
 
     await page.getByLabel('Request Collection').getByTestId('test proxies manipulation').press('Enter');
-
+    await page.getByRole('tab', { name: 'Body' }).click();
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
@@ -487,7 +481,6 @@ test.describe('pre-request features tests', () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify response
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
     await expect.soft(statusTag).toContainText('200 OK');
 
     // verify persisted environment
@@ -596,7 +589,6 @@ test.describe('pre-request features tests', () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify response
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
     await expect.soft(statusTag).toContainText('200 OK');
 
     // verify table environments have been updated
@@ -615,7 +607,6 @@ test.describe('pre-request features tests', () => {
 
     // verify response
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
     await expect.soft(statusTag).toContainText('200 OK');
 
     const responsePane = page.getByTestId('response-pane');
@@ -686,15 +677,12 @@ test.describe('unhappy paths', () => {
       const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
       await preRequestScriptEditor.fill(tc.preReqScript);
 
-      // TODO: wait for body and pre-request script are persisted to the disk
-      // should improve this part, we should avoid sync this state through db as it introduces race condition
-      await page.waitForTimeout(500);
+      await page.getByRole('tab', { name: 'Body' }).click();
 
       // send
       await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
       // verify
-      await page.waitForSelector('[data-testid="response-status-tag"]:visible');
       await expect.soft(responsePane).toContainText(tc.expectedResult.message);
     });
   }
