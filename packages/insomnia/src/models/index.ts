@@ -1,3 +1,5 @@
+import { invariant } from '~/utils/invariant';
+
 import { generateId } from '../common/misc';
 import { typedKeys } from '../utils';
 import * as _apiSpec from './api-spec';
@@ -204,13 +206,8 @@ export function getModel(type: string) {
 
 export async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
   const model = getModel(type);
-
-  if (!model) {
-    const choices = all()
-      .map(m => m.type)
-      .join(', ');
-    throw new Error(`Tried to init invalid model "${type}". Choices are ${choices}`);
-  }
+  invariant(isValidType(type), `Invalid model type ${type}`);
+  invariant(model, `Model type ${type} not found`);
 
   // Define global default fields
   const objectDefaults = Object.assign(
