@@ -21,51 +21,6 @@ export interface BaseModel {
   name: string;
 }
 
-// Reference to each model
-
-export function types() {
-  return Object.values(modelManifest).map(model => model.type);
-}
-export type AllTypes =
-  | 'ApiSpec'
-  | 'CaCertificate'
-  | 'ClientCertificate'
-  | 'CloudCredential'
-  | 'CookieJar'
-  | 'Environment'
-  | 'GitCredentials'
-  | 'GitRepository'
-  | 'GrpcRequest'
-  | 'GrpcRequestMeta'
-  | 'MockRoute'
-  | 'MockServer'
-  | 'OAuth2Token'
-  | 'PluginData'
-  | 'Project'
-  | 'ProtoDirectory'
-  | 'ProtoFile'
-  | 'Request'
-  | 'RequestGroup'
-  | 'RequestGroupMeta'
-  | 'RequestMeta'
-  | 'RequestVersion'
-  | 'Response'
-  | 'RunnerTestResult'
-  | 'Settings'
-  | 'SocketIOPayload'
-  | 'SocketIORequest'
-  | 'SocketIOResponse'
-  | 'Stats'
-  | 'UnitTest'
-  | 'UnitTestResult'
-  | 'UnitTestSuite'
-  | 'UserSession'
-  | 'WebSocketPayload'
-  | 'WebSocketRequest'
-  | 'WebSocketResponse'
-  | 'Workspace'
-  | 'WorkspaceMeta';
-
 export function canSync(d: BaseModel) {
   if (d.isPrivate) {
     return false;
@@ -130,19 +85,22 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
 
   // Migrate the model
   // NOTE: Do migration before pruning because we might need to look at those fields
-  //TODO(jack): fix this
-  const migratedDoc = model.migrate(fullObject);
+  // TODO(jack): explain why a migration shouldnt need to be here for 6 years, the only case it caters for is preserving data we can do without
+  // cookies should have ids
+  // responses should not be in zip files
+  // hotkeys should exist etc
+  // const migratedDoc = model.migrate(fullObject);
   // optional keys do not generated in init method but should allow update.
   // If we put those keys in init method, all related models will show as modified in git sync.
   const modelOptionalKeys: string[] = 'optionalKeys' in model ? model.optionalKeys || [] : [];
   // Prune extra keys from doc
-  for (const key of typedKeys(migratedDoc)) {
+  for (const key of typedKeys(fullObject)) {
     if (!(key in objectDefaults) && !modelOptionalKeys.includes(key)) {
-      delete migratedDoc[key];
+      delete fullObject[key];
     }
   }
 
-  return migratedDoc as T;
+  return fullObject as T;
 }
 
 // Use function instead of object to avoid issues with circular dependencies
@@ -787,3 +745,7 @@ export const modelManifest = {
     },
   },
 };
+
+export const types = Object.values(modelManifest).map(model => model.type);
+
+export type AllTypes = (typeof types)[number];
