@@ -252,28 +252,6 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
               </div>
             </TextField>
           )}
-          {credentialType === HashiCorpCredentialType.cloudVaultDedicated && (
-            <TextField
-              className="flex flex-col gap-2"
-              defaultValue={(credentials as HashiCorpVaultDedicatedCredential).namespace}
-            >
-              <Label className="col-span-4">
-                Namespace:
-                <HelpTooltip className="space-left ml-2">
-                  Target namespace, admin as default top-level namespace for Vault Dedicated clusters
-                </HelpTooltip>
-              </Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  required
-                  className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
-                  type="text"
-                  name="namespace"
-                  placeholder="Namespace"
-                />
-              </div>
-            </TextField>
-          )}
           {credentialAuthMethod === HashiCorpVaultAuthMethod.appRole && (
             <>
               <TextField className="flex flex-col gap-2" defaultValue={(credentials as VaultAppRoleCredential).role_id}>
@@ -312,6 +290,28 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
                 </div>
               </TextField>
             </>
+          )}
+          {credentialType === HashiCorpCredentialType.cloudVaultDedicated && (
+            <TextField
+              className="flex flex-col gap-2"
+              defaultValue={(credentials as HashiCorpVaultDedicatedCredential).namespace}
+            >
+              <Label className="col-span-4">
+                Namespace:
+                <HelpTooltip className="space-left ml-2">
+                  Target namespace, admin as default top-level namespace for Vault Dedicated clusters
+                </HelpTooltip>
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  required
+                  className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                  type="text"
+                  name="namespace"
+                  placeholder="Namespace"
+                />
+              </div>
+            </TextField>
           )}
         </>
       )}
