@@ -550,3 +550,5 @@ export const RESPONSE_CODE_REASONS: Record<number, string> = {
 
 // (ms) curently server timeout is 30s
 export const INSOMNIA_FETCH_TIME_OUT = 30_000;
+
+export const PREF_SECURITY = 'Insomnia’s Preferences → Security';

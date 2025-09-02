@@ -1,3 +1,5 @@
+import { PREF_SECURITY } from '~/common/constants';
+
 import packageJson from '../../package.json';
 import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { Request } from '../models/request';
@@ -188,7 +190,7 @@ export default class BaseExtension {
             ?.getSettings()
             .dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
           if (!allowed) {
-            throw `Insomnia cannot access the file ‘${path}’.`;
+            throw `Insomnia cannot access the file ‘${path}’. You must specify which directories Insomnia can access in ${PREF_SECURITY}.`;
           }
           return fetchFromTemplateWorkerDatabase('readFile', { path, encoding });
         },

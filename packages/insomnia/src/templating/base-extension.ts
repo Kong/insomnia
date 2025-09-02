@@ -5,6 +5,8 @@ import os from 'node:os';
 
 import iconv from 'iconv-lite';
 
+import { PREF_SECURITY } from '~/common/constants';
+
 import { database as db } from '../common/database';
 import * as models from '../models/index';
 import type { Request } from '../models/request';
@@ -124,7 +126,7 @@ export default class BaseExtension {
             ?.getSettings()
             .dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
           if (!allowed) {
-            throw `Insomnia cannot access the file ‘${path}’.`;
+            throw `Insomnia cannot access the file ‘${path}’. You must specify which directories Insomnia can access in ${PREF_SECURITY}.`;
           }
 
           const content = await fs.promises.readFile(path);

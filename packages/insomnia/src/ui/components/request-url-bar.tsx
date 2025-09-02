@@ -3,6 +3,7 @@ import { Button, Link } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { buildInteractiveMessage } from '~/common/interactive-messages';
 import { useRootLoaderData } from '~/root';
 import {
   type ConnectActionParams,
@@ -13,7 +14,6 @@ import {
   useDebugRequestSendActionFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
-import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -73,32 +73,34 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       } else {
         // only for request render error
         const errorMessage = searchParams.get('error') || '';
-        const settingTip = errorMessage.includes('Insomnia cannot access');
+        const messages = errorMessage.includes('Insomnia cannot access')
+          ? buildInteractiveMessage(errorMessage)
+          : [{ text: errorMessage }];
         const close = showModal(AlertModal, {
           title: 'Unexpected Request Failure',
           message: (
             <div>
               <p>The request failed due to an unhandled error:</p>
               <code className="wide selectable">
-                <p className="w-full overflow-y-auto text-wrap">
-                  {searchParams.get('error')}
-                  {settingTip && (
-                    <span>
-                      {' '}
-                      You must specify which directories Insomnia can access in{' '}
+                <div className="w-full overflow-y-auto text-wrap">
+                  {messages.map(({ text, handler }, index) =>
+                    handler ? (
                       <Link
                         className="cursor-pointer text-[--color-surprise]"
+                        // eslint-disable-next-line react/no-array-index-key
+                        key={index}
                         onPress={() => {
                           close();
-                          showSettingsModal({ tab: 'general' });
+                          handler();
                         }}
                       >
-                        Insomnia’s Preferences → Security
+                        {text}
                       </Link>
-                      .
-                    </span>
+                    ) : (
+                      text
+                    ),
                   )}
-                </p>
+                </div>
               </code>
             </div>
           ),

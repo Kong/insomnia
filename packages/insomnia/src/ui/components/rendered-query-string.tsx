@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-aria-components';
 
-import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { buildInteractiveMessage } from '~/common/interactive-messages';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -140,27 +140,28 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
     }
   }, [tooLong]);
 
-  const showPreferneces = useCallback(() => {
-    showSettingsModal({ tab: 'general' });
-  }, []);
-
   const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
   // naive way to detect the access file error
-  const settingTip = previewString.includes('Insomnia cannot access');
+  const messages = previewString.includes('Insomnia cannot access')
+    ? buildInteractiveMessage(previewString)
+    : [{ text: previewString }];
 
   return (
     <div className="relative flex h-full w-full justify-between gap-[var(--padding-sm)] overflow-auto">
       <span className={classNames('my-auto', className)}>
-        {previewString}
-        {settingTip && (
-          <span>
-            {' '}
-            You must specify which directories Insomnia can access in{' '}
-            <Link className="cursor-pointer text-[--color-surprise]" onPress={showPreferneces}>
-              Insomnia’s Preferences → Security
+        {messages.map(({ text, handler }, index) =>
+          handler ? (
+            <Link
+              className="cursor-pointer text-[--color-surprise]"
+              // eslint-disable-next-line react/no-array-index-key
+              key={index}
+              onPress={handler}
+            >
+              {text}
             </Link>
-            .
-          </span>
+          ) : (
+            text
+          ),
         )}
       </span>
 

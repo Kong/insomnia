@@ -2,8 +2,10 @@ import classnames from 'classnames';
 import clone from 'clone';
 import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
-import { Button } from 'react-aria-components';
+import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
+
+import { buildInteractiveMessage } from '~/common/interactive-messages';
 
 import { database as db } from '../../../common/database';
 import { docsAfterResponseScript } from '../../../common/documentation';
@@ -33,6 +35,7 @@ interface Props {
   onChange: (...args: any[]) => any;
   workspace: Workspace;
   editorId?: string;
+  close: () => void;
 }
 
 interface State {
@@ -251,7 +254,31 @@ export const TagEditor: FC<Props> = props => {
   }
   let previewElement;
   if (error) {
-    previewElement = <textarea className="danger" value={error || 'Error'} readOnly rows={5} />;
+    if (error.startsWith('Insomnia cannot access')) {
+      previewElement = (
+        <div className="danger min-h-[115px] rounded-md border border-solid border-[var(--hl-md)] bg-[var(--hl-xxs)] p-[var(--padding-sm)]">
+          {buildInteractiveMessage(error).map(({ text, handler }, index) =>
+            handler ? (
+              <Link
+                className="cursor-pointer text-[--color-surprise]"
+                // eslint-disable-next-line react/no-array-index-key
+                key={index}
+                onPress={() => {
+                  props.close();
+                  handler();
+                }}
+              >
+                {text}
+              </Link>
+            ) : (
+              text
+            ),
+          )}
+        </div>
+      );
+    } else {
+      previewElement = <textarea className="danger" value={error || 'Error'} readOnly rows={5} />;
+    }
   } else if (rendering) {
     previewElement = <textarea value="rendering..." readOnly rows={5} />;
   } else {

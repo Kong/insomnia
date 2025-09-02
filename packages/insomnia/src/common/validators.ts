@@ -1,3 +1,5 @@
+import { PREF_SECURITY } from '~/common/constants';
+
 import type { CaCertificate } from '../models/ca-certificate';
 import type { ClientCertificate } from '../models/client-certificate';
 import type { Settings } from '../models/settings';
@@ -14,7 +16,7 @@ export function isFsAccessingAllowed(
     if (fromCli) {
       throw `Insomnia cannot access the file ‘${fileName}’. You can specify paths with one or more "--dataFolders <directory>" or "-f <directory>" to allow accessing.`;
     } else {
-      throw `Insomnia cannot access the file ‘${fileName}’.`;
+      throw `Insomnia cannot access the file ‘${fileName}’. You must specify which directories Insomnia can access in ${PREF_SECURITY}.`;
     }
   };
 
