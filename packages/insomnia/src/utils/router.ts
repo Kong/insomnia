@@ -70,7 +70,7 @@ export const getInitialRouteForOrganization = async ({
     }
   }
   // 2. if no history, redirect to the first project
-  const firstProject = await database.getWhere<Project>(models.project.type, { parentId: organizationId });
+  const firstProject = await database.findOne<Project>(models.project.type, { parentId: organizationId });
 
   if (firstProject?._id) {
     return href(`/organization/:organizationId/project/:projectId`, {

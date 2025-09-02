@@ -23,14 +23,7 @@ import electron from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../../package.json';
-import {
-  AUTH_AWS_IAM,
-  AUTH_DIGEST,
-  AUTH_NETRC,
-  AUTH_NTLM,
-  CONTENT_TYPE_FORM_DATA,
-  CONTENT_TYPE_FORM_URLENCODED,
-} from '../../common/constants';
+import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { describeByteSize, hasAuthHeader } from '../../common/misc';
 import type { ClientCertificate } from '../../models/client-certificate';
 import type { RequestHeader } from '../../models/request';
@@ -53,7 +46,7 @@ interface RequestUsedHere {
   headers: any;
   method: string;
   body: { mimeType?: string | null };
-  authentication: Record<string, any>;
+  authentication: {} | { type: AuthTypes; disabled?: boolean; username?: string; password?: string };
   settingFollowRedirects: 'global' | 'on' | 'off';
   settingRebuildPath: boolean;
   settingSendCookies: boolean;
@@ -165,7 +158,8 @@ export const curlRequest = (options: CurlRequestOptions) =>
       const { authentication } = req;
       if (requestBodyPath) {
         // AWS IAM file upload not supported
-        invariant(authentication.type !== AUTH_AWS_IAM, 'AWS authentication not supported for provided body type');
+        const isAWSIAM = 'type' in authentication && authentication.type === 'iam';
+        invariant(!isAWSIAM, 'AWS authentication not supported for provided body type');
         const { size: contentLength } = fs.statSync(requestBodyPath);
         curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
         curl.setOpt(Curl.option.UPLOAD, 1);
@@ -449,21 +443,21 @@ export const createConfiguredCurlInstance = ({
   if (req.suppressUserAgent) {
     curl.setOpt(Curl.option.USERAGENT, '');
   }
-
-  const { username, password, disabled } = authentication;
-  const isDigest = authentication.type === AUTH_DIGEST;
-  const isNLTM = authentication.type === AUTH_NTLM;
-  const isDigestOrNLTM = isDigest || isNLTM;
-  if (!hasAuthHeader(headers) && !disabled && isDigestOrNLTM) {
-    isDigest && curl.setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
-    isNLTM && curl.setOpt(Curl.option.HTTPAUTH, CurlAuth.Ntlm);
-    curl.setOpt(Curl.option.USERNAME, username || '');
-    curl.setOpt(Curl.option.PASSWORD, password || '');
+  if (authentication && 'type' in authentication) {
+    const { username, password, disabled } = authentication;
+    const isDigest = authentication.type === 'digest';
+    const isNLTM = authentication.type === 'ntlm';
+    const isDigestOrNLTM = isDigest || isNLTM;
+    if (!hasAuthHeader(headers) && !disabled && isDigestOrNLTM) {
+      isDigest && curl.setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
+      isNLTM && curl.setOpt(Curl.option.HTTPAUTH, CurlAuth.Ntlm);
+      curl.setOpt(Curl.option.USERNAME, username || '');
+      curl.setOpt(Curl.option.PASSWORD, password || '');
+    }
+    if (authentication.type === 'netrc') {
+      curl.setOpt(Curl.option.NETRC, CurlNetrc.Required);
+    }
   }
-  if (authentication.type === AUTH_NETRC) {
-    curl.setOpt(Curl.option.NETRC, CurlNetrc.Required);
-  }
-
   return { curl, debugTimeline };
 };
 

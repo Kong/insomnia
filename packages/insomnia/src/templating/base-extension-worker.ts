@@ -34,7 +34,11 @@ export const fetchFromTemplateWorkerDatabase = async (path: PluginToMainAPIPaths
     method: 'post',
     body: JSON.stringify(body),
   });
-  const result = await resp.json();
+  let result;
+  try {
+    // We expect this to throw if a db call returns undefined
+    result = await resp.json();
+  } catch {}
   if (!resp.ok) {
     throw new Error(result?.error || JSON.stringify(result));
   }
@@ -180,7 +184,9 @@ export default class BaseExtension {
       renderPurpose,
       util: {
         readFile: async (path: string, encoding?: string) => {
-          const allowed = renderContext?.getSettings().dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
+          const allowed = renderContext
+            ?.getSettings()
+            .dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
           if (!allowed) {
             throw `Insomnia cannot access the file ‘${path}’. You can adjust this in Preferences → Security.`;
           }

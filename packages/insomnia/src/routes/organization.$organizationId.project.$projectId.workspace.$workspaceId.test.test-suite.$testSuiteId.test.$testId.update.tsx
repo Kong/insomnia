@@ -12,7 +12,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { testId } = params;
   const data = (await request.json()) as Partial<UnitTest>;
 
-  const unitTest = await database.getWhere<UnitTest>(models.unitTest.type, {
+  const unitTest = await database.findOne<UnitTest>(models.unitTest.type, {
     _id: testId,
   });
   invariant(unitTest, 'Test not found');

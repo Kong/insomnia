@@ -30,7 +30,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       event: SegmentEvent.vcsAction,
       properties: vcsSegmentEventProperties('remote', 'pull'),
     });
-
+    // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(delta);
     delete remoteCompareCache[workspaceId];
   } catch (err) {

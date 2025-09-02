@@ -9,7 +9,6 @@ import { v4 as uuidV4 } from 'uuid';
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
 import * as models from '../../models';
 import type { CookieJar } from '../../models/cookie-jar';
-import type { Environment } from '../../models/environment';
 import type { RequestAuthentication, RequestHeader } from '../../models/request';
 import type { Response } from '../../models/response';
 import { readCurlResponse } from '../../models/response';
@@ -113,7 +112,7 @@ const openCurlConnection = async (
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
-  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
+  const environment = await models.environment.getById(environmentId || 'n/a');
   const responseEnvironmentId = environment ? environment._id : null;
 
   const caCert = await models.caCertificate.findByParentId(options.workspaceId);

@@ -9,13 +9,6 @@ import {
   METHOD_PATCH,
   METHOD_POST,
   METHOD_PUT,
-  SORT_CREATED_ASC,
-  SORT_CREATED_DESC,
-  SORT_HTTP_METHOD,
-  SORT_NAME_ASC,
-  SORT_NAME_DESC,
-  SORT_TYPE_ASC,
-  SORT_TYPE_DESC,
 } from '../constants';
 import {
   ascendingFirstIndexStringSort,
@@ -44,7 +37,7 @@ describe('Sorting methods', () => {
     ]);
   });
   it('sorts by name', () => {
-    const ascendingNameSort = sortMethodMap[SORT_NAME_ASC];
+    const ascendingNameSort = sortMethodMap['name-asc'];
     expect(
       ascendingNameSort(
         {
@@ -155,7 +148,7 @@ describe('Sorting methods', () => {
         },
       ),
     ).toBe(0);
-    const descendingNameSort = sortMethodMap[SORT_NAME_DESC];
+    const descendingNameSort = sortMethodMap['name-desc'];
     expect(
       descendingNameSort(
         {
@@ -269,7 +262,7 @@ describe('Sorting methods', () => {
   });
 
   it('sorts by timestamp', () => {
-    const createdFirstSort = sortMethodMap[SORT_CREATED_ASC];
+    const createdFirstSort = sortMethodMap['created-asc'];
     expect(
       createdFirstSort(
         {
@@ -320,7 +313,7 @@ describe('Sorting methods', () => {
         },
       ),
     ).toBe(0);
-    const createdLastSort = sortMethodMap[SORT_CREATED_DESC];
+    const createdLastSort = sortMethodMap['created-desc'];
     expect(
       createdLastSort(
         {
@@ -374,7 +367,7 @@ describe('Sorting methods', () => {
   });
 
   it('sorts by type', () => {
-    const ascendingTypeSort = sortMethodMap[SORT_TYPE_ASC];
+    const ascendingTypeSort = sortMethodMap['type-asc'];
     expect(
       ascendingTypeSort(
         {
@@ -519,7 +512,7 @@ describe('Sorting methods', () => {
         },
       ),
     ).toBe(1);
-    const descendingTypeSort = sortMethodMap[SORT_TYPE_DESC];
+    const descendingTypeSort = sortMethodMap['type-desc'];
     expect(
       descendingTypeSort(
         {
@@ -667,7 +660,7 @@ describe('Sorting methods', () => {
   });
 
   it('sorts by HTTP method', () => {
-    const httpMethodSort = sortMethodMap[SORT_HTTP_METHOD];
+    const httpMethodSort = sortMethodMap['http-method'];
     expect(
       httpMethodSort(
         {

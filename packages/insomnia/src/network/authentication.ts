@@ -1,14 +1,5 @@
 import * as Hawk from 'hawk';
 
-import {
-  AUTH_API_KEY,
-  AUTH_ASAP,
-  AUTH_BASIC,
-  AUTH_BEARER,
-  AUTH_HAWK,
-  AUTH_OAUTH_1,
-  AUTH_OAUTH_2,
-} from '../common/constants';
 import type { AuthTypeOAuth2, RequestAuthentication, RequestParameter } from '../models/request';
 import type { RenderedRequest } from '../templating/types';
 import { COOKIE, HEADER, QUERY_PARAMS } from './api-key/constants';
@@ -32,7 +23,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     return;
   }
 
-  if (authentication.type === AUTH_API_KEY && authentication.addTo === HEADER) {
+  if (authentication.type === 'apikey' && authentication.addTo === HEADER) {
     const { key, value } = authentication;
     return {
       name: key,
@@ -40,7 +31,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     } as Header;
   }
 
-  if (authentication.type === AUTH_API_KEY && authentication.addTo === COOKIE) {
+  if (authentication.type === 'apikey' && authentication.addTo === COOKIE) {
     const { key, value } = authentication;
     return {
       name: 'Cookie',
@@ -48,18 +39,18 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     } as Header;
   }
 
-  if (authentication.type === AUTH_BASIC) {
+  if (authentication.type === 'basic') {
     const { username, password, useISO88591 } = authentication;
     const encoding = useISO88591 ? 'latin1' : 'utf8';
     return getBasicAuthHeader(username, password, encoding);
   }
 
-  if (authentication.type === AUTH_BEARER && authentication.token) {
+  if (authentication.type === 'bearer' && authentication.token) {
     const { token, prefix } = authentication;
     return getBearerAuthHeader(token, prefix);
   }
 
-  if (authentication.type === AUTH_OAUTH_2) {
+  if (authentication.type === 'oauth2') {
     // HACK: GraphQL requests use a child request to fetch the schema with an
     // ID of "{{request_id}}.graphql". Here we are removing the .graphql suffix and
     // pretending we are fetching a token for the original request. This makes sure
@@ -80,7 +71,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     }
   }
 
-  if (authentication.type === AUTH_OAUTH_1) {
+  if (authentication.type === 'oauth1') {
     const oAuth1Token = await getOAuth1Token(url, method, authentication, body);
 
     if (oAuth1Token) {
@@ -92,7 +83,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     return;
   }
 
-  if (authentication.type === AUTH_HAWK) {
+  if (authentication.type === 'hawk') {
     const { id, key, algorithm, ext, validatePayload } = authentication;
     let headerOptions = {
       credentials: {
@@ -118,7 +109,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     };
   }
 
-  if (authentication.type === AUTH_ASAP) {
+  if (authentication.type === 'asap') {
     const { issuer, subject, audience, keyId, additionalClaims, privateKey } = authentication;
 
     let parsedAdditionalClaims;
@@ -157,7 +148,7 @@ export function getAuthQueryParams(authentication: RequestAuthentication) {
     return;
   }
 
-  if (authentication.type === AUTH_API_KEY && authentication.addTo === QUERY_PARAMS) {
+  if (authentication.type === 'apikey' && authentication.addTo === QUERY_PARAMS) {
     const { key, value } = authentication;
     return {
       name: key,

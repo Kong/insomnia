@@ -43,28 +43,16 @@ export function remove(protoFile: ProtoFile) {
   return db.remove(protoFile);
 }
 
-export async function batchRemoveIds(ids: string[]) {
-  const files = await db.find(type, {
-    _id: {
-      $in: ids,
-    },
-  });
-  await db.batchModifyDocs({
-    upsert: [],
-    remove: files,
-  });
-}
-
 export function update(protoFile: ProtoFile, patch: Partial<ProtoFile> = {}) {
   return db.docUpdate<ProtoFile>(protoFile, patch);
 }
 
 export function getById(_id: string) {
-  return db.getWhere<ProtoFile>(type, { _id });
+  return db.findOne<ProtoFile>(type, { _id });
 }
 
 export function getByParentId(parentId: string) {
-  return db.getWhere<ProtoFile>(type, { parentId });
+  return db.findOne<ProtoFile>(type, { parentId });
 }
 
 export function findByParentId(parentId: string) {
@@ -72,5 +60,5 @@ export function findByParentId(parentId: string) {
 }
 
 export function all() {
-  return db.all<ProtoFile>(type);
+  return db.find<ProtoFile>(type);
 }

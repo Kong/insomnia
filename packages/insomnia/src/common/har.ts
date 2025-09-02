@@ -138,7 +138,7 @@ export async function exportHar(exportRequests: ExportRequest[]) {
   const entries: Har.Entry[] = [];
 
   for (const exportRequest of exportRequests) {
-    const request: Request | null = await models.request.getById(exportRequest.requestId);
+    const request = await models.request.getById(exportRequest.requestId);
 
     if (!request) {
       continue;
@@ -150,11 +150,11 @@ export async function exportHar(exportRequests: ExportRequest[]) {
       continue;
     }
 
-    let response: Response | null = null;
+    let response;
     if (exportRequest.responseId) {
       response = await models.response.getById(exportRequest.responseId);
     } else {
-      response = await models.response.getLatestForRequest(
+      response = await models.response.getLatestForRequestId(
         exportRequest.requestId,
         exportRequest.environmentId || null,
       );
@@ -199,7 +199,7 @@ export async function exportHar(exportRequests: ExportRequest[]) {
   return har;
 }
 
-export async function exportHarResponse(response: Response | null) {
+export async function exportHarResponse(response?: Response) {
   if (!response) {
     return {
       status: 0,

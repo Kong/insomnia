@@ -324,7 +324,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const workspaceEntities = await database.getWithDescendants(workspace, [models.request.type]);
   const requests: Request[] = workspaceEntities.filter(isRequest);
 
-  const unitTestSuite = await database.getWhere<UnitTestSuite>(models.unitTestSuite.type, {
+  const unitTestSuite = await database.findOne<UnitTestSuite>(models.unitTestSuite.type, {
     _id: testSuiteId,
   });
 

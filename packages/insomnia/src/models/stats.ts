@@ -61,16 +61,16 @@ export async function update(patch: Partial<Stats>) {
 }
 
 export async function get() {
-  const results = (await db.all<Stats>(type)) || [];
+  const result = await db.findOne<Stats>(type);
 
-  if (results.length === 0) {
+  if (!result) {
     return create();
   }
-  return results[0];
+  return result;
 }
 
 export function all() {
-  return db.all<Stats>(type) || [];
+  return db.find<Stats>(type) || [];
 }
 
 export async function incrementRequestStats({ createdRequests, deletedRequests, executedRequests }: Partial<Stats>) {

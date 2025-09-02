@@ -590,7 +590,7 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
       clientCertificates: [],
       cookies: new CookieObject({
         _id: '',
-        type: '',
+        type: 'CookieJar',
         parentId: '',
         modified: 0,
         created: 0,

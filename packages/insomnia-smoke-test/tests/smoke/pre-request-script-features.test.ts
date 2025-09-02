@@ -445,7 +445,7 @@ test.describe('pre-request features tests', () => {
     await page.getByLabel('Request Collection').getByTestId('test certificate manipulation').press('Enter');
 
     await page.getByTestId('settings-button').click();
-    await page.getByTestId('dataFolders').fill("invalid");
+    await page.getByTestId('dataFolders').fill('invalid');
     await page.getByTestId('dataFolders-btn').click();
     await expect.soft(page.getByText('invalid')).toBeVisible();
     await page.locator('.app').press('Escape');
@@ -501,11 +501,11 @@ test.describe('pre-request features tests', () => {
       __fromScript1: 'baseEnvironment',
       __fromScript2: 'collection',
       __fromScript: 'environment',
-      examplehost: 'https://mock.insomnia.rest',
+      examplehost: 'http://127.0.0.1:4010/echo',
       a: {
         b: {
           c: {
-            url: 'https://mock.insomnia.rest',
+            url: 'http://127.0.0.1:4010/echo',
           },
         },
       },

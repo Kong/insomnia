@@ -52,7 +52,7 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
-import { useActiveApiSpecSyncVCSVersion, useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
+import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec';
@@ -142,7 +142,7 @@ const lintOptions = {
 
 const Component = ({ params }: Route.ComponentProps) => {
   const { organizationId, projectId, workspaceId } = params;
-  const { activeProject, activeCookieJar, caCertificate, clientCertificates, activeWorkspace } =
+  const { activeProject, activeCookieJar, caCertificate, clientCertificates, activeWorkspace, vcsVersion } =
     useWorkspaceLoaderData()!;
   const { settings } = useRootLoaderData()!;
 
@@ -351,8 +351,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const disabledKeys = specActionList.filter(item => item.isDisabled).map(item => item.id);
 
   const gitVersion = useGitVCSVersion();
-  const syncVersion = useActiveApiSpecSyncVCSVersion();
-  const uniquenessKey = `${apiSpec?._id}::${apiSpec?.created}::${gitVersion}::${syncVersion}`;
+  const uniquenessKey = `${apiSpec?._id}::${apiSpec?.created}::${gitVersion}::${vcsVersion}`;
 
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
     settings.forceVerticalLayout ? 'vertical' : 'horizontal',
@@ -891,7 +890,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                         projectId,
                         workspaceId,
                         contents: value,
-                        fromSync: true,
+                        fromTemplate: true,
                       });
                     }}
                   />

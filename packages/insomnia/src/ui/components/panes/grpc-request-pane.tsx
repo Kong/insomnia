@@ -32,7 +32,7 @@ import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/tr
 import { setDefaultProtocol } from '../../../utils/url/protocol';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
-import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
+import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
 import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
 import { ErrorBoundary } from '../error-boundary';
@@ -62,7 +62,7 @@ export const GrpcMethodTypeName = {
 
 export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcState, reloadRequests }) => {
   const { activeRequest } = useRequestLoaderData() as GrpcRequestLoaderData;
-  const { activeEnvironment } = useWorkspaceLoaderData()!;
+  const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
   const environmentId = activeEnvironment._id;
   const { settings } = useRootLoaderData()!;
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
@@ -112,14 +112,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
   });
   const editorRef = useRef<CodeEditorHandle>(null);
   const gitVersion = useGitVCSVersion();
-  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
   const patchRequest = useRequestPatcher();
 
   const { updateTabById } = useInsomniaTabContext();
 
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}`;
+  const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
   const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
   const methodType = method?.type;
   const handleRequestSend = async () => {

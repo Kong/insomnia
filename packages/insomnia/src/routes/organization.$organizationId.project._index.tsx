@@ -148,7 +148,7 @@ export interface ProjectLoaderData {
   mockServersCount: number;
   projectsCount: number;
   activeProject?: Project;
-  activeProjectGitRepository?: GitRepository | null;
+  activeProjectGitRepository?: GitRepository;
   projects: (Project & { gitRepository?: GitRepository })[];
   learningFeaturePromise?: Promise<LearningFeature>;
   remoteFilesPromise?: Promise<InsomniaFile[]>;
@@ -954,7 +954,7 @@ const Component = () => {
                   {isGitProject(activeProject) && (
                     <GitProjectSyncDropdown
                       key={activeProjectGitRepository?._id}
-                      gitRepository={activeProjectGitRepository || null}
+                      gitRepository={activeProjectGitRepository}
                     />
                   )}
                   {isLocalProject(activeProject) && !isGitProject(activeProject) && <LocalProjectBar />}

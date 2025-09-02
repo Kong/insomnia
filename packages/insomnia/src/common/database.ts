@@ -7,20 +7,20 @@ import NeDB from '@seald-io/nedb';
 import electron from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
+import type { ApiSpec } from '~/models/api-spec';
+import type { CaCertificate } from '~/models/ca-certificate';
+import type { ClientCertificate } from '~/models/client-certificate';
+import type { CloudProviderCredential } from '~/models/cloud-credential';
+import type { WorkspaceMeta } from '~/models/workspace-meta';
+
 import { mustGetModel } from '../models';
 import type { CookieJar } from '../models/cookie-jar';
 import { type Environment } from '../models/environment';
 import type { GitRepository } from '../models/git-repository';
-import type { BaseModel } from '../models/index';
+import type { AllTypes, BaseModel } from '../models/index';
 import * as models from '../models/index';
 import type { Workspace } from '../models/workspace';
 import { generateId } from './misc';
-
-export type Query<T extends BaseModel = BaseModel> = {
-  [key in keyof T]?: string | SpecificQuery | null | undefined;
-};
-
-type Sort = Record<string, any>;
 
 export interface Operation {
   upsert?: BaseModel[];
@@ -34,25 +34,21 @@ export interface SpecificQuery {
   $ne?: string | null;
 }
 
+export type Query<T extends BaseModel = BaseModel> = {
+  [key in keyof T]?: string | SpecificQuery | null | undefined;
+};
+
 export type ChangeType = 'insert' | 'update' | 'remove';
 export const database = {
-  // Get all documents of a certain type
-  all: async function <T extends BaseModel>(type: string) {
-    if (db._empty) {
-      return _send<T[]>('all', ...arguments);
-    }
-    return database.find<T>(type);
-  },
-
   batchModifyDocs: async function ({ upsert = [], remove = [] }: Operation) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<void>('batchModifyDocs', ...arguments);
     }
     const flushId = await database.bufferChanges();
 
     // Perform from least to most dangerous
-    await Promise.all(upsert.map(doc => database.upsert(doc, true)));
-    await Promise.all(remove.map(doc => database.unsafeRemove(doc, true)));
+    await Promise.all(upsert.map(doc => database.update(doc)));
+    await Promise.all(remove.map(doc => database.unsafeRemove(doc)));
 
     await database.flushChanges(flushId);
   },
@@ -60,7 +56,7 @@ export const database = {
   /** buffers database changes and returns a buffer id, automatically call flushChanges in millis,
    * bufferChanges and flushChanges should be called in pair every time documents changes are made to trigger change listeners */
   bufferChanges: async function (millis = 1000) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<number>('bufferChanges', ...arguments);
     }
     bufferingChanges = true;
@@ -70,7 +66,7 @@ export const database = {
 
   /** buffers database changes and returns a buffer id */
   bufferChangesIndefinitely: async function () {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<number>('bufferChangesIndefinitely', ...arguments);
     }
     bufferingChanges = true;
@@ -78,22 +74,14 @@ export const database = {
   },
 
   /** return count num of documents matching query */
-  count: async function <T extends BaseModel>(type: string, query: Query<T> = {}) {
-    if (db._empty) {
+  count: async function <T extends BaseModel>(type: AllTypes, query: Query<T> = {}) {
+    if (process.type === 'renderer') {
       return _send<number>('count', ...arguments);
     }
-    return new Promise<number>((resolve, reject) => {
-      (db[type] as NeDB<T>).count(query, (err, count) => {
-        if (err) {
-          return reject(err);
-        }
-
-        resolve(count);
-      });
-    });
+    return nedbBucket[type].countAsync(query);
   },
 
-  docCreate: async <T extends BaseModel>(type: string, ...patches: Patch<T>[]) => {
+  docCreate: async <T extends BaseModel>(type: AllTypes, ...patches: Partial<T>[]) => {
     const doc = await models.initModel<T>(
       type,
       ...patches,
@@ -105,7 +93,7 @@ export const database = {
     return database.insert<T>(doc);
   },
 
-  docUpdate: async <T extends BaseModel>(originalDoc: T, ...patches: Patch<T>[]) => {
+  docUpdate: async <T extends BaseModel>(originalDoc: T, ...patches: Partial<T>[]) => {
     // No need to re-initialize the model during update; originalDoc will be in a valid state by virtue of loading
     const doc = await models.initModel<T>(
       originalDoc.type,
@@ -117,17 +105,17 @@ export const database = {
       },
       ...patches,
     );
-    return database.update<T>(doc, false, patches);
+    return database.update<T>(doc, patches);
   },
 
   /** duplicate doc and its descendents recursively */
-  duplicate: async function <T extends BaseModel>(originalDoc: T, patch: Patch<T> = {}) {
-    if (db._empty) {
+  duplicate: async function <T extends BaseModel>(originalDoc: T, patch: Partial<T> = {}) {
+    if (process.type === 'renderer') {
       return _send<T>('duplicate', ...arguments);
     }
     const flushId = await database.bufferChanges();
 
-    async function next<T extends BaseModel>(docToCopy: T, patch: Patch<T>) {
+    async function next<T extends BaseModel>(docToCopy: T, patch: Partial<T>) {
       const model = mustGetModel(docToCopy.type);
       const overrides = {
         _id: generateId(model.prefix),
@@ -137,22 +125,17 @@ export const database = {
       };
 
       // 1. Copy the doc
-      const newDoc = Object.assign({}, docToCopy, patch, overrides);
+      const newDoc = { ...docToCopy, ...patch, ...overrides };
 
-      // Don't initialize the model during insert, and simply duplicate
-      const createdDoc = await database.insert(newDoc, false, false);
-
+      const createdDoc = await nedbBucket[docToCopy.type].insertAsync(newDoc);
       // 2. Get all the children
-      for (const type of allTypes()) {
+      for (const type of Object.keys(nedbBucket) as AllTypes[]) {
         // Note: We never want to duplicate a response
         if (!models.canDuplicate(type)) {
           continue;
         }
 
-        const parentId = docToCopy._id;
-        const children = await database.find(type, { parentId });
-
-        for (const doc of children) {
+        for (const doc of await database.find(type, { parentId: docToCopy._id })) {
           await next(doc, { parentId: createdDoc._id });
         }
       }
@@ -164,75 +147,42 @@ export const database = {
     await database.flushChanges(flushId);
     return createdDoc;
   },
-
+  findOne: async function <T extends BaseModel>(
+    type: AllTypes,
+    query: Query<T> | string = {},
+    sort: Record<string, any> = { created: 1 },
+  ): Promise<T | undefined> {
+    if (process.type === 'renderer') {
+      return _send<T>('findOne', ...arguments);
+    }
+    return nedbBucket[type].findOneAsync<T>(query).sort(sort);
+  },
   /** find documents matching query */
-  find: async function <T extends BaseModel>(type: string, query: Query<T> | string = {}, sort: Sort = { created: 1 }) {
-    if (db._empty) {
+  find: async function <T extends BaseModel>(
+    type: AllTypes,
+    query: Query<T> | string = {},
+    sort: Record<string, any> = { created: 1 },
+    limit = 0,
+  ): Promise<T[]> {
+    if (process.type === 'renderer') {
       return _send<T[]>('find', ...arguments);
     }
-    return new Promise<T[]>((resolve, reject) => {
-      if (!db[type]) {
-        console.warn(`[db] No collection for type "${type}"`);
-        resolve([]);
-        return;
-      }
-      (db[type] as NeDB<T>)
-        .find(query)
-        .sort(sort)
-        .exec(async (err, rawDocs) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-
-          const docs: T[] = [];
-
-          for (const rawDoc of rawDocs) {
-            docs.push(await models.initModel(type, rawDoc));
-          }
-
-          resolve(docs);
-        });
-    });
-  },
-
-  findMostRecentlyModified: async function <T extends BaseModel>(
-    type: string,
-    query: Query<T> = {},
-    limit: number | null = null,
-  ) {
-    if (db._empty) {
-      return _send<T[]>('findMostRecentlyModified', ...arguments);
+    if (!nedbBucket[type]) {
+      console.warn(`[db] No collection for type "${type}"`);
+      return [];
     }
-    return new Promise<T[]>(resolve => {
-      (db[type] as NeDB<T>)
-        .find(query)
-        .sort({
-          modified: -1,
-        })
-        // @ts-expect-error -- TSCONVERSION limit shouldn't be applied if it's null, or default to something that means no-limit
-        .limit(limit)
-        .exec(async (err, rawDocs) => {
-          if (err) {
-            console.warn('[db] Failed to find docs', err);
-            resolve([]);
-            return;
-          }
-
-          const docs: T[] = [];
-
-          for (const rawDoc of rawDocs) {
-            docs.push(await models.initModel(type, rawDoc));
-          }
-
-          resolve(docs);
-        });
-    });
+    const docs = await nedbBucket[type].findAsync<T>(query).sort(sort).limit(limit);
+    // TODO: create a db init phase for migrations rather than doing it on every find.
+    const migrated = [];
+    for (const rawDoc of docs) {
+      migrated.push(await models.initModel<T>(type, rawDoc));
+    }
+    return migrated;
   },
 
   /** trigger all changeListeners */
   flushChanges: async function (id = 0, fake = false) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<void>('flushChanges', ...arguments);
     }
 
@@ -269,78 +219,174 @@ export const database = {
     }
   },
 
-  /** get the exact document by id */
-  get: async function <T extends BaseModel>(type: string, id?: string) {
-    if (db._empty) {
-      return _send<T>('get', ...arguments);
-    }
-
-    // Short circuit IDs used to represent nothing
-    if (!id || id === 'n/a') {
-      return null;
-    }
-    return database.getWhere<T>(type, { _id: id });
-  },
-
-  getMostRecentlyModified: async function <T extends BaseModel>(type: string, query: Query<T> = {}) {
-    if (db._empty) {
-      return _send<T>('getMostRecentlyModified', ...arguments);
-    }
-    const docs = await database.findMostRecentlyModified<T>(type, query, 1);
-    return docs.length ? docs[0] : null;
-  },
-
-  /** get the first document matching query */
-  getWhere: async function <T extends BaseModel>(type: string, query: Query<T>) {
-    if (db._empty) {
-      return _send<T>('getWhere', ...arguments);
-    }
-    const docs = await database.find<T>(type, query);
-    return docs.length ? docs[0] : null;
-  },
-
   /** init in main process */
-  init: async (
-    types: string[],
-    config: NeDB.DataStoreOptions = {},
-    forceReset = false,
-    consoleLog: typeof console.log = console.log,
-  ) => {
+  init: async (config: NeDB.DataStoreOptions = {}, forceReset = false) => {
     if (forceReset) {
       changeListeners = [];
-
-      for (const attr of Object.keys(db)) {
-        if (attr === '_empty') {
-          continue;
-        }
-
-        delete db[attr];
-      }
+      nedbBucket = {} as Record<AllTypes, NeDB>;
     }
+    const defaultConfig: NeDB.DataStoreOptions = {
+      autoload: true,
+      corruptAlertThreshold: 0.9,
+      ...config,
+    };
+    const dbPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
 
-    // Fill in the defaults
-    for (const modelType of types) {
-      if (db[modelType]) {
-        consoleLog(`[db] Already initialized DB.${modelType}`);
-        continue;
-      }
+    nedbBucket = {
+      ApiSpec: new NeDB<ApiSpec>({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.ApiSpec.db'),
+      }),
+      CaCertificate: new NeDB<CaCertificate>({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.CaCertificate.db'),
+      }),
+      ClientCertificate: new NeDB<ClientCertificate>({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.ClientCertificate.db'),
+      }),
+      CloudCredential: new NeDB<CloudProviderCredential>({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.CloudCredential.db'),
+      }),
+      CookieJar: new NeDB<CookieJar>({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.CookieJar.db'),
+      }),
+      Environment: new NeDB<Environment>({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.Environment.db'),
+      }),
+      GitCredentials: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.GitCredentials.db'),
+      }),
+      GitRepository: new NeDB<GitRepository>({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.GitRepository.db'),
+      }),
+      GrpcRequest: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.GrpcRequest.db'),
+      }),
+      GrpcRequestMeta: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.GrpcRequestMeta.db'),
+      }),
+      MockRoute: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.MockRoute.db'),
+      }),
+      MockServer: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.MockServer.db'),
+      }),
+      OAuth2Token: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.OAuth2Token.db'),
+      }),
+      PluginData: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.PluginData.db'),
+      }),
+      Project: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.Project.db'),
+      }),
+      ProtoDirectory: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.ProtoDirectory.db'),
+      }),
+      ProtoFile: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.ProtoFile.db'),
+      }),
+      Request: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.Request.db'),
+      }),
+      RequestGroup: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.RequestGroup.db'),
+      }),
+      RequestGroupMeta: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.RequestGroupMeta.db'),
+      }),
+      RequestMeta: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.RequestMeta.db'),
+      }),
+      RequestVersion: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.RequestVersion.db'),
+      }),
+      Response: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.Response.db'),
+      }),
+      RunnerTestResult: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.RunnerTestResult.db'),
+      }),
+      Settings: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.Settings.db'),
+      }),
+      SocketIOPayload: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.SocketIOPayload.db'),
+      }),
+      SocketIORequest: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.SocketIORequest.db'),
+      }),
+      SocketIOResponse: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.SocketIOResponse.db'),
+      }),
+      Stats: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.Stats.db'),
+      }),
+      UnitTest: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.UnitTest.db'),
+      }),
+      UnitTestResult: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.UnitTestResult.db'),
+      }),
+      UnitTestSuite: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.UnitTestSuite.db'),
+      }),
+      UserSession: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.UserSession.db'),
+      }),
+      WebSocketPayload: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.WebSocketPayload.db'),
+      }),
+      WebSocketRequest: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.WebSocketRequest.db'),
+      }),
+      WebSocketResponse: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.WebSocketResponse.db'),
+      }),
+      Workspace: new NeDB<Workspace>({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.Workspace.db'),
+      }),
+      WorkspaceMeta: new NeDB<WorkspaceMeta>({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.WorkspaceMeta.db'),
+      }),
+    };
 
-      const filePath = getDBFilePath(modelType);
-      const collection = new NeDB(
-        Object.assign(
-          {
-            autoload: true,
-            filename: filePath,
-            corruptAlertThreshold: 0.9,
-          },
-          config,
-        ),
-      );
-
-      db[modelType] = collection;
-    }
-
-    delete db._empty;
     electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
       try {
         // @ts-expect-error -- mapping unsoundness
@@ -358,106 +404,26 @@ export const database = {
     // TODO: Figure out why this makes tests hang
     if (!config.inMemoryOnly) {
       await _repairDatabase();
-      consoleLog(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
-    }
-
-    // This isn't the best place for this but w/e
-    // Listen for response deletions and delete corresponding response body files
-    database.onChange(async (changes: ChangeBufferEvent[]) => {
-      for (const [type, doc] of changes) {
-        // TODO(TSCONVERSION) what's returned here is the entire model implementation, not just a model
-        // The type definition will be a little confusing
-        const m: Record<string, any> | null = models.getModel(doc.type);
-
-        if (!m) {
-          continue;
-        }
-
-        if (type === 'remove' && typeof m.hookRemove === 'function') {
-          try {
-            await m.hookRemove(doc, consoleLog);
-          } catch (err) {
-            consoleLog(`[db] Delete hook failed for ${type} ${doc._id}: ${err.message}`);
-          }
-        }
-
-        if (type === 'insert' && typeof m.hookInsert === 'function') {
-          try {
-            await m.hookInsert(doc, consoleLog);
-          } catch (err) {
-            consoleLog(`[db] Insert hook failed for ${type} ${doc._id}: ${err.message}`);
-          }
-        }
-
-        if (type === 'update' && typeof m.hookUpdate === 'function') {
-          try {
-            await m.hookUpdate(doc, consoleLog);
-          } catch (err) {
-            consoleLog(`[db] Update hook failed for ${type} ${doc._id}: ${err.message}`);
-          }
-        }
-      }
-    });
-
-    for (const model of models.all()) {
-      // @ts-expect-error -- TSCONVERSION optional type on response
-      if (typeof model.hookDatabaseInit === 'function') {
-        // @ts-expect-error -- TSCONVERSION optional type on response
-        await model.hookDatabaseInit?.(consoleLog);
-      }
     }
   },
 
-  /** init in renderer process */
-  initClient: async () => {
-    electron.ipcRenderer.on('db.changes', async (_e, changes) => {
-      for (const fn of changeListeners) {
-        await fn(changes);
-      }
-    });
-    console.log('[db] Initialized DB client');
-  },
-
-  insert: async function <T extends BaseModel>(doc: T, fromSync = false, initializeModel = true) {
-    if (db._empty) {
+  insert: async function <T extends BaseModel>(doc: T) {
+    if (process.type === 'renderer') {
       return _send<T>('insert', ...arguments);
     }
-    return new Promise<T>(async (resolve, reject) => {
-      let docWithDefaults: T | null = null;
-
-      try {
-        if (initializeModel) {
-          docWithDefaults = await models.initModel<T>(doc.type, doc);
-        } else {
-          docWithDefaults = doc;
-        }
-      } catch (err) {
-        return reject(err);
-      }
-
-      (db[doc.type] as NeDB<T>).insert(docWithDefaults, (err, newDoc: T) => {
-        if (err) {
-          return reject(err);
-        }
-
-        resolve(newDoc);
-        // NOTE: This needs to be after we resolve
-        notifyOfChange('insert', newDoc, fromSync);
-      });
-    });
+    const docWithDefaults = await models.initModel<T>(doc.type, doc);
+    const newDoc = await nedbBucket[doc.type].insertAsync(docWithDefaults);
+    notifyOfChange('insert', newDoc);
+    return newDoc;
   },
 
   onChange: (callback: ChangeListener) => {
     changeListeners.push(callback);
   },
 
-  offChange: (callback: ChangeListener) => {
-    changeListeners = changeListeners.filter(l => l !== callback);
-  },
-
   /** remove doc and its descendants */
-  remove: async function <T extends BaseModel>(doc: T, fromSync = false) {
-    if (db._empty) {
+  remove: async function <T extends BaseModel>(doc: T) {
+    if (process.type === 'renderer') {
       return _send<void>('remove', ...arguments);
     }
 
@@ -469,7 +435,7 @@ export const database = {
 
     // Don't really need to wait for this to be over;
     types.map(t =>
-      db[t].remove(
+      nedbBucket[t].remove(
         {
           _id: {
             $in: docIds,
@@ -481,12 +447,12 @@ export const database = {
       ),
     );
 
-    docs.map(d => notifyOfChange('remove', d, fromSync));
+    docs.map(d => notifyOfChange('remove', d));
     await database.flushChanges(flushId);
   },
 
-  removeWhere: async function <T extends BaseModel>(type: string, query: Query<T>) {
-    if (db._empty) {
+  removeWhere: async function <T extends BaseModel>(type: AllTypes, query: Query<T>) {
+    if (process.type === 'renderer') {
       return _send<void>('removeWhere', ...arguments);
     }
     const flushId = await database.bufferChanges();
@@ -498,7 +464,7 @@ export const database = {
 
       // Don't really need to wait for this to be over;
       types.map(t =>
-        db[t].remove(
+        nedbBucket[t].remove(
           {
             _id: {
               $in: docIds,
@@ -509,70 +475,36 @@ export const database = {
           },
         ),
       );
-      docs.map(d => notifyOfChange('remove', d, false));
+      docs.map(d => notifyOfChange('remove', d));
     }
 
     await database.flushChanges(flushId);
   },
 
   /** Removes entries without removing their children */
-  unsafeRemove: async function <T extends BaseModel>(doc: T, fromSync = false) {
-    if (db._empty) {
+  unsafeRemove: async function <T extends BaseModel>(doc: T) {
+    if (process.type === 'renderer') {
       return _send<void>('unsafeRemove', ...arguments);
     }
 
-    (db[doc.type] as NeDB<T>).remove({ _id: doc._id });
-    notifyOfChange('remove', doc, fromSync);
+    nedbBucket[doc.type].remove({ _id: doc._id });
+    notifyOfChange('remove', doc);
   },
 
-  update: async function <T extends BaseModel>(doc: T, fromSync = false, patches: Patch<T>[] = []) {
-    if (db._empty) {
+  update: async function <T extends BaseModel>(doc: T, patches: Partial<T>[] = []) {
+    if (process.type === 'renderer') {
       return _send<T>('update', ...arguments);
     }
 
-    return new Promise<T>(async (resolve, reject) => {
-      let docWithDefaults: T;
-
-      try {
-        docWithDefaults = await models.initModel<T>(doc.type, doc);
-      } catch (err) {
-        return reject(err);
-      }
-
-      (db[doc.type] as NeDB<T>).update(
-        { _id: docWithDefaults._id },
-        docWithDefaults,
-        // TODO(TSCONVERSION) see comment below, upsert can happen automatically as part of the update
-        // @ts-expect-error -- TSCONVERSION expects 4 args but only sent 3. Need to validate what UpdateOptions should be.
-        err => {
-          if (err) {
-            return reject(err);
-          }
-
-          resolve(docWithDefaults);
-          // NOTE: This needs to be after we resolve
-          notifyOfChange('update', docWithDefaults, fromSync, patches);
-        },
-      );
-    });
+    const docWithDefaults = await models.initModel<T>(doc.type, doc);
+    await nedbBucket[doc.type].updateAsync({ _id: docWithDefaults._id }, docWithDefaults, { upsert: true });
+    notifyOfChange('update', docWithDefaults, patches);
+    return docWithDefaults;
   },
 
-  // TODO(TSCONVERSION) the update method above can now take an upsert property
-  upsert: async function <T extends BaseModel>(doc: T, fromSync = false) {
-    if (db._empty) {
-      return _send<T>('upsert', ...arguments);
-    }
-    const existingDoc = await database.get<T>(doc.type, doc._id);
-
-    if (existingDoc) {
-      return database.update<T>(doc, fromSync);
-    }
-    return database.insert<T>(doc, fromSync);
-  },
-
-  /** get all ancestors of specified types of a document */
-  withAncestors: async function <T extends BaseModel>(doc: T | null, types: string[] = allTypes()) {
-    if (db._empty) {
+  /** get all ancestors of specified types of a document including the original */
+  withAncestors: async function <T extends BaseModel>(doc: T | undefined, types: AllTypes[] = []) {
+    if (process.type === 'renderer') {
       return _send<T[]>('withAncestors', ...arguments);
     }
 
@@ -581,20 +513,21 @@ export const database = {
     }
 
     let docsToReturn: T[] = doc ? [doc] : [];
-
+    if (types.length === 0) {
+      types = Object.keys(nedbBucket) as AllTypes[];
+    }
     async function next(docs: T[]): Promise<T[]> {
       const foundDocs: T[] = [];
 
       for (const d of docs) {
         for (const type of types) {
           // If the doc is null, we want to search for parentId === null
-          const another = await database.get<T>(type, d.parentId);
-          another && foundDocs.push(another);
+          const parent = await database.findOne<T>(type, { _id: d.parentId });
+          parent && foundDocs.push(parent);
         }
       }
 
       if (foundDocs.length === 0) {
-        // Didn't find anything. We're done
         return docsToReturn;
       }
 
@@ -612,8 +545,8 @@ export const database = {
    * @param types - Only query specified types, if provided
    * @returns A promise that resolves to an array of documents
    */
-  getWithDescendants: async function <T extends BaseModel>(doc: T, types: models.ModelTypes = []) {
-    if (db._empty) {
+  getWithDescendants: async function <T extends BaseModel>(doc: T, types: AllTypes[] = []) {
+    if (process.type === 'renderer') {
       return _send<T[]>('getWithDescendants', ...arguments);
     }
 
@@ -629,8 +562,8 @@ export const database = {
         // Find all descendants of the current docs
         const promises: Promise<BaseModel[]>[] = [];
 
-        const uniqueDescendantTypes = new Set<string>();
-        const parentIdsMap = new Map<string, (string | null)[]>();
+        const uniqueDescendantTypes = new Set<AllTypes>();
+        const parentIdsMap = new Map<AllTypes, (string | null)[]>();
 
         for (const d of docs) {
           if (d.type) {
@@ -667,23 +600,7 @@ export const database = {
   },
 };
 
-type DB = Record<string, NeDB>;
-
-// @ts-expect-error -- TSCONVERSION _empty doesn't match the index signature, use something other than _empty in future
-const db: DB = {
-  // _empty is true if it's in the renderer process
-  _empty: true,
-} as DB;
-
-// ~~~~~~~ //
-// HELPERS //
-// ~~~~~~~ //
-const allTypes = () => Object.keys(db);
-
-function getDBFilePath(modelType: string) {
-  // NOTE: Do not EVER change this. EVER!
-  return fsPath.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), `insomnia.${modelType}.db`);
-}
+let nedbBucket: Record<AllTypes, NeDB> = {} as Record<AllTypes, NeDB>;
 
 // ~~~~~~~~~~~~~~~~ //
 // Change Listeners //
@@ -691,12 +608,7 @@ function getDBFilePath(modelType: string) {
 let bufferingChanges = false;
 let bufferChangesId = 1;
 
-export type ChangeBufferEvent<T extends BaseModel = BaseModel> = [
-  event: ChangeType,
-  doc: T,
-  fromSync: boolean,
-  patches: Patch<T>[],
-];
+export type ChangeBufferEvent<T extends BaseModel = BaseModel> = [event: ChangeType, doc: T, patches: Partial<T>[]];
 
 let changeBuffer: ChangeBufferEvent[] = [];
 
@@ -706,16 +618,11 @@ let changeListeners: ChangeListener[] = [];
 
 /** push changes into the buffer, so that changeListeners can get change contents when database.flushChanges is called,
  * this method should be called whenever a document change happens */
-async function notifyOfChange<T extends BaseModel>(
-  event: ChangeType,
-  doc: T,
-  fromSync: boolean,
-  patches: Patch<T>[] = [],
-) {
+async function notifyOfChange<T extends BaseModel>(event: ChangeType, doc: T, patches: Partial<T>[] = []) {
   const updatedDoc = doc;
 
   // TODO: Use object is better than array
-  changeBuffer.push([event, updatedDoc, fromSync, patches]);
+  changeBuffer.push([event, updatedDoc, patches]);
 
   // Flush right away if we're not buffering
   if (!bufferingChanges) {
@@ -723,27 +630,15 @@ async function notifyOfChange<T extends BaseModel>(
   }
 }
 
-// ~~~~~~~~~~~~~~~~~~~ //
-// DEFAULT MODEL STUFF //
-// ~~~~~~~~~~~~~~~~~~~ //
-
-type Patch<T> = Partial<T>;
-
 // ~~~~~~~ //
 // Helpers //
 // ~~~~~~~ //
-// If you call database.x methods within the render process, you can obtain results by this helper function. In renderer process, db._empty is true.
+// If you call database.x methods within the render process, you can obtain results by this helper function
 async function _send<T>(fnName: string, ...args: any[]) {
   return new Promise<T>((resolve, reject) => {
     const replyChannel = `db.fn.reply:${uuidv4()}`;
     electron.ipcRenderer.send('db.fn', fnName, replyChannel, ...args);
-    electron.ipcRenderer.once(replyChannel, (_e, err, result: T) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(result);
-      }
-    });
+    electron.ipcRenderer.once(replyChannel, (_e, err, result: T) => (err ? reject(err) : resolve(result)));
   });
 }
 
@@ -771,14 +666,10 @@ export async function _repairDatabase() {
  */
 async function _applyApiSpecName(workspace: Workspace) {
   const apiSpec = await models.apiSpec.getByParentId(workspace._id);
-  if (apiSpec === null) {
-    return;
-  }
-
-  if (!apiSpec.fileName || apiSpec.fileName === models.apiSpec.init().fileName) {
-    await models.apiSpec.update(apiSpec, {
-      fileName: workspace.name,
-    });
+  const existsAndFilenameIsDefaultOrMissing =
+    apiSpec && (!apiSpec.fileName || apiSpec.fileName === models.apiSpec.init().fileName);
+  if (existsAndFilenameIsDefaultOrMissing) {
+    await models.apiSpec.update(apiSpec, { fileName: workspace.name });
   }
 }
 

@@ -1,12 +1,14 @@
 import { readFile } from 'node:fs/promises';
 
+import { z, type ZodError } from 'zod/v4';
+
 import type { CurrentPlan } from '~/models/organization';
 
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';
 import { type BaseEnvironment, type Environment, isEnvironment } from '../models/environment';
 import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
-import { type BaseModel, getModel, userSession } from '../models/index';
+import { type AllTypes, type BaseModel, getModel, userSession } from '../models/index';
 import * as models from '../models/index';
 import { isMockRoute, type MockRoute } from '../models/mock-route';
 import { isGitProject } from '../models/project';
@@ -22,11 +24,29 @@ import type { ImportEntry } from '../utils/importers/entities';
 import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
 import { database as db } from './database';
-import { importInsomniaV5Data } from './insomnia-v5';
+import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
 
+export type AllExportTypes =
+  | 'request'
+  | 'grpc_request'
+  | 'websocket_request'
+  | 'websocket_payload'
+  | 'socketio_request'
+  | 'socketio_payload'
+  | 'mock'
+  | 'mock_route'
+  | 'request_group'
+  | 'unit_test_suite'
+  | 'unit_test'
+  | 'workspace'
+  | 'cookie_jar'
+  | 'environment'
+  | 'api_spec'
+  | 'proto_file'
+  | 'proto_directory';
 export interface ExportedModel extends BaseModel {
-  _type: string;
+  _type: AllExportTypes;
 }
 
 interface ConvertResult {
@@ -113,6 +133,26 @@ interface ResourceCacheType {
 
 let resourceCacheList: ResourceCacheType[] = [];
 
+export const MODELS_BY_EXPORT_TYPE: Record<AllExportTypes, AllTypes> = {
+  request: 'Request',
+  websocket_payload: 'WebSocketPayload',
+  websocket_request: 'WebSocketRequest',
+  socketio_payload: 'SocketIOPayload',
+  socketio_request: 'SocketIORequest',
+  mock: 'MockServer',
+  mock_route: 'MockRoute',
+  grpc_request: 'GrpcRequest',
+  request_group: 'RequestGroup',
+  unit_test_suite: 'UnitTestSuite',
+  unit_test: 'UnitTest',
+  workspace: 'Workspace',
+  cookie_jar: 'CookieJar',
+  environment: 'Environment',
+  api_spec: 'ApiSpec',
+  proto_file: 'ProtoFile',
+  proto_directory: 'ProtoDirectory',
+};
+
 export async function scanResources(importEntries: ImportEntry[]): Promise<ScanResult[]> {
   resourceCacheList = [];
   const results = await Promise.allSettled(
@@ -121,9 +161,11 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
       const oriFileName = importEntry.oriFileName || '';
 
       let result: ConvertResult | null = null;
+      let v5Error = null;
 
       try {
-        const insomnia5Import = importInsomniaV5Data(contentStr);
+        const { data: insomnia5Import, error } = tryImportV5Data(contentStr);
+        v5Error = error;
         if (insomnia5Import.length > 0) {
           result = {
             type: {
@@ -140,6 +182,16 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
           result = (await convert(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {
+        if (v5Error) {
+          const messages = extractErrorMessages(v5Error);
+          if (messages.length) {
+            return {
+              oriFileName,
+              // only report first 5 errors to avoid overflow
+              errors: messages.slice(0, 5),
+            };
+          }
+        }
         if (err instanceof Error) {
           return {
             oriFileName,
@@ -161,7 +213,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
         .filter(r => r._type)
         .map(r => {
           const { _type, ...model } = r;
-          return { ...model, type: models.MODELS_BY_EXPORT_TYPE[_type].type };
+          return { ...model, type: MODELS_BY_EXPORT_TYPE[_type] };
         });
 
       resourceCacheList.push({
@@ -204,6 +256,38 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
           errors: [retObj.reason.toString()],
         },
   );
+}
+
+type ZodTreeifiedError = ReturnType<typeof z.treeifyError<any>>;
+
+function extractErrorMessages(v5Error: ZodError | any): string[] {
+  const messages: [string, string[]][] = [];
+  function walkError(err: ZodTreeifiedError, path = '') {
+    if (err.errors.length > 0) {
+      messages.push([path, err.errors]);
+    }
+    if ('properties' in err) {
+      for (const [key, value] of Object.entries(err.properties!)) {
+        if (value) {
+          walkError(value, path ? `${path}.${key}` : key);
+        }
+      }
+    }
+    if ('items' in err) {
+      (err.items as (ZodTreeifiedError | undefined)[]).forEach((item, index) => {
+        if (item) {
+          walkError(item, path ? `${path}.${index}` : String(index));
+        }
+      });
+    }
+  }
+
+  if ('issues' in v5Error) {
+    const errors = z.treeifyError(v5Error);
+    walkError(errors);
+    return messages.map(([path, errs]) => `"${path}": ${errs.join('; ')}`);
+  }
+  return 'message' in v5Error ? [v5Error.message] : typeof v5Error === 'string' ? [v5Error] : [];
 }
 
 export async function importResourcesToProject({

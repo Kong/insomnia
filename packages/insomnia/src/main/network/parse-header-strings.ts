@@ -3,7 +3,9 @@ import { parse as urlParse } from 'node:url';
 import aws4 from 'aws4';
 import clone from 'clone';
 
-import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA } from '../../common/constants';
+import type { RequestAuthentication } from '~/models/request';
+
+import { CONTENT_TYPE_FORM_DATA } from '../../common/constants';
 import {
   getContentTypeHeader,
   getHostHeader,
@@ -27,7 +29,7 @@ interface Req {
   headers: any;
   method: string;
   body: { mimeType?: string | null };
-  authentication: Record<string, any>;
+  authentication: {} | RequestAuthentication;
 }
 export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath, authHeader }: Input) => {
   const headers = clone(req.headers);
@@ -39,25 +41,27 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
     headers.push({ name: 'Transfer-Encoding', value: DISABLE_HEADER_VALUE });
   }
   const { authentication, method } = req;
-  const isDigest = authentication.type === AUTH_DIGEST;
-  const isNTLM = authentication.type === AUTH_NTLM;
-  const isAWSIAM = authentication.type === AUTH_AWS_IAM;
-  const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest =
-    !hasAuthHeader(headers) && !authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
-  if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest && authHeader) {
-    headers.push(authHeader);
-  }
-  if (isAWSIAM) {
-    const hostHeader = getHostHeader(headers)?.value;
-    const contentTypeHeader = getContentTypeHeader(headers)?.value;
-    _getAwsAuthHeaders({
-      authentication,
-      url: finalUrl,
-      hostHeader,
-      contentTypeHeader,
-      body: requestBody,
-      method,
-    }).forEach(header => headers.push(header));
+  if (authentication && 'type' in authentication) {
+    const isDigest = authentication.type === 'digest';
+    const isNTLM = authentication.type === 'ntlm';
+    const isAWSIAM = authentication.type === 'iam';
+    const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest =
+      !hasAuthHeader(headers) && !authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
+    if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest && authHeader) {
+      headers.push(authHeader);
+    }
+    if (isAWSIAM) {
+      const hostHeader = getHostHeader(headers)?.value;
+      const contentTypeHeader = getContentTypeHeader(headers)?.value;
+      _getAwsAuthHeaders({
+        authentication,
+        url: finalUrl,
+        hostHeader,
+        contentTypeHeader,
+        body: requestBody,
+        method,
+      }).forEach(header => headers.push(header));
+    }
   }
   const isMultipartForm = req.body.mimeType === CONTENT_TYPE_FORM_DATA;
   if (isMultipartForm && requestBodyPath) {

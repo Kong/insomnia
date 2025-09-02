@@ -36,7 +36,7 @@ import { GitProjectRepositorySettingsModal } from '../modals/git-repository-sett
 import { SyncMergeModal } from '../modals/sync-merge-modal';
 import { showToast } from '../toast-notification';
 interface Props {
-  gitRepository: GitRepository | null;
+  gitRepository?: GitRepository;
 }
 
 export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {

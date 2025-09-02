@@ -54,13 +54,14 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { organizationId, projectId } = params;
 
   const project = await models.project.getById(projectId);
-
+  invariant(project, 'Project not found');
   const formData = await request.formData();
 
   const workspaceId = formData.get('workspaceId');
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
   const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
 
   const msgObj = await deleteWorkspace(workspace, project);
 

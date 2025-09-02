@@ -30,6 +30,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       projectId,
     });
 
+    // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(delta);
   } catch (err) {
     await vcs.checkout([], currentBranch);

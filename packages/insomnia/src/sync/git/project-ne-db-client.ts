@@ -94,8 +94,8 @@ export class GitProjectNeDBClient {
       const originDocs = await database.getWithDescendants(workspace);
       // If the workspace already exists, we need to remove any documents that are not in the new data
       const deletedDocs = originDocs.filter(originDoc => !dataToImport.some(doc => doc._id === originDoc._id));
-      await database.batchModifyDocs({
-        remove: deletedDocs,
+      deletedDocs.forEach(async doc => {
+        db.unsafeRemove(doc);
       });
     }
 
@@ -114,7 +114,7 @@ export class GitProjectNeDBClient {
         await models.workspaceMeta.update(workspaceMeta, { gitFilePath: filePath });
       }
 
-      await db.upsert(doc, true);
+      await db.update(doc);
     }
 
     await db.flushChanges(bufferId);
@@ -128,13 +128,13 @@ export class GitProjectNeDBClient {
       throw this._errMissing(filePath);
     }
 
-    const doc = await db.get(models.workspace.type, workspaceId);
+    const doc = await db.findOne(models.workspace.type, { _id: workspaceId });
 
     if (!doc) {
       return;
     }
 
-    await db.unsafeRemove(doc, true);
+    await db.unsafeRemove(doc);
   }
 
   async readdir(filePath: string) {

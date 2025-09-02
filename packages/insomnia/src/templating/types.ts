@@ -8,8 +8,7 @@ import type { OAuth2Token } from '../models/o-auth-2-token';
 import type { Project } from '../models/project';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
-import type { Response } from '../models/response';
-import type { getBodyBuffer, getLatestForRequest } from '../models/response';
+import type { getBodyBuffer, getLatestForRequestId, Response } from '../models/response';
 import type { get as getSettings } from '../models/settings';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
@@ -266,21 +265,21 @@ export interface PluginTemplateTagContext {
     openInBrowser?: (url: string) => void;
     models: {
       request: {
-        getById: (id: string) => Promise<Request | null>;
+        getById: (id: string) => Promise<Request | undefined>;
         getAncestors: (request: Request) => Promise<(Request | RequestGroup | Workspace)[]>;
       };
       cloudCredential: {
-        getById: (id: string) => Promise<CloudProviderCredential | null>;
+        getById: (id: string) => Promise<CloudProviderCredential | undefined>;
         update: (
           originCredential: CloudProviderCredential,
           patch: Partial<CloudProviderCredential>,
         ) => Promise<CloudProviderCredential>;
       };
-      workspace: { getById: (id: string) => Promise<Workspace | null> };
-      oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | null> };
+      workspace: { getById: (id: string) => Promise<Workspace | undefined> };
+      oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | undefined> };
       cookieJar: { getOrCreateForParentId: (parentId: string) => Promise<CookieJar> };
       response: {
-        getLatestForRequestId: typeof getLatestForRequest;
+        getLatestForRequestId: typeof getLatestForRequestId;
         getBodyBuffer: typeof getBodyBuffer;
       };
       settings: {
