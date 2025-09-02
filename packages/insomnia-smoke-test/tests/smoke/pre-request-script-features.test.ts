@@ -204,20 +204,20 @@ test.describe('pre-request features tests', () => {
   test('run test cases', async ({ page }) => {
     for (const tc of testCases) {
       console.log(`Running test case: ${tc.name}`);
-      const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-      const responseBody = page.getByTestId('response-pane').getByTestId('CodeEditor').locator('.CodeMirror-line');
 
       await page.getByLabel('Request Collection').getByTestId(tc.name).press('Enter');
 
       // send
+      await page.getByTestId('request-pane').getByLabel('Params').getByText('http://127.0.0.1:4010/echo').click();
       await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-
       // verify
-      await page.waitForSelector('[data-testid="response-status-tag"]:visible');
+      await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
 
-      await expect.soft(statusTag).toContainText('200 OK');
-
-      const rows = await responseBody.allInnerTexts();
+      const rows = await page
+        .getByTestId('response-pane')
+        .getByTestId('CodeEditor')
+        .locator('.CodeMirror-line')
+        .allInnerTexts();
       expect.soft(rows.length).toBeGreaterThan(0);
 
       const bodyJson = JSON.parse(rows.join(' '));
