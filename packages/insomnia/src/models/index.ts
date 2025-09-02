@@ -1,43 +1,12 @@
+import { v4 as uuidv4 } from 'uuid';
+
+import { CONTENT_TYPE_JSON } from '~/common/constants';
+import { newDefaultRegistry } from '~/common/hotkeys';
+import { HttpVersions, UpdateChannel } from '~/common/settings';
+
+import appConfig from '../../config/config.json';
 import { generateId } from '../common/misc';
 import { typedKeys } from '../utils';
-import * as _apiSpec from './api-spec';
-import * as _caCertificate from './ca-certificate';
-import * as _clientCertificate from './client-certificate';
-import * as _cloudCredential from './cloud-credential';
-import * as _cookieJar from './cookie-jar';
-import * as _environment from './environment';
-import * as _gitCredentials from './git-credentials';
-import * as _gitRepository from './git-repository';
-import * as _grpcRequest from './grpc-request';
-import * as _grpcRequestMeta from './grpc-request-meta';
-import * as _mockRoute from './mock-route';
-import * as _mockServer from './mock-server';
-import * as _oAuth2Token from './o-auth-2-token';
-import * as _pluginData from './plugin-data';
-import * as _project from './project';
-import * as _protoDirectory from './proto-directory';
-import * as _protoFile from './proto-file';
-import * as _request from './request';
-import * as _requestGroup from './request-group';
-import * as _requestGroupMeta from './request-group-meta';
-import * as _requestMeta from './request-meta';
-import * as _requestVersion from './request-version';
-import * as _response from './response';
-import * as _runnerTestResult from './runner-test-result';
-import * as _settings from './settings';
-import * as _socketIOPayload from './socket-io-payload';
-import * as _socketIORequest from './socket-io-request';
-import * as _socketIoResponse from './socket-io-response';
-import * as _stats from './stats';
-import * as _unitTest from './unit-test';
-import * as _unitTestResult from './unit-test-result';
-import * as _unitTestSuite from './unit-test-suite';
-import * as _userSession from './user-session';
-import * as _webSocketPayload from './websocket-payload';
-import * as _webSocketRequest from './websocket-request';
-import * as _webSocketResponse from './websocket-response';
-import * as _workspace from './workspace';
-import * as _workspaceMeta from './workspace-meta';
 
 export interface BaseModel {
   _id: string;
@@ -53,93 +22,9 @@ export interface BaseModel {
 }
 
 // Reference to each model
-export const apiSpec = _apiSpec;
-export const clientCertificate = _clientCertificate;
-export const caCertificate = _caCertificate;
-export const cookieJar = _cookieJar;
-export const environment = _environment;
-export const gitCredentials = _gitCredentials;
-export const gitRepository = _gitRepository;
-export const mockServer = _mockServer;
-export const mockRoute = _mockRoute;
-export const oAuth2Token = _oAuth2Token;
-export const pluginData = _pluginData;
-export const request = _request;
-export const requestGroup = _requestGroup;
-export const requestGroupMeta = _requestGroupMeta;
-export const requestMeta = _requestMeta;
-export const requestVersion = _requestVersion;
-export const runnerTestResult = _runnerTestResult;
-export const response = _response;
-export const settings = _settings;
-export const project = _project;
-export const stats = _stats;
-export const unitTest = _unitTest;
-export const unitTestSuite = _unitTestSuite;
-export const unitTestResult = _unitTestResult;
-export const protoFile = _protoFile;
-export const protoDirectory = _protoDirectory;
-export const grpcRequest = _grpcRequest;
-export const grpcRequestMeta = _grpcRequestMeta;
-export const webSocketPayload = _webSocketPayload;
-export const webSocketRequest = _webSocketRequest;
-export const socketIORequest = _socketIORequest;
-export const socketIOPayload = _socketIOPayload;
-export const socketIOResponse = _socketIoResponse;
-export const webSocketResponse = _webSocketResponse;
-export const workspace = _workspace;
-export const workspaceMeta = _workspaceMeta;
-export * as organization from './organization';
-export const userSession = _userSession;
-export const cloudCredential = _cloudCredential;
 
-export function all() {
-  // NOTE: This list should be from most to least specific (ie. parents above children)
-  // For example, stats, settings, project and workspace are global models, with project and workspace being the top-most parents,
-  // so they must be at the top
-  return [
-    stats,
-    settings,
-    project,
-    workspace,
-    workspaceMeta,
-    environment,
-    gitCredentials,
-    gitRepository,
-    cookieJar,
-    apiSpec,
-    requestGroup,
-    requestGroupMeta,
-    request,
-    requestVersion,
-    requestMeta,
-    response,
-    mockServer,
-    mockRoute,
-    oAuth2Token,
-    caCertificate,
-    clientCertificate,
-    pluginData,
-    unitTestSuite,
-    unitTestResult,
-    unitTest,
-    protoFile,
-    protoDirectory,
-    grpcRequest,
-    grpcRequestMeta,
-    runnerTestResult,
-    webSocketPayload,
-    webSocketRequest,
-    webSocketResponse,
-    userSession,
-    socketIORequest,
-    socketIOPayload,
-    socketIOResponse,
-    cloudCredential,
-  ] as const;
-}
 export function types() {
-  return all().map(model => model.type);
+  return Object.values(modelManifest).map(model => model.type);
 }
 export type AllTypes =
   | 'ApiSpec'
@@ -181,9 +66,6 @@ export type AllTypes =
   | 'Workspace'
   | 'WorkspaceMeta';
 
-export const isValidType = (type: string): type is AllTypes => {
-  return types().includes(type as AllTypes);
-};
 export function canSync(d: BaseModel) {
   if (d.isPrivate) {
     return false;
@@ -199,7 +81,7 @@ export function canSync(d: BaseModel) {
 }
 
 export function getModel(type: string) {
-  return all().find(m => m.type === type) || null;
+  return Object.values(modelManifest).find(m => m.type === type) || null;
 }
 
 export function mustGetModel(type: string) {
@@ -221,7 +103,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   const model = getModel(type);
 
   if (!model) {
-    const choices = all()
+    const choices = Object.values(modelManifest)
       .map(m => m.type)
       .join(', ');
     throw new Error(`Tried to init invalid model "${type}". Choices are ${choices}`);
@@ -237,7 +119,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
       modified: Date.now(),
       created: Date.now(),
     },
-    model.init(),
+    model.defaults,
   );
   const fullObject = Object.assign({}, objectDefaults, ...sources);
 
@@ -248,6 +130,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
 
   // Migrate the model
   // NOTE: Do migration before pruning because we might need to look at those fields
+  //TODO(jack): fix this
   const migratedDoc = model.migrate(fullObject);
   // optional keys do not generated in init method but should allow update.
   // If we put those keys in init method, all related models will show as modified in git sync.
@@ -265,88 +148,642 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
 // Use function instead of object to avoid issues with circular dependencies
 export const getAllDescendantMap = (): Partial<Record<AllTypes, AllTypes[]>> => {
   return {
-    [workspace.type]: [
-      requestGroup.type,
-      request.type,
-      grpcRequest.type,
-      webSocketRequest.type,
-      socketIORequest.type,
-      cookieJar.type,
-      environment.type,
-      apiSpec.type,
-      mockServer.type,
-      unitTestSuite.type,
-      protoDirectory.type,
-      protoFile.type,
-      workspaceMeta.type,
-      runnerTestResult.type,
-      caCertificate.type,
-      clientCertificate.type,
+    ['Workspace']: [
+      'RequestGroup',
+      'Request',
+      'GrpcRequest',
+      'WebSocketRequest',
+      'SocketIORequest',
+      'CookieJar',
+      'Environment',
+      'ApiSpec',
+      'MockServer',
+      'UnitTestSuite',
+      'ProtoDirectory',
+      'ProtoFile',
+      'WorkspaceMeta',
+      'RunnerTestResult',
+      'CaCertificate',
+      'ClientCertificate',
     ],
-    [requestGroup.type]: [
-      requestGroup.type,
-      request.type,
-      grpcRequest.type,
-      webSocketRequest.type,
-      socketIORequest.type,
-      runnerTestResult.type,
-      requestGroupMeta.type,
-      oAuth2Token.type,
+    ['RequestGroup']: [
+      'RequestGroup',
+      'Request',
+      'GrpcRequest',
+      'WebSocketRequest',
+      'SocketIORequest',
+      'RunnerTestResult',
+      'RequestGroupMeta',
+      'OAuth2Token',
     ],
-    [request.type]: [requestMeta.type, response.type, requestVersion.type, oAuth2Token.type],
-    [grpcRequest.type]: [grpcRequestMeta.type],
-    [webSocketRequest.type]: [webSocketPayload.type, webSocketResponse.type, requestMeta.type],
-    [socketIORequest.type]: [socketIOPayload.type, socketIOResponse.type, requestMeta.type],
-    [mockServer.type]: [mockRoute.type],
-    [environment.type]: [environment.type],
-    [unitTestSuite.type]: [unitTest.type, unitTestResult.type],
-    [unitTest.type]: [unitTestResult.type],
-    [protoDirectory.type]: [protoDirectory.type, protoFile.type],
+    ['Request']: ['RequestMeta', 'Response', 'RequestVersion', 'OAuth2Token'],
+    ['GrpcRequest']: ['GrpcRequestMeta'],
+    ['WebSocketRequest']: ['WebSocketPayload', 'WebSocketResponse', 'RequestMeta'],
+    ['SocketIORequest']: ['SocketIOPayload', 'SocketIOResponse', 'RequestMeta'],
+    ['MockServer']: ['MockRoute'],
+    ['Environment']: ['Environment'],
+    ['UnitTestSuite']: ['UnitTest', 'UnitTestResult'],
+    ['UnitTest']: ['UnitTestResult'],
+    ['ProtoDirectory']: ['ProtoDirectory', 'ProtoFile'],
   };
 };
-
-let childToParentMap: Partial<Record<AllTypes, AllTypes[]>> | undefined = undefined;
-
-const getChildToParentMap = () => {
-  if (childToParentMap) {
-    return childToParentMap;
-  }
-  const childToParents: Partial<Record<AllTypes, AllTypes[]>> = {};
-  for (const [parent, children] of Object.entries(getAllDescendantMap())) {
-    for (const child of children) {
-      if (!childToParents[child]) childToParents[child] = [];
-      childToParents[child].push(parent as AllTypes);
-    }
-  }
-  childToParentMap = childToParents;
-  return childToParents;
-};
-
-export const generateDescendantMap = (queryTypes: AllTypes[]): Partial<Record<AllTypes, AllTypes[]>> => {
-  const result: Partial<Record<AllTypes, AllTypes[]>> = {};
-
-  const visited = new Set<string>();
-  const collectAncestors = (child: AllTypes) => {
-    if (!child || visited.has(child)) {
-      return;
-    }
-    visited.add(child);
-    const parentMap = getChildToParentMap();
-    const parents = parentMap[child];
-    if (parents?.length) {
-      for (const p of parents) {
-        if (!result[p]) {
-          result[p] = [];
-        }
-        result[p].push(child);
-        collectAncestors(p);
-      }
-    }
-  };
-
-  for (const type of queryTypes) {
-    collectAncestors(type);
-  }
-
-  return result;
+export const modelManifest = {
+  ApiSpec: {
+    type: 'ApiSpec',
+    name: 'ApiSpec',
+    prefix: 'spc',
+    canDuplicate: true,
+    canSync: true,
+    defaults: { fileName: 'New Document', contents: '', contentType: 'yaml' },
+  },
+  CaCertificate: {
+    type: 'CaCertificate',
+    name: 'CA Certificate',
+    prefix: 'crt',
+    canDuplicate: true,
+    canSync: false,
+    defaults: { parentId: '', disabled: false, path: null, isPrivate: false },
+  },
+  ClientCertificate: {
+    type: 'ClientCertificate',
+    name: 'Client Certificate',
+    prefix: 'crt',
+    canDuplicate: true,
+    canSync: false,
+    defaults: {
+      parentId: '',
+      host: '',
+      passphrase: null,
+      disabled: false,
+      cert: null,
+      key: null,
+      pfx: null,
+      isPrivate: false,
+    },
+  },
+  CloudCredential: {
+    type: 'CloudCredential',
+    name: 'Cloud Credential',
+    prefix: 'cloudCred',
+    canDuplicate: false,
+    canSync: false,
+    defaults: { name: '', provider: undefined, credentials: undefined },
+  },
+  CookieJar: {
+    type: 'CookieJar',
+    name: 'Cookie Jar',
+    prefix: 'jar',
+    canDuplicate: true,
+    canSync: false,
+    defaults: { name: 'Default Jar', cookies: [] },
+  },
+  Environment: {
+    type: 'Environment',
+    name: 'Environment',
+    prefix: 'env',
+    canDuplicate: true,
+    canSync: true,
+    defaults: {
+      name: 'New Environment',
+      data: {},
+      dataPropertyOrder: null,
+      color: null,
+      isPrivate: false,
+      metaSortKey: 1756818285181,
+    },
+  },
+  GitCredentials: {
+    type: 'GitCredentials',
+    name: 'Git Credentials',
+    prefix: 'git_creds',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      token: '',
+      refreshToken: '',
+      provider: 'github',
+      author: {
+        email: '',
+        name: '',
+        avatarUrl: '',
+      },
+    },
+  },
+  GitRepository: {
+    type: 'GitRepository',
+    name: 'Git Repository',
+    prefix: 'git',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      needsFullClone: false,
+      uri: '',
+      credentials: null,
+      author: {
+        email: '',
+        name: '',
+        avatarUrl: '',
+      },
+      cachedGitLastCommitTime: null,
+      cachedGitRepositoryBranch: null,
+      cachedGitLastAuthor: null,
+      hasUncommittedChanges: false,
+      hasUnpushedChanges: false,
+      uriNeedsMigration: true,
+    },
+  },
+  GrpcRequest: {
+    type: 'GrpcRequest',
+    name: 'gRPC Request',
+    prefix: 'greq',
+    canDuplicate: true,
+    canSync: true,
+    defaults: {
+      url: '',
+      name: 'New gRPC Request',
+      description: '',
+      protoFileId: '',
+      protoMethodName: '',
+      metadata: [],
+      body: {
+        text: '{}',
+      },
+      metaSortKey: -1756818285182,
+      isPrivate: false,
+      reflectionApi: {
+        enabled: false,
+        url: 'https://buf.build',
+        apiKey: '',
+        module: 'buf.build/connectrpc/eliza',
+      },
+    },
+  },
+  GrpcRequestMeta: {
+    type: 'GrpcRequestMeta',
+    name: 'gRPC Request Meta',
+    prefix: 'greqm',
+    canDuplicate: false,
+    canSync: false,
+    defaults: { pinned: false, lastActive: 0 },
+  },
+  MockRoute: {
+    type: 'MockRoute',
+    name: 'Mock Route',
+    prefix: 'mock-route',
+    canDuplicate: true,
+    canSync: true,
+    defaults: {
+      body: '',
+      headers: [],
+      parentId: '',
+      statusCode: 200,
+      statusText: '',
+      name: '/',
+      mimeType: 'application/json',
+      method: 'GET',
+    },
+  },
+  MockServer: {
+    type: 'MockServer',
+    name: 'Mock Server',
+    prefix: 'mock',
+    canDuplicate: true,
+    canSync: true,
+    defaults: {
+      parentId: '',
+      name: 'New Mock',
+      url: 'http://localhost:8080',
+      useInsomniaCloud: true,
+    },
+  },
+  OAuth2Token: {
+    type: 'OAuth2Token',
+    name: 'OAuth 2.0 Token',
+    prefix: 'oa2',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      refreshToken: '',
+      accessToken: '',
+      identityToken: '',
+      expiresAt: null,
+      xResponseId: null,
+      xError: null,
+      error: '',
+      errorDescription: '',
+      errorUri: '',
+    },
+  },
+  PluginData: {
+    type: 'PluginData',
+    name: 'PluginData',
+    prefix: 'plg',
+    canDuplicate: false,
+    canSync: false,
+    defaults: { plugin: '', key: '', value: '' },
+  },
+  Project: {
+    type: 'Project',
+    name: 'Project',
+    prefix: 'proj',
+    canDuplicate: false,
+    canSync: false,
+    defaults: { name: 'My Project', remoteId: null, gitRepositoryId: null },
+  },
+  ProtoDirectory: {
+    type: 'ProtoDirectory',
+    name: 'Proto Directory',
+    prefix: 'pd',
+    canDuplicate: true,
+    canSync: true,
+    defaults: { name: 'New Proto Directory' },
+  },
+  ProtoFile: {
+    type: 'ProtoFile',
+    name: 'Proto File',
+    prefix: 'pf',
+    canDuplicate: true,
+    canSync: true,
+    defaults: { name: 'New Proto File', protoText: '' },
+  },
+  Request: {
+    type: 'Request',
+    name: 'Request',
+    prefix: 'req',
+    canDuplicate: true,
+    canSync: true,
+    defaults: {
+      url: '',
+      name: 'New Request',
+      description: '',
+      method: 'GET',
+      body: {},
+      parameters: [],
+      headers: [],
+      authentication: {},
+      preRequestScript: undefined,
+      metaSortKey: -1756818285181,
+      isPrivate: false,
+      pathParameters: undefined,
+      afterResponseScript: undefined,
+      settingStoreCookies: true,
+      settingSendCookies: true,
+      settingDisableRenderRequestBody: false,
+      settingEncodeUrl: true,
+      settingRebuildPath: true,
+      settingFollowRedirects: 'global',
+    },
+  },
+  RequestGroup: {
+    type: 'RequestGroup',
+    name: 'Folder',
+    prefix: 'fld',
+    canDuplicate: true,
+    canSync: true,
+    defaults: {
+      name: 'New Folder',
+      description: '',
+      environment: {},
+      environmentPropertyOrder: null,
+      metaSortKey: -1756818285181,
+      preRequestScript: undefined,
+      afterResponseScript: undefined,
+      authentication: undefined,
+      headers: undefined,
+    },
+  },
+  RequestGroupMeta: {
+    type: 'RequestGroupMeta',
+    name: 'Folder Meta',
+    prefix: 'fldm',
+    canDuplicate: false,
+    canSync: false,
+    defaults: { parentId: null, collapsed: false },
+  },
+  RequestMeta: {
+    type: 'RequestMeta',
+    name: 'Request Meta',
+    prefix: 'reqm',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      parentId: null,
+      previewMode: 'friendly',
+      responseFilter: '',
+      responseFilterHistory: [],
+      activeResponseId: null,
+      savedRequestBody: {},
+      pinned: false,
+      lastActive: 0,
+      downloadPath: null,
+      expandedAccordionKeys: {},
+    },
+  },
+  RequestVersion: {
+    type: 'RequestVersion',
+    name: 'Request Version',
+    prefix: 'rvr',
+    canDuplicate: false,
+    canSync: false,
+    defaults: { compressedRequest: null },
+  },
+  Response: {
+    type: 'Response',
+    name: 'Response',
+    prefix: 'res',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      statusCode: 0,
+      statusMessage: '',
+      httpVersion: '',
+      contentType: '',
+      url: '',
+      bytesRead: 0,
+      bytesContent: -1,
+      elapsedTime: 0,
+      headers: [],
+      timelinePath: '',
+      bodyPath: '',
+      bodyCompression: '__NEEDS_MIGRATION__',
+      error: '',
+      requestVersionId: null,
+      settingStoreCookies: null,
+      settingSendCookies: null,
+      environmentId: '__LEGACY__',
+      requestTestResults: [],
+      globalEnvironmentId: null,
+    },
+  },
+  RunnerTestResult: {
+    type: 'RunnerTestResult',
+    name: 'Runner Test Result',
+    prefix: 'rtr',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      source: 'runner',
+      iterations: 0,
+      duration: 0,
+      avgRespTime: 0,
+      iterationResults: [],
+      responsesInfo: [],
+      version: '1',
+    },
+  },
+  Settings: {
+    type: 'Settings',
+    name: 'Settings',
+    prefix: 'set',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      autoDetectColorScheme: false,
+      autoHideMenuBar: false,
+      autocompleteDelay: 1200,
+      clearOAuth2SessionOnRestart: true,
+      darkTheme: appConfig.darkTheme,
+      deviceId: null,
+      disableHtmlPreviewJs: false,
+      disableResponsePreviewLinks: false,
+      disableAppVersionUserAgent: false,
+      disableUpdateNotification: false,
+      editorFontSize: 11,
+      editorIndentSize: 2,
+      editorIndentWithTabs: true,
+      editorKeyMap: 'default',
+      enableKeyMapForInlineTextEditors: false,
+      editorLineWrapping: true,
+      enableAnalytics: true,
+      showVariableSourceAndValue: false,
+      filterResponsesByEnv: false,
+      followRedirects: true,
+      fontInterface: null,
+      fontMonospace: null,
+      fontSize: 13,
+      fontVariantLigatures: false,
+      forceVerticalLayout: !!process.env.PLAYWRIGHT,
+      hotKeyRegistry: newDefaultRegistry(),
+      httpProxy: '',
+      httpsProxy: '',
+      lightTheme: appConfig.lightTheme,
+      maxHistoryResponses: 20,
+      maxRedirects: 10,
+      maxTimelineDataSizeKB: 10,
+      pluginNodeExtraCerts: '',
+      pluginsAllowElevatedAccess: false,
+      noProxy: '',
+      nunjucksPowerUserMode: false,
+      pluginConfig: {},
+      pluginPath: '',
+      preferredHttpVersion: HttpVersions.default,
+      proxyEnabled: false,
+      showPasswords: false,
+      theme: appConfig.theme,
+      // milliseconds
+      timeout: 30_000,
+      updateAutomatically: true,
+      updateChannel: UpdateChannel.stable,
+      useBulkHeaderEditor: false,
+      useBulkParametersEditor: false,
+      validateAuthSSL: true,
+      validateSSL: true,
+      saveVaultKeyLocally: true,
+      enableVaultInScripts: false,
+      saveVaultKeyToOSSecretManager: true,
+      // The duration in mins for which the external vault secret is cached
+      vaultSecretCacheDuration: 30,
+      dataFolders: [],
+    },
+  },
+  SocketIOPayload: {
+    type: 'SocketIOPayload',
+    name: 'SocketIO Payload',
+    prefix: 'socket-io-payload',
+    canDuplicate: true,
+    canSync: true,
+    defaults: { args: [{ id: uuidv4(), value: '', mode: CONTENT_TYPE_JSON }], eventName: '', ack: false },
+  },
+  SocketIORequest: {
+    type: 'SocketIORequest',
+    name: 'Socket.IO Request',
+    prefix: 'socketio-req',
+    canDuplicate: true,
+    canSync: true,
+    defaults: {
+      name: 'New Socket.IO Request',
+      url: '',
+      metaSortKey: -1756818285182,
+      headers: [],
+      authentication: {},
+      parameters: [],
+      pathParameters: undefined,
+      settingEncodeUrl: true,
+      settingStoreCookies: true,
+      settingSendCookies: true,
+      description: '',
+      eventListeners: [],
+    },
+  },
+  SocketIOResponse: {
+    type: 'SocketIOResponse',
+    name: 'SocketIO Response',
+    prefix: 'socketIO-res',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      timelinePath: '',
+      eventLogPath: '',
+      requestVersionId: null,
+      environmentId: null,
+      elapsedTime: 0,
+      error: '',
+      url: '',
+    },
+  },
+  Stats: {
+    type: 'Stats',
+    name: 'Stats',
+    prefix: 'sta',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      currentLaunch: null,
+      lastLaunch: null,
+      currentVersion: null,
+      lastVersion: null,
+      launches: 0,
+      createdRequests: 0,
+      deletedRequests: 0,
+      executedRequests: 0,
+    },
+  },
+  UnitTest: {
+    type: 'UnitTest',
+    name: 'Unit Test',
+    prefix: 'ut',
+    canDuplicate: true,
+    canSync: true,
+    defaults: {
+      requestId: null,
+      name: 'My Test',
+      code: '',
+      metaSortKey: -1756818285182,
+    },
+  },
+  UnitTestResult: {
+    type: 'UnitTestResult',
+    name: 'Unit Test Result',
+    prefix: 'utr',
+    canDuplicate: false,
+    canSync: false,
+    defaults: { results: null },
+  },
+  UnitTestSuite: {
+    type: 'UnitTestSuite',
+    name: 'Unit Test Suite',
+    prefix: 'uts',
+    canDuplicate: true,
+    canSync: true,
+    defaults: { name: 'My Test', metaSortKey: -1756818285182 },
+  },
+  UserSession: {
+    type: 'UserSession',
+    name: 'UserSession',
+    prefix: 'usr',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      accountId: '',
+      id: '',
+      email: '',
+      firstName: '',
+      lastName: '',
+      symmetricKey: {},
+      publicKey: {},
+      encPrivateKey: {},
+      vaultKey: '',
+      vaultSalt: '',
+    },
+  },
+  WebSocketPayload: {
+    type: 'WebSocketPayload',
+    name: 'WebSocket Payload',
+    prefix: 'ws-payload',
+    canDuplicate: true,
+    canSync: true,
+    defaults: { name: 'New Payload', value: '', mode: 'application/json' },
+  },
+  WebSocketRequest: {
+    type: 'WebSocketRequest',
+    name: 'WebSocket Request',
+    prefix: 'ws-req',
+    canDuplicate: true,
+    canSync: true,
+    defaults: {
+      name: 'New WebSocket Request',
+      url: '',
+      metaSortKey: -1756818285182,
+      headers: [],
+      authentication: {},
+      parameters: [],
+      pathParameters: undefined,
+      settingEncodeUrl: true,
+      settingStoreCookies: true,
+      settingSendCookies: true,
+      settingFollowRedirects: 'global',
+      description: '',
+    },
+  },
+  WebSocketResponse: {
+    type: 'WebSocketResponse',
+    name: 'WebSocket Response',
+    prefix: 'ws-res',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      statusCode: 0,
+      statusMessage: '',
+      httpVersion: '',
+      contentType: '',
+      url: '',
+      elapsedTime: 0,
+      headers: [],
+      timelinePath: '',
+      eventLogPath: '',
+      error: '',
+      requestVersionId: null,
+      settingStoreCookies: null,
+      settingSendCookies: null,
+      environmentId: null,
+    },
+  },
+  Workspace: {
+    type: 'Workspace',
+    name: 'Workspace',
+    prefix: 'wrk',
+    canDuplicate: true,
+    canSync: true,
+    defaults: { name: 'New Collection', description: '', scope: 'collection' },
+  },
+  WorkspaceMeta: {
+    type: 'WorkspaceMeta',
+    name: 'Workspace Meta',
+    prefix: 'wrkm',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      activeActivity: null,
+      activeEnvironmentId: null,
+      activeGlobalEnvironmentId: null,
+      activeRequestId: null,
+      activeUnitTestSuiteId: null,
+      gitRepositoryId: null,
+      gitFilePath: null,
+      parentId: null,
+      pushSnapshotOnInitialize: false,
+      hasUncommittedChanges: false,
+      hasUnpushedChanges: false,
+    },
+  },
 };
