@@ -2,11 +2,7 @@ import classnames from 'classnames';
 import type { IpcRendererEvent } from 'electron';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { useRootLoaderData } from '~/root';
-
-import { getAppId, getAppPlatform, getAppVersion, getProductName, updatesSupported } from '../../common/constants';
-import * as models from '../../models/index';
-import { insomniaFetch } from '../../ui/insomniaFetch';
+import { getProductName } from '../../common/constants';
 import imgSrcCore from '../images/insomnia-logo.svg';
 import { Link } from './base/link';
 
@@ -22,7 +18,6 @@ export interface ToastNotification {
 type SeenNotifications = Record<string, boolean>;
 
 export const Toast: FC = () => {
-  const { userSession } = useRootLoaderData()!;
   const [notification, setNotification] = useState<ToastNotification | null>(null);
   const [visible, setVisible] = useState(false);
   const handleNotification = (notification: ToastNotification | null | undefined) => {
@@ -49,41 +44,6 @@ export const Toast: FC = () => {
     setTimeout(() => {
       setVisible(true);
     }, 1000);
-  };
-  const checkForNotifications = async () => {
-    // If there is a notification open, skip check
-    if (notification) {
-      return;
-    }
-    const stats = await models.stats.get();
-    const { disableUpdateNotification, updateAutomatically, updateChannel } = await models.settings.get();
-    let updatedNotification: ToastNotification | null = null;
-    // Try fetching user notification
-    try {
-      const data = {
-        app: getAppId(),
-        autoUpdatesDisabled: !updateAutomatically,
-        disableUpdateNotification,
-        firstLaunch: stats.created,
-        launches: stats.launches, // Used for account verification notifications
-        platform: getAppPlatform(), // Used for CTAs / Informational notifications
-        updateChannel,
-        updatesNotSupported: !updatesSupported(),
-        version: getAppVersion(),
-      };
-      const notificationOrEmpty = await insomniaFetch<ToastNotification>({
-        method: 'POST',
-        path: '/notification',
-        data,
-        sessionId: userSession.id,
-      });
-      if (notificationOrEmpty && typeof notificationOrEmpty !== 'string') {
-        updatedNotification = notificationOrEmpty;
-      }
-    } catch (err) {
-      console.warn('[toast] Failed to fetch user notifications', err);
-    }
-    handleNotification(updatedNotification);
   };
 
   useEffect(() => {
@@ -115,7 +75,6 @@ export const Toast: FC = () => {
                 // Give time for toast to fade out, then remove it
                 setTimeout(() => {
                   setNotification(null);
-                  checkForNotifications();
                 }, 1000);
               }
             }}
@@ -134,7 +93,6 @@ export const Toast: FC = () => {
                   // Give time for toast to fade out, then remove it
                   setTimeout(() => {
                     setNotification(null);
-                    checkForNotifications();
                   }, 1000);
                 }
               }}
