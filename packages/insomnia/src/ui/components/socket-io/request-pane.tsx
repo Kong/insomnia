@@ -4,6 +4,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { getAuthObjectOrNull } from '~/network/authentication';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
@@ -106,6 +107,9 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
   const disabled = readyState;
   const eventsCount = activeRequest?.eventListeners?.length || 0;
 
+  const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
+  const isAuthEnable = requestAuth?.type === 'singleToken' && !requestAuth.disabled;
+
   return (
     <Pane type="request">
       <header className="pane__header theme--pane__header !items-stretch">
@@ -159,6 +163,11 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
             id="auth"
           >
             <span>Auth</span>
+            {isAuthEnable && (
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+                <span className="h-2 w-2 rounded-full bg-green-500" />
+              </span>
+            )}
           </Tab>
           <Tab
             className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
