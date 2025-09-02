@@ -250,8 +250,8 @@ test.describe('pre-request features tests', () => {
 
     // enter script
     await page.getByRole('tab', { name: 'Scripts' }).click();
-    const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
-    await preRequestScriptEditor.fill(`
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    await editor.fill(`
           const rawReq = {
               url: 'http://127.0.0.1:4010/echo',
               method: 'POST',
@@ -634,56 +634,40 @@ test.describe('unhappy paths', () => {
     await page.getByLabel('Pre-request Scripts').click();
   });
 
-  const testCases = [
-    {
-      name: 'custom error is returned',
-      preReqScript: `
-            throw Error('my custom error');
-            `,
-      context: {
-        insomnia: {},
-      },
-      expectedResult: {
-        message: 'my custom error',
-      },
-    },
-    {
-      name: 'syntax error',
-      preReqScript: `
-            insomnia.INVALID_FIELD.set('', '')
-            `,
-      context: {
-        insomnia: {},
-      },
-      expectedResult: {
-        message: "Cannot read properties of undefined (reading 'set')",
-      },
-    },
-  ];
+  test('custom errors are returned', async ({ page }) => {
+    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
 
-  for (const tc of testCases) {
-    test(tc.name, async ({ page }) => {
-      const responsePane = page.getByTestId('response-pane');
+    // set request body
+    await page.getByRole('tab', { name: 'Body' }).click();
+    await page.getByRole('button', { name: 'Body' }).click();
+    await page.getByRole('option', { name: 'JSON' }).click();
 
-      await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+    // enter script
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    await editor.fill(`throw Error('my custom error');`);
 
-      // set request body
-      await page.getByRole('tab', { name: 'Body' }).click();
-      await page.getByRole('button', { name: 'Body' }).click();
-      await page.getByRole('option', { name: 'JSON' }).click();
+    await page.getByRole('tab', { name: 'Body' }).click();
 
-      // enter script
-      await page.getByRole('tab', { name: 'Scripts' }).click();
-      const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
-      await preRequestScriptEditor.fill(tc.preReqScript);
+    // send
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
-      await page.getByRole('tab', { name: 'Body' }).click();
+    // verify
+    await expect.soft(page.getByTestId('response-pane')).toContainText('my custom error');
 
-      // send
-      await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    await page.getByTestId('CodeEditor').getByRole('textbox').press('ControlOrMeta+a');
+    await page.keyboard.press('Backspace');
+    await editor.fill(`insomnia.INVALID_FIELD.set('', '')`);
 
-      // verify
-      await expect.soft(responsePane).toContainText(tc.expectedResult.message);
-    });
-  }
+    await page.getByRole('tab', { name: 'Body' }).click();
+
+    // send
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+    // verify
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .toContainText(`Cannot read properties of undefined (reading 'set')`);
+  });
 });
