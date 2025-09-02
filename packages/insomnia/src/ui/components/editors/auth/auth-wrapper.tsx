@@ -1,9 +1,8 @@
 import React, { type FC, type ReactNode } from 'react';
 import { Toolbar } from 'react-aria-components';
 
-import { SingleTokenAuth } from '~/ui/components/editors/auth/single-token-auth';
-
 import type { AuthTypes } from '~/common/constants';
+import { SingleTokenAuth } from '~/ui/components/editors/auth/single-token-auth';
 
 import type { RequestAuthentication } from '../../../../models/request';
 import { getAuthObjectOrNull } from '../../../../network/authentication';
@@ -51,7 +50,7 @@ export const AuthWrapper: FC<{
     authBody = <NetrcAuth />;
   } else if (type === 'asap') {
     authBody = <AsapAuth />;
-  } else if (type === 'singletoken') {
+  } else if (type === 'singleToken') {
     authBody = <SingleTokenAuth disabled={disabled} />;
   } else {
     authBody = (

@@ -130,7 +130,7 @@ export interface AuthTypeNone {
 }
 
 export interface AuthTypeSingleToken {
-  type: 'singletoken';
+  type: 'singleToken';
   token?: string;
   disabled?: boolean;
 }
