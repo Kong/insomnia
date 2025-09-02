@@ -131,7 +131,7 @@ export const database = {
       // 2. Get all the children
       for (const type of Object.keys(nedbBucket) as AllTypes[]) {
         // Note: We never want to duplicate a response
-        if (!models.canDuplicate(type)) {
+        if (!model.canDuplicate) {
           continue;
         }
 
