@@ -20,6 +20,8 @@ export interface HashiCorpVaultFormProps {
 type HashiCorpCredential = Extract<CloudProviderCredential, { provider: 'hashicorp' }>;
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 
+const defaultKVVersion = 'v2';
+
 export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
   const { cloudCredentials } = useRootLoaderData()!;
 
@@ -27,7 +29,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
   const { secretName } = formData;
   // onPrem secret config
   const {
-    kvVersion = 'v2',
+    kvVersion = defaultKVVersion,
     secretEnginePath,
     secretKey,
     sendNamespaceViaHeader = true,
@@ -41,7 +43,13 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
     name: T,
     newValue: string | boolean | number,
   ) => {
+    // append default configs when not exist
+    const defaultConfig =
+      credentialType === HashiCorpCredentialType.cloudVaultSecrets
+        ? {}
+        : { kvVersion: defaultKVVersion, sendNamespaceViaHeader: true };
     const newConfig = {
+      ...defaultConfig,
       ...formData,
       [name]: newValue,
     };
