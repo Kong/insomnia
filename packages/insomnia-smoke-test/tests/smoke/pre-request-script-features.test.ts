@@ -200,7 +200,16 @@ test.describe('pre-request features tests', () => {
         valFoundByFolder2: 2,
       },
     },
-  ];
+  ].map(tc => {
+    return {
+      ...tc,
+      customVerify:
+        tc.customVerify ??
+        (bodyJson => {
+          expect.soft(JSON.parse(bodyJson.data)).toEqual(tc.expectedBody);
+        }),
+    };
+  });
   test('run test cases', async ({ page }) => {
     for (const tc of testCases) {
       console.log(`Running test case: ${tc.name}`);
@@ -221,12 +230,7 @@ test.describe('pre-request features tests', () => {
       expect.soft(rows.length).toBeGreaterThan(0);
 
       const bodyJson = JSON.parse(rows.join(' '));
-      if (tc.expectedBody) {
-        expect.soft(JSON.parse(bodyJson.data)).toEqual(tc.expectedBody);
-      }
-      if (tc.customVerify) {
-        tc.customVerify(bodyJson);
-      }
+      tc.customVerify(bodyJson);
     }
   });
   test('send request with content type', async ({ page }) => {
