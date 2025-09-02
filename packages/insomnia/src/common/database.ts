@@ -12,8 +12,9 @@ import type { CaCertificate } from '~/models/ca-certificate';
 import type { ClientCertificate } from '~/models/client-certificate';
 import type { CloudProviderCredential } from '~/models/cloud-credential';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
+import { invariant } from '~/utils/invariant';
 
-import { mustGetModel } from '../models';
+import { getModel } from '../models';
 import type { CookieJar } from '../models/cookie-jar';
 import { type Environment } from '../models/environment';
 import type { GitRepository } from '../models/git-repository';
@@ -116,7 +117,8 @@ export const database = {
     const flushId = await database.bufferChanges();
 
     async function next<T extends BaseModel>(docToCopy: T, patch: Partial<T>) {
-      const model = mustGetModel(docToCopy.type);
+      const model = getModel(docToCopy.type);
+      invariant(model, `Invalid model type ${docToCopy.type}`);
       const overrides = {
         _id: generateId(model.prefix),
         modified: Date.now(),
