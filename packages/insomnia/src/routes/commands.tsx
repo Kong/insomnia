@@ -1,5 +1,3 @@
-import 'react-router';
-
 import { database } from '~/common/database';
 import { fuzzyMatch } from '~/common/misc';
 import {

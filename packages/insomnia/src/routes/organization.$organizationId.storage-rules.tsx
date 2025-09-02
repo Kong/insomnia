@@ -2,8 +2,7 @@ import { href } from 'react-router';
 
 import type { StorageRules } from '~/models/organization';
 import { fetchAndCacheOrganizationStorageRule } from '~/ui/organization-utils';
-import { createFetcherLoadHook } from '~/utils/router';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherLoadHook, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.storage-rules';
 
