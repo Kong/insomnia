@@ -120,10 +120,6 @@ export function init(): Partial<CloudProviderCredential> {
   };
 }
 
-export function migrate(doc: CloudProviderCredential) {
-  return doc;
-}
-
 export function create(patch: Partial<CloudProviderCredential> = {}) {
   return db.docCreate<CloudProviderCredential>(type, patch);
 }

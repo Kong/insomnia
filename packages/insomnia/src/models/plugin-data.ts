@@ -29,10 +29,6 @@ export function init(): BasePluginData {
   };
 }
 
-export function migrate(doc: PluginData) {
-  return doc;
-}
-
 export function create(patch: Partial<PluginData> = {}) {
   return db.docCreate<PluginData>(type, patch);
 }

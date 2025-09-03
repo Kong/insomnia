@@ -28,10 +28,6 @@ export function init() {
   };
 }
 
-export function migrate(doc: GrpcRequestMeta) {
-  return doc;
-}
-
 export function create(patch: Partial<GrpcRequestMeta> = {}) {
   if (!patch.parentId) {
     throw new Error('New GrpcRequestMeta missing `parentId`');

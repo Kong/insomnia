@@ -197,10 +197,6 @@ export function init() {
   };
 }
 
-export function migrate(doc: Environment) {
-  return doc;
-}
-
 export function create(patch: Partial<Environment> = {}) {
   if (!patch.parentId) {
     throw new Error(`New Environment missing \`parentId\`: ${JSON.stringify(patch)}`);

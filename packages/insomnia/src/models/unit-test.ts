@@ -30,10 +30,6 @@ export function init() {
   };
 }
 
-export function migrate(doc: UnitTest) {
-  return doc;
-}
-
 export function create(patch: Partial<UnitTest> = {}) {
   if (!patch.parentId) {
     throw new Error('New UnitTest missing `parentId` ' + JSON.stringify(patch));

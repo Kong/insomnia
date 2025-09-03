@@ -31,10 +31,6 @@ export function init(): BaseMockServer {
 
 export const isMockServer = (model: Pick<BaseModel, 'type'>): model is MockServer => model.type === type;
 
-export function migrate(doc: MockServer) {
-  return doc;
-}
-
 export function create(patch: Partial<MockServer> = {}) {
   if (!patch.parentId) {
     throw new Error('New MockServer missing `parentId`: ' + JSON.stringify(patch));

@@ -40,10 +40,6 @@ export function init(): BaseClientCertificate {
 
 export const isClientCertificate = (model: Pick<BaseModel, 'type'>): model is ClientCertificate => model.type === type;
 
-export function migrate(doc: ClientCertificate) {
-  return doc;
-}
-
 export function create(patch: Partial<ClientCertificate> = {}) {
   if (!patch.parentId) {
     throw new Error('New ClientCertificate missing `parentId`: ' + JSON.stringify(patch));

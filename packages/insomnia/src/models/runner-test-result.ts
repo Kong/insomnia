@@ -53,10 +53,6 @@ export function init() {
   };
 }
 
-export function migrate(doc: RunnerTestResult) {
-  return doc;
-}
-
 export function create(patch: Partial<RunnerTestResult> = {}) {
   if (!patch.parentId) {
     throw new Error('New RunnerTestResult missing `parentId` ' + JSON.stringify(patch));

@@ -47,10 +47,6 @@ export function init(): BaseStats {
   };
 }
 
-export function migrate(doc: Stats) {
-  return doc;
-}
-
 export function create(patch: Partial<Stats> = {}) {
   return db.docCreate<Stats>(type, patch);
 }

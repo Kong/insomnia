@@ -41,10 +41,6 @@ export function init(): BaseUserSession {
   };
 }
 
-export function migrate(doc: UserSession) {
-  return doc;
-}
-
 export async function all() {
   let userList = await db.find<UserSession>(type);
 

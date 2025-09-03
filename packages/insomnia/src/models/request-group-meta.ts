@@ -26,10 +26,6 @@ export function init() {
   };
 }
 
-export function migrate(doc: RequestGroupMeta) {
-  return doc;
-}
-
 export function create(patch: Partial<RequestGroupMeta> = {}) {
   if (!patch.parentId) {
     throw new Error('New RequestGroupMeta missing `parentId`: ' + JSON.stringify(patch));

@@ -30,10 +30,6 @@ export function init(): BaseApiSpec {
   };
 }
 
-export function migrate(doc: ApiSpec) {
-  return doc;
-}
-
 export function getByParentId(workspaceId: string) {
   return db.findOne<ApiSpec>(type, { parentId: workspaceId });
 }

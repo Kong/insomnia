@@ -51,10 +51,6 @@ export interface BaseGitRepository {
 
 export const isGitRepository = (model: Pick<BaseModel, 'type'>): model is GitRepository => model.type === type;
 
-export function migrate(doc: GitRepository) {
-  return doc;
-}
-
 export function create(patch: Partial<GitRepository> = {}) {
   return db.docCreate<GitRepository>(type, {
     uriNeedsMigration: false,

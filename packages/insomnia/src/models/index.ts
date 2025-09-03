@@ -230,7 +230,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
 
   // Migrate the model
   // NOTE: Do migration before pruning because we might need to look at those fields
-  const migratedDoc = model.migrate(fullObject);
+  const migratedDoc = migrationFunction(fullObject);
   // optional keys do not generated in init method but should allow update.
   // If we put those keys in init method, all related models will show as modified in git sync.
   const modelOptionalKeys: string[] = 'optionalKeys' in model ? model.optionalKeys || [] : [];
@@ -243,7 +243,10 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
 
   return migratedDoc as T;
 }
-
+const migrationFunction = (doc: BaseModel) => {
+  // Perform any necessary migrations on the document
+  return doc;
+};
 // Use function instead of object to avoid issues with circular dependencies
 export const getAllDescendantMap = (): Partial<Record<AllTypes, AllTypes[]>> => {
   return {

@@ -64,10 +64,6 @@ export function init(): BaseGrpcRequest {
   };
 }
 
-export function migrate(doc: GrpcRequest) {
-  return doc;
-}
-
 export function create(patch: Partial<GrpcRequest> = {}) {
   if (!patch.parentId) {
     throw new Error('New GrpcRequest missing `parentId`');

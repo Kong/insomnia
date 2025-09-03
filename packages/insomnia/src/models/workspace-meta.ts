@@ -41,10 +41,6 @@ export function init(): BaseWorkspaceMeta {
   };
 }
 
-export function migrate(doc: WorkspaceMeta) {
-  return doc;
-}
-
 export function create(patch: Partial<WorkspaceMeta> = {}) {
   if (!patch.parentId) {
     throw new Error(`New WorkspaceMeta missing parentId ${JSON.stringify(patch)}`);

@@ -27,10 +27,6 @@ export function init(): BaseProtoFile {
   };
 }
 
-export function migrate(doc: ProtoFile) {
-  return doc;
-}
-
 export function create(patch: Partial<ProtoFile> = {}) {
   if (!patch.parentId) {
     throw new Error('New ProtoFile missing `parentId`');

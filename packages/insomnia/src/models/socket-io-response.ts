@@ -43,10 +43,6 @@ export function init(): BaseSocketIOResponse {
   };
 }
 
-export function migrate(doc: SocketIOResponse) {
-  return doc;
-}
-
 export function update(doc: SocketIOResponse, patch: Partial<SocketIOResponse>) {
   return db.docUpdate(doc, patch);
 }

@@ -46,10 +46,6 @@ export function init(): BaseRequestGroup {
   };
 }
 
-export function migrate(doc: RequestGroup) {
-  return doc;
-}
-
 export function create(patch: Partial<RequestGroup> = {}) {
   if (!patch.parentId) {
     throw new Error('New RequestGroup missing `parentId`: ' + JSON.stringify(patch));

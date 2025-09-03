@@ -58,10 +58,6 @@ export function init(): BaseWebSocketResponse {
   };
 }
 
-export function migrate(doc: WebSocketResponse) {
-  return doc;
-}
-
 export function getById(id: string) {
   return db.findOne<WebSocketResponse>(type, { _id: id });
 }

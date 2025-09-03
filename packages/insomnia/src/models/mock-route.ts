@@ -40,10 +40,6 @@ export function init(): BaseMockRoute {
 
 export const isMockRoute = (model: Pick<BaseModel, 'type'>): model is MockRoute => model.type === type;
 
-export function migrate(doc: MockRoute) {
-  return doc;
-}
-
 export function create(patch: Partial<MockRoute> = {}) {
   if (!patch.parentId) {
     throw new Error('New MockRoute missing `parentId`: ' + JSON.stringify(patch));

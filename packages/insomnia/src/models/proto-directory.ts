@@ -26,10 +26,6 @@ export function init(): BaseProtoDirectory {
   };
 }
 
-export function migrate(doc: ProtoDirectory) {
-  return doc;
-}
-
 export function createId() {
   return generateId(prefix);
 }

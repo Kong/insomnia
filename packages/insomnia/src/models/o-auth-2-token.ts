@@ -47,10 +47,6 @@ export function init(): BaseOAuth2Token {
   };
 }
 
-export function migrate(doc: OAuth2Token) {
-  return doc;
-}
-
 export function create(patch: Partial<OAuth2Token> = {}) {
   if (!patch.parentId) {
     throw new Error(`New OAuth2Token missing \`parentId\` ${JSON.stringify(patch)}`);

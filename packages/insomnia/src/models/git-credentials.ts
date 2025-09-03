@@ -39,10 +39,6 @@ interface BaseGitCredentials {
   };
 }
 
-export function migrate(doc: GitCredentials) {
-  return doc;
-}
-
 export function create(patch: Partial<GitCredentials> = {}) {
   return db.docCreate<GitCredentials>(type, patch);
 }

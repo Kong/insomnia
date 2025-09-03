@@ -61,10 +61,6 @@ export function init(): Partial<Project> {
   };
 }
 
-export function migrate(project: Project) {
-  return project;
-}
-
 export function createId() {
   return generateId(prefix);
 }

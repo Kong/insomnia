@@ -32,10 +32,6 @@ export function init(): BaseCaCertificate {
 
 export const isCaCertificate = (model: Pick<BaseModel, 'type'>): model is CaCertificate => model.type === type;
 
-export function migrate(doc: CaCertificate) {
-  return doc;
-}
-
 export function create(patch: Partial<CaCertificate> = {}) {
   if (!patch.parentId) {
     throw new Error('New CaCertificate missing `parentId`: ' + JSON.stringify(patch));

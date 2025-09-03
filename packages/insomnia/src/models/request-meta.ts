@@ -42,10 +42,6 @@ export function init() {
   };
 }
 
-export function migrate(doc: RequestMeta) {
-  return doc;
-}
-
 export function create(patch: Partial<RequestMeta> = {}) {
   if (!patch.parentId) {
     throw new Error('New RequestMeta missing `parentId` ' + JSON.stringify(patch));

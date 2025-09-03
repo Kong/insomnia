@@ -44,10 +44,6 @@ export function init() {
   };
 }
 
-export function migrate(doc: RequestVersion) {
-  return doc;
-}
-
 export function getById(id: string) {
   return db.findOne<RequestVersion>(type, { _id: id });
 }
