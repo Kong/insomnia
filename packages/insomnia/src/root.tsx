@@ -456,10 +456,19 @@ const Root = () => {
         return navigate(`/organization/${params.organizationId}`);
       }
       if (urlWithoutParams === 'insomnia://system-browser-oauth/redirect') {
-        const { url: redirectUrl } = params;
-        return redirectToDefaultBrowserSubmit({
-          redirectUrl,
-        });
+        const { url: redirectUrl, encryptedUrl: encryptedRedirectUrl, encryptedKey, iv } = params;
+        if (redirectUrl) {
+          return redirectToDefaultBrowserSubmit({
+            redirectUrl,
+          });
+        } else if (encryptedRedirectUrl && encryptedKey && iv) {
+          return redirectToDefaultBrowserSubmit({
+            encryptedRedirectUrl,
+            encryptedKey,
+            iv,
+          });
+        }
+        return;
       }
       if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
         const { code, ...restParams } = params;
