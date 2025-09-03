@@ -5,11 +5,10 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import type { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 import YAML from 'yaml';
 
-import type { Authentication, Converter, ImportRequest } from '../entities';
-import { unthrowableParseJson } from '../utils';
-
 import * as models from '../../../models';
 import type { Settings } from '../../../models/settings';
+import type { Authentication, Converter, ImportRequest } from '../entities';
+import { unthrowableParseJson } from '../utils';
 
 export const id = 'openapi3';
 export const name = 'OpenAPI 3.0';

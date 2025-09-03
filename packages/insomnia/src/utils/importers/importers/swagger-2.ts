@@ -4,11 +4,10 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import type { OpenAPIV2 } from 'openapi-types';
 import YAML from 'yaml';
 
-import type { Converter, Header, ImportRequest } from '../entities';
-import { unthrowableParseJson } from '../utils';
-
 import * as models from '../../../models';
 import type { Settings } from '../../../models/settings';
+import type { Converter, Header, ImportRequest } from '../entities';
+import { unthrowableParseJson } from '../utils';
 
 const SUPPORTED_SWAGGER_VERSION = '2.0';
 const MIMETYPE_JSON = 'application/json';
