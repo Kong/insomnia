@@ -77,7 +77,7 @@ export const environmentModelSchema: Schema<Environment> = {
 
 export const cookieJarModelSchema: Schema<CookieJar> = {
   ...baseModelSchema,
-  ...toSchema(environment.init()),
+  ...toSchema(cookieJar.init()),
   type: () => cookieJar.type,
   cookies: () => [],
 };

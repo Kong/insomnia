@@ -293,7 +293,7 @@ export function sanitizeStrForWin32(str: string) {
   return str.replace(/\\/g, '\\\\\\\\');
 }
 
-export function getObjectUsedContextKeys<T extends Record<string, any>>(obj: T) {
+export function searchObjectForTemplateTags<T extends Record<string, any>>(obj: T) {
   const rootKeys = Object.keys(obj);
   const stack = rootKeys.map(key => ({ path: key, value: obj[key] }));
   const result: string[] = [];
