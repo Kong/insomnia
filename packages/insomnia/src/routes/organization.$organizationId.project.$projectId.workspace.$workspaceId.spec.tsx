@@ -400,24 +400,26 @@ const Component = ({ params }: Route.ComponentProps) => {
         minSize={10}
         collapsible
       >
-        <div className="flex h-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
-          <Breadcrumbs
-            className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-[--padding-sm] font-bold`}
-          >
-            <Breadcrumb className="flex h-full select-none items-center gap-2 text-[--color-font] outline-none data-[focused]:outline-none">
-              <NavLink
-                data-testid="project"
-                className="flex aspect-square h-7 flex-shrink-0 items-center justify-center gap-2 rounded-sm px-1 py-1 text-sm text-[--color-font] outline-none ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] data-[focused]:outline-none"
-                to={`/organization/${organizationId}/project/${activeProject._id}`}
-              >
-                <Icon className="text-xs" icon="chevron-left" />
-              </NavLink>
-              <span aria-hidden role="separator" className="h-4 text-[--hl-lg] outline outline-1" />
-            </Breadcrumb>
-            <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-[--color-font] outline-none data-[focused]:outline-none">
-              <WorkspaceDropdown />
-            </Breadcrumb>
-          </Breadcrumbs>
+        <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
+          <div className="flex w-full flex-col items-start">
+            <Breadcrumbs
+              className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-[--padding-sm] font-bold`}
+            >
+              <Breadcrumb className="flex h-full select-none items-center gap-2 text-[--color-font] outline-none data-[focused]:outline-none">
+                <NavLink
+                  data-testid="project"
+                  className="flex aspect-square h-7 flex-shrink-0 items-center justify-center gap-2 rounded-sm px-1 py-1 text-sm text-[--color-font] outline-none ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] data-[focused]:outline-none"
+                  to={`/organization/${organizationId}/project/${activeProject._id}`}
+                >
+                  <Icon className="text-xs" icon="chevron-left" />
+                </NavLink>
+                <span aria-hidden role="separator" className="h-4 text-[--hl-lg] outline outline-1" />
+              </Breadcrumb>
+              <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-[--color-font] outline-none data-[focused]:outline-none">
+                <WorkspaceDropdown />
+              </Breadcrumb>
+            </Breadcrumbs>
+          </div>
           <DocumentTab
             organizationId={organizationId}
             projectId={projectId}
