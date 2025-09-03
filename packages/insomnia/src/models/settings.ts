@@ -79,16 +79,6 @@ export function init(): BaseSettings {
   };
 }
 
-export function migrate(doc: Settings) {
-  try {
-    doc = migrateEnsureHotKeys(doc);
-    return doc;
-  } catch (e) {
-    console.log('[db] Error during settings migration', e);
-    throw e;
-  }
-}
-
 export async function all() {
   let settingsList = await db.find<Settings>(type);
 
@@ -131,7 +121,7 @@ export async function get() {
 /**
  * Ensure map is updated when new hotkeys are added
  */
-function migrateEnsureHotKeys(settings: Settings): Settings {
+export function migrateEnsureHotKeys(settings: Settings): Settings {
   const defaultHotKeyRegistry = hotkeys.newDefaultRegistry();
 
   // Remove any hotkeys that are no longer in the default registry

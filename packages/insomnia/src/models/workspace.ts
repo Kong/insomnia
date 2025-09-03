@@ -47,18 +47,6 @@ export const init = (): BaseWorkspace => ({
   scope: WorkspaceScopeKeys.collection,
 });
 
-export function migrate(doc: Workspace) {
-  try {
-    doc = _migrateExtractClientCertificates(doc);
-    doc = _migrateEnsureName(doc);
-    doc = _migrateScope(doc);
-    return doc;
-  } catch (e) {
-    console.log('[db] Error during workspace migration', e);
-    throw e;
-  }
-}
-
 export function getById(id?: string) {
   return db.findOne<Workspace>(type, { _id: id });
 }
@@ -89,7 +77,7 @@ export function remove(workspace: Workspace) {
   return db.remove(workspace);
 }
 
-function _migrateExtractClientCertificates(workspace: Workspace) {
+export function _migrateExtractClientCertificates(workspace: Workspace) {
   const certificates = workspace.certificates || null;
 
   if (!Array.isArray(certificates)) {
@@ -115,19 +103,6 @@ function _migrateExtractClientCertificates(workspace: Workspace) {
   return workspace;
 }
 
-/**
- * Ensure workspace has a valid String name. Due to real-world bug reports, we know
- * this happens (and it causes problems) so this migration will ensure that it is
- * corrected.
- */
-function _migrateEnsureName(workspace: Workspace) {
-  if (typeof workspace.name !== 'string') {
-    workspace.name = 'My Workspace';
-  }
-
-  return workspace;
-}
-
 // Translate the old value
 type OldScopeTypes = 'spec' | 'debug' | 'designer' | null;
 type MigrationWorkspace = Merge<Workspace, { scope: OldScopeTypes | Workspace['scope'] }>;
@@ -135,7 +110,7 @@ type MigrationWorkspace = Merge<Workspace, { scope: OldScopeTypes | Workspace['s
 /**
  * Ensure workspace scope is set to a valid entry
  */
-function _migrateScope(workspace: MigrationWorkspace) {
+export function _migrateScope(workspace: MigrationWorkspace) {
   if (
     workspace.scope === WorkspaceScopeKeys.design ||
     workspace.scope === WorkspaceScopeKeys.collection ||

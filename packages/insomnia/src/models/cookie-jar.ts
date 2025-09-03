@@ -47,16 +47,6 @@ export function init() {
   };
 }
 
-export function migrate(doc: CookieJar) {
-  try {
-    doc = migrateCookieId(doc);
-    return doc;
-  } catch (e) {
-    console.log('[db] Error during cookie jar migration', e);
-    throw e;
-  }
-}
-
 export async function create(patch: Partial<CookieJar>) {
   if (!patch.parentId) {
     throw new Error(`New CookieJar missing \`parentId\`: ${JSON.stringify(patch)}`);
@@ -89,15 +79,4 @@ export async function getById(id: string): Promise<CookieJar | undefined> {
 
 export async function update(cookieJar: CookieJar, patch: Partial<CookieJar> = {}) {
   return db.docUpdate(cookieJar, patch);
-}
-
-/** Ensure every cookie has an ID property */
-function migrateCookieId(cookieJar: CookieJar) {
-  for (const cookie of cookieJar.cookies) {
-    if (!cookie.id) {
-      cookie.id = uuidv4();
-    }
-  }
-
-  return cookieJar;
 }

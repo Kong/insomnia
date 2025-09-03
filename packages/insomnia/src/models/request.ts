@@ -288,18 +288,6 @@ export function init(): BaseRequest {
   };
 }
 
-export function migrate(doc: Request): Request {
-  try {
-    doc = migrateBody(doc);
-    doc = migrateWeirdUrls(doc);
-    doc = migrateAuthType(doc);
-    return doc;
-  } catch (e) {
-    console.log('[db] Error during request migration', e);
-    throw e;
-  }
-}
-
 export function create(patch: Partial<Request> = {}) {
   if (!patch.parentId) {
     throw new Error(`New Requests missing \`parentId\`: ${JSON.stringify(patch)}`);
@@ -363,15 +351,11 @@ export async function all() {
   return db.find<Request>(type);
 }
 
-// ~~~~~~~~~~ //
-// Migrations //
-// ~~~~~~~~~~ //
-
 /**
  * Migrate old body (string) to new body (object)
  * @param request
  */
-function migrateBody(request: Request) {
+export function migrateBody(request: Request) {
   if (request.body && typeof request.body === 'object') {
     return request;
   }
@@ -399,35 +383,6 @@ function migrateBody(request: Request) {
             mimeType: contentType.split(';')[0],
             text: rawBody,
           };
-  }
-
-  return request;
-}
-
-/**
- * Fix some weird URLs that were caused by an old bug
- * @param request
- */
-function migrateWeirdUrls(request: Request) {
-  // Some people seem to have requests with URLs that don't have the indexOf
-  // function. This should clear that up. This can be removed at a later date.
-  if (typeof request.url !== 'string') {
-    request.url = '';
-  }
-
-  return request;
-}
-
-/**
- * Ensure the request.authentication.type property is added
- * @param request
- */
-function migrateAuthType(request: Request) {
-  const isAuthSet = request?.authentication && 'username' in request.authentication && request.authentication.username;
-  // @ts-expect-error -- old model
-  if (isAuthSet && !request.authentication.type) {
-    // @ts-expect-error -- old model
-    request.authentication.type = 'basic';
   }
 
   return request;

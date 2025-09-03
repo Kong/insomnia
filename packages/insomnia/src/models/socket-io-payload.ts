@@ -40,8 +40,6 @@ export const init = (): BaseSocketIOPayload => {
   };
 };
 
-export const migrate = (doc: SocketIOPayload) => doc;
-
 export const create = (patch: Partial<SocketIOPayload> = {}) => {
   if (!patch.parentId) {
     throw new Error(`New SocketIOPayload missing \`parentId\`: ${JSON.stringify(patch)}`);

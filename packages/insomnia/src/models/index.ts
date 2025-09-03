@@ -1,3 +1,5 @@
+import { v4 } from 'uuid';
+
 import { invariant } from '~/utils/invariant';
 
 import { generateId } from '../common/misc';
@@ -6,6 +8,7 @@ import * as _apiSpec from './api-spec';
 import * as _caCertificate from './ca-certificate';
 import * as _clientCertificate from './client-certificate';
 import * as _cloudCredential from './cloud-credential';
+import type { CookieJar } from './cookie-jar';
 import * as _cookieJar from './cookie-jar';
 import * as _environment from './environment';
 import * as _gitCredentials from './git-credentials';
@@ -20,6 +23,7 @@ import * as _project from './project';
 import * as _protoDirectory from './proto-directory';
 import * as _protoFile from './proto-file';
 import * as _request from './request';
+import { migrateBody } from './request';
 import * as _requestGroup from './request-group';
 import * as _requestGroupMeta from './request-group-meta';
 import * as _requestMeta from './request-meta';
@@ -27,6 +31,7 @@ import * as _requestVersion from './request-version';
 import * as _response from './response';
 import * as _runnerTestResult from './runner-test-result';
 import * as _settings from './settings';
+import { migrateEnsureHotKeys } from './settings';
 import * as _socketIOPayload from './socket-io-payload';
 import * as _socketIORequest from './socket-io-request';
 import * as _socketIoResponse from './socket-io-response';
@@ -39,6 +44,7 @@ import * as _webSocketPayload from './websocket-payload';
 import * as _webSocketRequest from './websocket-request';
 import * as _webSocketResponse from './websocket-response';
 import * as _workspace from './workspace';
+import { _migrateExtractClientCertificates, _migrateScope } from './workspace';
 import * as _workspaceMeta from './workspace-meta';
 
 export interface BaseModel {
@@ -243,8 +249,47 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
 
   return migratedDoc as T;
 }
+/** Ensure every cookie has an ID property */
+function migrateCookieId(cookieJar: CookieJar) {
+  for (const cookie of cookieJar.cookies) {
+    if (!cookie.id) {
+      cookie.id = v4();
+    }
+  }
+
+  return cookieJar;
+}
+
 const migrationFunction = (doc: BaseModel) => {
   // Perform any necessary migrations on the document
+  if (doc.type === cookieJar.type) {
+    doc = migrateCookieId(doc);
+  }
+  if (doc.type === response.type) {
+    if (doc.bodyCompression === '__NEEDS_MIGRATION__') {
+      doc.bodyCompression = 'zip';
+    }
+  }
+  if (doc.type === settings.type) {
+    doc = migrateEnsureHotKeys(doc);
+  }
+  if (doc.type === workspace.type) {
+    doc = _migrateExtractClientCertificates(doc);
+    if (typeof doc.name !== 'string') {
+      doc.name = 'My Workspace';
+    }
+    doc = _migrateScope(doc);
+  }
+  if (doc.type === request.type) {
+    doc = migrateBody(doc);
+    if (typeof doc.url !== 'string') {
+      doc.url = '';
+    }
+    const isAuthSet = doc?.authentication && 'username' in doc.authentication && doc.authentication.username;
+    if (isAuthSet && !doc.authentication.type) {
+      doc.authentication.type = 'basic';
+    }
+  }
   return doc;
 };
 // Use function instead of object to avoid issues with circular dependencies

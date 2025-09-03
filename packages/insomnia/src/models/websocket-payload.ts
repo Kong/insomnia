@@ -29,8 +29,6 @@ export const init = (): BaseWebSocketPayload => ({
   mode: 'application/json',
 });
 
-export const migrate = (doc: WebSocketPayload) => doc;
-
 export const create = (patch: Partial<WebSocketPayload> = {}) => {
   if (!patch.parentId) {
     throw new Error(`New WebSocketPayload missing \`parentId\`: ${JSON.stringify(patch)}`);

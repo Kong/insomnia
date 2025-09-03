@@ -89,14 +89,6 @@ export function init(): BaseResponse {
   };
 }
 
-export function migrate(doc: Response) {
-  try {
-    return migrateBodyCompression(doc);
-  } catch (e) {
-    console.log('[db] Error during response migration', e);
-    throw e;
-  }
-}
 export function getById(id: string) {
   return db.findOne<Response>(type, { _id: id });
 }
@@ -278,12 +270,4 @@ export function getTimeline(response: Response, showBody?: boolean) {
     console.warn('Failed to read response body', err.message);
     return [];
   }
-}
-
-function migrateBodyCompression(doc: Response) {
-  if (doc.bodyCompression === '__NEEDS_MIGRATION__') {
-    doc.bodyCompression = 'zip';
-  }
-
-  return doc;
 }

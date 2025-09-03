@@ -65,8 +65,6 @@ export const create = (patch: Partial<SocketIORequest> = {}) => {
 
 export const getById = (_id: string) => database.findOne<SocketIORequest>(type, { _id });
 
-export const migrate = (doc: SocketIORequest) => doc;
-
 export const remove = (obj: SocketIORequest) => database.remove(obj);
 
 export const update = (obj: SocketIORequest, patch: Partial<SocketIORequest> = {}) => database.docUpdate(obj, patch);
