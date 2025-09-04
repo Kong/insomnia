@@ -160,7 +160,6 @@ export const ProjectSettingsForm: FC<Props> = ({
     setProjectData({
       ...projectData,
       ...credentials,
-      password: credentials.password || credentials.token,
       authorName: author?.name || '',
       authorEmail: author?.email || '',
       uri: repoPatch.uri,
@@ -181,10 +180,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               },
             }
           : {
-              credentials: {
-                password: credentials.password || credentials.token || '',
-                username: credentials.username || '',
-              },
+              credentials,
             }
         : {
             credentials: {
