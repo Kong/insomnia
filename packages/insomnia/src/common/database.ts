@@ -156,6 +156,9 @@ export const database = {
       return _send<T>('findOne', ...arguments);
     }
     const doc = await nedbBucket[type].findOneAsync<T>(query).sort(sort);
+    if (doc === null) {
+      return undefined;
+    }
     return models.initModel<T>(type, doc);
   },
   /** find documents matching query */
