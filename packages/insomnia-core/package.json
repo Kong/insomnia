@@ -14,8 +14,6 @@
     "url": "https://github.com/kong/insomnia/issues"
   },
   "homepage": "https://github.com/Kong/insomnia#readme",
-  "module": "./src/index.ts",
-  "types": "./src/index.ts",
   "exports": {
     "./insomnia-api": {
       "import": "./src/insomnia-api/index.ts",
