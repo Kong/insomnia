@@ -7,18 +7,15 @@
     "allowJs": true,
     "checkJs": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "isolatedModules": true,
     "paths": {
       "~/*": [
         "../insomnia/src/*"
       ],
-      "electron": [
-        "../insomnia/send-request/electron"
-      ]
     },
     /* Transpiling Options */
-    "module": "CommonJS",
+    "module": "ESNext",
     "sourceMap": true,
     "lib": [
       "ES2023",

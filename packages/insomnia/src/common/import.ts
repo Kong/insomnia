@@ -1,8 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
+import { type CurrentPlan } from 'insomnia-core/insomnia-api';
 import { z, type ZodError } from 'zod/v4';
-
-import type { CurrentPlan } from '~/models/organization';
 
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';

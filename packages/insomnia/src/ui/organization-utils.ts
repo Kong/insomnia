@@ -1,15 +1,11 @@
+import { getCurrentPlan, getUserProfile } from 'insomnia-core/insomnia-api';
+
 import { projectLock } from '~/common/project';
 
 import { database } from '../common/database';
 import { project, userSession } from '../models';
 import { updateLocalProjectToRemote } from '../models/helpers/project';
-import type {
-  CurrentPlan,
-  Organization,
-  OrganizationsResponse,
-  StorageRules,
-  UserProfileResponse,
-} from '../models/organization';
+import type { Organization, OrganizationsResponse, StorageRules } from '../models/organization';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../models/organization';
 import type { Project } from '../models/project';
 import { VCSInstance } from '../sync/vcs/insomnia-sync';
@@ -62,16 +58,8 @@ export async function syncOrganizations(sessionId: string, accountId: string) {
         path: '/v1/organizations',
         sessionId,
       }),
-      insomniaFetch<UserProfileResponse | void>({
-        method: 'GET',
-        path: '/v1/user/profile',
-        sessionId,
-      }),
-      insomniaFetch<CurrentPlan | void>({
-        method: 'GET',
-        path: '/v1/billing/current-plan',
-        sessionId,
-      }),
+      getUserProfile({ sessionId }),
+      getCurrentPlan({ sessionId }),
     ]);
 
     invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');

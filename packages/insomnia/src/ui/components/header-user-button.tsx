@@ -1,7 +1,7 @@
+import { type CurrentPlan, type PersonalPlanType, type UserProfileResponse } from 'insomnia-core/insomnia-api';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
-import type { CurrentPlan, PersonalPlanType, UserProfileResponse } from '~/models/organization';
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { Avatar } from '~/ui/components/avatar';
 import { Icon } from '~/ui/components/icon';

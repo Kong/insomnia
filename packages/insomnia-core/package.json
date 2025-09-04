@@ -1,0 +1,30 @@
+{
+  "private": true,
+  "name": "insomnia-core",
+  "version": "11.5.0",
+  "description": "Insomnia core functionalities",
+  "author": "Kong <office@konghq.com>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kong/insomnia.git",
+    "directory": "packages/insomnia-core"
+  },
+  "bugs": {
+    "url": "https://github.com/kong/insomnia/issues"
+  },
+  "homepage": "https://github.com/Kong/insomnia#readme",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    "./insomnia-api": {
+      "import": "./src/insomnia-api/index.ts",
+      "types": "./src/insomnia-api/index.ts"
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx --cache",
+    "type-check": "tsc --noEmit --project tsconfig.json"
+  },
+  "dependencies": {}
+}

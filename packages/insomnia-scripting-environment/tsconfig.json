@@ -7,7 +7,7 @@
     "allowJs": true,
     "resolveJsonModule": true,
     "module": "ES2022",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "isolatedModules": true,
     "paths": {
       "~/*": [

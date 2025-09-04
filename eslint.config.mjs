@@ -43,6 +43,18 @@ export default tseslint.config(
       'unicorn/relative-url-style': 'error',
       'unicorn/switch-case-braces': 'error',
       'unicorn/throw-new-error': 'error',
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            // Shouldn't import packages by relative path
+            {
+              group: ['**/*/insomnia-core'],
+              message: "Please use 'insomnia-core' instead of relative paths",
+            },
+          ],
+        },
+      ],
       // 'unicorn/custom-error-definition': 'error', //TODO: Enable this rule
       // 'unicorn/expiring-todo-comments': 'error', //TODO: Enable this rule
       // 'unicorn/explicit-length-check': 'error', //TODO: Enable this rule

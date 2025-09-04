@@ -1,4 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import { getLearningFeature as getLearningFeatureAPI, type LearningFeature } from 'insomnia-core/insomnia-api';
 import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -80,7 +81,6 @@ import { TimeFromNow } from '~/ui/components/time-from-now';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { insomniaFetch } from '~/ui/insomniaFetch';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 
@@ -313,14 +313,6 @@ async function getAllRemoteFiles({ projectId, organizationId }: { projectId: str
   return [];
 }
 
-interface LearningFeature {
-  active: boolean;
-  title: string;
-  message: string;
-  cta: string;
-  url: string;
-}
-
 const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   let learningFeature = fallbackLearningFeature;
   const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
@@ -331,12 +323,7 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   const wasNotDismissedAndOneDayHasPassed = !wasDismissed && hasOneDayPassedSinceLastFetch;
   if (wasNotDismissedAndOneDayHasPassed) {
     try {
-      learningFeature = await insomniaFetch<LearningFeature>({
-        method: 'GET',
-        path: '/insomnia-production-public-assets/inapp-learning.json',
-        origin: 'https://storage.googleapis.com',
-        sessionId: '',
-      });
+      learningFeature = await getLearningFeatureAPI();
       window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
     } catch {
       console.log('[project] Could not fetch learning feature data.');

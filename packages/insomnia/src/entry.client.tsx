@@ -1,10 +1,13 @@
 import './ui/rendererListeners';
 import './ui/log';
 
+import { configureFetch } from 'insomnia-core/insomnia-api';
 import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import type { SessionData } from 'react-router';
 import { HydratedRouter } from 'react-router/dom';
+
+import { insomniaFetch } from '~/ui/insomniaFetch';
 
 import { migrateFromLocalStorage, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
@@ -21,6 +24,9 @@ import { initializeSentry } from './ui/sentry';
 import { getInitialEntry } from './utils/router';
 
 initializeSentry();
+
+// Force onlyResolveOnSuccess to true, will be removed after all usages are updated
+configureFetch(options => insomniaFetch({ ...options, onlyResolveOnSuccess: true }));
 
 await initPlugins();
 

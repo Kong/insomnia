@@ -1,3 +1,4 @@
+import { type CurrentPlan, type UserProfileResponse } from 'insomnia-core/insomnia-api';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -16,7 +17,6 @@ import * as reactUse from 'react-use';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { userSession } from '~/models';
 import { isOwnerOfOrganization, isPersonalOrganization, type Organization } from '~/models/organization';
-import { type CurrentPlan, type UserProfileResponse } from '~/models/organization';
 import type { Settings } from '~/models/settings';
 import { isScratchpad } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';

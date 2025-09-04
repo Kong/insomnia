@@ -13,7 +13,9 @@ import type { Environment, UserUploadEnvironment } from 'insomnia/src/models/env
 import { init } from 'insomnia/src/models/environment';
 import type { Request } from 'insomnia/src/models/request';
 import type { RequestGroup } from 'insomnia/src/models/request-group';
+import { insomniaFetch } from 'insomnia/src/ui/insomniaFetch';
 import { deserializeNDJSON } from 'insomnia/src/utils/ndjson';
+import { configureFetch } from 'insomnia-core/insomnia-api';
 import { generate, runTestsCli } from 'insomnia-testing';
 import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';
@@ -47,6 +49,9 @@ if (!isDevelopment()) {
   // in production, silence the deprecation warnings
   process.removeAllListeners('warning');
 }
+
+// Force onlyResolveOnSuccess to true, will be removed after all usages are updated
+configureFetch(options => insomniaFetch({ ...options, onlyResolveOnSuccess: true }));
 
 export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: string) => {
   try {
