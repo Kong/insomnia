@@ -65,7 +65,7 @@ export const EnvironmentPicker = ({
     isBase: environment._id === baseEnvironment._id,
   }));
 
-  const selectedGlobalBaseEnvironmentId = activeGlobalEnvironment?.parentId.startsWith('wrk')
+  const selectedGlobalBaseEnvironmentId = activeGlobalEnvironment?.parentId?.startsWith('wrk')
     ? activeGlobalEnvironment._id
     : activeGlobalEnvironment?.parentId;
   const selectedGlobalBaseEnvironment = globalBaseEnvironments.find(e => e._id === selectedGlobalBaseEnvironmentId);
