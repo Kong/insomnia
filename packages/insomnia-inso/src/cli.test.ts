@@ -73,17 +73,11 @@ describe('inso dev bundle', () => {
   describe('exit codes are consistent', () => {
     it.each(shouldReturnSuccessCode)('exit code should be 0: %p', async input => {
       const result = await runCliFromRoot(input);
-      if (result.code !== 0) {
-        console.log(result);
-      }
-      expect(result.code).toBe(0);
+      expect(result.code, result.stdout).toBe(0);
     });
     it.each(shouldReturnErrorCode)('exit code should be 1: %p', async input => {
       const result = await runCliFromRoot(input);
-      if (result.code !== 1) {
-        console.log(result);
-      }
-      expect(result.code).toBe(1);
+      expect(result.code, result.stdout).toBe(1);
     });
   });
   describe('response and timeline has scripting effects', () => {
@@ -91,9 +85,7 @@ describe('inso dev bundle', () => {
       const input =
         '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/minimal.yml wrk_5b5ab6 --verbose';
       const result = await runCliFromRoot(input);
-      if (result.code !== 0) {
-        console.log(result);
-      }
+      expect(result.code, result.stdout).toBe(0);
       expect(result.stdout).toContain('HTTP/1.1 200 OK');
       expect(result.stdout).toContain('Preparing request to http://127.0.0.1:4010/');
       expect(result.stdout).toContain('foo bar baz');
@@ -103,9 +95,7 @@ describe('inso dev bundle', () => {
       const input =
         '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/script-add-header.yml wrk_5b5ab6 --verbose';
       const result = await runCliFromRoot(input);
-      if (result.code !== 0) {
-        console.log(result);
-      }
+      expect(result.code, result.stdout).toBe(0);
       expect(result.stdout).toContain('HTTP/1.1 200 OK');
       expect(result.stdout).toContain('Preparing request to http://127.0.0.1:4010/');
       expect(result.stdout).toContain('custom-test-header: test-header-value');
@@ -115,9 +105,7 @@ describe('inso dev bundle', () => {
       const input =
         '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/script-require.yml wrk_5b5ab6 --verbose';
       const result = await runCliFromRoot(input);
-      if (result.code !== 0) {
-        console.log(result);
-      }
+      expect(result.code, result.stdout).toBe(0);
       expect(result.stdout).toContain('X-Hello: hello');
       expect(result.stdout).toContain('GET /echo?k1=v1 HTTP/1.1');
     });
@@ -126,9 +114,7 @@ describe('inso dev bundle', () => {
       const input =
         '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/script-send-request.yml wrk_cfacae --verbose';
       const result = await runCliFromRoot(input);
-      if (result.code !== 0) {
-        console.log(result);
-      }
+      expect(result.code, result.stdout).toBe(0);
       expect(result.stdout).toContain('log: we did it: 200');
     });
 
@@ -136,20 +122,15 @@ describe('inso dev bundle', () => {
       const input =
         '$PWD/packages/insomnia-inso/bin/inso run collection -d packages/insomnia-smoke-test/fixtures/files/runner-data.json -w packages/insomnia-inso/src/examples/three-requests.yml -n 2 -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -e env_86e135 wrk_c992d40 --verbose';
       const result = await runCliFromRoot(input);
-      if (result.code !== 0) {
-        console.log(result);
-      }
+      expect(result.code, result.stdout).toBe(0);
       expect(result.stdout).toContain('expecting to see:file_value0');
       expect(result.stdout).toContain('expecting to see:file_value1');
     });
 
     it('send request with client cert and key', async () => {
-      const input =
-        `$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withCertAndCA" --verbose "Insomnia Designer" wrk_0b96eff -f packages`;
+      const input = `$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withCertAndCA" --verbose "Insomnia Designer" wrk_0b96eff -f packages`;
       const result = await runCliFromRoot(input);
-      if (result.code !== 0) {
-        console.log(result);
-      }
+      expect(result.code, result.stdout).toBe(0);
       expect(result.stdout).toContain('Adding SSL PEM certificate');
       expect(result.stdout).toContain('Adding SSL KEY certificate');
     });
@@ -199,10 +180,7 @@ describe('inso packaged binary', () => {
   describe('exit codes are consistent', () => {
     it.each(packagedSuccessCodes)('exit code should be 0: %p', async input => {
       const result = await runCliFromRoot(input);
-      if (result.code !== 0) {
-        console.log(result);
-      }
-      expect(result.code).toBe(0);
+      expect(result.code, result.stdout).toBe(0);
     });
     it.each(packagedErrorCodes)('exit code should be 1: %p', async input => {
       const result = await runCliFromRoot(input);
