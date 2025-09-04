@@ -597,7 +597,7 @@ export async function getRenderedRequestAndContext({
     _cookieJar: cookieJar,
   };
 
-  const requestUsedContextKeys = templatingUtils.getObjectUsedContextKeys(requestRenderObject);
+  const requestUsedContextKeys = templatingUtils.searchObjectForTemplateTags(requestRenderObject);
 
   const renderContext = await getRenderContext({
     request,
