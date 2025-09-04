@@ -12,7 +12,7 @@ import {
 } from '../../models/__schemas__/model-schemas';
 import type { Environment } from '../../models/environment';
 import type { Workspace } from '../../models/workspace';
-import { getObjectUsedContextKeys } from '../../templating/utils';
+import { searchObjectForTemplateTags } from '../../templating/utils';
 import * as renderUtils from '../render';
 
 const envBuilder = createBuilder(environmentModelSchema);
@@ -799,7 +799,7 @@ describe('render tests', () => {
           text: 'Body',
         })
         .build();
-      const requestUsedContextKeys = getObjectUsedContextKeys(requestObj);
+      const requestUsedContextKeys = searchObjectForTemplateTags(requestObj);
       expect(requestUsedContextKeys).toEqual([]);
       const renderContext = await renderUtils.buildRenderContext({
         rootEnvironment: rootEnvironment,
@@ -855,7 +855,7 @@ describe('render tests', () => {
           },
         ])
         .build();
-      const requestUsedContextKeys = getObjectUsedContextKeys({
+      const requestUsedContextKeys = searchObjectForTemplateTags({
         _req: requestObj,
         _cookieJar: reqCookeJar,
       });
