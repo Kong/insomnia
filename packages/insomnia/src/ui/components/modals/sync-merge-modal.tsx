@@ -1,6 +1,8 @@
-import { DefaultDarkColors, MisMerge3 } from '@mismerge/react';
+import darkCssHref from '@mismerge/core/dark.css?url';
+import lightCssHref from '@mismerge/core/light.css?url';
+import { DefaultDarkColors, DefaultLightColors, MisMerge3 } from '@mismerge/react';
 import classNames from 'classnames';
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -16,13 +18,13 @@ import { parse, stringify } from 'yaml';
 
 import { extractErrorMessages } from '~/common/import';
 import { InsomniaFileSchema } from '~/common/import-v5-parser';
+import { getColorScheme } from '~/plugins/misc';
+import { useRootLoaderData } from '~/root';
+import { showModal } from '~/ui/components/modals';
+import { AlertModal } from '~/ui/components/modals/alert-modal';
 
 import { type MergeConflict, RESOLUTION_SOURCE } from '../../../sync/types';
 import { SegmentEvent } from '../../analytics';
-import { Modal as BaseModal, type ModalHandle } from '../base/modal';
-import { ModalBody } from '../base/modal-body';
-import { ModalFooter } from '../base/modal-footer';
-import { ModalHeader } from '../base/modal-header';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 
@@ -170,7 +172,38 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
     [conflicts, selectedConflictKey],
   );
 
-  const modalRef = useRef<ModalHandle>(null);
+  const rootLoaderData = useRootLoaderData();
+  const isLightTheme = useMemo(() => {
+    let isLightTheme = false;
+    if (rootLoaderData?.settings) {
+      const colorScheme = getColorScheme(rootLoaderData.settings);
+      if (colorScheme === 'light') {
+        isLightTheme = true;
+      } else if (colorScheme === 'dark') {
+        isLightTheme = false;
+      } else {
+        // check if user has selected a light theme
+        isLightTheme = rootLoaderData.settings.theme.includes('light');
+      }
+    }
+    return isLightTheme;
+  }, [rootLoaderData?.settings]);
+
+  // Switch theme for mismerge
+  useEffect(() => {
+    const id = 'mismerge-theme-style';
+    let link = document.getElementById(id) as HTMLLinkElement | null;
+
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.id = id;
+      document.head.appendChild(link);
+    }
+
+    const nextHref = isLightTheme ? lightCssHref : darkCssHref;
+    if (link.href !== nextHref) link.href = nextHref;
+  }, [isLightTheme]);
 
   return (
     <>
@@ -259,7 +292,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                 );
                               } else if (editorType === 'merge') {
                                 return (
-                                  <GridListItem className="flex w-full cursor-pointer select-none items-start justify-start gap-2 overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
+                                  <GridListItem className="relative flex w-full cursor-pointer select-none items-start justify-start gap-2 overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
                                     {errMsgMapForConflictMergeResult[item.key] && (
                                       <Icon icon="exclamation-triangle" className="mt-1 text-[--color-danger]" />
                                     )}
@@ -267,7 +300,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                       <div className="truncate">{item.name}</div>
                                       {errMsgMapForConflictMergeResult[item.key] &&
                                         selectedConflictKey === item.key && (
-                                          <div className="whitespace-pre-wrap break-all text-sm text-[--color-danger]">
+                                          <div className="mt-2 whitespace-pre-wrap break-all text-sm text-[--color-warning]">
                                             This file has syntax errors:
                                             <br />
                                             {errMsgMapForConflictMergeResult[item.key]}
@@ -277,6 +310,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                   </GridListItem>
                                 );
                               }
+                              return null;
                             }}
                           </GridList>
                         </div>
@@ -287,7 +321,16 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                             event.preventDefault();
 
                             if (Object.entries(errMsgMapForConflictMergeResult).filter(([, val]) => val).length > 0) {
-                              modalRef.current?.show();
+                              showModal(AlertModal, {
+                                title: 'The following files have syntax errors and cannot be saved:',
+                                message: Object.entries(errMsgMapForConflictMergeResult)
+                                  .filter(([, val]) => val)
+                                  .map(([key]) => (
+                                    <div key={key}>{conflicts.find(({ key: itemKey }) => itemKey === key)?.name}</div>
+                                  )),
+                                addCancel: false,
+                                okLabel: 'Ok',
+                              });
                               return;
                             }
 
@@ -323,7 +366,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                           // will trigger onOpenChange on ModalOverlay
                           onClick={close}
                         >
-                          Cancel Merge
+                          Cancel merge
                         </Button>
                       </div>
                     )}
@@ -352,27 +395,45 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                         {editorType === 'merge' && (
                           <div className="flex h-full flex-col gap-2 overflow-y-auto p-2 pb-0">
                             <ol className="flex items-stretch gap-2">
-                              <li className="flex flex-1 flex-col items-center gap-2 bg-[--hl-xs] p-2 text-center text-lg font-semibold uppercase text-[--hl]">
-                                <span className="font-bold leading-6">Current</span>
+                              <li className="flex flex-1 flex-col items-center gap-2 bg-[--hl-xs] p-2 text-center text-lg font-semibold text-[--hl]">
+                                <span className="text-base leading-6">Current Changes</span>
                                 <Button
-                                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
+                                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-bold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
                                   onClick={() => {
-                                    onMergeEditorResultChange(selectedConflictCurrent);
+                                    showModal(AlertModal, {
+                                      title: 'Confirm',
+                                      message: `Taking all current changes will completely overwrite any choices or edits you’ve made already for ${selectedConflict.name}. Are you sure you want to continue?`,
+                                      addCancel: true,
+                                      okLabel: 'Confirm',
+                                      onConfirm: () => {
+                                        onMergeEditorResultChange(selectedConflictCurrent);
+                                      },
+                                    });
                                   }}
                                 >
                                   Take all current changes
                                 </Button>
                               </li>
-                              <li className="flex flex-1 flex-col items-center justify-between gap-2 bg-[--hl-xs] p-2 text-center text-lg font-semibold uppercase text-[--hl]">
-                                <span className="inline-block font-bold leading-6">{selectedConflict.name}</span>
-                                <span className="inline-block font-bold leading-6">Merge Result</span>
+                              <li className="flex flex-1 flex-col items-center justify-between gap-2 bg-[--hl-xs] p-2 pb-3 text-center text-lg font-semibold text-[--hl]">
+                                <span className="text-base leading-6">Merge Result</span>
+                                <span className="inline-block font-bold leading-6 text-[--color-font]">
+                                  {selectedConflict.name}
+                                </span>
                               </li>
-                              <li className="flex flex-1 flex-col items-center gap-2 bg-[--hl-xs] p-2 text-center text-lg font-semibold uppercase text-[--hl]">
-                                <span className="font-bold leading-6">Incoming</span>
+                              <li className="flex flex-1 flex-col items-center gap-2 bg-[--hl-xs] p-2 text-center text-lg font-semibold text-[--hl]">
+                                <span className="text-base leading-6">Incoming Changes</span>
                                 <Button
-                                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
+                                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-bold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
                                   onClick={() => {
-                                    onMergeEditorResultChange(selectedConflictIncoming);
+                                    showModal(AlertModal, {
+                                      title: 'Confirm',
+                                      message: `Taking all incoming changes will completely overwrite any choices or edits you’ve made already for ${selectedConflict.name}. Are you sure you want to continue?`,
+                                      addCancel: true,
+                                      okLabel: 'Confirm',
+                                      onConfirm: () => {
+                                        onMergeEditorResultChange(selectedConflictIncoming);
+                                      },
+                                    });
                                   }}
                                 >
                                   Take all incoming changes
@@ -385,7 +446,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                 ctr={selectedConflict?.mergeResult || ''}
                                 rhs={selectedConflictIncoming}
                                 onCtrChange={onMergeEditorResultChange}
-                                colors={DefaultDarkColors}
+                                colors={isLightTheme ? DefaultLightColors : DefaultDarkColors}
                                 wrapLines={true}
                                 disableWordsCounter
                               />
@@ -409,23 +470,6 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
           </Dialog>
         </Modal>
       </ModalOverlay>
-      <BaseModal ref={modalRef}>
-        <ModalHeader>The following files have syntax errors and cannot be saved:</ModalHeader>
-        <ModalBody className="wide pad">
-          {Object.entries(errMsgMapForConflictMergeResult)
-            .filter(([, val]) => val)
-            .map(([key]) => (
-              <div key={key}>{conflicts.find(({ key: itemKey }) => itemKey === key)?.name}</div>
-            ))}
-        </ModalBody>
-        <ModalFooter>
-          <div>
-            <button className="btn" onClick={() => modalRef.current?.hide()}>
-              Ok
-            </button>
-          </div>
-        </ModalFooter>
-      </BaseModal>
     </>
   );
 });

@@ -9,7 +9,6 @@
 @import './lib/codemirror/material.css';
 @import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css';
 @import '@mismerge/core/styles.css';
-@import '@mismerge/core/dark.css';
 @import './main.css';
 
 @tailwind base;

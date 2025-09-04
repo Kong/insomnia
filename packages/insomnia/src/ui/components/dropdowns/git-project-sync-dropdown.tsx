@@ -14,7 +14,6 @@ import {
 } from 'react-aria-components';
 import { useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
-import { stringify } from 'yaml';
 
 import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
 import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
