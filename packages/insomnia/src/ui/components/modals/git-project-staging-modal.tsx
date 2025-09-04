@@ -303,7 +303,6 @@ export const GitProjectStagingModal: FC<{
                           <Button
                             type="submit"
                             isDisabled={isCommitting || changes.staged.length === 0}
-                            formAction={`/organization/${organizationId}/project/${projectId}/git/commit`}
                             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                           >
                             <Icon
@@ -315,8 +314,9 @@ export const GitProjectStagingModal: FC<{
 
                           <Button
                             type="submit"
+                            name="push"
+                            value="true"
                             isDisabled={isCommitting || changes.staged.length === 0}
-                            formAction={`/organization/${organizationId}/project/${projectId}/git/commit-and-push`}
                             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                           >
                             <Icon
