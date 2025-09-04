@@ -167,9 +167,9 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
       isDismissable={true}
       isOpen={true}
       onOpenChange={setIsOpen}
-      className="theme--transparent-overlay fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-[--color-bg]"
+      className="theme--transparent-overlay fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full justify-center bg-[--color-bg] py-[100px]"
     >
-      <Modal className="theme--dialog fixed top-[100px] h-fit w-full max-w-[900px] rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[32px] text-[--color-font]">
+      <Modal className="theme--dialog h-fit max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[32px] text-[--color-font]">
         <Dialog className="relative outline-none">
           {({ close }) => (
             <>
@@ -293,7 +293,7 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
                 <RenderedText>{cookie.domain || ''}</RenderedText>
               </span>
               <div className="flex w-[70%] items-center leading-relaxed">
-                <div className="w-full truncate break-all">
+                <div className="line-clamp-3 w-full break-all">
                   <RenderedText>{cookieString || ''}</RenderedText>
                 </div>
               </div>
@@ -425,9 +425,9 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
       isDismissable={true}
       isOpen={isOpen}
       onOpenChange={setIsOpen}
-      className="theme--transparent-overlay fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-[--color-bg]"
+      className="theme--transparent-overlay fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full justify-center bg-[--color-bg] py-[100px]"
     >
-      <Modal className="theme--dialog fixed top-[100px] h-fit w-full max-w-[900px] rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[32px] text-[--color-font]">
+      <Modal className="theme--dialog h-fit max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[32px] text-[--color-font]">
         <Dialog className="relative outline-none">
           {({ close }) => (
             <>
