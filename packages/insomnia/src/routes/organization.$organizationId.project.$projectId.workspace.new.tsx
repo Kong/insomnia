@@ -178,8 +178,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       })}/${scopeToActivity(workspace.scope)}`,
     );
   } catch (err) {
+    console.error('Error creating workspace:', err);
+
     return {
-      error: `Failed to create workspace: ${err instanceof Error ? err.message : String(err)}`,
+      error: `Failed to create workspace: ${err instanceof Error ? err.message : JSON.stringify(err)}`,
     };
   }
 }
