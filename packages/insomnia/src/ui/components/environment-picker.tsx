@@ -1,5 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { Fragment } from 'react';
+import { Fragment } from 'react';
 import {
   Button,
   ComboBox,
@@ -74,10 +74,10 @@ export const EnvironmentPicker = ({
     ? [
         selectedGlobalBaseEnvironment,
         ...globalSubEnvironments.filter(e => e.parentId === selectedGlobalBaseEnvironment._id),
-      ].map(({ type, ...subenvironment }) => ({
-        ...subenvironment,
-        id: subenvironment._id,
-        isBase: subenvironment._id === selectedGlobalBaseEnvironment._id,
+      ].map(({ type, ...subEnvironment }) => ({
+        ...subEnvironment,
+        id: subEnvironment._id,
+        isBase: subEnvironment._id === selectedGlobalBaseEnvironment._id,
       }))
     : [];
 
@@ -161,7 +161,6 @@ export const EnvironmentPicker = ({
                 aria-label="Global Environment"
                 shouldFocusWrap
                 allowsCustomValue={false}
-                onFocus={() => {}}
                 menuTrigger="focus"
                 defaultFilter={(textValue, filter) => {
                   const match = Boolean(fuzzyMatch(filter, textValue, { splitSpace: false, loose: true })?.indexes);
