@@ -100,22 +100,22 @@ export function vcsSegmentEventProperties(type: 'git', action: VCSAction, error?
   return { type, action, error };
 }
 
-function parseGitToHttpsURL(s: string) {
+function parseGitToHttpsURL(url: string) {
   // try to convert any git URL to https URL
-  let parsed = fromUrl(s)?.https({ noGitPlus: true }) || '';
+  let parsed = fromUrl(url)?.https({ noGitPlus: true }) || '';
 
   // fallback for self-hosted git servers, see https://github.com/Kong/insomnia/issues/5967
   // and https://github.com/npm/hosted-git-info/issues/11
   if (parsed === '') {
-    let temp = s;
+    let tempURL = url;
     // handle "shorter scp-like syntax"
-    temp = temp.replace(/^git@([^:]+):/, 'https://$1/');
+    tempURL = tempURL.replace(/^git@([^:]+):/, 'https://$1/');
     // handle proper SSH URLs
-    temp = temp.replace(/^ssh:\/\//, 'https://');
+    tempURL = tempURL.replace(/^ssh:\/\//, 'https://');
 
     // final URL fallback for any other git URL
-    temp = new URL(temp).href;
-    parsed = temp;
+    tempURL = (URL.canParse(tempURL) ? URL.parse(tempURL)?.href : url) || '';
+    parsed = tempURL;
   }
 
   return parsed;
