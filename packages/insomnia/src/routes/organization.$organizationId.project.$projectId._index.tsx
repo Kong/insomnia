@@ -87,13 +87,14 @@ import { invariant } from '~/utils/invariant';
 
 export const scopeToLabelMap: Record<
   WorkspaceScope | 'unsynced',
-  'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment'
+  'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'Mcp Client'
 > = {
   'design': 'Document',
   'collection': 'Collection',
   'mock-server': 'Mock Server',
   'unsynced': 'Unsynced',
   'environment': 'Environment',
+  'mcp': 'Mcp Client',
 };
 
 export const scopeToIconMap: Record<string, IconName> = {
@@ -125,7 +126,7 @@ export interface InsomniaFile {
   name: string;
   remoteId?: string;
   scope: WorkspaceScope | 'unsynced';
-  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment';
+  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'Mcp Client';
   created: number;
   lastModifiedTimestamp: number;
   branch?: string;
@@ -147,6 +148,7 @@ export interface ProjectLoaderData {
   environmentsCount: number;
   collectionsCount: number;
   mockServersCount: number;
+  mcpClientsCount: number;
   projectsCount: number;
   activeProject?: Project;
   activeProjectGitRepository?: GitRepository;
@@ -408,6 +410,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
       environmentsCount: 0,
       collectionsCount: 0,
       mockServersCount: 0,
+      mcpClientsCount: 0,
       projectsCount: 0,
       activeProject: undefined,
       projects: [],
@@ -451,6 +454,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
     documentsCount: localFiles.filter(file => file.scope === 'design').length,
     collectionsCount: localFiles.filter(file => file.scope === 'collection').length,
     mockServersCount: localFiles.filter(file => file.scope === 'mock-server').length,
+    mcpClientsCount: localFiles.filter(file => file.scope === 'mcp').length,
     projectsSyncStatusPromise,
   };
 }
@@ -469,6 +473,7 @@ const Component = () => {
     environmentsCount,
     collectionsCount,
     mockServersCount,
+    mcpClientsCount,
     documentsCount,
     projectsCount,
     learningFeaturePromise,
@@ -643,6 +648,7 @@ const Component = () => {
   const createNewMockServer = () =>
     canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
   const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
+  const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true });
 
   const createNewCollectionWithRequest = () => {
     if (!activeProject) {
@@ -681,6 +687,12 @@ const Component = () => {
       name: 'Design document',
       icon: 'file',
       action: createNewDocument,
+    },
+    {
+      id: 'new-mcp-client',
+      name: 'Mcp Client',
+      icon: 'file',
+      action: createNewMcpClient,
     },
     {
       id: 'new-mock-server',
@@ -729,6 +741,16 @@ const Component = () => {
         icon: 'plus',
         label: 'New request collection',
         run: createNewCollection,
+      },
+    },
+    {
+      id: 'mcp',
+      label: `Mcp Clients (${mcpClientsCount})`,
+      icon: 'bars',
+      action: {
+        icon: 'plus',
+        label: 'New mcp client',
+        run: createNewMcpClient,
       },
     },
     {
