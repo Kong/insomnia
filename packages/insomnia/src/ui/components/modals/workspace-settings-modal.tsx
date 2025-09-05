@@ -26,7 +26,7 @@ import * as models from '../../../models/index';
 import type { MockServer } from '../../../models/mock-server';
 import { isGitProject, type Project } from '../../../models/project';
 import { isRequest } from '../../../models/request';
-import { isEnvironment, isMockServer, isScratchpad, type Workspace } from '../../../models/workspace';
+import { isEnvironment, isMcp, isMockServer, isScratchpad, type Workspace } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule } from '../../organization-utils';
 import { Link } from '../base/link';
@@ -200,7 +200,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                       }}
                     />
                     <Input name="description" className="sr-only" value={description} />
-                    {!isEnvironment(workspace) && (
+                    {!isEnvironment(workspace) && !isMcp(workspace) && (
                       <>
                         <Heading>Actions</Heading>
                         <PromptButton
