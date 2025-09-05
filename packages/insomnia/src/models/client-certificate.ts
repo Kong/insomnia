@@ -57,7 +57,7 @@ export function update(cert: ClientCertificate, patch: Partial<ClientCertificate
 }
 
 export function getById(id: string) {
-  return db.get<ClientCertificate>(type, id);
+  return db.findOne<ClientCertificate>(type, { _id: id });
 }
 
 export function findByParentId(parentId: string) {
@@ -69,5 +69,5 @@ export function remove(cert: ClientCertificate) {
 }
 
 export function all() {
-  return db.all<ClientCertificate>(type);
+  return db.find<ClientCertificate>(type);
 }

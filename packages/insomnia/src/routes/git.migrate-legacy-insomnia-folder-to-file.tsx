@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
+
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/git.migrate-legacy-insomnia-folder-to-file';
 
@@ -10,12 +11,10 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return window.main.git.migrateLegacyInsomniaFolderToFile({ projectId });
 }
 
-export function useGitProjectMigrateLegacyInsomniaFolderActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useGitProjectMigrateLegacyInsomniaFolderActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({ projectId }: { projectId: string }) => {
-      return fetcherSubmit(
+      return submit(
         {
           projectId,
         },
@@ -26,11 +25,5 @@ export function useGitProjectMigrateLegacyInsomniaFolderActionFetcher(args?: Par
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

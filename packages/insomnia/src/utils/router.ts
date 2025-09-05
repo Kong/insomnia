@@ -1,4 +1,5 @@
-import { href, matchPath, type PathMatch } from 'react-router';
+import { useCallback } from 'react';
+import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
 import { database } from '../common/database';
 import * as models from '../models';
@@ -70,7 +71,7 @@ export const getInitialRouteForOrganization = async ({
     }
   }
   // 2. if no history, redirect to the first project
-  const firstProject = await database.getWhere<Project>(models.project.type, { parentId: organizationId });
+  const firstProject = await database.findOne<Project>(models.project.type, { parentId: organizationId });
 
   if (firstProject?._id) {
     return href(`/organization/:organizationId/project/:projectId`, {
@@ -146,3 +147,37 @@ export const getInitialEntry = async () => {
     });
   }
 };
+
+type Override<T, R> = Omit<T, keyof R> & R;
+
+export const createFetcherSubmitHook =
+  <T extends (fetcher: ReturnType<typeof useFetcher<A>>['submit']) => any, A extends (...args: any) => unknown>(
+    fn: T,
+    _actionType?: A, // Only used for type inference
+  ) =>
+  (...args: Parameters<typeof useFetcher>) => {
+    const fetcher = useFetcher<A>(...args);
+
+    const submit = useCallback(((...args: any[]) => fn(fetcher.submit)(...args)) as ReturnType<T>, [fetcher.submit]);
+
+    return {
+      ...fetcher,
+      submit,
+    } as Override<typeof fetcher, { submit: ReturnType<T> }>;
+  };
+
+export const createFetcherLoadHook =
+  <T extends (fetcher: ReturnType<typeof useFetcher<A>>['load']) => any, A extends (...args: any) => unknown>(
+    fn: T,
+    _actionType?: A, // Only used for type inference
+  ) =>
+  (...args: Parameters<typeof useFetcher>) => {
+    const fetcher = useFetcher<A>(...args);
+
+    const load = useCallback(((...args: any[]) => fn(fetcher.load)(...args)) as ReturnType<T>, [fetcher.load]);
+
+    return {
+      ...fetcher,
+      load,
+    } as Override<typeof fetcher, { load: ReturnType<T> }>;
+  };

@@ -3,7 +3,6 @@ import { Button } from 'react-aria-components';
 
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
-import { NunjucksEnabledProvider } from '../../context/nunjucks/nunjucks-enabled-context';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
@@ -29,7 +28,6 @@ interface CodePromptModalOptions {
   hint?: string;
   mode: string;
   hideMode?: boolean;
-  enableRender: boolean;
   showCopyButton?: boolean;
   onChange: (value: string) => void;
   onModeChange?: (value: string) => void;
@@ -51,7 +49,6 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
     hint: '',
     mode: 'text/plain',
     hideMode: false,
-    enableRender: false,
     showCopyButton: false,
     onChange: () => {},
     onModeChange: () => {},
@@ -76,8 +73,7 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
     [],
   );
 
-  const { submitName, title, placeholder, defaultValue, hint, mode, hideMode, enableRender, showCopyButton, onChange } =
-    state;
+  const { submitName, title, placeholder, defaultValue, hint, mode, hideMode, showCopyButton, onChange } = state;
 
   return (
     <Modal ref={modalRef} tall>
@@ -97,37 +93,35 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
               }
         }
       >
-        <NunjucksEnabledProvider disable={!enableRender}>
-          {showCopyButton ? (
-            <div className="pad-top-sm pad-right-sm">
-              <CopyButton content={defaultValue} className="pull-right" />
-            </div>
-          ) : null}
-          {mode === 'text/x-markdown' ? (
-            <div className="pad-sm tall">
-              <MarkdownEditor
-                tall
-                defaultValue={defaultValue}
-                placeholder={placeholder}
-                onChange={onChange}
-                mode={mode}
-              />
-            </div>
-          ) : (
-            <div className="tall rounded bg-[--hl-xs]">
-              <CodeEditor
-                id="code-prompt-modal"
-                hideLineNumbers
-                showPrettifyButton
-                defaultValue={defaultValue}
-                placeholder={placeholder}
-                onChange={onChange}
-                mode={mode}
-                enableNunjucks
-              />
-            </div>
-          )}
-        </NunjucksEnabledProvider>
+        {showCopyButton ? (
+          <div className="pad-top-sm pad-right-sm">
+            <CopyButton content={defaultValue} className="pull-right" />
+          </div>
+        ) : null}
+        {mode === 'text/x-markdown' ? (
+          <div className="pad-sm tall">
+            <MarkdownEditor
+              tall
+              defaultValue={defaultValue}
+              placeholder={placeholder}
+              onChange={onChange}
+              mode={mode}
+            />
+          </div>
+        ) : (
+          <div className="tall rounded bg-[--hl-xs]">
+            <CodeEditor
+              id="code-prompt-modal"
+              hideLineNumbers
+              showPrettifyButton
+              defaultValue={defaultValue}
+              placeholder={placeholder}
+              onChange={onChange}
+              mode={mode}
+              enableNunjucks
+            />
+          </div>
+        )}
       </ModalBody>
       <ModalFooter>
         {!hideMode ? (

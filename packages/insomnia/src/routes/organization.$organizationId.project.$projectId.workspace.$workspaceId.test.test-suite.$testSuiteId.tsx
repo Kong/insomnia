@@ -322,13 +322,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
-  const workspaceEntities = await database.withDescendants(workspace, models.request.type, [
-    models.request.type,
-    models.requestGroup.type,
-  ]);
+  const workspaceEntities = await database.getWithDescendants(workspace, [models.request.type]);
   const requests: Request[] = workspaceEntities.filter(isRequest);
 
-  const unitTestSuite = await database.getWhere<UnitTestSuite>(models.unitTestSuite.type, {
+  const unitTestSuite = await database.findOne<UnitTestSuite>(models.unitTestSuite.type, {
     _id: testSuiteId,
   });
 

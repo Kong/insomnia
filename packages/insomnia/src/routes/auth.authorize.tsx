@@ -1,6 +1,6 @@
-import { Fragment, useCallback } from 'react';
+import { Fragment } from 'react';
 import { Button, Heading } from 'react-aria-components';
-import { href, redirect, useFetcher, useFetchers, useNavigate } from 'react-router';
+import { href, redirect, useFetchers, useNavigate } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';
 import { SegmentEvent } from '~/ui/analytics';
@@ -9,6 +9,7 @@ import { Icon } from '~/ui/components/icon';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { validateVaultKey } from '~/ui/vault-key.client';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 import { getVaultKeyFromStorage } from '~/utils/vault';
 
 import type { Route } from './+types/auth.authorize';
@@ -69,25 +70,16 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return redirect('/organization');
 }
 
-export function useAuthorizeActionFetcher(args: { key?: string } = {}) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
-    (data: { code: string }) => {
-      fetcherSubmit(data, {
-        action: href('/auth/authorize'),
-        method: 'POST',
-        encType: 'application/json',
-      });
-    },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+export const useAuthorizeActionFetcher = createFetcherSubmitHook(
+  submit => (data: { code: string }) => {
+    submit(data, {
+      action: href('/auth/authorize'),
+      method: 'POST',
+      encType: 'application/json',
+    });
+  },
+  clientAction,
+);
 
 const Component = () => {
   const url = getLoginUrl();

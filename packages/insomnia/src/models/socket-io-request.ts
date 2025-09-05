@@ -63,7 +63,7 @@ export const create = (patch: Partial<SocketIORequest> = {}) => {
   return database.docCreate<SocketIORequest>(type, patch);
 };
 
-export const getById = (_id: string) => database.getWhere<SocketIORequest>(type, { _id });
+export const getById = (_id: string) => database.findOne<SocketIORequest>(type, { _id });
 
 export const migrate = (doc: SocketIORequest) => doc;
 

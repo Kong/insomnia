@@ -78,7 +78,7 @@ test.describe('Check vault used in environment', () => {
     },
   });
 
-  test('test global private sub environment to store vaults', async ({ page, app }) => {
+  test('global private sub environment to store vaults', async ({ page, app }) => {
     await page.getByTestId('settings-button').click();
     await page.getByTestId('dataFolders').fill(getFixturePath('vault-collection.yaml'));
     await page.getByTestId('dataFolders-btn').click();

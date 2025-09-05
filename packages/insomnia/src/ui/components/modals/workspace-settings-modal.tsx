@@ -205,7 +205,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                         <Heading>Actions</Heading>
                         <PromptButton
                           onClick={async () => {
-                            const docs = await db.withDescendants(workspace, models.request.type);
+                            const docs = await db.getWithDescendants(workspace, [models.request.type]);
                             const requests = docs.filter(isRequest);
                             for (const req of requests) {
                               await models.response.removeForRequest(req._id);

@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { isSocketIORequestId } from '~/models/socket-io-request';
 import { isWebSocketRequestId } from '~/models/websocket-request';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete';
 
@@ -25,7 +25,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     const res = await models.webSocketResponse.getById(responseId);
     invariant(res, 'Response not found');
     await models.webSocketResponse.remove(res);
-    const response = await models.webSocketResponse.getLatestForRequest(requestId, workspaceMeta.activeEnvironmentId);
+    const response = await models.webSocketResponse.getLatestForRequestId(requestId, workspaceMeta.activeEnvironmentId);
     if (response?.requestVersionId) {
       await models.requestVersion.restore(response.requestVersionId);
     }
@@ -34,7 +34,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     const res = await models.socketIOResponse.getById(responseId);
     invariant(res, 'Response not found');
     await models.socketIOResponse.remove(res);
-    const response = await models.socketIOResponse.getLatestForRequest(requestId, workspaceMeta.activeEnvironmentId);
+    const response = await models.socketIOResponse.getLatestForRequestId(requestId, workspaceMeta.activeEnvironmentId);
     if (response?.requestVersionId) {
       await models.requestVersion.restore(response.requestVersionId);
     }
@@ -43,7 +43,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     const res = await models.response.getById(responseId);
     invariant(res, 'Response not found');
     await models.response.remove(res);
-    const response = await models.response.getLatestForRequest(requestId, workspaceMeta.activeEnvironmentId);
+    const response = await models.response.getLatestForRequestId(requestId, workspaceMeta.activeEnvironmentId);
     if (response?.requestVersionId) {
       await models.requestVersion.restore(response.requestVersionId);
     }
@@ -53,14 +53,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   return null;
 }
 
-export function useRequestResponseDeleteActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const {
-    submit: fetcherSubmit,
-    ...fetcherRest
-  } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback((
-    {
+export const useRequestResponseDeleteActionFetcher = createFetcherSubmitHook(
+  submit =>
+    ({
       organizationId,
       projectId,
       workspaceId,
@@ -72,24 +67,22 @@ export function useRequestResponseDeleteActionFetcher(args?: Parameters<typeof u
       workspaceId: string;
       requestId: string;
       responseId: string;
-    }
-  ) => {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/response/delete', {
-      organizationId,
-      projectId,
-      workspaceId,
-      requestId,
-    });
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/response/delete',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+          requestId,
+        },
+      );
 
-    return fetcherSubmit(JSON.stringify({ responseId }), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }, [fetcherSubmit]);
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+      return submit(JSON.stringify({ responseId }), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+  clientAction,
+);

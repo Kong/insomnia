@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
-import { href, redirect, type ShouldRevalidateFunctionArgs, useFetcher } from 'react-router';
+import { href, redirect, type ShouldRevalidateFunctionArgs } from 'react-router';
 
 import { userSession } from '~/models';
 import { isScratchpadOrganizationId, type Organization } from '~/models/organization';
 import { insomniaFetch } from '~/ui/insomniaFetch';
+import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.permissions';
 import type { Billing, FeatureList } from './organization';
@@ -63,22 +63,14 @@ export function shouldRevalidate(args: ShouldRevalidateFunctionArgs) {
   return args.currentParams.organizationId !== args.nextParams.organizationId;
 }
 
-export function useOrganizationPermissionsLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
-
-  const load = useCallback(
+export const useOrganizationPermissionsLoaderFetcher = createFetcherLoadHook(
+  load =>
     ({ organizationId }: { organizationId: string }) => {
-      return fetcherLoad(
+      return load(
         href('/organization/:organizationId/permissions', {
           organizationId,
         }),
       );
     },
-    [fetcherLoad],
-  );
-
-  return {
-    ...fetcherRest,
-    load,
-  };
-}
+  clientLoader,
+);

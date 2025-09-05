@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button } from 'react-aria-components';
+import { Button, Form } from 'react-aria-components';
 
 import type { GitCredentials } from '~/models/git-credentials';
 import type { GitRepository } from '~/models/git-repository';
@@ -74,7 +74,7 @@ const GitHubRepositoryForm = ({ uri, credentials, onSubmit }: GitHubRepositoryFo
   const signOutFetcher = useGithubSignOutFetcher();
 
   return (
-    <form
+    <Form
       id="github"
       className="flex flex-col gap-6"
       onSubmit={event => {
@@ -124,7 +124,7 @@ const GitHubRepositoryForm = ({ uri, credentials, onSubmit }: GitHubRepositoryFo
           {error}
         </p>
       )}
-    </form>
+    </Form>
   );
 };
 

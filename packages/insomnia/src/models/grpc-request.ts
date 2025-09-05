@@ -85,7 +85,7 @@ export function update(obj: GrpcRequest, patch: Partial<GrpcRequest> = {}) {
 }
 
 export function getById(_id: string) {
-  return db.getWhere<GrpcRequest>(type, { _id });
+  return db.findOne<GrpcRequest>(type, { _id });
 }
 
 export function findByProtoFileId(protoFileId: string) {
@@ -128,5 +128,5 @@ export async function duplicate(request: GrpcRequest, patch: Partial<GrpcRequest
 }
 
 export function all() {
-  return db.all<GrpcRequest>(type);
+  return db.find<GrpcRequest>(type);
 }

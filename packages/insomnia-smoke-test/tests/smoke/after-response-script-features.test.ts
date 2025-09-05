@@ -32,7 +32,6 @@ test.describe('after-response script features tests', () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify response
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
     await expect.soft(statusTag).toContainText('200 OK');
 
     // verify
@@ -78,7 +77,6 @@ test.describe('after-response script features tests', () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify response
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
     await expect.soft(statusTag1).toContainText('200 OK');
 
     // verify persisted environment

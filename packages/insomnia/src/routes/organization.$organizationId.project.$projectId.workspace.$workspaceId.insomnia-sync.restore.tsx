@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { getSyncItems, remoteCompareCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.restore';
 
@@ -19,6 +19,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     const vcs = VCSInstance();
     const { syncItems } = await getSyncItems({ workspaceId });
     const delta = await vcs.rollback(id, syncItems);
+    // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(delta as unknown as Operation);
     delete remoteCompareCache[workspaceId];
   } catch (err) {
@@ -37,10 +38,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   );
 }
 
-export function useInsomniaSyncRestoreActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useInsomniaSyncRestoreActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       id,
       organizationId,
@@ -55,7 +54,7 @@ export function useInsomniaSyncRestoreActionFetcher(args?: Parameters<typeof use
       const formData = new FormData();
       formData.set('id', id);
 
-      return fetcherSubmit(formData, {
+      return submit(formData, {
         method: 'POST',
         action: href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/restore`, {
           organizationId,
@@ -64,11 +63,5 @@ export function useInsomniaSyncRestoreActionFetcher(args?: Parameters<typeof use
         }),
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

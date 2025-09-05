@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.delete';
 
@@ -26,10 +26,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   return null;
 }
 
-export function useMockRouteDeleteActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useMockRouteDeleteActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -53,17 +51,11 @@ export function useMockRouteDeleteActionFetcher(args?: Parameters<typeof useFetc
         },
       );
 
-      return fetcherSubmit(JSON.stringify({ isSelected }), {
+      return submit(JSON.stringify({ isSelected }), {
         action: url,
         method: 'POST',
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

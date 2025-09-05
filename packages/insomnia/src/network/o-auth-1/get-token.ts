@@ -6,7 +6,6 @@ import crypto from 'node:crypto';
 
 import OAuth1 from 'oauth-1.0a';
 
-import type { AUTH_OAUTH_1 } from '../../common/constants';
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import type { RequestAuthentication, RequestBody } from '../../models/request';
 import type { OAuth1SignatureMethod } from './constants';
@@ -48,7 +47,7 @@ function hashFunction(signatureMethod: OAuth1SignatureMethod) {
 export default async function (
   url: string,
   method: string,
-  authentication: Extract<RequestAuthentication, { type: typeof AUTH_OAUTH_1 }>,
+  authentication: Extract<RequestAuthentication, { type: 'oauth1' }>,
   body: RequestBody | null = null,
 ) {
   const oauth = new OAuth1({

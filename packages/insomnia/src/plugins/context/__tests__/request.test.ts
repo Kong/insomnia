@@ -17,7 +17,7 @@ const CONTEXT = {
 
 describe('init()', () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
+    await db.init({ inMemoryOnly: true }, true, () => {});
 
     await models.workspace.create({
       _id: 'wrk_1',
@@ -98,7 +98,7 @@ describe('init()', () => {
 
 describe('request.*', () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
+    await db.init({ inMemoryOnly: true }, true, () => {});
 
     await models.workspace.create({
       _id: 'wrk_1',

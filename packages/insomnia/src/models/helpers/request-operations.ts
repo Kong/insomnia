@@ -4,7 +4,9 @@ import type { Request } from '../request';
 import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '../socket-io-request';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../websocket-request';
 
-export function getById(requestId: string): Promise<Request | GrpcRequest | WebSocketRequest | SocketIORequest | null> {
+export function getById(
+  requestId: string,
+): Promise<Request | GrpcRequest | WebSocketRequest | SocketIORequest | undefined> {
   if (isGrpcRequestId(requestId)) {
     return models.grpcRequest.getById(requestId);
   }

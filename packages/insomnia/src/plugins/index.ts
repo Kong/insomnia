@@ -401,7 +401,7 @@ export function getPluginCommonContext({
           },
         },
         response: {
-          getLatestForRequestId: models.response.getLatestForRequest,
+          getLatestForRequestId: models.response.getLatestForRequestId,
           getBodyBuffer: models.response.getBodyBuffer,
         },
         settings: {

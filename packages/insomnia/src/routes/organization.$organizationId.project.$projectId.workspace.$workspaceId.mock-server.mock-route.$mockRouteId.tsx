@@ -57,8 +57,11 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   // TODO: use the same request for try mock rather than creating lots of child requests
   const reqIds = (await models.request.findByParentId(mockRouteId)).map(r => r._id);
 
-  const responses = await db.findMostRecentlyModified<Response>(models.response.type, { parentId: { $in: reqIds } });
-  const activeResponse = responses?.[0];
+  const activeResponse = await db.findOne<Response>(
+    models.response.type,
+    { parentId: { $in: reqIds } },
+    { modified: -1 },
+  );
   if (activeResponse && 'bodyPath' in activeResponse) {
     // read the body if its smaller than the limit add it to the activeResponse
     const length = Math.max(activeResponse.bytesContent, activeResponse.bytesRead);
@@ -72,7 +75,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   return {
     mockServer,
     mockRoute,
-    activeResponse: responses?.[0],
+    activeResponse,
   };
 }
 

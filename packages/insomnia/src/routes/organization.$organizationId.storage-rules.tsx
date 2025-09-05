@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import type { StorageRules } from '~/models/organization';
 import { fetchAndCacheOrganizationStorageRule } from '~/ui/organization-utils';
+import { createFetcherLoadHook, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.storage-rules';
 
@@ -23,32 +23,22 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   return null;
 }
 
-export function useStorageRulesLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
-
-  const load = useCallback(
+export const useStorageRulesLoaderFetcher = createFetcherLoadHook(
+  load =>
     ({ organizationId }: { organizationId: string }) => {
-      return fetcherLoad(
+      return load(
         href('/organization/:organizationId/storage-rules', {
           organizationId,
         }),
       );
     },
-    [fetcherLoad],
-  );
+  clientLoader,
+);
 
-  return {
-    ...fetcherRest,
-    load,
-  };
-}
-
-export function useStorageRulesActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useStorageRulesActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({ organizationId }: { organizationId: string }) => {
-      return fetcherSubmit(
+      return submit(
         {},
         {
           method: 'POST',
@@ -58,11 +48,5 @@ export function useStorageRulesActionFetcher(args?: Parameters<typeof useFetcher
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

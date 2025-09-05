@@ -51,7 +51,7 @@ export const getOAuth2Token = async (
   requestId: string,
   authentication: AuthTypeOAuth2,
   forceRefresh = false,
-): Promise<OAuth2Token | null> => {
+): Promise<OAuth2Token | undefined> => {
   try {
     const { oAuth2Token, closestAuthId } = await getExistingAccessTokenAndRefreshIfExpired(
       requestId,
@@ -251,7 +251,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   requestId: string,
   authentication: AuthTypeOAuth2,
   forceRefresh: boolean,
-): Promise<{ oAuth2Token: OAuth2Token | null; closestAuthId: string }> {
+): Promise<{ oAuth2Token: OAuth2Token | undefined; closestAuthId: string }> {
   const activeRequest = await models.request.getById(requestId);
   const requestGroups = (
     await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
@@ -262,9 +262,9 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   const isRequestAuthEnabled =
     getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);
   const closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
-  const token: OAuth2Token | null = await models.oAuth2Token.getByParentId(closestAuthId);
+  const token = await models.oAuth2Token.getByParentId(closestAuthId);
   if (!token) {
-    return { oAuth2Token: null, closestAuthId };
+    return { oAuth2Token: undefined, closestAuthId };
   }
   const expiresAt = token.expiresAt || Infinity;
   const isExpired = Date.now() > expiresAt;
@@ -275,7 +275,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   // token is expired
 
   if (!token.refreshToken) {
-    return { oAuth2Token: null, closestAuthId };
+    return { oAuth2Token: undefined, closestAuthId };
   }
 
   let params = [
@@ -305,7 +305,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
     // brand new refresh and access tokens.
     const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
     models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
-    return { oAuth2Token: null, closestAuthId };
+    return { oAuth2Token: undefined, closestAuthId };
   }
   const isSuccessful = statusCode >= 200 && statusCode < 300;
   const hasBodyAndIsError = bodyBuffer && statusCode === 400;
@@ -328,7 +328,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   invariant(bodyBuffer, `[oauth2] No body returned from ${authentication.accessTokenUrl}`);
   const data = tryToParse(bodyBuffer.toString());
   if (!data) {
-    return { oAuth2Token: null, closestAuthId };
+    return { oAuth2Token: undefined, closestAuthId };
   }
   const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
   const oAuth2Token = await models.oAuth2Token.update(

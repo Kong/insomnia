@@ -48,11 +48,11 @@ export function create(patch: Partial<GitCredentials> = {}) {
 }
 
 export async function getById(id: string) {
-  return db.getWhere<GitCredentials>(type, { _id: id });
+  return db.findOne<GitCredentials>(type, { _id: id });
 }
 
 export async function getByProvider(provider: OauthProviderName) {
-  return db.getWhere<GitCredentials>(type, provider === 'github' ? { provider: 'githubapp' } : { provider: 'gitlab' });
+  return db.findOne<GitCredentials>(type, provider === 'github' ? { provider: 'githubapp' } : { provider: 'gitlab' });
 }
 
 export function update(credentials: GitCredentials, patch: Partial<GitCredentials>) {
@@ -64,5 +64,5 @@ export function remove(credentials: GitCredentials) {
 }
 
 export function all() {
-  return db.all<GitCredentials>(type);
+  return db.find<GitCredentials>(type);
 }

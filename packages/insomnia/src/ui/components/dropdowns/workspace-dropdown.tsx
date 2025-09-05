@@ -27,6 +27,7 @@ import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { PlatformKeyCombinations } from '../../../common/settings';
+import * as models from '../../../models';
 import { isRemoteProject } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
@@ -91,7 +92,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
           ...(pluginNetwork.init() as Record<string, any>),
         };
 
-        const docs = await db.withDescendants(workspace);
+        const docs = await db.getWithDescendants(workspace, [models.request.type]);
         const requests = docs.filter(isRequest).filter(doc => !doc.isPrivate);
         const requestGroups = docs.filter(isRequestGroup);
         await action(context, {

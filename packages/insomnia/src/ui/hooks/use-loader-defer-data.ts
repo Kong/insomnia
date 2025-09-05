@@ -14,6 +14,9 @@ export const useLoaderDeferData = <T>(
     if (deferedDataPromise === undefined) {
       return;
     }
+
+    const abortController = new AbortController();
+
     (async () => {
       try {
         // use keepStaleDataKey to let us know if we should keep the stale data or not
@@ -24,13 +27,23 @@ export const useLoaderDeferData = <T>(
         }
         keepStaleDataKeyRef.current = keepStaleDataKey;
         const data = await deferedDataPromise;
-        setIsPending(false);
-        setData(data);
+        if (!abortController.signal.aborted) {
+          setIsPending(false);
+          setData(data);
+          setError(undefined);
+        }
       } catch (err) {
-        setError(err);
-        console.warn('Failed to load deferred data', err);
+        if (!abortController.signal.aborted) {
+          setIsPending(false);
+          setError(err);
+          console.warn('Failed to load deferred data', err);
+        }
       }
     })();
+
+    return () => {
+      abortController.abort();
+    };
   }, [deferedDataPromise, keepStaleDataKey]);
 
   return [data, isPending, error];

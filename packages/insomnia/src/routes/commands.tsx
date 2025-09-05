@@ -1,6 +1,4 @@
-import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
-
 import { database } from '~/common/database';
 import { fuzzyMatch } from '~/common/misc';
 import {
@@ -22,6 +20,7 @@ import type { RequestGroup } from '~/models/request-group';
 import type { WebSocketRequest } from '~/models/websocket-request';
 import { scopeToActivity, type Workspace } from '~/models/workspace';
 import { invariant } from '~/utils/invariant';
+import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/commands';
 
@@ -287,10 +286,8 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
   };
 }
 
-export function useCommandsLoaderFetcher() {
-  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>();
-
-  const load = useCallback(
+export const useCommandsLoaderFetcher = createFetcherLoadHook(
+  load =>
     ({
       organizationId,
       projectId,
@@ -311,14 +308,7 @@ export function useCommandsLoaderFetcher() {
       if (filter) {
         params.set('filter', filter);
       }
-
-      return fetcherLoad(`${href('/commands')}?${params.toString()}`);
+      return load(`${href('/commands')}?${params.toString()}`);
     },
-    [fetcherLoad],
-  );
-
-  return {
-    ...fetcherRest,
-    load,
-  };
-}
+  clientLoader,
+);

@@ -1,11 +1,11 @@
 import electron from 'electron';
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';
 import { removeAllSecrets } from '~/models/environment';
 import type { ToastNotification } from '~/ui/components/toast';
 import { insomniaFetch } from '~/ui/insomniaFetch';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/auth.clear-vault-key';
 
@@ -42,22 +42,13 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return false;
 }
 
-export function useClearVaultKeyFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
-    (data: { organizations: string[]; sessionId: string }) => {
-      fetcherSubmit(data, {
-        action: href('/auth/clear-vault-key'),
-        method: 'POST',
-        encType: 'application/json',
-      });
-    },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+export const useClearVaultKeyFetcher = createFetcherSubmitHook(
+  submit => (data: { organizations: string[]; sessionId: string }) => {
+    submit(data, {
+      action: href('/auth/clear-vault-key'),
+      method: 'POST',
+      encType: 'application/json',
+    });
+  },
+  clientAction,
+);

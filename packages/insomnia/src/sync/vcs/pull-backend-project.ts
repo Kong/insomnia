@@ -35,7 +35,7 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
       scope: 'collection',
     });
 
-    await database.upsert(workspace);
+    await database.update(workspace);
 
     return { project: remoteProject, workspaceId: workspace._id };
   }
@@ -59,7 +59,7 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
     }
     const allModelType = models.types();
     if (allModelType.includes(doc.type)) {
-      await database.upsert(doc);
+      await database.update(doc);
     }
   }
 

@@ -59,16 +59,15 @@ export function update(workspaceMeta: WorkspaceMeta, patch: Partial<WorkspaceMet
 
 export async function updateByParentId(parentId: string, patch: Partial<WorkspaceMeta> = {}) {
   const meta = await getByParentId(parentId);
-  // @ts-expect-error -- TSCONVERSION appears to be a genuine error not previously caught by Flow
-  return db.docUpdate<WorkspaceMeta>(meta, patch);
+  return meta && db.docUpdate<WorkspaceMeta>(meta, patch);
 }
 
 export async function getByParentId(parentId: string) {
-  return db.getWhere<WorkspaceMeta>(type, { parentId });
+  return db.findOne<WorkspaceMeta>(type, { parentId });
 }
 
 export async function getByGitRepositoryId(gitRepositoryId: string) {
-  return db.getWhere<WorkspaceMeta>(type, { gitRepositoryId });
+  return db.findOne<WorkspaceMeta>(type, { gitRepositoryId });
 }
 
 export async function getOrCreateByParentId(parentId: string) {
@@ -77,5 +76,5 @@ export async function getOrCreateByParentId(parentId: string) {
 }
 
 export function all() {
-  return db.all<WorkspaceMeta>(type);
+  return db.find<WorkspaceMeta>(type);
 }

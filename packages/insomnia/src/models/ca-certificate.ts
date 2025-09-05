@@ -49,11 +49,11 @@ export function update(cert: CaCertificate, patch: Partial<CaCertificate> = {}) 
 }
 
 export function getById(id: string) {
-  return db.get<CaCertificate>(type, id);
+  return db.findOne<CaCertificate>(type, { _id: id });
 }
 
 export function findByParentId(parentId: string) {
-  return db.getWhere<CaCertificate>(type, { parentId });
+  return db.findOne<CaCertificate>(type, { parentId });
 }
 
 export function removeWhere(parentId: string) {
@@ -61,5 +61,5 @@ export function removeWhere(parentId: string) {
 }
 
 export function all() {
-  return db.all<CaCertificate>(type);
+  return db.find<CaCertificate>(type);
 }

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
-import { href, redirect, useFetcher, useNavigate } from 'react-router';
+import { href, redirect, useNavigate } from 'react-router';
 
 import { SCRATCHPAD_ORGANIZATION_ID } from '~/models/organization';
 import { SCRATCHPAD_PROJECT_ID } from '~/models/project';
@@ -8,6 +8,7 @@ import { SCRATCHPAD_WORKSPACE_ID } from '~/models/workspace';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/auth.login';
 
@@ -48,23 +49,15 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return redirect(href('/auth/authorize'));
 }
 
-export function useLoginActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-  const submit = useCallback(
-    (data: { provider: string }) => {
-      fetcherSubmit(data, {
-        action: href('/auth/login'),
-        method: 'POST',
-      });
-    },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+export const useLoginActionFetcher = createFetcherSubmitHook(
+  submit => (data: { provider: string }) => {
+    submit(data, {
+      action: href('/auth/login'),
+      method: 'POST',
+    });
+  },
+  clientAction,
+);
 
 const Component = () => {
   const loginFetcher = useLoginActionFetcher();

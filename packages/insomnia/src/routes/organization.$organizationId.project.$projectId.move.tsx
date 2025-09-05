@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.move';
 
@@ -26,10 +26,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   return null;
 }
 
-export function useProjectMoveActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useProjectMoveActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       currentOrganizationId,
       projectId,
@@ -39,7 +37,7 @@ export function useProjectMoveActionFetcher(args?: Parameters<typeof useFetcher>
       projectId: string;
       newOrganizationId: string;
     }) => {
-      return fetcherSubmit(
+      return submit(
         {
           organizationId: newOrganizationId,
         },
@@ -52,11 +50,5 @@ export function useProjectMoveActionFetcher(args?: Parameters<typeof useFetcher>
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

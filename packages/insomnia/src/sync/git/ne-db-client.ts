@@ -53,7 +53,7 @@ export class NeDBClient {
       throw this._errMissing(filePath);
     }
 
-    const doc = await db.get(type, id);
+    const doc = await db.findOne(type, { _id: id });
 
     if (!doc || doc.isPrivate) {
       throw this._errMissing(filePath);
@@ -117,7 +117,7 @@ export class NeDBClient {
       doc.parentId = this._projectId;
     }
 
-    await db.upsert(doc, true);
+    await db.update(doc);
   }
 
   async unlink(filePath: string) {
@@ -128,13 +128,13 @@ export class NeDBClient {
       throw new Error(`Cannot unlink file ${filePath}`);
     }
 
-    const doc = await db.get(type, id);
+    const doc = await db.findOne(type, { _id: id });
 
     if (!doc) {
       return;
     }
 
-    await db.unsafeRemove(doc, true);
+    await db.unsafeRemove(doc);
   }
 
   // recurses over each .insomnia subfolder, ApiSpec, Workspace, Request etc..
@@ -169,35 +169,8 @@ export class NeDBClient {
         models.socketIORequest.type,
       ];
     } else if (type !== null && id === null) {
-      const workspace = await db.get(models.workspace.type, this._workspaceId);
-      let typeFilter = [type];
-
-      const modelTypesWithinFolders = [models.request.type, models.grpcRequest.type, models.webSocketRequest.type];
-      if (modelTypesWithinFolders.includes(type)) {
-        typeFilter = [models.requestGroup.type, type];
-      }
-
-      if (type === models.unitTest.type) {
-        typeFilter = [models.unitTestSuite.type, type];
-      }
-
-      if (type === models.protoFile.type) {
-        typeFilter = [models.protoDirectory.type, type];
-      }
-
-      if (type === models.mockRoute.type) {
-        typeFilter = [models.mockServer.type, type];
-      }
-
-      if (type === models.webSocketPayload.type) {
-        typeFilter = [models.webSocketRequest.type, type];
-      }
-
-      if (type === models.socketIOPayload.type) {
-        typeFilter = [models.socketIORequest.type, type];
-      }
-
-      const children = await db.withDescendants(workspace, null, typeFilter);
+      const workspace = await db.findOne(models.workspace.type, { _id: this._workspaceId });
+      const children = workspace ? await db.getWithDescendants(workspace, [type]) : [];
       docs = children.filter(d => d.type === type && !d.isPrivate);
     } else {
       throw this._errMissing(filePath);

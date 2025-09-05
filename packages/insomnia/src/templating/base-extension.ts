@@ -120,11 +120,13 @@ export default class BaseExtension {
           };
         },
         readFile: async (path: string, encoding = 'utf8') => {
-          const allowed = renderContext?.getSettings().dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
+          const allowed = renderContext
+            ?.getSettings()
+            .dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
           if (!allowed) {
             throw `Insomnia cannot access the file ‘${path}’. You can adjust this in Preferences → Security.`;
           }
-                    
+
           const content = await fs.promises.readFile(path);
           return encoding === 'utf8' ? content.toString(encoding) : content;
         },
@@ -163,7 +165,7 @@ export default class BaseExtension {
             },
           },
           response: {
-            getLatestForRequestId: models.response.getLatestForRequest,
+            getLatestForRequestId: models.response.getLatestForRequestId,
             getBodyBuffer: models.response.getBodyBuffer,
           },
           settings: {

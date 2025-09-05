@@ -17,7 +17,7 @@ export const initializeLocalBackendProjectAndMarkForSync = async ({
   await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
   // Everything unstaged
-  const candidates = (await database.withDescendants(workspace)).filter(canSync).map(
+  const candidates = (await database.getWithDescendants(workspace)).filter(canSync).map(
     (doc: BaseModel): StatusCandidate => ({
       key: doc._id,
       name: doc.name || '',

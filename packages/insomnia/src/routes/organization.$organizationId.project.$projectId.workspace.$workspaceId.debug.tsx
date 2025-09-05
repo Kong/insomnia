@@ -38,9 +38,10 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router';
+import { useLocalStorage } from 'react-use';
 
 import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
-import { type ChangeBufferEvent, database as db } from '~/common/database';
+import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
@@ -113,6 +114,7 @@ import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-reque
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useExecutionState } from '~/ui/hooks/use-execution-state';
+import { useFilteredRequests } from '~/ui/hooks/use-filtered-requests';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 import {
@@ -233,7 +235,7 @@ const Debug = () => {
     caCertificate,
     clientCertificates,
     grpcRequests,
-    collection,
+    collection: _collection,
   } = useWorkspaceLoaderData()!;
 
   const requestData = useRequestLoaderData();
@@ -255,6 +257,9 @@ const Debug = () => {
     requestGroupId?: string;
   };
 
+  const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:collection-list-filter`);
+  const collection = useFilteredRequests(_collection, filter ?? '');
+
   const { activeRequestGroup } = useRequestGroupLoaderData() || {};
 
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(
@@ -274,7 +279,7 @@ const Debug = () => {
   const patchGroup = useRequestGroupPatcher();
   const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
-    db.onChange(async (changes: ChangeBufferEvent[]) => {
+    const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [event, doc] = change;
         if (isGrpcRequest(doc) && event === 'insert') {
@@ -282,6 +287,9 @@ const Debug = () => {
         }
       }
     });
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const { settings } = useRootLoaderData()!;
@@ -858,13 +866,8 @@ const Debug = () => {
               <SearchField
                 aria-label="Request filter"
                 className="group relative flex-1"
-                defaultValue={searchParams.get('filter')?.toString() ?? ''}
-                onChange={filter => {
-                  setSearchParams({
-                    ...Object.fromEntries(searchParams.entries()),
-                    filter,
-                  });
-                }}
+                value={filter ?? ''}
+                onChange={setFilter}
               >
                 <Input
                   placeholder="Filter"

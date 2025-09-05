@@ -25,7 +25,11 @@ const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
 export const resolveDbByKey = async (request: Request) => {
   const url = new URL(request.url);
-  const body = await request.json();
+  let body;
+  try {
+    // We expect this to throw if a db call returns undefined
+    body = await request.json();
+  } catch {}
   // url get normalized to lowercase, so we need to normalize the keys to lower case as well
   const withLowercasedKeys = Object.fromEntries(
     Object.entries(pluginToMainAPI).map(([key, value]) => [key.toLowerCase(), value]),
@@ -79,7 +83,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
   'request.getById': async (body: { id: string }) => {
     return await models.request.getById(body.id);
   },
-  'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: string[] }) => {
+  'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: models.AllTypes[] }) => {
     return await db.withAncestors<DBRequest | RequestGroup | Workspace>(body.request, body.types);
   },
   'workspace.getById': async (body: { id: string }) => {
@@ -92,7 +96,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return await models.cookieJar.getOrCreateForParentId(body.parentId);
   },
   'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
-    return await models.response.getLatestForRequest(body.requestId, body.environmentId);
+    return await models.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
   'response.getBodyBuffer': async (body: { response: Response; readFailureValue: string }) => {
     return await models.response.getBodyBuffer(body.response, body.readFailureValue);
@@ -174,7 +178,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     const response = await curlRequest({
       requestId: `no-sideEffects-request-${requestId}`,
       req: {
-        authentication: {},
+        authentication: { type: 'none' },
         body: {},
         cookieJar: {
           cookies: [],

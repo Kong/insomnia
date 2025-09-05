@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { project, userSession } from '~/models';
 import { type Organization } from '~/models/organization';
 import { type Project } from '~/models/project';
 import { insomniaFetch } from '~/ui/insomniaFetch';
+import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/remote-files';
 
@@ -88,15 +88,9 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
   }
 }
 
-export function useRemoteFilesLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
-
-  const load = useCallback(() => {
-    return fetcherLoad(href('/remote-files'));
-  }, [fetcherLoad]);
-
-  return {
-    ...fetcherRest,
-    load,
-  };
-}
+export const useRemoteFilesLoaderFetcher = createFetcherLoadHook(
+  load => () => {
+    return load(href('/remote-files'));
+  },
+  clientLoader,
+);

@@ -47,7 +47,6 @@ import {
 } from '~/ui/components/modals/settings-modal';
 import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
-import { NunjucksEnabledProvider } from '~/ui/context/nunjucks/nunjucks-enabled-context';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
 
@@ -531,26 +530,24 @@ const Root = () => {
   ]);
 
   return (
-    <NunjucksEnabledProvider>
-      <ErrorView>
-        <div className="app">
-          <Outlet />
-          <Toaster />
-        </div>
-        <Modals />
-        <AppHooks />
-        {/* triggered by insomnia://app/import */}
-        {importUri && (
-          <ImportModal
-            onHide={() => setImportUri('')}
-            projectName="Insomnia"
-            defaultProjectId={projectId}
-            organizationId={organizationId}
-            from={{ type: 'uri', defaultValue: importUri }}
-          />
-        )}
-      </ErrorView>
-    </NunjucksEnabledProvider>
+    <ErrorView>
+      <div className="app">
+        <Outlet />
+        <Toaster />
+      </div>
+      <Modals />
+      <AppHooks />
+      {/* triggered by insomnia://app/import */}
+      {importUri && (
+        <ImportModal
+          onHide={() => setImportUri('')}
+          projectName="Insomnia"
+          defaultProjectId={projectId}
+          organizationId={organizationId}
+          from={{ type: 'uri', defaultValue: importUri }}
+        />
+      )}
+    </ErrorView>
   );
 };
 

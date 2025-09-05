@@ -1,5 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   GridList,
@@ -149,7 +149,7 @@ export interface ProjectLoaderData {
   mockServersCount: number;
   projectsCount: number;
   activeProject?: Project;
-  activeProjectGitRepository?: GitRepository | null;
+  activeProjectGitRepository?: GitRepository;
   projects: (Project & { gitRepository?: GitRepository })[];
   learningFeaturePromise?: Promise<LearningFeature>;
   remoteFilesPromise?: Promise<InsomniaFile[]>;
@@ -491,7 +491,7 @@ const Component = () => {
       console.log('[remote files] remote files loaded for project ui', remoteFiles.length);
     }
   }, [activeProject?.remoteId, remoteFiles]);
-  const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(projectsSyncStatusPromise);
+  const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(projectsSyncStatusPromise, projectId);
 
   const allFiles = useMemo(() => {
     return remoteFiles ? [...localFiles, ...remoteFiles] : localFiles;
@@ -520,7 +520,7 @@ const Component = () => {
 
   const { storagePromise } = storageRuleFetcher.data || {};
 
-  const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise);
+  const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
 
   const [projectListFilter, setProjectListFilter] = reactUse.useLocalStorage(
     `${organizationId}:project-list-filter`,
@@ -548,23 +548,17 @@ const Component = () => {
 
   const filteredFiles = allFiles
     .filter(w => (workspaceListScope !== 'all' ? w.scope === workspaceListScope : true))
-    .filter(workspace =>
-      workspaceListFilter
-        ? Boolean(
-            fuzzyMatchAll(
-              workspaceListFilter,
-              // Use the filter string to match against these properties
-              [
-                workspace.name,
-                workspace.scope === 'design' ? 'document' : 'collection',
-                workspace.branch || '',
-                workspace.oasFormat || '',
-              ],
-              { splitSpace: true, loose: true },
-            )?.indexes,
-          )
-        : true,
-    )
+    .filter(workspace => {
+      if (!workspaceListFilter) return true;
+      const filterStr = workspaceListFilter.toLowerCase();
+      const props = [
+        workspace.name?.toLowerCase() || '',
+        workspace.branch?.toLowerCase() || '',
+        workspace.oasFormat?.toLowerCase() || '',
+      ];
+      const result = fuzzyMatchAll(filterStr, props, { splitSpace: true, loose: true });
+      return Boolean(result?.indexes);
+    })
     .sort((a, b) => sortMethodMap[workspaceListSortOrder as DashboardSortOrder](a, b));
 
   const filesWithPresence = filteredFiles
@@ -955,7 +949,7 @@ const Component = () => {
                   {isGitProject(activeProject) && (
                     <GitProjectSyncDropdown
                       key={activeProjectGitRepository?._id}
-                      gitRepository={activeProjectGitRepository || null}
+                      gitRepository={activeProjectGitRepository}
                     />
                   )}
                   {isLocalProject(activeProject) && !isGitProject(activeProject) && <LocalProjectBar />}

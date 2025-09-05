@@ -1,10 +1,10 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import * as models from '~/models';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.fetch';
 
@@ -30,6 +30,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       projectId,
     });
 
+    // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(delta);
   } catch (err) {
     await vcs.checkout([], currentBranch);
@@ -42,10 +43,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   return null;
 }
 
-export function useInsomniaSyncFetchActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useInsomniaSyncFetchActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -57,7 +56,7 @@ export function useInsomniaSyncFetchActionFetcher(args?: Parameters<typeof useFe
       workspaceId: string;
       branch: string;
     }) => {
-      return fetcherSubmit(
+      return submit(
         {
           branch,
         },
@@ -71,11 +70,5 @@ export function useInsomniaSyncFetchActionFetcher(args?: Parameters<typeof useFe
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

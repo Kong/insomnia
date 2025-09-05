@@ -1,6 +1,6 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { type AUTH_OAUTH_2, getOauthRedirectUrl } from '../../../../common/constants';
+import { getOauthRedirectUrl } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
@@ -95,7 +95,7 @@ const credentialsInBodyOptions = [
   },
 ];
 
-const getFields = (authentication: Extract<RequestAuthentication, { type: typeof AUTH_OAUTH_2 }>) => {
+const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth2' }>) => {
   const clientId = <AuthInputRow label="Client ID" property="clientId" key="clientId" />;
   const clientSecret = <AuthInputRow label="Client Secret" property="clientSecret" key="clientSecret" mask />;
   const usePkce = (
@@ -218,7 +218,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: typeof
   };
 };
 
-const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { type: typeof AUTH_OAUTH_2 }>) => {
+const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { type: 'oauth2' }>) => {
   const {
     clientId,
     clientSecret,
@@ -374,7 +374,7 @@ const renderAccessTokenExpiry = (token?: Pick<OAuth2Token, 'accessToken' | 'expi
 };
 
 const OAuth2TokenInput: FC<{
-  token: OAuth2Token | null;
+  token?: OAuth2Token;
   label: string;
   property: keyof Pick<OAuth2Token, 'accessToken' | 'refreshToken' | 'identityToken'>;
 }> = ({ token, label, property }) => {
@@ -413,7 +413,7 @@ const OAuth2TokenInput: FC<{
   );
 };
 
-const OAuth2Error: FC<{ token: OAuth2Token | null }> = ({ token }) => {
+const OAuth2Error: FC<{ token?: OAuth2Token }> = ({ token }) => {
   const debug = () => {
     if (!token || !token.xResponseId) {
       return;
@@ -459,7 +459,7 @@ const OAuth2Tokens: FC = () => {
   const reqData = useRequestLoaderData() as RequestLoaderData;
   const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
-  const [token, setToken] = useState<OAuth2Token | null>(null);
+  const [token, setToken] = useState<OAuth2Token | undefined>();
   useEffect(() => {
     const fn = async () => {
       const token = await models.oAuth2Token.getByParentId(_id);
@@ -490,7 +490,7 @@ const OAuth2Tokens: FC = () => {
             disabled={!token}
             onClick={() => {
               if (token) {
-                setToken(null);
+                setToken(undefined);
                 models.oAuth2Token.remove(token);
               }
             }}
@@ -513,7 +513,7 @@ const OAuth2Tokens: FC = () => {
             } catch (err) {
               // Clear existing tokens if there's an error
               if (token) {
-                setToken(null);
+                setToken(undefined);
                 models.oAuth2Token.remove(token);
               }
               setError(err.message);

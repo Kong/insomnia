@@ -7,13 +7,12 @@ import * as models from '../../models';
 import type { Cookie } from '../../models/cookie-jar';
 import type { Request } from '../../models/request';
 import type { Response } from '../../models/response';
-import { AUTH_BASIC } from '../constants';
 import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
 import { getRenderedRequestAndContext } from '../render';
 
 describe('export', () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
+    await db.init({ inMemoryOnly: true }, true);
     await models.project.all();
     await models.settings.getOrCreate();
   });
@@ -439,7 +438,7 @@ describe('export', () => {
         },
         url: 'http://google.com',
         authentication: {
-          type: AUTH_BASIC,
+          type: 'basic',
           username: 'user',
           password: 'pass',
         },

@@ -31,7 +31,7 @@ import { showModal } from '~/ui/components/modals/index';
 import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
 import { UpgradeModal } from '~/ui/components/modals/upgrade-modal';
 import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
-import { useGatedNunjucks } from '~/ui/context/nunjucks/use-gated-nunjucks';
+import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { usePlanData } from '~/ui/hooks/use-plan';
 import { ednPrettify } from '~/utils/prettify/edn';
@@ -222,7 +222,8 @@ export const CodeEditor = memo(
         }),
         [indentChars],
       );
-      const { handleRender, handleGetRenderContext } = useGatedNunjucks({ disabled: !enableNunjucks });
+      const { handleRender, handleGetRenderContext } = useNunjucks();
+      const isNunjucksEnabled = enableNunjucks && handleRender;
 
       const maybePrettifyAndSetValue = useCallback(
         (code?: string, forcePrettify?: boolean, filter?: string) => {
@@ -386,7 +387,7 @@ export const CodeEditor = memo(
           foldOptions: {
             widget: (from: CodeMirror.Position, to: CodeMirror.Position) => widget(codeMirror.current, from, to),
           },
-          mode: !handleRender ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) },
+          mode: !isNunjucksEnabled ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) },
           environmentAutocomplete: {
             getVariables: async () => (!handleGetRenderContext ? [] : (await handleGetRenderContext())?.keys || []),
             getTags: async () => (!handleGetRenderContext ? [] : (await getTagDefinitions()).flatMap(transformEnums)),
@@ -483,7 +484,7 @@ export const CodeEditor = memo(
         // Clear history so we can't undo the initial set
         codeMirror.current?.clearHistory();
         // Setup nunjucks listeners
-        if (!readOnly && handleRender && !settings.nunjucksPowerUserMode) {
+        if (!readOnly && isNunjucksEnabled && !settings.nunjucksPowerUserMode) {
           codeMirror.current?.enableNunjucksTags(
             handleRender,
             handleGetRenderContext,
@@ -666,9 +667,9 @@ export const CodeEditor = memo(
         () =>
           tryToSetOption(
             'mode',
-            !handleRender ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) },
+            !isNunjucksEnabled ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) },
           ),
-        [handleRender, mode],
+        [isNunjucksEnabled, mode],
       );
 
       useImperativeHandle(

@@ -84,7 +84,8 @@ export const TagEditor: FC<Props> = props => {
     for (const type of models.types()) {
       allDocs[type] = [];
     }
-    for (const doc of await db.withDescendants(props.workspace, models.request.type)) {
+    const descendants = await db.getWithDescendants(props.workspace, [models.request.type]);
+    for (const doc of descendants) {
       allDocs[doc.type].push(doc);
     }
     // add global Cloud Credential data

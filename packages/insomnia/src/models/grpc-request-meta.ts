@@ -48,7 +48,7 @@ export function update(requestMeta: GrpcRequestMeta, patch: Partial<GrpcRequestM
 
 export function getByParentId(parentId: string) {
   expectParentToBeGrpcRequest(parentId);
-  return db.getWhere<GrpcRequestMeta>(type, { parentId });
+  return db.findOne<GrpcRequestMeta>(type, { parentId });
 }
 
 export async function getOrCreateByParentId(parentId: string) {
@@ -77,7 +77,7 @@ export async function updateOrCreateByParentId(parentId: string, patch: Partial<
 }
 
 export function all() {
-  return db.all<GrpcRequestMeta>(type);
+  return db.find<GrpcRequestMeta>(type);
 }
 
 function expectParentToBeGrpcRequest(parentId: string | null) {

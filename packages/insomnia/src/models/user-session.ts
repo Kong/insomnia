@@ -46,7 +46,7 @@ export function migrate(doc: UserSession) {
 }
 
 export async function all() {
-  let userList = await db.all<UserSession>(type);
+  let userList = await db.find<UserSession>(type);
 
   if (userList?.length === 0) {
     userList = [await getOrCreate()];
@@ -72,16 +72,14 @@ export async function patch(patch: Partial<UserSession>) {
 }
 
 export async function getOrCreate() {
-  const results = (await db.all<UserSession>(type)) || [];
+  const result = await db.findOne<UserSession>(type);
 
-  if (results.length === 0) {
+  if (!result) {
     return await create();
   }
-  return results[0];
+  return result;
 }
 
 export async function get() {
-  const results = (await db.all<UserSession>(type)) || [];
-
-  return results[0];
+  return getOrCreate();
 }

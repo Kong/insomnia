@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import type { BackendProject, Compare } from '~/sync/types';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { getSyncItems } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
+import { createFetcherLoadHook, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.sync-data';
 
@@ -109,10 +109,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   }
 }
 
-export function useInsomniaSyncDataLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
-
-  const load = useCallback(
+export const useInsomniaSyncDataLoaderFetcher = createFetcherLoadHook(
+  load =>
     ({
       organizationId,
       projectId,
@@ -131,21 +129,13 @@ export function useInsomniaSyncDataLoaderFetcher(args?: Parameters<typeof useFet
         },
       );
 
-      return fetcherLoad(url);
+      return load(url);
     },
-    [fetcherLoad],
-  );
+  clientLoader,
+);
 
-  return {
-    ...fetcherRest,
-    load,
-  };
-}
-
-export function useInsomniaSyncDataActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useInsomniaSyncDataActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -164,7 +154,7 @@ export function useInsomniaSyncDataActionFetcher(args?: Parameters<typeof useFet
         },
       );
 
-      return fetcherSubmit(
+      return submit(
         {},
         {
           action: url,
@@ -172,11 +162,5 @@ export function useInsomniaSyncDataActionFetcher(args?: Parameters<typeof useFet
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

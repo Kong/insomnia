@@ -20,7 +20,7 @@ export function init(plugin: Pick<Plugin, 'name'>): { store: PluginStore } {
     store: {
       async hasItem(key: string) {
         const doc = await models.pluginData.getByKey(plugin.name, key);
-        return doc !== null;
+        return doc !== undefined && doc !== null;
       },
 
       async setItem(key: string, value: string) {
