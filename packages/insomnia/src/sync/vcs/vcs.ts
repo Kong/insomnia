@@ -65,7 +65,12 @@ export class VCS {
   async getVersion(): Promise<string> {
     const branch = await this._getCurrentBranch();
     // branch can be null if there is no backend project
-    return branch?.modified.toISOString();
+    if (branch && branch.modified) {
+      const date = new Date(branch.modified);
+      return date.toISOString();
+    }
+
+    return '';
   }
   _store: Store;
   _driver: BaseDriver;
