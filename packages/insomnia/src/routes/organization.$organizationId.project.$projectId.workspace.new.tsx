@@ -56,7 +56,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     const scope = workspaceData.scope;
     invariant(
-      scope === 'design' || scope === 'collection' || scope === 'mock-server' || scope === 'environment',
+      scope === 'design' ||
+        scope === 'collection' ||
+        scope === 'mock-server' ||
+        scope === 'environment' ||
+        scope === 'mcp',
       'Scope is required',
     );
 
@@ -143,6 +147,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       event = SegmentEvent.collectionCreate;
     } else if (isEnvironment(workspace)) {
       event = SegmentEvent.environmentWorkspaceCreate;
+    } else if (scope === 'mcp') {
+      event = SegmentEvent.mcpClientWorkspaceCreate;
     }
 
     window.main.trackSegmentEvent({

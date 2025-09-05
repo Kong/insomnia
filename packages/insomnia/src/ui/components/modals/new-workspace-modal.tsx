@@ -37,6 +37,7 @@ const titleByScope: Record<WorkspaceScope, string> = {
   [WorkspaceScopeKeys.environment]: 'Environment',
   [WorkspaceScopeKeys.mockServer]: 'Mock Server',
   [WorkspaceScopeKeys.design]: 'Design Document',
+  [WorkspaceScopeKeys.mcp]: 'MCP Client',
 };
 
 const defaultNameByScope: Record<WorkspaceScope, string> = {
@@ -44,6 +45,7 @@ const defaultNameByScope: Record<WorkspaceScope, string> = {
   [WorkspaceScopeKeys.environment]: 'My Environment',
   [WorkspaceScopeKeys.mockServer]: 'My Mock Server',
   [WorkspaceScopeKeys.design]: 'My Design Document',
+  [WorkspaceScopeKeys.mcp]: 'My MCP Client',
 };
 
 export const NewWorkspaceModal = ({
