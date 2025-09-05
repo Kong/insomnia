@@ -33,6 +33,10 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(delta);
     delete remoteCompareCache[workspaceId];
+
+    return {
+      success: true,
+    };
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while pulling from remote.';
 
@@ -45,11 +49,6 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       error: errorMessage,
     };
   }
-
-  return {
-    error: null,
-    success: true,
-  };
 }
 
 export const useInsomniaSyncPullActionFetcher = createFetcherSubmitHook(

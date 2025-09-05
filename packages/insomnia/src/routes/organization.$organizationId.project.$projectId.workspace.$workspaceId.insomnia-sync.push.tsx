@@ -29,6 +29,10 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     });
 
     delete remoteCompareCache[workspaceId];
+
+    return {
+      success: true,
+    };
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while pushing to remote.';
 
@@ -41,8 +45,6 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       error: errorMessage,
     };
   }
-
-  return null;
 }
 
 export const useInsomniaSyncPushActionFetcher = createFetcherSubmitHook(
