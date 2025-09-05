@@ -5,8 +5,6 @@ import os from 'node:os';
 
 import iconv from 'iconv-lite';
 
-import { PREF_SECURITY } from '~/common/constants';
-
 import { database as db } from '../common/database';
 import * as models from '../models/index';
 import type { Request } from '../models/request';
@@ -21,6 +19,7 @@ import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } f
 import { decodeEncoding } from './utils';
 
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
+const PREF_SECURITY = 'Insomnia’s Preferences → Security';
 
 export default class BaseExtension {
   _ext: PluginTemplateTag | null = null;

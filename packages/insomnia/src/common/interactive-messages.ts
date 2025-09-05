@@ -1,5 +1,6 @@
-import { PREF_SECURITY } from '~/common/constants';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+
+const PREF_SECURITY = 'Insomnia’s Preferences → Security';
 
 const interactives = [{ text: PREF_SECURITY, handler: () => showSettingsModal({ tab: 'general' }) }];
 

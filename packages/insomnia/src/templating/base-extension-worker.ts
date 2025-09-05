@@ -1,5 +1,3 @@
-import { PREF_SECURITY } from '~/common/constants';
-
 import packageJson from '../../package.json';
 import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { Request } from '../models/request';
@@ -10,6 +8,9 @@ import type { NodeCurlRequestOptions } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';
 import * as templating from './worker';
+
+const PREF_SECURITY = 'Insomnia’s Preferences → Security';
+
 export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
     return value;

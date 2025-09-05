@@ -1,9 +1,9 @@
-import { PREF_SECURITY } from '~/common/constants';
-
 import type { CaCertificate } from '../models/ca-certificate';
 import type { ClientCertificate } from '../models/client-certificate';
 import type { Settings } from '../models/settings';
 import type { RenderedRequest } from '../templating/types';
+
+const PREF_SECURITY = 'Insomnia’s Preferences → Security';
 
 export function isFsAccessingAllowed(
   renderedRequest: RenderedRequest,
