@@ -23,7 +23,7 @@ export async function backupIfNewerVersionAvailable() {
     );
     if (response) {
       console.log('[main] Found newer version');
-      backup();
+      await backup();
       return;
     }
     console.log('[main] No newer version');
@@ -44,11 +44,12 @@ export async function backup() {
       return;
     }
     const files = await readdir(dataPath);
-    files.forEach(async (file: string) => {
+    for (const file of files) {
       if (file.endsWith('.db')) {
         await copyFile(path.join(dataPath, file), path.join(versionPath, file));
       }
-    });
+    }
+
     console.log('[main] Exported backup to:', versionPath);
   } catch (err) {
     console.log('[main] Error exporting backup:', err);

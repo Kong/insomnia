@@ -102,6 +102,8 @@ app.on('ready', async () => {
   // Init some important things first
   await database.init();
   await _createModelInstances();
+  // backup needs the channel from settings which needs the database
+  await backupIfNewerVersionAvailable();
   sentryWatchAnalyticsEnabled();
   watchProxySettings();
   windowUtils.init();
@@ -321,7 +323,6 @@ async function _trackStats() {
   });
 
   ipcMainOnce('halfSecondAfterAppStart', async () => {
-    backupIfNewerVersionAvailable();
     const { currentVersion, launches, lastVersion } = stats;
 
     const firstLaunch = launches === 1;
