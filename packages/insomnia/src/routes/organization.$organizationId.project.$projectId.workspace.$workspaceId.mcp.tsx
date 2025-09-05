@@ -39,7 +39,27 @@ const McpPage = () => {
     settings.forceVerticalLayout ? 'vertical' : 'horizontal',
   );
 
-  const { organizationId, projectId, workspaceId } = useParams() as {
+  useEffect(() => {
+    if (settings.forceVerticalLayout) {
+      setDirection('vertical');
+      return () => {};
+    }
+    // Listen on media query changes
+    const mediaQuery = window.matchMedia('(max-width: 880px)');
+    setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      setDirection(e.matches ? 'vertical' : 'horizontal');
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, [settings.forceVerticalLayout, direction]);
+
+  const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
