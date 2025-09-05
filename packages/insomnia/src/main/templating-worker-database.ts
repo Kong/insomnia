@@ -8,6 +8,7 @@ import iconv from 'iconv-lite';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
+import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import * as models from '../models';
 import type { CloudProviderCredential } from '../models/cloud-credential';
@@ -53,7 +54,13 @@ const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
     bundlePluginModuleMap[pluginName] = module;
     return module;
   } catch (err) {
-    console.error(`Failed to load bundled plugin ${pluginName}`, err);
+    if (isDevelopment()) {
+      console.warn(
+        `[plugin] Failed to load bundled plugin ${pluginName}. You can ignore this warning if you not developing external vault feature.`,
+      );
+    } else {
+      console.error(`Failed to load bundled plugin ${pluginName}`, err);
+    }
   }
   return {};
 };
@@ -234,26 +241,22 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     const appBundlePluginTemplateTags: TemplateTag[] = [];
     appBundlePlugins.forEach(p => {
       const { name: pluginName } = p;
-      try {
-        const module = getBundlePluginModule(pluginName);
-        const pluginExportedTemplateTags: PluginTemplateTag[] = module?.templateTags || [];
-        const pluginTemplateTags: TemplateTag[] = pluginExportedTemplateTags.map(tt => ({
-          plugin: {
-            name: pluginName,
-            description: 'Bundle plugin',
-            version: 'Unknown',
-            directory: '',
-            config: {
-              disabled: false,
-            },
-            module,
+      const module = getBundlePluginModule(pluginName);
+      const pluginExportedTemplateTags: PluginTemplateTag[] = module?.templateTags || [];
+      const pluginTemplateTags: TemplateTag[] = pluginExportedTemplateTags.map(tt => ({
+        plugin: {
+          name: pluginName,
+          description: 'Bundle plugin',
+          version: 'Unknown',
+          directory: '',
+          config: {
+            disabled: false,
           },
-          templateTag: tt,
-        }));
-        appBundlePluginTemplateTags.push(...pluginTemplateTags);
-      } catch (err) {
-        console.error(`[plugin] Failed to load bundled plugin ${pluginName}`, err);
-      }
+          module,
+        },
+        templateTag: tt,
+      }));
+      appBundlePluginTemplateTags.push(...pluginTemplateTags);
     });
     return appBundlePluginTemplateTags;
   },
