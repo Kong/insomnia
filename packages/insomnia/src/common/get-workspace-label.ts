@@ -1,4 +1,4 @@
-import { isDesign, isEnvironment, isMockServer, type Workspace } from '../models/workspace';
+import { isDesign, isEnvironment, isMcp, isMockServer, type Workspace } from '../models/workspace';
 import { strings } from './strings';
 
 export const getWorkspaceLabel = (workspace: Workspace) => {
@@ -12,6 +12,10 @@ export const getWorkspaceLabel = (workspace: Workspace) => {
 
   if (isEnvironment(workspace)) {
     return strings.environment;
+  }
+
+  if (isMcp(workspace)) {
+    return strings.mcp;
   }
 
   return strings.collection;
