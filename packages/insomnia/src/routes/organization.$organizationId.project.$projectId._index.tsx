@@ -103,6 +103,8 @@ export const scopeToIconMap: Record<string, IconName> = {
   'mock-server': 'server',
   'unsynced': 'cloud-download',
   'environment': 'code',
+  // MCP TODO: replace the icon for mcp
+  'mcp': 'file',
 };
 
 export const scopeToBgColorMap: Record<string, string> = {
@@ -111,6 +113,7 @@ export const scopeToBgColorMap: Record<string, string> = {
   'mock-server': 'bg-[--color-warning]',
   'unsynced': 'bg-[--hl-md]',
   'environment': 'bg-[--color-font]',
+  'mcp': 'bg-[--color-danger]',
 };
 
 export const scopeToTextColorMap: Record<string, string> = {
@@ -119,6 +122,7 @@ export const scopeToTextColorMap: Record<string, string> = {
   'mock-server': 'text-[--color-font-warning]',
   'unsynced': 'text-[--color-font]',
   'environment': 'text-[--color-bg]',
+  'mcp': 'text-[--color-font-danger]',
 };
 
 export interface InsomniaFile {
