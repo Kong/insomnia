@@ -59,6 +59,7 @@
     "@stoplight/spectral-rulesets": "^1.22.0",
     "apiconnect-wsdl": "2.0.36",
     "aws4": "^1.13.2",
+    "blakejs": "^1.2.1",
     "chai": "^4.5.0",
     "chai-json-schema": "1.5.1",
     "chardet": "^2.1.0",
@@ -97,6 +98,7 @@
     "socket.io-client": "^4.8.1",
     "swagger-ui-dist": "^5.21.0",
     "tough-cookie": "^4.1.4",
+    "tweetnacl": "^1.0.3",
     "uuid": "^9.0.1",
     "yaml": "^2.7.1"
   },
@@ -108,7 +110,6 @@
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
-    "@getinsomnia/api-client": "0.0.10",
     "@getinsomnia/srp-js": "1.0.0-alpha.1",
     "@mismerge/core": "^1.2.1",
     "@mismerge/react": "^1.0.1",

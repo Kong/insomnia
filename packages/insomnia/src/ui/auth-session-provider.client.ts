@@ -1,8 +1,26 @@
-import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
+import { blake2b } from 'blakejs';
+import { box as naclBox } from 'tweetnacl';
 
 import * as session from '../account/session';
 import { getAppWebsiteBaseURL, getInsomniaPublicKey, getInsomniaSecretKey } from '../common/constants';
 import { invariant } from '../utils/invariant';
+
+export const overheadLength = naclBox.overheadLength + naclBox.publicKeyLength;
+
+export const keyPair = naclBox.keyPair;
+
+function open(sealedbox: Uint8Array, pk: Uint8Array, sk: Uint8Array): Uint8Array | null {
+  const epk = sealedbox.subarray(0, naclBox.publicKeyLength);
+  const data = sealedbox.subarray(naclBox.publicKeyLength);
+  return naclBox.open(data, nonce(epk, pk), epk, sk);
+}
+
+function nonce(epk: Uint8Array, pk: Uint8Array): Uint8Array {
+  const data: Uint8Array = new Uint8Array(epk.length + pk.length);
+  data.set(epk);
+  data.set(pk, epk.length);
+  return blake2b(data, undefined, naclBox.nonceLength);
+}
 
 interface AuthBox {
   token: string;
