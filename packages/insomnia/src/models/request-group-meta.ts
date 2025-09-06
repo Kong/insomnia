@@ -43,9 +43,9 @@ export function update(requestGroupMeta: RequestGroupMeta, patch: Partial<Reques
 }
 
 export function getByParentId(parentId: string) {
-  return db.getWhere<RequestGroupMeta>(type, { parentId });
+  return db.findOne<RequestGroupMeta>(type, { parentId });
 }
 
 export function all() {
-  return db.all<RequestGroupMeta>(type);
+  return db.find<RequestGroupMeta>(type);
 }

@@ -70,21 +70,17 @@ export function update(testResult: RunnerTestResult, patch: Partial<RunnerTestRe
 }
 
 export function getByParentId(parentId: string) {
-  return db.getWhere<RunnerTestResult>(type, { parentId });
-}
-
-export function getLatestByParentId(parentId: string) {
-  return db.getMostRecentlyModified<RunnerTestResult>(type, { parentId });
+  return db.findOne<RunnerTestResult>(type, { parentId });
 }
 
 export function getById(_id: string) {
-  return db.getWhere<RunnerTestResult>(type, {
+  return db.findOne<RunnerTestResult>(type, {
     _id,
   });
 }
 
 export function all() {
-  return db.all<RunnerTestResult>(type);
+  return db.find<RunnerTestResult>(type);
 }
 
 export function remove(item: RunnerTestResult) {

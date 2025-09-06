@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import * as models from '~/models';
 import { isRequestGroup } from '~/models/request-group';
 import { isRequestGroupMeta } from '~/models/request-group-meta';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.toggle-expand-all';
 
@@ -18,10 +18,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     toggle: 'collapse-all' | 'expand-all';
   };
   const isCollapsed = data.toggle === 'collapse-all';
-  const descendants = await database.withDescendants(workspace, null, [], {
-    [workspace.type]: [models.requestGroup.type],
-    [models.requestGroup.type]: [models.requestGroup.type, models.requestGroupMeta.type],
-  });
+  const descendants = await database.getWithDescendants(workspace, [
+    models.requestGroup.type,
+    models.requestGroupMeta.type,
+  ]);
 
   const requestGroups = descendants.filter(isRequestGroup);
   const requestGroupMetas = descendants.filter(isRequestGroupMeta);
@@ -38,10 +38,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   return null;
 }
 
-export function useToggleExpandAllActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useToggleExpandAllActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -59,17 +57,11 @@ export function useToggleExpandAllActionFetcher(args?: Parameters<typeof useFetc
         workspaceId,
       });
 
-      return fetcherSubmit(JSON.stringify({ toggle }), {
+      return submit(JSON.stringify({ toggle }), {
         action: url,
         method: 'POST',
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

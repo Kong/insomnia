@@ -32,7 +32,6 @@ test.describe('after-response script features tests', () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify response
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
     await expect.soft(statusTag).toContainText('200 OK');
 
     // verify
@@ -78,7 +77,6 @@ test.describe('after-response script features tests', () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify response
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
     await expect.soft(statusTag1).toContainText('200 OK');
 
     // verify persisted environment
@@ -95,7 +93,7 @@ test.describe('after-response script features tests', () => {
       __fromAfterScript: 'environment',
       base_url: 'http://localhost:4010',
     });
-    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByRole('button', { name: 'Close', exact: true }).click();
 
     // globals and baseGlobals can be persisted
     await page.getByTestId('underlay').click();

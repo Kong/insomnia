@@ -4,8 +4,11 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { getAuthObjectOrNull } from '~/network/authentication';
 import { useRootLoaderData } from '~/root';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { AuthWrapper } from '~/ui/components/editors/auth/auth-wrapper';
 
 import type { Environment } from '../../../models/environment';
 import { getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
@@ -16,7 +19,7 @@ import {
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
-import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
+import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { readOnlyWebsocketPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
@@ -51,7 +54,7 @@ interface Props {
 
 export const SocketIORequestPane: FC<Props> = ({ environment }) => {
   const { activeRequest, activeRequestMeta, requestPayload } = useRequestLoaderData() as SocketIORequestLoaderData;
-
+  const { vcsVersion } = useWorkspaceLoaderData()!;
   const { requestId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -95,15 +98,17 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
   };
 
   const gitVersion = useGitVCSVersion();
-  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const patchRequest = useRequestPatcher();
   const urlHasQueryParameters = activeRequest.url.includes('?');
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta.activeResponseId}`;
+  const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${vcsVersion}::${activeRequestMeta.activeResponseId}`;
 
   const readyState = useReadyState({ requestId: activeRequest._id, protocol: 'socketIO' });
   const disabled = readyState;
   const eventsCount = activeRequest?.eventListeners?.length || 0;
+
+  const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
+  const isAuthEnable = requestAuth?.type === 'singleToken' && !requestAuth.disabled;
 
   return (
     <Pane type="request">
@@ -150,6 +155,17 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
             {eventsCount > 0 && (
               <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
                 {eventsCount}
+              </span>
+            )}
+          </Tab>
+          <Tab
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="auth"
+          >
+            <span>Auth</span>
+            {isAuthEnable && (
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+                <span className="h-2 w-2 rounded-full bg-green-500" />
               </span>
             )}
           </Tab>
@@ -279,6 +295,15 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="events">
           <SocketIOEventTabPane request={activeRequest} eventListeners={activeRequest.eventListeners} />
+        </TabPanel>
+        <TabPanel className="w-full flex-1 overflow-y-auto" id="auth">
+          <AuthWrapper
+            key={uniqueKey}
+            authentication={activeRequest.authentication}
+            disabled={readyState}
+            authTypes={['singleToken']}
+            hideOthers
+          />
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="headers">
           {disabled && <PaneReadOnlyBanner />}

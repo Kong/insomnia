@@ -36,6 +36,9 @@ export const mergeConflictSchema: Schema<MergeConflict> = {
   theirsBlobContent: () => null,
   message: () => 'message',
   name: () => 'name',
+  suggestedMergeResult: () => '',
+  mergeResult: () => '',
+  resolutionSource: () => 'choose',
 };
 
 export const statusCandidateSchema: Schema<StatusCandidate> = {

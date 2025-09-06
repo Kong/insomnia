@@ -7,7 +7,7 @@ import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestGroupLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
-import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
+import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { EnvironmentEditor, type EnvironmentEditorHandle } from '../editors/environment-editor';
 import { EnvironmentKVEditor } from '../editors/environment-key-value-editor/key-value-editor';
@@ -21,12 +21,11 @@ import { RequestGroupSettingsModal } from '../modals/request-group-settings-moda
 
 export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
   const { activeRequestGroup } = useRequestGroupLoaderData()!;
-  const { activeEnvironment } = useWorkspaceLoaderData()!;
+  const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
   const [isRequestGroupSettingsModalOpen, setIsRequestGroupSettingsModalOpen] = useState(false);
   const patchRequestGroup = useRequestGroupPatcher();
   const gitVersion = useGitVCSVersion();
-  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
-  const uniqueKey = `${activeEnvironment?.modified}::${activeRequestGroup._id}::${gitVersion}::${activeRequestSyncVersion}`;
+  const uniqueKey = `${activeEnvironment?.modified}::${activeRequestGroup._id}::${gitVersion}::${vcsVersion}`;
   const folderHeaders = activeRequestGroup?.headers || [];
   const headersCount = folderHeaders.filter(h => !h.disabled)?.length || 0;
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);

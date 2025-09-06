@@ -12,7 +12,7 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { testResultId } = params;
 
-  const testResult = await database.getWhere<UnitTestResult>(models.unitTestResult.type, {
+  const testResult = await database.findOne<UnitTestResult>(models.unitTestResult.type, {
     _id: testResultId,
   });
   invariant(testResult, 'Test Result not found');

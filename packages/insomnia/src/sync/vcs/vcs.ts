@@ -62,6 +62,16 @@ export function chunkArray<T>(arr: T[], chunkSize: number) {
 // Unstaged items have changed compared to staged or not and can be staged
 //
 export class VCS {
+  async getVersion(): Promise<string> {
+    const branch = await this._getCurrentBranch();
+    // branch can be null if there is no backend project
+    if (branch && branch.modified) {
+      const date = new Date(branch.modified);
+      return date.toISOString();
+    }
+
+    return '';
+  }
   _store: Store;
   _driver: BaseDriver;
   // stored by key `/projects/${project.id}/meta.json`
@@ -85,7 +95,7 @@ export class VCS {
 
   async setBackendProject(backendProject: BackendProject) {
     this._backendProject = backendProject;
-    console.log(`[sync] Activated project ${backendProject.id}`);
+    console.debug(`[sync] Activated project ${backendProject.id}`);
     // Store it because it might not be yet
     await this._storeBackendProject(backendProject);
   }

@@ -9,6 +9,7 @@ import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
 
 import { type GitCredentials } from '~/models/git-repository';
+import { EMPTY_GIT_PROJECT_ID, isEmptyGitProject } from '~/models/project';
 
 import {
   getApiBaseURL,
@@ -140,6 +141,7 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(project.gitRepositoryId, 'Project is not linked to a git repository');
+  invariant(project.gitRepositoryId && !isEmptyGitProject(project), 'Project is not linked to a git repository');
   const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
   invariant(gitRepository, 'Git Repository not found');
   return gitRepository;
@@ -550,7 +552,7 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
         });
       }
 
-      await database.upsert(doc, true);
+      await database.update(doc);
       changes.push({
         path: legacyInsomniaFile.filePath,
         // It existed and was removed from the git repository
@@ -1122,7 +1124,7 @@ export const updateGitRepoAction = async ({
     repoSettingsPatch.credentials = credentials;
 
     async function setupGitRepository() {
-      if (gitRepositoryId && gitRepositoryId !== 'empty') {
+      if (gitRepositoryId && gitRepositoryId !== EMPTY_GIT_PROJECT_ID) {
         const gitRepository = await models.gitRepository.getById(gitRepositoryId);
         invariant(gitRepository, 'GitRepository not found');
         await models.gitRepository.update(gitRepository, repoSettingsPatch);
@@ -1197,7 +1199,7 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
     const project = await models.project.getById(projectId);
     invariant(project, 'Project not found');
     await models.project.update(project, {
-      gitRepositoryId: 'empty',
+      gitRepositoryId: EMPTY_GIT_PROJECT_ID,
     });
   }
 
@@ -1697,7 +1699,7 @@ export async function fetchGitRemoteBranches({
 
     return { branches };
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Error while fetching remote branches';
+    const errorMessage = `Could not fetch remote branches: ${getErrorMessage(err)}`;
     return { branches: [], errors: [errorMessage] };
   }
 }
@@ -1841,6 +1843,10 @@ export const discardChangesAction = async ({
       errors: [errorMessage],
     };
   }
+};
+
+export const abortMergeAction = async () => {
+  return GitVCS.abortMerge();
 };
 
 export interface GitStatusResult {
@@ -2040,6 +2046,20 @@ const getRepositoryDirectoryTree = async ({
   repositoryTree: FileTree;
   folderList: Record<string, string[]>;
 }> => {
+  const project = await models.project.getById(projectId);
+
+  if (project && isEmptyGitProject(project)) {
+    return {
+      repositoryTree: {
+        id: '',
+        name: 'Repository',
+        type: 'root',
+        children: [],
+      },
+      folderList: {},
+    };
+  }
+
   const gitRepository = await getGitRepository({ projectId });
   const fs = await getGitFSClient({ projectId, gitRepositoryId: gitRepository._id });
 
@@ -2209,84 +2229,97 @@ async function getGitHubRepositories({
   url?: string;
   repos?: GitHubRepositoriesApiResponse;
 }) {
-  const credentials = await models.gitCredentials.getByProvider('github');
-  const opts = {
-    headers: {
-      Authorization: `token ${credentials?.token}`,
-    },
-  };
+  try {
+    const credentials = await models.gitCredentials.getByProvider('github');
+    const opts = {
+      headers: {
+        Authorization: `token ${credentials?.token}`,
+      },
+    };
 
-  const response = await fetch(url, opts);
-  if (!response.ok) {
-    const raw = await response.text();
-    if (response.status === 401) {
+    const response = await fetch(url, opts);
+    if (!response.ok) {
+      const raw = await response.text();
+      if (response.status === 401) {
+        return {
+          errors: [`User token not authorized to fetch repositories, please sign out and back in.\nResponse: ${raw}`],
+          repos: [],
+        };
+      }
       return {
-        errors: [`User token not authorized to fetch repositories, please sign out and back in.\nResponse: ${raw}`],
+        errors: [`Failed to fetch repositories from GitHub: ${response.statusText}\nResponse: ${raw}`],
         repos: [],
       };
     }
-    return {
-      errors: [`Failed to fetch repositories from GitHub: ${response.statusText}\nResponse: ${raw}`],
-      repos: [],
-    };
-  }
 
-  const data = await response.json();
+    const data = await response.json();
 
-  let pullableRepos = data.filter((repo: GitHubRepositoryApiResponse) => repo.permissions.pull);
-  repos.push(...pullableRepos);
+    let pullableRepos = data.filter((repo: GitHubRepositoryApiResponse) => repo.permissions.pull);
+    repos.push(...pullableRepos);
 
-  const link = response.headers.get('link');
-  if (link && link.includes('rel="last"')) {
-    const last = link.match(/<([^>]+)>; rel="last"/)?.[1];
-    if (last) {
-      const lastUrl = new URL(last);
-      const lastPage = lastUrl.searchParams.get('page');
-      if (lastPage) {
-        const pages = Number(lastPage);
-        const pageList = await Promise.all(
-          Array.from({ length: pages - 1 }, (_, i) =>
-            fetch(`${GITHUB_USER_REPOS_URL}?per_page=100&page=${i + 2}`, opts),
-          ),
-        );
-        for (const page of pageList) {
-          const pageData = await page.json();
-          pullableRepos = pageData.filter((repo: GitHubRepositoryApiResponse) => repo.permissions.pull);
-          repos.push(...pullableRepos);
+    const link = response.headers.get('link');
+    if (link && link.includes('rel="last"')) {
+      const last = link.match(/<([^>]+)>; rel="last"/)?.[1];
+      if (last) {
+        const lastUrl = new URL(last);
+        const lastPage = lastUrl.searchParams.get('page');
+        if (lastPage) {
+          const pages = Number(lastPage);
+          const pageList = await Promise.all(
+            Array.from({ length: pages - 1 }, (_, i) =>
+              fetch(`${GITHUB_USER_REPOS_URL}?per_page=100&page=${i + 2}`, opts),
+            ),
+          );
+          for (const page of pageList) {
+            const pageData = await page.json();
+            pullableRepos = pageData.filter((repo: GitHubRepositoryApiResponse) => repo.permissions.pull);
+            repos.push(...pullableRepos);
+          }
+          return { repos, errors: [] };
         }
-        return { repos, errors: [] };
       }
     }
-  }
-  if (link && link.includes('rel="next"')) {
-    const next = link.match(/<([^>]+)>; rel="next"/)?.[1];
-    if (next) {
-      return getGitHubRepositories({ url: next, repos });
+    if (link && link.includes('rel="next"')) {
+      const next = link.match(/<([^>]+)>; rel="next"/)?.[1];
+      if (next) {
+        return getGitHubRepositories({ url: next, repos });
+      }
     }
+    return { repos, errors: [] };
+  } catch (e) {
+    const errorMessage = `Failed to fetch repositories from GitHub: ${e.message}`;
+    return { repos: [], errors: [errorMessage] };
   }
-  return { repos, errors: [] };
 }
 
 async function getGitHubRepository({ uri }: { uri: string }) {
-  const [owner, name] = uri.replace('.git', '').split('/').slice(-2); // extracts the owner + name
+  try {
+    const [owner, name] = uri.replace('.git', '').split('/').slice(-2); // extracts the owner + name
 
-  const credentials = await models.gitCredentials.getByProvider('github');
-  const opts = {
-    headers: {
-      Authorization: `token ${credentials?.token}`,
-    },
-  };
+    const credentials = await models.gitCredentials.getByProvider('github');
+    const opts = {
+      headers: {
+        Authorization: `token ${credentials?.token}`,
+      },
+    };
 
-  const response = await fetch(`${getGitHubRestApiUrl()}/repos/${owner}/${name}`, opts);
-  if (!response.ok) {
-    const raw = await response.text();
+    const response = await fetch(`${getGitHubRestApiUrl()}/repos/${owner}/${name}`, opts);
+    if (!response.ok) {
+      const raw = await response.text();
+      return {
+        errors: [`Failed to fetch repository from GitHub: ${response.statusText}\nResponse: ${raw}`],
+        notFound: response.status === 404,
+      };
+    }
+
+    return { repo: (await response.json()) as GitHubRepositoryApiResponse, errors: [], notFound: false };
+  } catch (e) {
+    const errorMessage = `Failed to fetch repository from GitHub: ${e.message}`;
     return {
-      errors: [`Failed to fetch repository from GitHub: ${response.statusText}\nResponse: ${raw}`],
-      notFound: response.status === 404,
+      errors: [errorMessage],
+      notFound: false,
     };
   }
-
-  return { repo: (await response.json()) as GitHubRepositoryApiResponse, errors: [], notFound: false };
 }
 
 /**
@@ -2472,6 +2505,7 @@ export interface GitServiceAPI {
   pullFromGitRemote: typeof pullFromGitRemote;
   continueMerge: typeof continueMerge;
   discardChanges: typeof discardChangesAction;
+  abortMerge: typeof abortMergeAction;
   gitStatus: typeof gitStatusAction;
   stageChanges: typeof stageChangesAction;
   unstageChanges: typeof unstageChangesAction;
@@ -2542,6 +2576,7 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.discardChanges', (_, options: Parameters<typeof discardChangesAction>[0]) =>
     discardChangesAction(options),
   );
+  ipcMainHandle('git.abortMerge', _ => abortMergeAction());
   ipcMainHandle('git.gitStatus', (_, options: Parameters<typeof gitStatusAction>[0]) => gitStatusAction(options));
   ipcMainHandle('git.stageChanges', (_, options: Parameters<typeof stageChangesAction>[0]) =>
     stageChangesAction(options),

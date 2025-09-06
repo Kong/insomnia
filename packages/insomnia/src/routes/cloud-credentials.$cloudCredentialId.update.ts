@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
 import * as models from '~/models';
 import type { CloudProviderCredential } from '~/models/cloud-credential';
 import { executePluginMainAction } from '~/plugins';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/cloud-credentials.$cloudCredentialId.update';
 
@@ -43,18 +43,10 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   return { error: 'Unexpected response from ' + provider };
 }
 
-export function useUpdateCloudCredentialActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcher } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
-    function submit({
-      cloudCredentialId,
-      patch,
-    }: {
-      cloudCredentialId: string;
-      patch: Partial<CloudProviderCredential>;
-    }) {
-      return fetcherSubmit(JSON.stringify(patch), {
+export const useUpdateCloudCredentialActionFetcher = createFetcherSubmitHook(
+  submit =>
+    ({ cloudCredentialId, patch }: { cloudCredentialId: string; patch: Partial<CloudProviderCredential> }) => {
+      return submit(JSON.stringify(patch), {
         method: 'POST',
         action: href('/cloud-credentials/:cloudCredentialId/update', {
           cloudCredentialId,
@@ -62,11 +54,5 @@ export function useUpdateCloudCredentialActionFetcher(args?: Parameters<typeof u
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcher,
-    submit,
-  };
-}
+  clientAction,
+);

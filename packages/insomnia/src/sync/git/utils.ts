@@ -11,21 +11,28 @@ const onMessage: MessageCallback = message => {
   console.log(`[git-event] ${message}`);
 };
 
-const onAuthFailure =
-  (credentials?: GitCredentials): AuthFailureCallback =>
-  async (message, auth) => {
+const onAuthFailure = (credentials?: GitCredentials): AuthFailureCallback => {
+  let retryCount = 0;
+  const maxRetries = 2;
+
+  return async (message, auth) => {
     console.log(`[git-event] Auth Failure: ${message}`);
 
     // Try to refresh the token if auth failed.
     // Whenever we return a new GitAuth object from this function
     // isomorphic-git will retry the request with the new credentials.
     // https://isomorphic-git.org/docs/en/onAuthFailure#docsNav
-    if (credentials && 'oauth2format' in credentials && credentials.oauth2format === 'gitlab') {
-      console.log('[git-event] Attempting to refresh token');
+    if (
+      credentials &&
+      'oauth2format' in credentials &&
+      credentials.oauth2format === 'gitlab' &&
+      retryCount < maxRetries
+    ) {
+      retryCount++;
+      console.log(`[git-event] Attempting to refresh token (attempt ${retryCount}/${maxRetries})`);
       try {
         const providerCredentials = await gitCredentials.getByProvider(credentials.oauth2format);
         if (providerCredentials?.refreshToken) {
-          console.log('[git-event] Token refreshed');
           return {
             ...auth,
             password: providerCredentials.refreshToken,
@@ -41,8 +48,13 @@ const onAuthFailure =
       }
     }
 
+    if (retryCount >= maxRetries) {
+      console.warn(`[git-event] Maximum retry attempts (${maxRetries}) reached, giving up`);
+    }
+
     return;
   };
+};
 
 const onAuthSuccess: AuthSuccessCallback = message => {
   console.log(`[git-event] Auth Success: ${message}`);

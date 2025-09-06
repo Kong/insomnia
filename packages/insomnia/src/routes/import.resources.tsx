@@ -1,5 +1,4 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { importResourcesToProject, importResourcesToWorkspace } from '~/common/import';
 import * as models from '~/models';
@@ -12,6 +11,7 @@ import {
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { fetchAndCacheOrganizationStorageRule } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/import.resources';
 
@@ -71,23 +71,16 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   }
 }
 
-export function useImportResourcesFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-  const submit = useCallback(
-    (data: { organizationId: string; projectId: string; workspaceId?: string }) => {
-      fetcherSubmit(JSON.stringify(data), {
-        action: href('/import/resources'),
-        method: 'POST',
-        encType: 'application/json',
-      });
-    },
-    [fetcherSubmit],
-  );
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+export const useImportResourcesFetcher = createFetcherSubmitHook(
+  submit => (data: { organizationId: string; projectId: string; workspaceId?: string }) => {
+    submit(JSON.stringify(data), {
+      action: href('/import/resources'),
+      method: 'POST',
+      encType: 'application/json',
+    });
+  },
+  clientAction,
+);
 
 // The reason why we put this function here is because this function indirectly depends on some modules that can only run in a browser environment.
 // If we put this function in import.ts which is depended by Inso CLI, Inso CLI will fail to build because it doesn't have access to the browser environment.

@@ -1,5 +1,4 @@
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import { importResourcesToNewWorkspace } from '~/common/import';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '~/common/insomnia-v5';
@@ -8,6 +7,7 @@ import type { Project } from '~/models/project';
 import { scopeToActivity } from '~/models/workspace';
 import { syncNewWorkspaceIfNeeded } from '~/routes/import.resources';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.move';
 
@@ -67,10 +67,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   }
 }
 
-export function useWorkspaceMoveActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useWorkspaceMoveActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       workspaceId,
       orgId,
@@ -95,16 +93,10 @@ export function useWorkspaceMoveActionFetcher(args?: Parameters<typeof useFetche
         projectId,
       });
 
-      return fetcherSubmit(formData, {
+      return submit(formData, {
         action: url,
         method: 'POST',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

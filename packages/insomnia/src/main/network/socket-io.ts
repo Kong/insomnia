@@ -13,7 +13,7 @@ import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { socketIORequest } from '../../models';
 import type { CookieJar } from '../../models/cookie-jar';
-import { type RequestHeader } from '../../models/request';
+import { type RequestAuthentication, type RequestHeader } from '../../models/request';
 import type { BaseSocketIORequest } from '../../models/socket-io-request';
 import type { SocketIOResponse } from '../../models/socket-io-response.ts';
 import { filterClientCertificates } from '../../network/certificate';
@@ -99,6 +99,7 @@ interface OpenSocketIORequestOptions {
   url: string;
   query: Record<string, string>;
   headers: RequestHeader[];
+  authentication: RequestAuthentication;
   cookieJar: CookieJar;
   initialPayload?: string;
 }
@@ -270,6 +271,12 @@ const openSocketIOConnection = async (
     } else {
       socketIOoptions.cert = pemCertificates.join('\n');
       socketIOoptions.key = pemCertificateKeys.join('\n');
+    }
+
+    if (options.authentication && options.authentication.type === 'singleToken' && !options.authentication.disabled) {
+      socketIOoptions.auth = {
+        token: options.authentication.token || '',
+      };
     }
 
     const socket = SocketIOClient(url, socketIOoptions);

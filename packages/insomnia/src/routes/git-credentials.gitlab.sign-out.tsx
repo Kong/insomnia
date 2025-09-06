@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
+
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/git-credentials.gitlab.sign-out';
 
@@ -9,15 +10,9 @@ export async function clientAction(_args: Route.ClientActionArgs) {
   return null;
 }
 
-export function useGitLabSignOutFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(() => {
-    return fetcherSubmit({}, { action: href('/git-credentials/gitlab/sign-out'), method: 'POST' });
-  }, [fetcherSubmit]);
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+export const useGitLabSignOutFetcher = createFetcherSubmitHook(
+  submit => () => {
+    return submit({}, { action: href('/git-credentials/gitlab/sign-out'), method: 'POST' });
+  },
+  clientAction,
+);

@@ -54,6 +54,7 @@
     "assets",
     "bin",
     "build",
+    "dist",
     "config",
     "node_modules",
     "src/coverage",

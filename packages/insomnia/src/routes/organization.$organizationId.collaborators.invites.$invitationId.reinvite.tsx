@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { insomniaFetch } from '~/ui/insomniaFetch';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.collaborators.invites.$invitationId.reinvite';
 
@@ -25,29 +25,19 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   }
 }
 
-export function useReinviteFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const {
-    submit: fetcherSubmit,
-    ...fetcherRest
-  } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback((
-    { organizationId, invitationId }: { organizationId: string; invitationId: string }
-  ) => {
-    return fetcherSubmit(
-      {},
-      {
-        action: href(`/organization/:organizationId/collaborators/invites/:invitationId/reinvite`, {
-          organizationId,
-          invitationId,
-        }),
-        method: 'POST',
-      },
-    );
-  }, [fetcherSubmit]);
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+export const useReinviteFetcher = createFetcherSubmitHook(
+  submit =>
+    ({ organizationId, invitationId }: { organizationId: string; invitationId: string }) => {
+      return submit(
+        {},
+        {
+          action: href(`/organization/:organizationId/collaborators/invites/:invitationId/reinvite`, {
+            organizationId,
+            invitationId,
+          }),
+          method: 'POST',
+        },
+      );
+    },
+  clientAction,
+);

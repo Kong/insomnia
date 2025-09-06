@@ -69,8 +69,8 @@ export async function duplicate(request: SocketIOPayload, patch: Partial<SocketI
   });
 }
 
-export const getById = (_id: string) => database.getWhere<SocketIOPayload>(type, { _id });
-export const getByParentId = (parentId: string) => database.getWhere<SocketIOPayload>(type, { parentId });
+export const getById = (_id: string) => database.findOne<SocketIOPayload>(type, { _id });
+export const getByParentId = (parentId: string) => database.findOne<SocketIOPayload>(type, { parentId });
 
 export async function updateOrCreateByParentId(parentId: string, patch: Partial<SocketIOPayload>) {
   const requestPayload = await getByParentId(parentId);
@@ -92,4 +92,4 @@ export async function getOrCreateByParentId(parentId: string) {
   return doc || create({ parentId });
 }
 
-export const all = () => database.all<SocketIOPayload>(type);
+export const all = () => database.find<SocketIOPayload>(type);

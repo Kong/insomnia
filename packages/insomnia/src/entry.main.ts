@@ -100,8 +100,10 @@ app.on('ready', async () => {
   }
 
   // Init some important things first
-  await database.init(models.types());
+  await database.init();
   await _createModelInstances();
+  // backup needs the channel from settings which needs the database
+  await backupIfNewerVersionAvailable();
   sentryWatchAnalyticsEnabled();
   watchProxySettings();
   windowUtils.init();
@@ -321,7 +323,6 @@ async function _trackStats() {
   });
 
   ipcMainOnce('halfSecondAfterAppStart', async () => {
-    backupIfNewerVersionAvailable();
     const { currentVersion, launches, lastVersion } = stats;
 
     const firstLaunch = launches === 1;
@@ -332,7 +333,7 @@ async function _trackStats() {
     console.log('[main] App update detected', currentVersion, lastVersion);
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
-      url: 'https://github.com/Kong/insomnia/releases',
+      url: 'https://insomnia.rest/changelog',
       cta: "See What's New",
       message: `Updated to ${currentVersion}`,
     };

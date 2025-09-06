@@ -1,5 +1,4 @@
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { project, userSession } from '~/models';
@@ -7,7 +6,7 @@ import { findPersonalOrganization, type Organization } from '~/models/organizati
 import type { Project } from '~/models/project';
 import { migrateProjectsUnderOrganization, syncOrganizations, syncProjects } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
-import { AsyncTask } from '~/utils/router';
+import { AsyncTask, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.sync-organizations-and-projects';
 
@@ -53,7 +52,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
     // When user switch to a new organization, there is no project in db cache, we need to redirect to the first project after sync project
     if (!projectId && asyncTaskList.includes(AsyncTask.SyncProjects)) {
-      const firstProject = await database.getWhere<Project>(project.type, { parentId: organizationId });
+      const firstProject = await database.findOne<Project>(project.type, { parentId: organizationId });
       if (firstProject?._id) {
         return redirect(
           href('/organization/:organizationId/project/:projectId', {
@@ -74,11 +73,9 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   }
 }
 
-export function useSyncOrganizationsAndProjectsActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcher } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
-    function submit({
+export const useSyncOrganizationsAndProjectsActionFetcher = createFetcherSubmitHook(
+  submit =>
+    ({
       organizationId,
       projectId,
       asyncTaskList,
@@ -86,8 +83,8 @@ export function useSyncOrganizationsAndProjectsActionFetcher(args?: Parameters<t
       organizationId: string;
       projectId?: string;
       asyncTaskList: AsyncTask[];
-    }) {
-      return fetcherSubmit(
+    }) => {
+      return submit(
         JSON.stringify({
           organizationId,
           projectId,
@@ -100,11 +97,5 @@ export function useSyncOrganizationsAndProjectsActionFetcher(args?: Parameters<t
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcher,
-    submit,
-  };
-}
+  clientAction,
+);

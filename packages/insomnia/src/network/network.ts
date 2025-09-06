@@ -812,7 +812,7 @@ export interface sendCurlAndWriteTimelineResponse extends ResponsePatch {
 export async function sendCurlAndWriteTimeline(
   renderedRequest: RenderedRequest,
   clientCertificates: ClientCertificate[],
-  caCert: CaCertificate | null,
+  caCert: CaCertificate | undefined,
   settings: Settings,
   timelinePath: string,
   responseId: string,

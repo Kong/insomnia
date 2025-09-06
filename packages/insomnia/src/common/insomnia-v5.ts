@@ -1,7 +1,8 @@
 import { parse, stringify } from 'yaml';
 
+import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
+
 import * as models from '../models';
-import { WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP } from '../models';
 import type { ApiSpec } from '../models/api-spec';
 import type { CookieJar } from '../models/cookie-jar';
 import { type Environment, maskVaultEnvironmentData } from '../models/environment';
@@ -15,21 +16,6 @@ import type { UnitTest } from '../models/unit-test';
 import type { UnitTestSuite } from '../models/unit-test-suite';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace, WorkspaceScope } from '../models/workspace';
-import {
-  EXPORT_TYPE_API_SPEC,
-  EXPORT_TYPE_COOKIE_JAR,
-  EXPORT_TYPE_ENVIRONMENT,
-  EXPORT_TYPE_GRPC_REQUEST,
-  EXPORT_TYPE_MOCK_ROUTE,
-  EXPORT_TYPE_MOCK_SERVER,
-  EXPORT_TYPE_REQUEST,
-  EXPORT_TYPE_REQUEST_GROUP,
-  EXPORT_TYPE_SOCKETIO_REQUEST,
-  EXPORT_TYPE_UNIT_TEST,
-  EXPORT_TYPE_UNIT_TEST_SUITE,
-  EXPORT_TYPE_WEBSOCKET_REQUEST,
-  EXPORT_TYPE_WORKSPACE,
-} from './constants';
 import { database } from './database';
 import {
   type Insomnia_GRPCRequest,
@@ -44,7 +30,7 @@ import {
   WebsocketRequestSchema,
 } from './import-v5-parser';
 
-type WithExportType<T extends models.BaseModel> = T & { _type: string };
+type WithExportType<T extends models.BaseModel> = T & { _type: AllExportTypes };
 
 function filterEmptyValue(value: string | number | boolean | null | undefined) {
   return value !== null && value !== undefined && !(typeof value === 'object' && Object.keys(value).length === 0);
@@ -104,7 +90,7 @@ function getWorkspace(file: InsomniaFile): WithExportType<Workspace> {
       },
     ),
     type: 'Workspace',
-    _type: EXPORT_TYPE_WORKSPACE,
+    _type: 'workspace',
     name: file.name || 'Imported Collection',
     parentId: '',
     scope: insomniaSchemaTypeToScope(file.type),
@@ -120,7 +106,7 @@ function getEnvironments(file: InsomniaFile): Environment[] {
         },
       ),
       type: 'Environment',
-      _type: EXPORT_TYPE_ENVIRONMENT,
+      _type: 'environment',
       parentId: file.meta?.id || '__WORKSPACE_ID__',
       color: file.environments.color || null,
       data: (file.environments.data as Record<string, any>) || {},
@@ -136,7 +122,7 @@ function getEnvironments(file: InsomniaFile): Environment[] {
           },
         ),
         type: 'Environment',
-        _type: EXPORT_TYPE_ENVIRONMENT,
+        _type: 'environment',
         color: environment.color || null,
         data: (environment.data as Record<string, any>) || {},
         dataPropertyOrder: (environment.dataPropertyOrder as Record<string, any>) || undefined,
@@ -159,7 +145,7 @@ function getCookieJar(file: InsomniaFile): [CookieJar] | [] {
         },
       ),
       type: 'CookieJar',
-      _type: EXPORT_TYPE_COOKIE_JAR,
+      _type: 'cookie_jar',
       name: file.cookieJar.name || 'Imported Cookie Jar',
       parentId: file.meta?.id || '__WORKSPACE_ID__',
       cookies: file.cookieJar.cookies || [],
@@ -182,7 +168,7 @@ function getApiSpec(file: InsomniaFile): [WithExportType<ApiSpec>] | [] {
         ),
         type: 'ApiSpec',
         name: file.name || 'Api Spec',
-        _type: EXPORT_TYPE_API_SPEC,
+        _type: 'api_spec',
         fileName: 'file' in file.spec ? file.spec.file : '',
         contentType: 'json',
         contents: 'contents' in file.spec && file.spec.contents ? stringify(file.spec.contents) : '',
@@ -203,7 +189,7 @@ function getMockServer(file: InsomniaFile): WithExportType<MockServer> {
         },
       ),
       type: 'MockServer',
-      _type: EXPORT_TYPE_MOCK_SERVER,
+      _type: 'mock',
       name: file.name || 'Imported Mock Server',
       parentId: file.meta?.id || '__WORKSPACE_ID__',
       url: file.server?.url || '',
@@ -224,7 +210,7 @@ function getMockRoutes(file: InsomniaFile): WithExportType<MockRoute>[] {
           },
         ),
         type: 'MockRoute',
-        _type: EXPORT_TYPE_MOCK_ROUTE,
+        _type: 'mock_route',
         name: mock.name || 'Imported Mock Route',
         parentId: file.server?.meta?.id || '__MOCK_SERVER_ID__',
         body: mock.body || '',
@@ -252,7 +238,7 @@ function getTestSuites(file: InsomniaFile): (UnitTestSuite | UnitTest)[] {
           },
         ),
         type: 'UnitTestSuite',
-        _type: EXPORT_TYPE_UNIT_TEST_SUITE,
+        _type: 'unit_test_suite',
         name: testSuite.name || 'Imported Test Suite',
         parentId: file.meta?.id || '__WORKSPACE_ID__',
         metaSortKey: testSuite.meta?.sortKey ?? index,
@@ -268,7 +254,7 @@ function getTestSuites(file: InsomniaFile): (UnitTestSuite | UnitTest)[] {
             },
           ),
           type: 'UnitTest',
-          _type: EXPORT_TYPE_UNIT_TEST,
+          _type: 'unit_test',
           name: test.name || 'Imported Test',
           parentId: suite._id,
           requestId: test.requestId,
@@ -304,7 +290,7 @@ function getCollection(
               },
             ),
             type: 'RequestGroup',
-            _type: EXPORT_TYPE_REQUEST_GROUP,
+            _type: 'request_group',
             name: item.name || 'Imported Folder',
             parentId,
             headers: item.headers?.map(({ name, value }) => ({ name: name || '', value: value || '' })) || [],
@@ -327,7 +313,7 @@ function getCollection(
               },
             ),
             type: 'Request',
-            _type: EXPORT_TYPE_REQUEST,
+            _type: 'request',
             name: item.name || 'Imported Request',
             parentId,
             url: item.url,
@@ -357,7 +343,7 @@ function getCollection(
               },
             ),
             type: 'GrpcRequest',
-            _type: EXPORT_TYPE_GRPC_REQUEST,
+            _type: 'grpc_request',
             name: item.name || 'Imported gRPC Request',
             parentId,
             url: item.url,
@@ -386,7 +372,7 @@ function getCollection(
                 },
               ),
               type: 'WebSocketRequest',
-              _type: EXPORT_TYPE_WEBSOCKET_REQUEST,
+              _type: 'websocket_request',
               name: item.name || 'Imported WebSocket Request',
               parentId,
               url: data.url,
@@ -413,7 +399,7 @@ function getCollection(
                   },
                 ),
                 type: 'SocketIORequest',
-                _type: EXPORT_TYPE_SOCKETIO_REQUEST,
+                _type: 'socketio_request',
                 name: item.name || 'Imported Socket.IO Request',
                 parentId,
                 url: data.url,
@@ -443,30 +429,42 @@ function getCollection(
   return [];
 }
 
+function importData(rawData: string) {
+  const file = InsomniaFileSchema.parse(parse(rawData));
+
+  if (file.type === 'collection.insomnia.rest/5.0') {
+    return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
+  }
+
+  if (file.type === 'spec.insomnia.rest/5.0') {
+    return [
+      getWorkspace(file),
+      ...getEnvironments(file),
+      ...getCookieJar(file),
+      ...getCollection(file),
+      ...getApiSpec(file),
+      ...getTestSuites(file),
+    ];
+  }
+
+  if (file.type === 'environment.insomnia.rest/5.0') {
+    return [getWorkspace(file), ...getEnvironments(file)];
+  }
+  return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
+}
+
+export function tryImportV5Data(rawData: string) {
+  try {
+    return { data: importData(rawData) };
+  } catch (error) {
+    console.error('Failed to import Insomnia v5 data', error);
+    return { data: [], error };
+  }
+}
+
 export function importInsomniaV5Data(rawData: string) {
   try {
-    const file = InsomniaFileSchema.parse(parse(rawData));
-
-    if (file.type === 'collection.insomnia.rest/5.0') {
-      return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
-    }
-
-    if (file.type === 'spec.insomnia.rest/5.0') {
-      return [
-        getWorkspace(file),
-        ...getEnvironments(file),
-        ...getCookieJar(file),
-        ...getCollection(file),
-        ...getApiSpec(file),
-        ...getTestSuites(file),
-      ];
-    }
-
-    if (file.type === 'environment.insomnia.rest/5.0') {
-      return [getWorkspace(file), ...getEnvironments(file)];
-    }
-
-    return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
+    return importData(rawData);
   } catch (err) {
     console.error('Failed to import Insomnia v5 data', err);
     return [];
@@ -488,15 +486,8 @@ export async function getInsomniaV5DataExport({
     if (!workspace) {
       throw new Error('Workspace not found');
     }
-
-    const workspaceDescendants = await database.withDescendants(
-      workspace,
-      null,
-      [],
-      WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP,
-    );
-
-    const exportableTypes = Object.values(models.MODELS_BY_EXPORT_TYPE).map(model => model.type);
+    const exportableTypes = Object.values(MODELS_BY_EXPORT_TYPE);
+    const workspaceDescendants = await database.getWithDescendants(workspace, exportableTypes);
 
     const exportableResources = workspaceDescendants.filter(resource => {
       if (exportableTypes.includes(resource.type)) {

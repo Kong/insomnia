@@ -35,11 +35,11 @@ export function migrate(doc: ApiSpec) {
 }
 
 export function getByParentId(workspaceId: string) {
-  return db.getWhere<ApiSpec>(type, { parentId: workspaceId });
+  return db.findOne<ApiSpec>(type, { parentId: workspaceId });
 }
 
 export async function getOrCreateForParentId(workspaceId: string, patch: Partial<ApiSpec> = {}) {
-  const spec = await db.getWhere<ApiSpec>(type, {
+  const spec = await db.findOne<ApiSpec>(type, {
     parentId: workspaceId,
   });
 
@@ -56,7 +56,7 @@ export async function updateOrCreateForParentId(workspaceId: string, patch: Part
 }
 
 export async function all() {
-  return db.all<ApiSpec>(type);
+  return db.find<ApiSpec>(type);
 }
 
 export function update(apiSpec: ApiSpec, patch: Partial<ApiSpec> = {}) {

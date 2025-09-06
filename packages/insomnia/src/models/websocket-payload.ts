@@ -58,7 +58,7 @@ export async function duplicate(request: WebSocketPayload, patch: Partial<WebSoc
   });
 }
 
-export const getById = (_id: string) => database.getWhere<WebSocketPayload>(type, { _id });
-export const getByParentId = (parentId: string) => database.getWhere<WebSocketPayload>(type, { parentId });
+export const getById = (_id: string) => database.findOne<WebSocketPayload>(type, { _id });
+export const getByParentId = (parentId: string) => database.findOne<WebSocketPayload>(type, { parentId });
 
-export const all = () => database.all<WebSocketPayload>(type);
+export const all = () => database.find<WebSocketPayload>(type);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -28,8 +28,7 @@ import { isGitProject, type Project } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isEnvironment, isMockServer, isScratchpad, type Workspace } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
-import { fetchAndCacheOrganizationStorageRule } from '../../organization-utils';
-import { DEFAULT_STORAGE_RULES } from '../../organization-utils';
+import { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule } from '../../organization-utils';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
@@ -206,7 +205,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                         <Heading>Actions</Heading>
                         <PromptButton
                           onClick={async () => {
-                            const docs = await db.withDescendants(workspace, models.request.type);
+                            const docs = await db.getWithDescendants(workspace, [models.request.type]);
                             const requests = docs.filter(isRequest);
                             for (const req of requests) {
                               await models.response.removeForRequest(req._id);

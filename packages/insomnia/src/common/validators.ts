@@ -1,7 +1,9 @@
-import type { CaCertificate } from "../models/ca-certificate";
-import type { ClientCertificate } from "../models/client-certificate";
-import type { Settings } from "../models/settings";
-import type { RenderedRequest } from "../templating/types";
+import type { CaCertificate } from '../models/ca-certificate';
+import type { ClientCertificate } from '../models/client-certificate';
+import type { Settings } from '../models/settings';
+import type { RenderedRequest } from '../templating/types';
+
+const PREF_SECURITY = 'Insomnia’s Preferences → Security';
 
 export function isFsAccessingAllowed(
   renderedRequest: RenderedRequest,
@@ -14,13 +16,15 @@ export function isFsAccessingAllowed(
     if (fromCli) {
       throw `Insomnia cannot access the file ‘${fileName}’. You can specify paths with one or more "--dataFolders <directory>" or "-f <directory>" to allow accessing.`;
     } else {
-      throw `Insomnia cannot access the file ‘${fileName}’. You can adjust this in Preferences → Security.`;
+      throw `Insomnia cannot access the file ‘${fileName}’. You must specify which directories Insomnia can access in ${PREF_SECURITY}.`;
     }
-  }
+  };
 
   // case1: check request body (set by scripts or request body editor)
   if (renderedRequest.body.fileName !== undefined && renderedRequest.body.fileName !== '') {
-    const allowed = settings?.dataFolders.some(folder => folder !== '' && renderedRequest.body.fileName?.startsWith(folder));
+    const allowed = settings?.dataFolders.some(
+      folder => folder !== '' && renderedRequest.body.fileName?.startsWith(folder),
+    );
     if (!allowed) {
       throwError(renderedRequest.body.fileName);
     }
@@ -29,7 +33,7 @@ export function isFsAccessingAllowed(
   // case2: check the body form data - "file" type params
   if (Array.isArray(renderedRequest.body.params)) {
     renderedRequest.body.params.forEach(param => {
-      if (param.type === "file" && !param.disabled) {
+      if (param.type === 'file' && !param.disabled) {
         const allowed = settings?.dataFolders.some(folder => folder !== '' && param.fileName?.startsWith(folder));
         if (!allowed) {
           throwError(param.fileName || param.value);
@@ -56,7 +60,9 @@ export function isFsAccessingAllowed(
 
       [cert.key, cert.cert, cert.pfx].forEach(targetPath => {
         if (targetPath) {
-          const allowed = settings?.dataFolders.some(folder => folder !== '' && targetPath !== "" && targetPath?.startsWith(folder));
+          const allowed = settings?.dataFolders.some(
+            folder => folder !== '' && targetPath !== '' && targetPath?.startsWith(folder),
+          );
           if (!allowed) {
             throwError(targetPath);
           }

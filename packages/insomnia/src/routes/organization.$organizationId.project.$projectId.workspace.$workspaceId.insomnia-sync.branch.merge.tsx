@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
 import { UserAbortResolveMergeConflictError, VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { getSyncItems, remoteCompareCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.merge';
 
@@ -27,6 +27,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     throw err;
   }
   try {
+    // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(delta as Operation);
     delete remoteCompareCache[workspaceId];
   } catch (err) {
@@ -39,10 +40,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   return null;
 }
 
-export function useInsomniaSyncBranchMergeActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useInsomniaSyncBranchMergeActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       branch,
       organizationId,
@@ -57,7 +56,7 @@ export function useInsomniaSyncBranchMergeActionFetcher(args?: Parameters<typeof
       const formData = new FormData();
       formData.set('branch', branch);
 
-      return fetcherSubmit(formData, {
+      return submit(formData, {
         method: 'POST',
         action: href(
           `/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/branch/merge`,
@@ -69,11 +68,5 @@ export function useInsomniaSyncBranchMergeActionFetcher(args?: Parameters<typeof
         ),
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

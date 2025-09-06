@@ -1,13 +1,13 @@
 import path from 'node:path';
 
-import { useCallback } from 'react';
-import { type ActionFunctionArgs, href, useFetcher } from 'react-router';
+import { type ActionFunctionArgs, href } from 'react-router';
 
 import type { ScanResult } from '~/common/import';
 import { fetchImportContentFromURI, getFilesFromPostmanExportedDataDump, scanResources } from '~/common/import';
 import { SegmentEvent } from '~/ui/analytics';
 import type { ImportEntry } from '~/utils/importers/entities';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 type SourceType = 'file' | 'uri' | 'clipboard';
 
@@ -153,20 +153,12 @@ export async function clientAction({ request }: ActionFunctionArgs) {
   }
 }
 
-export function useScanResourcesFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-  const submit = useCallback(
-    (data: FormData | HTMLFormElement) => {
-      return fetcherSubmit(data, {
-        action: href('/import/scan'),
-        method: 'POST',
-      });
-    },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+export const useScanResourcesFetcher = createFetcherSubmitHook(
+  submit => (data: FormData | HTMLFormElement) => {
+    return submit(data, {
+      action: href('/import/scan'),
+      method: 'POST',
+    });
+  },
+  clientAction,
+);

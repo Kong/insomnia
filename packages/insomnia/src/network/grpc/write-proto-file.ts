@@ -72,7 +72,7 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
       };
     }
     // Find all descendants of the root ancestor directory
-    const descendants = await db.withDescendants(rootAncestorProtoDirectory);
+    const descendants = await db.getWithDescendants(rootAncestorProtoDirectory);
     const treeRootDirs = await recursiveWriteProtoDirectory(
       rootAncestorProtoDirectory,
       descendants,

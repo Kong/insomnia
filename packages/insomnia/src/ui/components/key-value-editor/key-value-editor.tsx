@@ -16,7 +16,6 @@ import {
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { describeByteSize, generateId } from '../../../common/misc';
-import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
 import { FileInputButton } from '../base/file-input-button';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
@@ -75,7 +74,6 @@ export const KeyValueEditor: FC<Props> = ({
   readOnlyPairs,
 }) => {
   const [showDescription, setShowDescription] = React.useState(false);
-  const { enabled: nunjucksEnabled } = useNunjucksEnabled();
   let pairsListItems = useMemo(
     () =>
       pairs.length > 0 ? pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) : [createEmptyPair()],
@@ -273,7 +271,7 @@ export const KeyValueEditor: FC<Props> = ({
         <ListBox
           aria-label="Key-value pairs readonly"
           selectionMode="none"
-          dependencies={[showDescription, nunjucksEnabled]}
+          dependencies={[showDescription]}
           className="relative flex w-full flex-1 flex-col overflow-y-auto pt-1"
           items={initialReadOnlyItems}
         >
@@ -364,7 +362,7 @@ export const KeyValueEditor: FC<Props> = ({
           selectionMode="none"
           className="relative flex w-full flex-1 flex-col overflow-y-auto pt-1"
           dragAndDropHooks={dragAndDropHooks}
-          dependencies={[upsertPair, showDescription, nunjucksEnabled]}
+          dependencies={[upsertPair, showDescription]}
           items={pairsListItems}
         >
           {pair => {
@@ -407,7 +405,6 @@ export const KeyValueEditor: FC<Props> = ({
                       submitName: 'Done',
                       title: `Edit ${pair.name}`,
                       defaultValue: pair.value,
-                      enableRender: nunjucksEnabled,
                       mode: pair.multiline && typeof pair.multiline === 'string' ? pair.multiline : 'text/plain',
                       onChange: (value: string) => upsertPair(pairsListItems, { ...pair, value }),
                       onModeChange: (mode: string) => upsertPair(pairsListItems, { ...pair, multiline: mode }),

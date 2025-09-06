@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
+
+import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/git.repo';
 
@@ -12,10 +13,8 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   return window.main.git.loadGitRepository({ workspaceId, projectId });
 }
 
-export function useGitProjectRepoFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
-
-  const load = useCallback(
+export const useGitProjectRepoFetcher = createFetcherLoadHook(
+  load =>
     ({ workspaceId, projectId }: { workspaceId?: string; projectId: string }) => {
       const searchParams = new URLSearchParams();
       if (workspaceId) {
@@ -23,13 +22,7 @@ export function useGitProjectRepoFetcher(args?: Parameters<typeof useFetcher>[0]
       }
       searchParams.set('projectId', projectId);
 
-      return fetcherLoad(`${href('/git/repo')}?${searchParams.toString()}`);
+      return load(`${href('/git/repo')}?${searchParams.toString()}`);
     },
-    [fetcherLoad],
-  );
-
-  return {
-    ...fetcherRest,
-    load,
-  };
-}
+  clientLoader,
+);

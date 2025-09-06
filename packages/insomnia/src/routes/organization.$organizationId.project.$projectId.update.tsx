@@ -1,15 +1,16 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
 import * as models from '~/models';
 import type { OauthProviderName } from '~/models/git-credentials';
 import type { GitCredentials } from '~/models/git-repository';
+import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { SegmentEvent } from '~/ui/analytics';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.update';
 
@@ -222,7 +223,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       }
 
       if (projectData.connectRepositoryLater) {
-        await models.project.update(project, { name, gitRepositoryId: 'empty' });
+        await models.project.update(project, { name, gitRepositoryId: EMPTY_GIT_PROJECT_ID });
       } else {
         let credentials: GitCredentials | undefined = undefined;
         if (projectData.oauth2format) {
@@ -320,10 +321,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   }
 }
 
-export function useProjectUpdateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useProjectUpdateActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -333,7 +332,7 @@ export function useProjectUpdateActionFetcher(args?: Parameters<typeof useFetche
       projectId: string;
       projectData: UpdateProjectInputData;
     }) => {
-      return fetcherSubmit(JSON.stringify(projectData), {
+      return submit(JSON.stringify(projectData), {
         method: 'POST',
         action: href('/organization/:organizationId/project/:projectId/update', {
           organizationId,
@@ -342,11 +341,5 @@ export function useProjectUpdateActionFetcher(args?: Parameters<typeof useFetche
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);
