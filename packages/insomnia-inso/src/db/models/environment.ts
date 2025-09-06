@@ -9,7 +9,7 @@ import { ensureSingle, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 const loadBaseEnvironmentForWorkspace = (db: Database, workspaceId: string): Environment => {
   logger.trace('Load base environment for the workspace `%s` from data store', workspaceId);
   const items = db.Environment.filter(environment => environment.parentId === workspaceId);
-  logger.trace('Found %d.', items.length);
+  logger.trace('Found %d environment(s).', items.length);
   return ensureSingle(items, 'base environment');
 };
 
@@ -19,6 +19,7 @@ export const loadEnvironment = (
   identifier?: string,
 ): Environment | null | undefined => {
   if (!db.Environment.length) {
+    logger.trace('No environments found in given data store, not loading any environment');
     return null;
   }
 
@@ -37,7 +38,8 @@ export const promptEnvironment = async (
   ci: boolean,
   workspaceId: string,
 ): Promise<Environment | null | undefined> => {
-  if (ci || !db.Environment.length) {
+  if (!db.Environment.length) {
+    logger.warn('No environments found');
     return null;
   }
 
@@ -48,6 +50,21 @@ export const promptEnvironment = async (
   if (!subEnvironments.length) {
     logger.trace('No sub environments found, using base environment');
     return baseWorkspaceEnv;
+  }
+
+  // We know at this point that an environment was not specified as an argument, so if there is
+  // only one, and we're in CI mode, use it.
+  if (ci && subEnvironments.length === 1) {
+    logger.trace(`Only one environment found in CI mode, using it (${subEnvironments[0].name})`);
+    return subEnvironments[0];
+  }
+
+  if (ci) {
+    logger.error(
+      `Multiple environments found in CI mode (${subEnvironments.map(s => s.name).join(', ')}). ` +
+        'Select one using --env <identifier>.',
+    );
+    return null;
   }
 
   const prompt = new AutoComplete({

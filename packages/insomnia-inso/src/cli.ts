@@ -7,7 +7,7 @@ import * as commander from 'commander';
 import type { logType } from 'consola';
 import consola, { BasicReporter, FancyReporter, LogLevel } from 'consola';
 import { cosmiconfig } from 'cosmiconfig';
-import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
+import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
 import type { Environment, UserUploadEnvironment } from 'insomnia/src/models/environment';
 import { init } from 'insomnia/src/models/environment';
@@ -41,6 +41,11 @@ export interface GlobalOptions {
   printOptions: boolean;
   verbose: boolean;
   workingDir: string;
+}
+
+if (!isDevelopment()) {
+  // in production, silence the deprecation warnings
+  process.removeAllListeners('warning');
 }
 
 export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: string) => {
@@ -643,7 +648,9 @@ export const go = (args?: string[]) => {
         const isRunningFolder = options.item.length === 1 && options.item[0].startsWith('fld_');
         if (options.item.length && !isRunningFolder) {
           const requestOrder = new Map<string, number>();
-          options.item.forEach((reqId: string, order: number) => requestOrder.set(reqId, order + 1));
+          options.item.forEach((reqId: string, order: number) => {
+            requestOrder.set(reqId, order + 1);
+          });
           requestsToRun = requestsToRun.sort(
             (a, b) =>
               (requestOrder.get(a._id) || requestsToRun.length) - (requestOrder.get(b._id) || requestsToRun.length),
