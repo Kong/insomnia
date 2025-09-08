@@ -9,7 +9,7 @@ export function useRealtimeConnectionEvents({
   protocol,
 }: {
   responseId: string;
-  protocol: 'curl' | 'webSocket' | 'socketIO';
+  protocol: 'curl' | 'webSocket' | 'socketIO' | 'mcp';
 }) {
   const [events, setEvents] = useState<CurlEvent[] | WebSocketEvent[] | SocketIOEvent[]>([]);
   const updateEvents = useCallback(async () => {

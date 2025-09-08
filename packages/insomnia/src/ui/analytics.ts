@@ -55,6 +55,7 @@ export enum SegmentEvent {
   recommendCommitsCancelled = 'Recommend Commits Cancelled',
   recommendCommitsClicked = 'Recommend Commits Clicked',
   mcpClientWorkspaceCreate = 'MCP Client Workspace Created',
+  mcpClientRequestCreate = 'MCP Client Request Created',
 }
 
 type PushPull = 'push' | 'pull';

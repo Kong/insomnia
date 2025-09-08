@@ -182,6 +182,37 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       );
     }
 
+    if (workspaceData.scope === 'mcp') {
+      const settings = await models.settings.getOrCreate();
+      const defaultHeaders = settings.disableAppVersionUserAgent
+        ? []
+        : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
+      // Create mcp request when MCP workspace is created
+      const newMcpRequest = await models.mcpRequest.create({
+        parentId: workspace._id,
+        transportType: 'streamable-http',
+        url: '',
+        name: 'My first MCP Client',
+        headers: defaultHeaders,
+        description: '',
+      });
+      const requestId = newMcpRequest._id;
+
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.mcpClientRequestCreate,
+        properties: { transportType: 'streamable-http' },
+      });
+
+      return redirect(
+        `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/mcp/request/:requestId', {
+          organizationId,
+          projectId,
+          workspaceId: workspace._id,
+          requestId,
+        })}/${scopeToActivity(workspace.scope)}`,
+      );
+    }
+
     return redirect(
       `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
         organizationId,

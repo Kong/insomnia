@@ -58,7 +58,7 @@ export const strings: Record<StringId, StringInfo> = {
     plural: 'Environments',
   },
   mcp: {
-    singular: 'Mcp Client',
-    plural: 'Mcp Clients',
+    singular: 'MCP Client',
+    plural: 'MCP Clients',
   },
 };
