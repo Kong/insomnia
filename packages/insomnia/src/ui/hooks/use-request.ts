@@ -10,6 +10,7 @@ import { useSettingsUpdateActionFetcher } from '~/routes/settings.update';
 
 import type { GrpcRequest } from '../../models/grpc-request';
 import type { GrpcRequestMeta } from '../../models/grpc-request-meta';
+import type { McpRequest } from '../../models/mcp-request';
 import type { Request } from '../../models/request';
 import type { RequestGroup } from '../../models/request-group';
 import type { RequestGroupMeta } from '../../models/request-group-meta';
@@ -31,7 +32,12 @@ export const useRequestPatcher = () => {
   const fetcher = useRequestUpdateActionFetcher();
   return (
     requestId: string,
-    patch: Partial<GrpcRequest> | Partial<Request> | Partial<WebSocketRequest> | Partial<SocketIORequest>,
+    patch:
+      | Partial<GrpcRequest>
+      | Partial<Request>
+      | Partial<WebSocketRequest>
+      | Partial<SocketIORequest>
+      | Partial<McpRequest>,
   ) => {
     updateTabById?.(requestId, { temporary: false });
     fetcher.submit({
