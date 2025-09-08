@@ -16,9 +16,7 @@
     "lib": [
       "ES2023",
     ],
-    "types": [
-      "node"
-    ],
+    "types": [],
     "strict": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
