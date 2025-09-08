@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import type { RequestGroup } from '~/models/request-group';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 
@@ -37,14 +37,9 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return null;
 }
 
-export function useRequestGroupDuplicateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const {
-    submit: fetcherSubmit,
-    ...fetcherRest
-  } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback((
-    {
+export const useRequestGroupDuplicateActionFetcher = createFetcherSubmitHook(
+  submit =>
+    ({
       organizationId,
       projectId,
       workspaceId,
@@ -54,23 +49,21 @@ export function useRequestGroupDuplicateActionFetcher(args?: Parameters<typeof u
       projectId: string;
       workspaceId: string;
       requestGroupData: Partial<RequestGroup>;
-    }
-  ) => {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request-group/duplicate', {
-      organizationId,
-      projectId,
-      workspaceId,
-    });
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request-group/duplicate',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+        },
+      );
 
-    return fetcherSubmit(JSON.stringify(requestGroupData), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }, [fetcherSubmit]);
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+      return submit(JSON.stringify(requestGroupData), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+  clientAction,
+);

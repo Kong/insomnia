@@ -81,6 +81,13 @@ export interface StageEntryModify {
 
 export type StageEntry = StageEntryDelete | StageEntryAdd | StageEntryModify;
 
+export const RESOLUTION_SOURCE = {
+  CHOOSE: 'choose',
+  MANUAL: 'manual',
+} as const;
+
+export type ResolutionSource = (typeof RESOLUTION_SOURCE)[keyof typeof RESOLUTION_SOURCE];
+
 export interface MergeConflict {
   name: string;
   key: DocumentKey;
@@ -89,7 +96,16 @@ export interface MergeConflict {
   mineBlobContent?: BaseModel | null;
   theirsBlob: BlobId | null;
   theirsBlobContent?: BaseModel | null;
+  suggestedMergeResult?: string;
   choose: BlobId | null;
+  mergeResult?: string;
+
+  /**
+   * Indicates the source of the final resolved file content.
+   * - "choose": The user selected one side (mineBlob or theirsBlob) as the final result.
+   * - "manual": The user manually edited and provided the final content in mergeResult.
+   */
+  resolutionSource?: ResolutionSource;
 }
 
 export type Stage = Record<DocumentKey, StageEntry>;

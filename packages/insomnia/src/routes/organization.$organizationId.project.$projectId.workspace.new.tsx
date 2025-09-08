@@ -1,19 +1,19 @@
 import path from 'node:path';
 
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import { getAppVersion, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
 import * as models from '~/models';
 import type { MockServer } from '~/models/mock-server';
-import { isGitProject } from '~/models/project';
+import { isGitProject, isLocalProject } from '~/models/project';
 import { isCollection, isEnvironment, scopeToActivity, type WorkspaceScope } from '~/models/workspace';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 interface NewWorkspaceData {
   name: string;
@@ -123,7 +123,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     await database.flushChanges(flushId);
 
     const { id } = await models.userSession.getOrCreate();
-    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project)) {
+    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project)) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs,
@@ -178,22 +178,22 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       })}/${scopeToActivity(workspace.scope)}`,
     );
   } catch (err) {
+    console.error('Error creating workspace:', err);
+
     return {
-      error: `Failed to create workspace: ${err instanceof Error ? err.message : String(err)}`,
+      error: `Failed to create workspace: ${err instanceof Error ? err.message : JSON.stringify(err)}`,
     };
   }
 }
 
-export function useWorkspaceNewActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useWorkspaceNewActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
       ...workspaceData
     }: NewWorkspaceData & { organizationId: string; projectId: string }) => {
-      return fetcherSubmit(JSON.stringify(workspaceData), {
+      return submit(JSON.stringify(workspaceData), {
         method: 'POST',
         action: href('/organization/:organizationId/project/:projectId/workspace/new', {
           organizationId,
@@ -202,11 +202,5 @@ export function useWorkspaceNewActionFetcher(args?: Parameters<typeof useFetcher
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

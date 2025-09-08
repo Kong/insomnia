@@ -1,12 +1,11 @@
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
 import * as models from '~/models';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
-import { getInitialRouteForOrganization } from '~/utils/router';
+import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.delete';
 
@@ -70,17 +69,15 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   }
 }
 
-export function useProjectDeleteActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useProjectDeleteActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({ organizationId, projectId }: { organizationId: string; projectId: string }) => {
       const url = href('/organization/:organizationId/project/:projectId/delete', {
         organizationId,
         projectId,
       });
 
-      return fetcherSubmit(
+      return submit(
         {},
         {
           action: url,
@@ -88,11 +85,5 @@ export function useProjectDeleteActionFetcher(args?: Parameters<typeof useFetche
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

@@ -74,7 +74,7 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
   const [error, setError] = useState('');
   const [gitlabUri, setGitlabUri] = useState(uri || '');
   const signOutFetcher = useGitLabSignOutFetcher();
-
+  const isReadOnly = Boolean(uri);
   return (
     <Form
       id="gitlab"
@@ -111,14 +111,19 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
           Disconnect
         </PromptButton>
       </div>
-      <TextField autoFocus name="uri" className="flex w-full flex-col gap-1 px-0.5" isRequired>
+      <TextField
+        autoFocus
+        name="uri"
+        type="url"
+        pattern="https?://.*\.git"
+        defaultValue={uri}
+        onChange={value => setGitlabUri(value)}
+        isReadOnly={isReadOnly}
+        className="flex w-full flex-col gap-1 px-0.5"
+        isRequired
+      >
         <Label className="text-start text-sm font-semibold">Git URI (https, including .git suffix)</Label>
         <Input
-          type="url"
-          pattern="https?://.*\.git"
-          defaultValue={uri}
-          onChange={e => setGitlabUri(e.currentTarget.value)}
-          disabled={Boolean(uri)}
           placeholder="https://gitlab.com/org/repo.git"
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />

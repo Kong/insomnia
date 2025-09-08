@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { type ActionFunctionArgs, href, useFetcher } from 'react-router';
+import { type ActionFunctionArgs, href } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';
 import { insomniaFetch } from '~/ui/insomniaFetch';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 export async function clientAction(_args: ActionFunctionArgs) {
   const userSession = await sessionModel.getOrCreate();
@@ -21,15 +21,9 @@ export async function clientAction(_args: ActionFunctionArgs) {
   return vaultSalt;
 }
 
-export function useUpdateVaultSaltFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(() => {
-    return fetcherSubmit({}, { action: href('/auth/update-vault-salt'), method: 'POST' });
-  }, [fetcherSubmit]);
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+export const useUpdateVaultSaltFetcher = createFetcherSubmitHook(
+  submit => () => {
+    return submit({}, { action: href('/auth/update-vault-salt'), method: 'POST' });
+  },
+  clientAction,
+);

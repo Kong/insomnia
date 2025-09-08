@@ -1,10 +1,10 @@
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { getSyncItems, remoteCompareCache } from '~/ui/sync-utils';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.rollback';
 
@@ -34,10 +34,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   );
 }
 
-export function useInsomniaSyncRollbackActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useInsomniaSyncRollbackActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -56,7 +54,7 @@ export function useInsomniaSyncRollbackActionFetcher(args?: Parameters<typeof us
         },
       );
 
-      return fetcherSubmit(
+      return submit(
         {},
         {
           action: url,
@@ -64,11 +62,5 @@ export function useInsomniaSyncRollbackActionFetcher(args?: Parameters<typeof us
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

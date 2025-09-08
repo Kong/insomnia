@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { userSession } from '~/models';
 import { insomniaFetch } from '~/ui/insomniaFetch';
+import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.collaborators-search';
 
@@ -36,20 +36,12 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   }
 }
 
-export function useCollaboratorsSearchLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
-
-  const load = useCallback(
+export const useCollaboratorsSearchLoaderFetcher = createFetcherLoadHook(
+  load =>
     ({ organizationId, query }: { organizationId: string; query?: string }) => {
-      return fetcherLoad(
+      return load(
         `${href(`/organization/:organizationId/collaborators-search`, { organizationId })}?${encodeURIComponent(query || '')}`,
       );
     },
-    [fetcherLoad],
-  );
-
-  return {
-    ...fetcherRest,
-    load,
-  };
-}
+  clientLoader,
+);

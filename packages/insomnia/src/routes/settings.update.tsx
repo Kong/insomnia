@@ -1,9 +1,7 @@
-import { useCallback } from 'react';
-import { useFetcher } from 'react-router';
-
 import * as models from '~/models';
 import type { Settings } from '~/models/settings';
 import { SegmentEvent } from '~/ui/analytics';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/settings.update';
 
@@ -16,22 +14,14 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return null;
 }
 
-export function useSettingsUpdateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useSettingsUpdateActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({ patch }: { patch: Partial<Settings> }) => {
-      return fetcherSubmit(JSON.stringify(patch), {
+      return submit(JSON.stringify(patch), {
         method: 'POST',
         action: '/settings/update',
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

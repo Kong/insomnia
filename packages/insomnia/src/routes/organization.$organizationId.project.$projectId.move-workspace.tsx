@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.move-workspace';
 
@@ -25,28 +25,19 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return null;
 }
 
-export function useProjectMoveWorkspaceActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
+export const useProjectMoveWorkspaceActionFetcher = createFetcherSubmitHook(
+  submit => (organizationId: string, projectId: string, workspaceId: string) => {
+    const formData = new FormData();
+    formData.set('projectId', projectId);
+    formData.set('workspaceId', workspaceId);
 
-  const submit = useCallback(
-    (organizationId: string, projectId: string, workspaceId: string) => {
-      const formData = new FormData();
-      formData.set('projectId', projectId);
-      formData.set('workspaceId', workspaceId);
-
-      return fetcherSubmit(formData, {
-        method: 'POST',
-        action: href(`/organization/:organizationId/project/:projectId/move-workspace`, {
-          organizationId,
-          projectId,
-        }),
-      });
-    },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+    return submit(formData, {
+      method: 'POST',
+      action: href(`/organization/:organizationId/project/:projectId/move-workspace`, {
+        organizationId,
+        projectId,
+      }),
+    });
+  },
+  clientAction,
+);

@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { isSocketIORequestId } from '~/models/socket-io-request';
 import { isWebSocketRequestId } from '~/models/websocket-request';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete';
 
@@ -53,10 +53,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   return null;
 }
 
-export function useRequestResponseDeleteActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useRequestResponseDeleteActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -80,17 +78,11 @@ export function useRequestResponseDeleteActionFetcher(args?: Parameters<typeof u
         },
       );
 
-      return fetcherSubmit(JSON.stringify({ responseId }), {
+      return submit(JSON.stringify({ responseId }), {
         action: url,
         method: 'POST',
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

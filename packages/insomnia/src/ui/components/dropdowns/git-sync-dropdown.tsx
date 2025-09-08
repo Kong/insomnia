@@ -210,24 +210,20 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                     showModal(SyncMergeModal, {
                       conflicts: result.conflicts,
                       labels: result.labels,
-                      handleDone: (conflicts?: MergeConflict[]) => {
-                        if (Array.isArray(conflicts) && conflicts.length > 0) {
-                          setIsPulling(true);
-                          window.main.git
-                            .continueMerge({
-                              projectId,
-                              workspaceId,
-                              handledMergeConflicts: conflicts,
-                              commitMessage: result.commitMessage,
-                              commitParent: result.commitParent,
-                            })
-                            .finally(() => {
-                              setIsPulling(false);
-                              revalidate();
-                            });
-                        } else {
-                          // user aborted merge, do nothing
-                        }
+                      onResolveAll: (conflicts: MergeConflict[]) => {
+                        setIsPulling(true);
+                        window.main.git
+                          .continueMerge({
+                            projectId,
+                            workspaceId,
+                            handledMergeConflicts: conflicts,
+                            commitMessage: result.commitMessage,
+                            commitParent: result.commitParent,
+                          })
+                          .finally(() => {
+                            setIsPulling(false);
+                            revalidate();
+                          });
                       },
                     });
                   }

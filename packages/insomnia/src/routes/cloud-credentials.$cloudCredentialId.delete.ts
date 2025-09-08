@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/cloud-credentials.$cloudCredentialId.delete';
 
@@ -15,12 +15,10 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   return null;
 }
 
-export function useDeleteCloudCredentialActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcher } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
-    function submit({ cloudCredentialId }: { cloudCredentialId: string }) {
-      return fetcherSubmit(
+export const useDeleteCloudCredentialActionFetcher = createFetcherSubmitHook(
+  submit =>
+    ({ cloudCredentialId }: { cloudCredentialId: string }) => {
+      return submit(
         {},
         {
           method: 'POST',
@@ -31,11 +29,5 @@ export function useDeleteCloudCredentialActionFetcher(args?: Parameters<typeof u
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcher,
-    submit,
-  };
-}
+  clientAction,
+);

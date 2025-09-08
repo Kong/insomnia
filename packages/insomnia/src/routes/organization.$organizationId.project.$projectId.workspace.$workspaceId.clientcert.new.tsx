@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import type { ClientCertificate } from '~/models/client-certificate';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.clientcert.new';
 
@@ -15,10 +15,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   };
 }
 
-export function useClientCertNewActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useClientCertNewActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -30,7 +28,7 @@ export function useClientCertNewActionFetcher(args?: Parameters<typeof useFetche
       workspaceId: string;
       patch: Partial<ClientCertificate>;
     }) => {
-      return fetcherSubmit(JSON.stringify(patch), {
+      return submit(JSON.stringify(patch), {
         method: 'POST',
         action: href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/clientcert/new`, {
           organizationId,
@@ -40,11 +38,5 @@ export function useClientCertNewActionFetcher(args?: Parameters<typeof useFetche
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

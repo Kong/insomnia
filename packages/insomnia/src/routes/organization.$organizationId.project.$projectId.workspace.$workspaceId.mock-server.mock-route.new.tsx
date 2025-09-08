@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import * as models from '~/models';
 import type { MockRoute } from '~/models/mock-route';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.new';
 
@@ -60,10 +60,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   );
 }
 
-export function useMockRouteNewActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useMockRouteNewActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -75,7 +73,7 @@ export function useMockRouteNewActionFetcher(args?: Parameters<typeof useFetcher
       workspaceId: string;
       patch: NewMockRoutePatch;
     }) => {
-      return fetcherSubmit(JSON.stringify(patch), {
+      return submit(JSON.stringify(patch), {
         method: 'POST',
         action: href(
           `/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/new`,
@@ -88,11 +86,5 @@ export function useMockRouteNewActionFetcher(args?: Parameters<typeof useFetcher
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

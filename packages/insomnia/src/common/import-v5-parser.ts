@@ -248,6 +248,12 @@ const NoneAuthenticationSchema = z.object({
   disabled: z.boolean().optional(),
 });
 
+const SingleTokenAuthenticationSchema = z.object({
+  type: z.literal('singleToken'),
+  disabled: z.boolean().optional(),
+  token: z.string().optional(),
+});
+
 const AuthenticationSchema = z.union([
   z.discriminatedUnion('type', [
     BasicAuthenticationSchema,
@@ -262,6 +268,7 @@ const AuthenticationSchema = z.union([
     NetrcAuthenticationSchema,
     ASAPAuthenticationSchema,
     NoneAuthenticationSchema,
+    SingleTokenAuthenticationSchema,
   ]),
   z.object({}),
 ]);

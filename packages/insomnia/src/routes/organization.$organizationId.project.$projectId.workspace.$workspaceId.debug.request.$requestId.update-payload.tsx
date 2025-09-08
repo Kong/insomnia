@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import type { SocketIOPayload } from '~/models/socket-io-payload';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-payload';
 
@@ -16,10 +16,8 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   return null;
 }
 
-export function useRequestUpdatePayloadActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useRequestUpdatePayloadActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -43,17 +41,11 @@ export function useRequestUpdatePayloadActionFetcher(args?: Parameters<typeof us
         },
       );
 
-      return fetcherSubmit(JSON.stringify(payload), {
+      return submit(JSON.stringify(payload), {
         action: url,
         method: 'POST',
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
 
@@ -21,10 +21,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return newEnvironment;
 }
 
-export function useEnvironmentDuplicateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useEnvironmentDuplicateActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -48,16 +46,10 @@ export function useEnvironmentDuplicateActionFetcher(args?: Parameters<typeof us
       const formData = new FormData();
       formData.set('environmentId', environmentId);
 
-      return fetcherSubmit(formData, {
+      return submit(formData, {
         action: url,
         method: 'POST',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);
