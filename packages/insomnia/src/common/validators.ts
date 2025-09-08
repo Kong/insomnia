@@ -1,5 +1,6 @@
 import type { CaCertificate } from '../models/ca-certificate';
 import type { ClientCertificate } from '../models/client-certificate';
+import type { Request } from '../models/request';
 import type { Settings } from '../models/settings';
 import type { RenderedRequest } from '../templating/types';
 
@@ -72,4 +73,52 @@ export function isFsAccessingAllowed(
   }
 
   // case5: check "file" template tags, which is checked in tag implementation
+}
+
+const FILE_VAR_REGEX = /\{\%\s*file\s+['"](.+?)['"]\s*\%\}/;
+export function getAccessingFiles(request: Request | RenderedRequest): string[] {
+  const result = new Set<string>();
+  function checkValues(list: { disabled?: boolean; value?: string }[] | undefined) {
+    list?.forEach(param => {
+      if (!param.disabled && param.value) {
+        const paramMatch = param.value.match(FILE_VAR_REGEX);
+        if (paramMatch && paramMatch[1]) {
+          result.add(paramMatch[1]);
+        }
+      }
+    });
+  }
+
+  // body
+  const { url, body, parameters, headers } = request;
+  if (body.fileName) {
+    result.add(body.fileName);
+  }
+  body.params?.forEach(param => {
+    if (param.type === 'file' && !param.disabled && param.fileName) {
+      result.add(param.fileName);
+    }
+  });
+
+  // url
+  const urlMatch = url.match(FILE_VAR_REGEX);
+  if (urlMatch && urlMatch[1]) {
+    result.add(urlMatch[1]);
+  }
+
+  // parameters
+  checkValues(parameters);
+
+  // headers
+  checkValues(headers);
+
+  return [...result];
+}
+
+export function getNoAuthFiles(request: Request | RenderedRequest, settings: Settings) {
+  const toCheckFiles = getAccessingFiles(request);
+  return toCheckFiles.filter(fileName => {
+    const allowed = settings?.dataFolders.some(folder => folder !== '' && fileName.startsWith(folder));
+    return !allowed;
+  });
 }

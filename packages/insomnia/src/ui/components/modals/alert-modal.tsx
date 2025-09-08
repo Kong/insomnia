@@ -11,6 +11,7 @@ export interface AlertModalOptions {
   message?: ReactNode;
   addCancel?: boolean;
   okLabel?: React.ReactNode;
+  operationSlot?: React.ReactNode;
   onConfirm?: () => void | Promise<void>;
   bodyClassName?: string;
 }
@@ -26,6 +27,7 @@ export const AlertModal = forwardRef<AlertModalHandle, ModalProps>((_, ref) => {
     addCancel: false,
     okLabel: '',
     bodyClassName: '',
+    operationSlot: undefined,
   });
 
   useImperativeHandle(
@@ -34,7 +36,7 @@ export const AlertModal = forwardRef<AlertModalHandle, ModalProps>((_, ref) => {
       hide: () => {
         modalRef.current?.hide();
       },
-      show: ({ title, message, addCancel, onConfirm, okLabel, bodyClassName = '' }) => {
+      show: ({ title, message, addCancel, onConfirm, okLabel, bodyClassName = '', operationSlot }) => {
         setState({
           title,
           message,
@@ -42,6 +44,7 @@ export const AlertModal = forwardRef<AlertModalHandle, ModalProps>((_, ref) => {
           okLabel,
           onConfirm,
           bodyClassName,
+          operationSlot,
         });
         modalRef.current?.show();
       },
@@ -49,13 +52,14 @@ export const AlertModal = forwardRef<AlertModalHandle, ModalProps>((_, ref) => {
     [],
   );
 
-  const { message, title, addCancel, okLabel, bodyClassName } = state;
+  const { message, title, addCancel, okLabel, bodyClassName, operationSlot } = state;
   return (
     <Modal ref={modalRef}>
       <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
       <ModalBody className={classnames(['wide', 'pad', bodyClassName])}>{message}</ModalBody>
       <ModalFooter>
         <div>
+          {operationSlot && operationSlot}
           {addCancel ? (
             <button className="btn" onClick={() => modalRef.current?.hide()}>
               Cancel

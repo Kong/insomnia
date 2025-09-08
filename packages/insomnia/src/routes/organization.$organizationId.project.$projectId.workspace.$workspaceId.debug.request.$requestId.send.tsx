@@ -7,7 +7,7 @@ import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getContentDispositionHeader } from '~/common/misc';
-import { isFsAccessingAllowed } from '~/common/validators';
+import { getNoAuthFiles, isFsAccessingAllowed } from '~/common/validators';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
@@ -31,6 +31,8 @@ import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
+
+const PREF_SECURITY = 'Insomnia’s Preferences → Security';
 
 export interface SendActionParams {
   requestId: string;
@@ -140,6 +142,13 @@ export const sendActionImplementation = async (options: {
     iterationCount,
     runtime,
   );
+
+  const noAuthFiles = getNoAuthFiles(mutatedContext.request, mutatedContext.settings);
+  if (noAuthFiles.length > 0) {
+    console.log('noAuthFiles', noAuthFiles);
+    throw `Insomnia cannot access the following files. You must specify which directories Insomnia can access in ${PREF_SECURITY}.<br/>${noAuthFiles.join('<br/>')}`;
+  }
+
   if ('error' in mutatedContext) {
     window.main.completeExecutionStep({ requestId });
     throw {
