@@ -5,7 +5,7 @@ export function useReadyState({
   protocol,
 }: {
   requestId: string;
-  protocol: 'curl' | 'webSocket' | 'socketIO';
+  protocol: 'curl' | 'webSocket' | 'socketIO' | 'mcp';
 }): boolean {
   const [readyState, setReadyState] = useState<boolean>(false);
 
