@@ -34,6 +34,7 @@ import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';
 import type { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
+import type { McpBridgeAPI } from '../network/mcp';
 import {
   addExecutionStep,
   completeExecutionStep,
@@ -80,6 +81,7 @@ export interface RendererToMainBridgeAPI {
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
   webSocket: WebSocketBridgeAPI;
   socketIO: SocketIOBridgeAPI;
+  mcp: McpBridgeAPI;
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
   git: GitServiceAPI;

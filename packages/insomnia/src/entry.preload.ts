@@ -4,6 +4,7 @@ import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { CurlBridgeAPI } from './main/network/curl';
+import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 import { invariant } from './utils/invariant';
@@ -47,6 +48,29 @@ const socketIO: SocketIOBridgeAPI = {
     on: options => ipcRenderer.send('socketIO.event.on', options),
     off: options => ipcRenderer.send('socketIO.event.off', options),
   },
+};
+
+const mcp: McpBridgeAPI = {
+  connect: options => ipcRenderer.invoke('mcp.connect', options),
+  close: options => ipcRenderer.send('mcp.close', options),
+  closeAll: () => ipcRenderer.send('mcp.closeAll'),
+  primitive: {
+    listTools: options => ipcRenderer.invoke('mcp.primitive.listTools', options),
+    callTool: options => ipcRenderer.invoke('mcp.primitive.callTool', options),
+    listResources: options => ipcRenderer.invoke('mcp.primitive.listResources', options),
+    listResourceTemplates: options => ipcRenderer.invoke('mcp.primitive.listResourceTemplates', options),
+    readResource: options => ipcRenderer.invoke('mcp.primitive.readResource', options),
+    subscribeResource: options => ipcRenderer.invoke('mcp.primitive.subscribeResource', options),
+    listPrompts: options => ipcRenderer.invoke('mcp.primitive.listPrompts', options),
+    getPrompt: options => ipcRenderer.invoke('mcp.primitive.getPrompt', options),
+  },
+  readyState: {
+    getCurrent: options => ipcRenderer.invoke('mcp.readyState', options),
+  },
+  event: {
+    findMany: options => ipcRenderer.invoke('mcp.event.findMany', options),
+  },
+  getServerData: options => ipcRenderer.invoke('mcp.getServerData', options),
 };
 
 const grpc: gRPCBridgeAPI = {
@@ -144,6 +168,7 @@ const main: Window['main'] = {
   },
   webSocket,
   socketIO,
+  mcp,
   git,
   grpc,
   curl,

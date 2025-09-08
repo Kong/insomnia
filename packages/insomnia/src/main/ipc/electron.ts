@@ -94,7 +94,18 @@ export type HandleChannels =
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
-  | 'writeFile';
+  | 'writeFile'
+  | 'mcp.connect'
+  | 'mcp.primitive.listTools'
+  | 'mcp.primitive.callTool'
+  | 'mcp.primitive.listPrompts'
+  | 'mcp.primitive.getPrompt'
+  | 'mcp.primitive.listResources'
+  | 'mcp.primitive.listResourceTemplates'
+  | 'mcp.primitive.readResource'
+  | 'mcp.primitive.subscribeResource'
+  | 'mcp.readyState'
+  | 'mcp.getServerData';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
@@ -137,6 +148,9 @@ export type MainOnChannels =
   | 'updateLatestStepName'
   | 'webSocket.close'
   | 'webSocket.closeAll'
+  | 'mcp.close'
+  | 'mcp.closeAll'
+  | 'mcp.sendMCPRequest'
   | 'writeText';
 
 export type RendererOnChannels =

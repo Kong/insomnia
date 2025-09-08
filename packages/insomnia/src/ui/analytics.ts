@@ -48,6 +48,7 @@ export enum SegmentEvent {
   exportStarted = 'Export Started',
   exportRequestsChosen = 'Export Requests Chosen',
   mcpClientWorkspaceCreate = 'MCP Client Workspace Created',
+  mcpClientRequestCreate = 'MCP Client Request Created',
 }
 
 type PushPull = 'push' | 'pull';
