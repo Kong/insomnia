@@ -215,7 +215,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       })}/${scopeToActivity(workspace.scope)}`,
     );
   } catch (err) {
-    console.error(err);
     return {
       error: `Failed to create workspace: ${err instanceof Error ? err.message : String(err)}`,
     };
