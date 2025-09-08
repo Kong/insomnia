@@ -281,6 +281,14 @@ export const database = {
         ...defaultConfig,
         filename: fsPath.join(dbPath, 'insomnia.MockServer.db'),
       }),
+      McpRequest: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.McpRequest.db'),
+      }),
+      McpResponse: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.McpResponse.db'),
+      }),
       OAuth2Token: new NeDB({
         ...defaultConfig,
         filename: fsPath.join(dbPath, 'insomnia.OAuth2Token.db'),

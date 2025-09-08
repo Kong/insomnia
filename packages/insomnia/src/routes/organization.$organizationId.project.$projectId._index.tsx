@@ -85,44 +85,44 @@ import { insomniaFetch } from '~/ui/insomniaFetch';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 
+type ProjectScopeKeys = WorkspaceScope | 'unsynced';
 export const scopeToLabelMap: Record<
-  WorkspaceScope | 'unsynced',
-  'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'Mcp Client'
+  ProjectScopeKeys,
+  'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client'
 > = {
   'design': 'Document',
   'collection': 'Collection',
   'mock-server': 'Mock Server',
   'unsynced': 'Unsynced',
   'environment': 'Environment',
-  'mcp': 'Mcp Client',
+  'mcp': 'MCP Client',
 };
 
-export const scopeToIconMap: Record<string, IconName> = {
+export const scopeToIconMap: Record<ProjectScopeKeys, IconName> = {
   'design': 'file',
   'collection': 'bars',
   'mock-server': 'server',
   'unsynced': 'cloud-download',
   'environment': 'code',
-  // MCP TODO: replace the icon for mcp
   'mcp': 'file',
 };
 
-export const scopeToBgColorMap: Record<string, string> = {
+export const scopeToBgColorMap: Record<ProjectScopeKeys, string> = {
   'design': 'bg-[--color-info]',
   'collection': 'bg-[--color-surprise]',
   'mock-server': 'bg-[--color-warning]',
   'unsynced': 'bg-[--hl-md]',
   'environment': 'bg-[--color-font]',
-  'mcp': 'bg-[--color-danger]',
+  'mcp': 'bg-[--color-font]',
 };
 
-export const scopeToTextColorMap: Record<string, string> = {
+export const scopeToTextColorMap: Record<ProjectScopeKeys, string> = {
   'design': 'text-[--color-font-info]',
   'collection': 'text-[--color-font-surprise]',
   'mock-server': 'text-[--color-font-warning]',
   'unsynced': 'text-[--color-font]',
   'environment': 'text-[--color-bg]',
-  'mcp': 'text-[--color-font-danger]',
+  'mcp': 'bg-[--color-font]',
 };
 
 export interface InsomniaFile {
@@ -130,7 +130,7 @@ export interface InsomniaFile {
   name: string;
   remoteId?: string;
   scope: WorkspaceScope | 'unsynced';
-  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'Mcp Client';
+  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client';
   created: number;
   lastModifiedTimestamp: number;
   branch?: string;
@@ -694,7 +694,7 @@ const Component = () => {
     },
     {
       id: 'new-mcp-client',
-      name: 'Mcp Client',
+      name: 'MCP Client',
       icon: 'file',
       action: createNewMcpClient,
     },
@@ -749,8 +749,8 @@ const Component = () => {
     },
     {
       id: 'mcp',
-      label: `Mcp Clients (${mcpClientsCount})`,
-      icon: 'bars',
+      label: `MCP Clients (${mcpClientsCount})`,
+      icon: 'file',
       action: {
         icon: 'plus',
         label: 'New mcp client',

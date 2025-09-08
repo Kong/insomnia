@@ -6,6 +6,7 @@ import * as models from '~/models';
 import { type GrpcRequest, isGrpcRequestId } from '~/models/grpc-request';
 import type { GrpcRequestMeta } from '~/models/grpc-request-meta';
 import * as requestOperations from '~/models/helpers/request-operations';
+import { isMcpRequest, type McpRequest } from '~/models/mcp-request';
 import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import { isGraphqlSubscriptionRequest } from '~/models/request';
@@ -54,13 +55,16 @@ export interface RequestLoaderData {
   mockServerAndRoutes: (MockServer & { routes: MockRoute[] })[];
 }
 
-const getResponseModelName = (request: Request | WebSocketRequest | SocketIORequest | GrpcRequest) => {
+const getResponseModelName = (request: Request | WebSocketRequest | SocketIORequest | GrpcRequest | McpRequest) => {
   const isGraphqlWsRequest = isGraphqlSubscriptionRequest(request);
   if (isWebSocketRequest(request) || isGraphqlWsRequest) {
     return 'webSocketResponse';
   }
   if (isSocketIORequest(request)) {
     return 'socketIOResponse';
+  }
+  if (isMcpRequest(request)) {
+    return 'mcpResponse';
   }
   return 'response';
 };
