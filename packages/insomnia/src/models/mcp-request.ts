@@ -1,0 +1,76 @@
+import { database as db } from '../common/database';
+import type { BaseModel } from './index';
+import type { RequestAuthentication, RequestHeader } from './request';
+
+export const name = 'MCP Request';
+export const type = 'McpRequest';
+export const prefix = 'mcp-req';
+export const canDuplicate = true;
+export const canSync = false;
+
+export type TransportType = 'stdio' | 'streamable-http';
+
+export interface BaseMcpRequest {
+  name: string;
+  url: string;
+  transportType: TransportType;
+  description: string;
+  headers: RequestHeader[];
+  authentication: RequestAuthentication | {};
+}
+export type McpServerPrimitiveTypes = 'tools' | 'resources' | 'prompts';
+
+export const MCP_TRANSPORT_TYPES: TransportType[] = [
+  'streamable-http',
+  // TODO: Enable stdio transport type when implemented
+  // 'stdio',
+];
+
+export type McpRequest = BaseModel & BaseMcpRequest & { type: typeof type };
+
+export const isMcpRequest = (model: Pick<BaseModel, 'type'>): model is McpRequest => model.type === type;
+
+export const isMcpRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
+
+export function init(): BaseMcpRequest {
+  return {
+    url: '',
+    transportType: 'streamable-http',
+    name: 'New MCP Client',
+    description: '',
+    headers: [],
+    authentication: {},
+  };
+}
+
+export function migrate(doc: McpRequest) {
+  return doc;
+}
+
+export function create(patch: Partial<McpRequest> = {}) {
+  if (!patch.parentId) {
+    throw new Error('New GrpcRequest missing `parentId`');
+  }
+
+  return db.docCreate<McpRequest>(type, patch);
+}
+
+export function remove(obj: McpRequest) {
+  return db.remove(obj);
+}
+
+export function all() {
+  return db.find<McpRequest>(type);
+}
+
+export function getByParentId(parentId: string) {
+  return db.findOne<McpRequest>(type, { parentId });
+}
+
+export function getById(id: string) {
+  return db.findOne<McpRequest>(type, { _id: id });
+}
+
+export function update(mockServer: McpRequest, patch: Partial<McpRequest> = {}) {
+  return db.docUpdate<McpRequest>(mockServer, patch);
+}
