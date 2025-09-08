@@ -98,13 +98,13 @@ export const scopeToLabelMap: Record<
   'mcp': 'MCP Client',
 };
 
-export const scopeToIconMap: Record<ProjectScopeKeys, IconName> = {
+export const scopeToIconMap: Record<ProjectScopeKeys, IconProp> = {
   'design': 'file',
   'collection': 'bars',
   'mock-server': 'server',
   'unsynced': 'cloud-download',
   'environment': 'code',
-  'mcp': 'file',
+  'mcp': ['fac', 'mcp'] as unknown as IconProp,
 };
 
 export const scopeToBgColorMap: Record<ProjectScopeKeys, string> = {
@@ -113,7 +113,7 @@ export const scopeToBgColorMap: Record<ProjectScopeKeys, string> = {
   'mock-server': 'bg-[--color-warning]',
   'unsynced': 'bg-[--hl-md]',
   'environment': 'bg-[--color-font]',
-  'mcp': 'bg-[--color-font]',
+  'mcp': 'bg-[--color-danger]',
 };
 
 export const scopeToTextColorMap: Record<ProjectScopeKeys, string> = {
@@ -122,7 +122,7 @@ export const scopeToTextColorMap: Record<ProjectScopeKeys, string> = {
   'mock-server': 'text-[--color-font-warning]',
   'unsynced': 'text-[--color-font]',
   'environment': 'text-[--color-bg]',
-  'mcp': 'bg-[--color-font]',
+  'mcp': 'text-[--color-font-danger]',
 };
 
 export interface InsomniaFile {
