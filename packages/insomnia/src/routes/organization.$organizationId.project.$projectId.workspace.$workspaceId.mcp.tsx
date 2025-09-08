@@ -217,7 +217,7 @@ const McpPage = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto" ref={parentRef}>
-              <span>MCP Server List1</span>
+              <span>MCP Server List</span>
             </div>
           </div>
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
