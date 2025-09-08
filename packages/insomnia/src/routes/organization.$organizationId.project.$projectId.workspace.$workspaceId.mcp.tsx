@@ -1,12 +1,8 @@
-import type { Prompt, Resource, ResourceTemplate, Tool } from '@modelcontextprotocol/sdk/types.js';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
   Button,
-  GridList,
-  GridListItem,
   Input,
   SearchField,
   ToggleButton,
@@ -18,9 +14,7 @@ import { NavLink, redirect, useParams } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import type { McpServerData } from '~/main/network/mcp';
 import * as models from '~/models';
-import type { McpServerPrimitiveTypes } from '~/models/mcp-request';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useMcpRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp.request.$requestId';
@@ -36,17 +30,6 @@ import { useReadyState } from '~/ui/hooks/use-ready-state';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp';
-
-type ToolItem = Tool & { type: 'tools'; itemLevel: number };
-type ResourceItem = Resource & { type: 'resources'; itemLevel: number };
-type ResourceTemplateItem = ResourceTemplate & { type: 'resources'; itemLevel: number };
-type PromptItem = Prompt & { type: 'prompts'; itemLevel: number };
-interface PrimitiveTypeItem {
-  collapsed: boolean;
-  type: McpServerPrimitiveTypes;
-  name: string;
-  itemLevel: number;
-}
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   if (!params.requestId) {

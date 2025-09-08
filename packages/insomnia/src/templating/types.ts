@@ -84,6 +84,7 @@ export type RenderContextAncestor =
   | SocketIORequest
   | RequestGroup
   | Workspace
+  | McpRequest
   | Project;
 
 export type RenderContextOptions = BaseRenderContextOptions &

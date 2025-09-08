@@ -98,13 +98,13 @@ export const scopeToLabelMap: Record<
   'mcp': 'MCP Client',
 };
 
-export const scopeToIconMap: Record<ProjectScopeKeys, IconName | 'mcp'> = {
+export const scopeToIconMap: Record<ProjectScopeKeys, IconName> = {
   'design': 'file',
   'collection': 'bars',
   'mock-server': 'server',
   'unsynced': 'cloud-download',
   'environment': 'code',
-  'mcp': 'mcp',
+  'mcp': 'file',
 };
 
 export const scopeToBgColorMap: Record<ProjectScopeKeys, string> = {
@@ -695,7 +695,7 @@ const Component = () => {
     {
       id: 'new-mcp-client',
       name: 'MCP Client',
-      icon: 'mcp',
+      icon: 'file',
       action: createNewMcpClient,
     },
     {
@@ -750,7 +750,7 @@ const Component = () => {
     {
       id: 'mcp',
       label: `MCP Clients (${mcpClientsCount})`,
-      icon: 'mcp',
+      icon: 'file',
       action: {
         icon: 'plus',
         label: 'New mcp client',

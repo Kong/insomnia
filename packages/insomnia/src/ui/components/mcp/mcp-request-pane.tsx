@@ -1,8 +1,6 @@
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-
-import { useRootLoaderData } from '~/root';
 
 import { type AuthTypes } from '../../../common/constants';
 import type { Environment } from '../../../models/environment';
@@ -42,7 +40,6 @@ interface Props {
 export const McpRequestPane: FC<Props> = ({ environment, readyState }) => {
   const { activeRequest } = useMcpRequestLoaderData()!;
   const requestId = activeRequest._id;
-  const [requsestParams, setRequestParams] = useState<Record<string, any>>({});
 
   const headersCount = activeRequest.headers.filter(h => !h.disabled).length + readOnlyWebsocketPairs.length;
 

@@ -67,6 +67,9 @@ const mcp: McpBridgeAPI = {
   readyState: {
     getCurrent: options => ipcRenderer.invoke('mcp.readyState', options),
   },
+  event: {
+    findMany: options => ipcRenderer.invoke('mcp.event.findMany', options),
+  },
   getServerData: options => ipcRenderer.invoke('mcp.getServerData', options),
 };
 

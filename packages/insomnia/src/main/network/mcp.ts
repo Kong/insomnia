@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import type {
@@ -135,7 +133,7 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
           // notify renderer process about state change
           _notifyMcpClientStateChange(mcpStateChannel, false);
         };
-        mcpClient.onerror = error => {
+        mcpClient.onerror = _error => {
           // TODO support error
         };
         break;
@@ -205,7 +203,7 @@ const closeAllMcpConnections = () => {
 
 const getServerData = async (options: CommonMcpOptions) => mcpServerDataStore.get(options.requestId);
 
-const findMany = async (options: { responseId: string }): Promise<any> => {
+const findMany = async (_options: { responseId: string }): Promise<any> => {
   return [];
 };
 
@@ -223,7 +221,9 @@ const callTool = async (options: CallToolOptions) => {
   const mcpClient = _getMcpClient(requestId);
   if (mcpClient) {
     const response = await mcpClient.callTool({ name, arguments: parameters });
+    return response.content;
   }
+  return null;
 };
 
 const listPrompts = async (options: CommonMcpOptions) => {
@@ -235,7 +235,7 @@ const listPrompts = async (options: CommonMcpOptions) => {
   return prompts;
 };
 
-const getPrompt = async (options: CommonMcpOptions) => {};
+const getPrompt = async (_options: CommonMcpOptions) => {};
 
 const listResources = async (options: CommonMcpOptions) => {
   const mcpClient = _getMcpClient(options.requestId);
@@ -261,9 +261,9 @@ const getMcpReadyState = async (options: CommonMcpOptions) => {
   return !!mcpClient;
 };
 
-const readResource = async (options: CommonMcpOptions) => {};
+const readResource = async (_options: CommonMcpOptions) => {};
 
-const subscribeResource = async (options: CommonMcpOptions) => {};
+const subscribeResource = async (_options: CommonMcpOptions) => {};
 
 export interface McpBridgeAPI {
   connect: typeof openMcpClientConnection;
@@ -283,9 +283,9 @@ export interface McpBridgeAPI {
   readyState: {
     getCurrent: typeof getMcpReadyState;
   };
-  // event: {
-  //   findMany: typeof findMany;
-  // };
+  event: {
+    findMany: typeof findMany;
+  };
 }
 
 export const registerMcpHandlers = () => {
