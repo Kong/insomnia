@@ -20,6 +20,7 @@ import { registerMainHandlers } from './main/ipc/main';
 import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
 import log, { initializeLogging } from './main/log';
 import { registerCurlHandlers } from './main/network/curl';
+import { registerMcpHandlers } from './main/network/mcp';
 import { registerSocketIOHandlers } from './main/network/socket-io';
 import { registerWebSocketHandlers } from './main/network/websocket';
 import { watchProxySettings } from './main/proxy';
@@ -75,6 +76,7 @@ app.on('ready', async () => {
   registerWebSocketHandlers();
   registerSocketIOHandlers();
   registerCurlHandlers();
+  registerMcpHandlers();
   registerSecretStorageHandlers();
 
   /**
