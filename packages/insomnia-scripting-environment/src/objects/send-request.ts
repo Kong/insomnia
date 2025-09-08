@@ -15,46 +15,27 @@ export async function sendRequest(
   cb: (error?: string, response?: Response) => void,
   settings: Settings,
 ): Promise<Response | undefined> {
-  return new Promise<Response | undefined>(async (resolve, reject) => {
-    // TODO(george): enable cascading cancellation later as current solution just adds complexity
+  return new Promise(async (resolve, reject) => {
     try {
       const requestOptions = requestToCurlOptions(request, settings);
-
       const nodejsCurlRequest =
         process.type === 'renderer'
           ? window.bridge.curlRequest
           : (await import('insomnia/src/main/network/libcurl-promise')).curlRequest;
-      nodejsCurlRequest(requestOptions)
-        .then((result: any) => {
-          const output = result as CurlRequestOutput;
-          return curlOutputToResponse(output, request);
-        })
-        .then((transformedOutput: Response) => {
-          if (cb) {
-            cb(undefined, transformedOutput);
-          }
-          resolve(transformedOutput);
-        })
-        .catch((e: string | undefined) => {
-          if (cb) {
-            cb(e, undefined);
-          } else {
-            reject(e);
-          }
-        });
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        if (cb) {
-          cb(`Request was cancelled: ${err.message}`, undefined);
-        } else {
-          reject(err);
-        }
+
+      const output = (await nodejsCurlRequest(requestOptions)) as CurlRequestOutput;
+      const transformedOutput = await curlOutputToResponse(output, request);
+
+      if (cb) {
+        cb(undefined, transformedOutput);
+      }
+      return resolve(transformedOutput);
+    } catch (e) {
+      if (cb) {
+        cb(e, undefined);
+        resolve(undefined);
       } else {
-        if (cb) {
-          cb(`Something went wrong: ${err.message}`, undefined);
-        } else {
-          reject(err);
-        }
+        reject(e);
       }
     }
   });
@@ -119,7 +100,7 @@ function requestToCurlOptions(req: string | Request | RequestOptions, settings: 
           break;
         }
         default: {
-          // it could be empty body and which is valid
+          // the body could be empty and which is valid
           mimeType = 'text/plain';
         }
       }
