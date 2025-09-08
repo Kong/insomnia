@@ -206,6 +206,14 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         })}/${scopeToActivity(workspace.scope)}`,
       );
     }
+
+    return redirect(
+      `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
+        organizationId,
+        projectId,
+        workspaceId: workspace._id,
+      })}/${scopeToActivity(workspace.scope)}`,
+    );
   } catch (err) {
     console.error(err);
     return {
