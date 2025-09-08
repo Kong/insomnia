@@ -198,12 +198,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       });
 
       return redirect(
-        `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/mcp/request/:requestId', {
+        href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/mcp/request/:requestId', {
           organizationId,
           projectId,
           workspaceId: workspace._id,
           requestId,
-        })}/${scopeToActivity(workspace.scope)}`,
+        }),
       );
     }
 
