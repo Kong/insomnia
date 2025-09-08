@@ -1,4 +1,4 @@
-import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -677,7 +677,7 @@ const Component = () => {
   const createInProjectActionList: {
     id: string;
     name: string;
-    icon: IconName;
+    icon: IconProp;
     action: () => void;
   }[] = [
     {
@@ -695,7 +695,7 @@ const Component = () => {
     {
       id: 'new-mcp-client',
       name: 'Mcp Client',
-      icon: 'file',
+      icon: ['fac', 'mcp'] as unknown as IconProp,
       action: createNewMcpClient,
     },
     {
@@ -715,7 +715,7 @@ const Component = () => {
   const scopeActionList: {
     id: string;
     label: string;
-    icon: IconName;
+    icon: IconProp;
     action?: {
       icon: IconName;
       label: string;
@@ -750,7 +750,7 @@ const Component = () => {
     {
       id: 'mcp',
       label: `Mcp Clients (${mcpClientsCount})`,
-      icon: 'bars',
+      icon: ['fac', 'mcp'] as unknown as IconProp,
       action: {
         icon: 'plus',
         label: 'New mcp client',
