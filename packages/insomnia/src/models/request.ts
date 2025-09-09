@@ -153,6 +153,7 @@ export type RequestAuthentication =
 export type OAuth2ResponseType = 'code' | 'id_token' | 'id_token token' | 'none' | 'token';
 
 export interface RequestHeader {
+  id?: string;
   name: string;
   value: string;
   description?: string;
