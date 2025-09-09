@@ -15,35 +15,28 @@ export async function sendRequest(
   cb: (error?: string, response?: Response) => void,
   settings: Settings,
 ): Promise<Response | undefined> {
-  return new Promise<Response | undefined>(async resolve => {
-    // TODO(george): enable cascading cancellation later as current solution just adds complexity
-    const requestOptions = requestToCurlOptions(request, settings);
-
+  return new Promise(async (resolve, reject) => {
     try {
+      const requestOptions = requestToCurlOptions(request, settings);
       const nodejsCurlRequest =
         process.type === 'renderer'
           ? window.bridge.curlRequest
           : (await import('insomnia/src/main/network/libcurl-promise')).curlRequest;
-      nodejsCurlRequest(requestOptions)
-        .then((result: any) => {
-          const output = result as CurlRequestOutput;
-          return curlOutputToResponse(output, request);
-        })
-        .then((transformedOutput: Response) => {
-          cb(undefined, transformedOutput);
-          resolve(transformedOutput);
-        })
-        .catch((e: string | undefined) => {
-          cb(e, undefined);
-          resolve(undefined);
-        });
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        cb(`Request was cancelled: ${err.message}`, undefined);
-      } else {
-        cb(`Something went wrong: ${err.message}`, undefined);
+
+      const output = (await nodejsCurlRequest(requestOptions)) as CurlRequestOutput;
+      const transformedOutput = await curlOutputToResponse(output, request);
+
+      if (cb) {
+        cb(undefined, transformedOutput);
       }
-      resolve(undefined);
+      return resolve(transformedOutput);
+    } catch (e) {
+      if (cb) {
+        cb(e, undefined);
+        resolve(undefined);
+      } else {
+        reject(e);
+      }
     }
   });
 }
@@ -107,7 +100,8 @@ function requestToCurlOptions(req: string | Request | RequestOptions, settings: 
           break;
         }
         default: {
-          throw new Error(`unknown body mode: ${finalReq.body.mode}`);
+          // the body could be empty and which is valid
+          mimeType = 'text/plain';
         }
       }
     }

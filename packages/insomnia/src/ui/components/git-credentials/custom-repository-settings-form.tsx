@@ -13,6 +13,7 @@ export interface Props {
 }
 
 export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gitRepository, onSubmit }) => {
+  const isReadOnly = Boolean(gitRepository?.uri);
   const linkIcon = <i className="fa fa-external-link-square" />;
   const defaultValues = gitRepository || {
     uri: '',
@@ -42,7 +43,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
           uri: (formData.get('uri') as string) || '',
           credentials: {
             username: (formData.get('username') as string) || '',
-            token: (formData.get('token') as string) || '',
+            password: (formData.get('password') as string) || '',
           },
           author: {
             name: (formData.get('authorName') as string) || '',
@@ -51,15 +52,19 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
         });
       }}
     >
-      <TextField name="uri" className="col-span-2 flex w-full flex-col gap-1 px-0.5" isRequired>
+      <TextField
+        name="uri"
+        type="url"
+        pattern="https?://.*\.git"
+        autoFocus
+        defaultValue={uri}
+        onChange={value => setUri(value)}
+        isReadOnly={isReadOnly}
+        className="col-span-2 flex w-full flex-col gap-1 px-0.5"
+        isRequired
+      >
         <Label className="text-start text-sm font-semibold">Git URI (http/https, including .git suffix)</Label>
         <Input
-          type="url"
-          pattern="https?://.*\.git"
-          autoFocus
-          defaultValue={uri}
-          onChange={e => setUri(e.currentTarget.value)}
-          disabled={Boolean(defaultValues.uri)}
           placeholder="https://github.com/org/repo.git"
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
@@ -71,39 +76,59 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
           }
         </FieldError>
       </TextField>
-      <TextField name="authorName" className="flex w-full flex-col gap-1 px-0.5" isRequired>
+      <TextField
+        name="authorName"
+        isReadOnly={isReadOnly}
+        defaultValue={author?.name}
+        className="flex w-full flex-col gap-1 px-0.5"
+        isRequired
+      >
         <Label className="text-start text-sm font-semibold">Author Name</Label>
         <Input
           placeholder="Name"
-          disabled={Boolean(defaultValues.uri)}
-          defaultValue={author?.name}
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
         <FieldError className="text-xs text-[--color-danger]" />
       </TextField>
-      <TextField name="authorEmail" className="flex w-full flex-col gap-1 px-0.5" isRequired>
+      <TextField
+        name="authorEmail"
+        type="email"
+        isReadOnly={isReadOnly}
+        defaultValue={author?.email}
+        className="flex w-full flex-col gap-1 px-0.5"
+        isRequired
+      >
         <Label className="text-start text-sm font-semibold">Author Email</Label>
         <Input
-          type="email"
           placeholder="Email"
-          disabled={Boolean(defaultValues.uri)}
-          defaultValue={author?.email}
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
         <FieldError className="text-xs text-[--color-danger]" />
       </TextField>
-      <TextField name="username" className="flex w-full flex-col gap-1 px-0.5" isRequired>
+      <TextField
+        name="username"
+        isReadOnly={isReadOnly}
+        defaultValue={credentials?.username}
+        onChange={value => setCredentials({ ...credentials, username: value })}
+        className="flex w-full flex-col gap-1 px-0.5"
+        isRequired
+      >
         <Label className="text-start text-sm font-semibold">Username</Label>
         <Input
           placeholder="MyUserName"
-          disabled={Boolean(defaultValues.uri)}
-          defaultValue={credentials?.username}
-          onChange={e => setCredentials({ ...credentials, username: e.currentTarget.value })}
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
         <FieldError className="text-xs text-[--color-danger]" />
       </TextField>
-      <TextField name="token" className="flex w-full flex-col gap-1 px-0.5" isRequired>
+      <TextField
+        name="password"
+        type="password"
+        isReadOnly={isReadOnly}
+        onChange={value => setCredentials({ ...credentials, password: value })}
+        defaultValue={'password' in credentials ? credentials?.password : ''}
+        className="flex w-full flex-col gap-1 px-0.5"
+        isRequired
+      >
         <Label className="text-start text-sm font-semibold">
           Authentication Token
           <HelpTooltip className="space-left">
@@ -121,10 +146,6 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
           </HelpTooltip>
         </Label>
         <Input
-          type="password"
-          disabled={Boolean(defaultValues.uri)}
-          onChange={e => setCredentials({ ...credentials, password: e.currentTarget.value })}
-          defaultValue={'password' in credentials ? credentials?.password : ''}
           placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
@@ -137,7 +158,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
             username: credentials.username,
           }}
           url={uri || ''}
-          isDisabled={Boolean(defaultValues.uri)}
+          isDisabled={isReadOnly}
         />
       </div>
     </Form>

@@ -251,9 +251,9 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   }
 
   const userSession = await models.userSession.getOrCreate();
-  const isLoggedinIsCloudProjectAndIsNotGitRepo = userSession.id && activeProject.remoteId && !gitRepository;
+  const isLoggedInIsCloudProjectAndIsNotGitRepo = userSession.id && activeProject.remoteId && !gitRepository;
   let vcsVersion = null;
-  if (isLoggedinIsCloudProjectAndIsNotGitRepo) {
+  if (isLoggedInIsCloudProjectAndIsNotGitRepo) {
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);

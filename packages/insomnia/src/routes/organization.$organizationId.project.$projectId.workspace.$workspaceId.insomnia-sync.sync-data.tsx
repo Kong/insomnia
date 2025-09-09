@@ -1,17 +1,12 @@
 import { href } from 'react-router';
 
 import * as models from '~/models';
-import type { BackendProject, Compare } from '~/sync/types';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
-import { getSyncItems } from '~/ui/sync-utils';
+import { getSyncItems, remoteBackendProjectsCache, remoteBranchesCache, remoteCompareCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.sync-data';
-
-const remoteBranchesCache: Record<string, string[]> = {};
-const remoteCompareCache: Record<string, Compare> = {};
-const remoteBackendProjectsCache: Record<string, BackendProject[]> = {};
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { projectId, workspaceId } = params;
@@ -33,7 +28,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       remoteBranches = (remoteBranchesCache[workspaceId] || (await vcs.getRemoteBranchNames())).sort();
       compare = remoteCompareCache[workspaceId] || (await vcs.compareRemoteBranch());
       const remoteBackendProjects =
-        remoteBackendProjectsCache[workspaceId] ||
+        remoteBackendProjectsCache[project.remoteId] ||
         (await vcs.remoteBackendProjects({
           teamId: project.parentId,
           teamProjectId: project.remoteId,
@@ -50,7 +45,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
         hasUncommittedChanges = true;
       }
       // update workspace meta with sync data, use for show unpushed changes on collection card
-      models.workspaceMeta.updateByParentId(workspaceId, {
+      await models.workspaceMeta.updateByParentId(workspaceId, {
         hasUncommittedChanges,
         hasUnpushedChanges: compare?.ahead > 0,
       });
@@ -75,11 +70,11 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { projectId, workspaceId } = params;
+  const project = await models.project.getById(projectId);
+  invariant(project, 'Project not found');
+  invariant(project.remoteId, 'Project is not remote');
 
   try {
-    const project = await models.project.getById(projectId);
-    invariant(project, 'Project not found');
-    invariant(project.remoteId, 'Project is not remote');
     const vcs = VCSInstance();
     const remoteBranches = (await vcs.getRemoteBranchNames()).sort();
     const compare = await vcs.compareRemoteBranch();
@@ -91,7 +86,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     // Cache remote branches
     remoteBranchesCache[workspaceId] = remoteBranches;
     remoteCompareCache[workspaceId] = compare;
-    remoteBackendProjectsCache[workspaceId] = remoteBackendProjects;
+    remoteBackendProjectsCache[project.remoteId] = remoteBackendProjects;
 
     return {
       remoteBranches,
@@ -102,7 +97,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     const errorMessage = e instanceof Error ? e.message : 'Unknown error while syncing data.';
     delete remoteBranchesCache[workspaceId];
     delete remoteCompareCache[workspaceId];
-    delete remoteBackendProjectsCache[workspaceId];
+    delete remoteBackendProjectsCache[project.remoteId];
     return {
       error: errorMessage,
     };

@@ -275,46 +275,43 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
         });
 
         showModal(SyncMergeModal, {
+          editorType: 'merge',
           conflicts: pullResult.conflicts,
           labels: pullResult.labels,
-          handleDone: (conflicts?: MergeConflict[]) => {
-            if (Array.isArray(conflicts) && conflicts.length > 0) {
-              setIsPulling(true);
-              window.main.git
-                .continueMerge({
-                  projectId,
-                  handledMergeConflicts: conflicts,
-                  commitMessage: pullResult.commitMessage,
-                  commitParent: pullResult.commitParent,
-                })
-                .then(() => {
-                  showToast({
-                    icon,
-                    title: 'Resolved merge conflicts, pull completed',
-                    status: 'success',
-                  });
-
-                  return { success: true };
-                })
-                .catch(error => {
-                  showToast({
-                    icon,
-                    title: 'Failed to resolve merge conflicts',
-                    description: error.message || 'An error occurred during merge.',
-                    status: 'error',
-                  });
-
-                  return { success: false };
-                })
-                .finally(() => {
-                  setIsPulling(false);
-                  revalidate();
+          onResolveAll: (conflicts: MergeConflict[]) => {
+            setIsPulling(true);
+            window.main.git
+              .continueMerge({
+                projectId,
+                handledMergeConflicts: conflicts,
+                commitMessage: pullResult.commitMessage,
+                commitParent: pullResult.commitParent,
+              })
+              .then(() => {
+                showToast({
+                  icon,
+                  title: 'Resolved merge conflicts, pull completed',
+                  status: 'success',
                 });
-            } else {
-              // user aborted merge, do nothing
-            }
+
+                return { success: true };
+              })
+              .catch(error => {
+                showToast({
+                  icon,
+                  title: 'Failed to resolve merge conflicts',
+                  description: error.message || 'An error occurred during merge.',
+                  status: 'error',
+                });
+
+                return { success: false };
+              })
+              .finally(() => {
+                setIsPulling(false);
+                revalidate();
+              });
           },
-          handleClose: () => {
+          onCancelUnresolved: () => {
             setIsGitStagingModalOpen(false);
             setIsPulling(false);
             showToast({
