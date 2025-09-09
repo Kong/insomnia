@@ -46,7 +46,7 @@ type ToolItem = Tool & { type: 'tools' } & CommonItemProps;
 type ResourceItem = Resource & { type: 'resources' } & CommonItemProps;
 type ResourceTemplateItem = ResourceTemplate & { type: 'resources' } & CommonItemProps;
 type PromptItem = Prompt & { type: 'prompts' } & CommonItemProps;
-type PrimitiveSubItemTypes = ToolItem | ResourceItem | ResourceTemplateItem | PromptItem;
+export type PrimitiveSubItemTypes = ToolItem | ResourceItem | ResourceTemplateItem | PromptItem;
 interface PrimitiveTypeItem extends CommonItemProps {
   type: McpServerPrimitiveTypes;
   name: string;
@@ -88,7 +88,7 @@ const McpPage = () => {
   const [mcpServerData, setMcpServerData] = useState<McpServerData | null>(null);
   const [collapsedPrimitives, setCollapsedPrimitives] = useState<McpServerPrimitiveTypes[]>([]);
   const [selectedPrimitiveItem, setSelectedPrimitiveItem] = useState<PrimitiveSubItemTypes | null>(null);
-
+  console.log('selectedPrimitiveItem', selectedPrimitiveItem);
   const getPrimitiveCollection = () => {
     const collection: (PrimitiveTypeItem | PrimitiveSubItemTypes)[] = [];
     if (mcpServerData) {
@@ -437,7 +437,11 @@ const McpPage = () => {
         <OrganizationTabList currentPage="mcp" />
         <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
           <Panel id="mcp-request-pane" order={1} minSize={10} className="pane-one theme--pane">
-            <McpRequestPane environment={activeEnvironment} readyState={readyState} />
+            <McpRequestPane
+              selectedPrimitiveItem={selectedPrimitiveItem}
+              environment={activeEnvironment}
+              readyState={readyState}
+            />
           </Panel>
           <Panel id="mcp-response-pane" order={2} minSize={10} className="pane-two theme--pane">
             <ErrorBoundary showAlert>
