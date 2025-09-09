@@ -1,13 +1,19 @@
-import React, { type FC } from 'react';
+import type { IChangeEvent } from '@rjsf/core';
+import type { RJSFSchema } from '@rjsf/utils';
+import validator from '@rjsf/validator-ajv8';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+
+import type { PrimitiveSubItemTypes } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp';
+import { InsomniaRjsfForm } from '~/ui/components/rjsf';
 
 import { type AuthTypes } from '../../../common/constants';
 import type { Environment } from '../../../models/environment';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useMcpRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp.request.$requestId';
 import { useRequestPatcher } from '../../hooks/use-request';
-import { CodeEditor } from '../.client/codemirror/code-editor';
+import { CodeEditor, type CodeEditorHandle } from '../.client/codemirror/code-editor';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { readOnlyWebsocketPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane } from '../panes/pane';
@@ -35,10 +41,13 @@ const PaneReadOnlyBanner = () => {
 interface Props {
   environment: Environment | null;
   readyState: boolean;
+  selectedPrimitiveItem?: PrimitiveSubItemTypes | null;
 }
 
-export const McpRequestPane: FC<Props> = ({ environment, readyState }) => {
+export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPrimitiveItem }) => {
   const { activeRequest } = useMcpRequestLoaderData()!;
+  const [formData, setFormData] = useState({});
+  const paramEditorRef = useRef<CodeEditorHandle>(null);
   const requestId = activeRequest._id;
 
   const headersCount = activeRequest.headers.filter(h => !h.disabled).length + readOnlyWebsocketPairs.length;
@@ -48,6 +57,25 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState }) => {
   const uniqueKey = `${environment?.modified}::${requestId}`;
   const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
   const isNoneOrInherited = requestAuth?.type === 'none' || requestAuth === null;
+  const toolsSchema = selectedPrimitiveItem?.type === 'tools' ? selectedPrimitiveItem.inputSchema : undefined;
+
+  const handleRjsfFormChange = (e: IChangeEvent) => {
+    setFormData(e.formData);
+    paramEditorRef.current?.setValue(JSON.stringify(e.formData, null, 2));
+  };
+
+  useEffect(() => {
+    setFormData({});
+    paramEditorRef.current?.setValue('');
+  }, [selectedPrimitiveItem]);
+
+  const handleSend = () => {
+    window.main.mcp.primitive.callTool({
+      name: selectedPrimitiveItem?.name || '',
+      parameters: formData,
+      requestId: requestId,
+    });
+  };
 
   return (
     <Pane type="request">
@@ -110,14 +138,22 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState }) => {
                     <Heading className="text-xs font-bold uppercase text-[--hl]">Parameter Builder</Heading>
                     <div className="flex items-center gap-2">
                       <Button
-                        isDisabled={readyState}
+                        isDisabled={!readyState}
+                        onClick={handleSend}
                         className="asma-pressed:bg-[--hl-sm] flex h-full w-[14ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:ring-inset focus:ring-[--hl-md] aria-selected:bg-[--hl-xs] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
                       >
                         Send
                       </Button>
                     </div>
                   </div>
-                  TODO Parameter Builder UI
+                  {toolsSchema && (
+                    <InsomniaRjsfForm
+                      formData={formData}
+                      onChange={handleRjsfFormChange}
+                      schema={toolsSchema as RJSFSchema}
+                      validator={validator}
+                    />
+                  )}
                 </div>
               </Panel>
               <PanelResizeHandle className="h-[1px] w-full bg-[--hl-md]" />
@@ -126,6 +162,7 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState }) => {
                   <Heading className="p-4 text-xs font-bold uppercase text-[--hl]">Parameter Overview</Heading>
                   <div className="flex-1 overflow-hidden">
                     <CodeEditor
+                      ref={paramEditorRef}
                       id="mcp-parameter-overview-editor"
                       showPrettifyButton
                       dynamicHeight
