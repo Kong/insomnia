@@ -8,6 +8,9 @@ import type { NodeCurlRequestOptions } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';
 import * as templating from './worker';
+
+const PREF_SECURITY = 'Insomnia’s Preferences → Security';
+
 export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
     return value;
@@ -188,7 +191,7 @@ export default class BaseExtension {
             ?.getSettings()
             .dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
           if (!allowed) {
-            throw `Insomnia cannot access the file ‘${path}’. You can adjust this in Preferences → Security.`;
+            throw `Insomnia cannot access the file ‘${path}’. You must specify which directories Insomnia can access in ${PREF_SECURITY}.`;
           }
           return fetchFromTemplateWorkerDatabase('readFile', { path, encoding });
         },

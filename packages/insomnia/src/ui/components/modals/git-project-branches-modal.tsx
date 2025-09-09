@@ -147,25 +147,26 @@ const LocalBranchItem = ({
                 if ('conflicts' in result) {
                   await new Promise((resolve, reject) => {
                     showModal(SyncMergeModal, {
+                      editorType: 'merge',
                       conflicts: result.conflicts,
                       labels: result.labels,
-                      handleDone: (conflicts?: MergeConflict[]) => {
-                        if (Array.isArray(conflicts) && conflicts.length > 0) {
-                          window.main.git
-                            .continueMerge({
-                              projectId,
-                              handledMergeConflicts: conflicts,
-                              commitMessage: result.commitMessage,
-                              commitParent: result.commitParent,
-                            })
-                            .then(resolve, reject)
-                            .finally(() => {
-                              revalidate();
-                            });
-                        } else {
-                          // user aborted merge
-                          reject(new Error('You aborted the merge, no changes were made to working tree.'));
-                        }
+                      onResolveAll: (conflicts: MergeConflict[]) => {
+                        window.main.git
+                          .continueMerge({
+                            projectId,
+                            handledMergeConflicts: conflicts,
+                            commitMessage: result.commitMessage,
+                            commitParent: result.commitParent,
+                          })
+                          .then(resolve, reject)
+                          .finally(() => {
+                            revalidate();
+                          });
+                      },
+                      onCancelUnresolved: () => {
+                        // user aborted merge
+                        window.main.git.abortMerge();
+                        reject(new Error('You aborted the merge, no changes were made to working tree.'));
                       },
                     });
                   });

@@ -23,12 +23,11 @@ export const VCSInstance = () => {
       showModal(SyncMergeModal, {
         conflicts,
         labels,
-        handleDone: (conflicts?: MergeConflict[]) => {
-          if (conflicts && conflicts.length) {
-            resolve(conflicts);
-          } else {
-            reject(new UserAbortResolveMergeConflictError());
-          }
+        onResolveAll: (conflicts: MergeConflict[]) => {
+          resolve(conflicts);
+        },
+        onCancelUnresolved: () => {
+          reject(new UserAbortResolveMergeConflictError());
         },
       });
     });

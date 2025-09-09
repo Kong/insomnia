@@ -93,7 +93,7 @@ test.describe('after-response script features tests', () => {
       __fromAfterScript: 'environment',
       base_url: 'http://localhost:4010',
     });
-    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByRole('button', { name: 'Close', exact: true }).click();
 
     // globals and baseGlobals can be persisted
     await page.getByTestId('underlay').click();

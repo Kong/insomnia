@@ -258,14 +258,16 @@ async function getAllRemoteFiles({ projectId, organizationId }: { projectId: str
     const project = await models.project.getById(projectId);
 
     const remoteId = project?.remoteId;
+    if (!remoteId) {
+      return [];
+    }
+
     console.log(
       '[getAllRemoteFiles] start fetching remote backend workspaces for project',
       projectId,
       `remoteId: ${remoteId}`,
     );
-    if (!remoteId) {
-      return [];
-    }
+
     const vcs = VCSInstance();
 
     const [allPulledBackendProjectsForRemoteId, allFetchedRemoteBackendProjectsForRemoteId] = await Promise.all([

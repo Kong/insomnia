@@ -34,6 +34,7 @@ export function showModal<
   TModalProps extends ModalProps &
     React.RefAttributes<{
       show: (options: any) => void;
+      hide: () => void;
     }>,
 >(modalComponent: ModalComponent<TModalProps>, config?: ModalHandleShowOptions<GetRefHandleFromProps<TModalProps>>) {
   const name = modalComponent.name || modalComponent.displayName;
@@ -42,12 +43,18 @@ export function showModal<
 
   const modalHandle = getModalComponentHandle(name) as unknown as GetRefHandleFromProps<TModalProps>;
 
-  return modalHandle.show(config);
+  modalHandle.show(config);
+  return () => {
+    const modalHandle = getModalComponentHandle(name) as unknown as GetRefHandleFromProps<TModalProps>;
+    if (modalHandle) {
+      modalHandle.hide();
+    }
+  };
 }
 
 export function showError(config: ErrorModalOptions) {
   try {
-    return showModal(ErrorModal, config);
+    showModal(ErrorModal, config);
   } catch (err) {
     console.log('[modal] Cannot show modal', err, config);
   }

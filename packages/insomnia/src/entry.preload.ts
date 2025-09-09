@@ -89,6 +89,7 @@ const git: GitServiceAPI = {
   pullFromGitRemote: options => ipcRenderer.invoke('git.pullFromGitRemote', options),
   continueMerge: options => ipcRenderer.invoke('git.continueMerge', options),
   discardChanges: options => ipcRenderer.invoke('git.discardChanges', options),
+  abortMerge: () => ipcRenderer.invoke('git.abortMerge'),
   gitStatus: options => ipcRenderer.invoke('git.gitStatus', options),
   stageChanges: options => ipcRenderer.invoke('git.stageChanges', options),
   unstageChanges: options => ipcRenderer.invoke('git.unstageChanges', options),
