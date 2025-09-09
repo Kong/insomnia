@@ -325,8 +325,11 @@ const RequestParametersSchema = z.array(
 
 export const RequestHeadersSchema = z.array(
   z.object({
+    id: z.string().optional(),
     name: z.string().optional().default(''),
     value: z.string().optional().default(''),
+    description: z.string().optional(),
+    disabled: z.boolean().optional(),
   }),
 );
 
