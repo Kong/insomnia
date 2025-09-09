@@ -4,6 +4,7 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
+import { useMcpRequestLoaderData } from '../../..//routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp.request.$requestId';
 import { getSetCookieHeaders } from '../../../common/misc';
 import type { CurlEvent } from '../../../main/network/curl';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
@@ -35,6 +36,20 @@ import { EventView } from './event-view';
 
 export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
   const { activeResponse } = useRequestLoaderData()!;
+
+  if (!activeResponse) {
+    return (
+      <Pane type="response">
+        <PaneHeader className="!justify-normal" />
+        <PlaceholderResponsePane />
+      </Pane>
+    );
+  }
+  return <RealtimeActiveResponsePane response={activeResponse} />;
+};
+
+export const McpRealtimeResponsePane = () => {
+  const { activeResponse } = useMcpRequestLoaderData()!;
 
   if (!activeResponse) {
     return (
