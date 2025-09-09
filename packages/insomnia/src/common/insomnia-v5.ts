@@ -26,6 +26,7 @@ import {
   type InsomniaFile,
   InsomniaFileSchema,
   type Meta,
+  RequestHeadersSchema,
   SocketIORequestSchema,
   WebsocketRequestSchema,
 } from './import-v5-parser';
@@ -283,6 +284,8 @@ function getCollection(
     ) {
       collection?.forEach(item => {
         if ('children' in item && item.children) {
+          const headers = RequestHeadersSchema.parse(item.headers);
+
           const requestGroup: WithExportType<RequestGroup> = {
             ...mapMetaToInsomniaMeta(
               item.meta || {
@@ -293,7 +296,7 @@ function getCollection(
             _type: 'request_group',
             name: item.name || 'Imported Folder',
             parentId,
-            headers: item.headers?.map(({ name, value }) => ({ name: name || '', value: value || '' })) || [],
+            headers,
             preRequestScript: item.scripts?.preRequest || '',
             afterResponseScript: item.scripts?.afterResponse || '',
             authentication: item.authentication || {},
@@ -306,6 +309,8 @@ function getCollection(
 
           walkCollection(item.children, requestGroup._id);
         } else if ('method' in item && item.method) {
+          const headers = RequestHeadersSchema.parse(item.headers);
+
           const request: WithExportType<Request> = {
             ...mapMetaToInsomniaMeta(
               item.meta || {
@@ -320,7 +325,7 @@ function getCollection(
             method: item.method,
             body: item.body || {},
             parameters: item.parameters || [],
-            headers: item.headers || [],
+            headers,
             authentication: item.authentication || {},
             preRequestScript: item.scripts?.preRequest || '',
             settingDisableRenderRequestBody: !item.settings.renderRequestBody,
@@ -514,6 +519,8 @@ export async function getInsomniaV5DataExport({
         .filter(resource => resource.parentId === parentId)
         .forEach(resource => {
           if (models.request.isRequest(resource)) {
+            const headers = RequestHeadersSchema.parse(resource.headers);
+
             const request: Insomnia_Request = {
               url: resource.url,
               name: resource.name,
@@ -528,7 +535,7 @@ export async function getInsomniaV5DataExport({
               method: resource.method,
               body: resource.body,
               parameters: resource.parameters,
-              headers: resource.headers,
+              headers,
               authentication: resource.authentication,
               scripts: getScriptFromResources(resource),
               settings: {
@@ -545,6 +552,8 @@ export async function getInsomniaV5DataExport({
             };
             collection.push(request);
           } else if (models.requestGroup.isRequestGroup(resource)) {
+            const headers = RequestHeadersSchema.parse(resource.headers);
+
             const requestGroup: Insomnia_RequestGroup = {
               name: resource.name,
               meta: {
@@ -560,10 +569,12 @@ export async function getInsomniaV5DataExport({
               authentication: resource.authentication,
               environment: resource.environment,
               environmentPropertyOrder: resource.environmentPropertyOrder,
-              headers: resource.headers,
+              headers,
             };
             collection.push(requestGroup);
           } else if (models.webSocketRequest.isWebSocketRequest(resource)) {
+            const headers = RequestHeadersSchema.parse(resource.headers);
+
             const webSocketRequest: Insomnia_WebsocketRequest = {
               url: resource.url,
               name: resource.name,
@@ -584,12 +595,14 @@ export async function getInsomniaV5DataExport({
                 },
               },
               authentication: resource.authentication,
-              headers: resource.headers,
+              headers,
               parameters: resource.parameters,
               pathParameters: resource.pathParameters,
             };
             collection.push(webSocketRequest);
           } else if (models.socketIORequest.isSocketIORequest(resource)) {
+            const headers = RequestHeadersSchema.parse(resource.headers);
+
             const socketIORequest: Insomnia_SocketIORequest = {
               url: resource.url,
               name: resource.name,
@@ -609,7 +622,7 @@ export async function getInsomniaV5DataExport({
                 },
               },
               authentication: resource.authentication,
-              headers: resource.headers,
+              headers,
               parameters: resource.parameters,
               pathParameters: resource.pathParameters,
               eventListeners: resource.eventListeners,
@@ -784,21 +797,25 @@ export async function getInsomniaV5DataExport({
     function getRoutesFromResources(
       resources: MockRoute[],
     ): Extract<InsomniaFile, { type: 'mock.insomnia.rest/5.0' }>['routes'] {
-      return resources.map(resource => ({
-        name: resource.name,
-        meta: {
-          id: resource._id,
-          created: resource.created,
-          modified: resource.modified,
-          isPrivate: resource.isPrivate,
-        },
-        body: resource.body,
-        headers: resource.headers,
-        method: resource.method,
-        mimeType: resource.mimeType,
-        statusCode: resource.statusCode,
-        statusText: resource.statusText,
-      }));
+      return resources.map(resource => {
+        const headers = RequestHeadersSchema.parse(resource.headers);
+
+        return {
+          name: resource.name,
+          meta: {
+            id: resource._id,
+            created: resource.created,
+            modified: resource.modified,
+            isPrivate: resource.isPrivate,
+          },
+          body: resource.body,
+          headers,
+          method: resource.method,
+          mimeType: resource.mimeType,
+          statusCode: resource.statusCode,
+          statusText: resource.statusText,
+        };
+      });
     }
 
     if (workspace.scope === 'collection') {
