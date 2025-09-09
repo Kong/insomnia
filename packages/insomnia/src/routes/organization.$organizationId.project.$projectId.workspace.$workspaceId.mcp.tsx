@@ -176,6 +176,17 @@ const McpPage = () => {
 
   // TODO Support filter
   const visibleCollection = getPrimitiveCollection().filter(item => !item.hide);
+  const serverCapabilities = getServerCapabilities();
+  const allowSubscribeResources = serverCapabilities.resources.enabled && serverCapabilities.resources.subscribe;
+  const enableNotification =
+    serverCapabilities.tools.listChanged ||
+    serverCapabilities.resources.listChanged ||
+    serverCapabilities.prompts.listChanged;
+  // TODO Use these variables to enable notification
+  console.log('enableNotification', enableNotification);
+  console.log('allowSubscribeResources', allowSubscribeResources);
+  // TODO Use this for showing details
+  console.log('selectedPrimitiveItem', selectedPrimitiveItem);
   const requestId = activeRequest._id;
   const { activeEnvironment } = useWorkspaceLoaderData()!;
   const readyState = useReadyState({ requestId, protocol: 'mcp' });
