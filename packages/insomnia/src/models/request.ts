@@ -154,8 +154,8 @@ export type OAuth2ResponseType = 'code' | 'id_token' | 'id_token token' | 'none'
 
 export interface RequestHeader {
   id?: string;
-  name: string;
-  value: string;
+  name?: string;
+  value?: string;
   description?: string;
   disabled?: boolean;
 }
