@@ -800,23 +800,21 @@ export async function getInsomniaV5DataExport({
     function getRoutesFromResources(
       resources: MockRoute[],
     ): Extract<InsomniaFile, { type: 'mock.insomnia.rest/5.0' }>['routes'] {
-      return resources.map(resource => {
-        return {
-          name: resource.name,
-          meta: {
-            id: resource._id,
-            created: resource.created,
-            modified: resource.modified,
-            isPrivate: resource.isPrivate,
-          },
-          body: resource.body,
-          headers: mapHeaders(resource.headers),
-          method: resource.method,
-          mimeType: resource.mimeType,
-          statusCode: resource.statusCode,
-          statusText: resource.statusText,
-        };
-      });
+      return resources.map(resource => ({
+        name: resource.name,
+        meta: {
+          id: resource._id,
+          created: resource.created,
+          modified: resource.modified,
+          isPrivate: resource.isPrivate,
+        },
+        body: resource.body,
+        headers: mapHeaders(resource.headers),
+        method: resource.method,
+        mimeType: resource.mimeType,
+        statusCode: resource.statusCode,
+        statusText: resource.statusText,
+      }));
     }
 
     if (workspace.scope === 'collection') {
