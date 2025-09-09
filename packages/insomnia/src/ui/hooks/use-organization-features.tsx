@@ -22,7 +22,7 @@ export function useOrganizationPermissions() {
   // Load organization permissions and features if they are not already loaded.
   useEffect(() => {
     const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
-    if (!isScratchpadOrganizationId(organizationId) && isIdleAndUninitialized) {
+    if (organizationId && !isScratchpadOrganizationId(organizationId) && isIdleAndUninitialized) {
       permissionsFetcher.load({
         organizationId,
       });
