@@ -21,15 +21,22 @@ export interface ConnectActionParams {
   query?: Record<string, string>;
 }
 
-export async function clientAction({ params }: Route.ClientActionArgs) {
+export async function clientAction({ params, request }: Route.ClientActionArgs) {
   const { requestId, workspaceId } = params;
 
   const req = await requestOperations.getById(requestId);
   invariant(req, 'Request not found');
   invariant(workspaceId, 'Workspace ID is required');
-  //const rendered = (await request.json()) as ConnectActionParams;
+  const rendered = (await request.json()) as ConnectActionParams;
 
-  // TODO: Integrate with mcp ipc main
+  window.main.mcp.connect({
+    requestId,
+    transportType: rendered.transportType || 'streamable-http',
+    url: rendered.url,
+    headers: rendered.headers,
+    authentication: rendered.authentication,
+  });
+
   // HACK: even more elaborate hack to get the request to update
   return new Promise(resolve => {
     const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
