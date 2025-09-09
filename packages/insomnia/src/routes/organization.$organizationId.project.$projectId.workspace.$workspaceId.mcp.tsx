@@ -1,8 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import type { Prompt, Resource, ResourceTemplate, Tool } from '@modelcontextprotocol/sdk/types.js';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
   Button,
+  GridList,
+  GridListItem,
   Input,
   SearchField,
   ToggleButton,
@@ -14,7 +18,9 @@ import { NavLink, redirect, useParams } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
+import type { McpServerData } from '~/main/network/mcp';
 import * as models from '~/models';
+import type { McpServerPrimitiveTypes } from '~/models/mcp-request';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useMcpRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp.request.$requestId';
@@ -25,11 +31,26 @@ import { Icon } from '~/ui/components/icon';
 import { McpRequestPane } from '~/ui/components/mcp/mcp-request-pane';
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
+import { McpRealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp';
+
+interface CommonItemProps {
+  itemLevel: number;
+  hide: boolean;
+}
+type ToolItem = Tool & { type: 'tools' } & CommonItemProps;
+type ResourceItem = Resource & { type: 'resources' } & CommonItemProps;
+type ResourceTemplateItem = ResourceTemplate & { type: 'resources' } & CommonItemProps;
+type PromptItem = Prompt & { type: 'prompts' } & CommonItemProps;
+type PrimitiveSubItemTypes = ToolItem | ResourceItem | ResourceTemplateItem | PromptItem;
+interface PrimitiveTypeItem extends CommonItemProps {
+  type: McpServerPrimitiveTypes;
+  name: string;
+}
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   if (!params.requestId) {
@@ -61,15 +82,115 @@ const McpPage = () => {
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
   const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
-  const [allExpanded, setAllExpanded] = useState(false);
+  const [allExpanded, setAllExpanded] = useState(true);
   const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:mcp-list-filter`);
   const { settings } = useRootLoaderData()!;
+  const [mcpServerData, setMcpServerData] = useState<McpServerData | null>(null);
+  const [collapsedPrimitives, setCollapsedPrimitives] = useState<McpServerPrimitiveTypes[]>([]);
+  const [selectedPrimitiveItem, setSelectedPrimitiveItem] = useState<PrimitiveSubItemTypes | null>(null);
 
+  const getPrimitiveCollection = () => {
+    const collection: (PrimitiveTypeItem | PrimitiveSubItemTypes)[] = [];
+    if (mcpServerData) {
+      const { primitives } = mcpServerData;
+      const { tools, resources, resourceTemplates, prompts } = primitives;
+      if (tools.length > 0) {
+        collection.push({
+          type: 'tools',
+          name: 'Tools',
+          collapsed: collapsedPrimitives.includes('tools'),
+          itemLevel: 0,
+          hide: false,
+        });
+        const hide = collapsedPrimitives.includes('tools');
+        collection.push(...(tools.map(t => ({ ...t, type: 'tools', itemLevel: 1, hide })) as ToolItem[]));
+      }
+      if (resources.length > 0 || resourceTemplates.length > 0) {
+        collection.push({
+          type: 'resources',
+          name: 'Resources',
+          collapsed: collapsedPrimitives.includes('resources'),
+          itemLevel: 0,
+          hide: false,
+        });
+        const hide = collapsedPrimitives.includes('resources');
+        collection.push(...(resources.map(r => ({ ...r, type: 'resources', itemLevel: 1, hide })) as ResourceItem[]));
+        collection.push(
+          ...(resourceTemplates.map(rt => ({
+            ...rt,
+            type: 'resources',
+            itemLevel: 1,
+            hide,
+          })) as ResourceTemplateItem[]),
+        );
+      }
+      if (prompts.length > 0) {
+        collection.push({
+          type: 'prompts',
+          name: 'Prompts',
+          collapsed: collapsedPrimitives.includes('prompts'),
+          itemLevel: 0,
+          hide: false,
+        });
+        const hide = collapsedPrimitives.includes('prompts');
+        collection.push(...(prompts.map(p => ({ ...p, type: 'prompts', itemLevel: 1, hide })) as PromptItem[]));
+      }
+    }
+    return collection;
+  };
+
+  const getServerCapabilities = () => {
+    const serverCapabilities = {
+      tools: {
+        enabled: true,
+        listChanged: false,
+      },
+      resources: {
+        enabled: true,
+        listChanged: false,
+        subscribe: true,
+      },
+      prompts: {
+        enabled: true,
+        listChanged: false,
+      },
+    };
+    if (mcpServerData) {
+      const { tools, resources, prompts } = mcpServerData.serverCapabilities;
+      if (tools) {
+        serverCapabilities.tools.enabled = true;
+        serverCapabilities.tools.listChanged = !!tools.listChanged;
+      }
+      if (resources) {
+        serverCapabilities.resources.enabled = true;
+        serverCapabilities.resources.listChanged = !!resources.listChanged;
+        serverCapabilities.resources.subscribe = !!resources.subscribe;
+      }
+      if (prompts) {
+        serverCapabilities.prompts.enabled = true;
+        serverCapabilities.prompts.listChanged = !!prompts.listChanged;
+      }
+    }
+    return serverCapabilities;
+  };
+
+  // TODO Support filter
+  const visibleCollection = getPrimitiveCollection().filter(item => !item.hide);
   const requestId = activeRequest._id;
   const { activeEnvironment } = useWorkspaceLoaderData()!;
   const readyState = useReadyState({ requestId, protocol: 'mcp' });
 
   const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer<HTMLDivElement, Element>({
+    getScrollElement: () => parentRef.current,
+    count: visibleCollection.length,
+    estimateSize: useCallback(() => 32, []),
+    overscan: 20,
+    getItemKey: index => {
+      const item = visibleCollection[index];
+      return `${item.itemLevel}::${item.type}::${item.name}`;
+    },
+  });
 
   function toggleSidebar() {
     const layout = sidebarPanelRef.current?.getLayout();
@@ -116,6 +237,19 @@ const McpPage = () => {
       mediaQuery.removeEventListener('change', handleChange);
     };
   }, [settings.forceVerticalLayout, direction]);
+
+  useEffect(() => {
+    const updateServerData = async () => {
+      const serverData = await window.main.mcp.getServerData({ requestId });
+      setMcpServerData(serverData!);
+    };
+    if (readyState) {
+      // Get MCP server data when connection is ready
+      updateServerData();
+    } else {
+      setMcpServerData(null);
+    }
+  }, [readyState, requestId]);
 
   return (
     <PanelGroup
@@ -180,7 +314,13 @@ const McpPage = () => {
                   aria-label="Expand All/Collapse all"
                   defaultSelected={allExpanded}
                   onChange={() => {
-                    setAllExpanded(!allExpanded);
+                    const newState = !allExpanded;
+                    if (newState) {
+                      setCollapsedPrimitives([]);
+                    } else {
+                      setCollapsedPrimitives(['tools', 'resources', 'prompts']);
+                    }
+                    setAllExpanded(newState);
                   }}
                   className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
                 >
@@ -200,7 +340,82 @@ const McpPage = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto" ref={parentRef}>
-              <span>MCP Server List</span>
+              <GridList
+                id="sidebar-mcp-gridlist"
+                style={{ height: virtualizer.getTotalSize() }}
+                items={virtualizer.getVirtualItems()}
+                className="relative"
+                aria-label="Mcp Server Capabilities"
+                onAction={key => {
+                  const id = key.toString();
+                  if (id.startsWith('root_')) {
+                    // Click on primitive type item
+                    const primitiveType = id.split('root_')[1] as McpServerPrimitiveTypes;
+                    setCollapsedPrimitives(prev => {
+                      if (prev.includes(primitiveType)) {
+                        return prev.filter(p => p !== primitiveType);
+                      }
+                      return [...prev, primitiveType];
+                    });
+                  } else {
+                    // Click a specified primitive
+                    const [type, name] = id.split('_');
+                    const item = visibleCollection.find(i => i.itemLevel === 1 && i.type === type && i.name === name);
+                    setSelectedPrimitiveItem(item as PrimitiveSubItemTypes);
+                  }
+                }}
+              >
+                {virtualItem => {
+                  const item = visibleCollection[virtualItem.index];
+                  const label = 'title' in item ? item.title : item.name;
+                  const uniqueId = item.itemLevel === 0 ? `root_${item.type}` : `${item.type}_${item.name}`;
+                  const itemLevel = item.itemLevel;
+                  return (
+                    <GridListItem
+                      id={uniqueId}
+                      className={`group absolute left-0 top-0 w-full select-none outline-none ${item.itemLevel === 0 ? 'data-[drop-target]:bg-[--hl-md]' : 'border-solid data-[drop-target]:border-b data-[drop-target]:border-[--color-surprise]'}`}
+                      textValue={label}
+                      data-testid={`test-${uniqueId}`}
+                      style={{
+                        height: `${virtualItem.size}`,
+                        transform: `translateY(${virtualItem.start}px)`,
+                      }}
+                    >
+                      <div
+                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden pl-4 pr-2 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] data-[selected=true]:text-[--color-font]"
+                        style={{
+                          paddingLeft: `${itemLevel}em`,
+                        }}
+                      >
+                        <div className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors">
+                          {itemLevel === 0 && (
+                            <Icon
+                              className="w-4 flex-shrink-0"
+                              icon={collapsedPrimitives.includes(item.type) ? 'caret-right' : 'caret-down'}
+                            />
+                          )}
+                          {item.type === 'tools' && item.itemLevel === 1 && (
+                            <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-success-rgb),0.5)] text-[0.65rem] text-[--color-font-success]">
+                              Tool
+                            </span>
+                          )}
+                          {item.type === 'resources' && item.itemLevel === 1 && (
+                            <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-surprise-rgb),0.5)] text-[0.65rem] text-[--color-font-surprise]">
+                              Res
+                            </span>
+                          )}
+                          {item.type === 'prompts' && item.itemLevel === 1 && (
+                            <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-[--color-font-info]">
+                              Prompt
+                            </span>
+                          )}
+                          {label}
+                        </div>
+                      </div>
+                    </GridListItem>
+                  );
+                }}
+              </GridList>
             </div>
           </div>
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
@@ -215,7 +430,7 @@ const McpPage = () => {
           </Panel>
           <Panel id="mcp-response-pane" order={2} minSize={10} className="pane-two theme--pane">
             <ErrorBoundary showAlert>
-              <div />
+              <McpRealtimeResponsePane />
             </ErrorBoundary>
           </Panel>
         </PanelGroup>
