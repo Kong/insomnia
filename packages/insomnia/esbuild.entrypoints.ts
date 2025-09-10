@@ -3,6 +3,7 @@ import { builtinModules } from 'node:module';
 import path from 'node:path';
 
 import esbuild, { type BuildOptions, type Plugin } from 'esbuild';
+import { externalDependencies } from 'vite.config';
 
 import pkg from './package.json';
 
@@ -11,65 +12,7 @@ interface Options {
   autoRestart?: boolean;
 }
 const inspectPort = process.env.INSPECT_PORT || '5858';
-//These will be excluded from the bundle and remain as runtime dependencies
-export const externalDependencies = [
-  '@apideck/better-ajv-errors',
-  '@apidevtools/swagger-parser',
-  '@bufbuild/protobuf',
-  '@connectrpc/connect',
-  '@connectrpc/connect-node',
-  '@getinsomnia/node-libcurl',
-  '@grpc/grpc-js',
-  '@grpc/proto-loader',
-  '@seald-io/nedb',
-  '@segment/analytics-node',
-  '@stoplight/spectral-core',
-  '@stoplight/spectral-formats',
-  '@stoplight/spectral-ruleset-bundler',
-  '@stoplight/spectral-rulesets',
-  'apiconnect-wsdl',
-  'aws4',
-  'chai',
-  'chai-json-schema',
-  'chardet',
-  'clone',
-  'color',
-  'content-disposition',
-  'decompress',
-  'dompurify',
-  'electron-context-menu',
-  'electron-updater',
-  'fastq',
-  'graphql',
-  'graphql-ws',
-  'grpc-reflection-js',
-  'hawk',
-  'hkdf',
-  'hosted-git-info',
-  'html-entities',
-  'http-proxy-agent',
-  'https-proxy-agent',
-  'httpsnippet',
-  'iconv-lite',
-  'isbot',
-  'js-yaml',
-  'jsdom',
-  'jshint',
-  'jsonlint-mod-fixed',
-  'marked',
-  'mime-types',
-  'mocha',
-  'multiparty',
-  'node-forge',
-  'oauth-1.0a',
-  'papaparse',
-  'shell-quote',
-  'socket.io-client',
-  'swagger-ui-dist',
-  'tough-cookie',
-  'uuid',
-  'yaml',
-];
+
 export default async function build(options: Options) {
   const mode = options.mode || 'production';
   const __DEV__ = mode !== 'production';
