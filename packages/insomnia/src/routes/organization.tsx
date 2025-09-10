@@ -36,7 +36,6 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { SettingsModal, showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { OrganizationAvatar } from '~/ui/components/organization-avatar';
 import { PresentUsers } from '~/ui/components/present-users';
-import { Toast } from '~/ui/components/toast';
 import { InsomniaEventStreamProvider } from '~/ui/context/app/insomnia-event-stream-context';
 import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
@@ -602,7 +601,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
               </div>
             </div>
           </div>
-          <Toast />
         </div>
       </InsomniaTabProvider>
     </InsomniaEventStreamProvider>
