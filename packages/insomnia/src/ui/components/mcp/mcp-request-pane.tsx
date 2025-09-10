@@ -1,5 +1,5 @@
 import type { IChangeEvent } from '@rjsf/core';
-import type { RJSFSchema } from '@rjsf/utils';
+import { getDefaultFormState, type RJSFSchema, type UiSchema } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
@@ -20,6 +20,12 @@ import { Pane } from '../panes/pane';
 import { McpUrlActionBar } from './mcp-url-bar';
 
 const supportedAuthTypes: AuthTypes[] = ['apikey', 'basic', 'bearer'];
+
+const uiSchema: UiSchema = {
+  'ui:submitButtonOptions': {
+    norender: true,
+  },
+};
 
 const PaneReadOnlyBanner = () => {
   return (
@@ -57,17 +63,22 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
   const uniqueKey = `${environment?.modified}::${requestId}`;
   const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
   const isNoneOrInherited = requestAuth?.type === 'none' || requestAuth === null;
-  const toolsSchema = selectedPrimitiveItem?.type === 'tools' ? selectedPrimitiveItem.inputSchema : undefined;
+  const toolsSchema =
+    selectedPrimitiveItem?.type === 'tools' ? (selectedPrimitiveItem.inputSchema as RJSFSchema) : undefined;
 
   const handleRjsfFormChange = (e: IChangeEvent) => {
+    console.log('form change', e.formData);
     setFormData(e.formData);
     paramEditorRef.current?.setValue(JSON.stringify(e.formData, null, 2));
   };
 
   useEffect(() => {
-    setFormData({});
-    paramEditorRef.current?.setValue('');
-  }, [selectedPrimitiveItem]);
+    if (toolsSchema) {
+      const formDataWithDefaults = getDefaultFormState(validator, toolsSchema, {}, toolsSchema, true);
+      setFormData(formDataWithDefaults);
+      paramEditorRef.current?.setValue(JSON.stringify(formDataWithDefaults, null, 2));
+    }
+  }, [toolsSchema]);
 
   const handleSend = () => {
     window.main.mcp.primitive.callTool({
@@ -133,26 +144,33 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
             // Todo @CurryYangxx params builder and overview UI
             <PanelGroup className="flex-1 overflow-hidden" direction={'vertical'}>
               <Panel minSize={20}>
-                <div className="flex h-full flex-col">
+                <div className="flex h-full flex-col overflow-auto">
                   <div className="flex h-4 w-full items-center justify-between p-4">
                     <Heading className="text-xs font-bold uppercase text-[--hl]">Parameter Builder</Heading>
                     <div className="flex items-center gap-2">
                       <Button
                         isDisabled={!readyState}
                         onClick={handleSend}
-                        className="asma-pressed:bg-[--hl-sm] flex h-full w-[14ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:ring-inset focus:ring-[--hl-md] aria-selected:bg-[--hl-xs] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                        className="rounded bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise]"
                       >
                         Send
                       </Button>
                     </div>
                   </div>
                   {toolsSchema && (
-                    <InsomniaRjsfForm
-                      formData={formData}
-                      onChange={handleRjsfFormChange}
-                      schema={toolsSchema as RJSFSchema}
-                      validator={validator}
-                    />
+                    <div className="pl-4">
+                      <p>{selectedPrimitiveItem?.name}</p>
+                      <p className="text-[--hl]">{selectedPrimitiveItem?.description}</p>
+                      <div className="pl-2">
+                        <InsomniaRjsfForm
+                          formData={formData}
+                          onChange={handleRjsfFormChange}
+                          schema={toolsSchema as RJSFSchema}
+                          validator={validator}
+                          uiSchema={uiSchema}
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
               </Panel>
@@ -167,7 +185,7 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
                       showPrettifyButton
                       dynamicHeight
                       uniquenessKey="mcp-parameter-overview-editor"
-                      defaultValue=""
+                      defaultValue="{}"
                       enableNunjucks
                       onChange={() => {}}
                       mode="json"
