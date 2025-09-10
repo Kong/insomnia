@@ -66,7 +66,6 @@ export const McpActionsDropdown = ({ item, request, isOpen, onOpenChange, trigge
     <MenuTrigger
       isOpen={isOpen}
       onOpenChange={isOpen => {
-        console.log(`onOpenChange: ${isOpen}`);
         onOpenChange(isOpen);
       }}
     >
