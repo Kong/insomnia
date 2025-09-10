@@ -2,6 +2,7 @@ import { builtinModules } from 'node:module';
 import path from 'node:path';
 
 import { reactRouter } from '@react-router/dev/vite';
+import { externalDependencies } from 'esbuild.entrypoints';
 import { defineConfig } from 'vite';
 
 import pkg from './package.json';
@@ -54,7 +55,7 @@ export default defineConfig(({ mode }) => {
       electronNodeRequire({
         modules: [
           'electron',
-          ...Object.keys(pkg.dependencies),
+          ...externalDependencies,
           ...builtinModules.filter(m => m !== 'buffer'),
           ...builtinModules.map(m => `node:${m}`),
         ],
