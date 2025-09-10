@@ -3,7 +3,6 @@ import { href } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';
 import { removeAllSecrets } from '~/models/environment';
-import type { ToastNotification } from '~/ui/components/toast';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { createFetcherSubmitHook } from '~/utils/router';
 

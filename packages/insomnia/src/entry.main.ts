@@ -1,14 +1,11 @@
 import fs from 'node:fs/promises';
 import inspector from 'node:inspector';
 import path from 'node:path';
-import { title } from 'node:process';
 
 import electron, { app, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
-
-import { description } from '~/utils/importers/importers/curl';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
@@ -33,7 +30,6 @@ import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import type { Project, RemoteProject } from './models/project';
 import type { Stats } from './models/stats';
-import type { ToastNotification } from './ui/components/toast';
 
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
