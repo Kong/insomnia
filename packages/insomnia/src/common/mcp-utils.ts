@@ -33,6 +33,16 @@ export const METHOD_CALL_TOOL = CallToolRequestSchema.shape.method.value;
 export const METHOD_READ_RESOURCE = ReadResourceRequestSchema.shape.method.value;
 export const METHOD_GET_PROMPT = GetPromptRequestSchema.shape.method.value;
 const METHOD_UNKNOWN = 'unknown';
+export const MCP_JSONRPC_METHODS = [
+  METHOD_INITIALIZE,
+  METHOD_LIST_TOOLS,
+  METHOD_LIST_RESOURCES,
+  METHOD_LIST_RESOURCE_TEMPLATES,
+  METHOD_LIST_PROMPTS,
+  METHOD_CALL_TOOL,
+  METHOD_READ_RESOURCE,
+  METHOD_GET_PROMPT,
+];
 
 export type JSONRPCMessageMethods =
   | typeof METHOD_INITIALIZE

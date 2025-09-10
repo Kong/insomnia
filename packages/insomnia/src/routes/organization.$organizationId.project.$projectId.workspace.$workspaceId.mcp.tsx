@@ -17,7 +17,15 @@ import { NavLink, redirect, useParams } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import type { McpServerData } from '~/main/network/mcp';
+import {
+  type McpServerData,
+  METHOD_INITIALIZE,
+  METHOD_LIST_PROMPTS,
+  METHOD_LIST_RESOURCE_TEMPLATES,
+  METHOD_LIST_RESOURCES,
+  METHOD_LIST_TOOLS,
+} from '~/common/mcp-utils';
+import type { McpEvent, McpMessageEvent } from '~/main/network/mcp';
 import * as models from '~/models';
 import type { McpRequest, McpServerPrimitiveTypes } from '~/models/mcp-request';
 import { useRootLoaderData } from '~/root';
@@ -72,7 +80,7 @@ const McpPage = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { activeRequest } = useMcpRequestLoaderData()!;
+  const { activeRequest, activeResponse } = useMcpRequestLoaderData()!;
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
   const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
@@ -82,8 +90,6 @@ const McpPage = () => {
   const [mcpServerData, setMcpServerData] = useState<McpServerData | null>(null);
   const [collapsedPrimitives, setCollapsedPrimitives] = useState<McpServerPrimitiveTypes[]>([]);
   const [selectedPrimitiveItem, setSelectedPrimitiveItem] = useState<PrimitiveSubItem | null>(null);
-  const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
-  const triggerRef = useRef<HTMLDivElement>(null);
 
   const getPrimitiveCollection = () => {
     const collection: (PrimitiveTypeItem | PrimitiveSubItem)[] = [];
@@ -246,16 +252,41 @@ const McpPage = () => {
 
   useEffect(() => {
     const updateServerData = async () => {
-      const serverData = await window.main.mcp.getServerData({ requestId });
-      setMcpServerData(serverData!);
+      const findFirstMatchEventData = (mcpEvents: McpEvent[], method: string) => {
+        const firstMatchEvent = mcpEvents.find(
+          event => 'method' in event && event.method === method,
+        ) as McpMessageEvent;
+        if (firstMatchEvent) {
+          return firstMatchEvent.data.result;
+        }
+        return undefined;
+      };
+      const activeResponseId = activeResponse?._id;
+      if (activeResponseId) {
+        const allEvents = await window.main.mcp.event.findMany({ responseId: activeResponseId });
+        const serverCapabilities = findFirstMatchEventData(allEvents, METHOD_INITIALIZE)?.capabilities;
+        const tools = findFirstMatchEventData(allEvents, METHOD_LIST_TOOLS)?.tools || [];
+        const resources = findFirstMatchEventData(allEvents, METHOD_LIST_RESOURCES)?.resources || [];
+        const resourceTemplates =
+          findFirstMatchEventData(allEvents, METHOD_LIST_RESOURCE_TEMPLATES)?.resourceTemplates || [];
+        const prompts = findFirstMatchEventData(allEvents, METHOD_LIST_PROMPTS)?.prompts || [];
+        const mcpServerData = {
+          serverCapabilities: serverCapabilities,
+          primitives: {
+            tools,
+            resources,
+            resourceTemplates,
+            prompts,
+          },
+        } as McpServerData;
+        setMcpServerData(mcpServerData);
+      }
     };
     if (readyState) {
       // Get MCP server data when connection is ready
       updateServerData();
-    } else {
-      setMcpServerData(null);
     }
-  }, [readyState, requestId]);
+  }, [readyState, activeResponse?._id]);
 
   return (
     <PanelGroup
