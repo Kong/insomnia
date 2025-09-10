@@ -1,6 +1,6 @@
 import { database } from '~/common/database';
 import { userSession } from '~/models';
-import { type Organization, SCRATCHPAD_ORGANIZATION_ID } from '~/models/organization';
+import { type Organization } from '~/models/organization';
 import type { Project } from '~/models/project';
 import type { Workspace } from '~/models/workspace';
 import { createFetcherLoadHook } from '~/utils/router';
