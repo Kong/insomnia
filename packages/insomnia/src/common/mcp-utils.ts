@@ -14,8 +14,13 @@ import {
   ListResourceTemplatesResultSchema,
   ListToolsRequestSchema,
   ListToolsResultSchema,
+  type Prompt,
   ReadResourceRequestSchema,
   ReadResourceResultSchema,
+  type Resource,
+  type ResourceTemplate,
+  type ServerCapabilities,
+  type Tool,
 } from '@modelcontextprotocol/sdk/types.js';
 
 // method constants
@@ -38,6 +43,16 @@ export type JSONRPCMessageMethods =
   | typeof METHOD_CALL_TOOL
   | typeof METHOD_READ_RESOURCE
   | typeof METHOD_GET_PROMPT;
+
+export interface McpServerData {
+  serverCapabilities: ServerCapabilities;
+  primitives: {
+    tools: Tool[];
+    resources: Resource[];
+    resourceTemplates: ResourceTemplate[];
+    prompts: Prompt[];
+  };
+}
 
 export const getMcpMethodFromMessage = (message: JSONRPCMessage): JSONRPCMessageMethods | typeof METHOD_UNKNOWN => {
   let method: JSONRPCMessageMethods | typeof METHOD_UNKNOWN = METHOD_UNKNOWN;
