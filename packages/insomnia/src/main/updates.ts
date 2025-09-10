@@ -50,9 +50,14 @@ const getUpdateUrl = (updateChannel: string): string | null => {
   return fullUrl.toString();
 };
 
-export const _sendUpdateStatus = (status: UpdateStatus) => {
+export const _sendUpdateStatus = (title: UpdateStatus) => {
   for (const window of BrowserWindow.getAllWindows()) {
-    window.webContents.send('updaterStatus', status);
+    window.webContents.send('show-toast', {
+      content: {
+        title,
+        status: 'info',
+      },
+    });
   }
 };
 
@@ -147,6 +152,7 @@ export const init = async () => {
   // on check now button pushed
   ipcMainOn('manualUpdateCheck', async () => {
     console.log('[updater] Manual update check');
+
     if (!updateUrl) {
       _sendUpdateStatus('Updates Not Supported');
       return;
@@ -162,6 +168,7 @@ const _checkForUpdates = (updateUrl: string) => {
     console.log(`[updater] Checking for updates url=${updateUrl}`);
     autoUpdater.setFeedURL({ url: updateUrl });
     autoUpdater.checkForUpdates();
+    _sendUpdateStatus('Up to Date');
   } catch (err) {
     console.warn('[updater] Failed to check for updates:', err.message);
     _sendUpdateStatus('Update Error');
