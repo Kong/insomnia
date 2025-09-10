@@ -15,7 +15,7 @@ export interface UntrackedProjectsLoaderData {
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const { accountId } = await userSession.getOrCreate();
   const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
-  const listOfOrganizationIds = [...organizations.map(o => o.id), SCRATCHPAD_ORGANIZATION_ID];
+  const listOfOrganizationIds = organizations.map(o => o.id);
 
   const projects = await database.find<Project>('Project', {
     parentId: { $nin: listOfOrganizationIds },
