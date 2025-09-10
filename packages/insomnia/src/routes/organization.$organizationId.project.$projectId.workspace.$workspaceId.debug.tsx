@@ -1075,7 +1075,13 @@ const Debug = () => {
                           }
                         }}
                       />
-                      {item.pinned && <Icon className="text-[--font-size-sm]" icon="thumb-tack" />}
+                      {item.pinned && (
+                        <Icon
+                          className="text-[--font-size-sm]"
+                          icon="thumb-tack"
+                          onDoubleClick={() => patchRequestMeta(item.doc._id, { pinned: !item.pinned })}
+                        />
+                      )}
                     </div>
                   </GridListItem>
                 );
@@ -1283,6 +1289,7 @@ const CollectionGridListItem = ({
   const [isEditable, setIsEditable] = useState(false);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
+  const patchRequestMeta = useRequestMetaPatcher();
 
   const action = isRequestGroup(item.doc)
     ? `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}/update`
@@ -1409,7 +1416,13 @@ const CollectionGridListItem = ({
         {isGraphqlSubscriptionRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
         {isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
-        {item.pinned && <Icon className="text-[--font-size-sm]" icon="thumb-tack" />}
+        {item.pinned && (
+          <Icon
+            className="text-[--font-size-sm]"
+            icon="thumb-tack"
+            onDoubleClick={() => patchRequestMeta(item.doc._id, { pinned: !item.pinned })}
+          />
+        )}
         {isRequestGroup(item.doc) ? (
           <RequestGroupActionsDropdown
             requestGroup={item.doc}
