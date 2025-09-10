@@ -50,7 +50,7 @@ const getUpdateUrl = (updateChannel: string): string | null => {
   return fullUrl.toString();
 };
 
-export const _sendUpdateStatus = (title: UpdateStatus) => {
+export const showUpdateStatusToast = (title: UpdateStatus) => {
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send('show-toast', {
       content: {
@@ -91,20 +91,20 @@ export const init = async () => {
   }
   autoUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
-    _sendUpdateStatus('Update Error');
+    showUpdateStatusToast('Update Error');
   });
   autoUpdater.on('update-not-available', () => {
     console.log('[updater] Not Available');
-    _sendUpdateStatus('Up to Date');
+    showUpdateStatusToast('Up to Date');
   });
   autoUpdater.on('update-available', () => {
     console.log('[updater] Update Available');
-    _sendUpdateStatus('Downloading...');
+    showUpdateStatusToast('Downloading...');
   });
   autoUpdater.on('update-downloaded', async (_error, releaseNotes, releaseName) => {
     console.log(`[updater] Downloaded ${releaseName}`);
-    _sendUpdateStatus('Performing backup...');
-    _sendUpdateStatus('Updated (Restart Required)');
+    showUpdateStatusToast('Performing backup...');
+    showUpdateStatusToast('Updated (Restart Required)');
 
     dialog
       .showMessageBox({
@@ -154,10 +154,10 @@ export const init = async () => {
     console.log('[updater] Manual update check');
 
     if (!updateUrl) {
-      _sendUpdateStatus('Updates Not Supported');
+      showUpdateStatusToast('Updates Not Supported');
       return;
     }
-    _sendUpdateStatus('Checking');
+    showUpdateStatusToast('Checking');
     await delay(300); // Pacing
     _checkForUpdates(updateUrl);
   });
@@ -168,9 +168,9 @@ const _checkForUpdates = (updateUrl: string) => {
     console.log(`[updater] Checking for updates url=${updateUrl}`);
     autoUpdater.setFeedURL({ url: updateUrl });
     autoUpdater.checkForUpdates();
-    _sendUpdateStatus('Up to Date');
+    showUpdateStatusToast('Up to Date');
   } catch (err) {
     console.warn('[updater] Failed to check for updates:', err.message);
-    _sendUpdateStatus('Update Error');
+    showUpdateStatusToast('Update Error');
   }
 };
