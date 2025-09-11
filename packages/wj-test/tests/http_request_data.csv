@@ -1,0 +1,12 @@
+﻿id,test_case,url,method,headers,body,expected_status
+1,GET from petstore - 200,https://petstore.swagger.io/v2/pet/1,GET,,,200
+2,GET from petstore - 404,https://petstore.swagger.io/v2/pet/12345678,GET,,,404
+3,httpbin - GET request,https://httpbin.org/get,GET,"User-Agent: Mozilla/5.0
+Accept: application/json",,200
+4,httpbin - POST request,https://httpbin.org/post,POST,"User-Agent: Mozilla/5.0
+Accept: application/json","{
+  ""aaa"": 1234,
+  ""bbb"": 99999
+}",200
+5,httpbin - response status 202,https://httpbin.org/status/202,GET,,,202
+6,httpbin - response status 501,https://httpbin.org/status/501,PUT,,,501
