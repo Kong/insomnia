@@ -11,7 +11,6 @@ export const scratchPadTutorialList: {
   title: string;
   name: string;
   desc: string;
-  signUpText: string;
   learnMoreLink: string;
   icon: IconName;
 }[] = [
@@ -20,7 +19,6 @@ export const scratchPadTutorialList: {
     title: `Documents`,
     name: 'documents',
     desc: 'Design or test an API by adding a document.',
-    signUpText: 'Signup to create documents',
     learnMoreLink: 'https://developer.konghq.com/insomnia/documents/',
     icon: 'file',
   },
@@ -29,7 +27,6 @@ export const scratchPadTutorialList: {
     title: `Collections`,
     name: 'collections',
     desc: 'Use collections to tests APIs and run automated tests.',
-    signUpText: 'Signup to create collections',
     learnMoreLink: 'https://developer.konghq.com/insomnia/collections/',
     icon: 'bars',
   },
@@ -38,7 +35,6 @@ export const scratchPadTutorialList: {
     title: `Mocks`,
     name: 'mock servers',
     desc: 'Use mock servers to simulate API endpoints without a live backend.',
-    signUpText: 'Signup to create mock servers',
     learnMoreLink: 'https://developer.konghq.com/insomnia/mock-servers/',
     icon: 'server',
   },
@@ -47,7 +43,6 @@ export const scratchPadTutorialList: {
     title: `Environments`,
     name: 'environments',
     desc: 'Use environments to manage shared values like base URLs, API keys, and tokens across requests.',
-    signUpText: 'Signup to manage environments',
     learnMoreLink: 'https://developer.konghq.com/insomnia/environments/',
     icon: 'code',
   },
@@ -75,7 +70,7 @@ const TutorialContent = ({ panel }: { panel?: string }) => {
             onPress={handleSignUp}
             className="rounded-md bg-[--color-surprise] px-6 py-2 text-white transition-colors"
           >
-            {selectedTutorial.signUpText}
+            Signup to create {selectedTutorial.name}
           </Button>
         </div>
       </div>
