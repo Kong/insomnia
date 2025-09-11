@@ -1354,7 +1354,7 @@ const ScratchPadTutorialPanel = () => {
                   <Icon icon={item.icon} className="w-6" />
                 </span>
 
-                <span className="truncate capitalize">{item.title}</span>
+                <span className="truncate">{item.title}</span>
               </div>
             </GridListItem>
           );

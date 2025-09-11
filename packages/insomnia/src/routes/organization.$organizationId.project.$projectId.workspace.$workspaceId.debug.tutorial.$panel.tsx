@@ -9,14 +9,16 @@ import { Icon } from '~/ui/components/icon';
 export const scratchPadTutorialList: {
   id: string;
   title: string;
+  name: string;
   desc: string;
   signUpText: string;
   learnMoreLink: string;
   icon: IconName;
 }[] = [
   {
-    id: 'design',
+    id: 'document',
     title: `Documents`,
+    name: 'documents',
     desc: 'Design or test an API by adding a document.',
     signUpText: 'Signup to create documents',
     learnMoreLink: 'https://developer.konghq.com/insomnia/documents/',
@@ -25,6 +27,7 @@ export const scratchPadTutorialList: {
   {
     id: 'collection',
     title: `Collections`,
+    name: 'collections',
     desc: 'Use collections to tests APIs and run automated tests.',
     signUpText: 'Signup to create collections',
     learnMoreLink: 'https://developer.konghq.com/insomnia/collections/',
@@ -33,6 +36,7 @@ export const scratchPadTutorialList: {
   {
     id: 'mock-server',
     title: `Mocks`,
+    name: 'mock servers',
     desc: 'Use mock servers to simulate API endpoints without a live backend.',
     signUpText: 'Signup to create mock servers',
     learnMoreLink: 'https://developer.konghq.com/insomnia/mock-servers/',
@@ -41,6 +45,7 @@ export const scratchPadTutorialList: {
   {
     id: 'environment',
     title: `Environments`,
+    name: 'environments',
     desc: 'Use environments to manage shared values like base URLs, API keys, and tokens across requests.',
     signUpText: 'Signup to manage environments',
     learnMoreLink: 'https://developer.konghq.com/insomnia/environments/',
@@ -82,7 +87,7 @@ const TutorialContent = ({ panel }: { panel?: string }) => {
           onPress={() => window.main.openInBrowser(selectedTutorial.learnMoreLink)}
           className="inline-flex items-center gap-2 text-sm text-[--color-font-secondary] underline transition-colors hover:text-[--color-font]"
         >
-          {selectedTutorial.title}
+          {selectedTutorial.name}
           <Icon icon="external-link" className="h-3 w-3" />
         </Button>
       </div>
