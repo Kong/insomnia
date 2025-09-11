@@ -51,7 +51,6 @@
     "@getinsomnia/node-libcurl": "3.0.0",
     "@grpc/grpc-js": "^1.13.3",
     "@grpc/proto-loader": "^0.7.13",
-    "@modelcontextprotocol/sdk": "^1.17.5",
     "@seald-io/nedb": "^4.1.1",
     "@segment/analytics-node": "2.2.1",
     "@stoplight/spectral-core": "^1.20.0",
@@ -103,6 +102,7 @@
   },
   "devDependencies": {
     "@develohpanda/fluent-builder": "^2.1.2",
+    "@modelcontextprotocol/sdk": "^1.17.5",
     "@faker-js/faker": "9.7.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",

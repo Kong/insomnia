@@ -5,7 +5,6 @@ import React, { type FC, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
-import type { PrimitiveSubItemTypes } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp';
 import { InsomniaRjsfForm } from '~/ui/components/rjsf';
 
 import { type AuthTypes } from '../../../common/constants';
@@ -18,6 +17,7 @@ import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { readOnlyWebsocketPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane } from '../panes/pane';
 import { McpUrlActionBar } from './mcp-url-bar';
+import type { PrimitiveSubItem } from './types';
 
 const supportedAuthTypes: AuthTypes[] = ['apikey', 'basic', 'bearer'];
 
@@ -47,7 +47,7 @@ const PaneReadOnlyBanner = () => {
 interface Props {
   environment: Environment | null;
   readyState: boolean;
-  selectedPrimitiveItem?: PrimitiveSubItemTypes | null;
+  selectedPrimitiveItem?: PrimitiveSubItem | null;
 }
 
 export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPrimitiveItem }) => {
