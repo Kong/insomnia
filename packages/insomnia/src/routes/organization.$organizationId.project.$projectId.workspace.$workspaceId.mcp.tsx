@@ -165,8 +165,8 @@ const McpPage = () => {
 
   // TODO Support filter
   const visibleCollection = getPrimitiveCollection().filter(item => !item.hide);
-  const serverCapabilities = getServerCapabilities();
-  // TODO Use these variables to enable notification
+  // TODO Use these variales to enable notification
+  // const serverCapabilities = getServerCapabilities();
   // const allowSubscribeResources = serverCapabilities.resources.enabled && serverCapabilities.resources.subscribe;
   // const enableNotification =
   //   serverCapabilities.tools.listChanged ||
