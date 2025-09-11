@@ -14,6 +14,8 @@ export const canSync = false;
 
 export interface BaseMcpResponse {
   environmentId: string | null;
+  statusCode: number;
+  statusMessage: string;
   url: string;
   elapsedTime: number;
   headers: ResponseHeader[];
@@ -37,6 +39,8 @@ export function init(): BaseMcpResponse {
     timelinePath: '',
     eventLogPath: '',
     error: '',
+    statusCode: 0,
+    statusMessage: '',
     requestVersionId: null,
     environmentId: null,
   };

@@ -1,30 +1,42 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import type {
-  ClientRequest,
-  Prompt,
-  Resource,
-  ResourceTemplate,
-  ServerCapabilities,
-  Tool,
+import {
+  type ClientRequest,
+  isInitializeRequest,
+  type JSONRPCMessage,
+  type JSONRPCResponse,
 } from '@modelcontextprotocol/sdk/types.js';
 import electron, { BrowserWindow } from 'electron';
+import { v4 as uuidV4 } from 'uuid';
 import type { z } from 'zod';
 
 import { getAppVersion, getProductName } from '~/common/constants';
+import { getMcpMethodFromMessage } from '~/common/mcp-utils';
+import { generateId } from '~/common/misc';
+import * as models from '~/models';
 import type { TransportType } from '~/models/mcp-request';
+import type { McpResponse } from '~/models/mcp-response';
 import type { RequestAuthentication, RequestHeader } from '~/models/request';
 import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
 import { getBearerAuthHeader } from '~/network/bearer-auth/get-header';
+import { invariant } from '~/utils/invariant';
 
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 
+// Refer the SDK: https://github.com/modelcontextprotocol/typescript-sdk/blob/main/src/shared/protocol.ts#L504
+// The Client type has missing transport property
+type McpClient = Client & { transport: StreamableHTTPClientTransport };
+// Mcp connection and request options
 interface CommonMcpOptions {
   requestId: string;
 }
 export interface OpenMcpClientConnectionOptions extends CommonMcpOptions {
   url: string;
   requestId: string;
+  workspaceId: string;
   transportType: TransportType;
   headers: RequestHeader[];
   authentication: RequestAuthentication;
@@ -39,21 +51,56 @@ interface CallToolOptions extends CommonMcpOptions {
   name: string;
   parameters: Record<string, any>;
 }
-export interface McpServerData {
-  serverCapabilities: ServerCapabilities;
-  primitives: {
-    tools: Tool[];
-    resources: Resource[];
-    resourceTemplates: ResourceTemplate[];
-    prompts: Prompt[];
-  };
+
+interface McpCloseEvent {
+  _id: string;
+  requestId: string;
+  type: 'close';
+  timestamp: number;
+  reason: string;
+}
+export interface McpMessageEvent {
+  _id: string;
+  requestId: string;
+  type: 'message';
+  direction: 'INCOMING';
+  timestamp: number;
+  data: JSONRPCResponse;
+  method: string;
+}
+interface McpErrorEvent {
+  _id: string;
+  requestId: string;
+  timestamp: number;
+  type: 'error';
+  message: string;
+  error: any;
+}
+interface McpRequestEvent {
+  _id: string;
+  requestId: string;
+  type: 'message';
+  timestamp: number;
+  direction: 'OUTGOING';
+  method: string;
+  data: any;
+}
+export type McpEvent = McpMessageEvent | McpRequestEvent | McpCloseEvent | McpErrorEvent;
+interface ResponseEventOptions {
+  responseId: string;
+  requestId: string;
+  environmentId: string | null;
+  timelinePath: string;
+  eventLogPath: string;
 }
 
-const mcpConnections = new Map<string, Client>();
-// In-memory store of mcp server capabilities, tools/resources/resource templates/prompts list data for each mcp request
-const mcpServerDataStore = new Map<string, McpServerData>();
+const mcpConnections = new Map<string, McpClient>();
+const eventLogFileStreams = new Map<string, fs.WriteStream>();
+const timelineFileStreams = new Map<string, fs.WriteStream>();
 
-const mcpStateChannelBuilder = (requestId: string) => `mcp.${requestId}.readyState`;
+const protocol = 'mcp';
+const getMcpStateChannel = (requestId: string) => `${protocol}.${requestId}.readyState`;
+const mcpEventIdGenerator = () => `mcp-${uuidV4()}`;
 const _getMcpClient = (id: string) => {
   const mcpClient = mcpConnections.get(id);
   if (!mcpClient) {
@@ -68,13 +115,185 @@ const _notifyMcpClientStateChange = (channel: string, isConnected: boolean) => {
   }
 };
 
-const _clearMcpMaps = (requestId: string) => {
+const _clearMcpMaps = (requestId: string, timelineMessage: string, event?: McpEvent) => {
+  if (event) {
+    eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
+  }
+  eventLogFileStreams.get(requestId)?.end();
+  eventLogFileStreams.delete(requestId);
+  timelineFileStreams
+    .get(requestId)
+    ?.write(JSON.stringify({ value: timelineMessage, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineFileStreams.get(requestId)?.end();
+  timelineFileStreams.delete(requestId);
   mcpConnections.delete(requestId);
-  mcpServerDataStore.delete(requestId);
+};
+
+const _handleCloseMcpConnection = (requestId: string, error?: Error) => {
+  if (error) {
+    const closeEvent: McpErrorEvent = {
+      _id: mcpEventIdGenerator(),
+      requestId,
+      type: 'error',
+      timestamp: Date.now(),
+      error,
+      message: error.message || 'Unknown error',
+    };
+    // clear in-memory store
+    _clearMcpMaps(requestId, 'Closed MCP connection', closeEvent);
+  } else {
+    const closeEvent: McpCloseEvent = {
+      _id: mcpEventIdGenerator(),
+      requestId,
+      type: 'close',
+      timestamp: Date.now(),
+      reason: 'Mcp connection closed',
+    };
+    // clear in-memory store
+    _clearMcpMaps(requestId, 'Closed MCP connection', closeEvent);
+  }
+
+  const mcpStateChannel = getMcpStateChannel(requestId);
+  // notify renderer process about state change
+  _notifyMcpClientStateChange(mcpStateChannel, false);
+};
+
+const _handleMcpConnectionError = (requestId: string, error: Error) => {
+  const messageEvent: McpErrorEvent = {
+    _id: mcpEventIdGenerator(),
+    requestId,
+    type: 'error',
+    message: error.message || 'Unknown error',
+    error,
+    timestamp: Date.now(),
+  };
+  eventLogFileStreams.get(requestId)?.write(JSON.stringify(messageEvent) + '\n');
+  console.error(`MCP connection error for requestId: ${requestId}`, error);
+  // _handleCloseMcpConnection(requestId);
+};
+
+const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
+  const method = getMcpMethodFromMessage(message);
+  const messageEvent: McpMessageEvent = {
+    _id: mcpEventIdGenerator(),
+    requestId,
+    type: 'message',
+    method,
+    data: message as JSONRPCResponse,
+    direction: 'INCOMING',
+    timestamp: Date.now(),
+  };
+  eventLogFileStreams.get(requestId)?.write(JSON.stringify(messageEvent) + '\n');
+};
+
+const createErrorResponse = async ({
+  requestId,
+  responseId,
+  environmentId,
+  timelinePath,
+  message,
+}: ResponseEventOptions & { message: string }) => {
+  const settings = await models.settings.get();
+  const responsePatch = {
+    _id: responseId,
+    parentId: requestId,
+    environmentId: environmentId,
+    timelinePath,
+    statusMessage: 'Error',
+    error: message,
+  };
+  const res = await models.mcpResponse.create(responsePatch, settings.maxHistoryResponses);
+  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+};
+
+const getInitialTimeline = (url: string) => {
+  return [
+    { value: `Preparing request to ${url}`, name: 'Text', timestamp: Date.now() },
+    { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
+  ];
+};
+const parseResponseAndBuildTimeline = (requestHeaderLogs: string, response: Response) => {
+  const statusMessage = response.statusText || '';
+  const statusCode = response.status || 0;
+  const responseHeaders: { name: string; value: string }[] = [...response.headers.entries()].map(([name, value]) => ({
+    name,
+    value,
+  }));
+
+  const headersIn = responseHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
+  const timeline = [
+    { value: requestHeaderLogs, name: 'HeaderOut', timestamp: Date.now() },
+    { value: `${statusCode} ${statusMessage}`, name: 'HeaderIn', timestamp: Date.now() },
+    { value: headersIn, name: 'HeaderIn', timestamp: Date.now() },
+  ];
+  return { timeline, responseHeaders, statusCode, statusMessage };
+};
+
+// A wrapper fetch to log request and response details
+const fetchWithLogging = async (
+  url: string | URL,
+  init: RequestInit,
+  { requestId, responseId, environmentId, timelinePath, eventLogPath }: ResponseEventOptions,
+) => {
+  const { method = 'GET' } = init;
+  const reqHeader = new Headers(init?.headers || {});
+  const isJsonRequest = reqHeader.get('content-type')?.toLowerCase().includes('application/json');
+  const requestBody = isJsonRequest ? JSON.parse(init.body?.toString() || '{}') : init.body?.toString() || '';
+  const isMcpInitializeRequest = isJsonRequest && isInitializeRequest(requestBody);
+  if (isMcpInitializeRequest) {
+    // Add initial timeline
+    const initialTimelines = getInitialTimeline(url.toString());
+    initialTimelines.map(t => timelineFileStreams.get(requestId)?.write(JSON.stringify(t) + '\n'));
+  }
+  const requestHeaders: { name: string; value: string }[] = [...reqHeader.entries()].map(([name, value]) => ({
+    name,
+    value,
+  }));
+  const requestMethodLine = `${method.toUpperCase()} ${url} ${isJsonRequest && requestBody?.method ? `\nJSON-RPC Method: ${requestBody.method}` : ''}`;
+  const headersOut = requestHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
+  const start = performance.now();
+  const response = await fetch(url, init);
+  const { timeline, responseHeaders, statusCode, statusMessage } = parseResponseAndBuildTimeline(
+    `${requestMethodLine}\n${headersOut}`,
+    response,
+  );
+  timeline.map(t => timelineFileStreams.get(requestId)?.write(JSON.stringify(t) + '\n'));
+  if (isMcpInitializeRequest) {
+    // Create response model only for initialize response
+    const responsePatch: Partial<McpResponse> = {
+      _id: responseId,
+      parentId: requestId,
+      environmentId,
+      headers: responseHeaders,
+      url: url.toString(),
+      statusCode,
+      statusMessage,
+      elapsedTime: performance.now() - start,
+      timelinePath,
+      eventLogPath,
+    };
+    const settings = await models.settings.get();
+    const res = await models.mcpResponse.create(responsePatch, settings.maxHistoryResponses);
+    models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+  }
+  if (requestBody) {
+    // Add request event
+    const requestEvent: McpRequestEvent = {
+      _id: mcpEventIdGenerator(),
+      method: requestBody.method,
+      requestId,
+      type: 'message',
+      direction: 'OUTGOING',
+      timestamp: Date.now(),
+      data: requestBody,
+    };
+    eventLogFileStreams.get(requestId)?.write(JSON.stringify(requestEvent) + '\n');
+  }
+  return response;
 };
 
 const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) => {
-  const { transportType, url, requestId } = options;
+  const { transportType, url, requestId, workspaceId } = options;
   if (!url) {
     throw new Error('MCP server url is required');
   }
@@ -103,20 +322,47 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
     .filter(({ name, disabled }) => Boolean(name) && !disabled)
     .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
 
+  // create response model and file streams
+  const responseId = generateId('res');
+  const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
+  const eventLogPath = path.join(responsesDir, uuidV4() + '.response');
+  eventLogFileStreams.set(requestId, fs.createWriteStream(eventLogPath));
+  const timelinePath = path.join(responsesDir, responseId + '.timeline');
+  timelineFileStreams.set(requestId, fs.createWriteStream(timelinePath));
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  // fallback to base environment
+  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(workspaceId));
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
+  const responseEnvironmentId = environment ? environment._id : null;
+
+  // create connection
   const mcpClient = new Client({
     name: getProductName(),
     version: getAppVersion(),
   });
-  const mcpStateChannel = mcpStateChannelBuilder(requestId);
+  mcpClient.onclose = () => _handleCloseMcpConnection(requestId);
+  mcpClient.onerror = _error => _handleMcpConnectionError(requestId, _error);
+  const mcpStateChannel = getMcpStateChannel(requestId);
+  let transport: StreamableHTTPClientTransport;
 
   switch (transportType) {
     case 'streamable-http': {
       try {
         const mcpServerUrl = new URL(url);
-        const transport = new StreamableHTTPClientTransport(mcpServerUrl, {
+        transport = new StreamableHTTPClientTransport(mcpServerUrl, {
           requestInit: {
             headers: lowerCasedEnabledHeaders,
           },
+          fetch: (url, init) =>
+            fetchWithLogging(url, init || {}, {
+              requestId,
+              responseId,
+              environmentId: responseEnvironmentId,
+              timelinePath,
+              eventLogPath,
+            }),
           reconnectionOptions: {
             maxReconnectionDelay: 30000,
             initialReconnectionDelay: 1000,
@@ -124,73 +370,56 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
             maxRetries: 2,
           },
         });
+        transport.onmessage = message => _handleMcpMessage(message, requestId);
         await mcpClient.connect(transport);
-        mcpClient.onclose = () => {
-          // terminate the session when client is closed
-          transport.terminateSession();
-          // clear in-memory store
-          _clearMcpMaps(requestId);
-          // notify renderer process about state change
-          _notifyMcpClientStateChange(mcpStateChannel, false);
-        };
-        mcpClient.onerror = _error => {
-          // TODO support error
-        };
-        break;
       } catch (error) {
-        throw new Error(`Failed to create Streamable HTTP transport: ${error}`);
+        // Log error when connection fails with exception
+        createErrorResponse({
+          requestId,
+          responseId,
+          environmentId: responseEnvironmentId,
+          timelinePath,
+          eventLogPath,
+          message: error.message || 'Something went wrong',
+        });
+        console.error(`Failed to create Streamable HTTP transport: ${error}`);
+        return;
       }
+      break;
     }
-
     default: {
       throw new Error(`Unsupported transport type: ${transportType}`);
     }
   }
 
-  mcpConnections.set(requestId, mcpClient);
+  mcpConnections.set(requestId, mcpClient as McpClient);
   const serverCapabilities = mcpClient.getServerCapabilities();
-  let tools: Tool[] = [];
-  let resources: Resource[] = [];
-  let resourceTemplates: ResourceTemplate[] = [];
-  let prompts: Prompt[] = [];
   const primitivePromises: Promise<any>[] = [];
   // get server primitives if supported
   if (serverCapabilities?.tools) {
-    primitivePromises.push(mcpClient.listTools().then(response => (tools = response.tools)));
+    primitivePromises.push(mcpClient.listTools());
   }
   if (serverCapabilities?.resources) {
-    primitivePromises.push(mcpClient.listResources().then(response => (resources = response.resources)));
-    primitivePromises.push(
-      mcpClient.listResourceTemplates().then(response => (resourceTemplates = response.resourceTemplates)),
-    );
+    primitivePromises.push(mcpClient.listResources());
+    primitivePromises.push(mcpClient.listResourceTemplates());
   }
   if (serverCapabilities?.prompts) {
-    primitivePromises.push(mcpClient.listPrompts().then(response => (prompts = response.prompts)));
+    primitivePromises.push(mcpClient.listPrompts());
   }
   try {
     await Promise.all(primitivePromises);
   } catch (error) {
     console.warn('Failed to fetch one or more primitive types from MCP server', error);
   }
-  const serverData = {
-    serverCapabilities: serverCapabilities,
-    primitives: {
-      tools,
-      resources,
-      resourceTemplates,
-      prompts,
-    },
-  };
-  mcpServerDataStore.set(requestId, serverData as McpServerData);
   // notify connection ready after capabilities and primitives are fetched
   _notifyMcpClientStateChange(mcpStateChannel, true);
-  return serverData;
 };
 
-const closeMcpConnection = (options: CommonMcpOptions) => {
+const closeMcpConnection = async (options: CommonMcpOptions) => {
   const { requestId } = options;
   const mcpClient = _getMcpClient(requestId);
   if (mcpClient) {
+    await mcpClient.transport.terminateSession();
     mcpClient.close();
   }
 };
@@ -201,10 +430,22 @@ const closeAllMcpConnections = () => {
   }
 };
 
-const getServerData = async (options: CommonMcpOptions) => mcpServerDataStore.get(options.requestId);
-
-const findMany = async (_options: { responseId: string }): Promise<any> => {
-  return [];
+const findMany = async (options: { responseId: string }): Promise<McpEvent[]> => {
+  const response = await models.mcpResponse.getById(options.responseId);
+  if (!response || !response.eventLogPath) {
+    return [];
+  }
+  const body = await fs.promises.readFile(response.eventLogPath);
+  return (
+    body
+      .toString()
+      .split('\n')
+      .filter(e => e?.trim())
+      // Parse the message
+      .map(e => JSON.parse(e))
+      // Reverse the list of messages so that we get the latest message first
+      .reverse() || []
+  );
 };
 
 const listTools = async (options: CommonMcpOptions) => {
@@ -269,7 +510,6 @@ export interface McpBridgeAPI {
   connect: typeof openMcpClientConnection;
   close: typeof closeMcpConnection;
   closeAll: typeof closeAllMcpConnections;
-  getServerData: typeof getServerData;
   primitive: {
     listTools: typeof listTools;
     callTool: typeof callTool;
@@ -308,10 +548,10 @@ export const registerMcpHandlers = () => {
   ipcMainHandle('mcp.primitive.subscribeResource', (_, options: Parameters<typeof subscribeResource>[0]) =>
     subscribeResource(options),
   );
-  ipcMainOn('mcp.close', (_, options: Parameters<typeof closeMcpConnection>[0]) => closeMcpConnection(options));
+  ipcMainHandle('mcp.close', (_, options: Parameters<typeof closeMcpConnection>[0]) => closeMcpConnection(options));
   ipcMainOn('mcp.closeAll', closeAllMcpConnections);
   ipcMainHandle('mcp.readyState', (_, options: Parameters<typeof getMcpReadyState>[0]) => getMcpReadyState(options));
-  ipcMainHandle('mcp.getServerData', (_, options: Parameters<typeof getMcpReadyState>[0]) => getServerData(options));
+  ipcMainHandle('mcp.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
 };
 
 electron.app.on('window-all-closed', closeAllMcpConnections);
