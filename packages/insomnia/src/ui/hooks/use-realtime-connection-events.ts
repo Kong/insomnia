@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import * as reactUse from 'react-use';
 
-import type { McpEvent } from '../..//main/network/mcp';
 import type { CurlEvent } from '../../main/network/curl';
+import type { McpEvent } from '../../main/network/mcp';
 import type { SocketIOEvent } from '../../main/network/socket-io';
 import type { WebSocketEvent } from '../../main/network/websocket';
 

@@ -165,13 +165,15 @@ const McpPage = () => {
 
   // TODO Support filter
   const visibleCollection = getPrimitiveCollection().filter(item => !item.hide);
-  // TODO Use these variales to enable notification
-  // const serverCapabilities = getServerCapabilities();
-  // const allowSubscribeResources = serverCapabilities.resources.enabled && serverCapabilities.resources.subscribe;
-  // const enableNotification =
-  //   serverCapabilities.tools.listChanged ||
-  //   serverCapabilities.resources.listChanged ||
-  //   serverCapabilities.prompts.listChanged;
+  const serverCapabilities = getServerCapabilities();
+  const allowSubscribeResources = serverCapabilities.resources.enabled && serverCapabilities.resources.subscribe;
+  const enableNotification =
+    serverCapabilities.tools.listChanged ||
+    serverCapabilities.resources.listChanged ||
+    serverCapabilities.prompts.listChanged;
+  // TODO Use these variables to enable notification
+  console.log(`enableNotification`, enableNotification);
+  console.log(`allowSubscribeResources`, allowSubscribeResources);
 
   const requestId = activeRequest._id;
   const { activeEnvironment } = useWorkspaceLoaderData()!;
