@@ -1,3 +1,5 @@
+import { mkdirSync } from 'node:fs';
+
 import type {
   IpcMainEvent,
   IpcMainInvokeEvent,
@@ -115,6 +117,7 @@ export type MainOnChannels =
   | 'manualUpdateCheck'
   | 'openDeepLink'
   | 'openInBrowser'
+  | 'openPath'
   | 'readText'
   | 'restart'
   | 'set-hidden-window-busy-status'
@@ -301,6 +304,11 @@ export function registerElectronHandlers() {
 
   ipcMainOn('showItemInFolder', (_, name: string) => {
     shell.showItemInFolder(name);
+  });
+
+  ipcMainOn('openPath', (_, name: string) => {
+    mkdirSync(name, { recursive: true });
+    shell.openPath(name);
   });
 
   ipcMainOn('readText', event => {

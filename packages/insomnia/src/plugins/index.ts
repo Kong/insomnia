@@ -260,6 +260,7 @@ export function getBundlePluginMap() {
       if (isDevelopment()) {
         console.warn(
           `[plugin] Failed to load bundled plugin ${pluginName}. You can ignore this warning if you not developing external vault feature.`,
+          err,
         );
       } else {
         console.error(`Failed to load bundled plugin ${pluginName}`, err);

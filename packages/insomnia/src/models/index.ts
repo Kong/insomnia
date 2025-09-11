@@ -10,6 +10,7 @@ import * as _gitCredentials from './git-credentials';
 import * as _gitRepository from './git-repository';
 import * as _grpcRequest from './grpc-request';
 import * as _grpcRequestMeta from './grpc-request-meta';
+import * as _llmConfiguration from './llm-configuration';
 import * as _mockRoute from './mock-route';
 import * as _mockServer from './mock-server';
 import * as _oAuth2Token from './o-auth-2-token';
@@ -92,6 +93,7 @@ export const workspaceMeta = _workspaceMeta;
 export * as organization from './organization';
 export const userSession = _userSession;
 export const cloudCredential = _cloudCredential;
+export const llmConfiguration = _llmConfiguration;
 
 export function all() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
@@ -136,6 +138,7 @@ export function all() {
     socketIOPayload,
     socketIOResponse,
     cloudCredential,
+    llmConfiguration,
   ] as const;
 }
 export function types() {
@@ -152,6 +155,7 @@ export type AllTypes =
   | 'GitRepository'
   | 'GrpcRequest'
   | 'GrpcRequestMeta'
+  | 'LLMConfiguration'
   | 'MockRoute'
   | 'MockServer'
   | 'OAuth2Token'

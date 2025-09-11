@@ -195,6 +195,7 @@ const app: Window['app'] = {
 };
 const shell: Window['shell'] = {
   showItemInFolder: options => ipcRenderer.send('showItemInFolder', options),
+  openPath: options => ipcRenderer.send('openPath', options),
 };
 const clipboard: Window['clipboard'] = {
   readText: () => ipcRenderer.sendSync('readText'),
