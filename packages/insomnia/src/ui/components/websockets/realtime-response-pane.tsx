@@ -4,22 +4,26 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
-import { useMcpRequestLoaderData } from '../../..//routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp.request.$requestId';
 import { getSetCookieHeaders } from '../../../common/misc';
 import type { CurlEvent } from '../../../main/network/curl';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
+import type { McpEvent } from '../../../main/network/mcp';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
+import { isMcpResponse, type McpResponse } from '../../../models/mcp-response';
+import type { RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
 import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socket-io-response';
-import type { WebSocketResponse } from '../../../models/websocket-response';
+import { type WebSocketResponse } from '../../../models/websocket-response';
 import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { useMcpRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp.request.$requestId';
 import { deserializeNDJSON } from '../../../utils/ndjson';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
+import { McpEventView } from '../mcp/event-view';
 import { Pane, PaneHeader } from '../panes/pane';
 import { PlaceholderResponsePane } from '../panes/placeholder-response-pane';
 import { SocketIOEventView } from '../socket-io/event-view';
@@ -35,7 +39,7 @@ import { EventLogView } from './event-log-view';
 import { EventView } from './event-view';
 
 export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
-  const { activeResponse } = useRequestLoaderData()!;
+  const { activeResponse, responses, requestVersions } = useRequestLoaderData()!;
 
   if (!activeResponse) {
     return (
@@ -45,11 +49,13 @@ export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
       </Pane>
     );
   }
-  return <RealtimeActiveResponsePane response={activeResponse} />;
+  return (
+    <RealtimeActiveResponsePane response={activeResponse} responses={responses} requestVersions={requestVersions} />
+  );
 };
 
 export const McpRealtimeResponsePane = () => {
-  const { activeResponse } = useMcpRequestLoaderData()!;
+  const { activeResponse, responses, requestVersions } = useMcpRequestLoaderData()!;
 
   if (!activeResponse) {
     return (
@@ -59,13 +65,19 @@ export const McpRealtimeResponsePane = () => {
       </Pane>
     );
   }
-  return <RealtimeActiveResponsePane response={activeResponse} />;
+  return (
+    <RealtimeActiveResponsePane response={activeResponse} responses={responses} requestVersions={requestVersions} />
+  );
 };
 
+type ResponseType = WebSocketResponse | Response | SocketIOResponse | McpResponse;
+type EventType = CurlEvent | WebSocketEvent | SocketIOEvent | McpEvent;
 const RealtimeActiveResponsePane: FC<{
-  response: WebSocketResponse | Response | SocketIOResponse;
-}> = ({ response }) => {
-  const [selectedEvent, setSelectedEvent] = useState<CurlEvent | WebSocketEvent | SocketIOEvent | null>(null);
+  response: ResponseType;
+  responses: ResponseType[];
+  requestVersions: RequestVersion[];
+}> = ({ response, responses, requestVersions }) => {
+  const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [clearEventsBefore, setClearEventsBefore] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,20 +87,26 @@ const RealtimeActiveResponsePane: FC<{
     if (isSocketIOResponse(response)) {
       return 'socketIO';
     }
+    if (isMcpResponse(response)) {
+      return 'mcp';
+    }
     return response.type === 'WebSocketResponse' ? 'webSocket' : 'curl';
   }, [response]);
 
-  const allEvents = useRealtimeConnectionEvents({ responseId: response._id, protocol }) as (
-    | CurlEvent
-    | WebSocketEvent
-    | SocketIOEvent
-  )[];
+  const allEvents = useRealtimeConnectionEvents({ responseId: response._id, protocol }) as EventType[];
   const requestId = response.parentId;
   const readyState = useReadyState({ requestId: requestId, protocol });
-  const handleSelection = (event: CurlEvent | WebSocketEvent | SocketIOEvent) => {
-    setSelectedEvent((selected: CurlEvent | WebSocketEvent | SocketIOEvent | null) =>
-      selected?._id === event._id ? null : event,
-    );
+  const handleSelection = (event: EventType) => {
+    setSelectedEvent((selected: EventType | null) => (selected?._id === event._id ? null : event));
+  };
+  const getEventView = (selectedEvent: EventType) => {
+    if (isSocketIOResponse(response)) {
+      return <SocketIOEventView event={selectedEvent as SocketIOEvent} key={selectedEvent._id} />;
+    } else if (isMcpResponse(response)) {
+      return <McpEventView event={selectedEvent as McpEvent} key={selectedEvent._id} />;
+    }
+
+    return <EventView event={selectedEvent as WebSocketEvent} key={selectedEvent._id} />;
   };
 
   const events = useMemo(
@@ -157,7 +175,8 @@ const RealtimeActiveResponsePane: FC<{
     };
   }, [response.timelinePath, events.length]);
 
-  const cookieHeaders = !isSocketIOResponse(response) ? getSetCookieHeaders(response.headers) : [];
+  const cookieHeaders =
+    !isSocketIOResponse(response) && !isMcpResponse(response) ? getSetCookieHeaders(response.headers) : [];
   return (
     <Pane type="response">
       <PaneHeader className="row-spaced">
@@ -174,7 +193,7 @@ const RealtimeActiveResponsePane: FC<{
             </>
           )}
         </div>
-        <ResponseHistoryDropdown activeResponse={response} />
+        <ResponseHistoryDropdown activeResponse={response} requestVersions={requestVersions} responses={responses} />
       </PaneHeader>
       <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
         <TabList
@@ -284,13 +303,7 @@ const RealtimeActiveResponsePane: FC<{
                   <>
                     <PanelResizeHandle className={'h-[1px] w-full bg-[--hl-md]'} />
                     <Panel minSize={10} defaultSize={50}>
-                      <div className="h-full flex-1 border-t border-[var(--hl-md)]">
-                        {isSocketIOResponse(response) ? (
-                          <SocketIOEventView key={selectedEvent._id} event={selectedEvent as SocketIOEvent} />
-                        ) : (
-                          <EventView key={selectedEvent._id} event={selectedEvent} />
-                        )}
-                      </div>
+                      <div className="h-full flex-1 border-t border-[var(--hl-md)]">{getEventView(selectedEvent)}</div>
                     </Panel>
                   </>
                 )}

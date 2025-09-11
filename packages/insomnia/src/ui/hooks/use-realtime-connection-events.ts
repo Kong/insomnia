@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { CurlEvent } from '../../main/network/curl';
+import type { McpEvent } from '../../main/network/mcp';
 import type { SocketIOEvent } from '../../main/network/socket-io';
 import type { WebSocketEvent } from '../../main/network/websocket';
 
@@ -11,7 +12,7 @@ export function useRealtimeConnectionEvents({
   responseId: string;
   protocol: 'curl' | 'webSocket' | 'socketIO' | 'mcp';
 }) {
-  const [events, setEvents] = useState<CurlEvent[] | WebSocketEvent[] | SocketIOEvent[]>([]);
+  const [events, setEvents] = useState<CurlEvent[] | WebSocketEvent[] | SocketIOEvent[] | McpEvent[]>([]);
   const updateEvents = useCallback(async () => {
     const allEvents = await window.main[protocol].event.findMany({ responseId });
     setEvents(allEvents);
