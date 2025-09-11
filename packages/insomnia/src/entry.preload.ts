@@ -54,7 +54,7 @@ const socketIO: SocketIOBridgeAPI = {
 
 const mcp: McpBridgeAPI = {
   connect: options => ipcRenderer.invoke('mcp.connect', options),
-  close: options => ipcRenderer.send('mcp.close', options),
+  close: options => ipcRenderer.invoke('mcp.close', options),
   closeAll: () => ipcRenderer.send('mcp.closeAll'),
   primitive: {
     listTools: options => ipcRenderer.invoke('mcp.primitive.listTools', options),
@@ -72,7 +72,6 @@ const mcp: McpBridgeAPI = {
   event: {
     findMany: options => ipcRenderer.invoke('mcp.event.findMany', options),
   },
-  getServerData: options => ipcRenderer.invoke('mcp.getServerData', options),
 };
 
 const grpc: gRPCBridgeAPI = {

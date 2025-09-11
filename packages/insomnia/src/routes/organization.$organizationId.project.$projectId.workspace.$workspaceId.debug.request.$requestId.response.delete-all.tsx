@@ -2,6 +2,7 @@ import { href } from 'react-router';
 
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
+import { isMcpRequestId } from '~/models/mcp-request';
 import { isSocketIORequestId } from '~/models/socket-io-request';
 import { isWebSocketRequestId } from '~/models/websocket-request';
 import { invariant } from '~/utils/invariant';
@@ -22,6 +23,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     await models.webSocketResponse.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
   } else if (isSocketIORequestId(requestId)) {
     await models.socketIOResponse.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
+  } else if (isMcpRequestId(requestId)) {
+    await models.mcpResponse.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
   } else {
     await models.response.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
   }

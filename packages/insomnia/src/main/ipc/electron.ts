@@ -122,7 +122,8 @@ export type HandleChannels =
   | 'mcp.primitive.readResource'
   | 'mcp.primitive.subscribeResource'
   | 'mcp.readyState'
-  | 'mcp.getServerData';
+  | 'mcp.event.findMany'
+  | 'mcp.close';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
@@ -165,7 +166,6 @@ export type MainOnChannels =
   | 'updateLatestStepName'
   | 'webSocket.close'
   | 'webSocket.closeAll'
-  | 'mcp.close'
   | 'mcp.closeAll'
   | 'mcp.sendMCPRequest'
   | 'writeText';
