@@ -64,8 +64,6 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: package-lock.json
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@kong'
 
       - name: Install packages
         run: npm ci

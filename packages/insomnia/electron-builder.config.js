@@ -42,6 +42,8 @@ const config = {
     entitlements: './build/static/entitlements.mac.inherit.plist',
     entitlementsInherit: './build/static/entitlements.mac.inherit.plist',
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
+    x64ArchFiles:
+      "**/node_modules/{@node-llama-cpp,@reflink}/**/*",
     target: [
       {
         target: 'dmg',

@@ -201,7 +201,8 @@
     "zod": "^3.25.75"
   },
   "optionalDependencies": {
-    "@kong/insomnia-plugin-external-vault": "0.1.1-dev.0.20250902151320"
+    "@kong/insomnia-plugin-external-vault": "0.1.1-dev.0.20250902151320",
+    "@kong-insomnia/insomnia-plugin-ai": "1.0.1-dev.0.20250923182521"
   },
   "dev": {
     "dev-server-port": 3334
