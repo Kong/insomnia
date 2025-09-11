@@ -1,3 +1,4 @@
+import type { IconDefinition, IconName, IconPrefix } from '@fortawesome/fontawesome-common-types';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { fab } from '@fortawesome/free-brands-svg-icons';
 import { far } from '@fortawesome/free-regular-svg-icons';
@@ -5,8 +6,6 @@ import { fas } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon, type FontAwesomeIconProps } from '@fortawesome/react-fontawesome';
 
 library.add(fas, far, fab);
-
-import type { IconDefinition, IconName, IconPrefix } from '@fortawesome/fontawesome-common-types';
 
 const customMcpIcon: IconDefinition = {
   prefix: 'fac' as IconPrefix, // custom prefix for "custom" icons, avoids conflicts with standard prefixes

@@ -31,6 +31,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
 
   window.main.mcp.connect({
     requestId,
+    workspaceId,
     transportType: rendered.transportType || 'streamable-http',
     url: rendered.url,
     headers: rendered.headers,
