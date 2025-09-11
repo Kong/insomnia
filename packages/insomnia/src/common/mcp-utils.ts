@@ -88,3 +88,21 @@ export const getMcpMethodFromMessage = (message: JSONRPCMessage): JSONRPCMessage
   }
   return method;
 };
+
+export const getDefaultServerCapabilities = () => {
+  return {
+    tools: {
+      enabled: false,
+      listChanged: false,
+    },
+    resources: {
+      enabled: false,
+      listChanged: false,
+      subscribe: true,
+    },
+    prompts: {
+      enabled: false,
+      listChanged: false,
+    },
+  };
+};

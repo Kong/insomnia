@@ -18,6 +18,7 @@ import { useLocalStorage } from 'react-use';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import {
+  getDefaultServerCapabilities,
   type McpServerData,
   METHOD_INITIALIZE,
   METHOD_LIST_PROMPTS,
@@ -142,21 +143,7 @@ const McpPage = () => {
   };
 
   const getServerCapabilities = () => {
-    const serverCapabilities = {
-      tools: {
-        enabled: false,
-        listChanged: false,
-      },
-      resources: {
-        enabled: false,
-        listChanged: false,
-        subscribe: true,
-      },
-      prompts: {
-        enabled: false,
-        listChanged: false,
-      },
-    };
+    const serverCapabilities = getDefaultServerCapabilities();
     if (mcpServerData) {
       const { tools, resources, prompts } = mcpServerData.serverCapabilities;
       if (tools) {
@@ -264,7 +251,8 @@ const McpPage = () => {
       const activeResponseId = activeResponse?._id;
       if (activeResponseId) {
         const allEvents = await window.main.mcp.event.findMany({ responseId: activeResponseId });
-        const serverCapabilities = findFirstMatchEventData(allEvents, METHOD_INITIALIZE)?.capabilities;
+        const serverCapabilities =
+          findFirstMatchEventData(allEvents, METHOD_INITIALIZE)?.capabilities || getDefaultServerCapabilities();
         const tools = findFirstMatchEventData(allEvents, METHOD_LIST_TOOLS)?.tools || [];
         const resources = findFirstMatchEventData(allEvents, METHOD_LIST_RESOURCES)?.resources || [];
         const resourceTemplates =
