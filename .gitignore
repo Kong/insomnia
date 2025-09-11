@@ -29,8 +29,8 @@ graphql.config.json
 .cache
 .graphqlconfig
 schema.graphql
-packages/insomnia-smoke-test/traces
-packages/wj-test/traces
+packages/wj-test/wj-report
+**/traces
 *.tsbuildinfo
 dist
 .history

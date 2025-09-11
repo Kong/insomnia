@@ -1,9 +1,9 @@
 import { expect } from '@playwright/test';
 import { delay } from 'insomnia/src/common/misc';
 
-import { test } from '../fixtures/app';
+import { TestRunner } from '../common/test-runner';
 
-test('Create and send GET request', async ({ page }) => {
+TestRunner.runTest(__filename, 'Create and send GET request', async ({ page }) => {
   const delayMs = 100;
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.getByTestId('response-pane');
@@ -62,50 +62,3 @@ test('Create and send GET request', async ({ page }) => {
   await expect.soft(responseBody).toContainText(`"url": "https://httpbin.org/get"`);
 });
 
-
-test.skip('Create and send POST request', async ({ app, page }) => {
-  const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-  const responseBody = page.getByTestId('response-pane');
-
-  // Create a new request
-  await page.getByRole('button', { name: 'New HTTP Request' }).click();
-
-  // Check the new request in requests list
-  await expect.soft(page.getByTestId('New Request').getByText('New Request')).toBeVisible();
-
-  // Rename the new request in requests list
-  page.getByTestId('New Request').hover();
-  await page.getByTestId('Dropdown-New-Request').click();
-  await page.getByText('Rename').click();
-  await page.getByRole('textbox', { name: 'GET New Request' }).fill('My POST Request');
-  await page.getByRole('textbox', { name: 'GET New Request' }).press('Enter');
-  await page.getByLabel('Insomnia Tabs').getByText('My POST Request').click();
-
-  // Fill in POST request details
-  await page.getByTestId('request-pane').locator('header pre').nth(2).click();
-  await page.getByTestId('request-pane').locator('header').getByRole('textbox').fill('https://httpbin.org/post');
-  await expect.soft(page.getByTestId('OneLineEditor').getByText('https://httpbin.org/post')).toBeVisible();
-
-  await page.getByRole('button', { name: 'Request Method' }).click();
-  await page.getByRole('button', { name: 'POST' }).click();
-
-  await page.getByText('Body').click();
-  await page.getByRole('button', { name: 'No Body Change Body Type' }).click();
-  await page.getByRole('option', { name: 'Plain Text' }).click();
-
-  await page.getByTestId('CodeEditor').getByRole('textbox').pressSequentially('test text');
-  await expect.soft(page.getByTestId('CodeEditor')).toContainText('test text');
-  await page.getByTestId('CodeEditor').getByRole('textbox').blur();
-
-  await delay(500); // Wait for the request to be ready. Maybe there is a better way to do this?
-
-  // Send POST request
-  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-
-  // Check response
-  await expect.soft(statusTag).toContainText('200 OK');
-
-  await expect.soft(responseBody).toContainText(`"data": "test text",`);
-  await expect.soft(responseBody).toContainText(`"url": "https://httpbin.org/post"`);
-
-});

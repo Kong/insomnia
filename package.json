@@ -48,6 +48,8 @@
     "@types/node": "^24.2.1",
     "@typescript-eslint/eslint-plugin": "^8.29.0",
     "@typescript-eslint/parser": "^8.29.0",
+    "electron": "^38.1.0",
+    "electron-rebuild": "^3.2.9",
     "esbuild": "^0.24.0",
     "esbuild-runner": "^2.2.2",
     "eslint": "^9.23.0",
@@ -68,6 +70,6 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@getinsomnia/node-libcurl": "3.0.0"
+    "@getinsomnia/node-libcurl": "^3.0.0"
   }
 }
