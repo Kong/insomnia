@@ -32,9 +32,6 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
           scope: '@kong'
 
-      - name: Install dependencies
-        run: npm install @kong/insomnia-plugin-external-vault -w insomnia
-
       - name: Install packages
         run: npm ci
         env: 
