@@ -1,7 +1,10 @@
 name: Fix 11.6.0 inso provenance
 run-name: Fix 11.6.0 inso provenance
 
-# on: push
+on: push
+
+env:
+  RELEASE_VERSION: 11.6.0
 
 jobs:
   inso-image-provenance:
