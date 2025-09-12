@@ -43,10 +43,34 @@ jobs:
       - name: WJ test electron app
         run: npm run test:build -w wj-test -- --project=WJTest
 
-      - name: Upload test
+      - name: Upload test traces
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: ignore
           name: ubuntu-wj-test-traces-${{ github.run_number }}
           path: packages/wj-test/traces
+
+      - name: Report - Prepare report for Pages
+        run: |
+          mkdir -p gh-pages
+          cp -r packages/wj-test/wj-report/* gh-pages/
+
+      - name: Report - Configure Github Pages
+        uses: actions/configure-pages@v5
+
+      - name: Report - Upload report to Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'gh-pages'
+
+      - name: Report - Upload HTML test report for download
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: ubuntu-wj-test-report-${{ github.run_number }}
+          path: 'gh-pages'
+
+      - name: Report - Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
