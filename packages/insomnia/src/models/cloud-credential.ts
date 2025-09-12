@@ -42,7 +42,10 @@ interface HashiCorpBaseCredential {
   expires_at?: number;
 }
 export enum HashiCorpCredentialType {
-  cloud = 'cloud',
+  // Points to the EOS HCP Vault Secrets. Refer: https://developer.hashicorp.com/hcp/docs/vault-secrets/
+  cloudVaultSecrets = 'cloud',
+  // Points to the HCP Vault Dedicated. Refer: https://developer.hashicorp.com/hcp/docs/vault/
+  cloudVaultDedicated = 'cloudVaultDedicated',
   onPrem = 'onPrem',
 }
 export enum HashiCorpVaultAuthMethod {
@@ -52,7 +55,22 @@ export enum HashiCorpVaultAuthMethod {
 export interface HCPCredential extends HashiCorpBaseCredential {
   client_id: string;
   client_secret: string;
-  type: HashiCorpCredentialType.cloud;
+  type: HashiCorpCredentialType.cloudVaultSecrets;
+}
+export interface HCPVaultDedicatedAppRoleCredential extends HashiCorpBaseCredential {
+  role_id: string;
+  secret_id: string;
+  authMethod: HashiCorpVaultAuthMethod.appRole;
+  type: HashiCorpCredentialType.cloudVaultDedicated;
+  serverAddress: string;
+  namespace: string;
+}
+export interface HCPVaultDedicatedTokenCredential extends HashiCorpBaseCredential {
+  authMethod: HashiCorpVaultAuthMethod.token;
+  access_token: string;
+  type: HashiCorpCredentialType.cloudVaultDedicated;
+  serverAddress: string;
+  namespace: string;
 }
 export interface VaultAppRoleCredential extends HashiCorpBaseCredential {
   role_id: string;
@@ -88,7 +106,12 @@ type BaseCloudCredential =
   | { provider: 'azure'; credentials: AzureOAuthCredential }
   | {
       provider: 'hashicorp';
-      credentials: HCPCredential | VaultAppRoleCredential | VaultTokenCredential;
+      credentials:
+        | HCPCredential
+        | VaultAppRoleCredential
+        | VaultTokenCredential
+        | HCPVaultDedicatedAppRoleCredential
+        | HCPVaultDedicatedTokenCredential;
     };
 export type CloudProviderCredential = BaseModel & BaseCloudCredential;
 

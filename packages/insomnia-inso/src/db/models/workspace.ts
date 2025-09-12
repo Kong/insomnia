@@ -9,7 +9,7 @@ const entity = 'workspace';
 export const loadWorkspace = (db: Database, identifier: string) => {
   logger.trace('Load workspace with identifier `%s` from data store', identifier);
   const items = db.Workspace.filter(workspace => matchIdIsh(workspace, identifier) || workspace.name === identifier);
-  logger.trace('Found %d.', items.length);
+  logger.trace('Found %d workspace(s).', items.length);
   return ensureSingleOrNone(items, 'workspace');
 };
 export const promptWorkspace = async (db: Database, ci: boolean): Promise<Workspace | null | undefined> => {
