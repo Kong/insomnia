@@ -33,6 +33,7 @@ interface NewWorkspaceData {
 }
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.new';
+import { cwd } from 'node:process';
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
@@ -100,40 +101,43 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       };
 
       const createAIMockServer = async () => {
-        const managerResult = await window.main.createMockServerManager();
-        const parserResult = await window.main.createOpenAPIParser();
-
-        if (!managerResult.success || !parserResult.success) {
-          console.warn('AI features not available, using manual mock server creation');
-          await createManualMockServer();
-          return;
-        }
-
         const validationError = validateOpenAPISpec(workspaceData.openApiSpecPath);
         if (validationError) {
           return validationError;
         }
 
-        const parseResult = await parseOpenAPISpecFile(workspaceData.openApiSpecPath!);
-        if ('error' in parseResult) {
-          return parseResult;
-        }
+        try {
+          const openapiSpec = fs.readFileSync(workspaceData.openApiSpecPath!, 'utf8');
+          
+          const modelConfig = {
+            backend: 'gguf',
+            modelDir: cwd() + '/models/',
+            model: "Llama-3.2-3B-Instruct-Q6_K.gguf"
+          };
 
-        const serverResult = await window.main.createServerWithEndpoints(
-          workspace._id,
-          mockServerPatch,
-          parseResult.result
-        );
+          const serverResult = await window.main.createMockServerFromSpec(
+            openapiSpec,
+            workspace._id,
+            mockServerPatch,
+            modelConfig
+          );
 
-        if (!serverResult.success) {
-          // TODO how to handle this case? What if we created the server but the route
-          // creation failed?
-          console.error('Failed to create server with endpoints:', serverResult.error);
-          await createManualMockServer();
-        } else {
-          const result = serverResult.result;
-          const { id: sessionId } = await userSession.getOrCreate();
-          await registerMockRoutes(result.routes, result.server, sessionId, organizationId);
+          if (!serverResult.success) {
+            return {
+              error: `Failed to create mock server from spec: ${serverResult.error}`
+            };
+          } else {
+            const result = serverResult.result;
+            const { id: sessionId } = await userSession.getOrCreate();
+            if (result.routes) {
+              await registerMockRoutes(result.routes, result.server, sessionId, organizationId);
+            }
+          }
+        } catch (error) {
+          console.error('Error reading OpenAPI spec file:', error);
+          return {
+            error: 'Failed to read OpenAPI specification file.',
+          };
         }
 
         return;
@@ -271,18 +275,6 @@ function validateOpenAPISpec(specPath?: string) {
   return null;
 }
 
-async function parseOpenAPISpecFile(specPath: string) {
-  const openapiSpec = fs.readFileSync(specPath, 'utf8');
-  const parseResult = await window.main.parseOpenAPISpec(openapiSpec);
-
-  if (!parseResult.success) {
-    return {
-      error: 'Failed to parse OpenAPI spec.',
-    };
-  }
-
-  return parseResult;
-}
 
 async function registerMockRoutes(routes: any[], server: any, sessionId: string, organizationId: string) {
   for (const route of routes) {

@@ -45,7 +45,7 @@ import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
 import type { secretStorageBridgeAPI } from './secret-storage';
-import { createMockServerManager, createOpenAPIParser, parseOpenAPISpec, createServerWithEndpoints } from '../../lib/mock-server-bridge';
+import { createMockServerFromSpec } from '../../lib/mock-server-bridge';
 
 let lintProcess: Electron.UtilityProcess | null = null;
 
@@ -112,10 +112,7 @@ export interface RendererToMainBridgeAPI {
   updateLatestStepName: (options: { requestId: string; stepName: string }) => void;
   extractJsonFileFromPostmanDataDumpArchive: (archivePath: string) => Promise<any>;
   getLocalStorageDataFromFileOrigin: () => Promise<Record<string, any>>;
-  createMockServerManager: () => Promise<{ success: boolean; available: boolean; error?: string }>;
-  createOpenAPIParser: () => Promise<{ success: boolean; available: boolean; error?: string }>;
-  parseOpenAPISpec: (spec: string) => Promise<{ success: boolean; result?: any; error?: string }>;
-  createServerWithEndpoints: (workspaceId: string, mockServerPatch: any, endpoints: any[]) => Promise<{ success: boolean; result?: any; error?: string }>;
+  createMockServerFromSpec: (openApiSpec: string, workspaceId: string, mockServerData: any, modelConfig: any) => Promise<{ success: boolean; result?: any; error?: string }>;
 }
 
 export function registerMainHandlers() {
@@ -328,19 +325,7 @@ export function registerMainHandlers() {
     });
   });
 
-  ipcMainHandle('createMockServerManager', async (_) => {
-    return createMockServerManager();
-  });
-
-  ipcMainHandle('createOpenAPIParser', async (_) => {
-    return createOpenAPIParser();
-  });
-
-  ipcMainHandle('parseOpenAPISpec', async (_, spec: string) => {
-    return parseOpenAPISpec(spec);
-  });
-
-  ipcMainHandle('createServerWithEndpoints', async (_, workspaceId: string, mockServerPatch: any, endpoints: any[]) => {
-    return createServerWithEndpoints(workspaceId, mockServerPatch, endpoints);
+  ipcMainHandle('createMockServerFromSpec', async (_, openApiSpec: string, workspaceId: string, mockServerData: any, modelConfig: any) => {
+    return createMockServerFromSpec(openApiSpec, workspaceId, mockServerData, modelConfig);
   });
 }
