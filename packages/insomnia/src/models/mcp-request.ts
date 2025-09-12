@@ -8,7 +8,11 @@ export const prefix = 'mcp-req';
 export const canDuplicate = true;
 export const canSync = false;
 
-export type TransportType = 'stdio' | 'streamable-http';
+export const TRANSPORT_TYPES = {
+  STDIO: 'stdio',
+  HTTP: 'streamable-http',
+} as const;
+export type TransportType = (typeof TRANSPORT_TYPES)[keyof typeof TRANSPORT_TYPES];
 
 export interface BaseMcpRequest {
   name: string;
@@ -17,14 +21,11 @@ export interface BaseMcpRequest {
   description: string;
   headers: RequestHeader[];
   authentication: RequestAuthentication | {};
+  env: Record<string, string>;
 }
 export type McpServerPrimitiveTypes = 'tools' | 'resources' | 'prompts';
 
-export const MCP_TRANSPORT_TYPES: TransportType[] = [
-  'streamable-http',
-  // TODO: Enable stdio transport type when implemented
-  // 'stdio',
-];
+export const MCP_TRANSPORT_TYPES: TransportType[] = ['streamable-http', 'stdio'];
 
 export type McpRequest = BaseModel & BaseMcpRequest & { type: typeof type };
 
@@ -40,6 +41,7 @@ export function init(): BaseMcpRequest {
     description: '',
     headers: [],
     authentication: {},
+    env: {},
   };
 }
 
