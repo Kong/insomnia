@@ -1,0 +1,23 @@
+name: Fix 11.6.0 inso provenance
+run-name: Fix 11.6.0 inso provenance
+
+# on: push
+
+jobs:
+  inso-image-provenance:
+    permissions:
+      id-token: write # needed for signing the images
+      actions: read # For getting workflow run info to build provenance
+      packages: write # Required for publishing provenance. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
+      # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    with:
+      image: kong/inso
+      digest: sha256:5edb096494b10ed524e9df65bd568a25be2566619aedeed40c84ba3c77728f66
+      provenance-repository: "kong/notary"
+    secrets:
+      registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
+      registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+      provenance-registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
+      provenance-registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
