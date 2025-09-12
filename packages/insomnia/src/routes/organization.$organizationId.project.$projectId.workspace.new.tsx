@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 
 import { href, redirect } from 'react-router';
@@ -14,6 +15,10 @@ import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
+import { mockRouteToHar } from './organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { getMockServiceURL } from '~/common/constants';
+import { insomniaFetch } from '~/ui/insomniaFetch';
+import { userSession } from '~/models';
 
 interface NewWorkspaceData {
   name: string;
@@ -21,6 +26,8 @@ interface NewWorkspaceData {
   folderPath?: string;
   mockServerType?: 'self-hosted' | 'cloud';
   mockServerUrl?: string;
+  mockServerCreationType?: 'ai' | 'manual';
+  openApiSpecPath?: string;
   fileName?: string;
   withRequest?: boolean;
 }
@@ -88,7 +95,56 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
       await models.environment.getOrCreateForParentId(workspace._id);
       const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-      await models.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
+      const createManualMockServer = async () => {
+        await models.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
+      };
+
+      const createAIMockServer = async () => {
+        const managerResult = await window.main.createMockServerManager();
+        const parserResult = await window.main.createOpenAPIParser();
+
+        if (!managerResult.success || !parserResult.success) {
+          console.warn('AI features not available, using manual mock server creation');
+          await createManualMockServer();
+          return;
+        }
+
+        const validationError = validateOpenAPISpec(workspaceData.openApiSpecPath);
+        if (validationError) {
+          return validationError;
+        }
+
+        const parseResult = await parseOpenAPISpecFile(workspaceData.openApiSpecPath!);
+        if ('error' in parseResult) {
+          return parseResult;
+        }
+
+        const serverResult = await window.main.createServerWithEndpoints(
+          workspace._id,
+          mockServerPatch,
+          parseResult.result
+        );
+
+        if (!serverResult.success) {
+          // TODO how to handle this case? What if we created the server but the route
+          // creation failed?
+          console.error('Failed to create server with endpoints:', serverResult.error);
+          await createManualMockServer();
+        } else {
+          const result = serverResult.result;
+          const { id: sessionId } = await userSession.getOrCreate();
+          await registerMockRoutes(result.routes, result.server, sessionId, organizationId);
+        }
+
+        return;
+      };
+
+      if (workspaceData.mockServerCreationType === 'manual') {
+        await createManualMockServer();
+      } else {
+        await createAIMockServer();
+      }
+
       await database.flushChanges(flushId);
 
       const { id } = await models.userSession.getOrCreate();
@@ -177,6 +233,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         workspaceId: workspace._id,
       })}/${scopeToActivity(workspace.scope)}`,
     );
+
   } catch (err) {
     console.error('Error creating workspace:', err);
 
@@ -204,3 +261,57 @@ export const useWorkspaceNewActionFetcher = createFetcherSubmitHook(
     },
   clientAction,
 );
+
+function validateOpenAPISpec(specPath?: string) {
+  if (!specPath) {
+    return {
+      error: 'OpenAPI specification file is required for AI mock server creation',
+    };
+  }
+  return null;
+}
+
+async function parseOpenAPISpecFile(specPath: string) {
+  const openapiSpec = fs.readFileSync(specPath, 'utf8');
+  const parseResult = await window.main.parseOpenAPISpec(openapiSpec);
+
+  if (!parseResult.success) {
+    return {
+      error: 'Failed to parse OpenAPI spec.',
+    };
+  }
+
+  return parseResult;
+}
+
+async function registerMockRoutes(routes: any[], server: any, sessionId: string, organizationId: string) {
+  for (const route of routes) {
+    try {
+      const compoundId = route.parentId + route.name;
+      const mockbinUrl = server.useInsomniaCloud ? getMockServiceURL() : server.url;
+
+      if (mockbinUrl && sessionId) {
+        await insomniaFetch({
+          origin: mockbinUrl,
+          path: `/bin/upsert/${compoundId}`,
+          method: 'PUT',
+          organizationId,
+          sessionId,
+          headers: {
+            'insomnia-mock-method': route.method,
+          },
+          data: mockRouteToHar({
+            statusCode: route.statusCode,
+            statusText: route.statusText || '',
+            headersArray: route.headers,
+            mimeType: route.mimeType || '',
+            body: route.body || '',
+          }),
+        });
+        console.log(`Route registered: ${route.method} ${route.name}`);
+      }
+    } catch (error) {
+      console.error(`Failed to register route ${route.method} ${route.name}:`, error);
+    }
+  }
+}

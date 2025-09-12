@@ -92,11 +92,11 @@ export default defineConfig(({ mode }) => {
       target: 'esnext',
       sourcemap: true,
       rollupOptions: {
-        external: ['@getinsomnia/node-libcurl'],
+        external: ['@getinsomnia/node-libcurl', '@kong/insomnia-ai'],
       },
     },
     optimizeDeps: {
-      exclude: ['@getinsomnia/node-libcurl'],
+      exclude: ['@getinsomnia/node-libcurl', '@kong/insomnia-ai'],
       force: true, // wipe vite cache
       include: ['codemirror-graphql/utils/SchemaReference', '@stoplight/spectral-core', 'isomorphic-git'],
     },

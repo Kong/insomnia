@@ -73,6 +73,8 @@ export const NewWorkspaceModal = ({
     folderPath?: string;
     mockServerType?: 'self-hosted' | 'cloud';
     mockServerUrl?: string;
+    mockServerCreationType?: 'ai' | 'manual';
+    openApiSpecPath?: string;
     fileName?: string;
   }>({
     name: defaultNameByScope[scope],
@@ -81,6 +83,7 @@ export const NewWorkspaceModal = ({
     fileName: safeToUseInsomniaFileName(defaultNameByScope[scope]),
     mockServerType: canOnlyCreateSelfHosted ? 'self-hosted' : 'cloud',
     mockServerUrl: '',
+    mockServerCreationType: 'ai',
   });
 
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
@@ -157,7 +160,7 @@ export const NewWorkspaceModal = ({
                 </div>
               )}
 
-              <div className="flex flex-col justify-start gap-2 overflow-y-auto overflow-x-hidden px-10">
+              <div className="flex flex-col justify-start gap-4 overflow-y-auto overflow-x-hidden px-10">
                 <TextField
                   autoFocus
                   name="name"
@@ -272,18 +275,86 @@ export const NewWorkspaceModal = ({
                 {workspaceData.scope === 'mock-server' && (
                   <>
                     <RadioGroup
+                      name="mockServerCreationType"
+                      defaultValue={workspaceData.mockServerCreationType}
+                      onChange={creationType => {
+                        setWorkspaceData({ ...workspaceData, mockServerCreationType: creationType as 'ai' | 'manual' });
+                      }}
+                      className="flex flex-col gap-2 mb-2"
+                    >
+                      <Label className="text-sm text-[--hl]">How do you want to create your mock server?</Label>
+                      <div className="flex gap-2">
+                        <Radio
+                          value="ai"
+                          className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Icon icon="robot" />
+                            <Heading className="text-lg font-bold">Auto Generate</Heading>
+                          </div>
+                          <p className="pt-2">
+                            Automatically generate a mock server from an OpenAPI spec.
+                          </p>
+                        </Radio>
+                        <Radio
+                          value="manual"
+                          className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Icon icon="wrench" />
+                            <Heading className="text-lg font-bold">Start from Scratch</Heading>
+                          </div>
+                          <p className="pt-2">
+                            Create an empty mock server.
+                          </p>
+                        </Radio>
+                      </div>
+                    </RadioGroup>
+
+                    {workspaceData.mockServerCreationType === 'ai' && (
+                      <div className="mb-4">
+                        <Label className="text-sm text-[--hl] mb-2 block">What should Insomnia generate your mock server from?</Label>
+                        <p className="text-sm text-[--hl] mb-3">
+                          OpenAPI Spec (JSON or YAML)
+                        </p>
+                        <div className="flex gap-2 items-center">
+                          <Button
+                            type="button"
+                            onPress={async () => {
+                              const result = await window.dialog.showOpenDialog({
+                                filters: [
+                                  { name: 'OpenAPI Files', extensions: ['yaml', 'yml', 'json'] }
+                                ],
+                                properties: ['openFile']
+                              });
+                              if (!result.canceled && result.filePaths.length > 0) {
+                                setWorkspaceData({...workspaceData, openApiSpecPath: result.filePaths[0]});
+                              }
+                            }}
+                            className="px-4 py-2 border border-[--hl-md] rounded bg-[--color-bg] text-[--color-font] hover:bg-[--hl-xs]"
+                          >
+                            Choose File
+                          </Button>
+                          <span className="text-sm text-[--hl] flex-1">
+                            {workspaceData.openApiSpecPath ? workspaceData.openApiSpecPath.split('/').pop(): 'No file selected'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    <RadioGroup
                       name="mockServerType"
                       defaultValue={workspaceData.mockServerType}
                       onChange={serverType => {
                         setWorkspaceData({ ...workspaceData, mockServerType: serverType as 'self-hosted' | 'cloud' });
                       }}
-                      className="flex flex-col gap-2"
+                      className="flex flex-col gap-2 mb-2"
                     >
-                      <Label className="text-sm text-[--hl]">Mock server type</Label>
+                      <Label className="text-sm text-[--hl]">How do you want to host your mock server?</Label>
                       <div className="flex gap-2">
                         <Radio
                           value="cloud"
-                          isDisabled={isCloudProjectDisabled}
+                          isDisabled={isCloudProjectDisabled || workspaceData.mockServerCreationType === 'ai'}
                           className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
                         >
                           <div className="flex items-center gap-2">
@@ -311,7 +382,7 @@ export const NewWorkspaceModal = ({
                         </Radio>
                       </div>
                     </RadioGroup>
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-sm -mt-2">
                       <Icon icon="info-circle" />
                       <span>
                         To learn more about self hosting{' '}

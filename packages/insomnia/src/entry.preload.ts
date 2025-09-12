@@ -177,6 +177,11 @@ const main: Window['main'] = {
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
   getLocalStorageDataFromFileOrigin: () => ipcRenderer.invoke('getLocalStorageDataFromFileOrigin'),
+  createMockServerManager: () => ipcRenderer.invoke('createMockServerManager'),
+  createOpenAPIParser: () => ipcRenderer.invoke('createOpenAPIParser'),
+  parseOpenAPISpec: (spec: string) => ipcRenderer.invoke('parseOpenAPISpec', spec),
+  createServerWithEndpoints: (workspaceId: string, mockServerPatch: any, endpoints: any[]) => 
+    ipcRenderer.invoke('createServerWithEndpoints', workspaceId, mockServerPatch, endpoints),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {
