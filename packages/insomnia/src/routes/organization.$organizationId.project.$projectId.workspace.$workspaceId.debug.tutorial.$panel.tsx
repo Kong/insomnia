@@ -70,7 +70,7 @@ const TutorialContent = ({ panel }: { panel?: string }) => {
             onPress={handleSignUp}
             className="rounded-md bg-[--color-surprise] px-6 py-2 text-white transition-colors"
           >
-            Signup to create {selectedTutorial.name}
+            Sign Up to create {selectedTutorial.name}
           </Button>
         </div>
       </div>
