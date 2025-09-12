@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import {
   type ClientRequest,
@@ -10,6 +11,7 @@ import {
   type JSONRPCResponse,
 } from '@modelcontextprotocol/sdk/types.js';
 import electron, { BrowserWindow } from 'electron';
+import { parse } from 'shell-quote';
 import { v4 as uuidV4 } from 'uuid';
 import type { z } from 'zod';
 
@@ -17,7 +19,6 @@ import { getAppVersion, getProductName } from '~/common/constants';
 import { getMcpMethodFromMessage } from '~/common/mcp-utils';
 import { generateId } from '~/common/misc';
 import * as models from '~/models';
-import type { TransportType } from '~/models/mcp-request';
 import type { McpResponse } from '~/models/mcp-response';
 import type { RequestAuthentication, RequestHeader } from '~/models/request';
 import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
@@ -28,19 +29,30 @@ import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 
 // Refer the SDK: https://github.com/modelcontextprotocol/typescript-sdk/blob/main/src/shared/protocol.ts#L504
 // The Client type has missing transport property
-type McpClient = Client & { transport: StreamableHTTPClientTransport };
+type McpClient = Client & { transport: StreamableHTTPClientTransport | StdioClientTransport };
 // Mcp connection and request options
 interface CommonMcpOptions {
   requestId: string;
 }
-export interface OpenMcpClientConnectionOptions extends CommonMcpOptions {
-  url: string;
-  requestId: string;
+type OpenMcpHTTPClientConnectionOptions = CommonMcpOptions & {
   workspaceId: string;
-  transportType: TransportType;
+  url: string;
+  transportType: 'streamable-http';
   headers: RequestHeader[];
   authentication: RequestAuthentication;
-}
+};
+type OpenMcpStdioClientConnectionOptions = CommonMcpOptions & {
+  workspaceId: string;
+  // TODO: should rename to command or urlOrCommand
+  url: string;
+  transportType: 'stdio';
+};
+export type OpenMcpClientConnectionOptions = OpenMcpHTTPClientConnectionOptions | OpenMcpStdioClientConnectionOptions;
+const isOpenMcpHTTPClientConnectionOptions = (
+  options: OpenMcpClientConnectionOptions,
+): options is OpenMcpHTTPClientConnectionOptions => {
+  return options.transportType === 'streamable-http';
+};
 export interface McpRequestOptions {
   requestId: string;
   request: ClientRequest;
@@ -174,6 +186,7 @@ const _handleMcpConnectionError = (requestId: string, error: Error) => {
 
 const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
   const method = getMcpMethodFromMessage(message);
+
   const messageEvent: McpMessageEvent = {
     _id: mcpEventIdGenerator(),
     requestId,
@@ -293,34 +306,7 @@ const fetchWithLogging = async (
 };
 
 const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) => {
-  const { transportType, url, requestId, workspaceId } = options;
-  if (!url) {
-    throw new Error('MCP server url is required');
-  }
-
-  if (!options.authentication.disabled) {
-    if (options.authentication.type === 'basic') {
-      const { username, password, useISO88591 } = options.authentication;
-      const encoding = useISO88591 ? 'latin1' : 'utf8';
-      options.headers.push(getBasicAuthHeader(username, password, encoding));
-    }
-    if (options.authentication.type === 'apikey') {
-      const { key = '', value = '' } = options.authentication;
-      options.headers.push({ name: key, value: value });
-    }
-    if (options.authentication.type === 'bearer' && options.authentication.token) {
-      const { token, prefix } = options.authentication;
-      options.headers.push(getBearerAuthHeader(token, prefix));
-    }
-  }
-
-  const reduceArrayToLowerCaseKeyedDictionary = (acc: Record<string, string>, { name, value }: RequestHeader) => ({
-    ...acc,
-    [name.toLowerCase() || '']: value || '',
-  });
-  const lowerCasedEnabledHeaders = options.headers
-    .filter(({ name, disabled }) => Boolean(name) && !disabled)
-    .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
+  const { requestId, workspaceId } = options;
 
   // create response model and file streams
   const responseId = generateId('res');
@@ -345,53 +331,113 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
   mcpClient.onclose = () => _handleCloseMcpConnection(requestId);
   mcpClient.onerror = _error => _handleMcpConnectionError(requestId, _error);
   const mcpStateChannel = getMcpStateChannel(requestId);
-  let transport: StreamableHTTPClientTransport;
 
-  switch (transportType) {
-    case 'streamable-http': {
-      try {
-        const mcpServerUrl = new URL(url);
-        transport = new StreamableHTTPClientTransport(mcpServerUrl, {
-          requestInit: {
-            headers: lowerCasedEnabledHeaders,
-          },
-          fetch: (url, init) =>
-            fetchWithLogging(url, init || {}, {
-              requestId,
-              responseId,
-              environmentId: responseEnvironmentId,
-              timelinePath,
-              eventLogPath,
-            }),
-          reconnectionOptions: {
-            maxReconnectionDelay: 30000,
-            initialReconnectionDelay: 1000,
-            reconnectionDelayGrowFactor: 1.5,
-            maxRetries: 2,
-          },
-        });
-        transport.onmessage = message => _handleMcpMessage(message, requestId);
-        await mcpClient.connect(transport);
-      } catch (error) {
-        // Log error when connection fails with exception
-        createErrorResponse({
+  const createStreamableHTTPTransport = (options: OpenMcpHTTPClientConnectionOptions) => {
+    const { url, requestId } = options;
+    if (!url) {
+      throw new Error('MCP server url is required');
+    }
+
+    if (!options.authentication.disabled) {
+      if (options.authentication.type === 'basic') {
+        const { username, password, useISO88591 } = options.authentication;
+        const encoding = useISO88591 ? 'latin1' : 'utf8';
+        options.headers.push(getBasicAuthHeader(username, password, encoding));
+      }
+      if (options.authentication.type === 'apikey') {
+        const { key = '', value = '' } = options.authentication;
+        options.headers.push({ name: key, value: value });
+      }
+      if (options.authentication.type === 'bearer' && options.authentication.token) {
+        const { token, prefix } = options.authentication;
+        options.headers.push(getBearerAuthHeader(token, prefix));
+      }
+    }
+    const reduceArrayToLowerCaseKeyedDictionary = (acc: Record<string, string>, { name, value }: RequestHeader) => ({
+      ...acc,
+      [name.toLowerCase() || '']: value || '',
+    });
+    const lowerCasedEnabledHeaders = options.headers
+      .filter(({ name, disabled }) => Boolean(name) && !disabled)
+      .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
+
+    const mcpServerUrl = new URL(url);
+    const transport = new StreamableHTTPClientTransport(mcpServerUrl, {
+      requestInit: {
+        headers: lowerCasedEnabledHeaders,
+      },
+      fetch: (url, init) =>
+        fetchWithLogging(url, init || {}, {
           requestId,
           responseId,
           environmentId: responseEnvironmentId,
           timelinePath,
           eventLogPath,
-          message: error.message || 'Something went wrong',
-        });
-        console.error(`Failed to create Streamable HTTP transport: ${error}`);
-        return;
-      }
-      break;
-    }
-    default: {
-      throw new Error(`Unsupported transport type: ${transportType}`);
-    }
-  }
+        }),
+      reconnectionOptions: {
+        maxReconnectionDelay: 30000,
+        initialReconnectionDelay: 1000,
+        reconnectionDelayGrowFactor: 1.5,
+        maxRetries: 2,
+      },
+    });
+    transport.onmessage = message => _handleMcpMessage(message, requestId);
+    return transport;
+  };
 
+  const createStdioTransport = (options: OpenMcpClientConnectionOptions) => {
+    const { url } = options;
+    const parseResult = parse(url);
+    if (parseResult.find(arg => typeof arg !== 'string')) {
+      throw new Error('Invalid command format');
+    }
+    const [command, ...args] = parseResult as string[];
+    const transport = new StdioClientTransport({
+      command,
+      args,
+    });
+    transport.onmessage = async message => {
+      const method = getMcpMethodFromMessage(message);
+
+      // TODO[MCP-STDIO]: try to find a better way to unify this with the http transport
+      if (method === 'initialize') {
+        const responsePatch: Partial<McpResponse> = {
+          _id: responseId,
+          parentId: requestId,
+          environmentId: responseEnvironmentId,
+          url: url.toString(),
+          // elapsedTime: performance.now() - start,
+          timelinePath,
+          eventLogPath,
+        };
+        const settings = await models.settings.get();
+        const res = await models.mcpResponse.create(responsePatch, settings.maxHistoryResponses);
+        models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+      }
+
+      _handleMcpMessage(message, requestId);
+    };
+    return transport;
+  };
+
+  try {
+    const transport = isOpenMcpHTTPClientConnectionOptions(options)
+      ? await createStreamableHTTPTransport(options)
+      : await createStdioTransport(options);
+
+    await mcpClient.connect(transport!);
+  } catch (error) {
+    // Log error when connection fails with exception
+    createErrorResponse({
+      requestId,
+      responseId,
+      environmentId: responseEnvironmentId,
+      timelinePath,
+      eventLogPath,
+      message: error.message || 'Something went wrong',
+    });
+    console.error(`Failed to create ${options.transportType} transport: ${error}`);
+  }
   mcpConnections.set(requestId, mcpClient as McpClient);
   const serverCapabilities = mcpClient.getServerCapabilities();
   const primitivePromises: Promise<any>[] = [];
@@ -419,8 +465,11 @@ const closeMcpConnection = async (options: CommonMcpOptions) => {
   const { requestId } = options;
   const mcpClient = _getMcpClient(requestId);
   if (mcpClient) {
-    await mcpClient.transport.terminateSession();
-    mcpClient.close();
+    // Only terminate session if transport is StreamableHTTPClientTransport
+    if ('terminateSession' in mcpClient.transport) {
+      await mcpClient.transport.terminateSession();
+    }
+    await mcpClient.close();
   }
 };
 

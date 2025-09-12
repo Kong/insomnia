@@ -88,6 +88,8 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
     });
   };
 
+  const isStdio = activeRequest.transportType === 'stdio';
+
   return (
     <Pane type="request">
       <header className="pane__header theme--pane__header !items-stretch">
@@ -111,28 +113,40 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
           >
             <span>Params</span>
           </Tab>
-          <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
-            id="auth"
-          >
-            <span>Auth</span>
-            {!isNoneOrInherited && (
-              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
-                <span className="h-2 w-2 rounded-full bg-green-500" />
-              </span>
-            )}
-          </Tab>
-          <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
-            id="headers"
-          >
-            <span>Headers</span>
-            {headersCount > 0 && (
-              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
-                {headersCount}
-              </span>
-            )}
-          </Tab>
+          {!isStdio && (
+            <Tab
+              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              id="auth"
+            >
+              <span>Auth</span>
+              {!isNoneOrInherited && (
+                <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+                  <span className="h-2 w-2 rounded-full bg-green-500" />
+                </span>
+              )}
+            </Tab>
+          )}
+          {!isStdio && (
+            <Tab
+              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              id="headers"
+            >
+              <span>Headers</span>
+              {headersCount > 0 && (
+                <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+                  {headersCount}
+                </span>
+              )}
+            </Tab>
+          )}
+          {isStdio && (
+            <Tab
+              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              id="env"
+            >
+              <span>Environment</span>
+            </Tab>
+          )}
         </TabList>
         <TabPanel className="flex h-full w-full flex-1 flex-col overflow-y-auto" id="params">
           {!readyState ? (
@@ -214,6 +228,21 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
             bulk={false}
             isDisabled={readyState}
             requestType="McpRequest"
+          />
+        </TabPanel>
+        <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="env">
+          {readyState && <PaneReadOnlyBanner />}
+          {/* TODO[MCP-STDIO] */}
+          <p>WIP</p>
+          <CodeEditor
+            id="mcp-environment-editor"
+            showPrettifyButton
+            dynamicHeight
+            uniquenessKey={uniqueKey}
+            defaultValue={JSON.stringify(activeRequest.env, null, 2)}
+            enableNunjucks
+            mode="json"
+            placeholder="{}"
           />
         </TabPanel>
       </Tabs>
