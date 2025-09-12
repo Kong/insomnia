@@ -307,9 +307,9 @@ jobs:
       contents: write
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
     with:
-      image: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE }}
+      image: ${{ env.INSO_DOCKER_IMAGE }}
       digest: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE_DIGEST }}
-      provenance-repository: "${{ needs.publish.outputs.NOTARY_REPOSITORY }}"
+      provenance-repository: "${{ env.NOTARY_REPOSITORY }}"
     secrets:
       registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
       registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
