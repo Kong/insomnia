@@ -37,16 +37,16 @@ jobs:
         env: 
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build app for smoke tests
+      - name: Build app for tests
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
 
-      - name: Smoke test electron app
-        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke -- wj
+      - name: WJ test electron app
+        run: npm run test:build -w wj-test -- --project=WJTest
 
-      - name: Upload smoke test
+      - name: Upload test
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: ignore
-          name: ubuntu-smoke-test-traces-${{ github.run_number }}
-          path: packages/insomnia-smoke-test/traces
+          name: ubuntu-wj-test-traces-${{ github.run_number }}
+          path: packages/wj-test/traces

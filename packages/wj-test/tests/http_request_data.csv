@@ -1,5 +1,5 @@
 ﻿id,test_case,url,method,headers,body,expected_status
-1,GET from petstore - 200,https://petstore.swagger.io/v2/pet/1,GET,,,200
+1,GET from petstore - 200,https://petstore.swagger.io/v2/pet/100,GET,,,200
 2,GET from petstore - 404,https://petstore.swagger.io/v2/pet/12345678,GET,,,404
 3,httpbin - GET request,https://httpbin.org/get,GET,"User-Agent: Mozilla/5.0
 Accept: application/json",,200
