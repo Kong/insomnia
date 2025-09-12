@@ -24,6 +24,7 @@ import type { StorageRules } from '~/models/organization';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 
+import { type ApiSpec } from '../../../models/api-spec';
 import { isGitProject, type Project } from '../../../models/project';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
@@ -50,6 +51,7 @@ export const NewWorkspaceModal = ({
   scope,
   storageRules,
   currentPlan,
+  sourceApiSpec,
 }: {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -57,6 +59,7 @@ export const NewWorkspaceModal = ({
   storageRules: StorageRules;
   currentPlan?: { type: string };
   scope: WorkspaceScope;
+  sourceApiSpec?: ApiSpec;
 }) => {
   const { organizationId } = useParams() as { organizationId: string; projectId: string };
 
@@ -101,6 +104,9 @@ export const NewWorkspaceModal = ({
       organizationId,
       projectId: project._id,
       ...workspaceData,
+      ...(sourceApiSpec?.contents && {
+        apiSpecContents: sourceApiSpec.contents,
+      }),
     });
   };
 
@@ -138,7 +144,9 @@ export const NewWorkspaceModal = ({
             >
               <div className="flex items-center justify-between gap-2 px-10 pt-10">
                 <Heading slot="title" className="text-2xl">
-                  Create a new {titleByScope[workspaceData.scope]}
+                  Create a new {workspaceData.scope === 'mock-server' && sourceApiSpec?.contents
+                    ? `Mock Server from ${sourceApiSpec.fileName}`
+                    : titleByScope[workspaceData.scope]}
                 </Heading>
                 <Button
                   className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
@@ -317,28 +325,37 @@ export const NewWorkspaceModal = ({
                         <p className="text-sm text-[--hl] mb-3">
                           OpenAPI Spec (JSON or YAML)
                         </p>
-                        <div className="flex gap-2 items-center">
-                          <Button
-                            type="button"
-                            onPress={async () => {
-                              const result = await window.dialog.showOpenDialog({
-                                filters: [
-                                  { name: 'OpenAPI Files', extensions: ['yaml', 'yml', 'json'] }
-                                ],
-                                properties: ['openFile']
-                              });
-                              if (!result.canceled && result.filePaths.length > 0) {
-                                setWorkspaceData({...workspaceData, openApiSpecPath: result.filePaths[0]});
-                              }
-                            }}
-                            className="px-4 py-2 border border-[--hl-md] rounded bg-[--color-bg] text-[--color-font] hover:bg-[--hl-xs]"
-                          >
-                            Choose File
-                          </Button>
-                          <span className="text-sm text-[--hl] flex-1">
-                            {workspaceData.openApiSpecPath ? workspaceData.openApiSpecPath.split('/').pop(): 'No file selected'}
-                          </span>
-                        </div>
+                        {sourceApiSpec?.contents ? (
+                          <div className="flex items-center gap-2 p-3 border border-[--hl-md] rounded bg-[--hl-xs]">
+                            <Icon icon="file-code" className="text-[--color-success]" />
+                            <span className="text-sm text-[--color-font]">
+                              Using {sourceApiSpec.fileName} OpenAPI specification
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2 items-center">
+                            <Button
+                              type="button"
+                              onPress={async () => {
+                                const result = await window.dialog.showOpenDialog({
+                                  filters: [
+                                    { name: 'OpenAPI Files', extensions: ['yaml', 'yml', 'json'] }
+                                  ],
+                                  properties: ['openFile']
+                                });
+                                if (!result.canceled && result.filePaths.length > 0) {
+                                  setWorkspaceData({...workspaceData, openApiSpecPath: result.filePaths[0]});
+                                }
+                              }}
+                              className="px-4 py-2 border border-[--hl-md] rounded bg-[--color-bg] text-[--color-font] hover:bg-[--hl-xs]"
+                            >
+                              Choose File
+                            </Button>
+                            <span className="text-sm text-[--hl] flex-1">
+                              {workspaceData.openApiSpecPath ? workspaceData.openApiSpecPath.split('/').pop(): 'No file selected'}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
 

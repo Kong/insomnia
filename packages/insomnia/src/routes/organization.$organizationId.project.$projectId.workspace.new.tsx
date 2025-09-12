@@ -28,6 +28,7 @@ interface NewWorkspaceData {
   mockServerUrl?: string;
   mockServerCreationType?: 'ai' | 'manual';
   openApiSpecPath?: string;
+  apiSpecContents?: string;
   fileName?: string;
   withRequest?: boolean;
 }
@@ -101,14 +102,19 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       };
 
       const createAIMockServer = async () => {
-        const validationError = validateOpenAPISpec(workspaceData.openApiSpecPath);
-        if (validationError) {
-          return validationError;
-        }
+        let openapiSpec: string;
 
         try {
-          const openapiSpec = fs.readFileSync(workspaceData.openApiSpecPath!, 'utf8');
-          
+          if (workspaceData.apiSpecContents) {
+            openapiSpec = workspaceData.apiSpecContents;
+          } else {
+            const validationError = validateOpenAPISpec(workspaceData.openApiSpecPath);
+            if (validationError) {
+              return validationError;
+            }
+            openapiSpec = fs.readFileSync(workspaceData.openApiSpecPath!, 'utf8');
+          }
+
           const modelConfig = {
             backend: 'gguf',
             modelDir: cwd() + '/models/',
@@ -124,19 +130,18 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
           if (!serverResult.success) {
             return {
-              error: `Failed to create mock server from spec: ${serverResult.error}`
+              error: `Failed to create mock server from spec`
             };
-          } else {
-            const result = serverResult.result;
-            const { id: sessionId } = await userSession.getOrCreate();
-            if (result.routes) {
-              await registerMockRoutes(result.routes, result.server, sessionId, organizationId);
-            }
+          }
+
+          const result = serverResult.result;
+          const { id: sessionId } = await userSession.getOrCreate();
+          if (result.routes) {
+            await registerMockRoutes(result.routes, result.server, sessionId, organizationId);
           }
         } catch (error) {
-          console.error('Error reading OpenAPI spec file:', error);
           return {
-            error: 'Failed to read OpenAPI specification file.',
+            error: 'Failed to create mock server from spec.',
           };
         }
 

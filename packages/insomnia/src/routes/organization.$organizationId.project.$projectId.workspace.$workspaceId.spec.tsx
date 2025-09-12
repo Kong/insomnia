@@ -483,7 +483,8 @@ const Component = ({ params }: Route.ComponentProps) => {
             <span className="flex-1" />
             <Button
               onPress={() => setNewMockServerModalOpen(true)}
-              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+              isDisabled={!apiSpec.contents}
+              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Icon icon="server" className="w-5 flex-shrink-0" />
               <span className="truncate">Generate Mock</span>
@@ -897,6 +898,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               storageRules={storageRules}
               currentPlan={organizationData?.currentPlan}
               scope="mock-server"
+              sourceApiSpec={apiSpec}
               onOpenChange={setNewMockServerModalOpen}
             />
           )}
