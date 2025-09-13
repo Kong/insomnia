@@ -19,6 +19,10 @@ jobs:
   Test:
     timeout-minutes: 40
     runs-on: ubuntu-22.04
+    permissions:
+      pages: write
+      id-token: write
+
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -60,11 +64,11 @@ jobs:
 
       - name: Report - Configure Github Pages
         id: configure_pages
-        if: ${{ success() && steps.prepare_report.conclusion == 'success' }}
+        if: ${{ steps.prepare_report.conclusion == 'success' }}
         uses: actions/configure-pages@v5
 
       - name: Report - Upload report to Pages artifact
-        if: ${{ success() && steps.configure_pages.conclusion == 'success' }}
+        if: ${{ steps.configure_pages.conclusion == 'success' }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'gh-pages'

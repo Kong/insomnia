@@ -27,11 +27,9 @@ test('wj send requests', async ({ app, page }) => {
   // Create a new request and send a POST request
   await page.getByRole('button', { name: 'Create in collection' }).click();
   await page.getByText('HTTP Request').click();
+  await expect.soft(page.getByTestId('New Request').getByText('New Request')).toBeVisible(); // Check the new request in requests list
 
-  // Check the new request in requests list
-  await expect.soft(page.getByTestId('New Request').getByText('New Request')).toBeVisible();
-
-  page.getByTestId('New Request').hover();
+  await page.getByTestId('New Request').hover();
   await page.getByTestId('Dropdown-New-Request').click();
   await page.getByText('Rename').click();
   await page.getByRole('textbox', { name: 'GET New Request' }).fill('My POST Request');
