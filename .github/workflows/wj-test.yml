@@ -52,7 +52,8 @@ jobs:
           path: packages/wj-test/traces
 
       - name: Report - Prepare report for Pages
-        run: mkdir -p gh-pages
+        run: |
+          mkdir -p gh-pages
           cp -r packages/wj-test/wj-report/* gh-pages/
 
       - name: Report - Configure Github Pages

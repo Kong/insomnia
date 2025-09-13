@@ -34,7 +34,7 @@ TestRunner.run('Send Requests', async ({ page, record }) => {
 
     let isFirst = true;
     for (const header of http_headers.split('\n')) {
-      const [key, value] = header.split(':').map(s => s.trim());
+      const [key, value] = header.split(':').map((s: string) => s.trim());
       if (key && value) {
         if (isFirst) {
           // use the existing header line if it's the first one
