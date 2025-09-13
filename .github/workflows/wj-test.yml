@@ -68,6 +68,9 @@ jobs:
         id: configure_pages
         if: ${{ !cancelled() }}
         uses: actions/configure-pages@v5
+        with:
+          # Auto-enable Pages if it's not already enabled (requires proper permissions)
+          enablement: true # Critical addition to fix "Not Found" error
 
       - name: Report - Upload report to Pages artifact
         if: ${{ !cancelled() }}
