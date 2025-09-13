@@ -18,7 +18,7 @@
     "test:package": "xvfb-maybe cross-env BUNDLE=package playwright test",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "serve": "esr server/index.ts",
-    "test:csv": "node dist/scripts/run-csv-tests.js",
+    "test:csv": "node dist/run-csv-tests.js",
     "build:csv": "tsc",
     "start:csv": "npm run build:csv && npm run test:csv"
   },

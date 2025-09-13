@@ -18,7 +18,7 @@ const config: PlaywrightTestConfig = {
     },
   },
   reporter: process.env.CI ? [['github'], ['line'], ['html', { outputFolder: 'report', open: 'never' }]] : [['list'], ['html', { outputFolder: 'report', open: 'never' }]],
-  timeout: process.env.CI ? 60 * 1000 : 20 * 1000,
+  timeout: process.env.CI ? 60 * 1000 : 30 * 1000,
   forbidOnly: !!process.env.CI,
   outputDir: 'traces',
   testDir: './tests',

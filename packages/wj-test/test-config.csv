@@ -1,3 +1,3 @@
 run,path,filename
-yes,tests,example
-yes,tests,
+yes,tests,simple_requests
+yes,tests/webpage,

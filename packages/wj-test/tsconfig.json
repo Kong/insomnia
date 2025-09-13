@@ -10,7 +10,7 @@
   },
   // 严格指定只包含scripts目录下的.ts文件（不包含子目录可去掉**）
   "include": [
-    "scripts/*.ts"
+    "scripts/**/*.ts"
   ],
   // 明确排除所有不需要编译的目录
   "exclude": [

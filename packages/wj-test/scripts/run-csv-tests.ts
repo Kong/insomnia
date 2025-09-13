@@ -32,7 +32,7 @@ interface CsvRule {
 // --------------------------
 // Configuration - Critical path corrections
 // --------------------------
-const projectRoot = path.resolve(__dirname, '../../'); // Resolve to project root (2 levels up from dist/scripts)
+const projectRoot = path.resolve(__dirname, '../'); // Resolve to project root (2 levels up from dist/scripts)
 const SETTINGS: Config = {
     csvConfigPath: path.resolve(projectRoot, 'test-config.csv'),
     testFilesDir: path.resolve(projectRoot, 'tests'),
@@ -118,24 +118,45 @@ function getTestsIncludedByCSV(): string[] {
         trim: true
     });
 
-    // Get all valid test files in test directory
-    const allTestFiles: TestFile[] = fs.readdirSync(SETTINGS.testFilesDir)
-        .filter(fileName => {
-            const fullPath = path.join(SETTINGS.testFilesDir, fileName);
-            return fileName.endsWith('.test.ts') &&
-                !fileName.startsWith('_') &&
-                fs.lstatSync(fullPath).isFile();
-        })
-        .map(fileName => {
-            const fullPath = path.resolve(SETTINGS.testFilesDir, fileName);
-            return {
-                fullPath,
-                relativePath: path.relative(SETTINGS.projectRoot, fullPath).replace(/\\/g, '/'),
-                baseName: fileName,
-                prefix: fileName.replace('.test.ts', ''),
-                normalizedPath: fullPath.replace(/\\/g, '/')
-            };
-        });
+
+    // --------------------------
+    // Get all valid test files (including subdirectories) using merged recursive logic
+    // --------------------------
+    const allTestFiles: TestFile[] = (function findTestFilesRecursively(directory: string, projectRoot: string): TestFile[] {
+        const testFiles: TestFile[] = [];
+
+        // Read all entries in the current directory
+        const entries = fs.readdirSync(directory, { withFileTypes: true });
+
+        for (const entry of entries) {
+            const fullPath = path.resolve(directory, entry.name);
+
+            // If entry is a directory, recursively search it
+            if (entry.isDirectory()) {
+                // Skip directories starting with underscore (optional convention)
+                if (entry.name.startsWith('_')) continue;
+                // Recursively process subdirectory
+                testFiles.push(...findTestFilesRecursively(fullPath, projectRoot));
+            }
+            // If entry is a file, check if it's a valid test file
+            else if (entry.isFile()) {
+                if (entry.name.endsWith('.test.ts') && !entry.name.startsWith('_')) {
+                    testFiles.push({
+                        fullPath,
+                        relativePath: path.relative(projectRoot, fullPath).replace(/\\/g, '/'),
+                        baseName: entry.name,
+                        prefix: entry.name.replace('.test.ts', ''),
+                        normalizedPath: fullPath.replace(/\\/g, '/')
+                    });
+                }
+            }
+        }
+
+        return testFiles;
+    })(SETTINGS.testFilesDir, SETTINGS.projectRoot);
+
+    console.log(`🔍 Found ${allTestFiles.length} test file(s) in directory: ${SETTINGS.testFilesDir}`);
+
 
     // Filter files based on CSV rules
     const includedTests = allTestFiles.filter(testFile => {
