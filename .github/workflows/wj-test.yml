@@ -52,14 +52,17 @@ jobs:
           path: packages/wj-test/traces
 
       - name: Report - Prepare report for Pages
+        if: ${{ !cancelled() }}
         run: |
           mkdir -p gh-pages
           cp -r packages/wj-test/wj-report/* gh-pages/
 
       - name: Report - Configure Github Pages
+        if: ${{ !cancelled() }}
         uses: actions/configure-pages@v5
 
       - name: Report - Upload report to Pages artifact
+        if: ${{ !cancelled() }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'gh-pages'
@@ -72,5 +75,6 @@ jobs:
           path: 'gh-pages'
 
       - name: Report - Deploy to GitHub Pages
+        if: ${{ !cancelled() }}
         id: deployment
         uses: actions/deploy-pages@v4
