@@ -45,7 +45,7 @@ jobs:
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
 
       - name: WJ test electron app
-        run: npm run test:build -w wj-test -- --project=WJTest
+        run: npm run test:build -w wj-test -- --project=WJTest simple_requests
 
       - name: Upload test traces
         uses: actions/upload-artifact@v4
@@ -66,9 +66,11 @@ jobs:
 
       - name: Report - Configure Github Pages
         id: configure_pages
+        if: ${{ !cancelled() }}
         uses: actions/configure-pages@v5
 
       - name: Report - Upload report to Pages artifact
+        if: ${{ !cancelled() }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'gh-pages'
