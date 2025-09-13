@@ -45,7 +45,7 @@ jobs:
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
 
       - name: WJ test electron app
-        run: npm run test:build -w wj-test -- --project=WJTest simple_requests
+        run: npm run test:build -w wj-test -- --project=WJTest
 
       - name: Upload test traces
         uses: actions/upload-artifact@v4
