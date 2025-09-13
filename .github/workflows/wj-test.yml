@@ -64,25 +64,11 @@ jobs:
           echo "Content in gh-pages："
           ls -la gh-pages
 
-      # Debug step: Check status of prepare_report step
-      - name: Debug - Check prepare_report status
-        run: |
-          echo "prepare_report step conclusion: ${{ steps.prepare_report.outcome }}"
-        if: ${{ !cancelled() }} # Run regardless of previous step outcomes
-
       - name: Report - Configure Github Pages
         id: configure_pages
-        if: ${{ steps.prepare_report.outcome == 'success' }}
         uses: actions/configure-pages@v5
 
-      # Debug step: Check status of configure_pages step
-      - name: Debug - Check configure_pages status
-        run: |
-          echo "configure_pages step conclusion: ${{ steps.configure_pages.outcome }}"
-        if: ${{ !cancelled() }} # Run regardless of previous step outcomes
-
       - name: Report - Upload report to Pages artifact
-        if: ${{ steps.configure_pages.outcome == 'success' }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'gh-pages'
