@@ -3,7 +3,7 @@ import { delay } from 'insomnia/src/common/misc';
 
 import { TestRunner } from '../common/test-runner';
 
-TestRunner.runTest(__filename, 'Create and send GET request', async ({ page }) => {
+TestRunner.run('Create and send GET request', async ({ page }) => {
   const delayMs = 100;
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.getByTestId('response-pane');

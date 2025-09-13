@@ -34,7 +34,7 @@ jobs:
 
       - name: Install packages
         run: npm ci
-        env: 
+        env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build app for tests
@@ -52,8 +52,7 @@ jobs:
           path: packages/wj-test/traces
 
       - name: Report - Prepare report for Pages
-        run: |
-          mkdir -p gh-pages
+        run: mkdir -p gh-pages
           cp -r packages/wj-test/wj-report/* gh-pages/
 
       - name: Report - Configure Github Pages

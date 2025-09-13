@@ -4,7 +4,7 @@ import { delay } from 'insomnia/src/common/misc';
 import { TestRunner } from '../common/test-runner';
 
 // Run test with TestRunner
-TestRunner.runTest(__filename, 'Send Requests', async ({ page, record }) => {
+TestRunner.run('Send Requests', async ({ page, record }) => {
   const http_url = record.url;
   const http_method = record.method;
   const http_headers = record.headers;

@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "./dist" // 强制所有编译产物输出到dist目录，避免污染源码目录
+  },
+  // 严格指定只包含scripts目录下的.ts文件（不包含子目录可去掉**）
+  "include": [
+    "scripts/*.ts"
+  ],
+  // 明确排除所有不需要编译的目录
+  "exclude": [
+    "node_modules",
+    "dist", // 排除输出目录
+    "tests", // 排除测试目录
+    "common", // 排除common目录
+    "src", // 排除src目录（根据你的实际目录添加）
+    // "**/*.test.ts" // 排除所有测试文件（如果有的话）
+  ]
+}

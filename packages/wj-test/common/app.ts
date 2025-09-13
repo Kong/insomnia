@@ -1,4 +1,3 @@
-/* eslint-disable no-empty-pattern */
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
 import path from 'node:path';
 
