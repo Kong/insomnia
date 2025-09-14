@@ -798,7 +798,7 @@ const Debug = () => {
         <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
           <div className="flex flex-col items-start divide-y divide-solid divide-[--hl-md]">
             <div className={`flex w-full h-[${INSOMNIA_TAB_HEIGHT}px]`}>
-              <Breadcrumbs className="m-0 flex h-[--line-height-sm] w-full list-none items-center gap-2 px-[--padding-sm] font-bold">
+              <Breadcrumbs className="m-0 flex h-full w-full list-none items-center gap-2 px-[--padding-sm] font-bold">
                 <Breadcrumb className="flex h-full select-none items-center gap-2 text-[--color-font] outline-none data-[focused]:outline-none">
                   <NavLink
                     data-testid="project"
@@ -860,7 +860,6 @@ const Debug = () => {
               </Button>
             </div>
           </div>
-
           <div className="flex flex-1 flex-col overflow-hidden">
             <div className="flex justify-between gap-1 p-[--padding-sm]">
               <SearchField
@@ -1075,7 +1074,13 @@ const Debug = () => {
                           }
                         }}
                       />
-                      {item.pinned && <Icon className="text-[--font-size-sm]" icon="thumb-tack" />}
+                      {item.pinned && (
+                        <Icon
+                          className="text-[--font-size-sm]"
+                          icon="thumb-tack"
+                          onDoubleClick={() => patchRequestMeta(item.doc._id, { pinned: !item.pinned })}
+                        />
+                      )}
                     </div>
                   </GridListItem>
                 );
@@ -1145,9 +1150,7 @@ const Debug = () => {
               </GridList>
             </div>
           </div>
-
           <WorkspaceSyncDropdown />
-
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
           {isImportModalOpen && (
             <ImportModal
@@ -1283,6 +1286,7 @@ const CollectionGridListItem = ({
   const [isEditable, setIsEditable] = useState(false);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
+  const patchRequestMeta = useRequestMetaPatcher();
 
   const action = isRequestGroup(item.doc)
     ? `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}/update`
@@ -1409,7 +1413,13 @@ const CollectionGridListItem = ({
         {isGraphqlSubscriptionRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
         {isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
-        {item.pinned && <Icon className="text-[--font-size-sm]" icon="thumb-tack" />}
+        {item.pinned && (
+          <Icon
+            className="text-[--font-size-sm]"
+            icon="thumb-tack"
+            onDoubleClick={() => patchRequestMeta(item.doc._id, { pinned: !item.pinned })}
+          />
+        )}
         {isRequestGroup(item.doc) ? (
           <RequestGroupActionsDropdown
             requestGroup={item.doc}

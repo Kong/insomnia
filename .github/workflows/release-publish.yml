@@ -15,8 +15,8 @@ env:
   IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
   ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
   ARTIFACTS_VERIFY_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts_verify
-  INSO_DOCKER_IMAGE: kong/inso # By default, registry is docker.io
-  NOTARY_REPOSITORY: "kong/notary" # All signatures will be pushed to public notary repository
+  INSO_DOCKER_IMAGE: &INSO_DOCKER_IMAGE "kong/inso" # By default, registry is docker.io
+  NOTARY_REPOSITORY: &NOTARY_REPOSITORY "kong/notary" # All signatures will be pushed to public notary repository
 
 jobs:
   publish:
@@ -307,9 +307,9 @@ jobs:
       contents: write
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
     with:
-      image: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE }}
+      image: *INSO_DOCKER_IMAGE
       digest: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE_DIGEST }}
-      provenance-repository: "${{ needs.publish.outputs.NOTARY_REPOSITORY }}"
+      provenance-repository: *NOTARY_REPOSITORY
     secrets:
       registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
       registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
