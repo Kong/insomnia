@@ -89,6 +89,13 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
   const allEnvironment = [baseEnvironment, ...subEnvironments];
+
+  // Keep selectedEnvironmentId in sync when navigating between different environment workspaces/tabs.
+  useEffect(() => {
+    if (!allEnvironment.find(env => env._id === selectedEnvironmentId)) {
+      setSelectedEnvironmentId(activeEnvironment._id);
+    }
+  }, [allEnvironment, selectedEnvironmentId, activeEnvironment._id]);
   const selectedEnvironment = allEnvironment.find(env => env._id === selectedEnvironmentId);
   // Do not allowed to switch to json environment if contains secret item
   const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(
