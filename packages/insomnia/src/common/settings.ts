@@ -158,4 +158,5 @@ export interface Settings {
   saveVaultKeyToOSSecretManager: boolean;
   vaultSecretCacheDuration: number;
   dataFolders: string[];
+  collapseJsonResponseByDefault: boolean;
 }

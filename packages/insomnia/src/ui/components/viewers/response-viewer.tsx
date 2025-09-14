@@ -1,5 +1,6 @@
 import iconv from 'iconv-lite';
 import React, { Fragment, useCallback, useRef, useState } from 'react';
+import { useRootLoaderData } from '~/root';
 
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
@@ -213,6 +214,7 @@ export const ResponseViewer = ({
   }
 
   const contentType = _getContentType();
+  const { settings } = useRootLoaderData()!;
 
   if (previewMode === PREVIEW_MODE_FRIENDLY && contentType === 'application/json') {
     let bodyStr = getBodyAsString();
@@ -231,6 +233,7 @@ export const ResponseViewer = ({
         key={`${responseId}-json`}
         ref={editorRef}
         autoPrettify
+        collapseAllOnInit={settings.collapseJsonResponseByDefault}
         defaultValue={bodyStr}
         filter={filter}
         filterHistory={filterHistory}
