@@ -4,7 +4,7 @@ import { href } from 'react-router';
 import type { ChangeBufferEvent } from '~/common/database';
 import type { CookieJar } from '~/models/cookie-jar';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { isMcpRequest } from '~/models/mcp-request';
+import { isMcpRequest, type TransportType } from '~/models/mcp-request';
 import type { RequestAuthentication, RequestHeader } from '~/models/request';
 import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '~/models/request';
 import { isRequestMeta } from '~/models/request-meta';
@@ -24,7 +24,6 @@ export interface ConnectActionParams {
   cookieJar: CookieJar;
   suppressUserAgent: boolean;
   transportType?: TransportType;
-
   query?: Record<string, string>;
 }
 
