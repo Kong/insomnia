@@ -1465,7 +1465,7 @@ export class GitVCS {
           await git.resetIndex({ ...this._baseOpts, filepath: change.path });
         }
 
-        // Discard unstaged changes only
+        // Discard unstaged changes only.
         if (options?.discardUnstaged) {
           // Restore workdir from index (staged version)
           // 1. Get staged blob OID
