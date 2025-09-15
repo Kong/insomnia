@@ -49,6 +49,8 @@ import * as models from '~/models';
 import type { Environment } from '~/models/environment';
 import { type GrpcRequest, isGrpcRequest, isGrpcRequestId } from '~/models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '~/models/grpc-request-meta';
+import type { McpRequest } from '~/models/mcp-request';
+import type { McpResponse } from '~/models/mcp-response';
 import type { Project } from '~/models/project';
 import {
   isEventStreamRequest,
@@ -88,6 +90,7 @@ import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
+import { McpPane } from '~/ui/components/mcp/mcp-pane';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { CookiesModal } from '~/ui/components/modals/cookies-modal';
@@ -785,6 +788,15 @@ const Debug = () => {
     activeRequest,
     activeRequestGroup,
   });
+
+  if (activeWorkspace.scope === 'mcp') {
+    return (
+      <McpPane
+        activeRequest={activeRequest as McpRequest}
+        activeResponse={requestData?.activeResponse as McpResponse | null}
+      />
+    );
+  }
 
   return (
     <PanelGroup
