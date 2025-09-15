@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import React, { type FC, useRef } from 'react';
 import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
 
+import { NOTIFICATION_METHODS, unsupportedMethodPrefix } from '../../../common/mcp-utils';
 import type { CurlEvent } from '../../../main/network/curl';
 import type { McpEvent } from '../../../main/network/mcp';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
@@ -53,6 +54,9 @@ function getIcon(event: EventTypes): IconId {
     case 'info': {
       return 'info';
     }
+    case 'notification': {
+      return 'receive';
+    }
     default: {
       return 'bug';
     }
@@ -76,14 +80,15 @@ const getMessage = (event: EventTypes): string | JSX.Element => {
         );
       }
       if (isMcpEvent(event)) {
-        if ('method' in event) {
-          return <pre className="whitespace-pre-wrap">{event.method}</pre>;
-        }
+        return event.method.replace(`${unsupportedMethodPrefix}/`, '');
       }
       if ('data' in event && typeof event.data === 'object') {
         return 'Binary data';
       }
       return event.data.toString();
+    }
+    case 'notification': {
+      return isMcpEvent(event) ? event.method : 'Unknown notification';
     }
     case 'open': {
       return 'Connected successfully';
