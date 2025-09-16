@@ -621,10 +621,8 @@ const closeMcpConnection = async (options: CommonMcpOptions) => {
   const { requestId } = options;
   const mcpClient = _getMcpClient(requestId);
   if (mcpClient) {
-    await mcpClient.close();
     try {
       // Only terminate session if transport is StreamableHTTPClientTransport
-
       if ('terminateSession' in mcpClient.transport) {
         await mcpClient.transport.terminateSession();
       }
