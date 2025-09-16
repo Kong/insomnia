@@ -8,9 +8,11 @@ import type { GetPromptRequest, Notification, ReadResourceRequest } from '@model
 import {
   type ClientRequest,
   EmptyResultSchema,
+  InitializeRequestSchema,
   isInitializeRequest,
   JSONRPCErrorSchema,
   type JSONRPCMessage,
+  type JSONRPCRequest,
   type JSONRPCResponse,
   type ListPromptsRequest,
   type ListResourcesRequest,
@@ -113,6 +115,7 @@ export interface McpNotificationEvent {
   type: 'notification';
   timestamp: number;
   method: string;
+  direction: 'INCOMING';
   data: Notification;
 }
 export type McpEvent = McpMessageEvent | McpRequestEvent | McpCloseEvent | McpErrorEvent | McpNotificationEvent;
@@ -211,6 +214,7 @@ const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
     requestId,
   };
   if (JSONRPCErrorSchema.safeParse(message).success) {
+    // Error message
     const errorDetail = JSONRPCErrorSchema.parse(message).error;
     messageEvent = {
       ...commonEventProps,
@@ -219,9 +223,11 @@ const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
       message: `${errorDetail.code}: ${errorDetail.message}`,
     };
   } else if (ServerNotificationSchema.safeParse(message).success) {
+    // Server notification message
     messageEvent = {
       ...commonEventProps,
       type: 'notification',
+      direction: 'INCOMING',
       method: getMcpMethodFromMessage(message),
       data: ServerNotificationSchema.parse(message),
     };
@@ -489,11 +495,10 @@ const createStdioTransport = (
 
   // Wrap the original send method to log outgoing requests for stdio transport
   const originalSend = transport.send.bind(transport);
-  transport.send = async (message: JSONRPCMessage & { method: string }) => {
-    const method = message.method || 'unknown';
-
+  transport.send = async (message: JSONRPCRequest) => {
+    const isInitializedMessage = InitializeRequestSchema.safeParse(message).success;
     // Create response model for initialize message and add process status timeline
-    if (method === 'initialize') {
+    if (isInitializedMessage) {
       // Add process started timeline (similar to HTTP response timeline)
       timelineFileStreams
         .get(requestId)
@@ -516,7 +521,7 @@ const createStdioTransport = (
 
     const requestEvent: McpRequestEvent = {
       _id: mcpEventIdGenerator(),
-      method,
+      method: message.method || 'unknown',
       requestId,
       type: 'message',
       direction: 'OUTGOING',

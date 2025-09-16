@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import React, { type FC, useRef } from 'react';
 import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
 
-import { NOTIFICATION_METHODS, unsupportedMethodPrefix } from '../../../common/mcp-utils';
+import { unsupportedMethodPrefix } from '../../../common/mcp-utils';
 import type { CurlEvent } from '../../../main/network/curl';
 import type { McpEvent } from '../../../main/network/mcp';
 import type { SocketIOEvent } from '../../../main/network/socket-io';

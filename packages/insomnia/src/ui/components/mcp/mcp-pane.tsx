@@ -55,22 +55,26 @@ import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 
 export const McpPane = () => {
-  const requestData = useRequestLoaderData()!;
-  const { activeResponse, activeRequest } = requestData as McpRequestLoaderData;
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
   };
+  const { activeRequest, activeResponse } = useRequestLoaderData()! as McpRequestLoaderData;
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
   const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
   const [allExpanded, setAllExpanded] = useState(true);
   const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:mcp-list-filter`);
   const { settings } = useRootLoaderData()!;
-  const [mcpServerData, setMcpServerData] = useState<McpServerData | null>(null);
+  const [mcpServerData, setMcpServerData] = useState<McpServerData>({
+    serverCapabilities: getDefaultServerCapabilities(),
+    primitives: { tools: [], resources: [], resourceTemplates: [], prompts: [] },
+  });
   const [collapsedPrimitives, setCollapsedPrimitives] = useState<McpServerPrimitiveTypes[]>([]);
   const [selectedPrimitiveItem, setSelectedPrimitiveItem] = useState<PrimitiveSubItem | null>(null);
+  const [primitiveNextCursor, setPrimitiveNextCursor] = useState<Partial<Record<McpServerPrimitiveTypes, string>>>({});
+  const [subscribeResources, setSubscribeResources] = useState<string[]>([]);
 
   const getPrimitiveCollection = () => {
     const collection: (PrimitiveTypeItem | PrimitiveSubItem)[] = [];
@@ -84,6 +88,7 @@ export const McpPane = () => {
           collapsed: collapsedPrimitives.includes('tools'),
           itemLevel: 0,
           hide: false,
+          ...(primitiveNextCursor.tools && { nextCursor: primitiveNextCursor.tools }),
         });
         const hide = collapsedPrimitives.includes('tools');
         collection.push(...(tools.map(t => ({ ...t, type: 'tools', itemLevel: 1, hide })) as ToolItem[]));
@@ -95,13 +100,14 @@ export const McpPane = () => {
           collapsed: collapsedPrimitives.includes('resources'),
           itemLevel: 0,
           hide: false,
+          ...(primitiveNextCursor.resources && { nextCursor: primitiveNextCursor.resources }),
         });
         const hide = collapsedPrimitives.includes('resources');
         collection.push(...(resources.map(r => ({ ...r, type: 'resources', itemLevel: 1, hide })) as ResourceItem[]));
         collection.push(
           ...(resourceTemplates.map(rt => ({
             ...rt,
-            type: 'resources',
+            type: 'resourceTemplates',
             itemLevel: 1,
             hide,
           })) as ResourceTemplateItem[]),
@@ -114,6 +120,7 @@ export const McpPane = () => {
           collapsed: collapsedPrimitives.includes('prompts'),
           itemLevel: 0,
           hide: false,
+          ...(primitiveNextCursor.prompts && { nextCursor: primitiveNextCursor.prompts }),
         });
         const hide = collapsedPrimitives.includes('prompts');
         collection.push(...(prompts.map(p => ({ ...p, type: 'prompts', itemLevel: 1, hide })) as PromptItem[]));
@@ -143,6 +150,58 @@ export const McpPane = () => {
     return serverCapabilities;
   };
 
+  const updatePrimitiveNextCursor = (newNextCursor: string, type: McpServerPrimitiveTypes) => {
+    setPrimitiveNextCursor(prev => ({
+      ...prev,
+      [type]: newNextCursor,
+    }));
+  };
+
+  const updatePrimitiveData = (
+    newData: McpServerData['primitives'][McpServerPrimitiveTypes],
+    type: McpServerPrimitiveTypes,
+  ) => {
+    setMcpServerData(prev => ({
+      serverCapabilities: prev['serverCapabilities'],
+      primitives: {
+        ...prev['primitives'],
+        [type]: newData,
+      },
+    }));
+  };
+
+  const loadMorePrimitiveData = (
+    newData: McpServerData['primitives'][McpServerPrimitiveTypes],
+    type: McpServerPrimitiveTypes,
+  ) => {
+    setMcpServerData(prev => ({
+      serverCapabilities: prev['serverCapabilities'],
+      primitives: {
+        ...prev['primitives'],
+        [type]: [...prev['primitives'][type], ...newData],
+      },
+    }));
+  };
+
+  const handleSubscribe = async (item: ResourceItem) => {
+    const isSubscribed = subscribeResources.includes(item.name);
+    if (isSubscribed) {
+      try {
+        await window.main.mcp.primitive.unsubscribeResource({ uri: item.uri, requestId: requestId });
+        setSubscribeResources(prev => prev.filter(name => name !== item.name));
+      } catch (error) {
+        console.error(`Failed to unsubscribe resource ${item.name}: ${error}`);
+      }
+    } else {
+      try {
+        await window.main.mcp.primitive.subscribeResource({ uri: item.uri, requestId: requestId });
+        setSubscribeResources(prev => [...prev, item.name]);
+      } catch (error) {
+        console.error(`Failed to subscribe resource ${item.name}: ${error}`);
+      }
+    }
+  };
+
   // TODO Support filter
   const visibleCollection = getPrimitiveCollection().filter(item => !item.hide);
   const serverCapabilities = getServerCapabilities();
@@ -152,8 +211,9 @@ export const McpPane = () => {
     serverCapabilities.resources.listChanged ||
     serverCapabilities.prompts.listChanged;
   // TODO Use these variables to enable notification
-  console.log(`enableNotification`, enableNotification);
-  console.log(`allowSubscribeResources`, allowSubscribeResources);
+  if (enableNotification) {
+    // Todo support receive server notification
+  }
 
   const requestId = activeRequest._id;
   const { activeEnvironment } = useWorkspaceLoaderData()!;
@@ -171,7 +231,7 @@ export const McpPane = () => {
     },
   });
 
-  function toggleSidebar() {
+  const toggleSidebar = () => {
     const layout = sidebarPanelRef.current?.getLayout();
 
     if (!layout) {
@@ -185,11 +245,10 @@ export const McpPane = () => {
     }
 
     sidebarPanelRef.current?.setLayout(layout);
-  }
+  };
 
   useEffect(() => {
     const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
-
     return unsubscribe;
   }, []);
 
@@ -221,7 +280,7 @@ export const McpPane = () => {
     const updateServerData = async () => {
       const findFirstMatchEventData = (mcpEvents: McpEvent[], method: string) => {
         const firstMatchEvent = mcpEvents.find(
-          event => 'method' in event && event.method === method,
+          event => 'method' in event && event.method === method && event.direction === 'INCOMING',
         ) as McpMessageEvent;
         if (firstMatchEvent) {
           return firstMatchEvent.data.result;
@@ -231,13 +290,33 @@ export const McpPane = () => {
       const activeResponseId = activeResponse?._id;
       if (activeResponseId) {
         const allEvents = await window.main.mcp.event.findMany({ responseId: activeResponseId });
+        const allMessageEvents = allEvents.filter(
+          event => 'method' in event && event.direction === 'INCOMING',
+        ) as McpMessageEvent[];
         const serverCapabilities =
           findFirstMatchEventData(allEvents, METHOD_INITIALIZE)?.capabilities || getDefaultServerCapabilities();
-        const tools = findFirstMatchEventData(allEvents, METHOD_LIST_TOOLS)?.tools || [];
-        const resources = findFirstMatchEventData(allEvents, METHOD_LIST_RESOURCES)?.resources || [];
-        const resourceTemplates =
-          findFirstMatchEventData(allEvents, METHOD_LIST_RESOURCE_TEMPLATES)?.resourceTemplates || [];
-        const prompts = findFirstMatchEventData(allEvents, METHOD_LIST_PROMPTS)?.prompts || [];
+        const latestToolListEvent = findFirstMatchEventData(allMessageEvents, METHOD_LIST_TOOLS);
+        const latestResourceListEvent = findFirstMatchEventData(allMessageEvents, METHOD_LIST_RESOURCES);
+        const latestResourceTemplateListEvent = findFirstMatchEventData(
+          allMessageEvents,
+          METHOD_LIST_RESOURCE_TEMPLATES,
+        );
+        const latestPromptListEvent = findFirstMatchEventData(allMessageEvents, METHOD_LIST_PROMPTS);
+        const tools = latestToolListEvent?.tools || [];
+        const resources = latestResourceListEvent?.resources || [];
+        const resourceTemplates = latestResourceTemplateListEvent?.resourceTemplates || [];
+        const prompts = latestPromptListEvent?.prompts || [];
+        // Get nextCursor for each primitive type
+        const toolsNextCursor = latestToolListEvent?.nextCursor as string | undefined;
+        const resourcesNextCursor = latestResourceListEvent?.nextCursor as string | undefined;
+        const promptsNextCursor = latestPromptListEvent?.nextCursor as string | undefined;
+        const primitiveNextCursor = {
+          ...(toolsNextCursor && { tools: toolsNextCursor }),
+          ...(resourcesNextCursor && { resources: resourcesNextCursor }),
+          ...(promptsNextCursor && { prompts: promptsNextCursor }),
+        };
+        setPrimitiveNextCursor(primitiveNextCursor);
+
         const mcpServerData = {
           serverCapabilities: serverCapabilities,
           primitives: {
@@ -255,6 +334,13 @@ export const McpPane = () => {
       updateServerData();
     }
   }, [readyState, activeResponse?._id]);
+
+  useEffect(() => {
+    if (!readyState) {
+      // clear subscriptions when connection is closed
+      setSubscribeResources([]);
+    }
+  }, [readyState]);
 
   return (
     <PanelGroup
@@ -377,6 +463,12 @@ export const McpPane = () => {
                       activeRequest={activeRequest}
                       item={item}
                       collapsedPrimitives={collapsedPrimitives}
+                      onUpdatePrimitiveNextCursor={updatePrimitiveNextCursor}
+                      onRefreshPrimitive={updatePrimitiveData}
+                      onLoadMorePrimitive={loadMorePrimitiveData}
+                      allowSubscribeResources={allowSubscribeResources}
+                      subscribeResources={subscribeResources}
+                      handleSubscribe={handleSubscribe}
                       style={{
                         height: `${virtualItem.size}px`,
                         transform: `translateY(${virtualItem.start}px)`,
@@ -414,20 +506,38 @@ export const McpPane = () => {
   );
 };
 
-const CollectionGridListItem = ({
-  activeRequest,
-  style,
-  item,
-  collapsedPrimitives,
-}: {
+const CollectionGridListItem = (props: {
   activeRequest: McpRequest;
   item: PrimitiveTypeItem | PrimitiveSubItem;
   style: React.CSSProperties;
   collapsedPrimitives: McpServerPrimitiveTypes[];
+  allowSubscribeResources: boolean;
+  subscribeResources: string[];
+  handleSubscribe: (item: ResourceItem) => void;
+  onRefreshPrimitive: (
+    newData: McpServerData['primitives'][McpServerPrimitiveTypes],
+    type: McpServerPrimitiveTypes,
+  ) => void;
+  onUpdatePrimitiveNextCursor: (newNextCursor: string, type: McpServerPrimitiveTypes) => void;
+  onLoadMorePrimitive: (
+    newData: McpServerData['primitives'][McpServerPrimitiveTypes],
+    type: McpServerPrimitiveTypes,
+  ) => void;
 }) => {
+  const {
+    item,
+    style,
+    collapsedPrimitives,
+    allowSubscribeResources,
+    subscribeResources,
+    handleSubscribe,
+    ...restProps
+  } = props;
   const label = 'title' in item ? item.title : item.name;
   const uniqueId = item.itemLevel === 0 ? `root_${item.type}` : `${item.type}_${item.name}`;
   const itemLevel = item.itemLevel;
+  const isRootTypeItem = itemLevel === 0;
+  const isResourceTypeItem = item.type === 'resources' && itemLevel === 1;
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
 
@@ -451,7 +561,7 @@ const CollectionGridListItem = ({
         }}
       >
         <div className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors">
-          {itemLevel === 0 && (
+          {isRootTypeItem && (
             <Icon
               className="w-4 flex-shrink-0"
               icon={collapsedPrimitives.includes(item.type) ? 'caret-right' : 'caret-down'}
@@ -462,7 +572,7 @@ const CollectionGridListItem = ({
               Tool
             </span>
           )}
-          {item.type === 'resources' && item.itemLevel === 1 && (
+          {(item.type === 'resources' || item.type === 'resourceTemplates') && item.itemLevel === 1 && (
             <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-surprise-rgb),0.5)] text-[0.65rem] text-[--color-font-surprise]">
               Res
             </span>
@@ -474,13 +584,25 @@ const CollectionGridListItem = ({
           )}
           {label}
         </div>
-        <McpActionsDropdown
-          item={item}
-          request={activeRequest}
-          isOpen={isContextMenuOpen}
-          onOpenChange={setIsContextMenuOpen}
-          triggerRef={triggerRef}
-        />
+        {isRootTypeItem && (
+          <McpActionsDropdown
+            item={item}
+            isOpen={isContextMenuOpen}
+            onOpenChange={setIsContextMenuOpen}
+            triggerRef={triggerRef}
+            {...restProps}
+          />
+        )}
+        {isResourceTypeItem && allowSubscribeResources && (
+          <Button
+            data-testid={`Dropdown-${item.type}`}
+            aria-label="Mcp Actions"
+            className="h-6 items-center justify-center rounded-sm pr-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all"
+            onPress={() => handleSubscribe(item as ResourceItem)}
+          >
+            {subscribeResources.includes(item.name) ? 'Unsubscribe' : 'Subscribe'}
+          </Button>
+        )}
       </div>
     </GridListItem>
   );
