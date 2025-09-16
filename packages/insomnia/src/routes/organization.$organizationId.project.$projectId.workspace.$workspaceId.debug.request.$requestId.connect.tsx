@@ -4,6 +4,7 @@ import { href } from 'react-router';
 import type { ChangeBufferEvent } from '~/common/database';
 import type { CookieJar } from '~/models/cookie-jar';
 import * as requestOperations from '~/models/helpers/request-operations';
+import { isMcpRequest, type TransportType } from '~/models/mcp-request';
 import type { RequestAuthentication, RequestHeader } from '~/models/request';
 import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '~/models/request';
 import { isRequestMeta } from '~/models/request-meta';
@@ -22,6 +23,7 @@ export interface ConnectActionParams {
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
   suppressUserAgent: boolean;
+  transportType?: TransportType;
   query?: Record<string, string>;
 }
 
@@ -89,6 +91,16 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       cookieJar: rendered.cookieJar,
       authentication: rendered.authentication,
       query: rendered.query || {},
+    });
+  }
+  if (isMcpRequest(req)) {
+    window.main.mcp.connect({
+      requestId,
+      workspaceId,
+      transportType: rendered.transportType || 'streamable-http',
+      url: rendered.url,
+      headers: rendered.headers,
+      authentication: rendered.authentication,
     });
   }
   // HACK: even more elaborate hack to get the request to update
