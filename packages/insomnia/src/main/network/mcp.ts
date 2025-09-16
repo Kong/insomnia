@@ -437,6 +437,7 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
       message: error.message || 'Something went wrong',
     });
     console.error(`Failed to create ${options.transportType} transport: ${error}`);
+    return;
   }
   mcpConnections.set(requestId, mcpClient as McpClient);
   const serverCapabilities = mcpClient.getServerCapabilities();
