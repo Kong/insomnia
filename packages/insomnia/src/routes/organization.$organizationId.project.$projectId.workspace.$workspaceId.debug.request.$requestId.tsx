@@ -7,6 +7,7 @@ import { type GrpcRequest, isGrpcRequestId } from '~/models/grpc-request';
 import type { GrpcRequestMeta } from '~/models/grpc-request-meta';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { isMcpRequest, type McpRequest } from '~/models/mcp-request';
+import type { McpResponse } from '~/models/mcp-response';
 import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import { isGraphqlSubscriptionRequest } from '~/models/request';
@@ -44,6 +45,14 @@ export interface GrpcRequestLoaderData {
   activeRequestMeta: GrpcRequestMeta;
   activeResponse: null;
   responses: [];
+  requestVersions: RequestVersion[];
+}
+
+export interface McpRequestLoaderData {
+  activeRequest: McpRequest;
+  activeRequestMeta: RequestMeta;
+  activeResponse: McpResponse;
+  responses: McpResponse[];
   requestVersions: RequestVersion[];
 }
 export interface RequestLoaderData {
@@ -155,6 +164,18 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       requestPayload: socketIOPayload,
     } as SocketIORequestLoaderData;
   }
+
+  if (isMcpRequest(activeRequest)) {
+    // TODO - add mcp request payload model
+    return {
+      activeRequest,
+      activeRequestMeta,
+      activeResponse,
+      responses,
+      requestVersions: await models.requestVersion.findByParentId(requestId),
+    } as McpRequestLoaderData;
+  }
+
   return {
     activeRequest,
     activeRequestMeta,

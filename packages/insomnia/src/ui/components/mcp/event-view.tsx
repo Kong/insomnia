@@ -12,7 +12,7 @@ import {
   PREVIEW_MODES,
 } from '../../../common/constants';
 import type { McpEvent } from '../../../main/network/mcp';
-import { useMcpRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp.request.$requestId';
+import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { CodeEditor } from '../../components/.client/codemirror/code-editor';
 import { showError } from '../../components/modals';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
@@ -64,7 +64,7 @@ export const MessageEventView = ({ event }: Props) => {
   } catch {
     // Can't parse as JSON.
   }
-  const { activeRequestMeta } = useMcpRequestLoaderData()!;
+  const { activeRequestMeta } = useRequestLoaderData()!;
   const previewMode = ('previewMode' in activeRequestMeta && activeRequestMeta.previewMode) || PREVIEW_MODE_SOURCE;
   return (
     <div className="flex h-full flex-col">

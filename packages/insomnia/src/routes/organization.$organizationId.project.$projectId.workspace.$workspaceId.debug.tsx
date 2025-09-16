@@ -93,6 +93,7 @@ import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
+import { McpPane } from '~/ui/components/mcp/mcp-pane';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { CookiesModal } from '~/ui/components/modals/cookies-modal';
@@ -228,6 +229,15 @@ const RequestTiming = ({ requestId }: { requestId: string }) => {
       data-testid="WebSocketSpinner__Connected"
     />
   ) : null;
+};
+
+const DebugEntry = () => {
+  const { activeWorkspace } = useWorkspaceLoaderData()!;
+  if (activeWorkspace.scope === 'mcp') {
+    // MCP request under mcp workspace has different layout so we need to render a different component
+    return <McpPane />;
+  }
+  return <Debug />;
 };
 
 const Debug = () => {
@@ -1265,7 +1275,7 @@ const Debug = () => {
   );
 };
 
-export default Debug;
+export default DebugEntry;
 
 const ScratchPadTutorialPanel = () => {
   const [signUpTipDismissedState, setSignUpTipDismissedState] = useLocalStorage<{
