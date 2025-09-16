@@ -2,51 +2,86 @@ import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 
+import type { McpServerData } from '~/common/mcp-utils';
+
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { McpRequest } from '../../../models/mcp-request';
+import type { McpRequest, McpServerPrimitiveTypes } from '../../../models/mcp-request';
 import { Icon } from '../icon';
-import type { PrimitiveSubItem, PrimitiveTypeItem } from '../mcp/types';
+import type { PrimitiveTypeItem } from '../mcp/types';
 
 interface Props {
-  item: PrimitiveTypeItem | PrimitiveSubItem;
-  request: McpRequest;
+  item: PrimitiveTypeItem;
+  activeRequest: McpRequest;
   triggerRef: React.RefObject<HTMLDivElement>;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  onRefreshPrimitive: (
+    newData: McpServerData['primitives'][McpServerPrimitiveTypes],
+    type: McpServerPrimitiveTypes,
+  ) => void;
+  onUpdatePrimitiveNextCursor: (newNextCursor: string, type: McpServerPrimitiveTypes) => void;
+  onLoadMorePrimitive: (
+    newData: McpServerData['primitives'][McpServerPrimitiveTypes],
+    type: McpServerPrimitiveTypes,
+  ) => void;
+}
+interface actionList {
+  name: string;
+  id: string;
+  icon: IconName;
+  items: {
+    id: string;
+    name: string;
+    icon: IconName;
+    hint?: PlatformKeyCombinations;
+    action: () => void;
+  }[];
 }
 
-export const McpActionsDropdown = ({ item, request, isOpen, onOpenChange, triggerRef }: Props) => {
-  const { itemLevel, type } = item;
+export const McpActionsDropdown = ({
+  item,
+  activeRequest,
+  isOpen,
+  onOpenChange,
+  onRefreshPrimitive,
+  onUpdatePrimitiveNextCursor,
+  onLoadMorePrimitive,
+  triggerRef,
+}: Props) => {
+  const { type } = item;
+  const { nextCursor } = item as PrimitiveTypeItem;
+  // If there is a nextCursor, it means there are more items to load, so we only support load more
+  const couldRefresh = !nextCursor;
+  const updateMethod = couldRefresh ? onRefreshPrimitive : onLoadMorePrimitive;
 
-  if (itemLevel !== 0) {
-    // Only show for capability type item
-    return null;
-  }
+  const requestId = activeRequest._id;
 
-  const requestId = request._id;
-
-  const handleRefreshPrimitive = () => {
+  const handleRefreshPrimitive = async () => {
+    const params = {
+      ...(nextCursor && { cursor: nextCursor }),
+    };
     if (type === 'tools') {
-      window.main.mcp.primitive.listTools({ requestId });
+      const toolList = await window.main.mcp.primitive.listTools({ requestId, ...params });
+      if (toolList) {
+        updateMethod(toolList.tools, type);
+        toolList.nextCursor && onUpdatePrimitiveNextCursor(toolList.nextCursor, type);
+      }
     } else if (type === 'prompts') {
-      window.main.mcp.primitive.listPrompts({ requestId });
+      const promptList = await window.main.mcp.primitive.listPrompts({ requestId, ...params });
+      if (promptList) {
+        updateMethod(promptList.prompts, type);
+        promptList.nextCursor && onUpdatePrimitiveNextCursor(promptList.nextCursor, type);
+      }
     } else if (type === 'resources') {
-      window.main.mcp.primitive.listResources({ requestId });
+      const resourceList = await window.main.mcp.primitive.listResources({ requestId, ...params });
+      if (resourceList) {
+        updateMethod(resourceList.resources, type);
+        resourceList.nextCursor && onUpdatePrimitiveNextCursor(resourceList.nextCursor, type);
+      }
     }
   };
 
-  const mcpPrimitiveActionList: {
-    name: string;
-    id: string;
-    icon: IconName;
-    items: {
-      id: string;
-      name: string;
-      icon: IconName;
-      hint?: PlatformKeyCombinations;
-      action: () => void;
-    }[];
-  }[] = [
+  const mcpPrimitiveActionList: actionList[] = [
     {
       name: 'Actions',
       id: 'actions',
@@ -55,8 +90,8 @@ export const McpActionsDropdown = ({ item, request, isOpen, onOpenChange, trigge
         {
           id: 'Refresh',
           name: 'Refresh',
-          action: handleRefreshPrimitive,
           icon: 'refresh',
+          action: handleRefreshPrimitive,
         },
       ],
     },
@@ -100,17 +135,26 @@ export const McpActionsDropdown = ({ item, request, isOpen, onOpenChange, trigge
                 <Icon icon={section.icon} /> <span>{section.name}</span>
               </Header>
               <Collection items={section.items}>
-                {item => (
-                  <MenuItem
-                    key={item.id}
-                    id={item.id}
-                    className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
-                    aria-label={item.name}
-                  >
-                    <Icon icon={item.icon} />
-                    <span>{item.name}</span>
-                  </MenuItem>
-                )}
+                {item => {
+                  const { id, name, icon } = item;
+                  let itemName = name;
+                  let itemIcon = icon;
+                  if (id === 'Refresh') {
+                    itemName = couldRefresh ? 'Refresh' : 'Load More';
+                    itemIcon = couldRefresh ? 'refresh' : 'chevron-down';
+                  }
+                  return (
+                    <MenuItem
+                      key={item.id}
+                      id={item.id}
+                      className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                      aria-label={itemName}
+                    >
+                      <Icon icon={itemIcon} />
+                      <span>{itemName}</span>
+                    </MenuItem>
+                  );
+                }}
               </Collection>
             </MenuSection>
           )}

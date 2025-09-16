@@ -232,7 +232,28 @@ const RequestTiming = ({ requestId }: { requestId: string }) => {
 };
 
 const DebugEntry = () => {
-  const { activeWorkspace } = useWorkspaceLoaderData()!;
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+    requestId?: string;
+    requestGroupId?: string;
+  };
+  const { activeRequestGroup } = useRequestGroupLoaderData() || {};
+  const { activeWorkspace, activeProject } = useWorkspaceLoaderData()!;
+  const requestData = useRequestLoaderData();
+  const { activeRequest } = requestData || {};
+
+  useInsomniaTab({
+    organizationId,
+    projectId,
+    workspaceId,
+    activeWorkspace,
+    activeProject,
+    activeRequest,
+    activeRequestGroup,
+  });
+
   if (activeWorkspace.scope === 'mcp') {
     // MCP request under mcp workspace has different layout so we need to render a different component
     return <McpPane />;
@@ -274,8 +295,6 @@ const Debug = () => {
 
   const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:collection-list-filter`);
   const collection = useFilteredRequests(_collection, filter ?? '');
-
-  const { activeRequestGroup } = useRequestGroupLoaderData() || {};
 
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(
     grpcRequests.map(r => ({
@@ -790,16 +809,6 @@ const Debug = () => {
       mediaQuery.removeEventListener('change', handleChange);
     };
   }, [settings.forceVerticalLayout, direction]);
-
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
-    activeRequest,
-    activeRequestGroup,
-  });
 
   return (
     <PanelGroup
