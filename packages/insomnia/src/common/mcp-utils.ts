@@ -1,6 +1,9 @@
 import {
   CallToolRequestSchema,
   CallToolResultSchema,
+  CancelledNotificationSchema,
+  CreateMessageRequestSchema,
+  ElicitRequestSchema,
   GetPromptRequestSchema,
   GetPromptResultSchema,
   InitializeRequestSchema,
@@ -12,18 +15,29 @@ import {
   ListResourcesResultSchema,
   ListResourceTemplatesRequestSchema,
   ListResourceTemplatesResultSchema,
+  ListRootsRequestSchema,
   ListToolsRequestSchema,
   ListToolsResultSchema,
+  LoggingMessageNotificationSchema,
+  ProgressNotificationSchema,
   type Prompt,
+  PromptListChangedNotificationSchema,
   ReadResourceRequestSchema,
   ReadResourceResultSchema,
   type Resource,
+  ResourceListChangedNotificationSchema,
   type ResourceTemplate,
+  ResourceUpdatedNotificationSchema,
   type ServerCapabilities,
+  ServerNotificationSchema,
+  ServerRequestSchema,
+  SubscribeRequestSchema,
   type Tool,
+  ToolListChangedNotificationSchema,
+  UnsubscribeRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
-// method constants
+// methods for server features
 export const METHOD_INITIALIZE = InitializeRequestSchema.shape.method.value;
 export const METHOD_LIST_TOOLS = ListToolsRequestSchema.shape.method.value;
 export const METHOD_LIST_RESOURCES = ListResourcesRequestSchema.shape.method.value;
@@ -32,8 +46,38 @@ export const METHOD_LIST_PROMPTS = ListPromptsRequestSchema.shape.method.value;
 export const METHOD_CALL_TOOL = CallToolRequestSchema.shape.method.value;
 export const METHOD_READ_RESOURCE = ReadResourceRequestSchema.shape.method.value;
 export const METHOD_GET_PROMPT = GetPromptRequestSchema.shape.method.value;
-const METHOD_UNKNOWN = 'unknown';
-export const MCP_JSONRPC_METHODS = [
+export const METHOD_SUBSCRIBE_RESOURCE = SubscribeRequestSchema.shape.method.value;
+export const METHOD_UNSUBSCRIBE_RESOURCE = UnsubscribeRequestSchema.shape.method.value;
+// methods for client features
+export const METHOD_SAMPLING_CREATE_MESSAGE = CreateMessageRequestSchema.shape.method.value;
+export const METHOD_LIST_ROOTS = ListRootsRequestSchema.shape.method.value;
+export const METHOD_ELICITATION_CREATE_MESSAGE = ElicitRequestSchema.shape.method.value;
+// methods for notifications
+export const METHOD_NOTIFICATION_CANCELLED = CancelledNotificationSchema.shape.method.value;
+export const METHOD_NOTIFICATION_PROGRESS = ProgressNotificationSchema.shape.method.value;
+export const METHOD_NOTIFICATION_LOGGING_MESSAGE = LoggingMessageNotificationSchema.shape.method.value;
+export const METHOD_NOTIFICATION_RESOURCE_UPDATED = ResourceUpdatedNotificationSchema.shape.method.value;
+export const METHOD_NOTIFICATION_RESOURCE_LIST_CHANGED = ResourceListChangedNotificationSchema.shape.method.value;
+export const METHOD_NOTIFICATION_TOOL_LIST_CHANGED = ToolListChangedNotificationSchema.shape.method.value;
+export const METHOD_NOTIFICATION_PROMPT_LIST_CHANGED = PromptListChangedNotificationSchema.shape.method.value;
+
+export const unsupportedMethodPrefix = 'Unsupported/';
+export const METHOD_UNKNOWN = 'Unknown Method';
+export const NOTIFICATION_METHODS = [
+  METHOD_NOTIFICATION_CANCELLED,
+  METHOD_NOTIFICATION_PROGRESS,
+  METHOD_NOTIFICATION_LOGGING_MESSAGE,
+  METHOD_NOTIFICATION_RESOURCE_UPDATED,
+  METHOD_NOTIFICATION_RESOURCE_LIST_CHANGED,
+  METHOD_NOTIFICATION_TOOL_LIST_CHANGED,
+  METHOD_NOTIFICATION_PROMPT_LIST_CHANGED,
+] as const;
+export const CLIENT_METHODS = [
+  METHOD_SAMPLING_CREATE_MESSAGE,
+  METHOD_LIST_ROOTS,
+  METHOD_ELICITATION_CREATE_MESSAGE,
+] as const;
+export const SERVER_METHODS = [
   METHOD_INITIALIZE,
   METHOD_LIST_TOOLS,
   METHOD_LIST_RESOURCES,
@@ -44,16 +88,12 @@ export const MCP_JSONRPC_METHODS = [
   METHOD_GET_PROMPT,
 ];
 
-export type JSONRPCMessageMethods =
-  | typeof METHOD_INITIALIZE
-  | typeof METHOD_LIST_TOOLS
-  | typeof METHOD_LIST_RESOURCES
-  | typeof METHOD_LIST_RESOURCE_TEMPLATES
-  | typeof METHOD_LIST_PROMPTS
-  | typeof METHOD_CALL_TOOL
-  | typeof METHOD_READ_RESOURCE
-  | typeof METHOD_GET_PROMPT;
+export type McpServerMethods = (typeof SERVER_METHODS)[number];
+export type NotificationMethods = (typeof NOTIFICATION_METHODS)[number];
+export type McpClientMethods = (typeof CLIENT_METHODS)[number];
+export type UnsupportedMcpClientMethods = `${typeof unsupportedMethodPrefix}${string}`;
 
+export type JSONRPCMessageMethods = McpServerMethods | McpClientMethods | NotificationMethods;
 export interface McpServerData {
   serverCapabilities: ServerCapabilities;
   primitives: {
@@ -64,9 +104,13 @@ export interface McpServerData {
   };
 }
 
-export const getMcpMethodFromMessage = (message: JSONRPCMessage): JSONRPCMessageMethods | typeof METHOD_UNKNOWN => {
-  let method: JSONRPCMessageMethods | typeof METHOD_UNKNOWN = METHOD_UNKNOWN;
-  if ('result' in message) {
+type McpMessageEventMethods = JSONRPCMessageMethods | typeof METHOD_UNKNOWN | UnsupportedMcpClientMethods;
+export const getMcpMethodFromMessage = (message: JSONRPCMessage): McpMessageEventMethods => {
+  let method: McpMessageEventMethods = 'Unknown Method';
+  if (ServerNotificationSchema.safeParse(message).success) {
+    // for server notification messages
+    method = ServerNotificationSchema.parse(message).method;
+  } else if ('result' in message) {
     const messageResult = message.result;
     if (InitializeResultSchema.safeParse(messageResult).success) {
       method = METHOD_INITIALIZE;
@@ -85,6 +129,9 @@ export const getMcpMethodFromMessage = (message: JSONRPCMessage): JSONRPCMessage
     } else if (GetPromptResultSchema.safeParse(messageResult).success) {
       method = METHOD_GET_PROMPT;
     }
+  } else if (ServerRequestSchema.safeParse(message).success) {
+    // Do not support any server requests to client including ping, roots, elicitation and sampling
+    method = `${unsupportedMethodPrefix}${ServerRequestSchema.parse(message).method}`;
   }
   return method;
 };
