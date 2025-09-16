@@ -114,7 +114,7 @@ export const MessageEventView = ({ event }: Props) => {
 };
 
 export const McpEventView = ({ event }: Props) => {
-  if (event.type === 'message') {
+  if (event.type === 'message' || event.type === 'notification') {
     return <MessageEventView event={event} />;
   }
   return null;

@@ -7,12 +7,21 @@ interface CommonItemProps {
   hide: boolean;
 }
 
-export type ToolItem = Tool & { type: 'tools' } & CommonItemProps;
-export type ResourceItem = Resource & { type: 'resources' } & CommonItemProps;
-export type ResourceTemplateItem = ResourceTemplate & { type: 'resources' } & CommonItemProps;
-export type PromptItem = Prompt & { type: 'prompts' } & CommonItemProps;
+export interface ToolItem extends Tool, CommonItemProps {
+  type: 'tools';
+}
+export interface ResourceItem extends Resource, CommonItemProps {
+  type: 'resources';
+}
+export interface ResourceTemplateItem extends ResourceTemplate, CommonItemProps {
+  type: 'resourceTemplates';
+}
+export interface PromptItem extends Prompt, CommonItemProps {
+  type: 'prompts';
+}
 export type PrimitiveSubItem = ToolItem | ResourceItem | ResourceTemplateItem | PromptItem;
 export interface PrimitiveTypeItem extends CommonItemProps {
   type: McpServerPrimitiveTypes;
   name: string;
+  nextCursor?: string;
 }
