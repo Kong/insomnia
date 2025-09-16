@@ -1,4 +1,5 @@
 import { database as db } from '../common/database';
+import { type EnvironmentKvPairData } from './environment';
 import type { BaseModel } from './index';
 import type { RequestAuthentication, RequestHeader } from './request';
 
@@ -21,11 +22,11 @@ export interface BaseMcpRequest {
   description: string;
   headers: RequestHeader[];
   authentication: RequestAuthentication | {};
-  env: Record<string, string>;
+  env: EnvironmentKvPairData[];
 }
 export type McpServerPrimitiveTypes = 'tools' | 'resources' | 'prompts';
 
-export const MCP_TRANSPORT_TYPES: TransportType[] = ['streamable-http', 'stdio'];
+export const MCP_TRANSPORT_TYPES: TransportType[] = [TRANSPORT_TYPES.HTTP, TRANSPORT_TYPES.STDIO];
 
 export type McpRequest = BaseModel & BaseMcpRequest & { type: typeof type };
 
@@ -36,12 +37,12 @@ export const isMcpRequestId = (id?: string | null) => id?.startsWith(`${prefix}_
 export function init(): BaseMcpRequest {
   return {
     url: '',
-    transportType: 'streamable-http',
+    transportType: TRANSPORT_TYPES.HTTP,
     name: 'New MCP Client',
     description: '',
     headers: [],
     authentication: {},
-    env: {},
+    env: [],
   };
 }
 
