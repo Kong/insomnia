@@ -9,7 +9,8 @@ import {
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '~/ui/components/base/dropdown';
 
-import { MCP_TRANSPORT_TYPES, type McpRequest } from '../../../models/mcp-request';
+import { getDataFromKVPair } from '../../../models/environment';
+import { MCP_TRANSPORT_TYPES, type McpRequest, TRANSPORT_TYPES } from '../../../models/mcp-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -25,7 +26,7 @@ interface ActionBarProps {
 }
 
 const getTransportLabel = (transportType: McpRequest['transportType']) =>
-  transportType === 'streamable-http' ? 'HTTP' : 'STDIO';
+  transportType === TRANSPORT_TYPES.HTTP ? 'HTTP' : 'STDIO';
 
 export const McpUrlActionBar = ({ request, environmentId, defaultValue, onChange, readyState }: ActionBarProps) => {
   const isOpen = readyState;
@@ -70,6 +71,7 @@ export const McpUrlActionBar = ({ request, environmentId, defaultValue, onChange
         url: request.url,
         headers: request.headers,
         authentication: request.authentication,
+        env: getDataFromKVPair(request.env).data,
       },
     });
     return {
@@ -79,6 +81,7 @@ export const McpUrlActionBar = ({ request, environmentId, defaultValue, onChange
       authentication: rendered.authentication,
       suppressUserAgent: rendered.suppressUserAgent,
       cookieJar: rendered.workspaceCookieJar,
+      env: rendered.env,
     };
   }, [environmentId, request]);
 
@@ -173,6 +176,7 @@ export const McpUrlActionBar = ({ request, environmentId, defaultValue, onChange
           {isConnectingOrClosed ? (
             <button
               className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
+              disabled={connectRequestFetcher.state === 'submitting' || connectRequestFetcher.state === 'loading'}
               type="submit"
             >
               Discover
