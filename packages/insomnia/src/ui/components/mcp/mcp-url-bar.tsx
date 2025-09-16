@@ -5,7 +5,7 @@ import { useParams } from 'react-router';
 import {
   type ConnectActionParams,
   useRequestConnectActionFetcher,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp.request.$requestId.connect';
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '~/ui/components/base/dropdown';
 
