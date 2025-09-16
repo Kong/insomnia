@@ -32,6 +32,7 @@ export interface HashiCorpVaultKVV1SecretConfig {
   secretEnginePath: string;
   secretName: string;
   secretKey?: string;
+  sendNamespaceViaHeader?: boolean;
 }
 export interface HashiCorpVaultKVV2SecretConfig {
   kvVersion: 'v2';
@@ -39,6 +40,7 @@ export interface HashiCorpVaultKVV2SecretConfig {
   secretName: string;
   secretKey?: string;
   version?: string | number;
+  sendNamespaceViaHeader?: boolean;
 }
 export type HashiCorpSecretConfig = HCPSecretConfig | HashiCorpVaultKVV1SecretConfig | HashiCorpVaultKVV2SecretConfig;
 

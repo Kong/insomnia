@@ -804,7 +804,7 @@ const Debug = () => {
         <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
           <div className="flex flex-col items-start divide-y divide-solid divide-[--hl-md]">
             <div className={`flex w-full h-[${INSOMNIA_TAB_HEIGHT}px]`}>
-              <Breadcrumbs className="m-0 flex h-[--line-height-sm] w-full list-none items-center gap-2 px-[--padding-sm] font-bold">
+              <Breadcrumbs className="m-0 flex h-full w-full list-none items-center gap-2 px-[--padding-sm] font-bold">
                 <Breadcrumb className="flex h-full select-none items-center gap-2 text-[--color-font] outline-none data-[focused]:outline-none">
                   <NavLink
                     data-testid="project"
@@ -866,7 +866,6 @@ const Debug = () => {
               </Button>
             </div>
           </div>
-
           <div className="flex flex-1 flex-col overflow-hidden">
             <div className="flex justify-between gap-1 p-[--padding-sm]">
               <SearchField
@@ -1161,7 +1160,6 @@ const Debug = () => {
           {isScratchpadOrganizationId(organizationId) && <ScratchPadTutorialPanel />}
 
           <WorkspaceSyncDropdown />
-
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
           {isImportModalOpen && (
             <ImportModal

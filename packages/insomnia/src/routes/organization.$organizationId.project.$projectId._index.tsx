@@ -780,7 +780,7 @@ const Component = () => {
             collapsible
           >
             <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
-              <div className="h-[40px] p-[--padding-sm]">
+              <div className="flex h-[40px] flex-col items-start justify-center p-[--padding-sm]">
                 <Select
                   aria-label="Organizations"
                   onSelectionChange={id => {
