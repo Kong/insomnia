@@ -24,7 +24,7 @@ export interface BaseMcpRequest {
   authentication: RequestAuthentication | {};
   env: EnvironmentKvPairData[];
 }
-export type McpServerPrimitiveTypes = 'tools' | 'resources' | 'prompts';
+export type McpServerPrimitiveTypes = 'tools' | 'resources' | 'prompts' | 'resourceTemplates';
 
 export const MCP_TRANSPORT_TYPES: TransportType[] = [TRANSPORT_TYPES.HTTP, TRANSPORT_TYPES.STDIO];
 
