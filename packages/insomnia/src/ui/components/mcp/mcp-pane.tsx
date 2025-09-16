@@ -56,8 +56,7 @@ import { useReadyState } from '~/ui/hooks/use-ready-state';
 
 export const McpPane = () => {
   const requestData = useRequestLoaderData()!;
-  const activeResponse = requestData.activeResponse;
-  const { activeRequest } = requestData as McpRequestLoaderData;
+  const { activeResponse, activeRequest } = requestData as McpRequestLoaderData;
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
