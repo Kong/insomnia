@@ -150,7 +150,7 @@ const NetworkAndSyncIndicator = ({ asyncTaskStatus, settings, sync }: IndicatorP
       ) : (
         <TooltipTrigger>
           <Button
-            className="flex h-full items-center justify-center gap-1 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+            className="flex h-full items-center justify-center gap-1 px-4 py-1 text-xs capitalize text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
             onPress={() => {
               if (settings.proxyEnabled) {
                 showSettingsModal({
@@ -160,7 +160,7 @@ const NetworkAndSyncIndicator = ({ asyncTaskStatus, settings, sync }: IndicatorP
             }}
           >
             <Icon icon="circle" className={status === 'online' ? 'text-[--color-success]' : 'text-[--color-danger]'} />{' '}
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+            {status}
             {status === 'online' && settings.proxyEnabled ? ' via proxy' : ''}
           </Button>
           <Tooltip

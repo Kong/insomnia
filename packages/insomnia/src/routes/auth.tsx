@@ -69,7 +69,7 @@ const Component = () => {
           <div className="divide flex items-center gap-2 divide-y-[--hl-sm]">
             <TooltipTrigger>
               <Button
-                className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs capitalize text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                 onPress={() => {
                   if (settings.proxyEnabled) {
                     showSettingsModal({
@@ -82,7 +82,7 @@ const Component = () => {
                   icon="circle"
                   className={status === 'online' ? 'text-[--color-success]' : 'text-[--color-danger]'}
                 />{' '}
-                {status.charAt(0).toUpperCase() + status.slice(1)}
+                {status}
                 {settings.proxyEnabled ? ' via proxy' : ''}
               </Button>
               <Tooltip
