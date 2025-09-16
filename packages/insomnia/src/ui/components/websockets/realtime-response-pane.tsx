@@ -37,6 +37,7 @@ import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { EventLogView } from './event-log-view';
 import { EventView } from './event-view';
+import { McpNotificationTab } from './mcp-notification-tab';
 
 export const RealtimeResponsePane: FC<{ requestId?: string }> = () => {
   const { activeResponse, responses, requestVersions } = useRequestLoaderData()!;
@@ -106,6 +107,11 @@ const RealtimeActiveResponsePane: FC<{
           return false;
         }
 
+        // Filter out MCP notification events which will show on another tab
+        if (event.type === 'notification') {
+          return false;
+        }
+
         // Filter out events that don't match the search query
         if (searchQuery) {
           if (event.type === 'message') {
@@ -126,6 +132,8 @@ const RealtimeActiveResponsePane: FC<{
       }),
     [allEvents, clearEventsBefore, eventType, searchQuery],
   );
+
+  const notificationEvents = useMemo(() => allEvents.filter(event => event.type === 'notification'), [allEvents]);
 
   useEffect(() => {
     setSelectedEvent(null);
@@ -195,6 +203,19 @@ const RealtimeActiveResponsePane: FC<{
           >
             Events
           </Tab>
+          {isMcpResponse(response) && (
+            <Tab
+              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              id="notifications"
+            >
+              Notifications
+              {notificationEvents.length > 0 && (
+                <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                  {notificationEvents.length}
+                </span>
+              )}
+            </Tab>
+          )}
           {!hideHeaders && (
             <Tab
               className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
@@ -300,6 +321,11 @@ const RealtimeActiveResponsePane: FC<{
             )}
           </PanelGroup>
         </TabPanel>
+        {isMcpResponse(response) && (
+          <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="notifications">
+            <McpNotificationTab allEvents={notificationEvents} />
+          </TabPanel>
+        )}
         {!isSocketIOResponse(response) && (
           <>
             <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">

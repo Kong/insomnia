@@ -63,6 +63,7 @@ const mcp: McpBridgeAPI = {
     listResourceTemplates: options => ipcRenderer.invoke('mcp.primitive.listResourceTemplates', options),
     readResource: options => ipcRenderer.invoke('mcp.primitive.readResource', options),
     subscribeResource: options => ipcRenderer.invoke('mcp.primitive.subscribeResource', options),
+    unsubscribeResource: options => ipcRenderer.invoke('mcp.primitive.unsubscribeResource', options),
     listPrompts: options => ipcRenderer.invoke('mcp.primitive.listPrompts', options),
     getPrompt: options => ipcRenderer.invoke('mcp.primitive.getPrompt', options),
   },

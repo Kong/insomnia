@@ -33,7 +33,7 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disab
   const patchRequestGroup = useRequestGroupPatcher();
   const patcher = reqData ? patchRequest : patchRequestGroup;
 
-  const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
+  const { authentication, _id } = reqData?.activeRequest || groupData?.activeRequestGroup || {};
   const authOrNull = getAuthObjectOrNull(authentication);
   const selectedValue = authOrNull ? authOrNull[property as keyof RequestAuthentication] + '' : options[0].value;
 

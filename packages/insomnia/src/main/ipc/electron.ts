@@ -121,6 +121,7 @@ export type HandleChannels =
   | 'mcp.primitive.listResourceTemplates'
   | 'mcp.primitive.readResource'
   | 'mcp.primitive.subscribeResource'
+  | 'mcp.primitive.unsubscribeResource'
   | 'mcp.readyState'
   | 'mcp.event.findMany'
   | 'mcp.close';
