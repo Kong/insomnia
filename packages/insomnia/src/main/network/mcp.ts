@@ -4,11 +4,19 @@ import path from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { getDefaultEnvironment, StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import type { GetPromptRequest, Notification, ReadResourceRequest } from '@modelcontextprotocol/sdk/types.js';
 import {
   type ClientRequest,
+  EmptyResultSchema,
   isInitializeRequest,
+  JSONRPCErrorSchema,
   type JSONRPCMessage,
   type JSONRPCResponse,
+  type ListPromptsRequest,
+  type ListResourcesRequest,
+  ServerNotificationSchema,
+  type SubscribeRequest,
+  type UnsubscribeRequest,
 } from '@modelcontextprotocol/sdk/types.js';
 import electron, { BrowserWindow } from 'electron';
 import { parse } from 'shell-quote';
@@ -16,7 +24,7 @@ import { v4 as uuidV4 } from 'uuid';
 import type { z } from 'zod';
 
 import { getAppVersion, getProductName } from '~/common/constants';
-import { getMcpMethodFromMessage } from '~/common/mcp-utils';
+import { getMcpMethodFromMessage, METHOD_SUBSCRIBE_RESOURCE, METHOD_UNSUBSCRIBE_RESOURCE } from '~/common/mcp-utils';
 import { generateId } from '~/common/misc';
 import * as models from '~/models';
 import { TRANSPORT_TYPES, type TransportType } from '~/models/mcp-request';
@@ -99,7 +107,15 @@ interface McpRequestEvent {
   method: string;
   data: any;
 }
-export type McpEvent = McpMessageEvent | McpRequestEvent | McpCloseEvent | McpErrorEvent;
+export interface McpNotificationEvent {
+  _id: string;
+  requestId: string;
+  type: 'notification';
+  timestamp: number;
+  method: string;
+  data: Notification;
+}
+export type McpEvent = McpMessageEvent | McpRequestEvent | McpCloseEvent | McpErrorEvent | McpNotificationEvent;
 interface ResponseEventOptions {
   responseId: string;
   requestId: string;
@@ -172,7 +188,7 @@ const _handleCloseMcpConnection = (requestId: string, error?: Error) => {
   _notifyMcpClientStateChange(mcpStateChannel, false);
 };
 
-const _handleMcpConnectionError = (requestId: string, error: Error) => {
+const _handleMcpClientError = (requestId: string, error: Error) => {
   const messageEvent: McpErrorEvent = {
     _id: mcpEventIdGenerator(),
     requestId,
@@ -183,21 +199,48 @@ const _handleMcpConnectionError = (requestId: string, error: Error) => {
   };
   eventLogFileStreams.get(requestId)?.write(JSON.stringify(messageEvent) + '\n');
   console.error(`MCP connection error for requestId: ${requestId}`, error);
-  // _handleCloseMcpConnection(requestId);
 };
 
 const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
-  const method = getMcpMethodFromMessage(message);
-
-  const messageEvent: McpMessageEvent = {
-    _id: mcpEventIdGenerator(),
+  const _id = mcpEventIdGenerator();
+  const timestamp = Date.now();
+  let messageEvent: McpMessageEvent | McpErrorEvent | McpNotificationEvent;
+  const commonEventProps = {
+    _id,
+    timestamp,
     requestId,
-    type: 'message',
-    method,
-    data: message as JSONRPCResponse,
-    direction: 'INCOMING',
-    timestamp: Date.now(),
   };
+  if (JSONRPCErrorSchema.safeParse(message).success) {
+    const errorDetail = JSONRPCErrorSchema.parse(message).error;
+    messageEvent = {
+      ...commonEventProps,
+      type: 'error',
+      error: errorDetail,
+      message: `${errorDetail.code}: ${errorDetail.message}`,
+    };
+  } else if (ServerNotificationSchema.safeParse(message).success) {
+    messageEvent = {
+      ...commonEventProps,
+      type: 'notification',
+      method: getMcpMethodFromMessage(message),
+      data: ServerNotificationSchema.parse(message),
+    };
+  } else {
+    if ('result' in message && EmptyResultSchema.safeParse(message.result).success) {
+      console.log('Ignoring empty result message');
+      // ignore empty result message
+      return;
+    }
+    const method = getMcpMethodFromMessage(message);
+    messageEvent = {
+      ...commonEventProps,
+      type: 'message',
+      method,
+      data: message as JSONRPCResponse,
+      direction: 'INCOMING',
+    };
+  }
+
   eventLogFileStreams.get(requestId)?.write(JSON.stringify(messageEvent) + '\n');
 };
 
@@ -246,7 +289,7 @@ const parseResponseAndBuildTimeline = (requestHeaderLogs: string, response: Resp
   return { timeline, responseHeaders, statusCode, statusMessage };
 };
 
-// A wrapper fetch to log request and response details
+// A wrapped fetch to log request and response details
 const fetchWithLogging = async (
   url: string | URL,
   init: RequestInit,
@@ -513,7 +556,7 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
     version: getAppVersion(),
   });
   mcpClient.onclose = () => _handleCloseMcpConnection(requestId);
-  mcpClient.onerror = _error => _handleMcpConnectionError(requestId, _error);
+  mcpClient.onerror = _error => _handleMcpClientError(requestId, _error);
   const mcpStateChannel = getMcpStateChannel(requestId);
 
   try {
@@ -573,11 +616,20 @@ const closeMcpConnection = async (options: CommonMcpOptions) => {
   const { requestId } = options;
   const mcpClient = _getMcpClient(requestId);
   if (mcpClient) {
-    // Only terminate session if transport is StreamableHTTPClientTransport
-    if ('terminateSession' in mcpClient.transport) {
-      await mcpClient.transport.terminateSession();
-    }
     await mcpClient.close();
+    try {
+      // Only terminate session if transport is StreamableHTTPClientTransport
+
+      if ('terminateSession' in mcpClient.transport) {
+        await mcpClient.transport.terminateSession();
+      }
+    } catch (err) {
+      _handleMcpClientError(requestId, err as Error);
+    } finally {
+      // Alway close the connection even the transport terminate session fails
+      // This occurs when the server is not reachable, terminateSession failure will cause the connection to never close
+      mcpClient.close();
+    }
   }
 };
 
@@ -607,11 +659,11 @@ const findMany = async (options: { responseId: string }): Promise<McpEvent[]> =>
 
 const listTools = async (options: CommonMcpOptions) => {
   const mcpClient = _getMcpClient(options.requestId);
-  if (!mcpClient) {
-    return [];
+  if (mcpClient) {
+    const tools = await mcpClient.listTools();
+    return tools;
   }
-  const tools = await mcpClient.listTools();
-  return tools;
+  return null;
 };
 
 const callTool = async (options: CallToolOptions) => {
@@ -624,33 +676,85 @@ const callTool = async (options: CallToolOptions) => {
   return null;
 };
 
-const listPrompts = async (options: CommonMcpOptions) => {
+const listPrompts = async (options: CommonMcpOptions & ListPromptsRequest['params']) => {
   const mcpClient = _getMcpClient(options.requestId);
-  if (!mcpClient) {
-    return [];
+  if (mcpClient) {
+    const prompts = await mcpClient.listPrompts();
+    return prompts;
   }
-  const prompts = await mcpClient.listPrompts();
-  return prompts;
+  return null;
 };
 
-const getPrompt = async (_options: CommonMcpOptions) => {};
-
-const listResources = async (options: CommonMcpOptions) => {
+const getPrompt = async (options: CommonMcpOptions & GetPromptRequest['params']) => {
+  const { requestId, ...params } = options;
   const mcpClient = _getMcpClient(options.requestId);
-  if (!mcpClient) {
-    return [];
+  if (mcpClient) {
+    const prompt = await mcpClient.getPrompt(params);
+    return prompt;
   }
-  const resources = await mcpClient.listResources();
-  return resources;
+  return null;
 };
 
-const listResourceTemplates = async (options: CommonMcpOptions) => {
+const listResources = async (options: CommonMcpOptions & ListResourcesRequest['params']) => {
+  const { requestId, ...params } = options;
   const mcpClient = _getMcpClient(options.requestId);
-  if (!mcpClient) {
-    return [];
+  if (mcpClient) {
+    const resources = await mcpClient.listResources(params);
+    return resources;
   }
-  const resourceTemplates = await mcpClient.listResourceTemplates();
-  return resourceTemplates;
+  return null;
+};
+
+const subscribeResource = async (options: CommonMcpOptions & SubscribeRequest['params']) => {
+  const { requestId, ...params } = options;
+  const mcpClient = _getMcpClient(options.requestId);
+  if (mcpClient) {
+    const result = await mcpClient.subscribeResource(params);
+    // Subscribe resource do not have a formal response schema, so we log it manually
+    const messageEvent: Omit<McpMessageEvent, 'data'> & { data: {} } = {
+      type: 'message',
+      method: METHOD_SUBSCRIBE_RESOURCE,
+      _id: mcpEventIdGenerator(),
+      timestamp: Date.now(),
+      requestId,
+      data: result,
+      direction: 'INCOMING',
+    };
+    eventLogFileStreams.get(requestId)?.write(JSON.stringify(messageEvent) + '\n');
+    return result;
+  }
+  return null;
+};
+
+const unsubscribeResource = async (options: CommonMcpOptions & UnsubscribeRequest['params']) => {
+  const { requestId, ...params } = options;
+  const mcpClient = _getMcpClient(options.requestId);
+  if (mcpClient) {
+    const result = await mcpClient.unsubscribeResource(params);
+    // Unsubscribe resource do not have a formal response schema, so we log it manually
+    const messageEvent: Omit<McpMessageEvent, 'data'> & { data: {} } = {
+      type: 'message',
+      method: METHOD_UNSUBSCRIBE_RESOURCE,
+      _id: mcpEventIdGenerator(),
+      timestamp: Date.now(),
+      requestId,
+      data: result,
+      direction: 'INCOMING',
+    };
+    eventLogFileStreams.get(requestId)?.write(JSON.stringify(messageEvent) + '\n');
+    return result;
+  }
+  return null;
+};
+
+const listResourceTemplates = async (options: CommonMcpOptions & ListResourcesRequest['params']) => {
+  const { requestId, ...params } = options;
+  const mcpClient = _getMcpClient(requestId);
+  if (mcpClient) {
+    const resourceTemplates = await mcpClient.listResourceTemplates(params);
+    return resourceTemplates;
+  }
+  return null;
 };
 
 const getMcpReadyState = async (options: CommonMcpOptions) => {
@@ -659,9 +763,15 @@ const getMcpReadyState = async (options: CommonMcpOptions) => {
   return !!mcpClient;
 };
 
-const readResource = async (_options: CommonMcpOptions) => {};
-
-const subscribeResource = async (_options: CommonMcpOptions) => {};
+const readResource = async (options: CommonMcpOptions & ReadResourceRequest['params']) => {
+  const { requestId, ...params } = options;
+  const mcpClient = _getMcpClient(requestId);
+  if (mcpClient) {
+    const resource = await mcpClient.readResource(params);
+    return resource;
+  }
+  return null;
+};
 
 export interface McpBridgeAPI {
   connect: typeof openMcpClientConnection;
@@ -676,6 +786,7 @@ export interface McpBridgeAPI {
     listResourceTemplates: typeof listResourceTemplates;
     readResource: typeof readResource;
     subscribeResource: typeof subscribeResource;
+    unsubscribeResource: typeof unsubscribeResource;
   };
   readyState: {
     getCurrent: typeof getMcpReadyState;
@@ -704,6 +815,9 @@ export const registerMcpHandlers = () => {
   );
   ipcMainHandle('mcp.primitive.subscribeResource', (_, options: Parameters<typeof subscribeResource>[0]) =>
     subscribeResource(options),
+  );
+  ipcMainHandle('mcp.primitive.unsubscribeResource', (_, options: Parameters<typeof unsubscribeResource>[0]) =>
+    unsubscribeResource(options),
   );
   ipcMainHandle('mcp.close', (_, options: Parameters<typeof closeMcpConnection>[0]) => closeMcpConnection(options));
   ipcMainOn('mcp.closeAll', closeAllMcpConnections);
