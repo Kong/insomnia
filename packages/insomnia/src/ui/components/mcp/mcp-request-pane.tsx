@@ -23,7 +23,7 @@ import { Pane } from '../panes/pane';
 import { McpUrlActionBar } from './mcp-url-bar';
 import type { PrimitiveSubItem } from './types';
 
-const supportedAuthTypes: AuthTypes[] = ['apikey', 'basic', 'bearer'];
+const supportedAuthTypes: AuthTypes[] = ['apikey', 'oauth2', 'bearer'];
 
 const uiSchema: UiSchema = {
   'ui:submitButtonOptions': {
@@ -226,6 +226,7 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
             authentication={activeRequest.authentication}
             disabled={readyState}
             authTypes={supportedAuthTypes}
+            hideOthers
           />
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="headers">
