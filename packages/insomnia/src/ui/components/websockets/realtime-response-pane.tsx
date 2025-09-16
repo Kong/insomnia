@@ -16,7 +16,6 @@ import type { Response } from '../../../models/response';
 import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socket-io-response';
 import { type WebSocketResponse } from '../../../models/websocket-response';
 import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { useMcpRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp.request.$requestId';
 import { deserializeNDJSON } from '../../../utils/ndjson';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
@@ -38,24 +37,8 @@ import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { EventLogView } from './event-log-view';
 import { EventView } from './event-view';
 
-export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
+export const RealtimeResponsePane: FC<{ requestId?: string }> = () => {
   const { activeResponse, responses, requestVersions } = useRequestLoaderData()!;
-
-  if (!activeResponse) {
-    return (
-      <Pane type="response">
-        <PaneHeader className="!justify-normal" />
-        <PlaceholderResponsePane />
-      </Pane>
-    );
-  }
-  return (
-    <RealtimeActiveResponsePane response={activeResponse} responses={responses} requestVersions={requestVersions} />
-  );
-};
-
-export const McpRealtimeResponsePane = () => {
-  const { activeResponse, responses, requestVersions } = useMcpRequestLoaderData()!;
 
   if (!activeResponse) {
     return (
