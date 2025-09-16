@@ -111,7 +111,6 @@
     "@getinsomnia/api-client": "0.0.10",
     "@getinsomnia/srp-js": "1.0.0-alpha.1",
     "@mismerge/core": "^1.2.1",
-    "@mismerge/react": "^1.0.1",
     "@react-router/dev": "^7.7.0",
     "@react-router/fs-routes": "^7.7.0",
     "@react-router/node": "^7.7.0",

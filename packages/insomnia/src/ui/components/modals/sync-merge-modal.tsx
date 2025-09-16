@@ -1,6 +1,6 @@
+import { DefaultDarkColors, DefaultLightColors } from '@mismerge/core/colors';
 import darkCssHref from '@mismerge/core/dark.css?url';
 import lightCssHref from '@mismerge/core/light.css?url';
-import { DefaultDarkColors, DefaultLightColors, MisMerge3 } from '@mismerge/react';
 import classNames from 'classnames';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
@@ -204,6 +204,12 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
     const nextHref = isLightTheme ? lightCssHref : darkCssHref;
     if (link.href !== nextHref) link.href = nextHref;
   }, [isLightTheme]);
+
+  const misMergeRef = useRef<JSX.IntrinsicElements['mis-merge3']>(null);
+  useEffect(() => {
+    // @ts-expect-error No definitions provided for web components
+    import('@mismerge/core/web');
+  }, []);
 
   return (
     <>
@@ -441,13 +447,18 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                               </li>
                             </ol>
                             <div className="flex-1 overflow-y-auto rounded-sm bg-[--hl-xs] p-2 text-[--color-font]">
-                              <MisMerge3
+                              {/* Use mis-merge3 custom element directly instead of importing @mismerge/react,
+                              because @mismerge/react does not support React 19 */}
+                              <mis-merge3
+                                ref={misMergeRef}
                                 lhs={selectedConflictCurrent}
                                 ctr={selectedConflict?.mergeResult || ''}
                                 rhs={selectedConflictIncoming}
-                                onCtrChange={onMergeEditorResultChange}
-                                colors={isLightTheme ? DefaultLightColors : DefaultDarkColors}
-                                wrapLines={true}
+                                onInput={() => {
+                                  onMergeEditorResultChange(misMergeRef.current.ctr);
+                                }}
+                                colors={JSON.stringify(isLightTheme ? DefaultLightColors : DefaultDarkColors)}
+                                wrapLines
                                 disableWordsCounter
                               />
                             </div>
