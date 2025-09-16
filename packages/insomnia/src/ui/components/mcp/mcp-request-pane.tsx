@@ -10,7 +10,10 @@ import { InsomniaRjsfForm } from '~/ui/components/rjsf';
 import { type AuthTypes } from '../../../common/constants';
 import type { Environment } from '../../../models/environment';
 import { getAuthObjectOrNull } from '../../../network/authentication';
-import { useMcpRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp.request.$requestId';
+import {
+  type McpRequestLoaderData,
+  useRequestLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { CodeEditor, type CodeEditorHandle } from '../.client/codemirror/code-editor';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
@@ -51,7 +54,7 @@ interface Props {
 }
 
 export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPrimitiveItem }) => {
-  const { activeRequest } = useMcpRequestLoaderData()!;
+  const { activeRequest } = useRequestLoaderData()! as McpRequestLoaderData;
   const [formData, setFormData] = useState({});
   const paramEditorRef = useRef<CodeEditorHandle>(null);
   const requestId = activeRequest._id;
