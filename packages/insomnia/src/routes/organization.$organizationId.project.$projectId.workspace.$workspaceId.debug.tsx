@@ -49,8 +49,6 @@ import * as models from '~/models';
 import type { Environment } from '~/models/environment';
 import { type GrpcRequest, isGrpcRequest, isGrpcRequestId } from '~/models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '~/models/grpc-request-meta';
-import type { McpRequest } from '~/models/mcp-request';
-import type { McpResponse } from '~/models/mcp-response';
 import type { Project } from '~/models/project';
 import {
   isEventStreamRequest,
