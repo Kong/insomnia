@@ -10,6 +10,7 @@ import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promis
 import type { McpEvent } from '../../../main/network/mcp';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
+import { TRANSPORT_TYPES } from '../../../models/mcp-request';
 import { isMcpResponse, type McpResponse } from '../../../models/mcp-response';
 import type { RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
@@ -156,13 +157,18 @@ const RealtimeActiveResponsePane: FC<{
     };
   }, [response.timelinePath, events.length]);
 
-  const cookieHeaders =
-    !isSocketIOResponse(response) && !isMcpResponse(response) ? getSetCookieHeaders(response.headers) : [];
+  const isLongRunning = isSocketIOResponse(response) || isMcpResponse(response);
+  const hideCookies = isSocketIOResponse(response) || isMcpResponse(response);
+  const hideHeaders =
+    isSocketIOResponse(response) || (isMcpResponse(response) && response.transportType === TRANSPORT_TYPES.STDIO);
+
+  const cookieHeaders = hideCookies ? [] : getSetCookieHeaders(response.headers);
+
   return (
     <Pane type="response">
       <PaneHeader className="row-spaced">
         <div className="no-wrap scrollable scrollable--no-bars pad-left">
-          {isSocketIOResponse(response) ? (
+          {isLongRunning ? (
             <div data-testid="response-status-tag" className={`${readyState ? 'bg-success' : 'bg-danger'} px-2 py-1`}>
               {readyState ? 'Connected' : 'Disconnected'}
             </div>
@@ -187,31 +193,31 @@ const RealtimeActiveResponsePane: FC<{
           >
             Events
           </Tab>
-          {!isSocketIOResponse(response) && (
-            <>
-              <Tab
-                className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
-                id="headers"
-              >
-                Headers
-                {response.headers.length > 0 && (
-                  <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
-                    {response.headers.length}
-                  </span>
-                )}
-              </Tab>
-              <Tab
-                className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
-                id="cookies"
-              >
-                Cookies
-                {cookieHeaders.length > 0 && (
-                  <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
-                    {cookieHeaders.length}
-                  </span>
-                )}
-              </Tab>
-            </>
+          {!hideHeaders && (
+            <Tab
+              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              id="headers"
+            >
+              Headers
+              {response.headers.length > 0 && (
+                <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                  {response.headers.length}
+                </span>
+              )}
+            </Tab>
+          )}
+          {!hideCookies && (
+            <Tab
+              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              id="cookies"
+            >
+              Cookies
+              {cookieHeaders.length > 0 && (
+                <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                  {cookieHeaders.length}
+                </span>
+              )}
+            </Tab>
           )}
           <Tab
             className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"

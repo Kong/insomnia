@@ -5,10 +5,11 @@ import React, { type FC, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
+import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
 import { InsomniaRjsfForm } from '~/ui/components/rjsf';
 
 import { type AuthTypes } from '../../../common/constants';
-import type { Environment } from '../../../models/environment';
+import type { Environment, EnvironmentKvPairData } from '../../../models/environment';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import {
   type McpRequestLoaderData,
@@ -54,7 +55,7 @@ interface Props {
 }
 
 export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPrimitiveItem }) => {
-  const { activeRequest } = useRequestLoaderData()! as McpRequestLoaderData;
+  const { activeRequest, activeRequestMeta } = useRequestLoaderData()! as McpRequestLoaderData;
   const [formData, setFormData] = useState({});
   const paramEditorRef = useRef<CodeEditorHandle>(null);
   const requestId = activeRequest._id;
@@ -63,7 +64,7 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
 
   const patchRequest = useRequestPatcher();
   // Reset the response pane state when we switch requests, the environment gets modified
-  const uniqueKey = `${environment?.modified}::${requestId}`;
+  const uniqueKey = `${environment?.modified}::${requestId}::${activeRequestMeta?.activeResponseId}`;
   const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
   const isNoneOrInherited = requestAuth?.type === 'none' || requestAuth === null;
   const toolsSchema =
@@ -89,6 +90,10 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
       parameters: formData,
       requestId: requestId,
     });
+  };
+
+  const handleEnvChange = (data: EnvironmentKvPairData[]) => {
+    patchRequest(requestId, { env: data });
   };
 
   const isStdio = activeRequest.transportType === 'stdio';
@@ -235,17 +240,12 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="env">
           {readyState && <PaneReadOnlyBanner />}
-          {/* TODO[MCP-STDIO] */}
-          <p>WIP</p>
-          <CodeEditor
-            id="mcp-environment-editor"
-            showPrettifyButton
-            dynamicHeight
-            uniquenessKey={uniqueKey}
-            defaultValue={JSON.stringify(activeRequest.env, null, 2)}
-            enableNunjucks
-            mode="json"
-            placeholder="{}"
+          <EnvironmentKVEditor
+            key={uniqueKey}
+            data={activeRequest.env}
+            disabled={readyState}
+            textOnly
+            onChange={handleEnvChange}
           />
         </TabPanel>
       </Tabs>
