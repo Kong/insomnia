@@ -28,9 +28,12 @@ import {
 } from '~/common/mcp-utils';
 import type { McpEvent, McpMessageEvent } from '~/main/network/mcp';
 import type { McpRequest, McpServerPrimitiveTypes } from '~/models/mcp-request';
-import type { McpResponse } from '~/models/mcp-response';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import {
+  type McpRequestLoaderData,
+  useRequestLoaderData,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { McpActionsDropdown } from '~/ui/components/dropdowns/mcp-actions-dropdown';
 import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
 import { EnvironmentPicker } from '~/ui/components/environment-picker';
@@ -51,12 +54,10 @@ import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-respon
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 
-export interface McpPaneProps {
-  activeRequest: McpRequest;
-  activeResponse: McpResponse | null;
-}
-
-export const McpPane = ({ activeRequest, activeResponse }: McpPaneProps) => {
+export const McpPane = () => {
+  const requestData = useRequestLoaderData()!;
+  const activeResponse = requestData.activeResponse;
+  const { activeRequest } = requestData as McpRequestLoaderData;
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;

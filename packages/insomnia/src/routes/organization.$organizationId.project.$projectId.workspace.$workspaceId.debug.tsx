@@ -229,6 +229,15 @@ const RequestTiming = ({ requestId }: { requestId: string }) => {
   ) : null;
 };
 
+const DebugEntry = () => {
+  const { activeWorkspace } = useWorkspaceLoaderData()!;
+  if (activeWorkspace.scope === 'mcp') {
+    // MCP request under mcp workspace has different layout so we need to render a different component
+    return <McpPane />;
+  }
+  return <Debug />;
+};
+
 const Debug = () => {
   const {
     activeWorkspace,
@@ -789,15 +798,6 @@ const Debug = () => {
     activeRequestGroup,
   });
 
-  if (activeWorkspace.scope === 'mcp') {
-    return (
-      <McpPane
-        activeRequest={activeRequest as McpRequest}
-        activeResponse={requestData?.activeResponse as McpResponse | null}
-      />
-    );
-  }
-
   return (
     <PanelGroup
       ref={sidebarPanelRef}
@@ -1264,7 +1264,7 @@ const Debug = () => {
   );
 };
 
-export default Debug;
+export default DebugEntry;
 
 const CollectionGridListItem = ({
   label,
