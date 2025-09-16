@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import React, { type FC, useRef } from 'react';
 import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
 
+import { unsupportedMethodPrefix } from '../../../common/mcp-utils';
 import type { CurlEvent } from '../../../main/network/curl';
 import type { McpEvent } from '../../../main/network/mcp';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
@@ -53,6 +54,9 @@ function getIcon(event: EventTypes): IconId {
     case 'info': {
       return 'info';
     }
+    case 'notification': {
+      return 'receive';
+    }
     default: {
       return 'bug';
     }
@@ -76,14 +80,22 @@ const getMessage = (event: EventTypes): string | JSX.Element => {
         );
       }
       if (isMcpEvent(event)) {
-        if ('method' in event) {
-          return <pre className="whitespace-pre-wrap">{event.method}</pre>;
-        }
+        const eventMethod = event.method;
+        const isUnsupportedMethod = eventMethod.startsWith(unsupportedMethodPrefix);
+        return (
+          <div className="flex items-center">
+            {isUnsupportedMethod && <span className="bg-warning mr-2 rounded-sm px-2 py-1">Unsupported</span>}
+            <span className="flex-shrink">{eventMethod.replace(`${unsupportedMethodPrefix}`, '')}</span>
+          </div>
+        );
       }
       if ('data' in event && typeof event.data === 'object') {
         return 'Binary data';
       }
       return event.data.toString();
+    }
+    case 'notification': {
+      return isMcpEvent(event) ? event.method : 'Unknown notification';
     }
     case 'open': {
       return 'Connected successfully';
