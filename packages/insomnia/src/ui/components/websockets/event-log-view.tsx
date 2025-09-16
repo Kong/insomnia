@@ -80,7 +80,14 @@ const getMessage = (event: EventTypes): string | JSX.Element => {
         );
       }
       if (isMcpEvent(event)) {
-        return event.method.replace(`${unsupportedMethodPrefix}/`, '');
+        const eventMethod = event.method;
+        const isUnsupportedMethod = eventMethod.startsWith(unsupportedMethodPrefix);
+        return (
+          <div className="flex items-center">
+            {isUnsupportedMethod && <span className="bg-warning mr-2 rounded-sm px-2 py-1">Unsupported</span>}
+            <span className="flex-shrink">{eventMethod.replace(`${unsupportedMethodPrefix}`, '')}</span>
+          </div>
+        );
       }
       if ('data' in event && typeof event.data === 'object') {
         return 'Binary data';
