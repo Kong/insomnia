@@ -37,6 +37,8 @@ interface EditorProps {
   onChange: (newPair: EnvironmentKvPairData[]) => void;
   vaultKey?: string;
   isPrivate?: boolean;
+  textOnly?: boolean;
+  disabled?: boolean;
 }
 const cellCommonStyle = 'h-full px-2 flex items-center';
 
@@ -62,7 +64,14 @@ const ItemButton = (props: ButtonProps & { tabIndex?: number }) => {
   return <Button {...restProps} ref={btnRef} />;
 };
 
-export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate = false }: EditorProps) => {
+export const EnvironmentKVEditor = ({
+  data,
+  onChange,
+  vaultKey = '',
+  isPrivate = false,
+  textOnly = false,
+  disabled = false,
+}: EditorProps) => {
   const kvPairs: EnvironmentKvPairData[] = useMemo(
     () => (data.length > 0 ? [...data] : [createNewPair()]),
     // Ensure same array data will not generate different kvPairs to avoid flash issue
@@ -78,11 +87,13 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
       id: EnvironmentKvPairDataType.STRING,
       name: 'Text',
     },
-    {
+  ];
+  if (!textOnly) {
+    commonItemTypes.push({
       id: EnvironmentKvPairDataType.JSON,
       name: 'JSON',
-    },
-  ];
+    });
+  }
   const secretItemType = [{ id: EnvironmentKvPairDataType.SECRET, name: 'Secret' }];
   // Use private environment to store vault secrets if vault key is available
   const kvPairItemTypes = isPrivate && !!vaultKey ? commonItemTypes.concat(secretItemType) : commonItemTypes;
@@ -206,19 +217,21 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
     const isValidJSONString = checkValidJSONString(value);
     return (
       <>
-        <div
-          slot="drag"
-          className={`${cellCommonStyle} flex w-6 flex-shrink-0 items-center justify-end border-l border-r-0`}
-          style={{ padding: 0 }}
-        >
-          <Icon icon="grip-vertical" className="mr-1 cursor-grab" />
-        </div>
+        {!disabled && (
+          <div
+            slot="drag"
+            className={`${cellCommonStyle} flex w-6 flex-shrink-0 items-center justify-end border-l border-r-0`}
+            style={{ padding: 0 }}
+          >
+            <Icon icon="grip-vertical" className="mr-1 cursor-grab" />
+          </div>
+        )}
         <div className={`${cellCommonStyle} relative flex h-full w-[30%] flex-grow pl-1`}>
           <OneLineEditor
             id={`environment-kv-editor-name-${id}`}
             placeholder={'Input Name'}
             defaultValue={name}
-            readOnly={!enabled}
+            readOnly={!enabled || disabled}
             onChange={newName => {
               // check filed names for invalid '$' for '.' sign
               const error = ensureKeyIsValid(newName, true);
@@ -253,7 +266,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
               id={`environment-kv-editor-value-${id}`}
               placeholder={'Input Value'}
               defaultValue={value.toString()}
-              readOnly={!enabled}
+              readOnly={!enabled || disabled}
               onChange={newValue => handleItemChange(id, 'value', newValue)}
             />
           )}
@@ -261,7 +274,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
             <ItemButton
               className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
               tabIndex={-1}
-              isDisabled={!enabled}
+              isDisabled={!enabled || disabled}
               onPress={() => {
                 if (codeModalRef.current) {
                   const modalRef = codeModalRef.current;
@@ -296,7 +309,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
           {type === EnvironmentKvPairDataType.SECRET && (
             <PasswordInput
               itemId={id}
-              enabled={enabled}
+              enabled={enabled && !disabled}
               placeholder="Input Secret"
               value={decryptSecretValue(value, symmetricKey)}
               onChange={newValue => {
@@ -312,6 +325,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
               className="flex w-full flex-1 items-center justify-between rounded-sm px-[--padding-sm] py-1 text-sm font-bold text-[--color-font] hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
               tabIndex={-1}
               aria-label="Type Selection"
+              isDisabled={disabled}
             >
               <span className="flex items-center justify-center gap-2 truncate">
                 {kvPairItemTypes.find(t => t.id === type)?.name}
@@ -352,6 +366,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
             className="flex aspect-square h-7 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
             tabIndex={-1}
             aria-label={enabled ? 'Disable Row' : 'Enable Row'}
+            isDisabled={disabled}
             onPress={() => handleItemChange(id, 'enabled', !enabled)}
           >
             <Icon icon={enabled ? 'check-square' : 'square'} />
@@ -363,6 +378,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
             doneMessage=""
             ariaLabel="Delete Row"
             tabIndex={-1}
+            disabled={disabled}
             onClick={() => handleDeleteItem(id)}
           >
             <Icon icon="trash-can" />
@@ -378,6 +394,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
         <Button
           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           aria-label="Add Row"
+          isDisabled={disabled}
           onPress={() => {
             handleAddItem();
           }}
@@ -385,7 +402,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
           <Icon icon="plus" /> Add
         </Button>
         <PromptButton
-          disabled={kvPairs.length === 0}
+          disabled={disabled || kvPairs.length === 0}
           onClick={() => {
             onChange([]);
           }}
