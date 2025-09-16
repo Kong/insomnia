@@ -4,6 +4,7 @@ import { database as db } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';
+import { TRANSPORT_TYPES, type TransportType } from './mcp-request';
 import type { ResponseHeader } from './response';
 
 export const name = 'Mcp Response';
@@ -25,6 +26,7 @@ export interface BaseMcpResponse {
   timelinePath: string;
   error: string;
   requestVersionId: string | null;
+  transportType: TransportType;
 }
 
 export type McpResponse = BaseModel & BaseMcpResponse;
@@ -43,6 +45,7 @@ export function init(): BaseMcpResponse {
     statusMessage: '',
     requestVersionId: null,
     environmentId: null,
+    transportType: TRANSPORT_TYPES.HTTP,
   };
 }
 
