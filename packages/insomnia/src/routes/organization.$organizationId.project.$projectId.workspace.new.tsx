@@ -31,6 +31,7 @@ interface NewWorkspaceData {
   apiSpecContents?: string;
   fileName?: string;
   withRequest?: boolean;
+  mockServerDynamicResponses?: boolean;
 }
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.new';
@@ -125,7 +126,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             openapiSpec,
             workspace._id,
             mockServerPatch,
-            modelConfig
+            modelConfig,
+            workspaceData.mockServerDynamicResponses ?? false
           );
 
           if (!serverResult.success) {

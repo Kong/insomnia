@@ -177,8 +177,8 @@ const main: Window['main'] = {
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
   getLocalStorageDataFromFileOrigin: () => ipcRenderer.invoke('getLocalStorageDataFromFileOrigin'),
-  createMockServerFromSpec: (openApiSpec: string, workspaceId: string, mockServerData: any, modelConfig: any) => 
-    ipcRenderer.invoke('createMockServerFromSpec', openApiSpec, workspaceId, mockServerData, modelConfig),
+  createMockServerFromSpec: (openApiSpec: string, workspaceId: string, mockServerData: any, modelConfig: any, useDynamicMockResponses: boolean) =>
+    ipcRenderer.invoke('createMockServerFromSpec', openApiSpec, workspaceId, mockServerData, modelConfig, useDynamicMockResponses),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {

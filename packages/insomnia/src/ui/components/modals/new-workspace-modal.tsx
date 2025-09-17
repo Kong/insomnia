@@ -79,6 +79,7 @@ export const NewWorkspaceModal = ({
     mockServerCreationType?: 'ai' | 'manual';
     openApiSpecPath?: string;
     fileName?: string;
+    mockServerDynamicResponses?: boolean;
   }>({
     name: defaultNameByScope[scope],
     scope,
@@ -87,6 +88,7 @@ export const NewWorkspaceModal = ({
     mockServerType: canOnlyCreateSelfHosted ? 'self-hosted' : 'cloud',
     mockServerUrl: '',
     mockServerCreationType: 'ai',
+    mockServerDynamicResponses: false,
   });
 
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
@@ -306,6 +308,7 @@ export const NewWorkspaceModal = ({
                         </Radio>
                         <Radio
                           value="manual"
+                          isDisabled={!!sourceApiSpec?.contents}
                           className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
                         >
                           <div className="flex items-center gap-2">
@@ -313,7 +316,9 @@ export const NewWorkspaceModal = ({
                             <Heading className="text-lg font-bold">Start from Scratch</Heading>
                           </div>
                           <p className="pt-2">
-                            Create an empty mock server.
+                            {sourceApiSpec?.contents
+                              ? 'Not available when creating from a design document'
+                              : 'Create an empty mock server.'}
                           </p>
                         </Radio>
                       </div>
@@ -327,7 +332,7 @@ export const NewWorkspaceModal = ({
                         </p>
                         {sourceApiSpec?.contents ? (
                           <div className="flex items-center gap-2 p-3 border border-[--hl-md] rounded bg-[--hl-xs]">
-                            <Icon icon="file-code" className="text-[--color-success]" />
+                            <Icon icon="file-code" className="text-[--hl]" />
                             <span className="text-sm text-[--color-font]">
                               Using {sourceApiSpec.fileName} OpenAPI specification
                             </span>
@@ -359,6 +364,38 @@ export const NewWorkspaceModal = ({
                       </div>
                     )}
 
+                    {workspaceData.mockServerCreationType === 'ai' && (
+                      <div className="mb-4 flex items-start gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <Label className="text-sm text-[--hl]">
+                              Should your mock server use dynamic responses?
+                            </Label>
+                            <div className="group relative">
+                              <Icon icon="info-circle" className="text-[--hl] cursor-help" />
+                              <div className="absolute left-1/2 top-full mt-2 hidden w-72 -translate-x-1/2 rounded-md bg-[--color-bg] border border-[--hl-sm] p-3 text-xs text-[--color-font] shadow-lg group-hover:block z-10">
+                                Insomnia can generate a mock server that will use liquid templates in the mock response bodies. These templates can be used to dynamically populate response data using request data and/or faker functions.
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <Button
+                            onPress={() => {
+                              setWorkspaceData({ ...workspaceData, mockServerDynamicResponses: !workspaceData.mockServerDynamicResponses });
+                            }}
+                            className={`w-full rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none ${
+                              workspaceData.mockServerDynamicResponses
+                                ? 'border-[--color-surprise] ring-2 ring-[--color-surprise]'
+                                : ''
+                            }`}
+                          >
+                            <p>Yes</p>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
                     <RadioGroup
                       name="mockServerType"
                       defaultValue={workspaceData.mockServerType}
@@ -379,7 +416,9 @@ export const NewWorkspaceModal = ({
                             <Heading className="text-lg font-bold">Cloud Mock</Heading>
                           </div>
                           <p className="pt-2">
-                            {isCloudProjectDisabled
+                            {workspaceData.mockServerCreationType === 'ai'
+                              ? 'Not available when creating with Auto Generate.'
+                              : isCloudProjectDisabled
                               ? 'Only available for cloud projects'
                               : 'Runs on Insomnia cloud, ideal for collaboration.'}
                           </p>
@@ -391,7 +430,7 @@ export const NewWorkspaceModal = ({
                         >
                           <div className="flex items-center gap-2">
                             <Icon icon="server" />
-                            <Heading className="text-lg font-bold">Self-hosted Mock</Heading>
+                            <Heading className="text-lg font-bold">Self Hosted Mock</Heading>
                           </div>
                           <p className="pt-2">
                             Runs locally or on your infrastructure, ideal for private usage and lower latency.

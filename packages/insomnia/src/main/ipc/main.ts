@@ -112,7 +112,7 @@ export interface RendererToMainBridgeAPI {
   updateLatestStepName: (options: { requestId: string; stepName: string }) => void;
   extractJsonFileFromPostmanDataDumpArchive: (archivePath: string) => Promise<any>;
   getLocalStorageDataFromFileOrigin: () => Promise<Record<string, any>>;
-  createMockServerFromSpec: (openApiSpec: string, workspaceId: string, mockServerData: any, modelConfig: any) => Promise<{ success: boolean; result?: any; error?: string }>;
+  createMockServerFromSpec: (openApiSpec: string, workspaceId: string, mockServerData: any, modelConfig: any, useDynamicMockResponses: boolean) => Promise<{ success: boolean; result?: any; error?: string }>;
 }
 
 export function registerMainHandlers() {
@@ -325,7 +325,7 @@ export function registerMainHandlers() {
     });
   });
 
-  ipcMainHandle('createMockServerFromSpec', async (_, openApiSpec: string, workspaceId: string, mockServerData: any, modelConfig: any) => {
-    return createMockServerFromSpec(openApiSpec, workspaceId, mockServerData, modelConfig);
+  ipcMainHandle('createMockServerFromSpec', async (_, openApiSpec: string, workspaceId: string, mockServerData: any, modelConfig: any, useDynamicMockResponses: boolean) => {
+    return createMockServerFromSpec(openApiSpec, workspaceId, mockServerData, modelConfig, useDynamicMockResponses);
   });
 }

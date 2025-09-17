@@ -26,7 +26,8 @@ export async function createMockServerFromSpec(
   openApiSpec: string,
   workspaceId: string,
   mockServerData: Partial<MockServer>,
-  modelConfig: ModelConfig
+  modelConfig: ModelConfig,
+  useDynamicMockResponses: boolean
 ) {
   try {
     const databaseAdapter = new InsomniaAdapter();
@@ -35,7 +36,7 @@ export async function createMockServerFromSpec(
       workspaceId,
       mockServerData,
       modelConfig,
-      { databaseAdapter }
+      { useDynamicMockResponses: useDynamicMockResponses, databaseAdapter: databaseAdapter }
     );
     return { success: true, result };
   } catch (error) {
