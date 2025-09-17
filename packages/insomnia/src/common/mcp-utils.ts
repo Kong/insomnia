@@ -1,3 +1,4 @@
+import { UriTemplate } from '@modelcontextprotocol/sdk/shared/uriTemplate.js';
 import {
   CallToolRequestSchema,
   CallToolResultSchema,
@@ -36,6 +37,7 @@ import {
   ToolListChangedNotificationSchema,
   UnsubscribeRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import type { RJSFSchema } from '@rjsf/utils';
 
 // methods for server features
 export const METHOD_INITIALIZE = InitializeRequestSchema.shape.method.value;
@@ -152,4 +154,42 @@ export const getDefaultServerCapabilities = () => {
       listChanged: false,
     },
   };
+};
+
+export const isResourceTemplate = (resource: Resource | ResourceTemplate): resource is ResourceTemplate => {
+  return 'uriTemplate' in resource && resource.uriTemplate !== undefined;
+};
+
+export const buildResourceJsonSchema = (resource: Resource | ResourceTemplate): RJSFSchema => {
+  if (isResourceTemplate(resource)) {
+    const uriTemplate = new UriTemplate(resource.uriTemplate);
+    const properties: Record<string, any> = {};
+    const required: string[] = [];
+    uriTemplate.variableNames.forEach(name => {
+      properties[name] = {
+        type: 'string',
+      };
+      required.push(name);
+    });
+    return {
+      type: 'object',
+      properties,
+      required,
+    };
+  }
+  return {
+    type: 'object',
+    properties: {
+      uri: {
+        type: 'string',
+        default: resource.uri,
+      },
+    },
+    required: ['uri'],
+    readOnly: true,
+  };
+};
+
+export const fillUriTemplate = (template: string, values: Record<string, string>): string => {
+  return new UriTemplate(template).expand(values);
 };
