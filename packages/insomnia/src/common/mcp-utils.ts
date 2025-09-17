@@ -1,3 +1,4 @@
+import { UriTemplate } from '@modelcontextprotocol/sdk/shared/uriTemplate.js';
 import {
   CallToolRequestSchema,
   CallToolResultSchema,
@@ -36,6 +37,7 @@ import {
   ToolListChangedNotificationSchema,
   UnsubscribeRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import type { RJSFSchema } from '@rjsf/utils';
 
 // methods for server features
 export const METHOD_INITIALIZE = InitializeRequestSchema.shape.method.value;
@@ -122,12 +124,12 @@ export const getMcpMethodFromMessage = (message: JSONRPCMessage): McpMessageEven
       method = METHOD_LIST_RESOURCE_TEMPLATES;
     } else if (ListPromptsResultSchema.safeParse(messageResult).success) {
       method = METHOD_LIST_PROMPTS;
-    } else if (CallToolResultSchema.safeParse(messageResult).success) {
-      method = METHOD_CALL_TOOL;
-    } else if (ReadResourceResultSchema.safeParse(messageResult).success) {
-      method = METHOD_READ_RESOURCE;
     } else if (GetPromptResultSchema.safeParse(messageResult).success) {
       method = METHOD_GET_PROMPT;
+    } else if (ReadResourceResultSchema.safeParse(messageResult).success) {
+      method = METHOD_READ_RESOURCE;
+    } else if (CallToolResultSchema.safeParse(messageResult).success) {
+      method = METHOD_CALL_TOOL;
     }
   } else if (ServerRequestSchema.safeParse(message).success) {
     // Do not support any server requests to client including ping, roots, elicitation and sampling
@@ -152,4 +154,42 @@ export const getDefaultServerCapabilities = () => {
       listChanged: false,
     },
   };
+};
+
+export const isResourceTemplate = (resource: Resource | ResourceTemplate): resource is ResourceTemplate => {
+  return 'uriTemplate' in resource && resource.uriTemplate !== undefined;
+};
+
+export const buildResourceJsonSchema = (resource: Resource | ResourceTemplate): RJSFSchema => {
+  if (isResourceTemplate(resource)) {
+    const uriTemplate = new UriTemplate(resource.uriTemplate);
+    const properties: Record<string, any> = {};
+    const required: string[] = [];
+    uriTemplate.variableNames.forEach(name => {
+      properties[name] = {
+        type: 'string',
+      };
+      required.push(name);
+    });
+    return {
+      type: 'object',
+      properties,
+      required,
+    };
+  }
+  return {
+    type: 'object',
+    properties: {
+      uri: {
+        type: 'string',
+        default: resource.uri,
+      },
+    },
+    required: ['uri'],
+    readOnly: true,
+  };
+};
+
+export const fillUriTemplate = (template: string, values: Record<string, string>): string => {
+  return new UriTemplate(template).expand(values);
 };

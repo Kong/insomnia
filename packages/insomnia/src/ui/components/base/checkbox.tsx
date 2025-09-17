@@ -16,7 +16,12 @@ export const Checkbox = memo(
     children: ReactNode;
   }) => {
     return (
-      <RaCheckbox isSelected={isSelected} onChange={onChange} className={classnames('gap-2', className)} {...rest}>
+      <RaCheckbox
+        isSelected={isSelected}
+        onChange={onChange}
+        className={classnames('group flex items-center gap-2 p-0', className)}
+        {...rest}
+      >
         <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
           <Icon
             icon={isIndeterminate ? 'minus' : 'check'}

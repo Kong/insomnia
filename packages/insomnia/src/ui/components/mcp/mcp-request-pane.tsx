@@ -1,12 +1,11 @@
-import type { IChangeEvent } from '@rjsf/core';
-import { getDefaultFormState, type RJSFSchema, type UiSchema } from '@rjsf/utils';
-import validator from '@rjsf/validator-ajv8';
-import React, { type FC, useEffect, useRef, useState } from 'react';
+import { type RJSFSchema } from '@rjsf/utils';
+import React, { type FC, useCallback, useMemo, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
+import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
 import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
-import { InsomniaRjsfForm } from '~/ui/components/rjsf';
+import { InsomniaRjsfForm, type InsomniaRjsfFormHandle } from '~/ui/components/rjsf';
 
 import { type AuthTypes } from '../../../common/constants';
 import type { Environment, EnvironmentKvPairData } from '../../../models/environment';
@@ -24,12 +23,6 @@ import { McpUrlActionBar } from './mcp-url-bar';
 import type { PrimitiveSubItem } from './types';
 
 const supportedAuthTypes: AuthTypes[] = ['apikey', 'oauth2', 'bearer'];
-
-const uiSchema: UiSchema = {
-  'ui:submitButtonOptions': {
-    norender: true,
-  },
-};
 
 const PaneReadOnlyBanner = () => {
   return (
@@ -57,7 +50,9 @@ interface Props {
 export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPrimitiveItem }) => {
   const { activeRequest, activeRequestMeta } = useRequestLoaderData()! as McpRequestLoaderData;
   const [formData, setFormData] = useState({});
+  console.log('formData: ', formData);
   const paramEditorRef = useRef<CodeEditorHandle>(null);
+  const rjsfFormRef = useRef<InsomniaRjsfFormHandle>(null);
   const requestId = activeRequest._id;
 
   const headersCount = activeRequest.headers.filter(h => !h.disabled).length + readOnlyWebsocketPairs.length;
@@ -67,34 +62,94 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
   const uniqueKey = `${environment?.modified}::${requestId}::${activeRequestMeta?.activeResponseId}`;
   const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
   const isNoneOrInherited = requestAuth?.type === 'none' || requestAuth === null;
-  const toolsSchema =
-    selectedPrimitiveItem?.type === 'tools' ? (selectedPrimitiveItem.inputSchema as RJSFSchema) : undefined;
-
-  const handleRjsfFormChange = (e: IChangeEvent) => {
-    console.log('form change', e.formData);
-    setFormData(e.formData);
-    paramEditorRef.current?.setValue(JSON.stringify(e.formData, null, 2));
-  };
-
-  useEffect(() => {
-    if (toolsSchema) {
-      const formDataWithDefaults = getDefaultFormState(validator, toolsSchema, {}, toolsSchema, true);
-      setFormData(formDataWithDefaults);
-      paramEditorRef.current?.setValue(JSON.stringify(formDataWithDefaults, null, 2));
+  const jsonSchema = useMemo(() => {
+    if (selectedPrimitiveItem?.type === 'tools') {
+      return selectedPrimitiveItem?.type === 'tools' ? (selectedPrimitiveItem.inputSchema as RJSFSchema) : undefined;
+    } else if (selectedPrimitiveItem?.type === 'resources' || selectedPrimitiveItem?.type === 'resourceTemplates') {
+      const res = buildResourceJsonSchema(selectedPrimitiveItem);
+      console.log('resource json schema: ', res);
+      return res;
+    } else if (selectedPrimitiveItem?.type === 'prompts') {
+      const properties: Record<string, any> = {};
+      const required: string[] = [];
+      selectedPrimitiveItem?.arguments?.forEach(arg => {
+        properties[arg.name] = {
+          type: 'string',
+          description: arg?.description || '',
+        };
+        if (arg.required) {
+          required.push(arg.name);
+        }
+      });
+      return {
+        type: 'object',
+        properties,
+        required,
+      } as RJSFSchema;
     }
-  }, [toolsSchema]);
+    return {};
+  }, [selectedPrimitiveItem]);
+
+  const handleRjsfFormChange = useCallback(
+    (formData: any) => {
+      console.log('rjsf form change: ', formData);
+      setFormData(formData);
+
+      if (selectedPrimitiveItem?.type !== 'resourceTemplates' && selectedPrimitiveItem?.type !== 'resources') {
+        paramEditorRef.current?.setValue(JSON.stringify(formData, null, 2));
+      }
+    },
+    [selectedPrimitiveItem],
+  );
 
   const handleSend = () => {
-    window.main.mcp.primitive.callTool({
-      name: selectedPrimitiveItem?.name || '',
-      parameters: formData,
-      requestId: requestId,
-    });
+    rjsfFormRef.current?.validate();
+    if (selectedPrimitiveItem?.type === 'tools') {
+      window.main.mcp.primitive.callTool({
+        name: selectedPrimitiveItem?.name || '',
+        parameters: formData,
+        requestId: requestId,
+      });
+    } else if (selectedPrimitiveItem?.type === 'resources') {
+      window.main.mcp.primitive.readResource({
+        requestId,
+        uri: selectedPrimitiveItem?.uri || '',
+      });
+    } else if (selectedPrimitiveItem?.type === 'resourceTemplates') {
+      window.main.mcp.primitive.readResource({
+        requestId,
+        uri: fillUriTemplate(selectedPrimitiveItem.uriTemplate, formData),
+      });
+    } else if (selectedPrimitiveItem?.type === 'prompts') {
+      window.main.mcp.primitive.getPrompt({
+        requestId,
+        name: selectedPrimitiveItem?.name || '',
+        parameters: formData,
+      });
+    }
   };
 
   const handleEnvChange = (data: EnvironmentKvPairData[]) => {
     patchRequest(requestId, { env: data });
   };
+
+  const handleEditorChange = (value: string) => {
+    console.log('code editor change: ', value);
+    try {
+      setFormData(JSON.parse(value));
+    } catch (err) {}
+  };
+
+  const sendButtonText = useMemo(() => {
+    if (selectedPrimitiveItem?.type === 'tools') {
+      return 'Call Tool';
+    } else if (selectedPrimitiveItem?.type === 'resources' || selectedPrimitiveItem?.type === 'resourceTemplates') {
+      return 'Read Resource';
+    } else if (selectedPrimitiveItem?.type === 'prompts') {
+      return 'Get Prompt';
+    }
+    return 'Send';
+  }, [selectedPrimitiveItem]);
 
   const isStdio = activeRequest.transportType === 'stdio';
 
@@ -163,7 +218,6 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
               <span className="text-md">Enter MCP server url to discover capabilities</span>
             </div>
           ) : (
-            // Todo @CurryYangxx params builder and overview UI
             <PanelGroup className="flex-1 overflow-hidden" direction={'vertical'}>
               <Panel minSize={20}>
                 <div className="flex h-full flex-col overflow-auto">
@@ -175,21 +229,25 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
                         onClick={handleSend}
                         className="rounded bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise]"
                       >
-                        Send
+                        {sendButtonText}
                       </Button>
                     </div>
                   </div>
-                  {toolsSchema && (
-                    <div className="pl-4">
+                  {jsonSchema && (
+                    <div className="p-4">
                       <p>{selectedPrimitiveItem?.name}</p>
                       <p className="text-[--hl]">{selectedPrimitiveItem?.description}</p>
+                      {selectedPrimitiveItem?.type === 'resourceTemplates' && (
+                        <p className="py-2">uri: {fillUriTemplate(selectedPrimitiveItem.uriTemplate, formData)}</p>
+                      )}
                       <div className="pl-2">
                         <InsomniaRjsfForm
                           formData={formData}
                           onChange={handleRjsfFormChange}
-                          schema={toolsSchema as RJSFSchema}
-                          validator={validator}
-                          uiSchema={uiSchema}
+                          schema={jsonSchema}
+                          ref={rjsfFormRef}
+                          showErrorList={false}
+                          focusOnFirstError
                         />
                       </div>
                     </div>
@@ -197,25 +255,26 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
                 </div>
               </Panel>
               <PanelResizeHandle className="h-[1px] w-full bg-[--hl-md]" />
-              <Panel minSize={20}>
-                <div className="flex h-full flex-col">
-                  <Heading className="p-4 text-xs font-bold uppercase text-[--hl]">Parameter Overview</Heading>
-                  <div className="flex-1 overflow-hidden">
-                    <CodeEditor
-                      ref={paramEditorRef}
-                      id="mcp-parameter-overview-editor"
-                      showPrettifyButton
-                      dynamicHeight
-                      uniquenessKey="mcp-parameter-overview-editor"
-                      defaultValue="{}"
-                      enableNunjucks
-                      onChange={() => {}}
-                      mode="json"
-                      placeholder=""
-                    />
+              {selectedPrimitiveItem?.type !== 'resources' && selectedPrimitiveItem?.type !== 'resourceTemplates' && (
+                <Panel minSize={20}>
+                  <div className="flex h-full flex-col">
+                    <Heading className="p-4 text-xs font-bold uppercase text-[--hl]">Parameter Overview</Heading>
+                    <div className="flex-1 overflow-hidden">
+                      <CodeEditor
+                        ref={paramEditorRef}
+                        id="mcp-parameter-overview-editor"
+                        showPrettifyButton
+                        dynamicHeight
+                        uniquenessKey="mcp-parameter-overview-editor"
+                        defaultValue="{}"
+                        onChange={handleEditorChange}
+                        mode="json"
+                        placeholder=""
+                      />
+                    </div>
                   </div>
-                </div>
-              </Panel>
+                </Panel>
+              )}
             </PanelGroup>
           )}
         </TabPanel>
