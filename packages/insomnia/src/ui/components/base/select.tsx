@@ -33,7 +33,7 @@ export const Select = ({ value, onChange, className, options, ...rest }: SelectP
           {options?.map(option => (
             <ListBoxItem
               className={({ isHovered, isPressed, isFocused }) =>
-                classNames('flex min-h-[32px] cursor-pointer items-center px-2', {
+                classnames('flex min-h-[32px] cursor-pointer items-center px-2', {
                   'bg-[--hl-xs]': isHovered || isPressed || isFocused,
                 })
               }
