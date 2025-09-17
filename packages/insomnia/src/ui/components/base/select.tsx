@@ -1,4 +1,4 @@
-import classnames from 'classnames';
+import cn from 'classnames';
 import React from 'react';
 import {
   Button,
@@ -21,7 +21,7 @@ interface SelectProps {
 
 export const Select = ({ value, onChange, className, options, ...rest }: SelectProps & RaSelectProps) => {
   return (
-    <RaSelect selectedKey={value} onSelectionChange={onChange} {...rest} className={classnames('', className)}>
+    <RaSelect selectedKey={value} onSelectionChange={onChange} {...rest} className={cn('', className)}>
       <Button className="flex w-full gap-2 rounded border border-solid border-[--hl-sm] px-2 py-1">
         <SelectValue className="flex-1" />
         <span aria-hidden="true">
@@ -33,7 +33,7 @@ export const Select = ({ value, onChange, className, options, ...rest }: SelectP
           {options?.map(option => (
             <ListBoxItem
               className={({ isHovered, isPressed, isFocused }) =>
-                classnames('flex min-h-[32px] cursor-pointer items-center px-2', {
+                cn('flex min-h-[32px] cursor-pointer items-center px-2', {
                   'bg-[--hl-xs]': isHovered || isPressed || isFocused,
                 })
               }
