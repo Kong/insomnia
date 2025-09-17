@@ -1,5 +1,4 @@
 import classnames from 'classnames';
-import classNames from 'classnames';
 import React from 'react';
 import {
   Button,

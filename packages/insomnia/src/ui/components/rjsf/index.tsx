@@ -1,4 +1,3 @@
-// import type Form from '@rjsf/core';
 import type Form from '@rjsf/core';
 import { type FormProps, type IChangeEvent, withTheme } from '@rjsf/core';
 import { getDefaultFormState } from '@rjsf/utils';

@@ -8,7 +8,6 @@ import {
   type RegistryWidgetsType,
   type WidgetProps,
 } from '@rjsf/utils';
-import classNames from 'classnames';
 import cn from 'classnames';
 import { Input, TextField } from 'react-aria-components';
 
@@ -31,19 +30,17 @@ const CustomCheckboxWidget = (props: WidgetProps) => {
   const { id, value, onChange, disabled, readonly, required, label, schema } = props;
 
   return (
-    <>
-      <Checkbox
-        aria-label="rjsf-checkbox"
-        id={id}
-        isSelected={value || false}
-        onChange={onChange}
-        isDisabled={disabled}
-        isReadOnly={readonly}
-        isRequired={required}
-      >
-        <span className="text-sm text-[--color-font]">{schema?.description || label}</span>
-      </Checkbox>
-    </>
+    <Checkbox
+      aria-label="rjsf-checkbox"
+      id={id}
+      isSelected={value || false}
+      onChange={onChange}
+      isDisabled={disabled}
+      isReadOnly={readonly}
+      isRequired={required}
+    >
+      <span className="text-sm text-[--color-font]">{schema?.description || label}</span>
+    </Checkbox>
   );
 };
 
@@ -202,7 +199,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
         {items.map(item => (
           <div
             key={item.key}
-            className={classNames('flex items-start gap-4 rounded px-4', {
+            className={cn('flex items-start gap-4 rounded px-4', {
               'border-b border-solid border-[--hl-sm]': item.index < items.length - 1,
             })}
           >
