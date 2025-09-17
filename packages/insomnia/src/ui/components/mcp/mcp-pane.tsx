@@ -450,7 +450,7 @@ export const McpPane = () => {
                     });
                   } else {
                     // Click a specified primitive
-                    const [type, name] = id.split('_');
+                    const [, type, name] = id.match(/^([^_]+)_(.+)$/) || [];
                     const item = visibleCollection.find(i => i.itemLevel === 1 && i.type === type && i.name === name);
                     setSelectedPrimitiveItem(item as PrimitiveSubItem);
                   }
@@ -495,6 +495,7 @@ export const McpPane = () => {
               readyState={readyState}
             />
           </Panel>
+          <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
           <Panel id="mcp-response-pane" order={2} minSize={10} className="pane-two theme--pane">
             <ErrorBoundary showAlert>
               <RealtimeResponsePane />
