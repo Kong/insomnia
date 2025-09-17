@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import React, { type FC, useEffect, useRef } from 'react';
 import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
 
-import { unsupportedMethodPrefix } from '../../../common/mcp-utils';
+import { METHOD_UNKNOWN, unsupportedMethodPrefix } from '../../../common/mcp-utils';
 import type { CurlEvent } from '../../../main/network/curl';
 import type { McpEvent } from '../../../main/network/mcp';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
@@ -80,7 +80,7 @@ const getMessage = (event: EventTypes): string | JSX.Element => {
         );
       }
       if (isMcpEvent(event)) {
-        const eventMethod = event.method;
+        const eventMethod = event.method || METHOD_UNKNOWN;
         const isUnsupportedMethod = eventMethod.startsWith(unsupportedMethodPrefix);
         return (
           <div className="flex items-center">
