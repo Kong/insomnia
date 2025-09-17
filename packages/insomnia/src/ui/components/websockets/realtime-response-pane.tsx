@@ -76,35 +76,39 @@ const RealtimeActiveResponsePane: FC<{
     );
   };
 
-  const events = allEvents.filter(event => {
-    // Filter out events that are earlier than the clearEventsBefore timestamp
-    if (clearEventsBefore && event.timestamp <= clearEventsBefore) {
-      return false;
-    }
+  const events = useMemo(
+    () =>
+      allEvents.filter(event => {
+        // Filter out events that are earlier than the clearEventsBefore timestamp
+        if (clearEventsBefore && event.timestamp <= clearEventsBefore) {
+          return false;
+        }
 
-    // Filter out events that don't match the selected event type
-    if (eventType && event.type !== eventType) {
-      return false;
-    }
+        // Filter out events that don't match the selected event type
+        if (eventType && event.type !== eventType) {
+          return false;
+        }
 
-    // Filter out events that don't match the search query
-    if (searchQuery) {
-      if (event.type === 'message') {
-        return event.data.toString().toLowerCase().includes(searchQuery.toLowerCase());
-      }
-      if (event.type === 'error') {
-        return event.message.toLowerCase().includes(searchQuery.toLowerCase());
-      }
-      if (event.type === 'close') {
-        return event.reason.toLowerCase().includes(searchQuery.toLowerCase());
-      }
+        // Filter out events that don't match the search query
+        if (searchQuery) {
+          if (event.type === 'message') {
+            return event.data.toString().toLowerCase().includes(searchQuery.toLowerCase());
+          }
+          if (event.type === 'error') {
+            return event.message.toLowerCase().includes(searchQuery.toLowerCase());
+          }
+          if (event.type === 'close') {
+            return event.reason.toLowerCase().includes(searchQuery.toLowerCase());
+          }
 
-      // Filter out open events
-      return false;
-    }
+          // Filter out open events
+          return false;
+        }
 
-    return true;
-  });
+        return true;
+      }),
+    [allEvents, clearEventsBefore, eventType, searchQuery],
+  );
 
   useEffect(() => {
     setSelectedEvent(null);
