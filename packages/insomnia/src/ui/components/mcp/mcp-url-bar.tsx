@@ -265,7 +265,7 @@ export const MCPStdioAccessModal = forwardRef<
     organizationId: string;
   }
 >(({ requestId, workspaceId, projectId, organizationId }, ref) => {
-  const [grantLevel, setGrantLevel] = React.useState<'request' | 'project'>('request');
+  const [accessLevel, setAccessLevel] = React.useState<'request' | 'project'>('request');
 
   const modalRef = useRef<ModalHandle>(null);
   const onGrantRef = useRef<() => void>(() => {});
@@ -285,7 +285,7 @@ export const MCPStdioAccessModal = forwardRef<
 
   const handleGrant = async () => {
     await requestGrantAccessFetcher.submit({
-      grantLevel,
+      accessLevel,
       requestId,
       workspaceId,
       projectId,
@@ -316,10 +316,10 @@ export const MCPStdioAccessModal = forwardRef<
         <div className="flex flex-col gap-[var(--padding-lg)]">
           <RadioGroup
             aria-label="Grant access level"
-            name="grantLevel"
+            name="accessLevel"
             className="flex flex-col gap-2"
-            value={grantLevel}
-            onChange={grantLevel => setGrantLevel(grantLevel as 'request' | 'project')}
+            value={accessLevel}
+            onChange={accessLevel => setAccessLevel(accessLevel as 'request' | 'project')}
           >
             <Radio
               value="request"

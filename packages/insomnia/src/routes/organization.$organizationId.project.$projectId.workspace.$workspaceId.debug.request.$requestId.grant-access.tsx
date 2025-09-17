@@ -13,16 +13,16 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
 
   const req = (await requestOperations.getById(requestId)) as McpRequest;
   invariant(req, 'Request not found');
-  const { grantLevel } = await request.json();
+  const { accessLevel } = await request.json();
 
-  if (grantLevel === 'request') {
+  if (accessLevel === 'request') {
     await requestOperations.update(req, { mcpStdioAccess: true });
     return;
   }
 
   const project = await projectModel.getById(projectId);
   invariant(project, 'Project not found for request');
-  if (grantLevel === 'project') {
+  if (accessLevel === 'project') {
     await projectModel.update(project, { mcpStdioAccess: true });
   }
 }
@@ -34,13 +34,13 @@ export const useRequestGrantAccessFetcher = createFetcherSubmitHook(
       projectId,
       workspaceId,
       requestId,
-      grantLevel,
+      accessLevel,
     }: {
       organizationId: string;
       projectId: string;
       workspaceId: string;
       requestId: string;
-      grantLevel: 'request' | 'project';
+      accessLevel: 'request' | 'project';
     }) => {
       const url = href(
         '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/grant-access',
@@ -52,7 +52,7 @@ export const useRequestGrantAccessFetcher = createFetcherSubmitHook(
         },
       );
 
-      return submit(JSON.stringify({ grantLevel }), {
+      return submit(JSON.stringify({ accessLevel }), {
         action: url,
         method: 'POST',
         encType: 'application/json',
