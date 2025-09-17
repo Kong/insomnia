@@ -319,7 +319,7 @@ First commit!
         ],
       });
       // Discard changes
-      await GitVCS.discardChanges(status2.unstaged);
+      await GitVCS.discardChanges(status2.unstaged, { discardUnstaged: true });
 
       const status3 = await GitVCS.status();
 
@@ -362,7 +362,7 @@ First commit!
       const status2 = await GitVCS.status();
       // Undo foo1 and foo2, but not foo3
       const changesToUndo = status2.unstaged.filter(change => !change.path.includes(foo3Txt));
-      await GitVCS.discardChanges(changesToUndo);
+      await GitVCS.discardChanges(changesToUndo, { discardUnstaged: true });
       const status3 = await GitVCS.status();
       expect(status3).toEqual({
         staged: [],

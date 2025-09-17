@@ -55,7 +55,6 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
       <TextField
         name="uri"
         type="url"
-        pattern="https?://.*\.git"
         autoFocus
         defaultValue={uri}
         onChange={value => setUri(value)}
@@ -69,10 +68,8 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
         <FieldError className="text-xs text-[--color-danger]">
-          {({ validationDetails, defaultChildren }) =>
-            validationDetails.patternMismatch
-              ? 'Please ensure the URL is valid and ends with a .git suffix.'
-              : defaultChildren
+          {({ isInvalid }) =>
+            isInvalid ? 'Please ensure the URL is valid. In most cases it should also end with a .git suffix.' : null
           }
         </FieldError>
       </TextField>

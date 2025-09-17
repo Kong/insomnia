@@ -10,7 +10,7 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
 
 const Component = () => {
-  const { userSession, settings } = useRootLoaderData()!;
+  const { settings } = useRootLoaderData()!;
   const [status, setStatus] = useState<'online' | 'offline'>('online');
   useEffect(() => {
     const handleOnline = () => setStatus('online');
@@ -69,7 +69,7 @@ const Component = () => {
           <div className="divide flex items-center gap-2 divide-y-[--hl-sm]">
             <TooltipTrigger>
               <Button
-                className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs capitalize text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                 onPress={() => {
                   if (settings.proxyEnabled) {
                     showSettingsModal({
@@ -80,11 +80,9 @@ const Component = () => {
               >
                 <Icon
                   icon="circle"
-                  className={
-                    userSession ? (status === 'online' ? 'text-[--color-success]' : 'text-[--color-danger]') : ''
-                  }
+                  className={status === 'online' ? 'text-[--color-success]' : 'text-[--color-danger]'}
                 />{' '}
-                {userSession ? status.charAt(0).toUpperCase() + status.slice(1) : 'Log in to see your projects'}
+                {status}
                 {settings.proxyEnabled ? ' via proxy' : ''}
               </Button>
               <Tooltip
@@ -92,16 +90,13 @@ const Component = () => {
                 offset={8}
                 className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
               >
-                {userSession
-                  ? status === 'online'
-                    ? 'You have connectivity to the Internet' +
-                      (settings.proxyEnabled ? ' via the configured proxy' : '') +
-                      '.'
-                    : 'You are offline. Connect to sync your data.'
-                  : 'Login to Insomnia to unlock the full product experience.'}
+                {status === 'online'
+                  ? 'You have connectivity to the Internet' +
+                    (settings.proxyEnabled ? ' via the configured proxy' : '') +
+                    '.'
+                  : 'You are offline. Connect to sync your data.'}
               </Tooltip>
             </TooltipTrigger>
-            <span className="h-full w-[1px] bg-[--hl-sm]" />
             <Link>
               <a
                 className="flex items-center gap-1 px-[--padding-md] text-xs text-[--color-font] focus:underline focus:outline-none"

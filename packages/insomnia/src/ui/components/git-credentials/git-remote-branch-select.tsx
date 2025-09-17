@@ -8,7 +8,7 @@ import { useGitRemoteBranchesActionFetcher } from '~/routes/git.remote-branches'
 
 import { Icon } from '../icon';
 
-const GitRemoteURISchema = z.url().endsWith('.git');
+const GitRemoteURISchema = z.url();
 
 export const GitRemoteBranchSelect = ({
   url,

@@ -1449,20 +1449,57 @@ export class GitVCS {
     }
   }
 
-  async discardChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+  async discardChanges(
+    changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[],
+    options?: { discardStaged?: boolean; discardUnstaged?: boolean },
+  ) {
     for (const change of changes) {
-      // If the file didn't exist in HEAD, we need to remove it
+      // If the file didn't exist in HEAD, remove it
       if (change.status[0] === 0) {
         await git.remove({ ...this._baseOpts, filepath: change.path });
         // @ts-expect-error -- TSCONVERSION
         await this._baseOpts.fs.promises.unlink(change.path);
       } else {
-        await git.checkout({
-          ...this._baseOpts,
-          force: true,
-          ref: await this.getCurrentBranch(),
-          filepaths: [convertToPosixSep(change.path)],
-        });
+        // Discard staged changes only
+        if (options?.discardStaged) {
+          await git.resetIndex({ ...this._baseOpts, filepath: change.path });
+        }
+
+        // Discard unstaged changes only.
+        if (options?.discardUnstaged) {
+          // Restore workdir from index (staged version)
+          // 1. Get staged blob OID
+          const statusMatrix = await git.statusMatrix({ ...this._baseOpts });
+          const row = statusMatrix.find(([filepath]) => filepath === change.path);
+          if (row) {
+            const [, , , stageStatusCode] = row;
+            if (stageStatusCode !== 0) {
+              // 2. Get staged blob content
+              const index = await git.listFiles({ ...this._baseOpts });
+              if (index.includes(change.path)) {
+                // Use fileStatus logic to get staged content:
+                const { stage } = await this.fileStatus(change.path);
+                if (stage !== null) {
+                  // 3. Write staged content to workdir
+                  // @ts-expect-error -- TSCONVERSION
+                  await this._baseOpts.fs.promises.writeFile(change.path, stage, 'utf8');
+                }
+              }
+            }
+          }
+          // Do NOT touch the index (staged changes are preserved)
+          continue;
+        }
+
+        // Default: discard both (current behavior)
+        if (!options?.discardStaged && !options?.discardUnstaged) {
+          await git.checkout({
+            ...this._baseOpts,
+            force: true,
+            ref: await this.getCurrentBranch(),
+            filepaths: [convertToPosixSep(change.path)],
+          });
+        }
       }
     }
   }
