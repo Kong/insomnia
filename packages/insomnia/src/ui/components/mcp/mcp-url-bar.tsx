@@ -1,16 +1,29 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
-import { Button } from 'react-aria-components';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
+import { OverlayContainer } from 'react-aria';
+import { Button as RaButton, Heading, Radio, RadioGroup } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import * as projectModel from '~/models/project';
+import * as workspaceModel from '~/models/workspace';
 import {
   type ConnectActionParams,
   useRequestConnectActionFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
+import { useRequestGrantAccessFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.grant-access';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '~/ui/components/base/dropdown';
+import { Modal, type ModalHandle } from '~/ui/components/base/modal';
+import { ModalHeader } from '~/ui/components/base/modal-header';
+import { Button } from '~/ui/components/themed-button';
+import { invariant } from '~/utils/invariant';
 
 import { getDataFromKVPair } from '../../../models/environment';
-import { MCP_TRANSPORT_TYPES, type McpRequest, TRANSPORT_TYPES } from '../../../models/mcp-request';
+import {
+  getById as getMcpRequestById,
+  MCP_TRANSPORT_TYPES,
+  type McpRequest,
+  TRANSPORT_TYPES,
+} from '../../../models/mcp-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -35,6 +48,7 @@ export const McpUrlActionBar = ({ request, environmentId, defaultValue, onChange
   const requestId = request._id;
   const requestTransportType = request.transportType;
   const requestTransportTypeLabel = getTransportLabel(requestTransportType);
+  const modalRef = useRef<MCPStdioAccessModalHandle>(null);
 
   useLayoutEffect(() => {
     oneLineEditorRef.current?.focusEnd();
@@ -91,7 +105,17 @@ export const McpUrlActionBar = ({ request, environmentId, defaultValue, onChange
       window.main.mcp.close({ requestId: request._id });
       return;
     }
+
     const connectParams = await generateConnectParams();
+
+    if (connectParams.transportType === TRANSPORT_TYPES.STDIO) {
+      const stdioAccess = await isAllowedToRunSTDIO(request._id, modalRef);
+      if (!stdioAccess) {
+        console.log('User denied STDIO access');
+        return;
+      }
+    }
+
     connectParams && connect(connectParams);
   }, [connect, generateConnectParams, isOpen, request._id, updateTabById]);
 
@@ -126,9 +150,9 @@ export const McpUrlActionBar = ({ request, environmentId, defaultValue, onChange
         <div className="flex items-center">
           <Dropdown
             triggerButton={
-              <Button className="pl-2" aria-label="Request Method">
+              <RaButton className="pl-2" aria-label="Request Method">
                 <span>{requestTransportTypeLabel}</span> <i className="fa fa-caret-down space-left" />
-              </Button>
+              </RaButton>
             }
             placement="bottom start"
           >
@@ -186,6 +210,155 @@ export const McpUrlActionBar = ({ request, environmentId, defaultValue, onChange
           )}
         </div>
       </form>
+      <MCPStdioAccessModal
+        ref={modalRef}
+        requestId={requestId}
+        workspaceId={workspaceId}
+        projectId={projectId}
+        organizationId={organizationId}
+      />
     </>
   );
 };
+
+const isAllowedToRunSTDIO = async (requestId: string, modalRef: React.RefObject<MCPStdioAccessModalHandle>) => {
+  const request = await getMcpRequestById(requestId);
+  invariant(request, 'Request not found');
+  if (request.mcpStdioAccess) {
+    return true;
+  }
+  const workspace = await workspaceModel.getById(request.parentId);
+  invariant(workspace, 'Workspace not found for request');
+  const project = await projectModel.getById(workspace.parentId);
+  invariant(project, 'Project not found for request');
+  if (project.mcpStdioAccess) {
+    return true;
+  }
+
+  const promise = new Promise(resolve => {
+    let granted = false;
+    modalRef.current?.show({
+      onHide: () => {
+        if (!granted) {
+          resolve(false);
+        }
+      },
+      onGrant: () => {
+        resolve(true);
+        granted = true;
+      },
+    });
+  });
+
+  return promise;
+};
+
+export interface MCPStdioAccessModalHandle {
+  show: ({ onGrant, onHide }: { onGrant: () => void; onHide: () => void }) => void;
+}
+export const MCPStdioAccessModal = forwardRef<
+  MCPStdioAccessModalHandle,
+  {
+    requestId: string;
+    workspaceId: string;
+    projectId: string;
+    organizationId: string;
+  }
+>(({ requestId, workspaceId, projectId, organizationId }, ref) => {
+  const [grantLevel, setGrantLevel] = React.useState<'request' | 'project'>('request');
+
+  const modalRef = useRef<ModalHandle>(null);
+  const onGrantRef = useRef<() => void>(() => {});
+  const onHideRef = useRef<() => void>(() => {});
+
+  const requestGrantAccessFetcher = useRequestGrantAccessFetcher();
+
+  const isSubmitting =
+    requestGrantAccessFetcher.state === 'submitting' || requestGrantAccessFetcher.state === 'loading';
+
+  const handleHide = () => {
+    if (isSubmitting) return;
+    onHideRef.current();
+    onGrantRef.current = () => {};
+    onHideRef.current = () => {};
+  };
+
+  const handleGrant = async () => {
+    await requestGrantAccessFetcher.submit({
+      grantLevel,
+      requestId,
+      workspaceId,
+      projectId,
+      organizationId,
+    });
+    onGrantRef.current();
+    modalRef.current?.hide();
+  };
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      show: ({ onGrant, onHide }) => {
+        onGrantRef.current = onGrant;
+        onHideRef.current = onHide;
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
+
+  return (
+    <OverlayContainer onClick={e => e.stopPropagation()}>
+      <Modal ref={modalRef} onHide={handleHide} keyboardClosable={!isSubmitting} maskClosable={!isSubmitting}>
+        <ModalHeader hideCloseButton={isSubmitting}>Grant STDIO access for this MCP Client?</ModalHeader>
+        <p>You should be sure you understand and trust this STDIO server before using it.</p>
+        <p>Trust and give access to:</p>
+        <div className="flex flex-col gap-[var(--padding-lg)]">
+          <RadioGroup
+            aria-label="Grant access level"
+            name="grantLevel"
+            className="flex flex-col gap-2"
+            value={grantLevel}
+            onChange={grantLevel => setGrantLevel(grantLevel as 'request' | 'project')}
+          >
+            <Radio
+              value="request"
+              className="flex-1 cursor-pointer rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+            >
+              <div className="flex items-center gap-2">
+                <Heading className="text-lg">This MCP client only</Heading>
+              </div>
+            </Radio>
+            <Radio
+              value="project"
+              className="flex-1 cursor-pointer rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+            >
+              <div className="flex items-center gap-2">
+                <Heading className="text-lg">All MCP clients in this project</Heading>
+              </div>
+            </Radio>
+          </RadioGroup>
+
+          <div className="flex justify-end gap-[var(--padding-sm)] p-[var(--padding-sm)]">
+            <Button
+              className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+              isDisabled={isSubmitting}
+              data-close-modal="true"
+            >
+              Deny Access
+            </Button>
+            <Button
+              variant="contained"
+              bg="surprise"
+              className="gap-[var(--padding-sm)]"
+              isDisabled={isSubmitting}
+              onClick={handleGrant}
+            >
+              Grant Access
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </OverlayContainer>
+  );
+});

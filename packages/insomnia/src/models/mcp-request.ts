@@ -23,6 +23,7 @@ export interface BaseMcpRequest {
   headers: RequestHeader[];
   authentication: RequestAuthentication | {};
   env: EnvironmentKvPairData[];
+  mcpStdioAccess: boolean;
 }
 export type McpServerPrimitiveTypes = 'tools' | 'resources' | 'prompts' | 'resourceTemplates';
 
@@ -43,6 +44,7 @@ export function init(): BaseMcpRequest {
     headers: [],
     authentication: {},
     env: [],
+    mcpStdioAccess: false,
   };
 }
 
