@@ -1,5 +1,6 @@
 import { useParams } from 'react-router';
 
+import type { McpPayload } from '~/models/mcp-request-payload';
 import { useRequestUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';
 import { useRequestUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-meta';
 import { useRequestUpdatePayloadActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-payload';
@@ -137,7 +138,7 @@ export const useRequestPayloadPatcher = () => {
     workspaceId: string;
   };
   const fetcher = useRequestUpdatePayloadActionFetcher();
-  return async (requestId: string, payload: Partial<SocketIOPayload>) => {
+  return async (requestId: string, payload: Partial<SocketIOPayload> | Partial<McpPayload>) => {
     await fetcher.submit({
       organizationId,
       projectId,
