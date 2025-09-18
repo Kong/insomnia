@@ -15,7 +15,7 @@ import * as models from 'insomnia/src/models/index';
 import { type BaseModel, environment } from 'insomnia/src/models/index';
 import { isScratchpadOrganizationId, type Organization } from 'insomnia/src/models/organization';
 import type { Project } from 'insomnia/src/models/project';
-import { isScratchpad, type Workspace } from 'insomnia/src/models/workspace';
+import { isMcp, isScratchpad, type Workspace } from 'insomnia/src/models/workspace';
 import { SegmentEvent } from 'insomnia/src/ui/analytics';
 import { Icon } from 'insomnia/src/ui/components/icon';
 import { showError, showModal } from 'insomnia/src/ui/components/modals';
@@ -389,8 +389,10 @@ export async function exportWorkspaceData({
 export async function exportAllData({ dirPath }: { dirPath: string }): Promise<void> {
   const workspaces = await database.find<Workspace>(models.workspace.type);
 
+  const workspacesWithoutMcp = workspaces.filter(w => !isMcp(w));
+
   const baseEnvironments = await database.find<Environment>(environment.type, {
-    parentId: { $in: workspaces.map(w => w._id) },
+    parentId: { $in: workspacesWithoutMcp.map(w => w._id) },
   });
 
   const subEnvironments = await database.find<Environment>(environment.type, {
@@ -405,7 +407,7 @@ export async function exportAllData({ dirPath }: { dirPath: string }): Promise<v
   const insomniaExportFolder = path.join(dirPath, `insomnia-export.${Date.now()}`);
   await mkdir(insomniaExportFolder);
 
-  for (const workspace of workspaces) {
+  for (const workspace of workspacesWithoutMcp) {
     await exportWorkspaceData({
       workspace,
       dirPath: insomniaExportFolder,
@@ -632,7 +634,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
 
   const workspaceData = useWorkspaceLoaderData();
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
-  const { workspaceCount, userSession } = useRootLoaderData()!;
+  const { workspaceCount, userSession, mcpWorkspaceCount } = useRootLoaderData()!;
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
@@ -644,7 +646,11 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
     }
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data;
-  const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
+  const workspacesForActiveProject =
+    projectLoaderData?.files
+      .map(w => w.workspace)
+      .filter(isNotNullOrUndefined)
+      .filter(w => !isMcp(w)) || [];
   const activeProject = projectLoaderData?.activeProject;
   const projectName = activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
@@ -710,7 +716,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
         aria-label="Export all data"
       >
         <Icon icon="file-export" />
-        <span>Export all data {`(${workspaceCount} files)`}</span>
+        <span>Export all data {`(${workspaceCount - mcpWorkspaceCount} files)`}</span>
       </Button>
     );
   }
@@ -778,7 +784,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
               aria-label="Export all data"
             >
               <Icon icon="file-export" />
-              <span>Export all data {`(${workspaceCount} files)`}</span>
+              <span>Export all data {`(${workspaceCount - mcpWorkspaceCount} files)`}</span>
             </Button>
 
             <Button

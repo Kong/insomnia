@@ -133,7 +133,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     await database.flushChanges(flushId);
 
     const { id } = await models.userSession.getOrCreate();
-    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project)) {
+    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project) && scope !== 'mcp') {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs,
