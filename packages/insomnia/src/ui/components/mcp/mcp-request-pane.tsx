@@ -156,6 +156,12 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
     }
   }, [activeRequest.url, mcpParams, latestPayloadPatcherRef, requestId, readyState]);
 
+  useEffect(() => {
+    if (!readyState) {
+      setMcpParams({});
+    }
+  }, [readyState]);
+
   const sendButtonText = useMemo(() => {
     if (selectedPrimitiveItem?.type === 'tools') {
       return 'Call Tool';
