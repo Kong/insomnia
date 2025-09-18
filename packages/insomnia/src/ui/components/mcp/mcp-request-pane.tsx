@@ -4,6 +4,7 @@ import { Button, Heading, Tab, TabList, TabPanel, Tabs } from 'react-aria-compon
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
 import { InsomniaRjsfForm, type InsomniaRjsfFormHandle } from '~/ui/components/rjsf';
 
@@ -49,6 +50,7 @@ interface Props {
 
 export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPrimitiveItem }) => {
   const { activeRequest, activeRequestMeta } = useRequestLoaderData()! as McpRequestLoaderData;
+  const { activeProject } = useWorkspaceLoaderData()!;
   const [formData, setFormData] = useState({});
   console.log('formData: ', formData);
   const paramEditorRef = useRef<CodeEditorHandle>(null);
@@ -159,6 +161,7 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
         <McpUrlActionBar
           key={uniqueKey}
           request={activeRequest}
+          project={activeProject}
           environmentId={environment?._id || ''}
           defaultValue={activeRequest.url}
           readyState={readyState}
