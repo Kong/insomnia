@@ -87,7 +87,7 @@ export const clientMiddleware: Route.ClientMiddlewareFunction[] = [locationHisto
 export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
-      return err.data;
+      return typeof err.data === 'string' ? err.data : err.data?.message;
     }
 
     if (err?.message) {

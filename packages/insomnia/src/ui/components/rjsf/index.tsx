@@ -15,19 +15,20 @@ export interface InsomniaRjsfFormProps extends Omit<FormProps, 'onChange' | 'val
 }
 
 export interface InsomniaRjsfFormHandle {
-  validate: () => void;
+  validate: () => boolean;
 }
 
 export const InsomniaRjsfForm = forwardRef<InsomniaRjsfFormHandle, InsomniaRjsfFormProps>(
-  ({ onChange, schema, uiSchema = {}, renderSubmitButton, ...rest }, ref) => {
+  ({ onChange, schema, uiSchema = {}, formData, renderSubmitButton, ...rest }, ref) => {
     const onChangeRef = useLatest(onChange);
+    const formDataRef = useLatest(formData);
     const formRef = useRef<Form>(null);
     useEffect(() => {
       if (schema) {
-        const formDataWithDefaults = getDefaultFormState(validator, schema, {}, schema, true);
+        const formDataWithDefaults = getDefaultFormState(validator, schema, formDataRef.current, schema, true);
         onChangeRef?.current?.(formDataWithDefaults);
       }
-    }, [onChangeRef, schema]);
+    }, [formDataRef, onChangeRef, schema]);
 
     const mergedUiSchema = {
       'ui:submitButtonOptions': {
@@ -42,7 +43,7 @@ export const InsomniaRjsfForm = forwardRef<InsomniaRjsfFormHandle, InsomniaRjsfF
 
     useImperativeHandle(ref, () => ({
       validate: () => {
-        formRef.current?.validateForm();
+        return formRef.current?.validateForm() || false;
       },
     }));
 
@@ -53,6 +54,7 @@ export const InsomniaRjsfForm = forwardRef<InsomniaRjsfFormHandle, InsomniaRjsfF
         schema={schema}
         validator={validator}
         uiSchema={mergedUiSchema}
+        formData={formData}
         {...rest}
       />
     );
