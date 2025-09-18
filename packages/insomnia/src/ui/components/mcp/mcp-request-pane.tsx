@@ -52,6 +52,8 @@ interface Props {
 export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPrimitiveItem }) => {
   const primitiveId = `${selectedPrimitiveItem?.type}_${selectedPrimitiveItem?.name}`;
   const { activeRequest, activeRequestMeta, requestPayload } = useRequestLoaderData()! as McpRequestLoaderData;
+  const latestRequestPayloadRef = useLatest(requestPayload);
+
   const { activeProject } = useWorkspaceLoaderData()!;
 
   const [mcpParams, setMcpParams] = useState<Record<string, any>>(requestPayload?.params || {});
@@ -157,10 +159,8 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
   }, [activeRequest.url, mcpParams, latestPayloadPatcherRef, requestId, readyState]);
 
   useEffect(() => {
-    if (!readyState) {
-      setMcpParams({});
-    }
-  }, [readyState]);
+    readyState && setMcpParams(latestRequestPayloadRef.current?.params || {});
+  }, [activeRequest.url, latestRequestPayloadRef, readyState]);
 
   const sendButtonText = useMemo(() => {
     if (selectedPrimitiveItem?.type === 'tools') {
