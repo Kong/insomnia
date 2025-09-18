@@ -31,7 +31,7 @@ import * as models from '../../../models';
 import { isRemoteProject } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
-import { isScratchpad, type Workspace } from '../../../models/workspace';
+import { isMcp, isScratchpad, type Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -189,27 +189,31 @@ export const WorkspaceDropdown: FC<{}> = () => {
       action: () => void;
     }[];
   }[] = [
-    {
-      name: 'Import',
-      id: 'import',
-      icon: 'cog',
-      items: [
-        {
-          id: 'from-file',
-          name: 'From File',
-          icon: <Icon icon="file-import" />,
-          action: () => {
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.importStarted,
-              properties: {
-                source: `${activeWorkspace.scope}-menu`,
+    ...(isMcp(activeWorkspace)
+      ? []
+      : [
+          {
+            name: 'Import',
+            id: 'import',
+            icon: 'cog' as IconName,
+            items: [
+              {
+                id: 'from-file',
+                name: 'From File',
+                icon: <Icon icon="file-import" />,
+                action: () => {
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.importStarted,
+                    properties: {
+                      source: `${activeWorkspace.scope}-menu`,
+                    },
+                  });
+                  setIsImportModalOpen(true);
+                },
               },
-            });
-            setIsImportModalOpen(true);
+            ],
           },
-        },
-      ],
-    },
+        ]),
     {
       name: 'Runner',
       id: 'runner',
@@ -257,45 +261,33 @@ export const WorkspaceDropdown: FC<{}> = () => {
                 }),
             }),
         },
-        {
-          id: 'export',
-          name: 'Export',
-          icon: <Icon icon="file-export" />,
-          action: () => {
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.exportStarted,
-              properties: {
-                source: `${activeWorkspace.scope}-menu`,
-              },
-            });
-
-            if (activeWorkspace.scope === 'mock-server') {
-              return exportMockServerToFile(activeWorkspace);
-            }
-
-            if (activeWorkspace.scope === 'environment') {
-              return exportGlobalEnvironmentToFile(activeWorkspace);
-            }
-
-            return setIsExportModalOpen(true);
-          },
-        },
-        ...(activeWorkspace.scope === 'mock-server'
-          ? [
+        ...(isMcp(activeWorkspace)
+          ? []
+          : [
               {
-                id: 'generate-collection',
-                name: 'Generate Collection',
-                icon: <Icon icon="code" />,
+                id: 'export',
+                name: 'Export',
+                icon: <Icon icon="file-export" />,
                 action: () => {
-                  generateCollectionFetcher.submit({
-                    organizationId,
-                    projectId: activeWorkspace.parentId,
-                    workspaceId: activeWorkspace._id,
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.exportStarted,
+                    properties: {
+                      source: `${activeWorkspace.scope}-menu`,
+                    },
                   });
+
+                  if (activeWorkspace.scope === 'mock-server') {
+                    return exportMockServerToFile(activeWorkspace);
+                  }
+
+                  if (activeWorkspace.scope === 'environment') {
+                    return exportGlobalEnvironmentToFile(activeWorkspace);
+                  }
+
+                  return setIsExportModalOpen(true);
                 },
               },
-            ]
-          : []),
+            ]),
         {
           id: 'settings',
           name: 'Settings',
