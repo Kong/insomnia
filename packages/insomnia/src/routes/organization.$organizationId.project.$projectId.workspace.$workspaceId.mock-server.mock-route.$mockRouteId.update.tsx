@@ -10,14 +10,35 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { mockRouteId } = params;
 
-  const patch = (await request.json()) as Partial<MockRoute>;
+  try {
+    const patch = (await request.json()) as Partial<MockRoute>;
 
-  const mockRoute = await models.mockRoute.getById(mockRouteId);
-  invariant(mockRoute, 'Mock route is required');
+    const mockRoute = await models.mockRoute.getById(mockRouteId);
+    invariant(mockRoute, 'Mock route is required');
 
-  await models.mockRoute.update(mockRoute, patch);
+    if (patch.name !== undefined) {
+      invariant(typeof patch.name === 'string', 'Name is required');
+      invariant(patch.name.startsWith('/'), 'Path must begin with a /');
 
-  return null;
+      const existingRoutes = await models.mockRoute.findByParentId(mockRoute.parentId);
+      const hasRouteInServer = existingRoutes
+        .filter(m => m._id !== mockRouteId)
+        .find(m => m.name === patch.name && m.method.toUpperCase() === (patch.method || mockRoute.method).toUpperCase());
+
+      if (hasRouteInServer) {
+        invariant(false, `Path "${patch.name}" with ${patch.method || mockRoute.method} method already exists. Please enter a different path or method.`);
+      }
+    }
+
+    await models.mockRoute.update(mockRoute, patch);
+
+    return null;
+  } catch (err) {
+    console.error('Error updating mock route:', err);
+    return {
+      error: err instanceof Error ? err.message : 'Failed to update mock route',
+    };
+  }
 }
 
 export const useMockRouteUpdateActionFetcher = createFetcherSubmitHook(

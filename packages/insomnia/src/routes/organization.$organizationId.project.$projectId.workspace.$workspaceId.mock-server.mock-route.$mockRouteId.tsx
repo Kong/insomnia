@@ -281,7 +281,7 @@ export const MockRouteRoute = () => {
   return (
     <Pane type="request">
       <PaneHeader>
-        <MockUrlBar key={mockRoute._id + mockRoute.name} onSend={onSend} onPathUpdate={upsertMockbinHar} />
+        <MockUrlBar key={mockRoute._id + mockRoute.name} onSend={onSend} />
       </PaneHeader>
       <PaneBody>
         <Tabs aria-label="Mock response config" className="flex h-full w-full flex-1 flex-col">
