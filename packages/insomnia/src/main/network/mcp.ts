@@ -445,6 +445,9 @@ const createStdioTransport = (
   },
 ) => {
   const { url, requestId, env } = options;
+  if (!url) {
+    throw new Error('Command is required for STDIO transport');
+  }
   const parseResult = parse(url);
   if (parseResult.find(arg => typeof arg !== 'string')) {
     throw new Error('Invalid command format');
