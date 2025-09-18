@@ -2,6 +2,7 @@ import { type RJSFSchema } from '@rjsf/utils';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { useLatest } from 'react-use';
 
 import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -146,7 +147,7 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
   };
 
   const mcpPayloadPatcher = useRequestPayloadPatcher();
-  const latestPayloadPatcherRef = useRef(mcpPayloadPatcher);
+  const latestPayloadPatcherRef = useLatest(mcpPayloadPatcher);
 
   useEffect(() => {
     if (readyState) {
