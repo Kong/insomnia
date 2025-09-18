@@ -26,7 +26,12 @@ import { v4 as uuidV4 } from 'uuid';
 import type { z } from 'zod';
 
 import { getAppVersion, getProductName } from '~/common/constants';
-import { getMcpMethodFromMessage, METHOD_SUBSCRIBE_RESOURCE, METHOD_UNSUBSCRIBE_RESOURCE } from '~/common/mcp-utils';
+import {
+  getMcpMethodFromMessage,
+  METHOD_SUBSCRIBE_RESOURCE,
+  METHOD_UNKNOWN,
+  METHOD_UNSUBSCRIBE_RESOURCE,
+} from '~/common/mcp-utils';
 import { generateId } from '~/common/misc';
 import * as models from '~/models';
 import { TRANSPORT_TYPES, type TransportType } from '~/models/mcp-request';
@@ -347,7 +352,7 @@ const fetchWithLogging = async (
     // Add request event
     const requestEvent: McpRequestEvent = {
       _id: mcpEventIdGenerator(),
-      method: requestBody.method,
+      method: requestBody.method || METHOD_UNKNOWN,
       requestId,
       type: 'message',
       direction: 'OUTGOING',
@@ -524,7 +529,7 @@ const createStdioTransport = (
 
     const requestEvent: McpRequestEvent = {
       _id: mcpEventIdGenerator(),
-      method: message.method || 'unknown',
+      method: message.method || METHOD_UNKNOWN,
       requestId,
       type: 'message',
       direction: 'OUTGOING',
