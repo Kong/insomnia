@@ -2,9 +2,9 @@ import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayo
 import { OverlayContainer } from 'react-aria';
 import { Button as RaButton, Heading, Radio, RadioGroup } from 'react-aria-components';
 import { useParams } from 'react-router';
+import { useLatest } from 'react-use';
 
-import * as projectModel from '~/models/project';
-import * as workspaceModel from '~/models/workspace';
+import { type Project } from '~/models/project';
 import {
   type ConnectActionParams,
   useRequestConnectActionFetcher,
@@ -15,15 +15,9 @@ import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '~/ui/compo
 import { Modal, type ModalHandle } from '~/ui/components/base/modal';
 import { ModalHeader } from '~/ui/components/base/modal-header';
 import { Button } from '~/ui/components/themed-button';
-import { invariant } from '~/utils/invariant';
 
 import { getDataFromKVPair } from '../../../models/environment';
-import {
-  getById as getMcpRequestById,
-  MCP_TRANSPORT_TYPES,
-  type McpRequest,
-  TRANSPORT_TYPES,
-} from '../../../models/mcp-request';
+import { MCP_TRANSPORT_TYPES, type McpRequest, TRANSPORT_TYPES } from '../../../models/mcp-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -32,6 +26,7 @@ import { DisconnectButton } from '../websockets/disconnect-button';
 
 interface ActionBarProps {
   request: McpRequest;
+  project: Project;
   environmentId: string;
   defaultValue: string;
   readyState: boolean;
@@ -41,7 +36,14 @@ interface ActionBarProps {
 const getTransportLabel = (transportType: McpRequest['transportType']) =>
   transportType === TRANSPORT_TYPES.HTTP ? 'HTTP' : 'STDIO';
 
-export const McpUrlActionBar = ({ request, environmentId, defaultValue, onChange, readyState }: ActionBarProps) => {
+export const McpUrlActionBar = ({
+  request,
+  project,
+  environmentId,
+  defaultValue,
+  onChange,
+  readyState,
+}: ActionBarProps) => {
   const isOpen = readyState;
   const patchRequest = useRequestPatcher();
   const oneLineEditorRef = useRef<OneLineEditorHandle>(null);
@@ -109,7 +111,7 @@ export const McpUrlActionBar = ({ request, environmentId, defaultValue, onChange
     const connectParams = await generateConnectParams();
 
     if (connectParams.transportType === TRANSPORT_TYPES.STDIO) {
-      const stdioAccess = await isAllowedToRunSTDIO(request._id, modalRef);
+      const stdioAccess = await isAllowedToRunSTDIO(request, project, modalRef);
       if (!stdioAccess) {
         console.log('User denied STDIO access');
         return;
@@ -117,12 +119,14 @@ export const McpUrlActionBar = ({ request, environmentId, defaultValue, onChange
     }
 
     connectParams && connect(connectParams);
-  }, [connect, generateConnectParams, isOpen, request._id, updateTabById]);
+  }, [connect, generateConnectParams, isOpen, project, request, updateTabById]);
+
+  const handleSubmitRef = useLatest(handleSubmit);
 
   useEffect(() => {
     const sendOnMetaEnter = (event: KeyboardEvent) => {
       if (event.metaKey && event.key === 'Enter') {
-        handleSubmit();
+        handleSubmitRef.current();
       }
     };
     document
@@ -133,10 +137,10 @@ export const McpUrlActionBar = ({ request, environmentId, defaultValue, onChange
         .getElementById('sidebar-request-gridlist')
         ?.removeEventListener('keydown', sendOnMetaEnter, { capture: true });
     };
-  }, [handleSubmit]);
+  }, [handleSubmitRef]);
 
   useDocBodyKeyboardShortcuts({
-    request_send: () => handleSubmit(),
+    request_send: () => handleSubmitRef.current(),
     request_focusUrl: () => {
       oneLineEditorRef.current?.selectAll();
     },
@@ -221,16 +225,15 @@ export const McpUrlActionBar = ({ request, environmentId, defaultValue, onChange
   );
 };
 
-const isAllowedToRunSTDIO = async (requestId: string, modalRef: React.RefObject<MCPStdioAccessModalHandle>) => {
-  const request = await getMcpRequestById(requestId);
-  invariant(request, 'Request not found');
+const isAllowedToRunSTDIO = async (
+  request: McpRequest,
+  project: Project,
+  modalRef: React.RefObject<MCPStdioAccessModalHandle>,
+) => {
   if (request.mcpStdioAccess) {
     return true;
   }
-  const workspace = await workspaceModel.getById(request.parentId);
-  invariant(workspace, 'Workspace not found for request');
-  const project = await projectModel.getById(workspace.parentId);
-  invariant(project, 'Project not found for request');
+
   if (project.mcpStdioAccess) {
     return true;
   }
