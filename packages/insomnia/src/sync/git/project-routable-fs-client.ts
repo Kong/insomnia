@@ -14,6 +14,8 @@ type Methods =
   | 'readlink'
   | 'symlink';
 
+export type WriteFileMap = Record<string, string>;
+
 /**
  * An isometric-git FS client that can route to various client depending on what the filePath is.
  *
@@ -26,6 +28,7 @@ export function projectRoutableFSClient(
   insomniaFS: git.PromiseFsClient,
   otherFS: Record<string, git.PromiseFsClient>,
 ) {
+  let writeFileMap: WriteFileMap | null = null;
   const execMethod = async (method: Methods, filePath: string, ...args: any[]) => {
     filePath = path.normalize(filePath);
 
@@ -68,6 +71,9 @@ export function projectRoutableFSClient(
     if (filePath.endsWith('.yaml')) {
       try {
         const result = await insomniaFS.promises[method]!(filePath, ...args);
+        if (method === 'writeFile' && writeFileMap) {
+          writeFileMap[filePath.split(path.win32.sep).join(path.posix.sep)] = args[0].toString();
+        }
         return result;
       } catch (err) {
         const result = await defaultFS.promises[method]!(filePath, ...args);
@@ -97,5 +103,12 @@ export function projectRoutableFSClient(
   methods.symlink = execMethod.bind(methods, 'symlink');
   return {
     promises: methods,
+    // Because when writing files using insomniaFS, in some cases write operations that contain conflicting content may be skipped by insomniaFS. Therefore, we added the startCollectWriteAction and stopCollectWriteAction methods to collect all attempted writes to insomniaFS within a certain period of time.
+    startCollectWriteAction: (oriWriteFileMap: WriteFileMap) => {
+      writeFileMap = oriWriteFileMap;
+    },
+    stopCollectWriteAction: () => {
+      writeFileMap = null;
+    },
   };
 }

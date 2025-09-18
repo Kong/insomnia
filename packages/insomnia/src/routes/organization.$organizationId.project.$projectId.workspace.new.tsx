@@ -6,7 +6,7 @@ import { getAppVersion, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
 import * as models from '~/models';
 import type { MockServer } from '~/models/mock-server';
-import { isGitProject } from '~/models/project';
+import { isGitProject, isLocalProject } from '~/models/project';
 import { isCollection, isEnvironment, scopeToActivity, type WorkspaceScope } from '~/models/workspace';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initialize-backend-project';
@@ -127,7 +127,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     await database.flushChanges(flushId);
 
     const { id } = await models.userSession.getOrCreate();
-    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project)) {
+    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project)) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs,
@@ -215,8 +215,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       })}/${scopeToActivity(workspace.scope)}`,
     );
   } catch (err) {
+    console.error('Error creating workspace:', err);
+
     return {
-      error: `Failed to create workspace: ${err instanceof Error ? err.message : String(err)}`,
+      error: `Failed to create workspace: ${err instanceof Error ? err.message : JSON.stringify(err)}`,
     };
   }
 }

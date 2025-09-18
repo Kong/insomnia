@@ -101,15 +101,13 @@ export const useOrganizationLoaderData = () => {
 };
 
 interface IndicatorProps {
-  user?: UserProfileResponse;
   asyncTaskStatus: 'error' | 'idle' | 'loading' | 'submitting';
   settings: Settings;
   sync: () => void;
 }
 
-const NetworkAndSyncIndicator = ({ user, asyncTaskStatus, settings, sync }: IndicatorProps) => {
+const NetworkAndSyncIndicator = ({ asyncTaskStatus, settings, sync }: IndicatorProps) => {
   const [status, setStatus] = useState<'online' | 'offline'>('online');
-  const navigate = useNavigate();
 
   useEffect(() => {
     const handleOnline = () => setStatus('online');
@@ -152,9 +150,8 @@ const NetworkAndSyncIndicator = ({ user, asyncTaskStatus, settings, sync }: Indi
       ) : (
         <TooltipTrigger>
           <Button
-            className="flex h-full items-center justify-center gap-1 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+            className="flex h-full items-center justify-center gap-1 px-4 py-1 text-xs capitalize text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
             onPress={() => {
-              !user && navigate(href('/auth/login'));
               if (settings.proxyEnabled) {
                 showSettingsModal({
                   tab: 'proxy',
@@ -162,11 +159,8 @@ const NetworkAndSyncIndicator = ({ user, asyncTaskStatus, settings, sync }: Indi
               }
             }}
           >
-            <Icon
-              icon="circle"
-              className={user ? (status === 'online' ? 'text-[--color-success]' : 'text-[--color-danger]') : ''}
-            />{' '}
-            {user ? status.charAt(0).toUpperCase() + status.slice(1) : 'Log in to see your projects'}
+            <Icon icon="circle" className={status === 'online' ? 'text-[--color-success]' : 'text-[--color-danger]'} />{' '}
+            {status}
             {status === 'online' && settings.proxyEnabled ? ' via proxy' : ''}
           </Button>
           <Tooltip
@@ -174,13 +168,11 @@ const NetworkAndSyncIndicator = ({ user, asyncTaskStatus, settings, sync }: Indi
             offset={8}
             className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
           >
-            {user
-              ? status === 'online'
-                ? 'You have connectivity to the Internet' +
-                  (settings.proxyEnabled ? ' via the configured proxy' : '') +
-                  '.'
-                : 'You are offline. Connect to sync your data.'
-              : 'Log in to Insomnia to unlock the full product experience.'}
+            {status === 'online'
+              ? 'You have connectivity to the Internet' +
+                (settings.proxyEnabled ? ' via the configured proxy' : '') +
+                '.'
+              : 'You are offline. Connect to sync your data.'}
           </Tooltip>
         </TooltipTrigger>
       )}
@@ -196,12 +188,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const workspaceData = useWorkspaceLoaderData();
 
   const navigate = useNavigate();
-  const [isScratchPadBannerDismissed, setIsScratchPadBannerDismissed] = reactUse.useLocalStorage(
-    'scratchpad-banner-dismissed',
-    '',
-  );
   const isScratchpadWorkspace = workspaceData?.activeWorkspace && isScratchpad(workspaceData.activeWorkspace);
-  const isScratchPadBannerVisible = !isScratchPadBannerDismissed && isScratchpadWorkspace;
   const untrackedProjectsFetcher = useUntrackedProjectsLoaderFetcher();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
@@ -258,7 +245,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
       <InsomniaTabProvider>
         <div className="h-full w-full">
           <div
-            className={`h-full w-full divide-x divide-solid divide-[--hl-md] ${isOrganizationSidebarOpen ? 'with-navbar' : ''} ${isScratchPadBannerVisible ? 'with-banner' : ''} grid-template-app-layout relative grid bg-[--color-bg]`}
+            className={`h-full w-full divide-x divide-solid divide-[--hl-md] ${isOrganizationSidebarOpen ? 'with-navbar' : ''} grid-template-app-layout relative grid bg-[--color-bg]`}
           >
             {!isMinimal && (
               <header className="grid grid-cols-3 items-center border-b border-solid border-[--hl-md] [grid-area:Header]">
@@ -295,32 +282,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                 </div>
               </header>
             )}
-            {isScratchPadBannerVisible ? (
-              <div className="flex h-[30px] items-center bg-gradient-to-r from-[#7400e1] to-[#4000bf] text-white [grid-area:Banner]">
-                <div className="flex h-full flex-shrink-0 basis-[50px]">
-                  <div className="box-border flex h-full w-full items-center justify-center border-l border-r border-solid border-l-[--hl-xl] border-r-[--hl-xl]">
-                    <Icon icon="edit" />
-                  </div>
-                </div>
-                <div className="flex h-full w-full items-center overflow-hidden px-[--padding-md] py-[--padding-xs] text-xs">
-                  <p className="w-full truncate leading-normal">
-                    Welcome to the Scratch Pad where you can work locally with up to 1 collection. To create more and
-                    see your projects{' '}
-                    <NavLink to={href('/auth/login')} className="inline-flex font-bold text-white">
-                      login or create an account →
-                    </NavLink>
-                  </p>
-                </div>
-                <Button
-                  className="mr-2 flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                  onPress={() => {
-                    setIsScratchPadBannerDismissed('true');
-                  }}
-                >
-                  <Icon icon="x" />
-                </Button>
-              </div>
-            ) : null}
             {isOrganizationSidebarOpen && (
               <div className={`overflow-hidden [grid-area:Navbar] ${isOrganizationSidebarOpen ? '' : 'hidden'}`}>
                 <nav className="flex h-full w-full flex-col place-content-stretch items-center gap-[--padding-md] overflow-y-auto py-[--padding-md]">
@@ -551,7 +512,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       <Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
                     </Tooltip>
                   </TooltipTrigger>
-                  {hasUntrackedData && !isMinimal ? (
+                  {!isScratchpadWorkspace && hasUntrackedData && !isMinimal ? (
                     <div>
                       <Button
                         className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-warning] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
@@ -562,7 +523,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       </Button>
                     </div>
                   ) : null}
-                  {hasUntrackedData && isMinimal ? (
+                  {!isScratchpadWorkspace && hasUntrackedData && isMinimal ? (
                     <TooltipTrigger delay={500}>
                       <Button
                         className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-warning] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
@@ -581,7 +542,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   ) : null}
                   {isMinimal && (
                     <NetworkAndSyncIndicator
-                      user={user}
                       asyncTaskStatus={asyncTaskStatus}
                       settings={settings}
                       sync={syncOrgsAndProjects}
@@ -595,7 +555,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   <div className="divide flex items-center gap-2">
                     {!isMinimal && (
                       <NetworkAndSyncIndicator
-                        user={user}
                         asyncTaskStatus={asyncTaskStatus}
                         settings={settings}
                         sync={syncOrgsAndProjects}

@@ -155,7 +155,11 @@ export const database = {
     if (process.type === 'renderer') {
       return _send<T>('findOne', ...arguments);
     }
-    return nedbBucket[type].findOneAsync<T>(query).sort(sort);
+    const doc = await nedbBucket[type].findOneAsync<T>(query).sort(sort);
+    if (doc === null) {
+      return undefined;
+    }
+    return models.initModel<T>(type, doc);
   },
   /** find documents matching query */
   find: async function <T extends BaseModel>(

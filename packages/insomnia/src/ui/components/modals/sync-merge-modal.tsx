@@ -1,8 +1,11 @@
-import { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
+import darkCssHref from '@mismerge/core/dark.css?url';
+import lightCssHref from '@mismerge/core/light.css?url';
+import { DefaultDarkColors, DefaultLightColors, MisMerge3 } from '@mismerge/react';
+import classNames from 'classnames';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
-  Form,
   GridList,
   GridListItem,
   Heading,
@@ -11,79 +14,130 @@ import {
   Radio,
   RadioGroup,
 } from 'react-aria-components';
-import { stringify } from 'yaml';
+import { parse, stringify } from 'yaml';
 
-import type { MergeConflict } from '../../../sync/types';
+import { extractErrorMessages } from '~/common/import';
+import { InsomniaFileSchema } from '~/common/import-v5-parser';
+import { getColorScheme } from '~/plugins/misc';
+import { useRootLoaderData } from '~/root';
+import { showModal } from '~/ui/components/modals';
+import { AlertModal } from '~/ui/components/modals/alert-modal';
+
+import { type MergeConflict, RESOLUTION_SOURCE } from '../../../sync/types';
 import { SegmentEvent } from '../../analytics';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 
-function getDiffFromConflict(conflict: MergeConflict) {
-  let before = '';
-  let after = '';
-
-  if (conflict.mineBlobContent) {
-    try {
-      before = stringify(conflict.mineBlobContent);
-    } catch (error) {
-      console.warn('Failed to stringify mineBlobContent', error);
-    }
+function validateMergeResult(mergeResult: string) {
+  // empty string means the file is deleted
+  if (mergeResult === '') {
+    return undefined;
   }
-
-  if (conflict.theirsBlobContent) {
-    try {
-      after = stringify(conflict.theirsBlobContent);
-    } catch (error) {
-      console.warn('Failed to stringify theirsBlobContent', error);
-    }
+  let parsed = null;
+  try {
+    parsed = parse(mergeResult);
+  } catch (error) {
+    return error.message;
   }
-
-  return {
-    before,
-    after,
-  };
+  try {
+    InsomniaFileSchema.parse(parsed);
+  } catch (error) {
+    return extractErrorMessages(error).join('\n');
+  }
+  return undefined;
 }
 
+type EditorType = 'diff' | 'merge';
+
 export interface SyncMergeModalOptions {
+  editorType?: EditorType;
   conflicts?: MergeConflict[];
   labels: { ours: string; theirs: string };
-  handleDone?: (conflicts?: MergeConflict[]) => void;
-  handleClose?: () => void;
+  onResolveAll: (conflicts: MergeConflict[]) => void;
+  onCancelUnresolved?: () => void;
 }
 export interface SyncMergeModalHandle {
   show: (options: SyncMergeModalOptions) => void;
   hide: () => void;
 }
 export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
-  const [state, setState] = useState<SyncMergeModalOptions & { isOpen: boolean }>({
-    conflicts: [],
-    isOpen: false,
-    labels: { ours: '', theirs: '' },
-  });
+  const [conflicts, setConflicts] = useState<MergeConflict[]>([]);
+  const [errMsgMapForConflictMergeResult, setErrMsgMapForConflictMergeResult] = useState<Record<string, string>>({});
+  const [isOpen, setIsOpen] = useState(false);
+  const [labels, setLabels] = useState<{ ours: string; theirs: string }>({ ours: '', theirs: '' });
+  const [editorType, setEditorType] = useState<EditorType>('diff');
+
+  const [selectedConflictKey, setSelectedConflictKey] = useState<string | null>(null);
+
+  const onResolveAllRef = useRef<SyncMergeModalOptions['onResolveAll']>();
+  const onCancelUnresolvedRef = useRef<SyncMergeModalOptions['onCancelUnresolved']>();
+
+  const selectedConflict = useMemo(
+    () => conflicts.find(c => c.key === selectedConflictKey),
+    [conflicts, selectedConflictKey],
+  );
+
+  const selectedConflictCurrent = useMemo(() => {
+    let current = '';
+    if (selectedConflict?.mineBlobContent) {
+      try {
+        current = stringify(selectedConflict.mineBlobContent);
+      } catch (error) {
+        console.warn('Failed to stringify mineBlobContent', error);
+      }
+    }
+    return current;
+  }, [selectedConflict]);
+
+  const selectedConflictIncoming = useMemo(() => {
+    let incoming = '';
+    if (selectedConflict?.theirsBlobContent) {
+      try {
+        incoming = stringify(selectedConflict.theirsBlobContent);
+      } catch (error) {
+        console.warn('Failed to stringify theirsBlobContent', error);
+      }
+    }
+    return incoming;
+  }, [selectedConflict]);
 
   const reset = useCallback(() => {
-    setState({
-      conflicts: [],
-      isOpen: false,
-      labels: { ours: '', theirs: '' },
-    });
-    setSelectedConflict(null);
+    setConflicts([]);
+    setIsOpen(false);
+    setLabels({ ours: '', theirs: '' });
+    setEditorType('diff');
+    setSelectedConflictKey(null);
+    setErrMsgMapForConflictMergeResult({});
+    onResolveAllRef.current = undefined;
+    onCancelUnresolvedRef.current = undefined;
   }, []);
 
   useImperativeHandle(
     ref,
     () => ({
       hide: reset,
-      show: ({ conflicts, labels, handleDone, handleClose }) => {
-        setState({
-          conflicts,
-          handleDone,
-          handleClose,
-          isOpen: true,
-          labels,
-        });
-        // select the first conflict by default
-        setSelectedConflict(conflicts?.[0] || null);
+      show: ({ conflicts, labels, onResolveAll, onCancelUnresolved, editorType = 'diff' }) => {
+        setConflicts(
+          (conflicts ?? []).map(conflict => ({
+            id: conflict.key,
+            ...conflict,
+          })),
+        );
+        if (editorType === 'merge' && conflicts) {
+          const errMsgMap: Record<string, string> = {};
+          conflicts.forEach(conflict => {
+            if (conflict.mergeResult) {
+              errMsgMap[conflict.key] = validateMergeResult(conflict.mergeResult);
+            }
+          });
+          setErrMsgMapForConflictMergeResult(errMsgMap);
+        }
+        setLabels(labels);
+        setEditorType(editorType);
+        setSelectedConflictKey(conflicts?.[0]?.key || null);
+        onResolveAllRef.current = onResolveAll;
+        onCancelUnresolvedRef.current = onCancelUnresolved;
+        setIsOpen(true);
 
         window.main.trackSegmentEvent({
           event: SegmentEvent.syncConflictResolutionStart,
@@ -93,176 +147,330 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
     [reset],
   );
 
-  const { conflicts, handleDone, handleClose } = state;
+  const onMergeEditorResultChange = useCallback(
+    (result: string) => {
+      if (!conflicts) return;
+      if (!selectedConflictKey) return;
+      setConflicts(prevConflicts => {
+        const updatedConflicts = prevConflicts.map(c => {
+          if (c.key === selectedConflictKey) {
+            return {
+              ...c,
+              mergeResult: result,
+            };
+          }
+          return c;
+        });
+        return updatedConflicts;
+      });
+      const errMsg = validateMergeResult(result);
+      setErrMsgMapForConflictMergeResult(prev => ({
+        ...prev,
+        [selectedConflictKey]: errMsg,
+      }));
+    },
+    [conflicts, selectedConflictKey],
+  );
 
-  const [selectedConflict, setSelectedConflict] = useState<MergeConflict | null>(null);
+  const rootLoaderData = useRootLoaderData();
+  const isLightTheme = useMemo(() => {
+    let isLightTheme = false;
+    if (rootLoaderData?.settings) {
+      const colorScheme = getColorScheme(rootLoaderData.settings);
+      if (colorScheme === 'light') {
+        isLightTheme = true;
+      } else if (colorScheme === 'dark') {
+        isLightTheme = false;
+      } else {
+        // check if user has selected a light theme
+        isLightTheme = rootLoaderData.settings.theme.includes('light');
+      }
+    }
+    return isLightTheme;
+  }, [rootLoaderData?.settings]);
 
-  const selectedConflictDiff = selectedConflict ? getDiffFromConflict(selectedConflict) : null;
+  // Switch theme for mismerge
+  useEffect(() => {
+    const id = 'mismerge-theme-style';
+    let link = document.getElementById(id) as HTMLLinkElement | null;
+
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.id = id;
+      document.head.appendChild(link);
+    }
+
+    const nextHref = isLightTheme ? lightCssHref : darkCssHref;
+    if (link.href !== nextHref) link.href = nextHref;
+  }, [isLightTheme]);
 
   return (
-    <ModalOverlay
-      isOpen={state.isOpen}
-      onOpenChange={isOpen => {
-        !isOpen && reset();
-
-        !isOpen && handleDone?.();
-        !isOpen && handleClose?.();
-      }}
-      isDismissable
-      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
-    >
-      <Modal
+    <>
+      <ModalOverlay
+        isOpen={isOpen}
         onOpenChange={isOpen => {
+          !isOpen && onCancelUnresolvedRef.current?.();
           !isOpen && reset();
-
-          !isOpen && handleDone?.();
-          !isOpen && handleClose?.();
         }}
-        className="flex h-[calc(100%-var(--padding-xl))] max-h-full w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
+        className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
       >
-        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
-          {({ close }) => (
-            <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-              <div className="flex flex-shrink-0 items-center justify-between gap-2">
-                <Heading slot="title" className="text-2xl">
-                  Resolve conflicts
-                </Heading>
-                <Button
-                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                  onPress={close}
-                >
-                  <Icon icon="x" />
-                </Button>
-              </div>
-              <Form
-                className="flex flex-1 flex-col gap-4 overflow-hidden"
-                onSubmit={event => {
-                  event.preventDefault();
-                  handleDone?.(conflicts);
-                  // if at least one conflict.choose is theirsBlob, track conflict resolution complete as theirs
-                  if (conflicts?.some(conflict => conflict.choose === conflict.theirsBlob)) {
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.syncConflictResolutionCompleteTheirs,
-                    });
-                  }
-                  // if at least one conflict.choose is mine, track conflict resolution complete as mine
-                  if (conflicts?.some(conflict => conflict.choose === conflict.mineBlob)) {
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.syncConflictResolutionCompleteMine,
-                    });
-                  }
-
-                  reset();
-                }}
-              >
-                <div className="grid h-full gap-2 divide-x divide-solid divide-[--hl-md] overflow-hidden [grid-template-columns:300px_1fr]">
-                  {conflicts && conflicts.length > 0 && (
-                    <div className="flex flex-col gap-2 overflow-hidden">
-                      <Heading className="flex items-center gap-2 font-bold">
-                        <Icon icon="code-compare" />
-                        Merge changes
-                      </Heading>
-                      <div className="w-full flex-1 select-none overflow-y-auto">
-                        <GridList
-                          aria-label="Conflicted changes"
-                          selectedKeys={[selectedConflict?.key || '']}
-                          selectionMode="single"
-                          onSelectionChange={keys => {
-                            if (keys !== 'all') {
-                              const selectedKey = keys.values().next().value;
-
-                              setSelectedConflict(conflicts.find(c => c.key === selectedKey) || null);
-                            }
-                          }}
-                          items={conflicts.map(conflict => ({
-                            id: conflict.key,
-                            ...conflict,
-                          }))}
-                        >
-                          {item => (
-                            <GridListItem className="group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
-                              <span className="truncate">{item.name}</span>
-                              <RadioGroup
-                                onChange={value => {
-                                  setState({
-                                    ...state,
-                                    conflicts: conflicts.map(c =>
-                                      c.key !== item.key ? c : { ...c, choose: value || null },
-                                    ),
-                                  });
-                                }}
-                                aria-label="Choose version"
-                                name="type"
-                                value={item.choose || ''}
-                                className="flex flex-col gap-2 text-sm"
-                              >
-                                <div className="flex gap-2">
-                                  <Radio
-                                    value={item.mineBlob || ''}
-                                    className="flex flex-1 items-center gap-2 rounded border border-solid border-[--hl-md] px-2 py-1 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:bg-[rgba(var(--color-surprise-rgb),0.3)] data-[selected]:text-[--color-font] data-[selected]:ring-[--color-surprise]"
-                                  >
-                                    <Icon icon="laptop" />
-                                    <span>Current</span>
-                                  </Radio>
-                                  <Radio
-                                    value={item.theirsBlob || ''}
-                                    className="flex flex-1 items-center gap-2 rounded border border-solid border-[--hl-md] px-2 py-1 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:bg-[rgba(var(--color-surprise-rgb),0.3)] data-[selected]:text-[--color-font-surprise] data-[selected]:ring-[--color-surprise]"
-                                  >
-                                    <Icon icon="globe" />
-                                    <span>Incoming</span>
-                                  </Radio>
-                                </div>
-                              </RadioGroup>
-                            </GridListItem>
-                          )}
-                        </GridList>
-                      </div>
-                      <Button
-                        type="submit"
-                        className="flex h-10 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                      >
-                        <Icon icon="code-merge" className="w-5" /> Resolve conflicts
-                      </Button>
-                    </div>
-                  )}
-
-                  {selectedConflict ? (
-                    <div className="flex h-full flex-col gap-2 overflow-y-auto p-2 pb-0">
-                      <Heading className="flex items-center gap-2 font-bold">
-                        <Icon icon="code-compare" />
-                        {selectedConflict.name}
-                      </Heading>
-                      <div className="flex w-full items-center gap-2">
-                        <span className="flex flex-1 items-center gap-2 bg-[--hl-xs] p-2 text-xs font-semibold uppercase text-[--hl]">
-                          <Icon icon="laptop" /> {state.labels.ours}
-                        </span>
-                        <span className="flex flex-1 items-center gap-2 bg-[--hl-xs] p-2 text-xs font-semibold uppercase text-[--hl]">
-                          <Icon icon="globe" /> {state.labels.theirs}
-                        </span>
-                      </div>
-                      <div className="flex-1 overflow-y-auto rounded-sm bg-[--hl-xs] p-2 text-[--color-font]">
-                        <DiffEditor
-                          original={selectedConflictDiff?.before || ''}
-                          modified={selectedConflictDiff?.after || ''}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex h-full flex-col items-center justify-center gap-4 p-2">
-                      <Heading className="flex items-center justify-center gap-2 text-4xl font-semibold text-[--hl-md]">
-                        <Icon icon="code-compare" />
-                        Diff view
-                      </Heading>
-                      <p className="text-[--hl]">Select an item to compare</p>
-                    </div>
-                  )}
+        <Modal className="flex h-[calc(100%-var(--padding-xl))] max-h-full w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]">
+          <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
+            {({ close }) => (
+              <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+                <div className="flex flex-shrink-0 items-center justify-between gap-2">
+                  <Heading slot="title" className="text-2xl">
+                    Resolve conflicts
+                  </Heading>
                 </div>
-              </Form>
-            </div>
-          )}
-        </Dialog>
-      </Modal>
-    </ModalOverlay>
+                <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+                  <div
+                    className={classNames('grid h-full gap-2 divide-x divide-solid divide-[--hl-md] overflow-hidden', {
+                      '[grid-template-columns:300px_1fr]': editorType === 'diff',
+                      '[grid-template-columns:170px_1fr]': editorType === 'merge',
+                    })}
+                  >
+                    {conflicts && conflicts.length > 0 && (
+                      <div className="flex flex-col gap-2 overflow-hidden">
+                        <Heading className="flex items-center gap-2 font-bold">
+                          <Icon icon="code-compare" />
+                          Merge changes
+                        </Heading>
+                        <div className="w-full flex-1 select-none overflow-y-auto">
+                          <GridList
+                            aria-label="Conflicted changes"
+                            selectedKeys={[selectedConflictKey || '']}
+                            selectionMode="single"
+                            onSelectionChange={keys => {
+                              if (keys !== 'all') {
+                                const selectedKey = keys.values().next().value;
+                                if (typeof selectedKey === 'string') {
+                                  setSelectedConflictKey(selectedKey || null);
+                                }
+                              }
+                            }}
+                            items={conflicts}
+                            dependencies={[selectedConflictKey]}
+                          >
+                            {item => {
+                              if (editorType === 'diff') {
+                                return (
+                                  <GridListItem className="group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
+                                    <span className="truncate">{item.name}</span>
+                                    <RadioGroup
+                                      onChange={value => {
+                                        setConflicts(prevConflicts =>
+                                          prevConflicts.map(c =>
+                                            c.key !== item.key ? c : { ...c, choose: value || null },
+                                          ),
+                                        );
+                                      }}
+                                      aria-label="Choose version"
+                                      name="type"
+                                      value={item.choose || ''}
+                                      className="flex flex-col gap-2 text-sm"
+                                    >
+                                      <div className="flex gap-2">
+                                        <Radio
+                                          value={item.mineBlob || ''}
+                                          className="flex flex-1 items-center gap-2 rounded border border-solid border-[--hl-md] px-2 py-1 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:bg-[rgba(var(--color-surprise-rgb),0.3)] data-[selected]:text-[--color-font] data-[selected]:ring-[--color-surprise]"
+                                        >
+                                          <Icon icon="laptop" />
+                                          <span>Current</span>
+                                        </Radio>
+                                        <Radio
+                                          value={item.theirsBlob || ''}
+                                          className="flex flex-1 items-center gap-2 rounded border border-solid border-[--hl-md] px-2 py-1 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:bg-[rgba(var(--color-surprise-rgb),0.3)] data-[selected]:text-[--color-font-surprise] data-[selected]:ring-[--color-surprise]"
+                                        >
+                                          <Icon icon="globe" />
+                                          <span>Incoming</span>
+                                        </Radio>
+                                      </div>
+                                    </RadioGroup>
+                                  </GridListItem>
+                                );
+                              } else if (editorType === 'merge') {
+                                return (
+                                  <GridListItem className="relative flex w-full cursor-pointer select-none items-start justify-start gap-2 overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
+                                    {errMsgMapForConflictMergeResult[item.key] && (
+                                      <Icon icon="exclamation-triangle" className="mt-1 text-[--color-danger]" />
+                                    )}
+                                    <div>
+                                      <div className="truncate">{item.name}</div>
+                                      {errMsgMapForConflictMergeResult[item.key] &&
+                                        selectedConflictKey === item.key && (
+                                          <div className="mt-2 whitespace-pre-wrap break-all text-sm text-[--color-warning]">
+                                            This file has syntax errors:
+                                            <br />
+                                            {errMsgMapForConflictMergeResult[item.key]}
+                                          </div>
+                                        )}
+                                    </div>
+                                  </GridListItem>
+                                );
+                              }
+                              return null;
+                            }}
+                          </GridList>
+                        </div>
+                        <Button
+                          aria-label="Resolve conflicts"
+                          className="mb-1 flex h-10 items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                          onClick={event => {
+                            event.preventDefault();
+
+                            if (Object.entries(errMsgMapForConflictMergeResult).filter(([, val]) => val).length > 0) {
+                              showModal(AlertModal, {
+                                title: 'The following files have syntax errors and cannot be saved:',
+                                message: Object.entries(errMsgMapForConflictMergeResult)
+                                  .filter(([, val]) => val)
+                                  .map(([key]) => (
+                                    <div key={key}>{conflicts.find(({ key: itemKey }) => itemKey === key)?.name}</div>
+                                  )),
+                                addCancel: false,
+                                okLabel: 'Ok',
+                              });
+                              return;
+                            }
+
+                            onResolveAllRef.current?.(
+                              conflicts.map(c => ({
+                                ...c,
+                                resolutionSource:
+                                  editorType === 'merge' ? RESOLUTION_SOURCE.MANUAL : RESOLUTION_SOURCE.CHOOSE,
+                              })),
+                            );
+                            // if at least one conflict.choose is theirsBlob, track conflict resolution complete as theirs
+                            if (conflicts?.some(conflict => conflict.choose === conflict.theirsBlob)) {
+                              window.main.trackSegmentEvent({
+                                event: SegmentEvent.syncConflictResolutionCompleteTheirs,
+                              });
+                            }
+                            // if at least one conflict.choose is mine, track conflict resolution complete as mine
+                            if (conflicts?.some(conflict => conflict.choose === conflict.mineBlob)) {
+                              window.main.trackSegmentEvent({
+                                event: SegmentEvent.syncConflictResolutionCompleteMine,
+                              });
+                            }
+
+                            reset();
+                          }}
+                        >
+                          <Icon icon="code-merge" className="w-5" />
+                          <span className="truncate">Resolve conflicts</span>
+                        </Button>
+                        <Button
+                          type="button"
+                          className="flex h-10 items-center justify-center gap-2 rounded-md bg-[--hl-xxs] px-4 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                          // will trigger onOpenChange on ModalOverlay
+                          onClick={close}
+                        >
+                          Cancel merge
+                        </Button>
+                      </div>
+                    )}
+
+                    {selectedConflict ? (
+                      <>
+                        {editorType === 'diff' && (
+                          <div className="flex h-full flex-col gap-2 overflow-y-auto p-2 pb-0">
+                            <Heading className="flex items-center gap-2 font-bold">
+                              <Icon icon="code-compare" />
+                              {selectedConflict.name}
+                            </Heading>
+                            <div className="flex w-full items-center gap-2">
+                              <span className="flex flex-1 items-center gap-2 bg-[--hl-xs] p-2 text-xs font-semibold uppercase text-[--hl]">
+                                <Icon icon="laptop" /> {labels.ours}
+                              </span>
+                              <span className="flex flex-1 items-center gap-2 bg-[--hl-xs] p-2 text-xs font-semibold uppercase text-[--hl]">
+                                <Icon icon="globe" /> {labels.theirs}
+                              </span>
+                            </div>
+                            <div className="flex-1 overflow-y-auto rounded-sm bg-[--hl-xs] p-2 text-[--color-font]">
+                              <DiffEditor original={selectedConflictCurrent} modified={selectedConflictIncoming} />
+                            </div>
+                          </div>
+                        )}
+                        {editorType === 'merge' && (
+                          <div className="flex h-full flex-col gap-2 overflow-y-auto p-2 pb-0">
+                            <ol className="flex items-stretch gap-2">
+                              <li className="flex flex-1 flex-col items-center gap-2 bg-[--hl-xs] p-2 text-center text-lg font-semibold text-[--hl]">
+                                <span className="text-base leading-6">Current Changes</span>
+                                <Button
+                                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-bold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
+                                  onClick={() => {
+                                    showModal(AlertModal, {
+                                      title: 'Confirm',
+                                      message: `Taking all current changes will completely overwrite any choices or edits you’ve made already for ${selectedConflict.name}. Are you sure you want to continue?`,
+                                      addCancel: true,
+                                      okLabel: 'Confirm',
+                                      onConfirm: () => {
+                                        onMergeEditorResultChange(selectedConflictCurrent);
+                                      },
+                                    });
+                                  }}
+                                >
+                                  Take all current changes
+                                </Button>
+                              </li>
+                              <li className="flex flex-1 flex-col items-center justify-between gap-2 bg-[--hl-xs] p-2 pb-3 text-center text-lg font-semibold text-[--hl]">
+                                <span className="text-base leading-6">Merge Result</span>
+                                <span className="inline-block font-bold leading-6 text-[--color-font]">
+                                  {selectedConflict.name}
+                                </span>
+                              </li>
+                              <li className="flex flex-1 flex-col items-center gap-2 bg-[--hl-xs] p-2 text-center text-lg font-semibold text-[--hl]">
+                                <span className="text-base leading-6">Incoming Changes</span>
+                                <Button
+                                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-bold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
+                                  onClick={() => {
+                                    showModal(AlertModal, {
+                                      title: 'Confirm',
+                                      message: `Taking all incoming changes will completely overwrite any choices or edits you’ve made already for ${selectedConflict.name}. Are you sure you want to continue?`,
+                                      addCancel: true,
+                                      okLabel: 'Confirm',
+                                      onConfirm: () => {
+                                        onMergeEditorResultChange(selectedConflictIncoming);
+                                      },
+                                    });
+                                  }}
+                                >
+                                  Take all incoming changes
+                                </Button>
+                              </li>
+                            </ol>
+                            <div className="flex-1 overflow-y-auto rounded-sm bg-[--hl-xs] p-2 text-[--color-font]">
+                              <MisMerge3
+                                lhs={selectedConflictCurrent}
+                                ctr={selectedConflict?.mergeResult || ''}
+                                rhs={selectedConflictIncoming}
+                                onCtrChange={onMergeEditorResultChange}
+                                colors={isLightTheme ? DefaultLightColors : DefaultDarkColors}
+                                wrapLines={true}
+                                disableWordsCounter
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex h-full flex-col items-center justify-center gap-4 p-2">
+                        <Heading className="flex items-center justify-center gap-2 text-4xl font-semibold text-[--hl-md]">
+                          <Icon icon="code-compare" />
+                          Diff view
+                        </Heading>
+                        <p className="text-[--hl]">Select an item to compare</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </Dialog>
+        </Modal>
+      </ModalOverlay>
+    </>
   );
 });
 

@@ -100,22 +100,22 @@ export function vcsSegmentEventProperties(type: 'git', action: VCSAction, error?
   return { type, action, error };
 }
 
-function parseGitToHttpsURL(s: string) {
+function parseGitToHttpsURL(url: string) {
   // try to convert any git URL to https URL
-  let parsed = fromUrl(s)?.https({ noGitPlus: true }) || '';
+  let parsed = fromUrl(url)?.https({ noGitPlus: true }) || '';
 
   // fallback for self-hosted git servers, see https://github.com/Kong/insomnia/issues/5967
   // and https://github.com/npm/hosted-git-info/issues/11
   if (parsed === '') {
-    let temp = s;
+    let tempURL = url;
     // handle "shorter scp-like syntax"
-    temp = temp.replace(/^git@([^:]+):/, 'https://$1/');
+    tempURL = tempURL.replace(/^git@([^:]+):/, 'https://$1/');
     // handle proper SSH URLs
-    temp = temp.replace(/^ssh:\/\//, 'https://');
+    tempURL = tempURL.replace(/^ssh:\/\//, 'https://');
 
     // final URL fallback for any other git URL
-    temp = new URL(temp).href;
-    parsed = temp;
+    tempURL = (URL.canParse(tempURL) ? URL.parse(tempURL)?.href : url) || '';
+    parsed = tempURL;
   }
 
   return parsed;
@@ -1827,7 +1827,7 @@ export const discardChangesAction = async ({
 
     const files = changes.unstaged.filter(change => paths.includes(change.path));
 
-    await GitVCS.discardChanges(files);
+    await GitVCS.discardChanges(files, { discardUnstaged: true });
 
     await models.gitRepository.update(gitRepository, {
       cachedGitLastCommitTime: Date.now(),
@@ -1843,6 +1843,10 @@ export const discardChangesAction = async ({
       errors: [errorMessage],
     };
   }
+};
+
+export const abortMergeAction = async () => {
+  return GitVCS.abortMerge();
 };
 
 export interface GitStatusResult {
@@ -2501,6 +2505,7 @@ export interface GitServiceAPI {
   pullFromGitRemote: typeof pullFromGitRemote;
   continueMerge: typeof continueMerge;
   discardChanges: typeof discardChangesAction;
+  abortMerge: typeof abortMergeAction;
   gitStatus: typeof gitStatusAction;
   stageChanges: typeof stageChangesAction;
   unstageChanges: typeof unstageChangesAction;
@@ -2571,6 +2576,7 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.discardChanges', (_, options: Parameters<typeof discardChangesAction>[0]) =>
     discardChangesAction(options),
   );
+  ipcMainHandle('git.abortMerge', _ => abortMergeAction());
   ipcMainHandle('git.gitStatus', (_, options: Parameters<typeof gitStatusAction>[0]) => gitStatusAction(options));
   ipcMainHandle('git.stageChanges', (_, options: Parameters<typeof stageChangesAction>[0]) =>
     stageChangesAction(options),

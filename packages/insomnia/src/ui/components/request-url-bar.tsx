@@ -1,8 +1,9 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { Button } from 'react-aria-components';
+import { Button, Link } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { buildInteractiveMessage } from '~/common/interactive-messages';
 import { useRootLoaderData } from '~/root';
 import {
   type ConnectActionParams,
@@ -71,13 +72,35 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         setUndefinedEnvironmentVariables(searchParams.get('undefinedEnvironmentVariables')!);
       } else {
         // only for request render error
-        showModal(AlertModal, {
+        const errorMessage = searchParams.get('error') || '';
+        const messages = errorMessage.includes('Insomnia cannot access')
+          ? buildInteractiveMessage(errorMessage)
+          : [{ text: errorMessage }];
+        const close = showModal(AlertModal, {
           title: 'Unexpected Request Failure',
           message: (
             <div>
               <p>The request failed due to an unhandled error:</p>
               <code className="wide selectable">
-                <pre className="w-full overflow-y-auto text-wrap" >{searchParams.get('error')}</pre>
+                <div className="w-full overflow-y-auto text-wrap">
+                  {messages.map(({ text, handler }, index) =>
+                    handler ? (
+                      <Link
+                        className="cursor-pointer text-[--color-surprise]"
+                        // eslint-disable-next-line react/no-array-index-key
+                        key={index}
+                        onPress={() => {
+                          close();
+                          handler();
+                        }}
+                      >
+                        {text}
+                      </Link>
+                    ) : (
+                      text
+                    ),
+                  )}
+                </div>
               </code>
             </div>
           ),

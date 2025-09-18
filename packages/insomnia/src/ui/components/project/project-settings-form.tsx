@@ -180,10 +180,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               },
             }
           : {
-              credentials: {
-                password: credentials.password || '',
-                username: credentials.username || '',
-              },
+              credentials,
             }
         : {
             credentials: {
