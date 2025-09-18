@@ -293,6 +293,10 @@ export const database = {
         ...defaultConfig,
         filename: fsPath.join(dbPath, 'insomnia.McpResponse.db'),
       }),
+      McpPayload: new NeDB({
+        ...defaultConfig,
+        filename: fsPath.join(dbPath, 'insomnia.McpPayload.db'),
+      }),
       OAuth2Token: new NeDB({
         ...defaultConfig,
         filename: fsPath.join(dbPath, 'insomnia.OAuth2Token.db'),

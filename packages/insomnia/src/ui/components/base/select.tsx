@@ -37,6 +37,7 @@ export const Select = ({ value, onChange, className, options, ...rest }: SelectP
                   'bg-[--hl-xs]': isHovered || isPressed || isFocused,
                 })
               }
+              id={option.value}
               key={option.value}
             >
               {({ isSelected }) => (
