@@ -55,6 +55,25 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       'Scope is required',
     );
 
+    if (scope === 'mock-server') {
+      const mockServerType = workspaceData.mockServerType;
+      invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
+
+      if (workspaceData.mockServerCreationType === 'ai') {
+        if (!workspaceData.apiSpecContents) {
+          const validationError = validateOpenAPISpec(workspaceData.openApiSpecPath);
+          if (validationError) {
+            return validationError;
+          }
+        }
+      }
+
+      if (mockServerType === 'self-hosted') {
+        const mockServerUrl = workspaceData.mockServerUrl;
+        invariant(typeof mockServerUrl === 'string' && mockServerUrl.trim() !== '', 'Mock Server URL is required');
+      }
+    }
+
     const flushId = await database.bufferChanges();
 
     const workspaceName = name || (scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
@@ -78,41 +97,30 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     if (scope === 'mock-server') {
-      const mockServerType = workspaceData.mockServerType;
-      invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
-
+      const mockServerType = workspaceData.mockServerType!;
       const mockServerPatch: Partial<MockServer> = {
         name,
       };
 
       if (mockServerType === 'cloud') {
         mockServerPatch.useInsomniaCloud = true;
-      }
-
-      if (mockServerType === 'self-hosted') {
-        const mockServerUrl = workspaceData.mockServerUrl;
-        invariant(typeof mockServerUrl === 'string', 'Mock Server URL is required');
+      } else {
         mockServerPatch.useInsomniaCloud = false;
-        mockServerPatch.url = mockServerUrl;
+        mockServerPatch.url = workspaceData.mockServerUrl!;
       }
 
       await models.environment.getOrCreateForParentId(workspace._id);
       const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-      const createManualMockServer = async () => {
-        await models.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
-      };
 
-      const createAIMockServer = async () => {
+      if (workspaceData.mockServerCreationType === 'manual') {
+        await models.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
+      } else {
         let openapiSpec: string;
 
         try {
           if (workspaceData.apiSpecContents) {
             openapiSpec = workspaceData.apiSpecContents;
           } else {
-            const validationError = validateOpenAPISpec(workspaceData.openApiSpecPath);
-            if (validationError) {
-              return validationError;
-            }
             openapiSpec = fs.readFileSync(workspaceData.openApiSpecPath!, 'utf8');
           }
 
@@ -146,14 +154,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             error: 'Failed to create mock server from spec.',
           };
         }
-
-        return;
-      };
-
-      if (workspaceData.mockServerCreationType === 'manual') {
-        await createManualMockServer();
-      } else {
-        await createAIMockServer();
       }
 
       await database.flushChanges(flushId);
@@ -276,7 +276,7 @@ export const useWorkspaceNewActionFetcher = createFetcherSubmitHook(
 function validateOpenAPISpec(specPath?: string) {
   if (!specPath) {
     return {
-      error: 'OpenAPI specification file is required for AI mock server creation',
+      error: 'OpenAPI specification file is required to auto generate a mock server',
     };
   }
   return null;
