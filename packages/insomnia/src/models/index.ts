@@ -11,6 +11,7 @@ import * as _gitRepository from './git-repository';
 import * as _grpcRequest from './grpc-request';
 import * as _grpcRequestMeta from './grpc-request-meta';
 import * as _mcpRequest from './mcp-request';
+import * as _mcpPayload from './mcp-request-payload';
 import * as _mcpResponse from './mcp-response';
 import * as _mockRoute from './mock-route';
 import * as _mockServer from './mock-server';
@@ -96,6 +97,7 @@ export const userSession = _userSession;
 export const cloudCredential = _cloudCredential;
 export const mcpRequest = _mcpRequest;
 export const mcpResponse = _mcpResponse;
+export const mcpPayload = _mcpPayload;
 
 export function all() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
@@ -142,6 +144,7 @@ export function all() {
     cloudCredential,
     mcpRequest,
     mcpResponse,
+    mcpPayload,
   ] as const;
 }
 export function types() {
@@ -186,6 +189,7 @@ export type AllTypes =
   | 'WebSocketResponse'
   | 'McpRequest'
   | 'McpResponse'
+  | 'McpPayload'
   | 'Workspace'
   | 'WorkspaceMeta';
 
