@@ -1,5 +1,5 @@
 import { type RJSFSchema } from '@rjsf/utils';
-import React, { type FC, useCallback, useMemo, useRef, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
@@ -15,7 +15,7 @@ import {
   type McpRequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { useRequestPatcher } from '../../hooks/use-request';
+import { useRequestPatcher, useRequestPayloadPatcher } from '../../hooks/use-request';
 import { CodeEditor, type CodeEditorHandle } from '../.client/codemirror/code-editor';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { readOnlyWebsocketPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
@@ -49,10 +49,12 @@ interface Props {
 }
 
 export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPrimitiveItem }) => {
-  const { activeRequest, activeRequestMeta } = useRequestLoaderData()! as McpRequestLoaderData;
+  const primitiveId = `${selectedPrimitiveItem?.type}_${selectedPrimitiveItem?.name}`;
+  const { activeRequest, activeRequestMeta, requestPayload } = useRequestLoaderData()! as McpRequestLoaderData;
   const { activeProject } = useWorkspaceLoaderData()!;
-  const [formData, setFormData] = useState({});
-  console.log('formData: ', formData);
+
+  const [mcpParams, setMcpParams] = useState<Record<string, any>>(requestPayload?.params || {});
+
   const paramEditorRef = useRef<CodeEditorHandle>(null);
   const rjsfFormRef = useRef<InsomniaRjsfFormHandle>(null);
   const requestId = activeRequest._id;
@@ -94,14 +96,11 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
 
   const handleRjsfFormChange = useCallback(
     (formData: any) => {
-      console.log('rjsf form change: ', formData);
-      setFormData(formData);
-
       if (selectedPrimitiveItem?.type !== 'resourceTemplates' && selectedPrimitiveItem?.type !== 'resources') {
         paramEditorRef.current?.setValue(JSON.stringify(formData, null, 2));
       }
     },
-    [selectedPrimitiveItem],
+    [selectedPrimitiveItem?.type],
   );
 
   const handleSend = () => {
@@ -109,7 +108,7 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
     if (selectedPrimitiveItem?.type === 'tools') {
       window.main.mcp.primitive.callTool({
         name: selectedPrimitiveItem?.name || '',
-        parameters: formData,
+        parameters: mcpParams[primitiveId],
         requestId: requestId,
       });
     } else if (selectedPrimitiveItem?.type === 'resources') {
@@ -120,13 +119,13 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
     } else if (selectedPrimitiveItem?.type === 'resourceTemplates') {
       window.main.mcp.primitive.readResource({
         requestId,
-        uri: fillUriTemplate(selectedPrimitiveItem.uriTemplate, formData),
+        uri: fillUriTemplate(selectedPrimitiveItem.uriTemplate, mcpParams[primitiveId] || {}),
       });
     } else if (selectedPrimitiveItem?.type === 'prompts') {
       window.main.mcp.primitive.getPrompt({
         requestId,
         name: selectedPrimitiveItem?.name || '',
-        parameters: formData,
+        parameters: mcpParams[primitiveId],
       });
     }
   };
@@ -136,11 +135,25 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
   };
 
   const handleEditorChange = (value: string) => {
-    console.log('code editor change: ', value);
     try {
-      setFormData(JSON.parse(value));
+      setMcpParams(prev => {
+        return {
+          ...prev,
+          [primitiveId]: JSON.parse(value),
+        };
+      });
     } catch (err) {}
   };
+
+  const mcpPayloadPatcher = useRequestPayloadPatcher();
+  const latestPayloadPatcherRef = useRef(mcpPayloadPatcher);
+
+  useEffect(() => {
+    if (readyState) {
+      console.log('update mcp payload: ', { params: mcpParams, url: activeRequest.url });
+      latestPayloadPatcherRef.current(requestId, { params: mcpParams, url: activeRequest.url });
+    }
+  }, [activeRequest.url, mcpParams, latestPayloadPatcherRef, requestId, readyState]);
 
   const sendButtonText = useMemo(() => {
     if (selectedPrimitiveItem?.type === 'tools') {
@@ -241,11 +254,13 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
                       <p>{selectedPrimitiveItem?.name}</p>
                       <p className="text-[--hl]">{selectedPrimitiveItem?.description}</p>
                       {selectedPrimitiveItem?.type === 'resourceTemplates' && (
-                        <p className="py-2">uri: {fillUriTemplate(selectedPrimitiveItem.uriTemplate, formData)}</p>
+                        <p className="py-2">
+                          uri: {fillUriTemplate(selectedPrimitiveItem.uriTemplate, mcpParams[primitiveId] || {})}
+                        </p>
                       )}
                       <div className="pl-2">
                         <InsomniaRjsfForm
-                          formData={formData}
+                          formData={mcpParams[primitiveId]}
                           onChange={handleRjsfFormChange}
                           schema={jsonSchema}
                           ref={rjsfFormRef}

@@ -14,6 +14,7 @@ import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Toolbar } from 'react-aria-components';
 import * as reactUse from 'react-use';
+import { useLatest } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
 import { DEBOUNCE_MILLIS, isMac } from '~/common/constants';
@@ -571,9 +572,11 @@ export const CodeEditor = memo(
 
       useEditorRefresh(reinitialize);
 
+      const latestOnChangeRef = useLatest(onChange);
+
       useEffect(() => {
         const fn = misc.debounce((doc: CodeMirror.Editor) => {
-          if (onChange) {
+          if (latestOnChangeRef.current) {
             const value = doc.getValue()?.trim() || '';
             // Disable linting if the document reaches a maximum size or is empty
             const withinLintingThresholds = value.length > 0 && value.length < MAX_SIZE_FOR_LINTING;
@@ -589,14 +592,14 @@ export const CodeEditor = memo(
               const errorMessage = err instanceof Error ? err.message : String(err);
               console.log('[codemirror] Failed to set CodeMirror option', errorMessage);
             }
-            onChange(doc.getValue() || '');
+            latestOnChangeRef.current(doc.getValue() || '');
             setOriginalCode(doc.getValue() || '');
           }
         }, DEBOUNCE_MILLIS);
 
         codeMirror.current?.on('changes', fn);
         return () => codeMirror.current?.off('changes', fn);
-      }, [lintOptions, noLint, onChange]);
+      }, [lintOptions, noLint, latestOnChangeRef]);
 
       useEffect(() => {
         const handleOnBlur = (_: CodeMirror.Editor, e: FocusEvent) => onBlur?.(e);
