@@ -13,8 +13,7 @@ import deepEqual from 'deep-equal';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Toolbar } from 'react-aria-components';
-import * as reactUse from 'react-use';
-import { useLatest } from 'react-use';
+import { useLatest, useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
 import { DEBOUNCE_MILLIS, isMac } from '~/common/constants';
@@ -557,10 +556,10 @@ export const CodeEditor = memo(
         codeMirror.current = null;
       }, []);
 
-      reactUse.useMount(() => {
+      useMount(() => {
         initEditor();
       });
-      reactUse.useUnmount(() => {
+      useUnmount(() => {
         persistState();
         cleanUpEditor();
       });
