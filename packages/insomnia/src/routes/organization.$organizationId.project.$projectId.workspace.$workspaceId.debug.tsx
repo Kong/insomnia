@@ -99,7 +99,6 @@ import { CookiesModal } from '~/ui/components/modals/cookies-modal';
 import { ErrorModal } from '~/ui/components/modals/error-modal';
 import { GenerateCodeModal } from '~/ui/components/modals/generate-code-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
-import { OAuthAuthorizationStatusModal } from '~/ui/components/modals/oauth-authorization-status-modal';
 import { PasteCurlModal } from '~/ui/components/modals/paste-curl-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { RequestSettingsModal } from '~/ui/components/modals/request-settings-modal';
@@ -1253,7 +1252,6 @@ const Debug = () => {
                       </Panel>
                     </>
                   ) : null}
-                  <OAuthAuthorizationStatusModal />
                 </>
               }
             />
