@@ -36,9 +36,11 @@ import { generateId } from '~/common/misc';
 import * as models from '~/models';
 import { TRANSPORT_TYPES, type TransportType } from '~/models/mcp-request';
 import type { McpResponse } from '~/models/mcp-response';
-import type { RequestAuthentication, RequestHeader } from '~/models/request';
+import type { AuthTypeOAuth2, RequestAuthentication, RequestHeader } from '~/models/request';
+import { _buildBearerHeader } from '~/network/authentication';
 import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
 import { getBearerAuthHeader } from '~/network/bearer-auth/get-header';
+import { getOAuth2Token } from '~/network/o-auth-2/get-token';
 import { invariant } from '~/utils/invariant';
 
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
@@ -364,7 +366,7 @@ const fetchWithLogging = async (
   return response;
 };
 
-const createStreamableHTTPTransport = (
+const createStreamableHTTPTransport = async (
   options: OpenMcpHTTPClientConnectionOptions,
   {
     responseId,
@@ -388,14 +390,18 @@ const createStreamableHTTPTransport = (
       const { username, password, useISO88591 } = options.authentication;
       const encoding = useISO88591 ? 'latin1' : 'utf8';
       options.headers.push(getBasicAuthHeader(username, password, encoding));
-    }
-    if (options.authentication.type === 'apikey') {
-      const { key = '', value = '' } = options.authentication;
-      options.headers.push({ name: key, value: value });
-    }
-    if (options.authentication.type === 'bearer' && options.authentication.token) {
+    } else if (options.authentication.type === 'bearer' && options.authentication.token) {
       const { token, prefix } = options.authentication;
       options.headers.push(getBearerAuthHeader(token, prefix));
+    } else if (options.authentication.type === 'oauth2') {
+      const oAuth2Token = await getOAuth2Token(requestId, options.authentication as AuthTypeOAuth2);
+      if (!oAuth2Token) return;
+
+      const token = oAuth2Token.accessToken;
+      const authHeader = _buildBearerHeader(token, options.authentication.tokenPrefix);
+      if (!authHeader) return;
+
+      options.headers.push(authHeader);
     }
   }
   const reduceArrayToLowerCaseKeyedDictionary = (acc: Record<string, string>, { name, value }: RequestHeader) => ({
