@@ -384,9 +384,6 @@ const openWebSocketConnection = async (
         type: 'open',
         timestamp: Date.now(),
       };
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
-      }
       writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(openEvent) + '\n' });
       timelineFileStreams
         .get(options.requestId)
