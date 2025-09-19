@@ -3,6 +3,8 @@ import querystring from 'node:querystring';
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { isMcpRequestId } from '~/models/mcp-request';
+
 import { version } from '../../../package.json';
 import { getOauthRedirectUrl } from '../../common/constants';
 import { database as db } from '../../common/database';
@@ -19,6 +21,7 @@ import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getAuthObjectOrNull, isAuthEnabled } from '../authentication';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import {
+  fetchMcpRequestData,
   fetchRequestData,
   fetchRequestGroupData,
   responseTransform,
@@ -252,16 +255,21 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   authentication: AuthTypeOAuth2,
   forceRefresh: boolean,
 ): Promise<{ oAuth2Token: OAuth2Token | undefined; closestAuthId: string }> {
-  const activeRequest = await models.request.getById(requestId);
-  const requestGroups = (
-    await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
-  ).filter(isRequestGroup) as RequestGroup[];
-  const closestFolderAuth = [...requestGroups]
-    .reverse()
-    .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
-  const isRequestAuthEnabled =
-    getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);
-  const closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
+  const closestAuthId = requestId;
+
+  if (!isMcpRequestId(requestId)) {
+    const activeRequest = await models.request.getById(requestId);
+    const requestGroups = (
+      await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
+    ).filter(isRequestGroup) as RequestGroup[];
+    const closestFolderAuth = [...requestGroups]
+      .reverse()
+      .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
+    const isRequestAuthEnabled =
+      getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);
+    isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
+  }
+
   const token = await models.oAuth2Token.getByParentId(closestAuthId);
   if (!token) {
     return { oAuth2Token: undefined, closestAuthId };
@@ -391,10 +399,12 @@ const sendAccessTokenRequest = async (
 ) => {
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
   console.log(`[network] Sending with settings req=${requestOrGroupId}`);
-  // @TODO unpack oauth into regular timeline and remove oauth timeine dialog
+  // @TODO unpack oauth into regular timeline and remove oauth timeline dialog
   const initializedData = isRequestGroupId(requestOrGroupId)
     ? await fetchRequestGroupData(requestOrGroupId)
-    : await fetchRequestData(requestOrGroupId);
+    : isMcpRequestId(requestOrGroupId)
+      ? await fetchMcpRequestData(requestOrGroupId)
+      : await fetchRequestData(requestOrGroupId);
 
   const { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId } =
     initializedData;

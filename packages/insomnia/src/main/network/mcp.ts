@@ -395,13 +395,13 @@ const createStreamableHTTPTransport = async (
       options.headers.push(getBearerAuthHeader(token, prefix));
     } else if (options.authentication.type === 'oauth2') {
       const oAuth2Token = await getOAuth2Token(requestId, options.authentication as AuthTypeOAuth2);
-      if (!oAuth2Token) return;
-
-      const token = oAuth2Token.accessToken;
-      const authHeader = _buildBearerHeader(token, options.authentication.tokenPrefix);
-      if (!authHeader) return;
-
-      options.headers.push(authHeader);
+      if (oAuth2Token) {
+        const token = oAuth2Token.accessToken;
+        const authHeader = _buildBearerHeader(token, options.authentication.tokenPrefix);
+        if (authHeader) {
+          options.headers.push(authHeader);
+        }
+      }
     }
   }
   const reduceArrayToLowerCaseKeyedDictionary = (acc: Record<string, string>, { name, value }: RequestHeader) => ({
