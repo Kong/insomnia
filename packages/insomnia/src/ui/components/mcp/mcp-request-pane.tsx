@@ -139,10 +139,11 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
 
   const handleEditorChange = (value: string) => {
     try {
+      const payload = JSON.parse(value);
       setMcpParams(prev => {
         return {
           ...prev,
-          [primitiveId]: JSON.parse(value),
+          [primitiveId]: payload,
         };
       });
     } catch (err) {}
