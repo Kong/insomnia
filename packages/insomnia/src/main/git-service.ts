@@ -1827,7 +1827,7 @@ export const discardChangesAction = async ({
 
     const files = changes.unstaged.filter(change => paths.includes(change.path));
 
-    await GitVCS.discardChanges(files, { discardUnstaged: true });
+    await GitVCS.discardChanges(files);
 
     await models.gitRepository.update(gitRepository, {
       cachedGitLastCommitTime: Date.now(),
