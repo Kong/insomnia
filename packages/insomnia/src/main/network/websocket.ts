@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { type IncomingMessage, request } from 'node:http';
+import { type IncomingMessage } from 'node:http';
 import path from 'node:path';
 import tls, { type KeyObject, type PxfObject } from 'node:tls';
 
