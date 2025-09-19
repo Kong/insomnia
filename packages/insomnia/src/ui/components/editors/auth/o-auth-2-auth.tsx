@@ -1,5 +1,7 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
+import { OAuthAuthorizationStatusModal } from '~/ui/components/modals/oauth-authorization-status-modal';
+
 import { getOauthRedirectUrl } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
@@ -141,6 +143,16 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
       copyBtn={authentication.useDefaultBrowser}
     />
   );
+  const redirectUriWithoutDefaultBrowser = (
+    <AuthInputRow
+      label="Redirect URL"
+      property="redirectUrl"
+      key="redirectUrl"
+      help={
+        'This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL.'
+      }
+    />
+  );
   const useDefaultBrowser = (
     <AuthToggleRow
       label="Using default browser"
@@ -204,6 +216,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
     authorizationUrl,
     accessTokenUrl,
     redirectUri,
+    redirectUriWithoutDefaultBrowser,
     useDefaultBrowser,
     state,
     scope,
@@ -227,6 +240,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
     authorizationUrl,
     accessTokenUrl,
     redirectUri,
+    redirectUriWithoutDefaultBrowser,
     useDefaultBrowser,
     state,
     scope,
@@ -267,7 +281,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
 
     advanced = [scope, credentialsInBody, tokenPrefix, audience];
   } else if (grantType === GRANT_TYPE_IMPLICIT) {
-    basic = [authorizationUrl, clientId, redirectUri];
+    basic = [authorizationUrl, clientId, redirectUriWithoutDefaultBrowser];
 
     advanced = [responseType, scope, state, tokenPrefix, audience];
   }
@@ -313,6 +327,7 @@ export const OAuth2Auth: FC = () => {
       <div className="pad">
         <OAuth2Tokens />
       </div>
+      <OAuthAuthorizationStatusModal />
     </>
   );
 };
