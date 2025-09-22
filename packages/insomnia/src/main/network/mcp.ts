@@ -37,7 +37,6 @@ import * as models from '~/models';
 import { TRANSPORT_TYPES, type TransportType } from '~/models/mcp-request';
 import type { McpResponse } from '~/models/mcp-response';
 import type { RequestAuthentication, RequestHeader } from '~/models/request';
-import { _buildBearerHeader } from '~/network/authentication';
 import { invariant } from '~/utils/invariant';
 
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
@@ -363,7 +362,7 @@ const fetchWithLogging = async (
   return response;
 };
 
-const createStreamableHTTPTransport = async (
+const createStreamableHTTPTransport = (
   options: OpenMcpHTTPClientConnectionOptions,
   {
     responseId,
