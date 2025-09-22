@@ -21,6 +21,7 @@ import { useListData } from 'react-stately';
 import { useAIGenerateActionFetcher } from '~/routes/ai.generate-commit-messages';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
 import { useGitProjectCommitActionFetcher } from '~/routes/git.commit';
+import { useGitProjectCommitsActionFetcher } from '~/routes/git.commits';
 import { useGitProjectDiffLoaderFetcher } from '~/routes/git.diff';
 import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
@@ -101,6 +102,7 @@ export const GitProjectStagingModal: FC<{
   const undoUnstagedChangesFetcher = useGitProjectDiscardActionFetcher();
   const diffChangesFetcher = useGitProjectDiffLoaderFetcher();
   const commitFetcher = useGitProjectCommitActionFetcher();
+  const commitsFetcher = useGitProjectCommitsActionFetcher();
 
   const [message, setMessage] = useState('');
   // Add this state at the top of your component
@@ -163,16 +165,18 @@ export const GitProjectStagingModal: FC<{
   const allChangesLength = allChanges.length;
   const hasNoCommitErrors =
     commitFetcher.data && 'errors' in commitFetcher.data && commitFetcher.data.errors?.length === 0;
+  const hasNoMultipleCommitErrors =
+    commitsFetcher.data && 'errors' in commitsFetcher.data && commitsFetcher.data.errors?.length === 0;
 
   useEffect(() => {
-    if (allChangesLength === 0 && hasNoCommitErrors) {
+    if (allChangesLength === 0 && (hasNoCommitErrors || hasNoMultipleCommitErrors)) {
       if (mode === StagingModalModes.commitAndPull) {
         onPullAfterCommit();
       }
 
       onClose();
     }
-  }, [allChangesLength, onClose, hasNoCommitErrors, mode, onPullAfterCommit]);
+  }, [allChangesLength, onClose, hasNoCommitErrors, mode, onPullAfterCommit, hasNoMultipleCommitErrors]);
 
   useEffect(() => {
     if (commitFetcher.data && hasNoCommitErrors) {
@@ -185,6 +189,9 @@ export const GitProjectStagingModal: FC<{
 
   const generateCommitsFetcher = useAIGenerateActionFetcher({ key: commitGenerationKey.toString() });
   const isGeneratingCommits = generateCommitsFetcher.state !== 'idle';
+
+  // @TODO - Handle state updates for re-ordering files
+  const [commits, setCommits] = useState([]);
 
   return (
     <>
@@ -279,14 +286,20 @@ export const GitProjectStagingModal: FC<{
                           const submitter = e.nativeEvent instanceof SubmitEvent ? e.nativeEvent.submitter : null;
                           const formData = new FormData(e.currentTarget, submitter);
 
-                          const message = formData.get('message')?.toString() || '';
                           const push = Boolean(formData.get('push') === 'true');
 
                           setCommittingAction(push ? 'commit-push' : 'commit');
 
-                          commitFetcher.submit({
+                          if (!generateCommitsFetcher.data || 'error' in generateCommitsFetcher.data) {
+                            return;
+                          }
+
+                          commitsFetcher.submit({
                             projectId,
-                            message,
+                            commits: generateCommitsFetcher.data.commits.map(commit => ({
+                              message: commit.message,
+                              files: commit.files,
+                            })),
                             push,
                           });
                         }}
@@ -316,6 +329,7 @@ export const GitProjectStagingModal: FC<{
                                   files={commit.files.map(file => ({
                                     name: file,
                                     id: `${file}-${commit.id}`,
+                                    // @TODO - Get the real modifcation types
                                     type: 'modified',
                                   }))}
                                 />

@@ -38,6 +38,7 @@ export type HandleChannels =
   | 'git.cloneGitRepo'
   | 'git.commitAndPushToGitRepo'
   | 'git.commitToGitRepo'
+  | 'git.multipleCommitToGitRepo'
   | 'git.completeSignInToGitHub'
   | 'git.completeSignInToGitLab'
   | 'git.continueMerge'

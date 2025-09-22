@@ -1249,6 +1249,54 @@ export const commitToGitRepoAction = async ({
   };
 };
 
+export const multipleCommitToGitRepoAction = async ({
+  projectId,
+  workspaceId,
+  commits,
+}: {
+  projectId: string;
+  workspaceId?: string;
+  commits: {
+    message: string;
+    files: string[];
+  }[];
+}) => {
+  await getGitRepository({ projectId, workspaceId });
+
+  for (const commit of commits) {
+    // Get current git status
+    const { changes } = await getGitChanges(GitVCS);
+
+    // First, unstage everything to start with a clean slate for this commit
+    if (changes.staged.length > 0) {
+      await GitVCS.unstageChanges(changes.staged);
+    }
+
+    // Now stage only the files that should be included in this commit
+    const filesToStageForCommit: { path: string; status: [any, any, any] }[] = [];
+
+    // Refresh changes after unstaging everything
+    const { changes: currentChanges } = await getGitChanges(GitVCS);
+
+    for (const file of commit.files) {
+      const fileChange = currentChanges.unstaged.find(c => c.path === file);
+      if (fileChange) {
+        filesToStageForCommit.push(fileChange);
+      }
+    }
+
+    // Stage the files for this commit
+    if (filesToStageForCommit.length > 0) {
+      await GitVCS.stageChanges(filesToStageForCommit);
+
+      // Commit the staged files
+      await GitVCS.commit(commit.message);
+    }
+  }
+
+  return null;
+};
+
 export const migrateLegacyInsomniaFolderToFile = async ({ projectId }: { projectId: string }) => {
   const gitRepository = await getGitRepository({ projectId });
 
@@ -2534,6 +2582,7 @@ export interface GitServiceAPI {
   resetGitRepo: typeof resetGitRepoAction;
   commitToGitRepo: typeof commitToGitRepoAction;
   commitAndPushToGitRepo: typeof commitAndPushToGitRepoAction;
+  multipleCommitToGitRepo: typeof multipleCommitToGitRepoAction;
   createNewGitBranch: typeof createNewGitBranchAction;
   checkoutGitBranch: typeof checkoutGitBranchAction;
   mergeGitBranch: typeof mergeGitBranch;
@@ -2593,6 +2642,9 @@ export const registerGitServiceAPI = () => {
   );
   ipcMainHandle('git.commitAndPushToGitRepo', (_, options: Parameters<typeof commitAndPushToGitRepoAction>[0]) =>
     commitAndPushToGitRepoAction(options),
+  );
+  ipcMainHandle('git.multipleCommitToGitRepo', (_, options: Parameters<typeof multipleCommitToGitRepoAction>[0]) =>
+    multipleCommitToGitRepoAction(options),
   );
   ipcMainHandle('git.createNewGitBranch', (_, options: Parameters<typeof createNewGitBranchAction>[0]) =>
     createNewGitBranchAction(options),
