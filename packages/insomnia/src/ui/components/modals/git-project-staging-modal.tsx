@@ -243,15 +243,25 @@ export const GitProjectStagingModal: FC<{
                           projectId,
                         });
                       }}
-                      className="hover:bg-[rgba(var(--color-surprise-rgb),0.8] flex h-8 flex-shrink-0 items-center justify-center gap-2 rounded-sm bg-[--color-surprise] px-4 text-sm text-[--color-font-surprise] ring-1 ring-transparent transition-all focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      className="hover:bg-[rgba(var(--color-surprise-rgb),0.8] flex h-8 flex-shrink-0 items-center justify-center gap-2 rounded-sm bg-[--color-surprise] px-4 text-[--color-font-surprise] ring-1 ring-transparent transition-all focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                     >
                       <Icon
-                        icon={isGeneratingCommits ? 'spinner' : 'star'}
-                        className={`w-5 ${isGeneratingCommits ? 'animate-spin' : ''}`}
-                      />{' '}
-                      {generateCommitsFetcher.data && !('error' in generateCommitsFetcher.data)
-                        ? 'Back to manual commits'
-                        : 'Recommend commits and comments'}
+                        icon={
+                          isGeneratingCommits
+                            ? 'spinner'
+                            : generateCommitsFetcher.data && !('error' in generateCommitsFetcher.data)
+                              ? 'chevron-left'
+                              : 'star'
+                        }
+                        className={`size-4 ${isGeneratingCommits ? 'animate-spin' : ''}`}
+                      />
+                      <span>
+                        {generateCommitsFetcher.state !== 'idle'
+                          ? 'Generating commits...'
+                          : generateCommitsFetcher.data && !('error' in generateCommitsFetcher.data)
+                            ? 'Back to manual commits'
+                            : 'Recommend commits and comments'}
+                      </span>
                     </Button>
                     {generateCommitsFetcher.state === 'idle' &&
                       generateCommitsFetcher.data &&
