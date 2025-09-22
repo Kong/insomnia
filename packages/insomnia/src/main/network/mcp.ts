@@ -286,7 +286,31 @@ const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
 };
 
 const parseAndLogMcpRequest = (requestId: string, message: any) => {
-  // TODO unify the parse logic
+  if (message) {
+    // Add request event
+    let requestMethod = message?.method;
+    if (!requestMethod) {
+      if (ListRootsResultSchema.safeParse(message?.result).success) {
+        requestMethod = METHOD_LIST_ROOTS;
+      } else if (ElicitResultSchema.safeParse(message?.result).success) {
+        requestMethod = METHOD_ELICITATION_CREATE_MESSAGE;
+      } else if (JSONRPCErrorSchema.safeParse(message).success) {
+        requestMethod = 'JSON-RPC Error';
+      } else {
+        requestMethod = METHOD_UNKNOWN;
+      }
+    }
+    const requestEvent: McpRequestEvent = {
+      _id: mcpEventIdGenerator(),
+      method: requestMethod,
+      requestId,
+      type: 'message',
+      direction: 'OUTGOING',
+      timestamp: Date.now(),
+      data: message,
+    };
+    writeEventLogAndNotify({ requestId, data: JSON.stringify(requestEvent) });
+  }
 };
 
 const createErrorResponse = async ({
