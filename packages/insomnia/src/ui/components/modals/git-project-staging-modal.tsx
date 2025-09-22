@@ -1,10 +1,11 @@
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
   GridList,
   GridListItem,
   Heading,
+  isTextDropItem,
   Label,
   Modal,
   ModalOverlay,
@@ -12,8 +13,10 @@ import {
   TextField,
   Tooltip,
   TooltipTrigger,
+  useDragAndDrop,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
+import { useListData } from 'react-stately';
 
 import { useAIGenerateActionFetcher } from '~/routes/ai.generate-commit-messages';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
@@ -83,6 +86,8 @@ export const GitProjectStagingModal: FC<{
     projectId: string;
     workspaceId: string;
   };
+
+  const [commitGenerationKey, setCommitGenerationKey] = useState(0);
 
   const [operationError, setOperationError] = useState<string | null>(null);
   const [isGitPullRequiredModalOpen, setIsGitPullRequiredModalOpen] = useState(false);
@@ -178,7 +183,7 @@ export const GitProjectStagingModal: FC<{
   // These used only when the mode is commitAndPull
   const canCommitAndPull = changes.staged.length > 0 && changes.unstaged.length === 0;
 
-  const generateCommitsFetcher = useAIGenerateActionFetcher();
+  const generateCommitsFetcher = useAIGenerateActionFetcher({ key: commitGenerationKey.toString() });
   const isGeneratingCommits = generateCommitsFetcher.state !== 'idle';
 
   return (
@@ -229,6 +234,11 @@ export const GitProjectStagingModal: FC<{
                     <Button
                       onPress={() => {
                         console.log('generateCommitsFetcher', generateCommitsFetcher);
+                        if (generateCommitsFetcher.data && !('error' in generateCommitsFetcher.data)) {
+                          setCommitGenerationKey(commitGenerationKey + 1);
+                          return;
+                        }
+
                         generateCommitsFetcher.submit({
                           projectId,
                         });
@@ -239,34 +249,168 @@ export const GitProjectStagingModal: FC<{
                         icon={isGeneratingCommits ? 'spinner' : 'star'}
                         className={`w-5 ${isGeneratingCommits ? 'animate-spin' : ''}`}
                       />{' '}
-                      Recommend commits and comments
+                      {generateCommitsFetcher.data && !('error' in generateCommitsFetcher.data)
+                        ? 'Back to manual commits'
+                        : 'Recommend commits and comments'}
                     </Button>
+                    {generateCommitsFetcher.state === 'idle' &&
+                      generateCommitsFetcher.data &&
+                      'error' in generateCommitsFetcher.data && (
+                        <p className="flex items-center gap-2 rounded-sm bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))] bg-opacity-20 p-2 text-sm text-[--color-font-danger]">
+                          <Icon icon="exclamation-triangle" className="size-4" />
+                          <span>{generateCommitsFetcher.data.error}</span>
+                        </p>
+                      )}
 
-                    {generateCommitsFetcher.data && (
-                      <div>
-                        {generateCommitsFetcher.data.commits.map(commit => (
-                          <div
-                            key={commit.message}
-                            className="mb-2 rounded-md border border-solid border-[--hl-sm] p-2"
-                          >
-                            <p>
-                              <strong>Message:</strong>
-                              {commit.message}
-                            </p>
-                            <p>
-                              <strong>Files:</strong>
-                            </p>
-                            <ul>
-                              {commit.files.map(file => (
-                                <li key={file}>{file}</li>
-                              ))}
-                            </ul>
+                    {generateCommitsFetcher.data && !('error' in generateCommitsFetcher.data) && (
+                      <form
+                        onSubmit={e => {
+                          e.preventDefault();
+                          const submitter = e.nativeEvent instanceof SubmitEvent ? e.nativeEvent.submitter : null;
+                          const formData = new FormData(e.currentTarget, submitter);
+
+                          const message = formData.get('message')?.toString() || '';
+                          const push = Boolean(formData.get('push') === 'true');
+
+                          setCommittingAction(push ? 'commit-push' : 'commit');
+
+                          commitFetcher.submit({
+                            projectId,
+                            message,
+                            push,
+                          });
+                        }}
+                        className="flex flex-1 flex-col gap-6"
+                      >
+                        <div className="flex flex-1 flex-col gap-6 overflow-y-auto py-2">
+                          {generateCommitsFetcher.data.commits.map((commit, index) => (
+                            <div
+                              key={commit.id}
+                              className="relative flex flex-shrink-0 flex-col gap-2 rounded-md border border-solid border-[--hl-sm] p-2"
+                            >
+                              <span className="absolute -top-3 left-2 w-fit bg-[--color-bg] px-2 text-[--hl]">
+                                Commit {index + 1}
+                              </span>
+                              <TextField className="flex flex-col gap-2" defaultValue={commit.message}>
+                                <Label className="font-bold text-[--hl]">Message:</Label>
+                                <TextArea
+                                  rows={2}
+                                  name="message"
+                                  className="resize-none rounded-sm border border-solid border-[--hl-sm] p-2 placeholder:text-[--hl-md]"
+                                  placeholder="This is a helpful message that describes the changes made in this commit."
+                                />
+                              </TextField>
+                              <div className="">
+                                <span className="font-bold text-[--hl]">Files:</span>
+                                <CommitSection
+                                  files={commit.files.map(file => ({
+                                    name: file,
+                                    id: `${file}-${commit.id}`,
+                                    type: 'modified',
+                                  }))}
+                                />
+                              </div>
+                            </div>
+                          ))}
+
+                          <div className="relative flex flex-shrink-0 flex-col gap-2 rounded-md border border-solid border-[--hl-sm] p-2">
+                            <span className="absolute -top-3 left-2 w-fit bg-[--color-bg] px-2 text-[--hl]">
+                              Do not commit
+                            </span>
+                            <div className="">
+                              <span className="font-bold text-[--hl]">Files:</span>
+                              <CommitSection
+                                emptyState={
+                                  <p className="p-2 text-sm text-[--hl]">These files will not be committed.</p>
+                                }
+                                files={[]}
+                              />
+                            </div>
                           </div>
-                        ))}
-                      </div>
+                        </div>
+
+                        {mode === StagingModalModes.commitAndPull ? (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="submit"
+                              isDisabled={isCommitting || changes.staged.length === 0}
+                              className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                            >
+                              {canCommitAndPull ? (
+                                <>
+                                  <Icon
+                                    icon={isCommitting ? 'spinner' : 'cloud-arrow-down'}
+                                    className={`w-5 ${isCommitting ? 'animate-spin' : ''}`}
+                                  />
+                                  Commit and pull
+                                </>
+                              ) : (
+                                <>
+                                  <Icon
+                                    icon={isCommitting ? 'spinner' : 'check'}
+                                    className={`w-5 ${isCommitting ? 'animate-spin' : ''}`}
+                                  />
+                                  Commit
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              type="button"
+                              isDisabled={isCommitting}
+                              className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                              onPress={() => {
+                                setShowConfirmDiscardAndPullModal(true);
+                              }}
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                className="size-4"
+                              >
+                                <path d="M5.828 7l2.536 2.535L6.95 10.95 2 6l4.95-4.95 1.414 1.415L5.828 5H13a8 8 0 110 16H4v-2h9a6 6 0 000-12H5.828z" />
+                              </svg>
+                              Discard and pull
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-shrink-0 items-center justify-stretch gap-2">
+                            <Button
+                              type="submit"
+                              isDisabled={
+                                (committingAction === 'commit' && isCommitting) || changes.staged.length === 0
+                              }
+                              className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                            >
+                              <Icon
+                                icon={committingAction === 'commit' && isCommitting ? 'spinner' : 'check'}
+                                className={`w-5 ${committingAction === 'commit' && isCommitting ? 'animate-spin' : ''}`}
+                              />{' '}
+                              Commit
+                            </Button>
+
+                            <Button
+                              type="submit"
+                              isDisabled={
+                                (committingAction === 'commit-push' && isCommitting) || changes.staged.length === 0
+                              }
+                              name="push"
+                              value="true"
+                              className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                            >
+                              <Icon
+                                icon={committingAction === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
+                                className={`w-5 ${committingAction === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
+                              />{' '}
+                              Commit and push
+                            </Button>
+                          </div>
+                        )}
+                      </form>
                     )}
 
-                    {!generateCommitsFetcher.data && (
+                    {(!generateCommitsFetcher.data ||
+                      (generateCommitsFetcher.data && 'error' in generateCommitsFetcher.data)) && (
                       <>
                         <form
                           onSubmit={e => {
@@ -764,5 +908,101 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
         </Dialog>
       </Modal>
     </ModalOverlay>
+  );
+};
+
+interface FileItem {
+  id: string;
+  name: string;
+  type: string;
+}
+
+const CommitSection = (props: { files: FileItem[]; emptyState?: ReactNode }) => {
+  const list = useListData({
+    initialItems: props.files,
+  });
+
+  const { dragAndDropHooks } = useDragAndDrop({
+    // Provide drag data in a custom format as well as plain text.
+    getItems(keys) {
+      return list.items
+        .filter(item => keys.has(item.id))
+        .map(item => {
+          return {
+            'custom-app-type': JSON.stringify(item),
+            'text/plain': item.name,
+          };
+        });
+    },
+
+    // Accept drops with the custom format.
+    acceptedDragTypes: ['custom-app-type'],
+
+    // Ensure items are always moved rather than copied.
+    getDropOperation: () => 'move',
+
+    // Handle drops between items from other lists.
+    async onInsert(e) {
+      const processedItems = await Promise.all(
+        e.items.filter(isTextDropItem).map(async item => JSON.parse(await item.getText('custom-app-type'))),
+      );
+      if (e.target.dropPosition === 'before') {
+        list.insertBefore(e.target.key, ...processedItems);
+      } else if (e.target.dropPosition === 'after') {
+        list.insertAfter(e.target.key, ...processedItems);
+      }
+    },
+
+    // Handle drops on the collection when empty.
+    async onRootDrop(e) {
+      const processedItems = await Promise.all(
+        e.items.filter(isTextDropItem).map(async item => JSON.parse(await item.getText('custom-app-type'))),
+      );
+      list.append(...processedItems);
+    },
+
+    // Handle reordering items within the same list.
+    onReorder(e) {
+      if (e.target.dropPosition === 'before') {
+        list.moveBefore(e.target.key, e.keys);
+      } else if (e.target.dropPosition === 'after') {
+        list.moveAfter(e.target.key, e.keys);
+      }
+    },
+
+    // Remove the items from the source list on drop
+    // if they were moved to a different list.
+    onDragEnd(e) {
+      if (e.dropOperation === 'move' && !e.isInternal) {
+        list.remove(...e.keys);
+      }
+    },
+  });
+
+  return (
+    <GridList
+      renderEmptyState={() => {
+        if (props.emptyState) {
+          return props.emptyState;
+        }
+
+        return <p className="p-2 text-sm text-[--hl]">No files to commit. This commit will be omitted.</p>;
+      }}
+      className="w-full"
+      aria-label="Files to commit"
+      items={list.items}
+      dragAndDropHooks={dragAndDropHooks}
+    >
+      {item => {
+        return (
+          <GridListItem className="group flex w-full select-none items-center gap-2 overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
+            <Button slot="drag" className="cursor-move">
+              <Icon icon="grip-vertical" className="size-4" />
+            </Button>
+            <span className={`truncate ${item.type === GitFileType.Deleted ? 'line-through' : ''}`}>{item.name}</span>
+          </GridListItem>
+        );
+      }}
+    </GridList>
   );
 };
