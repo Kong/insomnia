@@ -1,6 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
-import React, { type FC, useRef } from 'react';
+import React, { type FC, useEffect, useRef } from 'react';
 import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
 
 import { HelpTooltip } from '~/ui/components/help-tooltip';
@@ -22,6 +22,7 @@ interface Props {
   events: EventTypes[];
   selectionId?: string;
   onSelect: (event: EventTypes) => void;
+  autoSelectLatestEvent?: boolean;
 }
 
 const isSocketIOEvent = (event: EventTypes): event is SocketIOEvent => {
@@ -138,8 +139,9 @@ const getMessage = (event: EventTypes): string | JSX.Element => {
   }
 };
 
-export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
+export const EventLogView: FC<Props> = ({ events, onSelect, selectionId, autoSelectLatestEvent = false }) => {
   const parentRef = useRef<HTMLTableSectionElement>(null);
+
   const virtualizer = useVirtualizer({
     getScrollElement: () => parentRef.current,
     count: events.length,
@@ -184,8 +186,14 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
           >
             {item => {
               const event = events[item.index];
+              const isSelectedRow = event._id === selectionId;
+              // add focus style when autoSelectLatestEvent is true for the first row
+              const rowExtraClasses =
+                isSelectedRow && autoSelectLatestEvent
+                  ? 'bg-[--hl-sm] outline-none'
+                  : 'focus-within:bg-[--hl-sm] focus:outline-none';
               return (
-                <Row className="group transition-colors focus-within:bg-[--hl-sm] focus:outline-none">
+                <Row className={`group transition-colors ${rowExtraClasses}`}>
                   <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] p-2 text-sm font-medium focus:outline-none group-last-of-type:border-none">
                     <SvgIcon icon={getIcon(event)} />
                   </Cell>

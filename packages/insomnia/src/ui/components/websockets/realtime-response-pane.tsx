@@ -51,7 +51,12 @@ export const RealtimeResponsePane: FC<{ requestId?: string }> = () => {
     );
   }
   return (
-    <RealtimeActiveResponsePane response={activeResponse} responses={responses} requestVersions={requestVersions} />
+    <RealtimeActiveResponsePane
+      response={activeResponse}
+      responses={responses}
+      requestVersions={requestVersions}
+      autoSelectLatestEvent={isMcpResponse(activeResponse)}
+    />
   );
 };
 
@@ -61,7 +66,8 @@ const RealtimeActiveResponsePane: FC<{
   response: ResponseType;
   responses: ResponseType[];
   requestVersions: RequestVersion[];
-}> = ({ response, responses, requestVersions }) => {
+  autoSelectLatestEvent?: boolean;
+}> = ({ response, responses, requestVersions, autoSelectLatestEvent }) => {
   const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [clearEventsBefore, setClearEventsBefore] = useState<number | null>(null);
@@ -132,6 +138,12 @@ const RealtimeActiveResponsePane: FC<{
       }),
     [allEvents, clearEventsBefore, eventType, searchQuery],
   );
+
+  useEffect(() => {
+    if (events.length > 0 && autoSelectLatestEvent) {
+      setSelectedEvent(events[0]);
+    }
+  }, [events, autoSelectLatestEvent]);
 
   const notificationEvents = useMemo(() => allEvents.filter(event => event.type === 'notification'), [allEvents]);
 
@@ -304,7 +316,12 @@ const RealtimeActiveResponsePane: FC<{
                   </div>
 
                   {Boolean(events?.length) && (
-                    <EventLogView events={events} onSelect={handleSelection} selectionId={selectedEvent?._id} />
+                    <EventLogView
+                      events={events}
+                      onSelect={handleSelection}
+                      selectionId={selectedEvent?._id}
+                      autoSelectLatestEvent
+                    />
                   )}
                 </Panel>
                 {selectedEvent && (
