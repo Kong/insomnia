@@ -7,6 +7,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import type { GetPromptRequest, Notification, ReadResourceRequest } from '@modelcontextprotocol/sdk/types.js';
 import {
   type ClientRequest,
+  ElicitResultSchema,
   EmptyResultSchema,
   InitializeRequestSchema,
   isInitializeRequest,
@@ -16,6 +17,7 @@ import {
   type JSONRPCResponse,
   type ListPromptsRequest,
   type ListResourcesRequest,
+  ListRootsResultSchema,
   ServerNotificationSchema,
   type SubscribeRequest,
   type UnsubscribeRequest,
@@ -25,9 +27,11 @@ import { parse } from 'shell-quote';
 import { v4 as uuidV4 } from 'uuid';
 import type { z } from 'zod';
 
-import { getAppVersion, getProductName } from '~/common/constants';
+import { getAppVersion, getProductName, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import {
   getMcpMethodFromMessage,
+  METHOD_ELICITATION_CREATE_MESSAGE,
+  METHOD_LIST_ROOTS,
   METHOD_SUBSCRIBE_RESOURCE,
   METHOD_UNKNOWN,
   METHOD_UNSUBSCRIBE_RESOURCE,
@@ -135,10 +139,40 @@ interface ResponseEventOptions {
 const mcpConnections = new Map<string, McpClient>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
+const requestIdToResponseIdMap = new Map<string, string>();
 
 const protocol = 'mcp';
-const getMcpStateChannel = (requestId: string) => `${protocol}.${requestId}.readyState`;
+const getMcpStateChannel = (requestId: string) => `${protocol}.${requestId}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 const mcpEventIdGenerator = () => `mcp-${uuidV4()}`;
+
+const writeEventLogAndNotify = ({
+  requestId,
+  data,
+  clearRequestIdMap = false,
+  newLine = true,
+}: {
+  requestId: string;
+  data: any;
+  clearRequestIdMap?: boolean;
+  newLine?: boolean;
+}) => {
+  const dataToWrite = newLine ? data + '\n' : data;
+  eventLogFileStreams.get(requestId)?.write(dataToWrite, () => {
+    // notify all renderers of new event has been received
+    for (const window of BrowserWindow.getAllWindows()) {
+      const resId = requestIdToResponseIdMap.get(requestId);
+      if (resId) {
+        const notifyChannel = `${protocol}.${resId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
+        notifyChannel && window.webContents.send(notifyChannel);
+        if (clearRequestIdMap) {
+          // clean up maps after last event has been written to file
+          requestIdToResponseIdMap.delete(requestId);
+        }
+      }
+    }
+  });
+};
+
 const _getMcpClient = (id: string) => {
   const mcpClient = mcpConnections.get(id);
   if (!mcpClient) {
@@ -155,7 +189,11 @@ const _notifyMcpClientStateChange = (channel: string, isConnected: boolean) => {
 
 const _clearMcpMaps = (requestId: string, timelineMessage: string, event?: McpEvent) => {
   if (event) {
-    eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
+    writeEventLogAndNotify({
+      requestId,
+      data: JSON.stringify(event),
+      clearRequestIdMap: true,
+    });
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);
@@ -167,46 +205,33 @@ const _clearMcpMaps = (requestId: string, timelineMessage: string, event?: McpEv
   mcpConnections.delete(requestId);
 };
 
-const _handleCloseMcpConnection = (requestId: string, error?: Error) => {
-  if (error) {
-    const closeEvent: McpErrorEvent = {
-      _id: mcpEventIdGenerator(),
-      requestId,
-      type: 'error',
-      timestamp: Date.now(),
-      error,
-      message: error.message || 'Unknown error',
-    };
-    // clear in-memory store
-    _clearMcpMaps(requestId, 'Closed MCP connection', closeEvent);
-  } else {
-    const closeEvent: McpCloseEvent = {
-      _id: mcpEventIdGenerator(),
-      requestId,
-      type: 'close',
-      timestamp: Date.now(),
-      reason: 'Mcp connection closed',
-    };
-    // clear in-memory store
-    _clearMcpMaps(requestId, 'Closed MCP connection', closeEvent);
-  }
+const _handleCloseMcpConnection = (requestId: string) => {
+  const closeEvent: McpCloseEvent = {
+    _id: mcpEventIdGenerator(),
+    requestId,
+    type: 'close',
+    timestamp: Date.now(),
+    reason: 'Mcp connection closed',
+  };
+  // clear in-memory store
+  _clearMcpMaps(requestId, 'Closed MCP connection', closeEvent);
 
   const mcpStateChannel = getMcpStateChannel(requestId);
   // notify renderer process about state change
   _notifyMcpClientStateChange(mcpStateChannel, false);
 };
 
-const _handleMcpClientError = (requestId: string, error: Error) => {
+const _handleMcpClientError = (requestId: string, error: Error, prefix?: string) => {
   const messageEvent: McpErrorEvent = {
     _id: mcpEventIdGenerator(),
     requestId,
     type: 'error',
-    message: error.message || 'Unknown error',
-    error,
+    message: prefix || 'Unknown error',
+    error: error.message,
     timestamp: Date.now(),
   };
-  eventLogFileStreams.get(requestId)?.write(JSON.stringify(messageEvent) + '\n');
-  console.error(`MCP connection error for requestId: ${requestId}`, error);
+  writeEventLogAndNotify({ requestId, data: JSON.stringify(messageEvent) });
+  console.error(`MCP client error for ${requestId}`, error);
 };
 
 const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
@@ -221,11 +246,17 @@ const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
   if (JSONRPCErrorSchema.safeParse(message).success) {
     // Error message
     const errorDetail = JSONRPCErrorSchema.parse(message).error;
+    let errorMessage = errorDetail.message;
+    try {
+      // Try to parse error message to JSON if possible
+      errorMessage = JSON.parse(errorMessage);
+    } catch (error) {}
+
     messageEvent = {
       ...commonEventProps,
       type: 'error',
-      error: errorDetail,
-      message: `${errorDetail.code}: ${errorDetail.message}`,
+      error: errorMessage,
+      message: `MCP Error ${errorDetail.code}`,
     };
   } else if (ServerNotificationSchema.safeParse(message).success) {
     // Server notification message
@@ -251,8 +282,11 @@ const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
       direction: 'INCOMING',
     };
   }
+  writeEventLogAndNotify({ requestId, data: JSON.stringify(messageEvent) });
+};
 
-  eventLogFileStreams.get(requestId)?.write(JSON.stringify(messageEvent) + '\n');
+const parseAndLogMcpRequest = (requestId: string, message: any) => {
+  // TODO unify the parse logic
 };
 
 const createErrorResponse = async ({
@@ -322,6 +356,9 @@ const fetchWithLogging = async (
   }));
   const requestMethodLine = `${method.toUpperCase()} ${url} ${isJsonRequest && requestBody?.method ? `\nJSON-RPC Method: ${requestBody.method}` : ''}`;
   const headersOut = requestHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
+  // Log outgoing request
+  parseAndLogMcpRequest(requestId, requestBody);
+
   const start = performance.now();
   const response = await fetch(url, init);
   const { timeline, responseHeaders, statusCode, statusMessage } = parseResponseAndBuildTimeline(
@@ -347,19 +384,6 @@ const fetchWithLogging = async (
     const settings = await models.settings.get();
     const res = await models.mcpResponse.create(responsePatch, settings.maxHistoryResponses);
     models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
-  }
-  if (requestBody) {
-    // Add request event
-    const requestEvent: McpRequestEvent = {
-      _id: mcpEventIdGenerator(),
-      method: requestBody.method || METHOD_UNKNOWN,
-      requestId,
-      type: 'message',
-      direction: 'OUTGOING',
-      timestamp: Date.now(),
-      data: requestBody,
-    };
-    eventLogFileStreams.get(requestId)?.write(JSON.stringify(requestEvent) + '\n');
   }
   return response;
 };
@@ -526,17 +550,8 @@ const createStdioTransport = (
       const res = await models.mcpResponse.create(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
     }
-
-    const requestEvent: McpRequestEvent = {
-      _id: mcpEventIdGenerator(),
-      method: message.method || METHOD_UNKNOWN,
-      requestId,
-      type: 'message',
-      direction: 'OUTGOING',
-      timestamp: Date.now(),
-      data: message,
-    };
-    eventLogFileStreams.get(requestId)?.write(JSON.stringify(requestEvent) + '\n');
+    // Log outgoing request
+    parseAndLogMcpRequest(requestId, message);
 
     return originalSend(message);
   };
@@ -555,6 +570,8 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
   eventLogFileStreams.set(requestId, fs.createWriteStream(eventLogPath));
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(requestId, fs.createWriteStream(timelinePath));
+  requestIdToResponseIdMap.set(options.requestId, responseId);
+
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
@@ -569,7 +586,7 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
     version: getAppVersion(),
   });
   mcpClient.onclose = () => _handleCloseMcpConnection(requestId);
-  mcpClient.onerror = _error => _handleMcpClientError(requestId, _error);
+  mcpClient.onerror = _error => _handleMcpClientError(requestId, _error, 'MCP Client Error');
   const mcpStateChannel = getMcpStateChannel(requestId);
 
   try {
@@ -635,7 +652,7 @@ const closeMcpConnection = async (options: CommonMcpOptions) => {
         await mcpClient.transport.terminateSession();
       }
     } catch (err) {
-      _handleMcpClientError(requestId, err as Error);
+      _handleMcpClientError(requestId, err as Error, 'Failed to terminate MCP session');
     } finally {
       // Alway close the connection even the transport terminate session fails
       // This occurs when the server is not reachable, terminateSession failure will cause the connection to never close
@@ -731,7 +748,7 @@ const subscribeResource = async (options: CommonMcpOptions & SubscribeRequest['p
       data: result,
       direction: 'INCOMING',
     };
-    eventLogFileStreams.get(requestId)?.write(JSON.stringify(messageEvent) + '\n');
+    writeEventLogAndNotify({ requestId, data: JSON.stringify(messageEvent) });
     return result;
   }
   return null;
@@ -752,7 +769,7 @@ const unsubscribeResource = async (options: CommonMcpOptions & UnsubscribeReques
       data: result,
       direction: 'INCOMING',
     };
-    eventLogFileStreams.get(requestId)?.write(JSON.stringify(messageEvent) + '\n');
+    writeEventLogAndNotify({ requestId, data: JSON.stringify(messageEvent) });
     return result;
   }
   return null;
