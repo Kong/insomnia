@@ -17,6 +17,7 @@ import { extractErrorMessages } from '~/common/import';
 import { InsomniaFileSchema } from '~/common/import-v5-parser';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
+import { useIsLightTheme } from '~/ui/hooks/theme';
 
 import { type MergeConflict, RESOLUTION_SOURCE } from '../../../sync/types';
 import { SegmentEvent } from '../../analytics';

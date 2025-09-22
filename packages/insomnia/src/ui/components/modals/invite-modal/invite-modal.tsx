@@ -130,7 +130,7 @@ const InviteModal: FC<{
 
   return (
     <ModalOverlay
-      isDismissable={true}
+      isDismissable={false}
       isOpen={true}
       onOpenChange={setIsOpen}
       className="theme--transparent-overlay fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-[--color-bg]"
@@ -151,6 +151,7 @@ const InviteModal: FC<{
                         resetCollaboratorsList();
                       }
                     }}
+                    senderRole={currentUserRoleInOrg}
                     allRoles={allRoles}
                   />
                   <hr className="my-[24px] border" />
@@ -447,7 +448,15 @@ const MemberListItem: FC<{
           doneMessage={isFailed ? 'Failed' : isAcceptedMember || isGroup ? 'Removed' : 'Revoked'}
           disabled={memberRoleName === 'owner' || isCurrentUser}
           onClick={() => {
-            if (!permissionRef.current['delete:membership']) {
+            if (isPendingMember && member.metadata.invitationId) {
+              if (!permissionRef.current['delete:invitation']) {
+                showModal(AlertModal, {
+                  title: 'Permission required',
+                  message: "You don't have permission to make this action, please contact the organization owner.",
+                });
+                return;
+              }
+            } else if (!permissionRef.current['delete:membership']) {
               showModal(AlertModal, {
                 title: 'Permission required',
                 message: "You don't have permission to make this action, please contact the organization owner.",

@@ -5,29 +5,7 @@ import type { CurrentPlan, PersonalPlanType, UserProfileResponse } from '~/model
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { Avatar } from '~/ui/components/avatar';
 import { Icon } from '~/ui/components/icon';
-
-const formatCurrentPlanType = (type: PersonalPlanType) => {
-  switch (type) {
-    case 'free': {
-      return 'Hobby';
-    }
-    case 'individual': {
-      return 'Individual';
-    }
-    case 'team': {
-      return 'Pro';
-    }
-    case 'enterprise': {
-      return 'Enterprise';
-    }
-    case 'enterprise-member': {
-      return 'Enterprise Member';
-    }
-    default: {
-      return 'Free';
-    }
-  }
-};
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 const UpgradeButton = ({ currentPlan }: { currentPlan: CurrentPlan }) => {
   // For the enterprise-member plan we don't show the upgrade button.
@@ -47,7 +25,7 @@ const UpgradeButton = ({ currentPlan }: { currentPlan: CurrentPlan }) => {
     );
   }
 
-  let to = '/app/subscription/update?plan=individual&pay_schedule=year';
+  let to = '/app/subscription/update?plan=team&pay_schedule=year';
 
   if (currentPlan?.type === 'individual') {
     to = `/app/subscription/update?plan=team&pay_schedule=${currentPlan?.period}`;
@@ -68,7 +46,7 @@ interface UserButtonProps {
   currentPlan?: CurrentPlan;
   isMinimal?: boolean;
 }
-export const HeaderUserButton = ({ user, currentPlan, isMinimal = false }: UserButtonProps) => {
+export const HeaderUserButton = ({ user, isMinimal = false }: UserButtonProps) => {
   const logoutFetcher = useLogoutFetcher();
 
   return (
@@ -78,16 +56,9 @@ export const HeaderUserButton = ({ user, currentPlan, isMinimal = false }: UserB
         className="flex flex-shrink-0 items-center justify-center gap-2 rounded-md px-1 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm]"
       >
         <Avatar src={user.picture} alt={user.name} />
-        <span className="truncate">{user.name}</span>
         <Icon className="w-4 pr-2" icon={isMinimal ? 'caret-up' : 'caret-down'} />
       </Button>
       <Popover className="max-h-[85vh] min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none">
-        {currentPlan && Boolean(currentPlan.type) && (
-          <div className="text-md flex h-[--line-height-xs] w-full items-center justify-between gap-2 whitespace-nowrap border-b border-solid border-[--hl-sm] px-[--padding-md] pb-2 capitalize text-[--color-font]">
-            <span>{currentPlan?.planName ?? formatCurrentPlanType(currentPlan.type)} Plan</span>
-            <UpgradeButton currentPlan={currentPlan} />
-          </div>
-        )}
         <Menu
           className="focus:outline-none"
           onAction={action => {
@@ -95,30 +66,30 @@ export const HeaderUserButton = ({ user, currentPlan, isMinimal = false }: UserB
               logoutFetcher.submit();
             }
 
-            if (action === 'account-settings') {
-              window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/settings/account`);
+            if (action === 'my-profile') {
+              window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/settings/profile`);
             }
 
-            if (action === 'manage-organizations') {
-              window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations`);
+            if (action === 'preferences') {
+              showSettingsModal();
             }
           }}
         >
           <MenuItem
-            id="manage-organizations"
+            id="preferences"
             className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
-            aria-label="Manage organizations"
-          >
-            <Icon icon="users" />
-            <span>Manage Organizations</span>
-          </MenuItem>
-          <MenuItem
-            id="account-settings"
-            className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
-            aria-label="Account settings"
+            aria-label="preferences"
           >
             <Icon icon="gear" />
-            <span>Account Settings</span>
+            <span>Preferences</span>
+          </MenuItem>
+          <MenuItem
+            id="my-profile"
+            className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+            aria-label="My profile"
+          >
+            <Icon icon="user" />
+            <span>My Profile</span>
           </MenuItem>
           <MenuItem
             id="logout"

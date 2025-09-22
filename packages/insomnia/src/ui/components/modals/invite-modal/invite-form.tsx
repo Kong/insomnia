@@ -1,20 +1,29 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
+  Dialog,
+  Heading,
   type Key,
   ListBox,
   ListBoxItem,
   type ListBoxItemProps,
+  Modal,
+  ModalOverlay,
   Popover,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 
+import { getAppWebsiteBaseURL } from '~/common/constants';
 import { debounce } from '~/common/misc';
+import { isOwnerOfOrganization } from '~/models/organization';
+import { useRootLoaderData } from '~/root';
+import { useOrganizationLoaderData } from '~/routes/organization';
 import { useCollaboratorsSearchLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-search';
 import { SegmentEvent } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
+import { insomniaFetch } from '~/ui/insomniaFetch';
 
 import { startInvite } from './encryption';
 import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
@@ -38,7 +47,35 @@ export function getSearchParamsString(
 
 interface EmailsInputProps {
   allRoles: Role[];
+  senderRole: Role;
   onInviteCompleted?: () => void;
+}
+
+const needsToUpgrade = 'NEEDS_TO_UPGRADE';
+const needsToIncreaseSeats = 'NEEDS_TO_INCREASE_SEATS';
+
+const upgradeModalWording = {
+  [needsToUpgrade]: {
+    title: 'Upgrade to invite people',
+    ownerDescription: 'To collaborate on Git Sync projects with more than 3 people, please upgrade your Insomnia plan.',
+    memberDescription:
+      'To collaborate on Git Sync projects with more than 3 people, please ask your organization owner to upgrade Insomnia plan.',
+    submitText: 'Upgrade to Pro',
+    submitLink: getAppWebsiteBaseURL() + '/app/subscription/update?plan=team',
+  },
+  [needsToIncreaseSeats]: {
+    title: 'Increase seats',
+    ownerDescription: 'Seat count is not enough for new collaborators, please increase your seats and try again.',
+    memberDescription:
+      'Seat count is not enough for new collaborators, please ask your organization owner to increase seats and try again.',
+    submitText: 'Increase seats',
+    submitLink: getAppWebsiteBaseURL() + '/app/subscription/update',
+  },
+};
+
+interface CheckSeatsResponse {
+  isAllowed: boolean;
+  code?: typeof needsToUpgrade | typeof needsToIncreaseSeats;
 }
 
 export interface EmailInput {
@@ -58,10 +95,16 @@ const isValidEmail = (email: string): boolean => {
 
 const defaultRoleName = 'member';
 
-export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) => {
+export const InviteForm = ({ allRoles, onInviteCompleted, senderRole }: EmailsInputProps) => {
+  const organizationId = useParams().organizationId as string;
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const organizationId = useParams().organizationId as string;
+  const { userSession } = useRootLoaderData()!;
+  const organizationData = useOrganizationLoaderData();
+  const organization = organizationData?.organizations.find(o => o.id === organizationId);
+  const isUserOwner =
+    organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
+  const sessionId = userSession.id;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -79,12 +122,30 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
   const searchResult = useMemo(() => collaboratorSearchLoader.data || [], [collaboratorSearchLoader.data]);
 
   useEffect(() => {
-    if (searchResult.length > 0) {
-      setShowResults(true);
-    } else {
-      setShowResults(false);
-    }
+    setShowResults(searchResult.length > 0);
   }, [searchResult]);
+
+  const [upgradeModalStatus, setUpgradeModalStatus] = useState<
+    'closed' | typeof needsToUpgrade | typeof needsToIncreaseSeats
+  >('closed');
+
+  useEffect(() => {
+    const checkSeats = async () => {
+      const validEmails = emails.filter(e => e.isValid);
+      if (validEmails.length === 0) {
+        setError('');
+      } else {
+        const data = await insomniaFetch<CheckSeatsResponse>({
+          method: 'POST',
+          path: `/v1/organizations/${organizationId}/check-seats`,
+          data: { emails: validEmails.map(e => e.email) },
+          sessionId,
+        });
+        setError(data.isAllowed ? '' : 'You cannot invite more people than the seats you have remaining');
+      }
+    };
+    checkSeats();
+  }, [emails, organizationId, sessionId]);
 
   const addEmail = ({
     email,
@@ -230,10 +291,26 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
         <Button
           className="h-[40px] w-[67px] shrink-0 self-end rounded bg-[#4000bf] text-center text-[--color-font-surprise] disabled:opacity-70"
           isDisabled={loading}
-          onPress={() => {
+          onPress={async () => {
             if (emails.some(({ isValid }) => !isValid)) {
               setError('Some emails are invalid, please correct them before inviting.');
               return;
+            }
+            const checkResponseData = await insomniaFetch<CheckSeatsResponse>({
+              method: 'POST',
+              path: `/v1/organizations/${organizationId}/check-seats`,
+              data: { emails: emails.map(e => e.email) },
+              sessionId,
+            });
+
+            if (checkResponseData && !checkResponseData.isAllowed) {
+              if (checkResponseData.code === needsToUpgrade) {
+                setUpgradeModalStatus(needsToUpgrade);
+                return;
+              } else if (checkResponseData.code === needsToIncreaseSeats) {
+                setUpgradeModalStatus(needsToIncreaseSeats);
+                return;
+              }
             }
 
             setLoading(true);
@@ -256,7 +333,8 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
                     properties: {
                       numberOfInvites: emailsToInvite.length,
                       numberOfTeams: groupsToInvite.length,
-                      role: selectedRoleRef.current.name,
+                      receiver_role: selectedRoleRef.current.name,
+                      sender_role: senderRole.name,
                     },
                   });
 
@@ -322,6 +400,63 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
         </Popover>
       </div>
       {error && <p className="text-red-500">{error}</p>}
+      {upgradeModalStatus !== 'closed' && (
+        <ModalOverlay
+          isDismissable={false}
+          isOpen={true}
+          onOpenChange={isOpen => {
+            setUpgradeModalStatus(isOpen ? needsToUpgrade : 'closed');
+          }}
+          className="theme--transparent-overlay fixed left-0 top-0 z-50 flex h-[--visual-viewport-height] w-full items-center justify-center bg-[--color-bg]"
+        >
+          <Modal className="theme--dialog fixed top-[100px] h-fit w-full max-w-[900px] rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[32px] text-[--color-font]">
+            <Dialog className="relative outline-none">
+              {({ close }) => (
+                <>
+                  <div className="flex items-center justify-between gap-2">
+                    <Heading slot="title" className="text-2xl">
+                      {upgradeModalWording[upgradeModalStatus].title}
+                    </Heading>
+                    <Button
+                      className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      onPress={close}
+                    >
+                      <Icon icon="x" />
+                    </Button>
+                  </div>
+                  <p className="mt-8">
+                    {isUserOwner
+                      ? upgradeModalWording[upgradeModalStatus].ownerDescription
+                      : upgradeModalWording[upgradeModalStatus].memberDescription}
+                  </p>
+                  <div className="flex items-center justify-end gap-2 pt-10">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        onPress={close}
+                        className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+                      >
+                        Cancel
+                      </Button>
+                      {isUserOwner && (
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            window.main.openInBrowser(upgradeModalWording[upgradeModalStatus].submitLink);
+                          }}
+                          className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-center text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+                        >
+                          {upgradeModalWording[upgradeModalStatus].submitText}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </Dialog>
+          </Modal>
+        </ModalOverlay>
+      )}
     </div>
   );
 };

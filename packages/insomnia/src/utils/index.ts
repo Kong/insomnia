@@ -78,3 +78,12 @@ export const moveAfter = (list: any[], key: Key, keys: Iterable<Key>) => {
 export const typedKeys = <T extends object>(obj: T) => {
   return Object.keys(obj) as (keyof T)[];
 };
+
+export function diffInDayCeil(dateA: Date, dateB: Date) {
+  const diffTime = dateA.getTime() - dateB.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
+
+export function formatNumber(num: number) {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d)(?=\.\d*|$))/g, ',');
+}

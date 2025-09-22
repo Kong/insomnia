@@ -3,6 +3,7 @@ import { href, redirect } from 'react-router';
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
 import * as models from '~/models';
+import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';
@@ -52,6 +53,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     await models.project.remove(project);
 
     await database.flushChanges(bufferId);
+
+    project.gitRepositoryId && reportGitProjectCount(organizationId, sessionId);
 
     // When redirect to `/organizations/:organizationId`, it sometimes doesn't reload the index loader, so manually redirect to the initial route for the organization
     const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });

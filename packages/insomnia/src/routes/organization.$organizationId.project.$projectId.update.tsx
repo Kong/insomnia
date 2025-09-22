@@ -7,6 +7,7 @@ import type { OauthProviderName } from '~/models/git-credentials';
 import type { GitCredentials } from '~/models/git-repository';
 import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
+import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { SegmentEvent } from '~/ui/analytics';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
@@ -179,6 +180,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       }
 
       await models.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
+
+      project.gitRepositoryId && reportGitProjectCount(organizationId, sessionId);
       return {
         success: true,
       };
@@ -278,6 +281,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         }
       }
 
+      reportGitProjectCount(organizationId, sessionId);
+
       return {
         success: true,
       };
@@ -289,6 +294,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
       gitRepository && (await models.gitRepository.remove(gitRepository));
       await models.project.update(project, { name, gitRepositoryId: null });
+
+      reportGitProjectCount(organizationId, sessionId);
 
       return {
         success: true,
