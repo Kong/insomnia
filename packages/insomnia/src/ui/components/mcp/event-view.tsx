@@ -24,7 +24,10 @@ interface Props {
 
 export const MessageEventView = ({ event }: Props) => {
   const { requestId } = useParams() as { requestId: string };
-  const raw = JSON.stringify('data' in event ? event.data : '');
+
+  const isErrorEvent = event.type === 'error';
+  const eventData = isErrorEvent ? event.error : 'data' in event ? event.data : '';
+  const raw = JSON.stringify(eventData);
 
   const handleDownloadResponseBody = useCallback(async () => {
     const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
@@ -114,7 +117,7 @@ export const MessageEventView = ({ event }: Props) => {
 };
 
 export const McpEventView = ({ event }: Props) => {
-  if (event.type === 'message' || event.type === 'notification') {
+  if (event.type === 'message' || event.type === 'notification' || event.type === 'error') {
     return <MessageEventView event={event} />;
   }
   return null;
