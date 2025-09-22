@@ -255,7 +255,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   authentication: AuthTypeOAuth2,
   forceRefresh: boolean,
 ): Promise<{ oAuth2Token: OAuth2Token | undefined; closestAuthId: string }> {
-  const closestAuthId = requestId;
+  let closestAuthId = requestId;
 
   if (!isMcpRequestId(requestId)) {
     const activeRequest = await models.request.getById(requestId);
@@ -267,7 +267,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
       .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
     const isRequestAuthEnabled =
       getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);
-    isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
+    closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
   }
 
   const token = await models.oAuth2Token.getByParentId(closestAuthId);
