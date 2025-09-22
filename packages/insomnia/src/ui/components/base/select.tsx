@@ -21,7 +21,13 @@ interface SelectProps {
 
 export const Select = ({ value, onChange, className, options, ...rest }: SelectProps & RaSelectProps) => {
   return (
-    <RaSelect selectedKey={value} onSelectionChange={onChange} {...rest} className={cn('', className)}>
+    <RaSelect
+      placeholder="Select an item"
+      selectedKey={value}
+      onSelectionChange={onChange}
+      {...rest}
+      className={cn('', className)}
+    >
       <Button className="flex w-full gap-2 rounded border border-solid border-[--hl-sm] px-2 py-1">
         <SelectValue className="flex-1" />
         <span aria-hidden="true">
