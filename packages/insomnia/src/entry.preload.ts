@@ -93,6 +93,7 @@ const git: GitServiceAPI = {
   discardChanges: options => ipcRenderer.invoke('git.discardChanges', options),
   abortMerge: () => ipcRenderer.invoke('git.abortMerge'),
   gitStatus: options => ipcRenderer.invoke('git.gitStatus', options),
+  diff: () => ipcRenderer.invoke('git.diff'),
   stageChanges: options => ipcRenderer.invoke('git.stageChanges', options),
   unstageChanges: options => ipcRenderer.invoke('git.unstageChanges', options),
   diffFileLoader: options => ipcRenderer.invoke('git.diffFileLoader', options),

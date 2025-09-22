@@ -55,6 +55,7 @@ export type HandleChannels =
   | 'git.gitFetchAction'
   | 'git.gitLogLoader'
   | 'git.gitStatus'
+  | 'git.diff'
   | 'git.initGitRepoClone'
   | 'git.initSignInToGitHub'
   | 'git.initSignInToGitLab'

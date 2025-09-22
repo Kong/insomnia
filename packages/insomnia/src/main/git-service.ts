@@ -1809,6 +1809,11 @@ async function getGitChanges(vcs: typeof GitVCS) {
   };
 }
 
+async function diff() {
+  const diff = await GitVCS.diff();
+  return diff;
+}
+
 export const discardChangesAction = async ({
   projectId,
   workspaceId,
@@ -2539,6 +2544,7 @@ export interface GitServiceAPI {
   discardChanges: typeof discardChangesAction;
   abortMerge: typeof abortMergeAction;
   gitStatus: typeof gitStatusAction;
+  diff: typeof diff;
   stageChanges: typeof stageChangesAction;
   unstageChanges: typeof unstageChangesAction;
   diffFileLoader: typeof diffFileLoader;
@@ -2610,6 +2616,7 @@ export const registerGitServiceAPI = () => {
   );
   ipcMainHandle('git.abortMerge', _ => abortMergeAction());
   ipcMainHandle('git.gitStatus', (_, options: Parameters<typeof gitStatusAction>[0]) => gitStatusAction(options));
+  ipcMainHandle('git.diff', () => diff());
   ipcMainHandle('git.stageChanges', (_, options: Parameters<typeof stageChangesAction>[0]) =>
     stageChangesAction(options),
   );

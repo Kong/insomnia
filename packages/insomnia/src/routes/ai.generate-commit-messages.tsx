@@ -18,9 +18,11 @@ const GeneratedCommitsSchema = z.object({
 export async function clientAction(args: Route.ClientActionArgs) {
   const { projectId } = (await args.request.json()) as { projectId: string };
 
-  // @TODO pass more detailed changes for better results
   try {
-    const changes = await window.main.git.gitChangesLoader({ projectId });
+    const diff = await window.main.git.diff();
+
+    console.log('Diff for AI:\n', diff);
+
     const { log } = await window.main.git.gitLogLoader({ projectId });
     const generatedCommitsResponse = await fetch('http://localhost:3000/generate-commit-message', {
       method: 'POST',
@@ -28,25 +30,7 @@ export async function clientAction(args: Route.ClientActionArgs) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        diff: `
-      Staged Changes:
-        ${changes.changes.staged
-          .map(
-            c => `
-          - ${c.path} (${c.status}) | ${c.name}
-        `,
-          )
-          .join('\n')}
-
-      Unstaged Changes:
-        ${changes.changes.unstaged
-          .map(
-            c => `
-          - ${c.path} (${c.status}) | ${c.name}
-        `,
-          )
-          .join('\n')}
-      `,
+        diff,
         recent_commits: log
           .slice(0, 5)
           .map(({ commit }) => commit.message)
