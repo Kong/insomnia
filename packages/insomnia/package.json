@@ -106,7 +106,7 @@
     "httpsnippet": "^2.0.0",
     "iconv-lite": "^0.6.3",
     "isbot": "^5",
-    "isomorphic-git": "1.25.7",
+    "isomorphic-git": "1.33.2",
     "js-yaml": "^4.1.0",
     "jsdom": "^25.0.1",
     "jshint": "^2.13.6",
