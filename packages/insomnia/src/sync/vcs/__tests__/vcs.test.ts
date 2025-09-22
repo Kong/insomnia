@@ -962,4 +962,28 @@ describe('VCS', () => {
       expect(hasProject).toBe(false);
     });
   });
+
+  it('validate branch names', async () => {
+    expect(VCS.validateBranchName('branchA')).toEqual('');
+    expect(VCS.validateBranchName('feat/branch-A')).toEqual('');
+    expect(VCS.validateBranchName('A')).toEqual(
+      'Branch names must be at least 3 characters long and can only contain English letters, numbers, period (.), hyphen (-), underscore (_) and forward slash (/)',
+    );
+    expect(VCS.validateBranchName('U*&(')).toEqual(
+      'Branch names must be at least 3 characters long and can only contain English letters, numbers, period (.), hyphen (-), underscore (_) and forward slash (/)',
+    );
+    expect(VCS.validateBranchName('/feature')).toEqual('Branch names must start with a letter or number');
+    expect(VCS.validateBranchName('feature/')).toEqual('Branch names must not end with a forward slash (/)');
+    expect(VCS.validateBranchName('feature//A')).toEqual(
+      'Branch names must not contain consecutive forward slashes (//)',
+    );
+    expect(VCS.validateBranchName('feature.')).toEqual('Branch names must not end with a period (.)');
+    expect(VCS.validateBranchName('feature/../A')).toEqual('Branch names must not contain consecutive periods (..)');
+    expect(VCS.validateBranchName('feature/.A/B')).toEqual(
+      'No slash-separated component in branch name can begin with a period (.)',
+    );
+    expect(VCS.validateBranchName('feature/A.lock/B')).toEqual(
+      'No slash-separated component in branch name can end with the sequence .lock',
+    );
+  });
 });
