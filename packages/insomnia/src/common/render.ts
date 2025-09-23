@@ -711,6 +711,7 @@ export async function getRenderContextAncestors(
     models.request.type,
     models.grpcRequest.type,
     models.webSocketRequest.type,
+    models.mcpRequest.type,
     models.requestGroup.type,
     models.workspace.type,
     models.project.type,

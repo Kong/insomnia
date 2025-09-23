@@ -37,8 +37,6 @@ import * as models from '~/models';
 import { TRANSPORT_TYPES, type TransportType } from '~/models/mcp-request';
 import type { McpResponse } from '~/models/mcp-response';
 import type { RequestAuthentication, RequestHeader } from '~/models/request';
-import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
-import { getBearerAuthHeader } from '~/network/bearer-auth/get-header';
 import { invariant } from '~/utils/invariant';
 
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
@@ -383,21 +381,6 @@ const createStreamableHTTPTransport = (
     throw new Error('MCP server url is required');
   }
 
-  if (!options.authentication.disabled) {
-    if (options.authentication.type === 'basic') {
-      const { username, password, useISO88591 } = options.authentication;
-      const encoding = useISO88591 ? 'latin1' : 'utf8';
-      options.headers.push(getBasicAuthHeader(username, password, encoding));
-    }
-    if (options.authentication.type === 'apikey') {
-      const { key = '', value = '' } = options.authentication;
-      options.headers.push({ name: key, value: value });
-    }
-    if (options.authentication.type === 'bearer' && options.authentication.token) {
-      const { token, prefix } = options.authentication;
-      options.headers.push(getBearerAuthHeader(token, prefix));
-    }
-  }
   const reduceArrayToLowerCaseKeyedDictionary = (acc: Record<string, string>, { name, value }: RequestHeader) => ({
     ...acc,
     [name.toLowerCase() || '']: value || '',
