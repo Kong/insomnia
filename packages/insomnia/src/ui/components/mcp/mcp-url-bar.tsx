@@ -5,6 +5,11 @@ import { useParams } from 'react-router';
 import { useLatest } from 'react-use';
 
 import { type Project } from '~/models/project';
+import type { AuthTypeOAuth2 } from '~/models/request';
+import { _buildBearerHeader } from '~/network/authentication';
+import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
+import { getBearerAuthHeader } from '~/network/bearer-auth/get-header';
+import { getOAuth2Token } from '~/network/o-auth-2/get-token';
 import {
   type ConnectActionParams,
   useRequestConnectActionFetcher,
@@ -90,10 +95,33 @@ export const McpUrlActionBar = ({
         env: getDataFromKVPair(request.env).data,
       },
     });
+
+    const { authentication, headers } = rendered;
+
+    if (!authentication.disabled) {
+      if (authentication.type === 'basic') {
+        const { username, password, useISO88591 } = authentication;
+        const encoding = useISO88591 ? 'latin1' : 'utf8';
+        headers.push(getBasicAuthHeader(username, password, encoding));
+      } else if (authentication.type === 'bearer' && authentication.token) {
+        const { token, prefix } = authentication;
+        headers.push(getBearerAuthHeader(token, prefix));
+      } else if (authentication.type === 'oauth2') {
+        const oAuth2Token = await getOAuth2Token(request._id, authentication as AuthTypeOAuth2);
+        if (oAuth2Token) {
+          const token = oAuth2Token.accessToken;
+          const authHeader = _buildBearerHeader(token, authentication.tokenPrefix);
+          if (authHeader) {
+            headers.push(authHeader);
+          }
+        }
+      }
+    }
+
     return {
       url: rendered.url,
       transportType: request.transportType,
-      headers: rendered.headers,
+      headers: headers,
       authentication: rendered.authentication,
       suppressUserAgent: rendered.suppressUserAgent,
       cookieJar: rendered.workspaceCookieJar,
