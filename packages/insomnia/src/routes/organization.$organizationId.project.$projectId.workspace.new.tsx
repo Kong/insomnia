@@ -27,7 +27,11 @@ interface NewWorkspaceData {
   mockServerType?: 'self-hosted' | 'cloud';
   mockServerUrl?: string;
   mockServerCreationType?: 'ai' | 'manual';
-  openApiSpecPath?: string;
+  mockServerOASFilePath?: string;
+  mockServerSpecURL?: string;
+  mockServerSpecSource?: 'file' | 'url' | 'text';
+  mockServerSpecText?: string;
+  mockServerAdditionalFiles?: string[];
   apiSpecContents?: string;
   fileName?: string;
   withRequest?: boolean;
@@ -60,11 +64,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
 
       if (workspaceData.mockServerCreationType === 'ai') {
-        if (!workspaceData.apiSpecContents) {
-          const validationError = validateOpenAPISpec(workspaceData.openApiSpecPath);
-          if (validationError) {
-            return validationError;
-          }
+        const validationError = validateMockServerSpec(workspaceData);
+        if (validationError) {
+          return validationError;
         }
       }
 
@@ -115,32 +117,41 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       if (workspaceData.mockServerCreationType === 'manual') {
         await models.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
       } else {
-        let openapiSpec: string;
+        let openapiSpec: string | undefined;
+        let specUrl: string | undefined;
+        let specText: string | undefined;
 
         try {
           if (workspaceData.apiSpecContents) {
             openapiSpec = workspaceData.apiSpecContents;
-          } else {
-            openapiSpec = fs.readFileSync(workspaceData.openApiSpecPath!, 'utf8');
+          } else if (workspaceData.mockServerSpecSource === 'file') {
+            openapiSpec = fs.readFileSync(workspaceData.mockServerOASFilePath!, 'utf8');
+          } else if (workspaceData.mockServerSpecSource === 'url') {
+            specUrl = workspaceData.mockServerSpecURL!;
+          } else if (workspaceData.mockServerSpecSource === 'text') {
+            specText = workspaceData.mockServerSpecText!;
           }
 
           const modelConfig = {
             backend: 'gguf',
             modelDir: cwd() + '/models/',
-            model: "Llama-3.2-3B-Instruct-Q6_K.gguf"
+            model: 'Llama-3.2-3B-Instruct-Q6_K.gguf',
           };
 
           const serverResult = await window.main.createMockServerFromSpec(
             openapiSpec,
+            specUrl,
+            specText,
             workspace._id,
             mockServerPatch,
             modelConfig,
-            workspaceData.mockServerDynamicResponses ?? false
+            workspaceData.mockServerDynamicResponses ?? false,
+            workspaceData.mockServerAdditionalFiles || [],
           );
 
           if (!serverResult.success) {
             return {
-              error: `Failed to create mock server from spec`
+              error: `Failed to create mock server from spec`,
             };
           }
 
@@ -244,7 +255,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         workspaceId: workspace._id,
       })}/${scopeToActivity(workspace.scope)}`,
     );
-
   } catch (err) {
     console.error('Error creating workspace:', err);
 
@@ -273,15 +283,31 @@ export const useWorkspaceNewActionFetcher = createFetcherSubmitHook(
   clientAction,
 );
 
-function validateOpenAPISpec(specPath?: string) {
-  if (!specPath) {
+function validateMockServerSpec(workspaceData: NewWorkspaceData) {
+  if (workspaceData.apiSpecContents) {
+    return null;
+  }
+
+  if (workspaceData.mockServerSpecSource === 'file' && !workspaceData.mockServerOASFilePath) {
     return {
-      error: 'OpenAPI specification file is required to auto generate a mock server',
+      error: 'OpenAPI specification file is required when file source is selected',
     };
   }
+
+  if (workspaceData.mockServerSpecSource === 'url' && !workspaceData.mockServerSpecURL) {
+    return {
+      error: 'URL is required when URL source is selected',
+    };
+  }
+
+  if (workspaceData.mockServerSpecSource === 'text' && !workspaceData.mockServerSpecText) {
+    return {
+      error: 'Text input is required when text source is selected',
+    };
+  }
+
   return null;
 }
-
 
 async function registerMockRoutes(routes: any[], server: any, sessionId: string, organizationId: string) {
   for (const route of routes) {
