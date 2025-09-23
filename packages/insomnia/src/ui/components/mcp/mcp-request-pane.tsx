@@ -24,7 +24,7 @@ import { Pane } from '../panes/pane';
 import { McpUrlActionBar } from './mcp-url-bar';
 import type { PrimitiveSubItem } from './types';
 
-const supportedAuthTypes: AuthTypes[] = ['apikey', 'oauth2', 'bearer'];
+const supportedAuthTypes: AuthTypes[] = ['basic', 'oauth2', 'bearer'];
 
 const PaneReadOnlyBanner = () => {
   return (
@@ -311,7 +311,7 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
             authentication={activeRequest.authentication}
             disabled={readyState}
             authTypes={supportedAuthTypes}
-            hideOthers
+            hideInherit
           />
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="headers">
