@@ -24,6 +24,7 @@ import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown'
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
 import { McpEventView } from '../mcp/event-view';
+import { McpNotificationTab } from '../mcp/mcp-notification-tab';
 import { Pane, PaneHeader } from '../panes/pane';
 import { PlaceholderResponsePane } from '../panes/placeholder-response-pane';
 import { SocketIOEventView } from '../socket-io/event-view';
@@ -37,7 +38,6 @@ import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { EventLogView } from './event-log-view';
 import { EventView } from './event-view';
-import { McpNotificationTab } from './mcp-notification-tab';
 
 export const RealtimeResponsePane: FC<{ requestId?: string }> = () => {
   const { activeResponse, responses, requestVersions } = useRequestLoaderData()!;
@@ -121,6 +121,15 @@ const RealtimeActiveResponsePane: FC<{
         // Filter out events that don't match the search query
         if (searchQuery) {
           if (event.type === 'message') {
+            if (protocol === 'mcp') {
+              // MCP message event data can search both method and json stringified data
+              const eventMethod = 'method' in event ? event.method : '';
+              const eventData = typeof event.data === 'string' ? event.data : JSON.stringify(event.data);
+              return (
+                eventMethod.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                eventData.toLowerCase().includes(searchQuery.toLowerCase())
+              );
+            }
             return event.data.toString().toLowerCase().includes(searchQuery.toLowerCase());
           }
           if (event.type === 'error') {
@@ -136,7 +145,7 @@ const RealtimeActiveResponsePane: FC<{
 
         return true;
       }),
-    [allEvents, clearEventsBefore, eventType, searchQuery],
+    [allEvents, clearEventsBefore, eventType, protocol, searchQuery],
   );
 
   useEffect(() => {
