@@ -5,6 +5,7 @@ import { href } from 'react-router';
 import * as models from '~/models';
 import { isGitProject } from '~/models/project';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -53,6 +54,10 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       name: patch.name || workspace.name,
       useInsomniaCloud,
       url: mockServerUrl,
+    });
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.mockEdit,
     });
   }
 

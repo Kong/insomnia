@@ -179,6 +179,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       }
       window.main.trackSegmentEvent({
         event: SegmentEvent.mockCreate,
+        properties: {
+          hosting: workspaceData.mockServerType || '',
+          generation: workspaceData.mockServerCreationType || '',
+          generation_from: workspaceData.apiSpecContents ? 'design_doc' : workspaceData.mockServerSpecSource || '',
+          dynamic_responses: workspaceData.mockServerDynamicResponses ? 'yes' : 'no',
+        },
       });
       return redirect(
         `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
