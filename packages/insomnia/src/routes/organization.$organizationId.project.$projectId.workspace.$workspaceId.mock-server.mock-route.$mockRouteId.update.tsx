@@ -2,6 +2,7 @@ import { href } from 'react-router';
 
 import * as models from '~/models';
 import type { MockRoute } from '~/models/mock-route';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -31,6 +32,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     await models.mockRoute.update(mockRoute, patch);
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.mockRouteEdit,
+    });
 
     return null;
   } catch (err) {

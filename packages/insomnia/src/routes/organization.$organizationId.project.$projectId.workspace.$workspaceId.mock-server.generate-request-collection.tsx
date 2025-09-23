@@ -2,6 +2,7 @@ import { href, redirect } from 'react-router';
 
 import { getMockServiceBinURL } from '~/common/constants';
 import * as models from '~/models';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -60,6 +61,10 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       ],
     });
   }
+
+  window.main.trackSegmentEvent({
+    event: SegmentEvent.generateCollectionFromMock,
+  });
 
   return redirect(
     href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {

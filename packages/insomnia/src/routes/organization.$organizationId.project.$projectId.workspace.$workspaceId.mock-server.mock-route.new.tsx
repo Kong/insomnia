@@ -2,6 +2,7 @@ import { href, redirect } from 'react-router';
 
 import * as models from '~/models';
 import type { MockRoute } from '~/models/mock-route';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -44,6 +45,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       });
       delete patch.mockServerName;
       const mockRoute = await models.mockRoute.create({ ...patch, parentId: newMockServer._id });
+
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.mockRouteCreate,
+      });
+
       return redirect(
         href(
           '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId',
@@ -60,6 +66,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     const mockServer = await models.mockServer.getById(patch.parentId);
     invariant(mockServer, 'Mock server not found');
     const mockRoute = await models.mockRoute.create(patch);
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.mockRouteCreate,
+    });
+
     return redirect(
       href(
         '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId',
