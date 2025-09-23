@@ -18,7 +18,8 @@ export type TabType =
   | 'collection'
   | 'runner'
   | 'test'
-  | 'testSuite';
+  | 'testSuite'
+  | 'mcp';
 export interface BaseTab {
   type: TabType;
   name: string;
@@ -69,6 +70,11 @@ const WORKSPACE_TAB_UI_MAP: Partial<Record<TabType, any>> = {
     icon: 'file',
     bgColor: 'bg-[--color-info]',
     textColor: 'text-[--color-font-info]',
+  },
+  mcp: {
+    icon: ['fac', 'mcp'],
+    bgColor: 'bg-[--color-danger]',
+    textColor: 'text-[--color-font-danger]',
   },
 };
 

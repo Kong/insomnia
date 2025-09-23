@@ -130,7 +130,7 @@ export const McpUrlActionBar = ({
   }, [environmentId, request]);
 
   const handleSubmit = useCallback(async () => {
-    updateTabById?.(request._id, { temporary: false });
+    updateTabById?.(workspaceId, { temporary: false });
     if (isOpen) {
       window.main.mcp.close({ requestId: request._id });
       return;
@@ -147,7 +147,7 @@ export const McpUrlActionBar = ({
     }
 
     connectParams && connect(connectParams);
-  }, [connect, generateConnectParams, isOpen, project, request, updateTabById]);
+  }, [connect, generateConnectParams, isOpen, project, request, updateTabById, workspaceId]);
 
   const handleSubmitRef = useLatest(handleSubmit);
 

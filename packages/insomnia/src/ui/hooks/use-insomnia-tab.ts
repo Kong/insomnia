@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { matchPath, useLocation, useSearchParams } from 'react-router';
 
 import type { McpRequest } from '~/models/mcp-request';
+import { prefix as mcpPrefix } from '~/models/mcp-request';
 
 import type { GrpcRequest } from '../../models/grpc-request';
 import type { MockRoute } from '../../models/mock-route';
@@ -55,6 +56,10 @@ export const useInsomniaTab = ({
         return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${activeRequestGroup?._id}`;
       }
 
+      if (type === 'mcp') {
+        return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest?._id}`;
+      }
+
       if (type === 'collection') {
         return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug?doNotSkipToActiveRequest=true`;
       }
@@ -101,6 +106,9 @@ export const useInsomniaTab = ({
   );
 
   const getTabType = (pathname: string): TabType | null => {
+    if (pathname.includes(mcpPrefix)) {
+      return 'mcp';
+    }
     for (const type in TAB_ROUTER_PATH) {
       const ifMatch = matchPath(
         {
@@ -153,7 +161,7 @@ export const useInsomniaTab = ({
         return currentOrgTabs?.tabList.find(tab => tab.id === unitTestSuite?._id);
       }
 
-      const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test'];
+      const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test', 'mcp'];
       if (collectionTabTypes.includes(type)) {
         return currentOrgTabs?.tabList.find(tab => tab.id === workspaceId);
       }
@@ -196,7 +204,7 @@ export const useInsomniaTab = ({
       if (type === 'testSuite') {
         return unitTestSuite?._id || '';
       }
-      const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test'];
+      const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test', 'mcp'];
       if (collectionTabTypes.includes(type)) {
         return workspaceId;
       }
@@ -248,7 +256,7 @@ export const useInsomniaTab = ({
         };
       }
 
-      const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test'];
+      const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test', 'mcp'];
       if (collectionTabTypes.includes(type)) {
         return {
           type,
@@ -333,7 +341,10 @@ export const useInsomniaTab = ({
       if (tabInfo) {
         let temporary = false;
         // current temporary tabs scope only for request collection
-        if ((type === 'request' || type === 'folder' || type === 'collection') && !searchParams.get('created')) {
+        if (
+          (type === 'request' || type === 'folder' || type === 'collection' || type === 'mcp') &&
+          !searchParams.get('created')
+        ) {
           temporary = true;
         }
 
