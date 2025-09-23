@@ -24,7 +24,8 @@ export const AuthWrapper: FC<{
   disabled?: boolean;
   authTypes?: AuthTypes[];
   hideOthers?: boolean;
-}> = ({ authentication, disabled = false, authTypes, hideOthers }) => {
+  hideInherit?: boolean;
+}> = ({ authentication, disabled = false, authTypes, hideOthers, hideInherit }) => {
   const type = getAuthObjectOrNull(authentication)?.type || '';
   let authBody: ReactNode = null;
 
@@ -74,7 +75,12 @@ export const AuthWrapper: FC<{
   return (
     <>
       <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
-        <AuthDropdown authentication={authentication} authTypes={authTypes} hideOthers={hideOthers} />
+        <AuthDropdown
+          authentication={authentication}
+          authTypes={authTypes}
+          hideOthers={hideOthers}
+          hideInherit={hideInherit}
+        />
       </Toolbar>
       <div className="flex-1 overflow-y-auto">{authBody}</div>
     </>
