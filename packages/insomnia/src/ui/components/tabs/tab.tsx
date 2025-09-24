@@ -189,7 +189,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
                 italic: tab.temporary,
               })}
             >
-              {tab.name}
+              {isMcpRequestId(tab.id) ? tab.workspaceName : tab.name}
             </span>
             <Button
               aria-label="Close Tab"
