@@ -254,6 +254,10 @@ const DebugEntry = () => {
     activeRequestGroup,
   });
 
+  useCloseConnection({
+    organizationId,
+  });
+
   if (activeWorkspace.scope === 'mcp') {
     // MCP request under mcp workspace has different layout so we need to render a different component
     return <McpPane />;
@@ -503,10 +507,6 @@ const Debug = () => {
         showModal(GenerateCodeModal, { request: activeRequest });
       }
     },
-  });
-
-  useCloseConnection({
-    organizationId,
   });
 
   const isRealtimeRequest =

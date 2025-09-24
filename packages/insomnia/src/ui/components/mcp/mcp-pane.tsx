@@ -471,7 +471,6 @@ export const McpPane = () => {
                 }}
               >
                 {virtualItem => {
-                  console.log(virtualItem);
                   const item = visibleCollection[virtualItem.index];
                   const isSelected =
                     selectedPrimitiveItem?.type === item.type && selectedPrimitiveItem?.name === item.name;
