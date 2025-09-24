@@ -228,14 +228,6 @@ export const McpPane = () => {
 
   const serverCapabilities = getServerCapabilities();
   const allowSubscribeResources = serverCapabilities.resources.enabled && serverCapabilities.resources.subscribe;
-  const enableNotification =
-    serverCapabilities.tools.listChanged ||
-    serverCapabilities.resources.listChanged ||
-    serverCapabilities.prompts.listChanged;
-  // TODO Use these variables to enable notification
-  if (enableNotification) {
-    // Todo support receive server notification
-  }
 
   useEffect(() => {
     const [, type, name] = activeRequestMeta?.activeMcpPrimitive?.match(/^([^_]+)_(.+)$/) || [];
