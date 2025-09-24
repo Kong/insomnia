@@ -1,28 +1,39 @@
 import type { Root } from '@modelcontextprotocol/sdk/types.js';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Toolbar } from 'react-aria-components';
 
+import type { McpRequest } from '~/models/mcp-request';
 import { PromptButton } from '~/ui/components/base/prompt-button';
+import { useRequestPatcher } from '~/ui/hooks/use-request';
 
 interface McpRootsPanelProps {
-  requestRoots: Root[];
-  onSaveRoots: (roots: Root[]) => void;
+  request: McpRequest;
   readyState: boolean;
 }
 
-export const McpRootsPanel = ({ requestRoots, onSaveRoots, readyState }: McpRootsPanelProps) => {
+export const McpRootsPanel = ({ request, readyState }: McpRootsPanelProps) => {
   const [rootUri, setRootUri] = useState('');
-  const [roots, setRoots] = useState<Root[]>(requestRoots);
+  const [roots, setRoots] = useState<Root[]>(request.roots);
+  const patchRootsRequest = useRequestPatcher();
+  const requestId = request._id;
 
   const addRoot = () => {
     if (rootUri.trim().length > 0) {
-      setRoots(currentRoots => [...currentRoots, { uri: rootUri.trim(), name: '' }]);
+      setRoots(currentRoots => {
+        const newRoots = [...currentRoots, { uri: rootUri.trim() }];
+        patchRootsRequest(requestId, { roots: newRoots });
+        return newRoots;
+      });
       setRootUri('');
     }
   };
 
   const removeRoot = (rootIdx: number) => {
-    setRoots(currentRoots => currentRoots.filter((_, i) => i !== rootIdx));
+    setRoots(currentRoots => {
+      const newRoots = currentRoots.filter((_, i) => i !== rootIdx);
+      patchRootsRequest(requestId, { roots: newRoots });
+      return newRoots;
+    });
   };
 
   return (
@@ -31,10 +42,12 @@ export const McpRootsPanel = ({ requestRoots, onSaveRoots, readyState }: McpRoot
         <Heading className="text-sm font-bold text-[--hl]">Configure Roots</Heading>
         <Button
           className="rounded bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise]"
-          onClick={() => onSaveRoots(roots)}
+          onClick={() => {
+            window.main.mcp.notification.rootListChange({ requestId });
+          }}
           isDisabled={!readyState}
         >
-          Save Roots
+          Notify Roots
         </Button>
       </Toolbar>
 
