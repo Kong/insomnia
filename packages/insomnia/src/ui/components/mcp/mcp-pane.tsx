@@ -1,5 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import cn from 'classnames';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -53,6 +54,7 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
+import { useRequestMetaPatcher } from '~/ui/hooks/use-request';
 
 export const McpPane = () => {
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -60,7 +62,7 @@ export const McpPane = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { activeRequest, activeResponse } = useRequestLoaderData()! as McpRequestLoaderData;
+  const { activeRequest, activeResponse, activeRequestMeta } = useRequestLoaderData()! as McpRequestLoaderData;
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
   const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
@@ -75,8 +77,9 @@ export const McpPane = () => {
   const [selectedPrimitiveItem, setSelectedPrimitiveItem] = useState<PrimitiveSubItem | null>(null);
   const [primitiveNextCursor, setPrimitiveNextCursor] = useState<Partial<Record<McpServerPrimitiveTypes, string>>>({});
   const [subscribeResources, setSubscribeResources] = useState<string[]>([]);
+  const requestMetaPatcher = useRequestMetaPatcher();
 
-  const getPrimitiveCollection = () => {
+  const visibleCollection = useMemo(() => {
     const collection: (PrimitiveTypeItem | PrimitiveSubItem)[] = [];
     if (mcpServerData) {
       const { primitives } = mcpServerData;
@@ -126,8 +129,14 @@ export const McpPane = () => {
         collection.push(...(prompts.map(p => ({ ...p, type: 'prompts', itemLevel: 1, hide })) as PromptItem[]));
       }
     }
-    return collection;
-  };
+    return collection.filter(item => !item.hide);
+  }, [
+    collapsedPrimitives,
+    mcpServerData,
+    primitiveNextCursor.prompts,
+    primitiveNextCursor.resources,
+    primitiveNextCursor.tools,
+  ]);
 
   const getServerCapabilities = () => {
     const serverCapabilities = getDefaultServerCapabilities();
@@ -202,8 +211,6 @@ export const McpPane = () => {
     }
   };
 
-  // TODO Support filter
-  const visibleCollection = getPrimitiveCollection().filter(item => !item.hide);
   const serverCapabilities = getServerCapabilities();
   const allowSubscribeResources = serverCapabilities.resources.enabled && serverCapabilities.resources.subscribe;
   const enableNotification =
@@ -214,6 +221,12 @@ export const McpPane = () => {
   if (enableNotification) {
     // Todo support receive server notification
   }
+
+  useEffect(() => {
+    const [, type, name] = activeRequestMeta?.activeMcpPrimitive?.match(/^([^_]+)_(.+)$/) || [];
+    const primitiveItem = visibleCollection.find(i => i.itemLevel === 1 && i.type === type && i.name === name);
+    primitiveItem && setSelectedPrimitiveItem(primitiveItem as PrimitiveSubItem);
+  }, [activeRequest._id, activeRequestMeta?.activeMcpPrimitive, visibleCollection]);
 
   const requestId = activeRequest._id;
   const { activeEnvironment } = useWorkspaceLoaderData()!;
@@ -452,12 +465,15 @@ export const McpPane = () => {
                     // Click a specified primitive
                     const [, type, name] = id.match(/^([^_]+)_(.+)$/) || [];
                     const item = visibleCollection.find(i => i.itemLevel === 1 && i.type === type && i.name === name);
+                    requestMetaPatcher(requestId, { activeMcpPrimitive: id });
                     setSelectedPrimitiveItem(item as PrimitiveSubItem);
                   }
                 }}
               >
                 {virtualItem => {
                   const item = visibleCollection[virtualItem.index];
+                  const isSelected =
+                    selectedPrimitiveItem?.type === item.type && selectedPrimitiveItem?.name === item.name;
                   return (
                     <CollectionGridListItem
                       activeRequest={activeRequest}
@@ -473,6 +489,7 @@ export const McpPane = () => {
                         height: `${virtualItem.size}px`,
                         transform: `translateY(${virtualItem.start}px)`,
                       }}
+                      isSelected={isSelected}
                     />
                   );
                 }}
@@ -524,6 +541,7 @@ const CollectionGridListItem = (props: {
     newData: McpServerData['primitives'][McpServerPrimitiveTypes],
     type: McpServerPrimitiveTypes,
   ) => void;
+  isSelected: boolean;
 }) => {
   const {
     item,
@@ -532,6 +550,7 @@ const CollectionGridListItem = (props: {
     allowSubscribeResources,
     subscribeResources,
     handleSubscribe,
+    isSelected,
     ...restProps
   } = props;
   const label = 'title' in item ? item.title : item.name;
@@ -545,7 +564,12 @@ const CollectionGridListItem = (props: {
   return (
     <GridListItem
       id={uniqueId}
-      className={`group absolute left-0 top-0 w-full select-none outline-none ${item.itemLevel === 0 ? 'data-[drop-target]:bg-[--hl-md]' : 'border-solid data-[drop-target]:border-b data-[drop-target]:border-[--color-surprise]'}`}
+      className={cn(
+        `group absolute left-0 top-0 w-full select-none outline-none ${item.itemLevel === 0 ? 'data-[drop-target]:bg-[--hl-md]' : 'border-solid data-[drop-target]:border-b data-[drop-target]:border-[--color-surprise]'}`,
+        {
+          'bg-[--hl-sm] text-[--color-font]': isSelected,
+        },
+      )}
       textValue={label}
       data-testid={`test-${uniqueId}`}
       style={style}
