@@ -100,7 +100,7 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
   const handleRjsfFormChange = useCallback(
     (formData: any) => {
       if (selectedPrimitiveItem?.type !== 'resourceTemplates' && selectedPrimitiveItem?.type !== 'resources') {
-        paramEditorRef.current?.setValue(JSON.stringify(formData, null, 2));
+        paramEditorRef.current?.setValue(JSON.stringify(formData || {}, null, 2));
       }
     },
     [selectedPrimitiveItem?.type],
