@@ -1,5 +1,5 @@
 import type { Root } from '@modelcontextprotocol/sdk/types.js';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Toolbar } from 'react-aria-components';
 
 import type { McpRequest } from '~/models/mcp-request';
