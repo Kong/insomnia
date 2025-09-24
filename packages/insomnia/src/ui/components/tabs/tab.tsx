@@ -1,6 +1,9 @@
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import classNames from 'classnames';
 import React, { useCallback } from 'react';
 import { Button, GridListItem } from 'react-aria-components';
+
+import { isMcpRequestId } from '~/models/mcp-request';
 
 import { scrollElementIntoView } from '../../../utils';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
@@ -75,13 +78,21 @@ const WORKSPACE_TAB_UI_MAP: Partial<Record<TabType, any>> = {
 export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
   const { closeTabById, currentOrgTabs } = useInsomniaTabContext();
 
-  const renderTabIcon = (type: TabType) => {
+  const renderTabIcon = (type: TabType, tabId: string) => {
     if (WORKSPACE_TAB_UI_MAP[type]) {
       return (
         <div
           className={`${WORKSPACE_TAB_UI_MAP[type].bgColor} ${WORKSPACE_TAB_UI_MAP[type].textColor} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
         >
           <Icon icon={WORKSPACE_TAB_UI_MAP[type].icon} />
+        </div>
+      );
+    }
+
+    if (isMcpRequestId(tabId)) {
+      return (
+        <div className="flex h-[20px] w-[20px] items-center justify-center rounded-s-sm bg-[--color-danger] px-2 text-[--color-font-danger]">
+          <Icon icon={['fac', 'mcp'] as unknown as IconProp} />
         </div>
       );
     }
@@ -172,13 +183,13 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
             onContextMenu={handleContextMenu}
             className={`relative flex h-full max-w-[200px] cursor-pointer flex-nowrap items-center border-r border-solid border-[--hl-sm] px-[10px] outline-none hover:text-[--color-font] ${!isSelected && !isHovered && 'opacity-[0.7]'}`}
           >
-            {renderTabIcon(tab.type)}
+            {renderTabIcon(tab.type, tab.id)}
             <span
               className={classNames('mx-[8px] overflow-hidden text-ellipsis text-nowrap', {
                 italic: tab.temporary,
               })}
             >
-              {tab.name}
+              {isMcpRequestId(tab.id) ? tab.workspaceName : tab.name}
             </span>
             <Button
               aria-label="Close Tab"
