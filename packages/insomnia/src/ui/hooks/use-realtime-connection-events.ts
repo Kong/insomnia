@@ -25,16 +25,12 @@ export function useRealtimeConnectionEvents({
   }, [updateEvents]);
 
   useEffect(() => {
-    let isMounted = true;
-    // @ts-expect-error -- we use a dynamic channel here+
+    // @ts-expect-error -- we use a dynamic channel here
     const unsubscribe = window.main.on(`${protocol}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`, () => {
       // update events when new event message is received
-      if (isMounted) {
-        updateEvents();
-      }
+      updateEvents();
     });
     return () => {
-      isMounted = false;
       unsubscribe();
     };
   }, [protocol, responseId, updateEvents]);
