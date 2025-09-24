@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+
 import type { CurlEvent } from '../../main/network/curl';
 import type { McpEvent } from '../../main/network/mcp';
 import type { SocketIOEvent } from '../../main/network/socket-io';
@@ -23,16 +25,12 @@ export function useRealtimeConnectionEvents({
   }, [updateEvents]);
 
   useEffect(() => {
-    let isMounted = true;
-    // @ts-expect-error -- we use a dynamic channel here+
-    const unsubscribe = window.main.on(`${protocol}.${responseId}.newEventReceived`, () => {
+    // @ts-expect-error -- we use a dynamic channel here
+    const unsubscribe = window.main.on(`${protocol}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`, () => {
       // update events when new event message is received
-      if (isMounted) {
-        updateEvents();
-      }
+      updateEvents();
     });
     return () => {
-      isMounted = false;
       unsubscribe();
     };
   }, [protocol, responseId, updateEvents]);

@@ -154,7 +154,6 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
 
   useEffect(() => {
     if (readyState) {
-      console.log('update mcp payload: ', { params: mcpParams, url: activeRequest.url });
       latestPayloadPatcherRef.current(requestId, { params: mcpParams, url: activeRequest.url });
     }
   }, [activeRequest.url, mcpParams, latestPayloadPatcherRef, requestId, readyState]);

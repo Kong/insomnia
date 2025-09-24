@@ -10,6 +10,7 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import { v4 as uuidV4 } from 'uuid';
 import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSocket } from 'ws';
 
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { database } from '~/common/database';
 
 import { jarFromCookies } from '../../common/cookies';
@@ -78,7 +79,8 @@ const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
 
-const getEventNotificationChannel = (responseId: string) => `${protocolName}.${responseId}.newEventReceived`;
+const getEventNotificationChannel = (responseId: string) =>
+  `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
 
 const writeEventLogAndNotify = ({
   requestId,
@@ -180,7 +182,7 @@ const openWebSocketConnection = async (
     if (!options.url) {
       throw new Error('URL is required');
     }
-    const readyStateChannel = `${protocolName}.${request._id}.readyState`;
+    const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
     const reduceArrayToLowerCaseKeyedDictionary = (
       acc: Record<string, string>,
