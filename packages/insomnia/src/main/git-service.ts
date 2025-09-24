@@ -2158,14 +2158,14 @@ async function completeSignInToGitHub({ code, state }: { code: string; state: st
 
   // need both requests because the email in GET /user
   // is the public profile email and may not exist
-  const emailsPromise = fetch(getGitHubRestApiUrl() + '/user/emails', {
+  const emailsPromise = net.fetch(getGitHubRestApiUrl() + '/user/emails', {
     method: 'GET',
     headers: {
       Authorization: `token ${data.access_token}`,
     },
   }).then(response => response.json() as Promise<{ email: string; primary: boolean }[]>);
 
-  const userPromise = fetch(getGitHubRestApiUrl() + '/user', {
+  const userPromise = net.fetch(getGitHubRestApiUrl() + '/user', {
     method: 'GET',
     headers: {
       Authorization: `token ${data.access_token}`,
@@ -2237,7 +2237,7 @@ async function getGitHubRepositories({
       },
     };
 
-    const response = await fetch(url, opts);
+    const response = await net.fetch(url, opts);
     if (!response.ok) {
       const raw = await response.text();
       if (response.status === 401) {
@@ -2267,7 +2267,7 @@ async function getGitHubRepositories({
           const pages = Number(lastPage);
           const pageList = await Promise.all(
             Array.from({ length: pages - 1 }, (_, i) =>
-              fetch(`${GITHUB_USER_REPOS_URL}?per_page=100&page=${i + 2}`, opts),
+              net.fetch(`${GITHUB_USER_REPOS_URL}?per_page=100&page=${i + 2}`, opts),
             ),
           );
           for (const page of pageList) {
@@ -2303,7 +2303,7 @@ async function getGitHubRepository({ uri }: { uri: string }) {
       },
     };
 
-    const response = await fetch(`${getGitHubRestApiUrl()}/repos/${owner}/${name}`, opts);
+    const response = await net.fetch(`${getGitHubRestApiUrl()}/repos/${owner}/${name}`, opts);
     if (!response.ok) {
       const raw = await response.text();
       return {
@@ -2345,7 +2345,7 @@ const getGitLabConfig = async () => {
     };
   }
 
-  const configResponse = await fetch(getApiBaseURL() + '/v1/oauth/gitlab/config', {
+  const configResponse = await net.fetch(getApiBaseURL() + '/v1/oauth/gitlab/config', {
     method: 'GET',
   });
 
@@ -2422,7 +2422,7 @@ async function completeSignInToGitLab({ code, state }: { code: string; state: st
     code_verifier: verifier,
   }).toString();
 
-  const gitLabResponse = await fetch(getGitLabOauthApiURL() + url.pathname + url.search, {
+  const gitLabResponse = await net.fetch(getGitLabOauthApiURL() + url.pathname + url.search, {
     method: 'POST',
   });
 
@@ -2434,7 +2434,7 @@ async function completeSignInToGitLab({ code, state }: { code: string; state: st
   gitLabStatesCache.delete(state);
   const existingGitLabCredentials = await models.gitCredentials.getByProvider('gitlab');
 
-  const gitLabUserResponse = await fetch(`${getGitLabOauthApiURL()}/api/v4/user`, {
+  const gitLabUserResponse = await net.fetch(`${getGitLabOauthApiURL()}/api/v4/user`, {
     headers: {
       Authorization: `Bearer ${access_token}`,
     },
