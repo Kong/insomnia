@@ -11,20 +11,27 @@ interface McpRootsPanelProps {
   readyState: boolean;
 }
 
+const rootPrefix = 'file://';
+
 export const McpRootsPanel = ({ request, readyState }: McpRootsPanelProps) => {
-  const [rootUri, setRootUri] = useState('');
+  const [rootUri, setRootUri] = useState(rootPrefix);
   const [roots, setRoots] = useState<Root[]>(request.roots);
+  const [isInvalidRoot, setIsInvalidRoot] = useState(true);
   const patchRootsRequest = useRequestPatcher();
   const requestId = request._id;
 
   const addRoot = () => {
-    if (rootUri.trim().length > 0) {
+    const parsedRoot = rootUri.trim();
+    if (parsedRoot.startsWith(rootPrefix) && parsedRoot.length > rootPrefix.length) {
       setRoots(currentRoots => {
         const newRoots = [...currentRoots, { uri: rootUri.trim() }];
         patchRootsRequest(requestId, { roots: newRoots });
         return newRoots;
       });
-      setRootUri('');
+      setRootUri(rootPrefix);
+      setIsInvalidRoot(true);
+    } else {
+      setIsInvalidRoot(false);
     }
   };
 
@@ -84,7 +91,6 @@ export const McpRootsPanel = ({ request, readyState }: McpRootsPanelProps) => {
         <input
           value={rootUri}
           onChange={e => setRootUri(e.target.value)}
-          placeholder="Input root URI, e.g. file://path/to/folder"
           type={'text'}
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
@@ -92,6 +98,11 @@ export const McpRootsPanel = ({ request, readyState }: McpRootsPanelProps) => {
           Add Root
         </button>
       </div>
+      {!isInvalidRoot && (
+        <div className="mt-5 px-2">
+          <p className="notice error margin-bottom-sm mt-2 w-full">{`Invalid root, please config root directory and must be start with ${rootPrefix}`}</p>
+        </div>
+      )}
     </div>
   );
 };
