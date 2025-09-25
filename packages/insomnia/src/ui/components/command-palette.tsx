@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef } from 'react';
+import React, { memo, useEffect } from 'react';
 import { useState } from 'react';
 import {
   Button,
@@ -40,8 +40,6 @@ import { useRemoteFilesLoaderFetcher } from '~/routes/remote-files';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
-import { showModal } from '~/ui/components/modals';
-import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 
@@ -146,8 +144,9 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const currentRequests =
     commandsLoader.data?.current.requests.map(request => ({
       ...request,
-      action: () => {
-        navigate(request.url);
+      action: async () => {
+        await navigate(request.url);
+        close();
       },
     })) || [];
 
@@ -161,18 +160,18 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const currentFiles =
     [...currentFilesData, ...currentRemoteFilesData]?.map(file => ({
       ...file,
-      action: () => {
+      action: async () => {
         if ('pullUrl' in file && file.pullUrl) {
-          pullFileFetcher.submit({
+          await pullFileFetcher.submit({
             backendProjectId: file.item.projectId,
             remoteId: file.item.teamProjectId,
             organizationId: file.item.organizationId,
           });
 
-          return true;
+          close();
         }
-        navigate(file.url);
-        return null;
+        await navigate(file.url);
+        close();
       },
     })) || [];
 
@@ -180,23 +179,24 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     commandsLoader.data?.current.environments.map(environment => ({
       ...environment,
       id: environment._id,
-      action: () => {
-        setActiveEnvironmentFetcher.submit({
+      action: async () => {
+        await setActiveEnvironmentFetcher.submit({
           organizationId,
           projectId,
           workspaceId,
           environmentId: environment._id,
         });
 
-        return true;
+        close();
       },
     })) || [];
 
   const otherRequests =
     commandsLoader.data?.other.requests.map(request => ({
       ...request,
-      action: () => {
-        navigate(request.url);
+      action: async () => {
+        await navigate(request.url);
+        close();
       },
     })) || [];
 
@@ -208,7 +208,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const otherFiles =
     [...otherFilesData, ...otherRemoteFilesData].map(file => ({
       ...file,
-      action: () => {
+      action: async () => {
         if ('pullUrl' in file && file.pullUrl) {
           pullFileFetcher.submit({
             backendProjectId: file.item.projectId,
@@ -216,10 +216,10 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
             organizationId: file.item.organizationId,
           });
 
-          return true;
+          close();
         }
-        navigate(file.url);
-        return null;
+        await navigate(file.url);
+        close();
       },
     })) || [];
 
@@ -406,34 +406,6 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       })),
     });
 
-  const prevPullFetcherState = useRef(pullFileFetcher.state);
-  useEffect(() => {
-    if (pullFileFetcher.state === 'idle' && prevPullFetcherState.current !== 'idle') {
-      if (pullFileFetcher.data?.error) {
-        showModal(AlertModal, {
-          title: 'Error',
-          message: pullFileFetcher.data.error,
-        });
-      }
-
-      close();
-    }
-
-    prevPullFetcherState.current = pullFileFetcher.state;
-  }, [close, pullFileFetcher]);
-
-  // Close the dialog when the environment is set
-  // If we close the dialog when fetcher.submit() is done then the dialog will close before the environment is set
-  // The update env will run but the loaders on the page will not be revalidated. https://github.com/remix-run/remix/discussions/9020
-  const prevEnvFetcherState = useRef(setActiveEnvironmentFetcher.state);
-  useEffect(() => {
-    if (setActiveEnvironmentFetcher.state === 'idle' && prevEnvFetcherState.current !== 'idle') {
-      close();
-    }
-
-    prevEnvFetcherState.current = setActiveEnvironmentFetcher.state;
-  }, [close, setActiveEnvironmentFetcher.state]);
-
   const isPullingFile = pullFileFetcher.state !== 'idle';
   const pullingFileBackedProjectId = pullFileFetcher.formData?.get('backendProjectId');
   const pullingFile = remoteFiles.find(file => file.item.projectId === pullingFileBackedProjectId);
@@ -471,11 +443,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           ...otherFiles,
         ].find(item => item.id === itemId);
 
-        const result = item?.action();
-
-        if (!result) {
-          close();
-        }
+        item?.action();
       }}
     >
       {({ isOpen }) => {

@@ -449,7 +449,7 @@ const UntrackedProject = ({
           aria-label="Select an organization"
           name="organizationId"
           onSelectionChange={key => {
-            setSelectedOrganizationId(key.toString());
+            key && setSelectedOrganizationId(key.toString());
           }}
           selectedKey={selectedOrganizationId}
           isDisabled={organizations.length === 0}
@@ -540,7 +540,7 @@ const UntrackedWorkspace = ({
           aria-label="Select a project"
           name="projectId"
           onSelectionChange={key => {
-            setSelectedProjectId(key.toString());
+            key && setSelectedProjectId(key.toString());
           }}
           selectedKey={selectedProjectId}
           isDisabled={projects.length === 0}

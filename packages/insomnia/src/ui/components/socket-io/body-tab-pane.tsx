@@ -124,7 +124,7 @@ export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: 
           <Select
             aria-label="Change Body Type"
             name="body-type"
-            onSelectionChange={value => handleContentTypeChange(value.toString())}
+            onSelectionChange={value => value && handleContentTypeChange(value.toString())}
             selectedKey={contentType}
           >
             <Button className="flex min-w-[12ch] flex-1 items-center justify-between gap-2 rounded-sm px-4 py-1 text-sm font-bold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">

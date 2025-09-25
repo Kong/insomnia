@@ -109,17 +109,18 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
           className="flex-shrink-0"
           aria-label="Request for test"
           onSelectionChange={key => {
-            const requestId = key.toString();
-            updateUnitTestFetcher.submit({
-              organizationId,
-              projectId,
-              workspaceId,
-              testSuiteId: unitTestSuite._id,
-              testId: unitTest._id,
-              data: {
-                requestId,
-              },
-            });
+            const requestId = key?.toString();
+            requestId &&
+              updateUnitTestFetcher.submit({
+                organizationId,
+                projectId,
+                workspaceId,
+                testSuiteId: unitTestSuite._id,
+                testId: unitTest._id,
+                data: {
+                  requestId,
+                },
+              });
           }}
           selectedKey={unitTest.requestId}
         >

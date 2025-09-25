@@ -1,3 +1,5 @@
+import { href } from 'react-router';
+
 import { database } from '~/common/database';
 import { fuzzyMatch } from '~/common/misc';
 import {
@@ -307,10 +309,7 @@ export const useCommandsLoaderFetcher = createFetcherLoadHook(
       if (filter) {
         params.set('filter', filter);
       }
-
-      return load(`/commands?${params.toString()}`, {
-        flushSync: true,
-      });
+      return load(`${href('/commands')}?${params.toString()}`);
     },
   clientLoader,
 );
