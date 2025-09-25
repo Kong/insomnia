@@ -17,9 +17,10 @@ interface SelectProps {
   onChange: (value: string | number) => void;
   className?: string;
   options: { label: string; value: string }[];
+  multiple?: boolean;
 }
 
-export const Select = ({ value, onChange, className, options, ...rest }: SelectProps & RaSelectProps) => {
+export const Select = ({ value, onChange, className, options, multiple, ...rest }: SelectProps & RaSelectProps) => {
   return (
     <RaSelect
       placeholder="Select an item"

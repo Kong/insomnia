@@ -1,4 +1,5 @@
 import { type RJSFSchema } from '@rjsf/utils';
+import type { EditorChange } from 'codemirror';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -111,6 +112,12 @@ export const McpRequestPane: FC<Props> = ({
 
   const handleRjsfFormChange = useCallback(
     (formData: any) => {
+      setMcpParams(prev => {
+        return {
+          ...prev,
+          [primitiveId]: formData,
+        };
+      });
       if (selectedPrimitiveItem?.type !== 'resourceTemplates' && selectedPrimitiveItem?.type !== 'resources') {
         paramEditorRef.current?.setValue(JSON.stringify(formData || {}, null, 2));
       } else {
@@ -156,15 +163,18 @@ export const McpRequestPane: FC<Props> = ({
     patchRequest(requestId, { env: data });
   };
 
-  const handleEditorChange = (value: string) => {
+  const handleEditorChange = (value: string, changeObj: EditorChange[]) => {
     try {
       const payload = JSON.parse(value);
-      setMcpParams(prev => {
-        return {
-          ...prev,
-          [primitiveId]: payload,
-        };
-      });
+      const origin = changeObj[0]?.origin;
+      if (origin !== 'setValue') {
+        setMcpParams(prev => {
+          return {
+            ...prev,
+            [primitiveId]: payload,
+          };
+        });
+      }
     } catch (err) {}
   };
 
