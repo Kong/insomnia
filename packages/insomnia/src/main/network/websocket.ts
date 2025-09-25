@@ -73,7 +73,9 @@ export type WebSocketEvent = WebSocketOpenEvent | WebSocketMessageEvent | WebSoc
 export type WebSocketEventLog = WebSocketEvent[];
 
 const protocolName = 'webSocket';
+const protocolName = 'webSocket';
 const WebSocketConnections = new Map<string, WebSocket>();
+const requestIdToResponseIdMap = new Map<string, string>();
 const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
@@ -160,6 +162,7 @@ const openWebSocketConnection = async (
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
+  requestIdToResponseIdMap.set(options.requestId, responseId);
   requestIdToResponseIdMap.set(options.requestId, responseId);
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);

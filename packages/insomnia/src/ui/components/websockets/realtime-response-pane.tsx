@@ -107,6 +107,13 @@ const RealtimeActiveResponsePane: FC<{
         if (clearEventsBefore && event.timestamp <= clearEventsBefore) {
           return false;
         }
+  const events = useMemo(
+    () =>
+      allEvents.filter(event => {
+        // Filter out events that are earlier than the clearEventsBefore timestamp
+        if (clearEventsBefore && event.timestamp <= clearEventsBefore) {
+          return false;
+        }
 
         // Filter out events that don't match the selected event type
         if (eventType && event.type !== eventType) {
@@ -139,6 +146,9 @@ const RealtimeActiveResponsePane: FC<{
             return event.reason.toLowerCase().includes(searchQuery.toLowerCase());
           }
 
+          // Filter out open events
+          return false;
+        }
           // Filter out open events
           return false;
         }
