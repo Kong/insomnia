@@ -1,3 +1,5 @@
+import fs from 'node:fs/promises';
+
 import React from 'react';
 import {
   Button,
@@ -17,6 +19,7 @@ import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organiza
 import { useMockRouteNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.new';
 
 import { HTTP_METHODS } from '../../../common/constants';
+import type { ResponseHeader } from '../../../models/response';
 import { Icon } from '../icon';
 
 export interface MockRouteModalProps {
@@ -28,6 +31,13 @@ export interface MockRouteModalProps {
   mode: 'create' | 'edit';
   mockRouteId?: string;
   mockServerId?: string;
+  mockServerName?: string;
+  responseData?: {
+    bodyPath?: string;
+    headers: ResponseHeader[];
+    statusCode: number;
+    mimeType: string;
+  };
 }
 
 export const MockRouteModal = ({
@@ -39,6 +49,8 @@ export const MockRouteModal = ({
   mode,
   mockRouteId,
   mockServerId,
+  mockServerName,
+  responseData,
 }: MockRouteModalProps) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
@@ -61,24 +73,54 @@ export const MockRouteModal = ({
     const path = formData.get('path') as string;
     const method = formData.get('method') as string;
 
+    let body = '';
+    if (responseData?.bodyPath) {
+      try {
+        const bodyBuffer = await fs.readFile(responseData.bodyPath);
+        body = bodyBuffer.toString();
+      } catch (error) {
+        console.error('Failed to read response body:', error);
+      }
+    }
+
     if (mode === 'create') {
+      const patchData = {
+        name: path,
+        method: method,
+        ...(responseData && {
+          body,
+          headers: responseData.headers,
+          statusCode: responseData.statusCode,
+          mimeType: responseData.mimeType,
+        }),
+        ...(mockServerId ? { parentId: mockServerId } : {}),
+        ...(mockServerName ? { mockServerName } : {}),
+      };
+
       createFetcher.submit({
         organizationId,
         projectId,
         workspaceId,
-        patch: {
-          name: path,
-          method: method,
-          parentId: mockServerId!,
-        },
+        patch: patchData,
       });
     } else {
+      const patchData = {
+        name: path,
+        method,
+        ...(responseData && {
+          body,
+          headers: responseData.headers,
+          statusCode: responseData.statusCode,
+          mimeType: responseData.mimeType,
+        }),
+      };
+
       updateFetcher.submit({
         organizationId,
         projectId,
         workspaceId,
         mockRouteId: mockRouteId!,
-        patch: { name: path, method },
+        patch: patchData,
       });
     }
   };
@@ -112,9 +154,7 @@ export const MockRouteModal = ({
           {currentFetcher.data?.error && (
             <div className="px-[--padding-md] pb-[--padding-md]">
               <div className="flex items-center gap-2 rounded-sm bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-[--color-font-danger]">
-                <span>
-                  Error: {currentFetcher.data.error}
-                </span>
+                <span>Error: {currentFetcher.data.error}</span>
               </div>
             </div>
           )}

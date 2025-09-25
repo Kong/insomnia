@@ -11,17 +11,12 @@ import {
   isInMockContentTypeList,
   useMockRoutePatcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
-import { useMockRouteNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.new';
 
 import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
-import { type ResponseHeader } from '../../../models/response';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { invariant } from '../../../utils/invariant';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
-import { showModal } from '../modals';
-import { AlertModal } from '../modals/alert-modal';
-import { PromptModal } from '../modals/prompt-modal';
+import { MockRouteModal } from '../modals/mock-route-modal';
 
 export const MockResponseExtractor = () => {
   const requestLoaderData = useRequestLoaderData()!;
@@ -59,16 +54,25 @@ If you want to create a self-hosted mock server route from a request response in
 
   const patchMockRoute = useMockRoutePatcher();
   const navigate = useNavigate();
-  const { organizationId, projectId, workspaceId } = useParams() as {
+  const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
-    workspaceId: string;
   };
-  const createMockRouteFetcher = useMockRouteNewActionFetcher();
+
   const [selectedMockServer, setSelectedMockServer] = useState(
     canOnlyChooseExistingMockServer ? mockServerAndRoutes[0]._id : '',
   );
   const [selectedMockRoute, setSelectedMockRoute] = useState('');
+  const [mockRouteModalState, setMockRouteModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    defaultPath?: string;
+    defaultMethod?: string;
+    mode: 'create' | 'edit';
+    mockRouteId?: string;
+    mockServerId?: string;
+    mockServerName?: string;
+  } | null>(null);
   if (tipPreventingUserFromCreatingMockRoute) {
     return (
       <div className="flex h-full flex-col justify-center px-32">
@@ -96,6 +100,7 @@ If you want to create a self-hosted mock server route from a request response in
 
   const maybeMimeType = activeResponse && getMimeTypeFromContentType(activeResponse.contentType);
   const mimeType = maybeMimeType && isInMockContentTypeList(maybeMimeType) ? maybeMimeType : 'text/plain';
+
   return (
     <div className="flex h-full flex-col justify-center px-32">
       <div className="flex place-content-center pb-8 text-9xl text-[--hl-md]">
@@ -115,14 +120,16 @@ If you want to create a self-hosted mock server route from a request response in
           e.preventDefault();
           if (selectedMockServer && selectedMockRoute) {
             if (activeResponse && 'bodyPath' in activeResponse) {
-              // TODO: move this out of the renderer, and upsert mock
               const body = await fs.readFile(activeResponse.bodyPath);
+              const headersWithoutContentLength = activeResponse.headers.filter(
+                h => h.name.toLowerCase() !== 'content-length',
+              );
 
               patchMockRoute(selectedMockRoute, {
                 body: body.toString(),
                 mimeType,
                 statusCode: activeResponse.statusCode,
-                headers: activeResponse.headers,
+                headers: headersWithoutContentLength,
               });
             }
             return;
@@ -133,74 +140,25 @@ If you want to create a self-hosted mock server route from a request response in
           } catch (e) {
             console.log(e);
           }
-          // Create new mock server and route
           if (!selectedMockServer) {
-            showModal(PromptModal, {
+            setMockRouteModalState({
+              isOpen: true,
               title: 'Create Mock Route',
-              defaultValue: path,
-              label: 'Name',
-              onComplete: async name => {
-                invariant(activeResponse, 'Active response must be defined');
-                const body = 'bodyPath' in activeResponse ? await fs.readFile(activeResponse.bodyPath) : '';
-                // auth mechanism is too sensitive to allow content length checks
-                const headersWithoutContentLength: ResponseHeader[] = activeResponse.headers.filter(
-                  h => h.name.toLowerCase() !== 'content-length',
-                );
-
-                createMockRouteFetcher.submit({
-                  organizationId,
-                  projectId,
-                  workspaceId,
-                  patch: {
-                    name: name,
-                    body: body.toString(),
-                    mimeType,
-                    statusCode: activeResponse.statusCode,
-                    headers: headersWithoutContentLength,
-                    mockServerName: activeWorkspace.name,
-                  },
-                });
-              },
+              defaultPath: path,
+              defaultMethod: 'GET',
+              mode: 'create',
+              mockServerName: activeWorkspace.name,
             });
             return;
           }
-          // Create new mock route
           if (!selectedMockRoute) {
-            showModal(PromptModal, {
+            setMockRouteModalState({
+              isOpen: true,
               title: 'Create Mock Route',
-              defaultValue: path,
-              label: 'Name',
-              onComplete: async name => {
-                invariant(activeResponse, 'Active response must be defined');
-                const body = 'bodyPath' in activeResponse ? await fs.readFile(activeResponse.bodyPath) : '';
-                const hasRouteInServer = mockServerAndRoutes
-                  .find(s => s._id === selectedMockServer)
-                  ?.routes.find(r => r.name === name && r.method.toUpperCase() === 'GET');
-                if (hasRouteInServer) {
-                  showModal(AlertModal, {
-                    title: 'Error',
-                    message: `Path "${name}" and method must be unique. Please enter a different name.`,
-                  });
-                  return;
-                }
-                // auth mechanism is too sensitive to allow content length checks
-                const headersWithoutContentLength: ResponseHeader[] = activeResponse.headers.filter(
-                  h => h.name.toLowerCase() !== 'content-length',
-                );
-                createMockRouteFetcher.submit({
-                  organizationId,
-                  projectId,
-                  workspaceId,
-                  patch: {
-                    name: name,
-                    parentId: selectedMockServer,
-                    body: body.toString(),
-                    mimeType,
-                    statusCode: activeResponse.statusCode,
-                    headers: headersWithoutContentLength,
-                  },
-                });
-              },
+              defaultPath: path,
+              defaultMethod: 'GET',
+              mode: 'create',
+              mockServerId: selectedMockServer,
             });
           }
         }}
@@ -249,7 +207,7 @@ If you want to create a self-hosted mock server route from a request response in
                   .find(s => s._id === selectedMockServer)
                   ?.routes.map(w => (
                     <option key={w._id} value={w._id}>
-                      {w.name}
+                      {w.method} {w.name}
                     </option>
                   ))}
               </select>
@@ -277,6 +235,33 @@ If you want to create a self-hosted mock server route from a request response in
           </Button>
         </div>
       </form>
+      {mockRouteModalState && (
+        <MockRouteModal
+          isOpen={mockRouteModalState.isOpen}
+          onOpenChange={isOpen => {
+            if (!isOpen) {
+              setMockRouteModalState(null);
+            }
+          }}
+          title={mockRouteModalState.title}
+          defaultPath={mockRouteModalState.defaultPath}
+          defaultMethod={mockRouteModalState.defaultMethod}
+          mode={mockRouteModalState.mode}
+          mockRouteId={mockRouteModalState.mockRouteId}
+          mockServerId={mockRouteModalState.mockServerId}
+          mockServerName={mockRouteModalState.mockServerName}
+          responseData={
+            activeResponse
+              ? {
+                  bodyPath: 'bodyPath' in activeResponse ? activeResponse.bodyPath : undefined,
+                  headers: activeResponse.headers.filter(h => h.name.toLowerCase() !== 'content-length'),
+                  statusCode: activeResponse.statusCode,
+                  mimeType,
+                }
+              : undefined
+          }
+        />
+      )}
     </div>
   );
 };
