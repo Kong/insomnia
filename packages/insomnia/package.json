@@ -200,11 +200,11 @@
     "xpath": "0.0.34",
     "zod": "^3.25.75"
   },
-  "optionalDependencies": {
-    "@kong/insomnia-plugin-external-vault": "0.1.1-dev.0.20250902151320"
-  },
   "dev": {
     "dev-server-port": 3334
+  },
+  "optionalDependencies": {
+    "@kong-insomnia/insomnia-plugin-external-vault": "0.1.1"
   },
   "bin": {
     "insomnia": "bin/yarn-standalone.js"

@@ -23,6 +23,13 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v4
 
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 #2.1.4
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -30,12 +37,11 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@kong'
-
+    
       - name: Install packages
         run: npm ci
         env: 
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Build app for smoke tests
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
