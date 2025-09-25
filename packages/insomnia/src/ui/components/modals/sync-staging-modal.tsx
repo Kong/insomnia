@@ -120,6 +120,8 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
   const stageChangesFetcher = useInsomniaSyncStageActionFetcher();
   const unstageChangesFetcher = useInsomniaSyncUnstageActionFetcher();
 
+  const [message, setMessage] = useState('');
+
   const stageChanges = (keys: string[]) => {
     stageChangesFetcher.submit({
       organizationId,
@@ -148,6 +150,12 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
       onClose();
     }
   }, [allChangesLength, onClose, createSnapshotFetcher.data?.error]);
+
+  useEffect(() => {
+    if (allChangesLength > 0) {
+      setMessage('');
+    }
+  }, [allChangesLength]);
 
   const [selectedItemId, setSelectedItemId] = useState<string>('');
 
@@ -213,6 +221,8 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                         className="resize-none rounded-sm border border-solid border-[--hl-sm] p-2 placeholder:text-[--hl-md]"
                         placeholder="This is a helpful message that describes the changes made in this commit."
                         required
+                        value={message}
+                        onChange={e => setMessage(e.target.value)}
                       />
                     </TextField>
 
