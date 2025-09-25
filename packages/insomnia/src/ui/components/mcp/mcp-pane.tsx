@@ -27,6 +27,7 @@ import {
   METHOD_LIST_RESOURCES,
   METHOD_LIST_TOOLS,
 } from '~/common/mcp-utils';
+import { fuzzyMatchAll } from '~/common/misc';
 import type { McpEvent, McpMessageEvent } from '~/main/network/mcp';
 import type { McpRequest, McpServerPrimitiveTypes } from '~/models/mcp-request';
 import { useRootLoaderData } from '~/root';
@@ -83,7 +84,18 @@ export const McpPane = () => {
     const collection: (PrimitiveTypeItem | PrimitiveSubItem)[] = [];
     if (mcpServerData) {
       const { primitives } = mcpServerData;
-      const { tools, resources, resourceTemplates, prompts } = primitives;
+      const tools = primitives.tools.filter(tool =>
+        filter ? Boolean(fuzzyMatchAll(filter, [tool.name, tool.description || ''])?.indexes) : true,
+      );
+      const resources = primitives.resources.filter(res =>
+        filter ? Boolean(fuzzyMatchAll(filter, [res.name, res.description || '', res.uri])?.indexes) : true,
+      );
+      const resourceTemplates = primitives.resourceTemplates.filter(rt =>
+        filter ? Boolean(fuzzyMatchAll(filter, [rt.name, rt.description || '', rt.uriTemplate])?.indexes) : true,
+      );
+      const prompts = primitives.prompts.filter(prompt =>
+        filter ? Boolean(fuzzyMatchAll(filter, [prompt.name, prompt.description || ''])?.indexes) : true,
+      );
       if (tools.length > 0) {
         collection.push({
           type: 'tools',
@@ -132,6 +144,7 @@ export const McpPane = () => {
     return collection.filter(item => !item.hide);
   }, [
     collapsedPrimitives,
+    filter,
     mcpServerData,
     primitiveNextCursor.prompts,
     primitiveNextCursor.resources,
