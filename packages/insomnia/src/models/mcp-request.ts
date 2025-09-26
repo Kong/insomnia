@@ -1,3 +1,5 @@
+import type { Root } from '@modelcontextprotocol/sdk/types.js';
+
 import { database as db } from '../common/database';
 import { type EnvironmentKvPairData } from './environment';
 import type { BaseModel } from './index';
@@ -24,6 +26,7 @@ export interface BaseMcpRequest {
   authentication: RequestAuthentication | {};
   env: EnvironmentKvPairData[];
   mcpStdioAccess: boolean;
+  roots: Root[];
 }
 export type McpServerPrimitiveTypes = 'tools' | 'resources' | 'prompts' | 'resourceTemplates';
 
@@ -45,6 +48,7 @@ export function init(): BaseMcpRequest {
     authentication: {},
     env: [],
     mcpStdioAccess: false,
+    roots: [],
   };
 }
 
