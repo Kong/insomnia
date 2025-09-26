@@ -137,8 +137,13 @@ export const getMcpMethodFromMessage = (message: JSONRPCMessage): McpMessageEven
       method = METHOD_CALL_TOOL;
     }
   } else if (ServerRequestSchema.safeParse(message).success) {
-    // Do not support any server requests to client including ping, roots, elicitation and sampling
-    method = `${unsupportedMethodPrefix}${ServerRequestSchema.parse(message).method}`;
+    const requestMethod = ServerRequestSchema.parse(message).method;
+    if (requestMethod === METHOD_LIST_ROOTS) {
+      method = METHOD_LIST_ROOTS;
+    } else {
+      // Do not support any server requests to client including ping, elicitation and sampling
+      method = `${unsupportedMethodPrefix}${ServerRequestSchema.parse(message).method}`;
+    }
   }
   return method;
 };

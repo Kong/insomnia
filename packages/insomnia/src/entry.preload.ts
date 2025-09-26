@@ -65,6 +65,9 @@ const mcp: McpBridgeAPI = {
     listPrompts: options => ipcRenderer.invoke('mcp.primitive.listPrompts', options),
     getPrompt: options => ipcRenderer.invoke('mcp.primitive.getPrompt', options),
   },
+  notification: {
+    rootListChange: options => ipcRenderer.invoke('mcp.notification.rootListChange', options),
+  },
   readyState: {
     getCurrent: options => ipcRenderer.invoke('mcp.readyState', options),
   },
