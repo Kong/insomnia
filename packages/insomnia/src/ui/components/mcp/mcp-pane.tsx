@@ -41,7 +41,7 @@ import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown'
 import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
-import { McpRequestPane } from '~/ui/components/mcp/mcp-request-pane';
+import { McpRequestPane, type RequestPaneTabs } from '~/ui/components/mcp/mcp-request-pane';
 import {
   type PrimitiveSubItem,
   type PrimitiveTypeItem,
@@ -79,6 +79,7 @@ export const McpPane = () => {
   const [primitiveNextCursor, setPrimitiveNextCursor] = useState<Partial<Record<McpServerPrimitiveTypes, string>>>({});
   const [subscribeResources, setSubscribeResources] = useState<string[]>([]);
   const requestMetaPatcher = useRequestMetaPatcher();
+  const [requestPaneActiveTab, setRequestPaneActiveTab] = useState<RequestPaneTabs>('params');
 
   const visibleCollection = useMemo(() => {
     const collection: (PrimitiveTypeItem | PrimitiveSubItem)[] = [];
@@ -96,6 +97,7 @@ export const McpPane = () => {
       const prompts = primitives.prompts.filter(prompt =>
         filter ? Boolean(fuzzyMatchAll(filter, [prompt.name, prompt.description || ''])?.indexes) : true,
       );
+      // Add primitive type item
       if (tools.length > 0) {
         collection.push({
           type: 'tools',
@@ -226,14 +228,6 @@ export const McpPane = () => {
 
   const serverCapabilities = getServerCapabilities();
   const allowSubscribeResources = serverCapabilities.resources.enabled && serverCapabilities.resources.subscribe;
-  const enableNotification =
-    serverCapabilities.tools.listChanged ||
-    serverCapabilities.resources.listChanged ||
-    serverCapabilities.prompts.listChanged;
-  // TODO Use these variables to enable notification
-  if (enableNotification) {
-    // Todo support receive server notification
-  }
 
   useEffect(() => {
     const [, type, name] = activeRequestMeta?.activeMcpPrimitive?.match(/^([^_]+)_(.+)$/) || [];
@@ -480,6 +474,7 @@ export const McpPane = () => {
                     const item = visibleCollection.find(i => i.itemLevel === 1 && i.type === type && i.name === name);
                     requestMetaPatcher(requestId, { activeMcpPrimitive: id });
                     setSelectedPrimitiveItem(item as PrimitiveSubItem);
+                    setRequestPaneActiveTab('params');
                   }
                 }}
               >
@@ -523,6 +518,8 @@ export const McpPane = () => {
               }
               environment={activeEnvironment}
               readyState={readyState}
+              activeTab={requestPaneActiveTab}
+              onTabChange={setRequestPaneActiveTab}
             />
           </Panel>
           <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
