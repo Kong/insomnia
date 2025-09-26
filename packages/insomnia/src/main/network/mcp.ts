@@ -335,7 +335,6 @@ const createErrorResponse = async ({
     error: message,
     transportType,
   };
-  console.log('Creating MCP error response:', responsePatch);
 
   const res = await models.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
   models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
@@ -517,11 +516,9 @@ class McpOAuthClientProvider implements OAuthClientProvider {
   private _redirectEndListener: ((authorizationCode: string) => void) | null = null;
   constructor(private mcpRequest: McpRequest) {}
   get redirectUrl() {
-    console.log('Retrieving redirect URL');
     return getOauthRedirectUrl();
   }
   get clientMetadata(): OAuthClientMetadata {
-    console.log('Retrieving client metadata');
     return {
       redirect_uris: [this.redirectUrl],
       token_endpoint_auth_method: 'none',
@@ -553,13 +550,11 @@ class McpOAuthClientProvider implements OAuthClientProvider {
   // It's called when auth tries to get client information for authorization, use as a starting point for MCP Auth Flow
   // See: https://github.com/modelcontextprotocol/typescript-sdk/blob/1d475bb3f75674a46d81dba881ea743a763cbc12/src/client/auth.ts#L349
   async clientInformation() {
-    console.log('Retrieving client information');
     // If not using MCP Auth Flow, wait for user to confirm in the app UI
     if (!this.isUsingMcpAuthFlow()) {
       BrowserWindow.getAllWindows().forEach(window => {
         window.webContents.send('mcp-auth-confirmation');
       });
-      console.log('Waiting for user to confirm MCP authorization');
       await new Promise<void>((resolve, reject) => {
         ipcMain.once('mcp.authConfirmed', async (_, confirmed: boolean) => {
           if (!confirmed) {
@@ -588,7 +583,6 @@ class McpOAuthClientProvider implements OAuthClientProvider {
   }
   async saveClientInformation(clientInformation: OAuthClientInformationFull) {
     const parsedClientInformation = OAuthClientInformationSchema.parse(clientInformation);
-    console.log('Saving client information:', parsedClientInformation);
     await models.mcpRequest.update(this.mcpRequest, {
       authentication: {
         ...this.mcpRequest.authentication,
@@ -601,7 +595,6 @@ class McpOAuthClientProvider implements OAuthClientProvider {
     await this.refreshMcpRequest();
   }
   async tokens(): Promise<OAuthTokens | undefined> {
-    console.log('Retrieving tokens');
     const { authentication } = this.mcpRequest;
     // Don't return tokens if not using MCP Auth Flow or if disabled
     if (this.isUsingMcpAuthFlow()) {
@@ -619,7 +612,6 @@ class McpOAuthClientProvider implements OAuthClientProvider {
     return undefined;
   }
   async saveTokens(tokens: OAuthTokens) {
-    console.log('Saving tokens:', tokens);
     const token = await models.oAuth2Token.getOrCreateByParentId(this.mcpRequest._id);
     await models.oAuth2Token.update(token, {
       accessToken: tokens.access_token,
@@ -643,7 +635,6 @@ class McpOAuthClientProvider implements OAuthClientProvider {
     return this._resourceMetadataUrl;
   }
   async redirectToAuthorization(authorizationUrl: URL) {
-    console.log('Redirecting to authorization URL:', authorizationUrl.toString());
     BrowserWindow.getAllWindows().forEach(window => {
       window.webContents.send('show-oauth-authorization-modal', authorizationUrl.toString());
     });
@@ -668,10 +659,8 @@ class McpOAuthClientProvider implements OAuthClientProvider {
   }
   async saveCodeVerifier(codeVerifier: string) {
     this._codeVerifier = codeVerifier;
-    console.log('Saving code verifier:', codeVerifier);
   }
   async codeVerifier() {
-    console.log('Retrieving code verifier');
     if (!this._codeVerifier) {
       throw new Error('Code verifier not set');
     }
