@@ -135,22 +135,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
       getAutocompleteConstants={getAccessTokenUrls}
     />
   );
-  const redirectUri = (
-    <AuthInputRow
-      label="Redirect URL"
-      property="redirectUrl"
-      key="redirectUrl"
-      help={
-        authentication.useDefaultBrowser
-          ? 'The callback URL is provided by Insomnia and cannot be modified when authorizing via the default browser.'
-          : 'This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL.'
-      }
-      disabled={authentication.useDefaultBrowser}
-      overrideValueWhenDisabled={getOauthRedirectUrl()}
-      copyBtn={authentication.useDefaultBrowser}
-    />
-  );
-  const redirectUriWithoutDefaultBrowser = (
+  const defaultRedirectUri = (
     <AuthInputRow
       label="Redirect URL"
       property="redirectUrl"
@@ -160,6 +145,18 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
       }
     />
   );
+  const readonlyRedirectUri = (
+    <AuthInputRow
+      label="Redirect URL"
+      property="redirectUrl"
+      key="redirectUrl"
+      help={'The callback URL is provided by Insomnia and cannot be modified when authorizing via the default browser.'}
+      disabled
+      overrideValueWhenDisabled={getOauthRedirectUrl()}
+      copyBtn
+    />
+  );
+  const redirectUri = authentication.useDefaultBrowser ? readonlyRedirectUri : defaultRedirectUri;
   const useDefaultBrowser = (
     <AuthToggleRow
       label="Using default browser"
@@ -223,7 +220,8 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
     authorizationUrl,
     accessTokenUrl,
     redirectUri,
-    redirectUriWithoutDefaultBrowser,
+    defaultRedirectUri,
+    readonlyRedirectUri,
     useDefaultBrowser,
     state,
     scope,
@@ -247,7 +245,8 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
     authorizationUrl,
     accessTokenUrl,
     redirectUri,
-    redirectUriWithoutDefaultBrowser,
+    defaultRedirectUri,
+    readonlyRedirectUri,
     useDefaultBrowser,
     state,
     scope,
@@ -288,11 +287,11 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
 
     advanced = [scope, credentialsInBody, tokenPrefix, audience];
   } else if (grantType === GRANT_TYPE_IMPLICIT) {
-    basic = [authorizationUrl, clientId, redirectUriWithoutDefaultBrowser];
+    basic = [authorizationUrl, clientId, defaultRedirectUri];
 
     advanced = [responseType, scope, state, tokenPrefix, audience];
   } else if (grantType === GRANT_TYPE_MCP_AUTH_FLOW) {
-    basic = [clientId, clientSecret];
+    basic = [clientId, clientSecret, readonlyRedirectUri];
     advanced = [];
   }
 
