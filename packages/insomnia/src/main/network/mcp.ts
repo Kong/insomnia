@@ -452,6 +452,7 @@ const fetchWithLogging = async (
     let authPromiseResolve: (authorizationCode: string) => void = () => {};
     const redirectPromise = new Promise<string>(res => (authPromiseResolve = res));
     const unsubscribe = authProvider.onRedirectEnd(async (authorizationCode: string) => {
+      // Resolve the promise to continue the auth flow after user has completed authorization in default browser
       authPromiseResolve(authorizationCode);
     });
 
@@ -493,7 +494,9 @@ const fetchWithLogging = async (
         fetchFn: authFetchFn,
       });
       if (authResult === 'REDIRECT') {
+        // Wait for oauth authorization flow to complete in default browser
         const authorizationCode = await redirectPromise;
+        // Exchange authorization code for tokens
         authResult = await auth(authProvider, {
           serverUrl: url,
           resourceMetadataUrl,
