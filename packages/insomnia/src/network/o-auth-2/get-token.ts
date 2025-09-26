@@ -56,6 +56,10 @@ export const getOAuth2Token = async (
   forceRefresh = false,
 ): Promise<OAuth2Token | undefined> => {
   try {
+    // If it's MCP Auth Flow, should leave it to be handled by the MCP auth provider
+    if (authentication.grantType === 'mcp-auth-flow') {
+      return undefined;
+    }
     const { oAuth2Token, closestAuthId } = await getExistingAccessTokenAndRefreshIfExpired(
       requestId,
       authentication,
