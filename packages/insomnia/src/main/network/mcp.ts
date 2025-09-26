@@ -427,7 +427,9 @@ const fetchWithLogging = async (
   }
 
   // Avoid infinite loop, only call auth flow once per request
-  if (!calledByAuth && statusCode === 401) {
+  // DELETE method is used to terminate the MCP request, it should not trigger auth flow to keep consistent with the SDK behavior.
+  // See: https://github.com/modelcontextprotocol/typescript-sdk/blob/058b87c163996b31d5cda744085ecf3c13c5c56a/src/client/streamableHttp.ts#L529-L537
+  if (!calledByAuth && statusCode === 401 && method !== 'DELETE') {
     const resourceMetadataUrl = extractResourceMetadataUrl(response);
     if (resourceMetadataUrl) {
       authProvider.saveResourceMetadataUrl(resourceMetadataUrl);
