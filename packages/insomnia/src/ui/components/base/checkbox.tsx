@@ -1,6 +1,11 @@
 import classnames from 'classnames';
 import React, { memo, type ReactNode } from 'react';
-import { Checkbox as RaCheckbox, type CheckboxProps } from 'react-aria-components';
+import {
+  Checkbox as RaCheckbox,
+  CheckboxGroup as RaCheckboxGroup,
+  type CheckboxGroupProps,
+  type CheckboxProps,
+} from 'react-aria-components';
 
 import { Icon } from '../icon';
 
@@ -33,3 +38,18 @@ export const Checkbox = memo(
     );
   },
 );
+
+interface InsomniaCheckboxGroupProps extends CheckboxGroupProps {
+  options: { label: string; value: string }[];
+}
+export const CheckboxGroup = ({ options, ...rest }: InsomniaCheckboxGroupProps) => {
+  return (
+    <RaCheckboxGroup {...rest}>
+      {options.map(option => (
+        <Checkbox key={option.value} value={option.value} className="text-sm text-[--color-font]">
+          {option.label}
+        </Checkbox>
+      ))}
+    </RaCheckboxGroup>
+  );
+};
