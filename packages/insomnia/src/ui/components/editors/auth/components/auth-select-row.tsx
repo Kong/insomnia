@@ -51,7 +51,7 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disab
 
   return (
     <AuthRow labelFor={toKebabCase(label)} label={label} help={help} disabled={disabled}>
-      <select id={toKebabCase(label)} onChange={onChange} value={selectedValue}>
+      <select id={toKebabCase(label)} onChange={onChange} value={selectedValue} disabled={disabled}>
         {options.map(({ name, value }) => (
           <option key={value} value={value}>
             {name}

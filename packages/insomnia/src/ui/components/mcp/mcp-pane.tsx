@@ -303,7 +303,7 @@ export const McpPane = () => {
           event => 'method' in event && event.method === method && event.direction === 'INCOMING',
         ) as McpMessageEvent;
         if (firstMatchEvent) {
-          return firstMatchEvent.data.result;
+          return 'result' in firstMatchEvent.data ? firstMatchEvent.data.result : undefined;
         }
         return undefined;
       };

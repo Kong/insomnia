@@ -56,6 +56,7 @@ const mcp: McpBridgeAPI = {
   connect: options => ipcRenderer.invoke('mcp.connect', options),
   close: options => ipcRenderer.invoke('mcp.close', options),
   closeAll: () => ipcRenderer.send('mcp.closeAll'),
+  authConfirmation: confirmed => ipcRenderer.send('mcp.authConfirmed', confirmed),
   primitive: {
     listTools: options => ipcRenderer.invoke('mcp.primitive.listTools', options),
     callTool: options => ipcRenderer.invoke('mcp.primitive.callTool', options),
