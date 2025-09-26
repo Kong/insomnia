@@ -4,6 +4,7 @@ import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, {
   type CodeMirrorLinkClickCallback,
+  type EditorChange,
   type EditorConfiguration,
   type ShowHintOptions,
 } from 'codemirror';
@@ -105,7 +106,7 @@ export interface CodeEditorProps {
   // used only for saving env editor state, focusEvent doesn't work well
   onBlur?: (e: FocusEvent) => void;
   onFocus?: (e: Event, editor?: CodeMirror.Editor) => void;
-  onChange?: (value: string) => void;
+  onChange?: (value: string, changeObj: EditorChange[]) => void;
   onCursorActivity?: (doc: CodeMirror.Editor) => void;
   onPaste?: (value: string) => string;
   onClickLink?: CodeMirrorLinkClickCallback;
@@ -574,7 +575,7 @@ export const CodeEditor = memo(
       const latestOnChangeRef = useLatest(onChange);
 
       useEffect(() => {
-        const fn = misc.debounce((doc: CodeMirror.Editor) => {
+        const fn = misc.debounce((doc: CodeMirror.Editor, changeObj: EditorChange[]) => {
           if (latestOnChangeRef.current) {
             const value = doc.getValue()?.trim() || '';
             // Disable linting if the document reaches a maximum size or is empty
@@ -591,7 +592,7 @@ export const CodeEditor = memo(
               const errorMessage = err instanceof Error ? err.message : String(err);
               console.log('[codemirror] Failed to set CodeMirror option', errorMessage);
             }
-            latestOnChangeRef.current(doc.getValue() || '');
+            latestOnChangeRef.current(doc.getValue() || '', changeObj);
             setOriginalCode(doc.getValue() || '');
           }
         }, DEBOUNCE_MILLIS);
