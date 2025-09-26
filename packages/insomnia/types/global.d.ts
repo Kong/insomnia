@@ -15,6 +15,12 @@ declare global {
     showWrapper: (options?: Record<string, any>) => void;
     showPrompt: (options?: Record<string, any>) => void;
   }
+  namespace JSX {
+    interface IntrinsicElements {
+      'mis-merge2': React.DetailedHTMLProps<>;
+      'mis-merge3': React.DetailedHTMLProps<>;
+    }
+  }
 }
 
 declare const __DEV__: boolean;

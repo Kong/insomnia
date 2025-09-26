@@ -101,9 +101,16 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
     (formData: any) => {
       if (selectedPrimitiveItem?.type !== 'resourceTemplates' && selectedPrimitiveItem?.type !== 'resources') {
         paramEditorRef.current?.setValue(JSON.stringify(formData || {}, null, 2));
+      } else {
+        setMcpParams(prev => {
+          return {
+            ...prev,
+            [primitiveId]: formData,
+          };
+        });
       }
     },
-    [selectedPrimitiveItem?.type],
+    [primitiveId, selectedPrimitiveItem?.type],
   );
 
   const handleSend = () => {
