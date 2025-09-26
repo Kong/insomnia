@@ -170,6 +170,9 @@ export type RendererOnChannels =
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
   | 'toggle-sidebar'
+  | 'show-oauth-authorization-modal'
+  | 'hide-oauth-authorization-modal'
+  | 'mcp-auth-confirmation'
   | 'updaterStatus';
 
 export const ipcMainOn = (

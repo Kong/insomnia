@@ -25,7 +25,8 @@ export const AuthWrapper: FC<{
   authTypes?: AuthTypes[];
   hideOthers?: boolean;
   hideInherit?: boolean;
-}> = ({ authentication, disabled = false, authTypes, hideOthers, hideInherit }) => {
+  showMcpAuthFlow?: boolean;
+}> = ({ authentication, disabled = false, authTypes, hideOthers, hideInherit, showMcpAuthFlow }) => {
   const type = getAuthObjectOrNull(authentication)?.type || '';
   let authBody: ReactNode = null;
 
@@ -34,7 +35,7 @@ export const AuthWrapper: FC<{
   } else if (type === 'apikey') {
     authBody = <ApiKeyAuth disabled={disabled} />;
   } else if (type === 'oauth2') {
-    authBody = <OAuth2Auth />;
+    authBody = <OAuth2Auth showMcpAuthFlow={showMcpAuthFlow} disabled={disabled} />;
   } else if (type === 'hawk') {
     authBody = <HawkAuth />;
   } else if (type === 'oauth1') {
@@ -80,6 +81,7 @@ export const AuthWrapper: FC<{
           authTypes={authTypes}
           hideOthers={hideOthers}
           hideInherit={hideInherit}
+          disabled={disabled}
         />
       </Toolbar>
       <div className="flex-1 overflow-y-auto">{authBody}</div>
