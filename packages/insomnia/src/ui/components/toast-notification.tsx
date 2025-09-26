@@ -14,7 +14,7 @@ import { flushSync } from 'react-dom';
 type Status = 'info' | 'success' | 'warning' | 'error';
 
 // Define the type for your toast content.
-interface RAToastContent {
+export interface RAToastContent {
   icon?: IconProp;
   title: string;
   description?: string;
