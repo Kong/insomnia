@@ -68,6 +68,13 @@ const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
 // These are exposed to the templating worker and can be used by plugins from context.util
 const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
   'readFile': async (body: { path: string; encoding: 'utf8' }) => {
+    const settings = await models.settings.get();
+    const isInAllowList = settings.dataFolders.some(folder => folder !== '' && body.path?.startsWith(folder));
+    if (!isInAllowList) {
+      throw new Error(
+        `Insomnia cannot access the file ‘${body.path}’. You must specify which directories Insomnia can access in Insomnia’s Preferences → Security.`,
+      );
+    }
     return await fs.promises.readFile(body.path, { encoding: body.encoding || 'utf8' });
   },
   'nodeOS': async () => {
