@@ -1,6 +1,6 @@
 import { type RJSFSchema } from '@rjsf/utils';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Heading, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
+import { Button, Heading, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useLatest } from 'react-use';
 
@@ -21,10 +21,12 @@ import { CodeEditor, type CodeEditorHandle } from '../.client/codemirror/code-ed
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { readOnlyWebsocketPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane } from '../panes/pane';
+import { McpRootsPanel } from './mcp-roots-panel';
 import { McpUrlActionBar } from './mcp-url-bar';
 import type { PrimitiveSubItem } from './types';
 
 const supportedAuthTypes: AuthTypes[] = ['basic', 'oauth2', 'bearer'];
+export type RequestPaneTabs = 'params' | 'auth' | 'headers' | 'roots';
 
 const PaneReadOnlyBanner = () => {
   return (
@@ -47,9 +49,17 @@ interface Props {
   environment: Environment | null;
   readyState: boolean;
   selectedPrimitiveItem?: PrimitiveSubItem | null;
+  activeTab: RequestPaneTabs;
+  onTabChange: (newTab: RequestPaneTabs) => void;
 }
 
-export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPrimitiveItem }) => {
+export const McpRequestPane: FC<Props> = ({
+  environment,
+  readyState,
+  selectedPrimitiveItem,
+  activeTab,
+  onTabChange,
+}) => {
   const primitiveId = `${selectedPrimitiveItem?.type}_${selectedPrimitiveItem?.name}`;
   const { activeRequest, activeRequestMeta, requestPayload } = useRequestLoaderData()! as McpRequestLoaderData;
   const latestRequestPayloadRef = useLatest(requestPayload);
@@ -61,10 +71,13 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
   const paramEditorRef = useRef<CodeEditorHandle>(null);
   const rjsfFormRef = useRef<InsomniaRjsfFormHandle>(null);
   const requestId = activeRequest._id;
+  const isStdio = activeRequest.transportType === 'stdio';
 
   const headersCount = activeRequest.headers.filter(h => !h.disabled).length + readOnlyWebsocketPairs.length;
-
   const patchRequest = useRequestPatcher();
+  const mcpPayloadPatcher = useRequestPayloadPatcher();
+  const latestPayloadPatcherRef = useLatest(mcpPayloadPatcher);
+
   // Reset the response pane state when we switch requests, the environment gets modified
   const uniqueKey = `${environment?.modified}::${requestId}::${activeRequestMeta?.activeResponseId}`;
   const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
@@ -74,7 +87,6 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
       return selectedPrimitiveItem?.type === 'tools' ? (selectedPrimitiveItem.inputSchema as RJSFSchema) : undefined;
     } else if (selectedPrimitiveItem?.type === 'resources' || selectedPrimitiveItem?.type === 'resourceTemplates') {
       const res = buildResourceJsonSchema(selectedPrimitiveItem);
-      console.log('resource json schema: ', res);
       return res;
     } else if (selectedPrimitiveItem?.type === 'prompts') {
       const properties: Record<string, any> = {};
@@ -156,19 +168,6 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
     } catch (err) {}
   };
 
-  const mcpPayloadPatcher = useRequestPayloadPatcher();
-  const latestPayloadPatcherRef = useLatest(mcpPayloadPatcher);
-
-  useEffect(() => {
-    if (readyState) {
-      latestPayloadPatcherRef.current(requestId, { params: mcpParams, url: activeRequest.url });
-    }
-  }, [activeRequest.url, mcpParams, latestPayloadPatcherRef, requestId, readyState]);
-
-  useEffect(() => {
-    readyState && setMcpParams(latestRequestPayloadRef.current?.params || {});
-  }, [activeRequest.url, latestRequestPayloadRef, readyState]);
-
   const sendButtonText = useMemo(() => {
     if (selectedPrimitiveItem?.type === 'tools') {
       return 'Call Tool';
@@ -180,7 +179,15 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
     return 'Send';
   }, [selectedPrimitiveItem]);
 
-  const isStdio = activeRequest.transportType === 'stdio';
+  useEffect(() => {
+    if (readyState) {
+      latestPayloadPatcherRef.current(requestId, { params: mcpParams, url: activeRequest.url });
+    }
+  }, [activeRequest.url, mcpParams, latestPayloadPatcherRef, requestId, readyState]);
+
+  useEffect(() => {
+    readyState && setMcpParams(latestRequestPayloadRef.current?.params || {});
+  }, [activeRequest.url, latestRequestPayloadRef, readyState]);
 
   return (
     <Pane type="request">
@@ -195,7 +202,15 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
           onChange={url => patchRequest(requestId, { url })}
         />
       </header>
-      <Tabs aria-label="Websocket request pane tabs" className="flex h-full w-full flex-1 flex-col">
+      <Tabs
+        aria-label="Websocket request pane tabs"
+        className="flex h-full w-full flex-1 flex-col"
+        onSelectionChange={key => {
+          const activeTab = key.toString();
+          onTabChange(activeTab as RequestPaneTabs);
+        }}
+        selectedKey={activeTab}
+      >
         <TabList
           className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
           aria-label="Request pane tabs"
@@ -240,6 +255,17 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
               <span>Environment</span>
             </Tab>
           )}
+          <Tab
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="roots"
+          >
+            <span>Roots</span>
+            {activeRequest.roots.length > 0 && (
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+                <span className="h-2 w-2 rounded-full bg-green-500" />
+              </span>
+            )}
+          </Tab>
         </TabList>
         <TabPanel className="flex h-full w-full flex-1 flex-col overflow-y-auto" id="params">
           {!readyState ? (
@@ -251,7 +277,7 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
             <PanelGroup className="flex-1 overflow-hidden" direction={'vertical'}>
               <Panel minSize={20}>
                 <div className="flex h-full flex-col overflow-auto">
-                  <div className="flex h-4 w-full items-center justify-between p-4">
+                  <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center justify-between gap-2 px-2 py-2">
                     <Heading className="text-xs font-bold uppercase text-[--hl]">Parameter Builder</Heading>
                     <div className="flex items-center gap-2">
                       <Button
@@ -262,7 +288,7 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
                         {sendButtonText}
                       </Button>
                     </div>
-                  </div>
+                  </Toolbar>
                   {jsonSchema && (
                     <div className="p-4">
                       <p>{selectedPrimitiveItem?.name}</p>
@@ -290,7 +316,7 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
               {selectedPrimitiveItem?.type !== 'resources' && selectedPrimitiveItem?.type !== 'resourceTemplates' && (
                 <Panel minSize={20}>
                   <div className="flex h-full flex-col">
-                    <Heading className="p-4 text-xs font-bold uppercase text-[--hl]">Parameter Overview</Heading>
+                    <Heading className="p-4 text-xs font-bold text-[--hl]">Parameter Overview</Heading>
                     <div className="flex-1 overflow-hidden">
                       <CodeEditor
                         ref={paramEditorRef}
@@ -339,6 +365,9 @@ export const McpRequestPane: FC<Props> = ({ environment, readyState, selectedPri
             textOnly
             onChange={handleEnvChange}
           />
+        </TabPanel>
+        <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="roots">
+          <McpRootsPanel request={activeRequest} readyState={readyState} />
         </TabPanel>
       </Tabs>
     </Pane>
