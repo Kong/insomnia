@@ -1,7 +1,5 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { OAuthAuthorizationStatusModal } from '~/ui/components/modals/oauth-authorization-status-modal';
-
 import { getOauthRedirectUrl } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
@@ -13,6 +11,7 @@ import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,
   GRANT_TYPE_IMPLICIT,
+  GRANT_TYPE_MCP_AUTH_FLOW,
   GRANT_TYPE_PASSWORD,
   PKCE_CHALLENGE_PLAIN,
   PKCE_CHALLENGE_S256,
@@ -57,6 +56,14 @@ const grantTypeOptions = [
   {
     name: 'Client Credentials',
     value: GRANT_TYPE_CLIENT_CREDENTIALS,
+  },
+];
+
+const grantTypeOptionsWithMcpAuthFlow = [
+  ...grantTypeOptions,
+  {
+    name: 'MCP Auth Flow',
+    value: GRANT_TYPE_MCP_AUTH_FLOW,
   },
 ];
 
@@ -284,6 +291,9 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
     basic = [authorizationUrl, clientId, redirectUriWithoutDefaultBrowser];
 
     advanced = [responseType, scope, state, tokenPrefix, audience];
+  } else if (grantType === GRANT_TYPE_MCP_AUTH_FLOW) {
+    basic = [clientId, clientSecret];
+    advanced = [];
   }
 
   return {
@@ -292,18 +302,43 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
   };
 };
 
-export const OAuth2Auth: FC = () => {
+export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: boolean; disabled?: boolean }) => {
   const reqData = useRequestLoaderData() as RequestLoaderData;
   const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const { authentication } = reqData?.activeRequest || groupData.activeRequestGroup;
 
   const { basic, advanced } = getFieldsForGrantType(authentication as AuthTypeOAuth2);
 
+  if ('grantType' in authentication && authentication.grantType === GRANT_TYPE_MCP_AUTH_FLOW) {
+    return (
+      <>
+        <AuthTableBody>
+          <AuthToggleRow label="Enabled" property="disabled" invert disabled={disabled} />
+          <AuthSelectRow
+            label="Grant Type"
+            property="grantType"
+            disabled={disabled}
+            options={showMcpAuthFlow ? grantTypeOptionsWithMcpAuthFlow : grantTypeOptions}
+          />
+          {basic}
+        </AuthTableBody>
+        <div className="pad">
+          <OAuth2Tokens hideRefresh />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <AuthTableBody>
-        <AuthToggleRow label="Enabled" property="disabled" invert />
-        <AuthSelectRow label="Grant Type" property="grantType" options={grantTypeOptions} />
+        <AuthToggleRow label="Enabled" property="disabled" invert disabled={disabled} />
+        <AuthSelectRow
+          label="Grant Type"
+          property="grantType"
+          disabled={disabled}
+          options={showMcpAuthFlow ? grantTypeOptionsWithMcpAuthFlow : grantTypeOptions}
+        />
         {basic}
         <AuthAccordion accordionKey="OAuth2AdvancedOptions" label="Advanced Options">
           {advanced}
@@ -327,7 +362,6 @@ export const OAuth2Auth: FC = () => {
       <div className="pad">
         <OAuth2Tokens />
       </div>
-      <OAuthAuthorizationStatusModal />
     </>
   );
 };
@@ -470,7 +504,7 @@ const OAuth2Error: FC<{ token?: OAuth2Token }> = ({ token }) => {
   return debugButton;
 };
 
-const OAuth2Tokens: FC = () => {
+const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
   const reqData = useRequestLoaderData() as RequestLoaderData;
   const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
@@ -513,32 +547,33 @@ const OAuth2Tokens: FC = () => {
             Clear
           </button>
         ) : null}
-        &nbsp;&nbsp;
-        <button
-          className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
-          onClick={async () => {
-            setError('');
-            setLoading(true);
+        {!hideRefresh && (
+          <button
+            className="ml-2 h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+            onClick={async () => {
+              setError('');
+              setLoading(true);
 
-            try {
-              const renderedAuthentication = (await handleRender(authentication)) as AuthTypeOAuth2;
-              const t = await getOAuth2Token(_id, renderedAuthentication, true);
-              setToken(t);
-              setLoading(false);
-            } catch (err) {
-              // Clear existing tokens if there's an error
-              if (token) {
-                setToken(undefined);
-                models.oAuth2Token.remove(token);
+              try {
+                const renderedAuthentication = (await handleRender(authentication)) as AuthTypeOAuth2;
+                const t = await getOAuth2Token(_id, renderedAuthentication, true);
+                setToken(t);
+                setLoading(false);
+              } catch (err) {
+                // Clear existing tokens if there's an error
+                if (token) {
+                  setToken(undefined);
+                  models.oAuth2Token.remove(token);
+                }
+                setError(err.message);
+                setLoading(false);
               }
-              setError(err.message);
-              setLoading(false);
-            }
-          }}
-          disabled={loading}
-        >
-          {loading ? (token ? 'Refreshing...' : 'Fetching...') : token ? 'Refresh Token' : 'Fetch Tokens'}
-        </button>
+            }}
+            disabled={loading}
+          >
+            {loading ? (token ? 'Refreshing...' : 'Fetching...') : token ? 'Refresh Token' : 'Fetch Tokens'}
+          </button>
+        )}
       </div>
     </div>
   );

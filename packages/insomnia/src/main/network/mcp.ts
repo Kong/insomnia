@@ -1,9 +1,22 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import {
+  auth,
+  type AuthResult,
+  extractResourceMetadataUrl,
+  type OAuthClientProvider,
+  UnauthorizedError,
+} from '@modelcontextprotocol/sdk/client/auth.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { getDefaultEnvironment, StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import {
+  type OAuthClientInformationFull,
+  OAuthClientInformationSchema,
+  type OAuthClientMetadata,
+  type OAuthTokens,
+} from '@modelcontextprotocol/sdk/shared/auth.js';
 import type { GetPromptRequest, Notification, ReadResourceRequest } from '@modelcontextprotocol/sdk/types.js';
 import {
   type ClientRequest,
@@ -22,12 +35,12 @@ import {
   type SubscribeRequest,
   type UnsubscribeRequest,
 } from '@modelcontextprotocol/sdk/types.js';
-import electron, { BrowserWindow } from 'electron';
+import electron, { BrowserWindow, ipcMain } from 'electron';
 import { parse } from 'shell-quote';
 import { v4 as uuidV4 } from 'uuid';
 import type { z } from 'zod';
 
-import { getAppVersion, getProductName, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { getAppVersion, getOauthRedirectUrl, getProductName, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import {
   getMcpMethodFromMessage,
   METHOD_ELICITATION_CREATE_MESSAGE,
@@ -37,9 +50,10 @@ import {
   METHOD_UNSUBSCRIBE_RESOURCE,
 } from '~/common/mcp-utils';
 import { generateId } from '~/common/misc';
+import { authorizeUserInDefaultBrowser } from '~/main/authorizeUserInDefaultBrowser';
 import * as models from '~/models';
-import { TRANSPORT_TYPES, type TransportType } from '~/models/mcp-request';
-import type { McpResponse } from '~/models/mcp-response';
+import { type McpRequest, TRANSPORT_TYPES, type TransportType } from '~/models/mcp-request';
+import { type McpResponse, prefix as mcpResponsePrefix } from '~/models/mcp-response';
 import type { RequestAuthentication, RequestHeader } from '~/models/request';
 import { invariant } from '~/utils/invariant';
 
@@ -83,55 +97,61 @@ interface CallToolOptions extends CommonMcpOptions {
   parameters: Record<string, any>;
 }
 
-interface McpCloseEvent {
+interface McpEventBase {
   _id: string;
   requestId: string;
-  type: 'close';
   timestamp: number;
+}
+interface McpCloseEventWithoutBase {
+  type: 'close';
   reason: string;
 }
-export interface McpMessageEvent {
-  _id: string;
-  requestId: string;
+interface McpMessageEventWithoutBase {
   type: 'message';
   direction: 'INCOMING';
-  timestamp: number;
-  data: JSONRPCResponse;
+  data: JSONRPCResponse | {};
   method: string;
 }
-interface McpErrorEvent {
-  _id: string;
-  requestId: string;
-  timestamp: number;
+export type McpMessageEvent = McpEventBase & McpMessageEventWithoutBase;
+interface McpErrorEventWithoutBase {
   type: 'error';
   message: string;
   error: any;
 }
-interface McpRequestEvent {
-  _id: string;
-  requestId: string;
+interface McpRequestEventWithoutBase {
   type: 'message';
-  timestamp: number;
   direction: 'OUTGOING';
   method: string;
   data: any;
 }
-export interface McpNotificationEvent {
-  _id: string;
-  requestId: string;
+interface McpNotificationEventWithoutBase {
   type: 'notification';
-  timestamp: number;
   method: string;
   direction: 'INCOMING';
   data: Notification;
 }
-export type McpEvent = McpMessageEvent | McpRequestEvent | McpCloseEvent | McpErrorEvent | McpNotificationEvent;
+interface McpAuthEventWithoutBase {
+  type: 'message';
+  method: 'MCP Auth';
+  direction: 'OUTGOING' | 'INCOMING';
+  data: Record<string, any>;
+}
+export type McpNotificationEvent = McpEventBase & McpNotificationEventWithoutBase;
+type McpEventWithoutBase =
+  | McpMessageEventWithoutBase
+  | McpRequestEventWithoutBase
+  | McpCloseEventWithoutBase
+  | McpErrorEventWithoutBase
+  | McpNotificationEventWithoutBase
+  | McpAuthEventWithoutBase;
+export type McpEvent = McpEventBase & McpEventWithoutBase;
 interface ResponseEventOptions {
   responseId: string;
   requestId: string;
   environmentId: string | null;
   timelinePath: string;
   eventLogPath: string;
+  authProvider: McpOAuthClientProvider;
 }
 
 const mcpConnections = new Map<string, McpClient>();
@@ -143,18 +163,25 @@ const protocol = 'mcp';
 const getMcpStateChannel = (requestId: string) => `${protocol}.${requestId}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 const mcpEventIdGenerator = () => `mcp-${uuidV4()}`;
 
-const writeEventLogAndNotify = ({
-  requestId,
-  data,
-  clearRequestIdMap = false,
-  newLine = true,
-}: {
-  requestId: string;
-  data: any;
-  clearRequestIdMap?: boolean;
-  newLine?: boolean;
-}) => {
-  const dataToWrite = newLine ? data + '\n' : data;
+const writeEventLogAndNotify = (
+  requestId: string,
+  data: McpEventWithoutBase,
+  {
+    clearRequestIdMap = false,
+    newLine = true,
+  }: {
+    clearRequestIdMap?: boolean;
+    newLine?: boolean;
+  } = {},
+) => {
+  const eventData: McpEvent = {
+    ...data,
+    _id: mcpEventIdGenerator(),
+    requestId,
+    timestamp: Date.now(),
+  };
+  const stringifiedData = JSON.stringify(eventData);
+  const dataToWrite = newLine ? stringifiedData + '\n' : stringifiedData;
   eventLogFileStreams.get(requestId)?.write(dataToWrite, () => {
     // notify all renderers of new event has been received
     for (const window of BrowserWindow.getAllWindows()) {
@@ -185,11 +212,9 @@ const _notifyMcpClientStateChange = (channel: string, isConnected: boolean) => {
   }
 };
 
-const _clearMcpMaps = (requestId: string, timelineMessage: string, event?: McpEvent) => {
+const _clearMcpMaps = (requestId: string, timelineMessage: string, event?: McpEventWithoutBase) => {
   if (event) {
-    writeEventLogAndNotify({
-      requestId,
-      data: JSON.stringify(event),
+    writeEventLogAndNotify(requestId, event, {
       clearRequestIdMap: true,
     });
   }
@@ -204,11 +229,8 @@ const _clearMcpMaps = (requestId: string, timelineMessage: string, event?: McpEv
 };
 
 const _handleCloseMcpConnection = (requestId: string) => {
-  const closeEvent: McpCloseEvent = {
-    _id: mcpEventIdGenerator(),
-    requestId,
+  const closeEvent: McpCloseEventWithoutBase = {
     type: 'close',
-    timestamp: Date.now(),
     reason: 'Mcp connection closed',
   };
   // clear in-memory store
@@ -220,27 +242,17 @@ const _handleCloseMcpConnection = (requestId: string) => {
 };
 
 const _handleMcpClientError = (requestId: string, error: Error, prefix?: string) => {
-  const messageEvent: McpErrorEvent = {
-    _id: mcpEventIdGenerator(),
-    requestId,
+  const messageEvent: McpErrorEventWithoutBase = {
     type: 'error',
     message: prefix || 'Unknown error',
     error: error.message,
-    timestamp: Date.now(),
   };
-  writeEventLogAndNotify({ requestId, data: JSON.stringify(messageEvent) });
+  writeEventLogAndNotify(requestId, messageEvent);
   console.error(`MCP client error for ${requestId}`, error);
 };
 
 const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
-  const _id = mcpEventIdGenerator();
-  const timestamp = Date.now();
-  let messageEvent: McpMessageEvent | McpErrorEvent | McpNotificationEvent;
-  const commonEventProps = {
-    _id,
-    timestamp,
-    requestId,
-  };
+  let messageEvent: McpMessageEventWithoutBase | McpErrorEventWithoutBase | McpNotificationEventWithoutBase;
   if (JSONRPCErrorSchema.safeParse(message).success) {
     // Error message
     const errorDetail = JSONRPCErrorSchema.parse(message).error;
@@ -251,7 +263,6 @@ const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
     } catch (error) {}
 
     messageEvent = {
-      ...commonEventProps,
       type: 'error',
       error: errorMessage,
       message: `MCP Error ${errorDetail.code}`,
@@ -259,7 +270,6 @@ const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
   } else if (ServerNotificationSchema.safeParse(message).success) {
     // Server notification message
     messageEvent = {
-      ...commonEventProps,
       type: 'notification',
       direction: 'INCOMING',
       method: getMcpMethodFromMessage(message),
@@ -273,14 +283,13 @@ const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
     }
     const method = getMcpMethodFromMessage(message);
     messageEvent = {
-      ...commonEventProps,
       type: 'message',
       method,
       data: message as JSONRPCResponse,
       direction: 'INCOMING',
     };
   }
-  writeEventLogAndNotify({ requestId, data: JSON.stringify(messageEvent) });
+  writeEventLogAndNotify(requestId, messageEvent);
 };
 
 const parseAndLogMcpRequest = (requestId: string, message: any) => {
@@ -298,16 +307,13 @@ const parseAndLogMcpRequest = (requestId: string, message: any) => {
         requestMethod = METHOD_UNKNOWN;
       }
     }
-    const requestEvent: McpRequestEvent = {
-      _id: mcpEventIdGenerator(),
+    const requestEvent: McpRequestEventWithoutBase = {
       method: requestMethod,
-      requestId,
       type: 'message',
       direction: 'OUTGOING',
-      timestamp: Date.now(),
       data: message,
     };
-    writeEventLogAndNotify({ requestId, data: JSON.stringify(requestEvent) });
+    writeEventLogAndNotify(requestId, requestEvent);
   }
 };
 
@@ -318,7 +324,7 @@ const createErrorResponse = async ({
   timelinePath,
   message,
   transportType,
-}: ResponseEventOptions & { message: string; transportType: TransportType }) => {
+}: Omit<ResponseEventOptions, 'authProvider'> & { message: string; transportType: TransportType }) => {
   const settings = await models.settings.get();
   const responsePatch = {
     _id: responseId,
@@ -329,7 +335,9 @@ const createErrorResponse = async ({
     error: message,
     transportType,
   };
-  const res = await models.mcpResponse.create(responsePatch, settings.maxHistoryResponses);
+  console.log('Creating MCP error response:', responsePatch);
+
+  const res = await models.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
   models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
@@ -360,10 +368,20 @@ const parseResponseAndBuildTimeline = (requestHeaderLogs: string, response: Resp
 const fetchWithLogging = async (
   url: string | URL,
   init: RequestInit,
-  { requestId, responseId, environmentId, timelinePath, eventLogPath }: ResponseEventOptions,
+  options: ResponseEventOptions,
+  calledByAuth?: boolean,
 ) => {
+  const { requestId, responseId, environmentId, timelinePath, eventLogPath, authProvider } = options;
   const { method = 'GET' } = init;
+
   const reqHeader = new Headers(init?.headers || {});
+  const tokens = await authProvider.tokens();
+  if (tokens) {
+    // Keep the same header case as the mcp-ts-sdk: https://github.com/modelcontextprotocol/typescript-sdk/blob/1d475bb3f75674a46d81dba881ea743a763cbc12/src/client/streamableHttp.ts#L175-L178
+    reqHeader.set('Authorization', `Bearer ${tokens.access_token}`);
+    init.headers = reqHeader;
+  }
+
   const isJsonRequest = reqHeader.get('content-type')?.toLowerCase().includes('application/json');
   const requestBody = isJsonRequest ? JSON.parse(init.body?.toString() || '{}') : init.body?.toString() || '';
   const isMcpInitializeRequest = isJsonRequest && isInitializeRequest(requestBody);
@@ -404,24 +422,277 @@ const fetchWithLogging = async (
       transportType: TRANSPORT_TYPES.HTTP,
     };
     const settings = await models.settings.get();
-    const res = await models.mcpResponse.create(responsePatch, settings.maxHistoryResponses);
+    const res = await models.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
     models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
   }
+
+  // Avoid infinite loop, only call auth flow once per request
+  if (!calledByAuth && statusCode === 401) {
+    const resourceMetadataUrl = extractResourceMetadataUrl(response);
+    if (resourceMetadataUrl) {
+      authProvider.saveResourceMetadataUrl(resourceMetadataUrl);
+    }
+
+    const authEvent: McpAuthEventWithoutBase = {
+      type: 'message',
+      method: 'MCP Auth',
+      direction: 'INCOMING',
+      data: {
+        statusCode,
+        statusMessage,
+        resourceMetadataUrl: resourceMetadataUrl?.toString() || null,
+      },
+    };
+    writeEventLogAndNotify(requestId, authEvent);
+
+    let authResult: AuthResult;
+
+    let authPromiseResolve: (authorizationCode: string) => void = () => {};
+    const redirectPromise = new Promise<string>(res => (authPromiseResolve = res));
+    const unsubscribe = authProvider.onRedirectEnd(async (authorizationCode: string) => {
+      authPromiseResolve(authorizationCode);
+    });
+
+    const authFetchFn = async (url: string | URL, init?: RequestInit) => {
+      const authRequestEvent: McpAuthEventWithoutBase = {
+        type: 'message',
+        method: 'MCP Auth',
+        direction: 'OUTGOING',
+        data: {
+          url: typeof url === 'string' ? url : url.toString(),
+          method: init?.method || 'GET',
+          headers: init?.headers || {},
+          body: init?.body || null,
+        },
+      };
+      writeEventLogAndNotify(requestId, authRequestEvent);
+      const response = await fetch(url, init);
+
+      const authResponseEvent: McpAuthEventWithoutBase = {
+        type: 'message',
+        method: 'MCP Auth',
+        direction: 'INCOMING',
+        data: {
+          statusCode: response.status,
+          statusMessage: response.statusText,
+          body: await response.clone().text(),
+        },
+      };
+      writeEventLogAndNotify(requestId, authResponseEvent);
+
+      return response;
+    };
+
+    try {
+      // Start auth flow
+      authResult = await auth(authProvider, {
+        serverUrl: url,
+        resourceMetadataUrl,
+        fetchFn: authFetchFn,
+      });
+      if (authResult === 'REDIRECT') {
+        const authorizationCode = await redirectPromise;
+        authResult = await auth(authProvider, {
+          serverUrl: url,
+          resourceMetadataUrl,
+          authorizationCode,
+          fetchFn: authFetchFn,
+        });
+      }
+      if (authResult !== 'AUTHORIZED') {
+        throw new UnauthorizedError();
+      }
+      return await fetchWithLogging(url, init, options, calledByAuth);
+    } finally {
+      unsubscribe();
+    }
+  }
+
   return response;
 };
 
-const createStreamableHTTPTransport = (
+class McpOAuthClientProvider implements OAuthClientProvider {
+  private _codeVerifier?: string;
+  private _resourceMetadataUrl?: URL;
+  private _redirectEndListener: ((authorizationCode: string) => void) | null = null;
+  constructor(private mcpRequest: McpRequest) {}
+  get redirectUrl() {
+    console.log('Retrieving redirect URL');
+    return getOauthRedirectUrl();
+  }
+  get clientMetadata(): OAuthClientMetadata {
+    console.log('Retrieving client metadata');
+    return {
+      redirect_uris: [this.redirectUrl],
+      token_endpoint_auth_method: 'none',
+      grant_types: ['authorization_code', 'refresh_token'],
+      response_types: ['code'],
+      client_name: 'Insomnia MCP Client',
+      client_uri: 'https://github.com/Kong/insomnia',
+      scope: 'scope' in this.mcpRequest.authentication ? this.mcpRequest.authentication.scope : undefined,
+    };
+  }
+  private async refreshMcpRequest() {
+    const _mcpRequest = await models.mcpRequest.getById(this.mcpRequest._id);
+    invariant(_mcpRequest, 'MCP Request not found');
+    this.mcpRequest = _mcpRequest;
+  }
+  private isUsingMcpAuthFlow() {
+    const { authentication } = this.mcpRequest;
+    return 'grantType' in authentication && authentication.grantType === 'mcp-auth-flow' && !authentication.disabled;
+  }
+  private async updateAuthentication(auth: Partial<RequestAuthentication>) {
+    await models.mcpRequest.update(this.mcpRequest, {
+      authentication: {
+        ...this.mcpRequest.authentication,
+        ...auth,
+      },
+    });
+    await this.refreshMcpRequest();
+  }
+  // It's called when auth tries to get client information for authorization, use as a starting point for MCP Auth Flow
+  // See: https://github.com/modelcontextprotocol/typescript-sdk/blob/1d475bb3f75674a46d81dba881ea743a763cbc12/src/client/auth.ts#L349
+  async clientInformation() {
+    console.log('Retrieving client information');
+    // If not using MCP Auth Flow, wait for user to confirm in the app UI
+    if (!this.isUsingMcpAuthFlow()) {
+      BrowserWindow.getAllWindows().forEach(window => {
+        window.webContents.send('mcp-auth-confirmation');
+      });
+      console.log('Waiting for user to confirm MCP authorization');
+      await new Promise<void>((resolve, reject) => {
+        ipcMain.once('mcp.authConfirmed', async (_, confirmed: boolean) => {
+          if (!confirmed) {
+            reject(new Error('MCP authorization cancelled by user'));
+          } else {
+            await this.updateAuthentication({
+              type: 'oauth2',
+              grantType: 'mcp-auth-flow',
+              disabled: false,
+            });
+            resolve();
+          }
+        });
+      });
+    }
+
+    if ('clientId' in this.mcpRequest.authentication && this.mcpRequest.authentication.clientId) {
+      return {
+        client_id: this.mcpRequest.authentication.clientId,
+        client_secret: this.mcpRequest.authentication.clientSecret,
+        client_id_issued_at: this.mcpRequest.authentication.clientIdIssuedAt,
+        client_secret_expires_at: this.mcpRequest.authentication.clientSecretExpiresAt,
+      };
+    }
+    return undefined;
+  }
+  async saveClientInformation(clientInformation: OAuthClientInformationFull) {
+    const parsedClientInformation = OAuthClientInformationSchema.parse(clientInformation);
+    console.log('Saving client information:', parsedClientInformation);
+    await models.mcpRequest.update(this.mcpRequest, {
+      authentication: {
+        ...this.mcpRequest.authentication,
+        clientId: parsedClientInformation.client_id,
+        clientSecret: parsedClientInformation.client_secret,
+        clientIdIssuedAt: parsedClientInformation.client_id_issued_at,
+        clientSecretExpiresAt: parsedClientInformation.client_secret_expires_at,
+      },
+    });
+    await this.refreshMcpRequest();
+  }
+  async tokens(): Promise<OAuthTokens | undefined> {
+    console.log('Retrieving tokens');
+    const { authentication } = this.mcpRequest;
+    // Don't return tokens if not using MCP Auth Flow or if disabled
+    if (this.isUsingMcpAuthFlow()) {
+      const token = await models.oAuth2Token.getOrCreateByParentId(this.mcpRequest._id);
+      if (token.accessToken) {
+        return {
+          access_token: token.accessToken,
+          refresh_token: token.refreshToken,
+          id_token: token.identityToken,
+          expires_in: token.expiresAt ? Math.floor(token.expiresAt / 1000) : undefined,
+          token_type: ('tokenPrefix' in authentication && authentication.tokenPrefix) || 'Bearer',
+        };
+      }
+    }
+    return undefined;
+  }
+  async saveTokens(tokens: OAuthTokens) {
+    console.log('Saving tokens:', tokens);
+    const token = await models.oAuth2Token.getOrCreateByParentId(this.mcpRequest._id);
+    await models.oAuth2Token.update(token, {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token || '',
+      identityToken: tokens.id_token || '',
+      expiresAt: tokens.expires_in ? Date.now() + tokens.expires_in * 1000 : null,
+    });
+    await models.mcpRequest.update(this.mcpRequest, {
+      authentication: {
+        ...this.mcpRequest.authentication,
+        scope: tokens.scope,
+        tokenPrefix: tokens.token_type,
+      },
+    });
+    await this.refreshMcpRequest();
+  }
+  saveResourceMetadataUrl(url: URL | undefined) {
+    this._resourceMetadataUrl = url;
+  }
+  get resourceMetadataUrl() {
+    return this._resourceMetadataUrl;
+  }
+  async redirectToAuthorization(authorizationUrl: URL) {
+    console.log('Redirecting to authorization URL:', authorizationUrl.toString());
+    BrowserWindow.getAllWindows().forEach(window => {
+      window.webContents.send('show-oauth-authorization-modal', authorizationUrl.toString());
+    });
+    const redirectedTo = await authorizeUserInDefaultBrowser({
+      url: authorizationUrl.toString(),
+    });
+    BrowserWindow.getAllWindows().forEach(window => {
+      window.webContents.send('hide-oauth-authorization-modal', authorizationUrl.toString());
+    });
+    const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
+    const authorizationCode = redirectParams.code;
+    if (!authorizationCode) {
+      throw new Error('Authorization code not found');
+    }
+    await this._redirectEndListener?.(authorizationCode);
+  }
+  onRedirectEnd(listener: (authorizationCode: string) => void) {
+    this._redirectEndListener = listener;
+    return () => {
+      this._redirectEndListener = null;
+    };
+  }
+  async saveCodeVerifier(codeVerifier: string) {
+    this._codeVerifier = codeVerifier;
+    console.log('Saving code verifier:', codeVerifier);
+  }
+  async codeVerifier() {
+    console.log('Retrieving code verifier');
+    if (!this._codeVerifier) {
+      throw new Error('Code verifier not set');
+    }
+    return this._codeVerifier;
+  }
+}
+
+const createStreamableHTTPTransport = async (
   options: OpenMcpHTTPClientConnectionOptions,
   {
     responseId,
     responseEnvironmentId,
     timelinePath,
     eventLogPath,
+    authProvider,
   }: {
     responseId: string;
     responseEnvironmentId: string | null;
     timelinePath: string;
     eventLogPath: string;
+    authProvider: McpOAuthClientProvider;
   },
 ) => {
   const { url, requestId } = options;
@@ -449,6 +720,7 @@ const createStreamableHTTPTransport = (
         environmentId: responseEnvironmentId,
         timelinePath,
         eventLogPath,
+        authProvider,
       }),
     reconnectionOptions: {
       maxReconnectionDelay: 30000,
@@ -554,7 +826,7 @@ const createStdioTransport = (
         transportType: TRANSPORT_TYPES.STDIO,
       };
       const settings = await models.settings.get();
-      const res = await models.mcpResponse.create(responsePatch, settings.maxHistoryResponses);
+      const res = await models.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
     }
     // Log outgoing request
@@ -567,11 +839,38 @@ const createStdioTransport = (
   return transport;
 };
 
+const createTransportAndConnect = async (
+  mcpClient: Client,
+  connectionOptions: OpenMcpClientConnectionOptions,
+  options: {
+    responseId: string;
+    responseEnvironmentId: string | null;
+    timelinePath: string;
+    eventLogPath: string;
+  },
+) => {
+  if (!isOpenMcpHTTPClientConnectionOptions(connectionOptions)) {
+    const transport = await createStdioTransport(connectionOptions, options);
+    await mcpClient.connect(transport);
+  } else {
+    const mcpRequest = await models.mcpRequest.getById(connectionOptions.requestId);
+    invariant(mcpRequest, 'MCP Request not found');
+
+    const authProvider = new McpOAuthClientProvider(mcpRequest);
+    const transport = await createStreamableHTTPTransport(connectionOptions, {
+      ...options,
+      authProvider,
+    });
+    // Use a longer timeout for initial connection to allow for auth flow to complete
+    await mcpClient.connect(transport, { timeout: 3 * 60 * 1000 });
+  }
+};
+
 const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) => {
   const { requestId, workspaceId } = options;
 
   // create response model and file streams
-  const responseId = generateId('res');
+  const responseId = generateId(mcpResponsePrefix);
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
   const eventLogPath = path.join(responsesDir, uuidV4() + '.response');
   eventLogFileStreams.set(requestId, fs.createWriteStream(eventLogPath));
@@ -592,25 +891,17 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
     name: getProductName(),
     version: getAppVersion(),
   });
-  mcpClient.onclose = () => _handleCloseMcpConnection(requestId);
   mcpClient.onerror = _error => _handleMcpClientError(requestId, _error, 'MCP Client Error');
   const mcpStateChannel = getMcpStateChannel(requestId);
 
   try {
-    const transport = isOpenMcpHTTPClientConnectionOptions(options)
-      ? await createStreamableHTTPTransport(options, {
-          responseId,
-          responseEnvironmentId,
-          timelinePath,
-          eventLogPath,
-        })
-      : await createStdioTransport(options, {
-          responseId,
-          responseEnvironmentId,
-          timelinePath,
-          eventLogPath,
-        });
-    await mcpClient.connect(transport!);
+    await createTransportAndConnect(mcpClient, options, {
+      responseId,
+      responseEnvironmentId,
+      timelinePath,
+      eventLogPath,
+    });
+    mcpClient.onclose = () => _handleCloseMcpConnection(requestId);
   } catch (error) {
     // Log error when connection fails with exception
     createErrorResponse({
@@ -623,9 +914,13 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
       transportType: options.transportType,
     });
     console.error(`Failed to create ${options.transportType} transport: ${error}`);
+    _handleCloseMcpConnection(requestId);
     return;
   }
-
+  if (mcpConnections.has(requestId)) {
+    // close existing connection if any, avoid multiple connections with same requestId
+    await closeMcpConnection({ requestId });
+  }
   mcpConnections.set(requestId, mcpClient as McpClient);
   const serverCapabilities = mcpClient.getServerCapabilities();
   const primitivePromises: Promise<any>[] = [];
@@ -746,16 +1041,13 @@ const subscribeResource = async (options: CommonMcpOptions & SubscribeRequest['p
   if (mcpClient) {
     const result = await mcpClient.subscribeResource(params);
     // Subscribe resource do not have a formal response schema, so we log it manually
-    const messageEvent: Omit<McpMessageEvent, 'data'> & { data: {} } = {
+    const messageEvent: Omit<McpMessageEventWithoutBase, 'data'> & { data: {} } = {
       type: 'message',
       method: METHOD_SUBSCRIBE_RESOURCE,
-      _id: mcpEventIdGenerator(),
-      timestamp: Date.now(),
-      requestId,
       data: result,
       direction: 'INCOMING',
     };
-    writeEventLogAndNotify({ requestId, data: JSON.stringify(messageEvent) });
+    writeEventLogAndNotify(requestId, messageEvent);
     return result;
   }
   return null;
@@ -767,16 +1059,13 @@ const unsubscribeResource = async (options: CommonMcpOptions & UnsubscribeReques
   if (mcpClient) {
     const result = await mcpClient.unsubscribeResource(params);
     // Unsubscribe resource do not have a formal response schema, so we log it manually
-    const messageEvent: Omit<McpMessageEvent, 'data'> & { data: {} } = {
+    const messageEvent: Omit<McpMessageEventWithoutBase, 'data'> & { data: {} } = {
       type: 'message',
       method: METHOD_UNSUBSCRIBE_RESOURCE,
-      _id: mcpEventIdGenerator(),
-      timestamp: Date.now(),
-      requestId,
       data: result,
       direction: 'INCOMING',
     };
-    writeEventLogAndNotify({ requestId, data: JSON.stringify(messageEvent) });
+    writeEventLogAndNotify(requestId, messageEvent);
     return result;
   }
   return null;
@@ -812,6 +1101,7 @@ export interface McpBridgeAPI {
   connect: typeof openMcpClientConnection;
   close: typeof closeMcpConnection;
   closeAll: typeof closeAllMcpConnections;
+  authConfirmation: (confirmed: boolean) => void;
   primitive: {
     listTools: typeof listTools;
     callTool: typeof callTool;

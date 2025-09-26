@@ -129,6 +129,20 @@ export async function create(patch: Partial<McpResponse> = {}, maxResponses = 20
   return db.docCreate(type, patch);
 }
 
+export async function updateOrCreate(patch: Partial<McpResponse>, maxResponses = 20) {
+  const id = patch._id;
+  if (!id) {
+    throw new Error('Cannot updateOrCreate McpResponse without _id');
+  }
+
+  const existing = await getById(id);
+  if (existing) {
+    return db.docUpdate(existing, patch);
+  }
+
+  return create(patch, maxResponses);
+}
+
 export async function getLatestForRequestId(requestId: string, environmentId: string | null) {
   // Filter responses by environment if setting is enabled
 
