@@ -1,4 +1,5 @@
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { OAuthAuthorizationStatusModal } from '~/ui/components/modals/oauth-authorization-status-modal';
 
 import { ErrorBoundary } from './components/error-boundary';
 import { registerModal } from './components/modals';
@@ -55,6 +56,8 @@ const Modals = () => {
         <SyncMergeModal ref={instance => registerModal(instance, 'SyncMergeModal')} />
 
         <UpgradeModal ref={instance => registerModal(instance, 'UpgradeModal')} />
+
+        <OAuthAuthorizationStatusModal />
       </ErrorBoundary>
     </div>
   );

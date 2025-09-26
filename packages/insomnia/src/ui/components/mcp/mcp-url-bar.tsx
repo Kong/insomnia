@@ -19,6 +19,8 @@ import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '~/ui/components/base/dropdown';
 import { Modal, type ModalHandle } from '~/ui/components/base/modal';
 import { ModalHeader } from '~/ui/components/base/modal-header';
+import { showModal } from '~/ui/components/modals';
+import { AskModal } from '~/ui/components/modals/ask-modal';
 import { Button } from '~/ui/components/themed-button';
 
 import { getDataFromKVPair } from '../../../models/environment';
@@ -99,22 +101,26 @@ export const McpUrlActionBar = ({
     const { authentication, headers } = rendered;
 
     if (!authentication.disabled) {
-      if (authentication.type === 'basic') {
-        const { username, password, useISO88591 } = authentication;
-        const encoding = useISO88591 ? 'latin1' : 'utf8';
-        headers.push(getBasicAuthHeader(username, password, encoding));
-      } else if (authentication.type === 'bearer' && authentication.token) {
-        const { token, prefix } = authentication;
-        headers.push(getBearerAuthHeader(token, prefix));
-      } else if (authentication.type === 'oauth2') {
-        const oAuth2Token = await getOAuth2Token(request._id, authentication as AuthTypeOAuth2);
-        if (oAuth2Token) {
-          const token = oAuth2Token.accessToken;
-          const authHeader = _buildBearerHeader(token, authentication.tokenPrefix);
-          if (authHeader) {
-            headers.push(authHeader);
+      try {
+        if (authentication.type === 'basic') {
+          const { username, password, useISO88591 } = authentication;
+          const encoding = useISO88591 ? 'latin1' : 'utf8';
+          headers.push(getBasicAuthHeader(username, password, encoding));
+        } else if (authentication.type === 'bearer' && authentication.token) {
+          const { token, prefix } = authentication;
+          headers.push(getBearerAuthHeader(token, prefix));
+        } else if (authentication.type === 'oauth2') {
+          const oAuth2Token = await getOAuth2Token(request._id, authentication as AuthTypeOAuth2);
+          if (oAuth2Token) {
+            const token = oAuth2Token.accessToken;
+            const authHeader = _buildBearerHeader(token, authentication.tokenPrefix);
+            if (authHeader) {
+              headers.push(authHeader);
+            }
           }
         }
+      } catch (error) {
+        console.error('[mcp] Failed to get auth header', error);
       }
     }
 
@@ -173,6 +179,32 @@ export const McpUrlActionBar = ({
       oneLineEditorRef.current?.selectAll();
     },
   });
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('mcp-auth-confirmation', async _ => {
+      let answered = false;
+      showModal(AskModal, {
+        title: 'MCP Authentication Confirmation',
+        message: 'The MCP server is requesting authentication to proceed. Type "confirm" to proceed.',
+        onDone: async (yes: boolean) => {
+          if (answered) {
+            console.error('Already answered MCP auth confirmation, this should not happen.');
+            return;
+          }
+          answered = true;
+          window.main.mcp.authConfirmation(yes);
+        },
+        onHide: () => {
+          if (answered) {
+            return;
+          }
+          answered = true;
+          window.main.mcp.authConfirmation(false);
+        },
+      });
+    });
+    return unsubscribe;
+  }, []);
 
   const isConnectingOrClosed = !readyState;
 

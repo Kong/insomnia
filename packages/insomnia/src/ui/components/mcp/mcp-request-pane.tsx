@@ -344,6 +344,7 @@ export const McpRequestPane: FC<Props> = ({
             disabled={readyState}
             authTypes={supportedAuthTypes}
             hideInherit
+            showMcpAuthFlow
           />
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="headers">
