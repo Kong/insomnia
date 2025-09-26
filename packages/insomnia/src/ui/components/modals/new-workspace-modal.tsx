@@ -103,6 +103,17 @@ export const NewWorkspaceModal = ({
   const gitRepoTreeFetcher = useGitProjectRepositoryTreeLoaderFetcher();
 
   useEffect(() => {
+    if (
+      scope === WorkspaceScopeKeys.mockServer &&
+      createNewWorkspaceFetcher.state === 'idle' &&
+      createNewWorkspaceFetcher.data &&
+      !createNewWorkspaceFetcher.data.error
+    ) {
+      onOpenChange(false);
+    }
+  }, [createNewWorkspaceFetcher.state, createNewWorkspaceFetcher.data, scope, onOpenChange]);
+
+  useEffect(() => {
     if (isGitProject(project) && isOpen && gitRepoTreeFetcher.state === 'idle' && !gitRepoTreeFetcher.data) {
       gitRepoTreeFetcher.load({ projectId: project._id });
     }

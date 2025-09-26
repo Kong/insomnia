@@ -177,23 +177,19 @@ const main: Window['main'] = {
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
   getLocalStorageDataFromFileOrigin: () => ipcRenderer.invoke('getLocalStorageDataFromFileOrigin'),
-  createMockServerFromSpec: (
+  generateMockRouteDataFromSpec: (
     openApiSpec: string | undefined,
     specUrl: string | undefined,
     specText: string | undefined,
-    workspaceId: string,
-    mockServerData: any,
     modelConfig: any,
     useDynamicMockResponses: boolean,
     mockServerAdditionalFiles: string[],
   ) =>
     ipcRenderer.invoke(
-      'createMockServerFromSpec',
+      'generateMockRouteDataFromSpec',
       openApiSpec,
       specUrl,
       specText,
-      workspaceId,
-      mockServerData,
       modelConfig,
       useDynamicMockResponses,
       mockServerAdditionalFiles,

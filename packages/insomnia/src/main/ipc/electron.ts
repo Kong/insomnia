@@ -24,7 +24,7 @@ export type HandleChannels =
   | 'authorizeUserInWindow'
   | 'backup'
   | 'cancelAuthorizationInDefaultBrowser'
-  | 'createMockServerFromSpec'
+  | 'generateMockRouteDataFromSpec'
   | 'curl.event.findMany'
   | 'curl.open'
   | 'curl.readyState'
