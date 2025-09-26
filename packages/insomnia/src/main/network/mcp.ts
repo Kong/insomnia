@@ -17,6 +17,7 @@ import {
   type JSONRPCResponse,
   type ListPromptsRequest,
   type ListResourcesRequest,
+  ListRootsRequestSchema,
   ListRootsResultSchema,
   ServerNotificationSchema,
   type SubscribeRequest,
@@ -267,7 +268,7 @@ const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
     };
   } else {
     if ('result' in message && EmptyResultSchema.safeParse(message.result).success) {
-      console.log('Ignoring empty result message');
+      console.info('Ignoring empty result message');
       // ignore empty result message
       return;
     }
@@ -588,10 +589,20 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
   const responseEnvironmentId = environment ? environment._id : null;
 
   // create connection
-  const mcpClient = new Client({
-    name: getProductName(),
-    version: getAppVersion(),
-  });
+  const mcpClient = new Client(
+    {
+      name: getProductName(),
+      version: getAppVersion(),
+    },
+    {
+      capabilities: {
+        roots: {
+          // declare the client to support list roots
+          listChanged: true,
+        },
+      },
+    },
+  );
   mcpClient.onclose = () => _handleCloseMcpConnection(requestId);
   mcpClient.onerror = _error => _handleMcpClientError(requestId, _error, 'MCP Client Error');
   const mcpStateChannel = getMcpStateChannel(requestId);
@@ -625,6 +636,13 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
     console.error(`Failed to create ${options.transportType} transport: ${error}`);
     return;
   }
+
+  // Support listing roots
+  mcpClient.setRequestHandler(ListRootsRequestSchema, async () => {
+    const mcpRequest = await models.mcpRequest.getById(requestId);
+    invariant(mcpRequest, 'MCP request not found');
+    return { roots: mcpRequest.roots };
+  });
 
   mcpConnections.set(requestId, mcpClient as McpClient);
   const serverCapabilities = mcpClient.getServerCapabilities();
@@ -702,7 +720,7 @@ const listTools = async (options: CommonMcpOptions) => {
 };
 
 const callTool = async (options: CallToolOptions) => {
-  const { requestId, name, parameters } = options;
+  const { requestId, name, parameters = {} } = options;
   const mcpClient = _getMcpClient(requestId);
   if (mcpClient) {
     const response = await mcpClient.callTool({ name, arguments: parameters });
@@ -808,6 +826,15 @@ const readResource = async (options: CommonMcpOptions & ReadResourceRequest['par
   return null;
 };
 
+const sendRootListChangeNotification = async (options: CommonMcpOptions) => {
+  const mcpClient = _getMcpClient(options.requestId);
+  if (mcpClient) {
+    const result = await mcpClient.sendRootsListChanged();
+    return result;
+  }
+  return null;
+};
+
 export interface McpBridgeAPI {
   connect: typeof openMcpClientConnection;
   close: typeof closeMcpConnection;
@@ -825,6 +852,9 @@ export interface McpBridgeAPI {
   };
   readyState: {
     getCurrent: typeof getMcpReadyState;
+  };
+  notification: {
+    rootListChange: typeof sendRootListChangeNotification;
   };
   event: {
     findMany: typeof findMany;
@@ -858,6 +888,9 @@ export const registerMcpHandlers = () => {
   ipcMainOn('mcp.closeAll', closeAllMcpConnections);
   ipcMainHandle('mcp.readyState', (_, options: Parameters<typeof getMcpReadyState>[0]) => getMcpReadyState(options));
   ipcMainHandle('mcp.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
+  ipcMainHandle('mcp.notification.rootListChange', (_, options: Parameters<typeof sendRootListChangeNotification>[0]) =>
+    sendRootListChangeNotification(options),
+  );
 };
 
 electron.app.on('window-all-closed', closeAllMcpConnections);
