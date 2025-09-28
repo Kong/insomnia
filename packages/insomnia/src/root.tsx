@@ -17,8 +17,9 @@ import {
 import { isRouteErrorResponse, useNavigation } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
+import type { ChangeBufferEvent } from '~/common/database';
 import * as models from '~/models';
-import type { Settings } from '~/models/settings';
+import { isSettings, type Settings } from '~/models/settings';
 import type { UserSession } from '~/models/user-session';
 import { executePluginMainAction, reloadPlugins } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
@@ -136,14 +137,22 @@ export const useRootLoaderData = () => {
   return useRouteLoaderData<typeof clientLoader>('root');
 };
 
-export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const settings = await models.settings.get();
-  const workspaceCount = await models.workspace.count();
-  const userSession = await models.userSession.getOrCreate();
-  const cloudCredentials = await models.cloudCredential.all();
+const dbCache = new Map();
 
+export async function clientLoader(_args: Route.ClientLoaderArgs) {
+  const [settings, workspaceCount, userSession, cloudCredentials] = await Promise.all([
+    models.settings.get(),
+    models.workspace.count(),
+    models.userSession.getOrCreate(),
+    models.cloudCredential.all(),
+  ]);
+  let cachedSettings = dbCache.get(settings._id);
+  if (!cachedSettings) {
+    dbCache.set(settings._id, settings);
+    cachedSettings = settings;
+  }
   return {
-    settings,
+    settings: cachedSettings,
     workspaceCount,
     userSession,
     cloudCredentials,
@@ -300,6 +309,22 @@ const Root = () => {
   const { submit: gitLabCompleteSignInSubmit } = useGitLabCompleteSignInFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    return window.main.on('db.changes', (_, changes: ChangeBufferEvent[]) => {
+      for (const change of changes) {
+        const [event, doc, patches] = change;
+        if (!isSettings(doc)) continue;
+        if (event === 'insert') {
+          dbCache.set(doc._id, doc);
+        } else if (event === 'remove') {
+          dbCache.delete(doc._id);
+        } else if (event === 'update') {
+          dbCache.set(doc._id, Object.assign({}, doc, ...patches));
+        }
+      }
+    });
+  }, []);
 
   useEffect(() => {
     return window.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {

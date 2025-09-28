@@ -1,6 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { ServiceError, StatusObject } from '@grpc/grpc-js';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Breadcrumb,
@@ -598,24 +597,7 @@ const Debug = () => {
       }
     },
     renderDropIndicator(target) {
-      if (target.type === 'item') {
-        const item = virtualizer.getVirtualItems().find(i => i.key === target.key);
-        if (item) {
-          return (
-            <DropIndicator
-              target={target}
-              className="absolute left-0 top-0 z-10 w-full outline outline-1 outline-[--color-surprise]"
-              style={{
-                transform: `translateY(${target.dropPosition === 'before' ? item?.start : item.end}px)`,
-              }}
-            />
-          );
-        }
-      }
-
-      return (
-        <DropIndicator target={target} className="absolute left-0 top-0 outline outline-1 outline-[--color-surprise]" />
-      );
+      return <DropIndicator target={target} className="outline outline-1 outline-[--color-surprise]" />;
     },
   });
 
@@ -750,13 +732,6 @@ const Debug = () => {
   const visibleCollection = collection.filter(item => !item.hidden);
 
   const parentRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer<HTMLDivElement, Element>({
-    getScrollElement: () => parentRef.current,
-    count: visibleCollection.length,
-    estimateSize: React.useCallback(() => 32, []),
-    overscan: 30,
-    getItemKey: index => visibleCollection[index].doc._id,
-  });
 
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
     settings.forceVerticalLayout ? 'vertical' : 'horizontal',
@@ -1033,7 +1008,7 @@ const Debug = () => {
                     data-testid={item.doc.name}
                   >
                     <div className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:text-[--color-font]">
-                      <span className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-[--color-surprise]" />
+                      <span className="h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-[--color-surprise]" />
                       {isRequest(item.doc) && (
                         <span
                           className={`flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] text-[0.65rem] ${
@@ -1095,8 +1070,7 @@ const Debug = () => {
             <div className="flex-1 overflow-y-auto" ref={parentRef}>
               <GridList
                 id="sidebar-request-gridlist"
-                style={{ height: virtualizer.getTotalSize() }}
-                items={virtualizer.getVirtualItems()}
+                items={visibleCollection.map(i => ({ ...i, id: i.doc._id }))}
                 className="relative"
                 aria-label="Request Collection"
                 key={sortOrder}
@@ -1110,16 +1084,15 @@ const Debug = () => {
                       navigate(
                         `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${id}?${searchParams.toString()}`,
                       );
-                      return;
                     }
+                  } else {
+                    navigate(
+                      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${id}?${searchParams.toString()}`,
+                    );
                   }
-                  navigate(
-                    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${id}?${searchParams.toString()}`,
-                  );
                 }}
               >
-                {virtualItem => {
-                  const item = visibleCollection[virtualItem.index];
+                {item => {
                   let label = item.doc.name;
                   if (isRequest(item.doc)) {
                     label = `${getMethodShortHand(item.doc)} ${label}`;
@@ -1133,10 +1106,6 @@ const Debug = () => {
                     <CollectionGridListItem
                       {...{
                         label,
-                        style: {
-                          height: `${virtualItem.size}`,
-                          transform: `translateY(${virtualItem.start}px)`,
-                        },
                         item,
                         navigate,
                         organizationId,
@@ -1380,7 +1349,7 @@ const CollectionGridListItem = ({
 }: {
   label: string;
   item: Child;
-  style: React.CSSProperties;
+  style?: React.CSSProperties;
   navigate: NavigateFunction;
   organizationId: string;
   projectId: string;
@@ -1424,15 +1393,8 @@ const CollectionGridListItem = ({
     [isSelected],
   );
 
-  return (
-    <GridListItem
-      id={item.doc._id}
-      className={`group absolute left-0 top-0 w-full select-none outline-none ${isRequestGroup(item.doc) ? 'data-[drop-target]:bg-[--hl-md]' : 'border-solid data-[drop-target]:border-b data-[drop-target]:border-[--color-surprise]'}`}
-      textValue={label}
-      data-testid={item.doc.name}
-      style={style}
-      ref={triggerRef}
-    >
+  const div = useMemo(
+    () => (
       <div
         ref={scrollIntoView}
         onContextMenu={e => {
@@ -1539,8 +1501,8 @@ const CollectionGridListItem = ({
           />
         ) : (
           <RequestActionsDropdown
-            activeEnvironment={activeEnvironment}
-            activeProject={activeProject}
+            activeEnvironmentId={activeEnvironment._id}
+            activeProjectId={activeProject._id}
             request={item.doc}
             onRename={() => setIsEditable(true)}
             isPinned={item.pinned}
@@ -1550,6 +1512,36 @@ const CollectionGridListItem = ({
           />
         )}
       </div>
+    ),
+    [
+      activeEnvironment._id,
+      activeProject._id,
+      isContextMenuOpen,
+      isEditable,
+      isSelected,
+      item.collapsed,
+      item.doc,
+      item.level,
+      item.pinned,
+      label,
+      name,
+      patchGroup,
+      patchRequest,
+      patchRequestMeta,
+      scrollIntoView,
+    ],
+  );
+
+  return (
+    <GridListItem
+      id={item.doc._id}
+      className={`group w-full select-none outline-none ${isRequestGroup(item.doc) ? 'data-[drop-target]:bg-[--hl-md]' : 'border-solid data-[drop-target]:border-b data-[drop-target]:border-[--color-surprise]'}`}
+      textValue={label}
+      data-testid={item.doc.name}
+      style={style}
+      ref={triggerRef}
+    >
+      {div}
     </GridListItem>
   );
 };

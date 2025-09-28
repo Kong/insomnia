@@ -401,7 +401,7 @@ describe('migrate()', () => {
       settingRebuildPath: true,
       settingFollowRedirects: 'global',
     };
-    const migrated = await models.initModel(models.request.type, original);
+    const migrated = models.initModel(models.request.type, original);
     expect(migrated).toEqual(expected);
   });
 });

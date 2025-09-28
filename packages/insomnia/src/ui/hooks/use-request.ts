@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useParams } from 'react-router';
 
 import { useRequestUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';
@@ -29,19 +30,22 @@ export const useRequestPatcher = () => {
   };
   const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestUpdateActionFetcher();
-  return (
-    requestId: string,
-    patch: Partial<GrpcRequest> | Partial<Request> | Partial<WebSocketRequest> | Partial<SocketIORequest>,
-  ) => {
-    updateTabById?.(requestId, { temporary: false });
-    fetcher.submit({
-      organizationId,
-      patch,
-      projectId,
-      requestId,
-      workspaceId,
-    });
-  };
+  return useCallback(
+    (
+      requestId: string,
+      patch: Partial<GrpcRequest> | Partial<Request> | Partial<WebSocketRequest> | Partial<SocketIORequest>,
+    ) => {
+      updateTabById?.(requestId, { temporary: false });
+      fetcher.submit({
+        organizationId,
+        patch,
+        projectId,
+        requestId,
+        workspaceId,
+      });
+    },
+    [fetcher, organizationId, projectId, updateTabById, workspaceId],
+  );
 };
 
 export const useRequestMetaPatcher = () => {
@@ -52,16 +56,19 @@ export const useRequestMetaPatcher = () => {
   };
   const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestUpdateMetaActionFetcher();
-  return (requestId: string, patch: Partial<GrpcRequestMeta> | Partial<RequestMeta>) => {
-    updateTabById?.(requestId, { temporary: false });
-    fetcher.submit({
-      organizationId,
-      projectId,
-      workspaceId,
-      requestId,
-      patch,
-    });
-  };
+  return useCallback(
+    (requestId: string, patch: Partial<GrpcRequestMeta> | Partial<RequestMeta>) => {
+      updateTabById?.(requestId, { temporary: false });
+      fetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        requestId,
+        patch,
+      });
+    },
+    [fetcher, organizationId, projectId, updateTabById, workspaceId],
+  );
 };
 
 export const useRequestGroupPatcher = () => {
@@ -72,16 +79,19 @@ export const useRequestGroupPatcher = () => {
   };
   const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestGroupUpdateActionFetcher();
-  return (requestGroupId: string, patch: Partial<RequestGroup>) => {
-    updateTabById?.(requestGroupId, { temporary: false });
-    fetcher.submit({
-      organizationId,
-      projectId,
-      workspaceId,
-      requestGroupId,
-      patch,
-    });
-  };
+  return useCallback(
+    (requestGroupId: string, patch: Partial<RequestGroup>) => {
+      updateTabById?.(requestGroupId, { temporary: false });
+      fetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        requestGroupId,
+        patch,
+      });
+    },
+    [fetcher, organizationId, projectId, updateTabById, workspaceId],
+  );
 };
 
 export const useRequestGroupMetaPatcher = () => {
@@ -92,36 +102,45 @@ export const useRequestGroupMetaPatcher = () => {
   };
   const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestGroupUpdateMetaActionFetcher();
-  return (requestGroupId: string, patch: Partial<RequestGroupMeta>) => {
-    updateTabById?.(requestGroupId, { temporary: false });
-    fetcher.submit({
-      organizationId,
-      projectId,
-      workspaceId,
-      requestGroupId,
-      patch,
-    });
-  };
+  return useCallback(
+    (requestGroupId: string, patch: Partial<RequestGroupMeta>) => {
+      updateTabById?.(requestGroupId, { temporary: false });
+      fetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        requestGroupId,
+        patch,
+      });
+    },
+    [fetcher, organizationId, projectId, updateTabById, workspaceId],
+  );
 };
 
 export const useSettingsPatcher = () => {
   const fetcher = useSettingsUpdateActionFetcher();
-  return (patch: Partial<Settings>) => {
-    fetcher.submit({ patch });
-  };
+  return useCallback(
+    (patch: Partial<Settings>) => {
+      fetcher.submit({ patch });
+    },
+    [fetcher],
+  );
 };
 
 export const useWorkspaceMetaPatcher = () => {
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
   const fetcher = useWorkspaceUpdateMetaActionFetcher();
-  return (workspaceId: string, patch: Partial<WorkspaceMeta>) => {
-    fetcher.submit({
-      organizationId,
-      projectId,
-      workspaceId,
-      patch,
-    });
-  };
+  return useCallback(
+    (workspaceId: string, patch: Partial<WorkspaceMeta>) => {
+      fetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        patch,
+      });
+    },
+    [fetcher, organizationId, projectId],
+  );
 };
 
 export const useRequestPayloadPatcher = () => {
@@ -131,15 +150,18 @@ export const useRequestPayloadPatcher = () => {
     workspaceId: string;
   };
   const fetcher = useRequestUpdatePayloadActionFetcher();
-  return async (requestId: string, payload: Partial<SocketIOPayload>) => {
-    await fetcher.submit({
-      organizationId,
-      projectId,
-      workspaceId,
-      requestId,
-      payload,
-    });
-  };
+  return useCallback(
+    async (requestId: string, payload: Partial<SocketIOPayload>) => {
+      await fetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        requestId,
+        payload,
+      });
+    },
+    [fetcher, organizationId, projectId, workspaceId],
+  );
 };
 
 export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL' | 'WebSocket' | 'Event Stream' | 'From Curl' | 'SocketIO';

@@ -217,7 +217,7 @@ export function canDuplicate(type: string) {
   return model ? model.canDuplicate : false;
 }
 
-export async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
+export function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
   const model = getModel(type);
 
   if (!model) {

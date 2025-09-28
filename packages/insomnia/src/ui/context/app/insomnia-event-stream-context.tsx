@@ -1,4 +1,4 @@
-import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
+import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 import { useFetchers, useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
@@ -275,15 +275,14 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     latestInSubmission,
   ]);
 
-  return (
-    <InsomniaEventStreamContext.Provider
-      value={{
-        presence,
-      }}
-    >
-      {children}
-    </InsomniaEventStreamContext.Provider>
+  const context = useMemo(
+    () => ({
+      presence,
+    }),
+    [presence],
   );
+
+  return <InsomniaEventStreamContext.Provider value={context}>{children}</InsomniaEventStreamContext.Provider>;
 };
 
 export const useInsomniaEventStreamContext = () => useContext(InsomniaEventStreamContext);

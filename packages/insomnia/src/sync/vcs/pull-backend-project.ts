@@ -28,7 +28,7 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
   // @TODO Revisit the UX for this. What should happen if there are other branches?
   // The default branch does not exist, so we create it and the workspace locally
   if (defaultBranchMissing) {
-    const workspace = await models.initModel<Workspace>(models.workspace.type, {
+    const workspace = models.initModel<Workspace>(models.workspace.type, {
       _id: backendProject.rootDocumentId,
       name: backendProject.name,
       parentId: remoteProject._id,

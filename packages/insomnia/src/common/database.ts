@@ -82,7 +82,7 @@ export const database = {
   },
 
   docCreate: async <T extends BaseModel>(type: AllTypes, ...patches: Partial<T>[]) => {
-    const doc = await models.initModel<T>(
+    const doc = models.initModel<T>(
       type,
       ...patches,
       // Fields that the user can't touch
@@ -95,7 +95,7 @@ export const database = {
 
   docUpdate: async <T extends BaseModel>(originalDoc: T, ...patches: Partial<T>[]) => {
     // No need to re-initialize the model during update; originalDoc will be in a valid state by virtue of loading
-    const doc = await models.initModel<T>(
+    const doc = models.initModel<T>(
       originalDoc.type,
       originalDoc,
 
@@ -179,7 +179,7 @@ export const database = {
     // TODO: create a db init phase for migrations rather than doing it on every find.
     const migrated = [];
     for (const rawDoc of docs) {
-      migrated.push(await models.initModel<T>(type, rawDoc));
+      migrated.push(models.initModel<T>(type, rawDoc));
     }
     return migrated;
   },
@@ -415,7 +415,7 @@ export const database = {
     if (process.type === 'renderer') {
       return _send<T>('insert', ...arguments);
     }
-    const docWithDefaults = await models.initModel<T>(doc.type, doc);
+    const docWithDefaults = models.initModel<T>(doc.type, doc);
     const newDoc = await nedbBucket[doc.type].insertAsync(docWithDefaults);
     notifyOfChange('insert', newDoc);
     return newDoc;
@@ -500,7 +500,7 @@ export const database = {
       return _send<T>('update', ...arguments);
     }
 
-    const docWithDefaults = await models.initModel<T>(doc.type, doc);
+    const docWithDefaults = models.initModel<T>(doc.type, doc);
     await nedbBucket[doc.type].updateAsync({ _id: docWithDefaults._id }, docWithDefaults, { upsert: true });
     notifyOfChange('update', docWithDefaults, patches);
     return docWithDefaults;

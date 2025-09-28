@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
 import { database } from '../common/database';
@@ -160,10 +160,14 @@ export const createFetcherSubmitHook =
 
     const submit = useCallback(((...args: any[]) => fn(fetcher.submit)(...args)) as ReturnType<T>, [fetcher.submit]);
 
-    return {
-      ...fetcher,
-      submit,
-    } as Override<typeof fetcher, { submit: ReturnType<T> }>;
+    return useMemo(
+      () =>
+        ({
+          ...fetcher,
+          submit,
+        }) as Override<typeof fetcher, { submit: ReturnType<T> }>,
+      [fetcher, submit],
+    );
   };
 
 export const createFetcherLoadHook =
@@ -176,8 +180,12 @@ export const createFetcherLoadHook =
 
     const load = useCallback(((...args: any[]) => fn(fetcher.load)(...args)) as ReturnType<T>, [fetcher.load]);
 
-    return {
-      ...fetcher,
-      load,
-    } as Override<typeof fetcher, { load: ReturnType<T> }>;
+    return useMemo(
+      () =>
+        ({
+          ...fetcher,
+          load,
+        }) as Override<typeof fetcher, { load: ReturnType<T> }>,
+      [fetcher, load],
+    );
   };
