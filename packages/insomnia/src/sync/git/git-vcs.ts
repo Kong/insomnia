@@ -4,8 +4,9 @@ import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
 import type { GitAuthor, GitCredentials, GitRemoteConfig } from '~/models/git-repository';
+import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 
-import type { MergeConflict } from '../types';
+import { type MergeConflict, RESOLUTION_SOURCE } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
 import { getAuthorFromGitRepository, gitCallbacks } from './utils';
@@ -108,7 +109,12 @@ function getInsomniaFileName(blob: void | Uint8Array | undefined): string {
 interface BaseOpts {
   dir: string;
   gitdir?: string;
-  fs: git.CallbackFsClient | git.PromiseFsClient;
+  fs:
+    | git.CallbackFsClient
+    | (git.PromiseFsClient & {
+        startCollectWriteAction?: (oriWriteFileMap: WriteFileMap) => void;
+        stopCollectWriteAction?: () => void;
+      });
   http: git.HttpClient;
   onMessage: (message: string) => void;
   onAuthFailure: git.AuthFailureCallback;
@@ -760,7 +766,15 @@ export class GitVCS {
       throw new Error(GitVCSOperationErrors.UncommittedChangesError);
     }
 
+    const writeFileMap = {};
+
     try {
+      if (
+        'startCollectWriteAction' in this._baseOpts.fs &&
+        typeof this._baseOpts.fs.startCollectWriteAction === 'function'
+      ) {
+        this._baseOpts.fs.startCollectWriteAction(writeFileMap);
+      }
       // Try to pull changes from the remote repository
       await git.pull({
         ...this._baseOpts,
@@ -775,7 +789,7 @@ export class GitVCS {
 
       // merge conflict from pull
       if (err instanceof git.Errors.MergeConflictError) {
-        return await this.collectMergeConflicts(err, oursBranch, theirsBranch);
+        return await this.collectMergeConflicts(err, oursBranch, theirsBranch, writeFileMap);
       }
 
       // merge not supported by native pull: fallback
@@ -799,7 +813,7 @@ export class GitVCS {
         } catch (mergeErr) {
           // If the merge operation reported conflicts, collect them
           if (mergeErr instanceof git.Errors.MergeConflictError) {
-            return await this.collectMergeConflicts(mergeErr, oursBranch, theirsBranch);
+            return await this.collectMergeConflicts(mergeErr, oursBranch, theirsBranch, writeFileMap);
           }
 
           // If still MergeNotSupportedError or unexpected, fall back to manual detection and UI
@@ -839,6 +853,7 @@ export class GitVCS {
           ref: theirsBranch,
         });
 
+        // The return value is never used?
         return {
           success: false,
           conflicts: conflictData,
@@ -853,6 +868,13 @@ export class GitVCS {
 
       console.error('[git] Pull failed with unexpected error', err);
       throw err;
+    } finally {
+      if (
+        'stopCollectWriteAction' in this._baseOpts.fs &&
+        typeof this._baseOpts.fs.stopCollectWriteAction === 'function'
+      ) {
+        this._baseOpts.fs.stopCollectWriteAction();
+      }
     }
   }
 
@@ -910,16 +932,24 @@ export class GitVCS {
         let theirsBlobContent = null;
         let theirsBlobId = null;
 
+        let suggestedMergeResult = '';
+
         if (conflictType !== 'deleteByUs') {
           const { blobContent, blobId } = await readOursBlob(conflictPath);
           mineBlobContent = blobContent;
           mineBlobId = blobId;
+          if (mineBlobContent) {
+            suggestedMergeResult = stringify(mineBlobContent);
+          }
         }
 
         if (conflictType !== 'deleteByTheirs') {
           const { blobContent, blobId } = await readTheirsBlob(conflictPath);
           theirsBlobContent = blobContent;
           theirsBlobId = blobId;
+          if (!suggestedMergeResult && theirsBlobContent) {
+            suggestedMergeResult = stringify(theirsBlobContent);
+          }
         }
         const name = mineBlobContent?.name || theirsBlobContent?.name || '';
 
@@ -932,6 +962,8 @@ export class GitVCS {
           choose: mineBlobId || theirsBlobId,
           mineBlobContent,
           theirsBlobContent,
+          suggestedMergeResult,
+          mergeResult: suggestedMergeResult,
         });
       }
     }
@@ -1042,6 +1074,7 @@ export class GitVCS {
     mergeConflictError: InstanceType<typeof git.Errors.MergeConflictError>,
     oursBranch: string,
     theirsBranch: string,
+    writeFileMap?: WriteFileMap,
   ) {
     const { filepaths, bothModified, deleteByUs, deleteByTheirs } = mergeConflictError.data;
     if (filepaths.length) {
@@ -1113,6 +1146,34 @@ export class GitVCS {
           }
           const name = mineBlobContent?.name || theirsBlobContent?.name || '';
 
+          let suggestedMergeResult = '';
+          try {
+            if (conflictType === 'bothModified') {
+              if (writeFileMap && writeFileMap[conflictPath]) {
+                suggestedMergeResult = writeFileMap[conflictPath];
+              } else {
+                const commonBaseCommitOid = (
+                  await git.findMergeBase({
+                    ...this._baseOpts,
+                    oids: [oursHeadCommitOid, theirsHeadCommitOid],
+                  })
+                )[0];
+                if (commonBaseCommitOid) {
+                  const commonBaseBlob = await readBlob(conflictPath, commonBaseCommitOid);
+                  if (commonBaseBlob) {
+                    suggestedMergeResult = stringify(commonBaseBlob.blobContent);
+                  }
+                }
+              }
+            } else if (conflictType === 'deleteByUs' && theirsBlobContent) {
+              suggestedMergeResult = stringify(theirsBlobContent);
+            } else if (conflictType === 'deleteByTheirs' && mineBlobContent) {
+              suggestedMergeResult = stringify(mineBlobContent);
+            }
+          } catch (e) {
+            console.warn('Failed to stringify suggestedMergeResult', e);
+          }
+
           mergeConflicts.push({
             key: conflictPath,
             name,
@@ -1122,6 +1183,8 @@ export class GitVCS {
             choose: mineBlobId || theirsBlobId,
             mineBlobContent,
             theirsBlobContent,
+            suggestedMergeResult,
+            mergeResult: suggestedMergeResult,
           });
         }
       }
@@ -1153,18 +1216,39 @@ export class GitVCS {
   }) {
     console.log('[git] continue to merge after resolving merge conflicts', await this.getCurrentBranch());
 
-    // Because wo don't need to do anything with the conflicts that the user has chosen to keep 'ours'
-    // Here we just filter in conflicts that user has chosen to keep 'theirs'
-    handledMergeConflicts = handledMergeConflicts.filter(conflict => conflict.choose !== conflict.mineBlob);
-
     for (const conflict of handledMergeConflicts) {
       assertIsPromiseFsClient(this._baseOpts.fs);
-      if (conflict.theirsBlobContent) {
-        await this._baseOpts.fs.promises.writeFile(conflict.key, stringify(conflict.theirsBlobContent));
-        await git.add({ ...this._baseOpts, filepath: conflict.key });
+      if (conflict.resolutionSource === RESOLUTION_SOURCE.MANUAL) {
+        // Apply the merge result to the working directory
+        if (conflict.mergeResult) {
+          await this._baseOpts.fs.promises.writeFile(conflict.key, conflict.mergeResult);
+          await git.add({ ...this._baseOpts, filepath: conflict.key });
+        } else {
+          try {
+            await this._baseOpts.fs.promises.unlink(conflict.key);
+            await git.remove({ ...this._baseOpts, filepath: conflict.key });
+          } catch (error) {
+            console.error('Failed to delete file:', conflict.key, error);
+          }
+        }
       } else {
-        await this._baseOpts.fs.promises.unlink(conflict.key);
-        await git.remove({ ...this._baseOpts, filepath: conflict.key });
+        // resolutionSource is RESOLUTION_SOURCE.CHOOSE
+        // The file is deleted
+        if (!conflict.choose) {
+          try {
+            await this._baseOpts.fs.promises.unlink(conflict.key);
+            await git.remove({ ...this._baseOpts, filepath: conflict.key });
+          } catch (error) {
+            console.error('Failed to delete file:', conflict.key, error);
+          }
+        } else {
+          let blobContentToWrite = conflict.mineBlobContent;
+          if (conflict.choose === conflict.theirsBlob) {
+            blobContentToWrite = conflict.theirsBlobContent;
+          }
+          await this._baseOpts.fs.promises.writeFile(conflict.key, stringify(blobContentToWrite));
+          await git.add({ ...this._baseOpts, filepath: conflict.key });
+        }
       }
     }
 
@@ -1193,6 +1277,13 @@ export class GitVCS {
     }
     const oursBranch = await this.getCurrentBranch();
     console.log(`[git] Merge ${oursBranch} <-- ${theirsBranch}`);
+    const writeFileMap = {};
+    if (
+      'startCollectWriteAction' in this._baseOpts.fs &&
+      typeof this._baseOpts.fs.startCollectWriteAction === 'function'
+    ) {
+      this._baseOpts.fs.startCollectWriteAction(writeFileMap);
+    }
     return git
       .merge({
         ...this._baseOpts,
@@ -1202,7 +1293,7 @@ export class GitVCS {
       })
       .catch(async err => {
         if (err instanceof git.Errors.MergeConflictError) {
-          return await this.collectMergeConflicts(err, oursBranch, theirsBranch);
+          return await this.collectMergeConflicts(err, oursBranch, theirsBranch, writeFileMap);
         }
 
         if (err instanceof git.Errors.MergeNotSupportedError) {
@@ -1212,6 +1303,14 @@ export class GitVCS {
         }
 
         throw err;
+      })
+      .finally(() => {
+        if (
+          'stopCollectWriteAction' in this._baseOpts.fs &&
+          typeof this._baseOpts.fs.stopCollectWriteAction === 'function'
+        ) {
+          this._baseOpts.fs.stopCollectWriteAction();
+        }
       });
   }
 
@@ -1366,6 +1465,10 @@ export class GitVCS {
         });
       }
     }
+  }
+
+  async abortMerge() {
+    await git.abortMerge({ ...this._baseOpts });
   }
 
   static sortBranches(branches: string[]) {

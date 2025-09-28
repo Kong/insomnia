@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-cookie-jar';
 
@@ -20,10 +20,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return updatedCookieJar;
 }
 
-export function useUpdateCookieJarActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useUpdateCookieJarActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -43,17 +41,11 @@ export function useUpdateCookieJarActionFetcher(args?: Parameters<typeof useFetc
         workspaceId,
       });
 
-      return fetcherSubmit(JSON.stringify({ cookieJarId, patch }), {
+      return submit(JSON.stringify({ cookieJarId, patch }), {
         action: url,
         method: 'POST',
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

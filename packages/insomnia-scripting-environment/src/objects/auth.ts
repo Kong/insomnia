@@ -805,6 +805,10 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
       // TODO: not supported yet
       throw new Error('netrc auth is not supported in scripting yet');
     }
+    case 'singleToken': {
+      // TODO: not supported yet
+      throw new Error('singleToken auth is not supported in scripting yet');
+    }
     default: {
       // @ts-expect-error - user can input any string
       throw new Error(`unknown auth type: ${auth.type}`);

@@ -8,6 +8,7 @@ import { useGithubCompleteSignInFetcher } from '~/routes/git-credentials.github.
 import { useInitSignInToGitHubFetcher } from '~/routes/git-credentials.github.init-sign-in';
 import { useGithubSignOutFetcher } from '~/routes/git-credentials.github.sign-out';
 import { PromptButton } from '~/ui/components/base/prompt-button';
+import { Icon } from '~/ui/components/icon';
 
 import { GitHubRepositorySelect } from './github-repository-select';
 
@@ -127,12 +128,20 @@ const GitHubRepositoryForm = ({ uri, credentials, onSubmit }: GitHubRepositoryFo
     </Form>
   );
 };
-
+const getErrorResult = (data: any) => {
+  if (data && 'errors' in data && Array.isArray(data.errors) && data.errors.length > 0) {
+    return data.errors.join(', ');
+  }
+  return null;
+};
 const GitHubSignInForm = () => {
   const [error, setError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const initSignInFetcher = useInitSignInToGitHubFetcher();
   const completeSignInFetcher = useGithubCompleteSignInFetcher();
+
+  const initSignInError = getErrorResult(initSignInFetcher.data);
+  const completeSignInError = getErrorResult(completeSignInFetcher.data);
 
   return (
     <div className="flex flex-col items-center justify-center border border-solid border-[--hl-sm] p-4">
@@ -193,9 +202,15 @@ const GitHubSignInForm = () => {
           {error && (
             <p className="notice error margin-bottom-sm">
               <Button className="pull-right icon" onPress={() => setError('')}>
-                <i className="fa fa-times" />
+                <Icon icon="times" className="size-4" />
               </Button>
               {error}
+            </p>
+          )}
+          {(initSignInError || completeSignInError) && (
+            <p className="margin-bottom-sm flex items-center rounded-sm border border-solid border-[--color-danger] bg-[--color-danger-bg] p-2 text-[--color-danger]">
+              <Icon icon="exclamation-triangle" className="size-4" />
+              <span>{initSignInError || completeSignInError}</span>
             </p>
           )}
         </form>

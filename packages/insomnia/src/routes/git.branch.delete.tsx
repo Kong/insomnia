@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
+
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import { invariant } from '../utils/invariant';
 import type { Route } from './+types/git.branch.delete';
@@ -18,22 +19,13 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return window.main.git.deleteGitBranch(data);
 }
 
-export function useGitProjectDeleteBranchActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
-    (data: DeleteGitBranchData) => {
-      return fetcherSubmit(JSON.stringify(data), {
-        method: 'POST',
-        action: href('/git/branch/delete'),
-        encType: 'application/json',
-      });
-    },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+export const useGitProjectDeleteBranchActionFetcher = createFetcherSubmitHook(
+  submit => (data: DeleteGitBranchData) => {
+    return submit(JSON.stringify(data), {
+      method: 'POST',
+      action: href('/git/branch/delete'),
+      encType: 'application/json',
+    });
+  },
+  clientAction,
+);

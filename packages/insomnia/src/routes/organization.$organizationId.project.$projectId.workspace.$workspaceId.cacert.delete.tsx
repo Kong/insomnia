@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.cacert.delete';
 
@@ -15,10 +15,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   return null;
 }
 
-export function useCaCertDeleteActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useCaCertDeleteActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -34,7 +32,7 @@ export function useCaCertDeleteActionFetcher(args?: Parameters<typeof useFetcher
         workspaceId,
       });
 
-      return fetcherSubmit(
+      return submit(
         {},
         {
           action: url,
@@ -42,11 +40,5 @@ export function useCaCertDeleteActionFetcher(args?: Parameters<typeof useFetcher
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

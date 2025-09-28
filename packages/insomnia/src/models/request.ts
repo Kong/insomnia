@@ -128,6 +128,13 @@ export interface AuthTypeNone {
   type: 'none';
   disabled?: boolean;
 }
+
+export interface AuthTypeSingleToken {
+  type: 'singleToken';
+  token?: string;
+  disabled?: boolean;
+}
+
 export type RequestAuthentication =
   | AuthTypeOAuth2
   | AuthTypeBasic
@@ -140,7 +147,8 @@ export type RequestAuthentication =
   | AuthTypeAsap
   | AuthTypeNone
   | AuthTypeAPIKey
-  | AuthTypeNTLM;
+  | AuthTypeNTLM
+  | AuthTypeSingleToken;
 
 export type OAuth2ResponseType = 'code' | 'id_token' | 'id_token token' | 'none' | 'token';
 

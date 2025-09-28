@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
 
@@ -22,10 +22,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   return null;
 }
 
-export function useSetActiveEnvironmentFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useSetActiveEnvironmentFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -37,7 +35,7 @@ export function useSetActiveEnvironmentFetcher(args?: Parameters<typeof useFetch
       workspaceId: string;
       environmentId: string;
     }) => {
-      return fetcherSubmit(
+      return submit(
         {
           environmentId,
         },
@@ -54,11 +52,5 @@ export function useSetActiveEnvironmentFetcher(args?: Parameters<typeof useFetch
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

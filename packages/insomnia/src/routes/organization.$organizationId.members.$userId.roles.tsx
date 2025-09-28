@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.members.$userId.roles';
 
@@ -34,15 +34,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   }
 }
 
-export function useOrganizationMemberRolesActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useOrganizationMemberRolesActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({ organizationId, userId, roleId }: { organizationId: string; userId: string; roleId: string }) => {
       const formData = new FormData();
       formData.set('roleId', roleId);
 
-      return fetcherSubmit(formData, {
+      return submit(formData, {
         method: 'POST',
         action: href(`/organization/:organizationId/members/:userId/roles`, {
           organizationId,
@@ -50,11 +48,5 @@ export function useOrganizationMemberRolesActionFetcher(args?: Parameters<typeof
         }),
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

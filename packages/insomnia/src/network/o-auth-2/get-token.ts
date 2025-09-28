@@ -293,8 +293,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   } else {
     headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
   }
-  // Why not send headers here?
-  const response = await sendAccessTokenRequest(requestId, authentication, params, []);
+  const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
 
   const statusCode = response.statusCode || 0;
   const bodyBuffer = await models.response.getBodyBuffer(response);

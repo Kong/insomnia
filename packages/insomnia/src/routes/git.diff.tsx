@@ -1,7 +1,7 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { invariant } from '~/utils/invariant';
+import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/git.diff';
 
@@ -19,14 +19,9 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   return window.main.git.diffFileLoader({ filepath, staged, projectId, workspaceId });
 }
 
-export function useGitProjectDiffLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const {
-    load: fetcherLoad,
-    ...fetcherRest
-  } = useFetcher<typeof clientLoader>(args);
-
-  const load = useCallback((
-    {
+export const useGitProjectDiffLoaderFetcher = createFetcherLoadHook(
+  load =>
+    ({
       workspaceId,
       projectId,
       filePath,
@@ -36,21 +31,16 @@ export function useGitProjectDiffLoaderFetcher(args?: Parameters<typeof useFetch
       projectId: string;
       filePath: string;
       staged: boolean;
-    }
-  ) => {
-    const params = new URLSearchParams();
-    params.set('filepath', filePath);
-    params.set('staged', staged ? 'true' : 'false');
-    if (workspaceId) {
-      params.set('workspaceId', workspaceId);
-    }
-    params.set('projectId', projectId);
+    }) => {
+      const params = new URLSearchParams();
+      params.set('filepath', filePath);
+      params.set('staged', staged ? 'true' : 'false');
+      if (workspaceId) {
+        params.set('workspaceId', workspaceId);
+      }
+      params.set('projectId', projectId);
 
-    return fetcherLoad(`${href('/git/diff')}?${params.toString()}`);
-  }, [fetcherLoad]);
-
-  return {
-    ...fetcherRest,
-    load,
-  };
-}
+      return load(`${href('/git/diff')}?${params.toString()}`);
+    },
+  clientLoader,
+);

@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { type ActionFunctionArgs, href, useFetcher } from 'react-router';
+import { type ActionFunctionArgs, href } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';
 import { saveVaultKey, validateVaultKey } from '~/ui/vault-key.client';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 export async function clientAction({ request }: ActionFunctionArgs) {
   const { vaultKey, saveVaultKey: saveVaultKeyLocally = false } = await request.json();
@@ -29,24 +29,16 @@ export async function clientAction({ request }: ActionFunctionArgs) {
   }
 }
 
-export function useValidateVaultKeyActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useValidateVaultKeyActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({ vaultKey, saveVaultKey = false }: { vaultKey: string; saveVaultKey?: boolean }) => {
       const url = href('/auth/validate-vault-key');
 
-      return fetcherSubmit(JSON.stringify({ vaultKey, saveVaultKey }), {
+      return submit(JSON.stringify({ vaultKey, saveVaultKey }), {
         action: url,
         method: 'POST',
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

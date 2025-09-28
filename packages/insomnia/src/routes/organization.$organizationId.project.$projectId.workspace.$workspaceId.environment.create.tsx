@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { EnvironmentType } from '~/models/environment';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 
@@ -25,10 +25,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   return environment;
 }
 
-export function useEnvironmentCreateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useEnvironmentCreateActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -40,7 +38,7 @@ export function useEnvironmentCreateActionFetcher(args?: Parameters<typeof useFe
       workspaceId: string;
       params: { isPrivate: boolean; environmentType?: string };
     }) => {
-      return fetcherSubmit(JSON.stringify(params), {
+      return submit(JSON.stringify(params), {
         method: 'POST',
         action: href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment/create`, {
           organizationId,
@@ -50,11 +48,5 @@ export function useEnvironmentCreateActionFetcher(args?: Parameters<typeof useFe
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

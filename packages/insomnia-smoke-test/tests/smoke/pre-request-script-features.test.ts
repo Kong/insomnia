@@ -200,36 +200,38 @@ test.describe('pre-request features tests', () => {
         valFoundByFolder2: 2,
       },
     },
-  ];
-
-  for (const tc of testCases) {
-    test(tc.name, async ({ page }) => {
-      const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-      const responseBody = page.getByTestId('response-pane').getByTestId('CodeEditor').locator('.CodeMirror-line');
+  ].map(tc => {
+    return {
+      ...tc,
+      customVerify:
+        tc.customVerify ??
+        (bodyJson => {
+          expect.soft(JSON.parse(bodyJson.data)).toEqual(tc.expectedBody);
+        }),
+    };
+  });
+  test('run test cases', async ({ page }) => {
+    for (const tc of testCases) {
+      console.log(`Running test case: ${tc.name}`);
 
       await page.getByLabel('Request Collection').getByTestId(tc.name).press('Enter');
 
-      // send
+      await page.getByTestId('request-pane').getByLabel('Params').click();
       await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-
       // verify
-      await page.waitForSelector('[data-testid="response-status-tag"]:visible');
+      await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
 
-      await expect.soft(statusTag).toContainText('200 OK');
-
-      const rows = await responseBody.allInnerTexts();
+      const rows = await page
+        .getByTestId('response-pane')
+        .getByTestId('CodeEditor')
+        .locator('.CodeMirror-line')
+        .allInnerTexts();
       expect.soft(rows.length).toBeGreaterThan(0);
 
       const bodyJson = JSON.parse(rows.join(' '));
-      if (tc.expectedBody) {
-        expect.soft(JSON.parse(bodyJson.data)).toEqual(tc.expectedBody);
-      }
-      if (tc.customVerify) {
-        tc.customVerify(bodyJson);
-      }
-    });
-  }
-
+      tc.customVerify(bodyJson);
+    }
+  });
   test('send request with content type', async ({ page }) => {
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     const responseBody = page.getByTestId('response-pane').getByTestId('CodeEditor').locator('.CodeMirror-line');
@@ -248,108 +250,104 @@ test.describe('pre-request features tests', () => {
 
     // enter script
     await page.getByRole('tab', { name: 'Scripts' }).click();
-    const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
-    await preRequestScriptEditor.fill(`
-        const rawReq = {
-            url: 'http://127.0.0.1:4010/echo',
-            method: 'POST',
-            header: {
-                'Content-Type': 'text/plain',
-            },
-            body: {
-                mode: 'raw',
-                raw: 'rawContent',
-            },
-        };
-        const urlencodedReq = {
-            url: 'http://127.0.0.1:4010/echo',
-            method: 'POST',
-            header: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: {
-                mode: 'urlencoded',
-                urlencoded: [
-                    { key: 'k1', value: 'v1' },
-                    { key: 'k2', value: 'v2' },
-                ],
-            },
-        };
-        const gqlReq = {
-            url: 'http://127.0.0.1:4010/echo',
-            method: 'POST',
-            header: {
-                'Content-Type': 'application/graphql',
-            },
-            body: {
-                mode: 'graphql',
-                graphql: {
-                    query: 'query',
-                    operationName: 'operation',
-                    variables: 'var',
-                },
-            },
-        };
-        const fileReq = {
-            url: 'http://127.0.0.1:4010/echo',
-            method: 'POST',
-            header: {
-                'Content-Type': 'application/octet-stream',
-            },
-            body: {
-                mode: 'file',
-                file: "${getFixturePath('files/rawfile.txt')}",
-            },
-        };
-        const formdataReq = {
-            url: 'http://127.0.0.1:4010/echo',
-            method: 'POST',
-            header: {
-                // TODO: try to understand why this breaks the test
-                // 'Content-Type': 'multipart/form-data',
-            },
-            body: {
-                mode: 'formdata',
-                formdata: [
-                    { key: 'k1', type: 'text', value: 'v1' },
-                    { key: 'k2', type: 'file', value: "${getFixturePath('files/rawfile.txt')}" },
-                ],
-            },
-        };
-        const promises = [rawReq, urlencodedReq, gqlReq, fileReq, formdataReq].map(req => {
-            return new Promise((resolve, reject) => {
-                insomnia.sendRequest(
-                    req,
-                    (err, resp) => {
-                        if (err != null) {
-                            reject(err);
-                        } else {
-                            resolve(resp);
-                        }
-                    }
-                );
-            });
-        });
-        // send request
-        const resps = await Promise.all(promises);
-        // set envs
-        insomnia.environment.set('rawBody', resps[0].body);
-        insomnia.environment.set('urlencodedBody', resps[1].body);
-        insomnia.environment.set('gqlBody', resps[2].body);
-        insomnia.environment.set('fileBody', resps[3].body);
-        insomnia.environment.set('formdataBody', resps[4].body);
-        `);
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    await editor.fill(`
+          const rawReq = {
+              url: 'http://127.0.0.1:4010/echo',
+              method: 'POST',
+              header: {
+                  'Content-Type': 'text/plain',
+              },
+              body: {
+                  mode: 'raw',
+                  raw: 'rawContent',
+              },
+          };
+          const urlencodedReq = {
+              url: 'http://127.0.0.1:4010/echo',
+              method: 'POST',
+              header: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: {
+                  mode: 'urlencoded',
+                  urlencoded: [
+                      { key: 'k1', value: 'v1' },
+                      { key: 'k2', value: 'v2' },
+                  ],
+              },
+          };
+          const gqlReq = {
+              url: 'http://127.0.0.1:4010/echo',
+              method: 'POST',
+              header: {
+                  'Content-Type': 'application/graphql',
+              },
+              body: {
+                  mode: 'graphql',
+                  graphql: {
+                      query: 'query',
+                      operationName: 'operation',
+                      variables: 'var',
+                  },
+              },
+          };
+          const fileReq = {
+              url: 'http://127.0.0.1:4010/echo',
+              method: 'POST',
+              header: {
+                  'Content-Type': 'application/octet-stream',
+              },
+              body: {
+                  mode: 'file',
+                  file: "${getFixturePath('files/rawfile.txt')}",
+              },
+          };
+          const formdataReq = {
+              url: 'http://127.0.0.1:4010/echo',
+              method: 'POST',
+              header: {
+                  // TODO: try to understand why this breaks the test
+                  // 'Content-Type': 'multipart/form-data',
+              },
+              body: {
+                  mode: 'formdata',
+                  formdata: [
+                      { key: 'k1', type: 'text', value: 'v1' },
+                      { key: 'k2', type: 'file', value: "${getFixturePath('files/rawfile.txt')}" },
+                  ],
+              },
+          };
+          const promises = [rawReq, urlencodedReq, gqlReq, fileReq, formdataReq].map(req => {
+              return new Promise((resolve, reject) => {
+                  insomnia.sendRequest(
+                      req,
+                      (err, resp) => {
+                          if (err != null) {
+                              reject(err);
+                          } else {
+                              resolve(resp);
+                          }
+                      }
+                  );
+              });
+          });
+          // send request
+          const resps = await Promise.all(promises);
+          // set envs
+          insomnia.environment.set('rawBody', resps[0].body);
+          insomnia.environment.set('urlencodedBody', resps[1].body);
+          insomnia.environment.set('gqlBody', resps[2].body);
+          insomnia.environment.set('fileBody', resps[3].body);
+          insomnia.environment.set('formdataBody', resps[4].body);
+          `);
 
-    // TODO: wait for body and pre - request script are persisted to the disk
-    // should improve this part, we should avoid sync this state through db as it introduces race condition
-    await page.waitForTimeout(500);
+    await page.getByRole('tab', { name: 'Body' }).click();
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
-
     await expect.soft(statusTag).toContainText('200 OK');
 
     const rows = await responseBody.allInnerTexts();
@@ -386,10 +384,9 @@ test.describe('pre-request features tests', () => {
     await page.locator('[name="noProxy"]').fill('http://a.com,https://b.com');
     await page.locator('.app').press('Escape');
     // add 1s timeout to ensure noProxy settings is applied - INS-4155
-    await page.waitForTimeout(1000);
 
     await page.getByLabel('Request Collection').getByTestId('test proxies manipulation').press('Enter');
-
+    await page.getByRole('tab', { name: 'Body' }).click();
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
@@ -484,7 +481,6 @@ test.describe('pre-request features tests', () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify response
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
     await expect.soft(statusTag).toContainText('200 OK');
 
     // verify persisted environment
@@ -593,7 +589,6 @@ test.describe('pre-request features tests', () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify response
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
     await expect.soft(statusTag).toContainText('200 OK');
 
     // verify table environments have been updated
@@ -612,7 +607,6 @@ test.describe('pre-request features tests', () => {
 
     // verify response
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
     await expect.soft(statusTag).toContainText('200 OK');
 
     const responsePane = page.getByTestId('response-pane');
@@ -640,59 +634,40 @@ test.describe('unhappy paths', () => {
     await page.getByLabel('Pre-request Scripts').click();
   });
 
-  const testCases = [
-    {
-      name: 'custom error is returned',
-      preReqScript: `
-          throw Error('my custom error');
-          `,
-      context: {
-        insomnia: {},
-      },
-      expectedResult: {
-        message: 'my custom error',
-      },
-    },
-    {
-      name: 'syntax error',
-      preReqScript: `
-          insomnia.INVALID_FIELD.set('', '')
-          `,
-      context: {
-        insomnia: {},
-      },
-      expectedResult: {
-        message: "Cannot read properties of undefined (reading 'set')",
-      },
-    },
-  ];
+  test('custom errors are returned', async ({ page }) => {
+    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
 
-  for (const tc of testCases) {
-    test(tc.name, async ({ page }) => {
-      const responsePane = page.getByTestId('response-pane');
+    // set request body
+    await page.getByRole('tab', { name: 'Body' }).click();
+    await page.getByRole('button', { name: 'Body' }).click();
+    await page.getByRole('option', { name: 'JSON' }).click();
 
-      await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+    // enter script
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    await editor.fill(`throw Error('my custom error');`);
 
-      // set request body
-      await page.getByRole('tab', { name: 'Body' }).click();
-      await page.getByRole('button', { name: 'Body' }).click();
-      await page.getByRole('option', { name: 'JSON' }).click();
+    await page.getByRole('tab', { name: 'Body' }).click();
 
-      // enter script
-      await page.getByRole('tab', { name: 'Scripts' }).click();
-      const preRequestScriptEditor = page.getByTestId('CodeEditor').getByRole('textbox');
-      await preRequestScriptEditor.fill(tc.preReqScript);
+    // send
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
-      // TODO: wait for body and pre-request script are persisted to the disk
-      // should improve this part, we should avoid sync this state through db as it introduces race condition
-      await page.waitForTimeout(500);
+    // verify
+    await expect.soft(page.getByTestId('response-pane')).toContainText('my custom error');
 
-      // send
-      await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    await page.getByTestId('CodeEditor').getByRole('textbox').press('ControlOrMeta+a');
+    await page.keyboard.press('Backspace');
+    await editor.fill(`insomnia.INVALID_FIELD.set('', '')`);
 
-      // verify
-      await page.waitForSelector('[data-testid="response-status-tag"]:visible');
-      await expect.soft(responsePane).toContainText(tc.expectedResult.message);
-    });
-  }
+    await page.getByRole('tab', { name: 'Body' }).click();
+
+    // send
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+    // verify
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .toContainText(`Cannot read properties of undefined (reading 'set')`);
+  });
 });

@@ -258,14 +258,16 @@ async function getAllRemoteFiles({ projectId, organizationId }: { projectId: str
     const project = await models.project.getById(projectId);
 
     const remoteId = project?.remoteId;
+    if (!remoteId) {
+      return [];
+    }
+
     console.log(
       '[getAllRemoteFiles] start fetching remote backend workspaces for project',
       projectId,
       `remoteId: ${remoteId}`,
     );
-    if (!remoteId) {
-      return [];
-    }
+
     const vcs = VCSInstance();
 
     const [allPulledBackendProjectsForRemoteId, allFetchedRemoteBackendProjectsForRemoteId] = await Promise.all([
@@ -778,7 +780,7 @@ const Component = () => {
             collapsible
           >
             <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
-              <div className="h-[40px] p-[--padding-sm]">
+              <div className="flex h-[40px] flex-col items-start justify-center p-[--padding-sm]">
                 <Select
                   aria-label="Organizations"
                   onSelectionChange={id => {

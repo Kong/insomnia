@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
-import { href, redirect, useFetcher, useNavigate } from 'react-router';
+import { href, redirect, useNavigate } from 'react-router';
 
 import { SCRATCHPAD_ORGANIZATION_ID } from '~/models/organization';
 import { SCRATCHPAD_PROJECT_ID } from '~/models/project';
@@ -8,6 +8,8 @@ import { SCRATCHPAD_WORKSPACE_ID } from '~/models/workspace';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
+import { Tooltip } from '~/ui/components/tooltip';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/auth.login';
 
@@ -45,26 +47,18 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   window.main.openInBrowser(url.toString());
 
-  return redirect(href('/auth/authorize'));
+  return redirect(href('/auth/login-tip'));
 }
 
-export function useLoginActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-  const submit = useCallback(
-    (data: { provider: string }) => {
-      fetcherSubmit(data, {
-        action: href('/auth/login'),
-        method: 'POST',
-      });
-    },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+export const useLoginActionFetcher = createFetcherSubmitHook(
+  submit => (data: { provider: string }) => {
+    submit(data, {
+      action: href('/auth/login'),
+      method: 'POST',
+    });
+  },
+  clientAction,
+);
 
 const Component = () => {
   const loginFetcher = useLoginActionFetcher();
@@ -151,28 +145,13 @@ const Component = () => {
           <span className="items flex-1">Continue with SSO</span>
         </Button>
 
-        <p className="text-center text-xs text-[rgba(var(--color-font-rgb),0.8)]">
-          By signing up or using Insomnia, you agree to the{' '}
-          <a
-            className="font-bold outline-none transition-colors hover:text-[--color-font] focus:text-[--color-font]"
-            href="https://insomnia.rest/terms"
-            rel="noreferrer"
-          >
-            terms of service
-          </a>{' '}
-          and{' '}
-          <a
-            className="font-bold outline-none transition-colors hover:text-[--color-font] focus:text-[--color-font]"
-            href="https://insomnia.rest/privacy"
-            rel="noreferrer"
-          >
-            privacy policy
-          </a>
-          .
-        </p>
-      </div>
+        <div className="flex items-center justify-between gap-[--padding-xs] text-sm text-[rgba(var(--color-font-rgb),0.8)]">
+          <p>Or, start right away with limited capabilities</p>
+          <Tooltip position="top" message="Collections only, sign in later to save, sync, or share." wide>
+            <Icon icon="circle-info" />
+          </Tooltip>
+        </div>
 
-      <div className="flex justify-center">
         <Button
           onPress={() => {
             window.main.trackSegmentEvent({
@@ -186,14 +165,34 @@ const Component = () => {
               }),
             );
           }}
-          aria-label="Use the Scratch Pad"
-          className="flex justify-center gap-[--padding-xs] text-sm text-[rgba(var(--color-font-rgb),0.8)] outline-none transition-colors hover:text-[--color-font] focus:text-[--color-font]"
+          aria-label="Use local Scratch Pad"
+          className="flex w-full items-center justify-center gap-[--padding-md] rounded-md border border-solid border-[--hl-md] text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
         >
-          <div>
-            <i className="fa fa-edit" />
+          <div className="flex h-[35px] w-[40px] items-center justify-center border-r border-solid border-[--hl-sm] bg-[--hl-xs]">
+            <Icon icon="code" />
           </div>
-          <span>Use the local Scratch Pad</span>
+          <span className="items flex-1">Use local Scratch Pad</span>
         </Button>
+
+        <p className="text-center text-xs text-[rgba(var(--color-font-rgb),0.8)]">
+          By signing up or using Insomnia, you agree to the{' '}
+          <a
+            className="font-bold outline-none transition-colors hover:text-[--color-font] focus:text-[--color-font]"
+            href="https://insomnia.rest/terms"
+            rel="noreferrer"
+          >
+            Terms of Service
+          </a>{' '}
+          and{' '}
+          <a
+            className="font-bold outline-none transition-colors hover:text-[--color-font] focus:text-[--color-font]"
+            href="https://insomnia.rest/privacy"
+            rel="noreferrer"
+          >
+            Privacy Policy
+          </a>{' '}
+          agreement.
+        </p>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
+
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/git.discard';
 
@@ -15,22 +16,13 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return window.main.git.discardChanges(data);
 }
 
-export function useGitProjectDiscardActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const {
-    submit: fetcherSubmit,
-    ...fetcherRest
-  } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback((data: DiscardGitChangesData) => {
-    return fetcherSubmit(JSON.stringify(data), {
+export const useGitProjectDiscardActionFetcher = createFetcherSubmitHook(
+  submit => (data: DiscardGitChangesData) => {
+    return submit(JSON.stringify(data), {
       method: 'POST',
       action: href('/git/discard'),
       encType: 'application/json',
     });
-  }, [fetcherSubmit]);
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  },
+  clientAction,
+);

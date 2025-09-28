@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
+
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/git.unstage';
 
@@ -15,22 +16,13 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return window.main.git.unstageChanges(data);
 }
 
-export function useGitProjectUnstageActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
-    (data: UnstageGitChangesData) => {
-      return fetcherSubmit(JSON.stringify(data), {
-        method: 'POST',
-        action: href('/git/unstage'),
-        encType: 'application/json',
-      });
-    },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+export const useGitProjectUnstageActionFetcher = createFetcherSubmitHook(
+  submit => (data: UnstageGitChangesData) => {
+    return submit(JSON.stringify(data), {
+      method: 'POST',
+      action: href('/git/unstage'),
+      encType: 'application/json',
+    });
+  },
+  clientAction,
+);

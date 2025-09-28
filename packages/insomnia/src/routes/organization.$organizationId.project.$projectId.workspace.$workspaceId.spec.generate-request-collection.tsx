@@ -1,13 +1,13 @@
 import path from 'node:path';
 
 import type { IRuleResult } from '@stoplight/spectral-core';
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import { importResourcesToWorkspace, scanResources } from '~/common/import';
 import * as models from '~/models';
 import { isGitProject } from '~/models/project';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 
@@ -62,10 +62,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   );
 }
 
-export function useSpecGenerateRequestCollectionActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useSpecGenerateRequestCollectionActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -84,7 +82,7 @@ export function useSpecGenerateRequestCollectionActionFetcher(args?: Parameters<
         },
       );
 
-      return fetcherSubmit(
+      return submit(
         {},
         {
           action: url,
@@ -92,11 +90,5 @@ export function useSpecGenerateRequestCollectionActionFetcher(args?: Parameters<
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

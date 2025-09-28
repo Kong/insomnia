@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { remoteCompareCache, vcsSegmentEventProperties } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.push';
 
@@ -29,6 +29,10 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     });
 
     delete remoteCompareCache[workspaceId];
+
+    return {
+      success: true,
+    };
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while pushing to remote.';
 
@@ -41,14 +45,10 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       error: errorMessage,
     };
   }
-
-  return null;
 }
 
-export function useInsomniaSyncPushActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useInsomniaSyncPushActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -64,7 +64,7 @@ export function useInsomniaSyncPushActionFetcher(args?: Parameters<typeof useFet
         workspaceId,
       });
 
-      return fetcherSubmit(
+      return submit(
         {},
         {
           action: url,
@@ -72,11 +72,5 @@ export function useInsomniaSyncPushActionFetcher(args?: Parameters<typeof useFet
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

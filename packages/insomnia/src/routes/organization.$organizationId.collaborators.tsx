@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { userSession } from '~/models';
 import { insomniaFetch } from '~/ui/insomniaFetch';
+import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.collaborators';
 
@@ -75,10 +75,8 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   }
 }
 
-export function useCollaboratorsFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
-
-  const load = useCallback(
+export const useCollaboratorsFetcher = createFetcherLoadHook(
+  load =>
     ({
       organizationId,
       page,
@@ -95,15 +93,7 @@ export function useCollaboratorsFetcher(args?: Parameters<typeof useFetcher>[0])
       if (per_page) queryParams.append('per_page', String(per_page));
       if (filter) queryParams.append('filter', filter);
 
-      fetcherLoad(
-        `${href(`/organization/:organizationId/collaborators`, { organizationId })}?${queryParams.toString()}`,
-      );
+      load(`${href(`/organization/:organizationId/collaborators`, { organizationId })}?${queryParams.toString()}`);
     },
-    [fetcherLoad],
-  );
-
-  return {
-    ...fetcherRest,
-    load,
-  };
-}
+  clientLoader,
+);

@@ -1,10 +1,10 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import * as models from '~/models';
 import type { UnitTestSuite } from '~/models/unit-test-suite';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.update';
 
@@ -24,10 +24,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   return null;
 }
 
-export function useTestSuiteUpdateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useTestSuiteUpdateActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -51,17 +49,11 @@ export function useTestSuiteUpdateActionFetcher(args?: Parameters<typeof useFetc
         },
       );
 
-      return fetcherSubmit(JSON.stringify(data), {
+      return submit(JSON.stringify(data), {
         action: url,
         method: 'POST',
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

@@ -294,7 +294,8 @@ export type AuthTypes =
   | 'hawk'
   | 'iam'
   | 'netrc'
-  | 'asap';
+  | 'asap'
+  | 'singleToken';
 
 export const HAWK_ALGORITHM_SHA256 = 'sha256';
 export const HAWK_ALGORITHM_SHA1 = 'sha1';

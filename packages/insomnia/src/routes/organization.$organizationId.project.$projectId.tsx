@@ -1,4 +1,4 @@
-import { useRouteLoaderData } from 'react-router';
+import { href, redirect, useRouteLoaderData } from 'react-router';
 
 import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
@@ -6,11 +6,14 @@ import { invariant } from '~/utils/invariant';
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  const { projectId } = params;
+  const { organizationId, projectId } = params;
   invariant(projectId, 'Project ID is required');
 
   const project = await models.project.getById(projectId);
-  invariant(project, `Project was not found ${projectId}`);
+
+  if (!project) {
+    return redirect(href('/organization/:organizationId', { organizationId }));
+  }
 
   return {
     activeProject: project,
