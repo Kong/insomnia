@@ -102,7 +102,7 @@ jobs:
               // Run circular reference check
               console.log('Analyzing circular references...');
               const madge = require('madge');
-              const res = await madge(path.join(process.cwd(), 'src'), {
+              const res = await madge(process.cwd(), {
                 fileExtensions: ['ts', 'tsx'],
               });
               
