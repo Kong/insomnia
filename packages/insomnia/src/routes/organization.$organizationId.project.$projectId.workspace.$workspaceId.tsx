@@ -67,82 +67,93 @@ export interface Child {
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const activeWorkspace = await models.workspace.getById(workspaceId);
+  const [activeWorkspace, activeProject] = await Promise.all([
+    models.workspace.getById(workspaceId),
+    models.project.getById(projectId),
+  ]);
 
   invariant(activeWorkspace, 'Workspace not found');
-
-  // I don't know what to say man, this is just how it is
-  await models.environment.getOrCreateForParentId(workspaceId);
-  await models.cookieJar.getOrCreateForParentId(workspaceId);
-
-  const activeProject = await models.project.getById(projectId);
   invariant(activeProject, 'Project not found');
 
-  const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-  invariant(activeWorkspaceMeta, 'Workspace meta not found');
-  const gitRepositoryId = isGitProject(activeProject)
-    ? activeProject.gitRepositoryId
-    : activeWorkspaceMeta.gitRepositoryId;
-  const gitRepository = await models.gitRepository.getById(gitRepositoryId || '');
+  const [activeWorkspaceMeta, activeCookieJar, baseEnvironment, userSession] = await Promise.all([
+    models.workspaceMeta.getOrCreateByParentId(workspaceId),
+    models.cookieJar.getOrCreateForParentId(workspaceId),
+    models.environment.getOrCreateForParentId(workspaceId),
+    models.userSession.getOrCreate(),
+  ]);
 
-  const baseEnvironment = await models.environment.getByParentId(workspaceId);
+  invariant(activeWorkspaceMeta, 'Workspace meta not found');
+  invariant(activeCookieJar, 'Cookie jar not found');
   invariant(baseEnvironment, 'Base environment not found');
 
-  const subEnvironments = (await models.environment.findByParentId(baseEnvironment._id)).sort(
-    (e1, e2) => e1.metaSortKey - e2.metaSortKey,
-  );
+  const getEnvironments = async () => {
+    const getSubEnvironments = async () =>
+      (await models.environment.findByParentId(baseEnvironment._id)).sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
 
-  const globalEnvironmentWorkspaces = await database.find<Workspace>(models.workspace.type, {
-    parentId: projectId,
-    scope: 'environment',
-  });
+    const getActiveEnvironment = async () =>
+      (await database.findOne<Environment>(models.environment.type, {
+        _id: activeWorkspaceMeta.activeEnvironmentId,
+      })) || baseEnvironment;
 
-  const globalBaseEnvironments = await database.find<Environment>(models.environment.type, {
-    parentId: {
-      $in: globalEnvironmentWorkspaces.map(w => w._id),
-    },
-  });
+    const [subEnvironments, globalEnvironmentWorkspaces, activeGlobalEnvironment, activeEnvironment] =
+      await Promise.all([
+        getSubEnvironments(),
+        database.find<Workspace>(models.workspace.type, {
+          parentId: projectId,
+          scope: 'environment',
+        }),
+        database.findOne<Environment>(models.environment.type, {
+          _id: activeWorkspaceMeta.activeGlobalEnvironmentId,
+        }),
+        getActiveEnvironment(),
+      ]);
 
-  const globalSubEnvironments = await database.find<Environment>(models.environment.type, {
-    parentId: {
-      $in: globalBaseEnvironments.map(e => e._id),
-    },
-  });
+    const globalBaseEnvironments = await database.find<Environment>(models.environment.type, {
+      parentId: {
+        $in: globalEnvironmentWorkspaces.map(w => w._id),
+      },
+    });
 
-  const globalBaseEnvironmentsWithWorkspaceName = globalBaseEnvironments.map(e => {
-    const workspace = globalEnvironmentWorkspaces.find(w => w._id === e.parentId);
+    const globalSubEnvironments = await database.find<Environment>(models.environment.type, {
+      parentId: {
+        $in: globalBaseEnvironments.map(e => e._id),
+      },
+    });
+
+    const globalBaseEnvironmentsWithWorkspaceName = globalBaseEnvironments.map(e => {
+      const workspace = globalEnvironmentWorkspaces.find(w => w._id === e.parentId);
+      return {
+        ...e,
+        workspaceName: workspace?.name || '',
+      };
+    });
+
     return {
-      ...e,
-      workspaceName: workspace?.name || '',
+      subEnvironments,
+      globalSubEnvironments,
+      globalBaseEnvironmentsWithWorkspaceName,
+      activeEnvironment,
+      activeGlobalEnvironment,
     };
-  });
+  };
 
-  const activeEnvironment =
-    (await database.findOne<Environment>(models.environment.type, {
-      _id: activeWorkspaceMeta.activeEnvironmentId,
-    })) || baseEnvironment;
+  const getMisc = async () => {
+    const [activeApiSpec, activeMockServer, clientCertificates, caCertificate] = await Promise.all([
+      models.apiSpec.getByParentId(workspaceId),
+      models.mockServer.getByParentId(workspaceId),
+      models.clientCertificate.findByParentId(workspaceId),
+      models.caCertificate.findByParentId(workspaceId),
+    ]);
+    return { activeApiSpec, activeMockServer, clientCertificates, caCertificate };
+  };
 
-  const activeGlobalEnvironment = await database.findOne<Environment>(models.environment.type, {
-    _id: activeWorkspaceMeta.activeGlobalEnvironmentId,
-  });
-
-  const activeCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-  invariant(activeCookieJar, 'Cookie jar not found');
-
-  const activeApiSpec = await models.apiSpec.getByParentId(workspaceId);
-  const activeMockServer = await models.mockServer.getByParentId(workspaceId);
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
-
-  const organizationProjects =
-    (await database.find<Project>(models.project.type, {
-      parentId: organizationId,
-    })) || [];
-
-  const projects = sortProjects(organizationProjects);
-
-  const searchParams = new URL(request.url).searchParams;
-  const sortOrder = searchParams.get('sortOrder') as SortOrder;
-  const sortFunction = sortMethodMap[sortOrder] || sortMethodMap['type-manual'];
+  const getProjects = async () => {
+    const organizationProjects =
+      (await database.find<Project>(models.project.type, {
+        parentId: organizationId,
+      })) || [];
+    return sortProjects(organizationProjects);
+  };
 
   // first recursion to get all the folders ids in order to use nedb search by an array
   const flattenFoldersIntoList = async (id: string): Promise<string[]> => {
@@ -153,49 +164,56 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     }
     return parentIds;
   };
-  const listOfParentIds = await flattenFoldersIntoList(activeWorkspace._id);
 
-  const reqs = await database.find(models.request.type, { parentId: { $in: listOfParentIds } });
-  const reqGroups = await database.find(models.requestGroup.type, { parentId: { $in: listOfParentIds } });
-  const grpcReqs = (await database.find(models.grpcRequest.type, {
-    parentId: { $in: listOfParentIds },
-  })) as GrpcRequest[];
-  const wsReqs = await database.find(models.webSocketRequest.type, { parentId: { $in: listOfParentIds } });
-  const socketIORequests = await database.find(models.socketIORequest.type, { parentId: { $in: listOfParentIds } });
-  const allRequests = [...reqs, ...reqGroups, ...grpcReqs, ...wsReqs, ...socketIORequests] as (
-    | Request
-    | RequestGroup
-    | GrpcRequest
-    | WebSocketRequest
-    | SocketIORequest
-  )[];
+  const getCollection = async () => {
+    const searchParams = new URL(request.url).searchParams;
+    const sortOrder = searchParams.get('sortOrder') as SortOrder;
+    const sortFunction = sortMethodMap[sortOrder] || sortMethodMap['type-manual'];
+    const listOfParentIds = await flattenFoldersIntoList(activeWorkspace._id);
 
-  const requestMetas = await database.find(models.requestMeta.type, { parentId: { $in: reqs.map(r => r._id) } });
-  const grpcRequestMetas = await database.find(models.grpcRequestMeta.type, {
-    parentId: { $in: grpcReqs.map(r => r._id) },
-  });
-  const grpcAndRequestMetas = [...requestMetas, ...grpcRequestMetas] as (RequestMeta | GrpcRequestMeta)[];
-  const requestGroupMetas = (await database.find(models.requestGroupMeta.type, {
-    parentId: { $in: listOfParentIds },
-  })) as RequestGroupMeta[];
-  // second recursion to build the tree
-  const getCollectionTree = async ({
-    parentId,
-    level,
-    parentIsCollapsed,
-    ancestors,
-  }: {
-    parentId: string;
-    level: number;
-    parentIsCollapsed: boolean;
-    ancestors: string[];
-  }): Promise<Child[]> => {
-    const levelReqs = allRequests.filter(r => r.parentId === parentId);
+    const [reqs, reqGroups, grpcReqs, wsReqs, socketIORequests, requestGroupMetas] = await Promise.all([
+      database.find(models.request.type, { parentId: { $in: listOfParentIds } }),
+      database.find(models.requestGroup.type, { parentId: { $in: listOfParentIds } }),
+      database.find(models.grpcRequest.type, { parentId: { $in: listOfParentIds } }) as Promise<GrpcRequest[]>,
+      database.find(models.webSocketRequest.type, { parentId: { $in: listOfParentIds } }),
+      database.find(models.socketIORequest.type, { parentId: { $in: listOfParentIds } }),
+      database.find(models.requestGroupMeta.type, { parentId: { $in: listOfParentIds } }) as Promise<
+        RequestGroupMeta[]
+      >,
+    ]);
 
-    // parentIsCollapsed is always false if filter is set.
-    // so child.collapsed is always false and child.hidden is definitely determined by filter
-    const childrenWithChildren: Child[] = await Promise.all(
-      levelReqs.sort(sortFunction).map(async (doc): Promise<Child> => {
+    const allRequests = [...reqs, ...reqGroups, ...grpcReqs, ...wsReqs, ...socketIORequests] as (
+      | Request
+      | RequestGroup
+      | GrpcRequest
+      | WebSocketRequest
+      | SocketIORequest
+    )[];
+
+    const [requestMetas, grpcRequestMetas] = await Promise.all([
+      database.find(models.requestMeta.type, { parentId: { $in: reqs.map(r => r._id) } }),
+      database.find(models.grpcRequestMeta.type, { parentId: { $in: grpcReqs.map(r => r._id) } }),
+    ]);
+
+    const grpcAndRequestMetas = [...requestMetas, ...grpcRequestMetas] as (RequestMeta | GrpcRequestMeta)[];
+
+    // second recursion to build the tree
+    const getCollectionTree = ({
+      parentId,
+      level,
+      parentIsCollapsed,
+      ancestors,
+    }: {
+      parentId: string;
+      level: number;
+      parentIsCollapsed: boolean;
+      ancestors: string[];
+    }): Child[] => {
+      const levelReqs = allRequests.filter(r => r.parentId === parentId);
+
+      // parentIsCollapsed is always false if filter is set.
+      // so child.collapsed is always false and child.hidden is definitely determined by filter
+      const childrenWithChildren: Child[] = levelReqs.sort(sortFunction).map((doc): Child => {
         const hidden = parentIsCollapsed;
 
         const pinned = (!isRequestGroup(doc) && grpcAndRequestMetas.find(m => m.parentId === doc._id)?.pinned) || false;
@@ -213,62 +231,90 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
           hidden,
           level,
           ancestors: docAncestors,
-          children: await getCollectionTree({
+          children: getCollectionTree({
             parentId: doc._id,
             level: level + 1,
             parentIsCollapsed: collapsed,
             ancestors: docAncestors,
           }),
         };
-      }),
-    );
+      });
 
-    return childrenWithChildren;
+      return childrenWithChildren;
+    };
+
+    const requestTree = getCollectionTree({
+      parentId: activeWorkspace._id,
+      level: 0,
+      parentIsCollapsed: false,
+      ancestors: [],
+    });
+
+    function flattenTree() {
+      const collection: Collection = [];
+      const tree = requestTree;
+
+      const build = (node: Child) => {
+        if (isRequestGroup(node.doc)) {
+          collection.push(node);
+          node.children.forEach(child => build(child));
+        } else {
+          collection.push(node);
+        }
+      };
+      tree.forEach(node => build(node));
+
+      return collection;
+    }
+
+    return { collection: flattenTree(), grpcReqs, requestTree };
   };
 
-  const requestTree = await getCollectionTree({
-    parentId: activeWorkspace._id,
-    level: 0,
-    parentIsCollapsed: false,
-    ancestors: [],
-  });
-
-  function flattenTree() {
-    const collection: Collection = [];
-    const tree = requestTree;
-
-    const build = (node: Child) => {
-      if (isRequestGroup(node.doc)) {
-        collection.push(node);
-        node.children.forEach(child => build(child));
-      } else {
-        collection.push(node);
+  const getVCS = async () => {
+    const gitRepositoryId = isGitProject(activeProject)
+      ? activeProject.gitRepositoryId
+      : activeWorkspaceMeta.gitRepositoryId;
+    const gitRepository = await models.gitRepository.getById(gitRepositoryId || '');
+    const isLoggedInIsCloudProjectAndIsNotGitRepo = userSession.id && activeProject.remoteId && !gitRepository;
+    let vcsVersion = null;
+    if (isLoggedInIsCloudProjectAndIsNotGitRepo) {
+      try {
+        const vcs = VCSInstance();
+        await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
+        if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
+          await pushSnapshotOnInitialize({ vcs, workspace: activeWorkspace, project: activeProject });
+        }
+        vcsVersion = await vcs.getVersion();
+      } catch (err) {
+        console.warn('Failed to initialize VCS', err);
       }
-    };
-    tree.forEach(node => build(node));
-
-    return collection;
-  }
-
-  const userSession = await models.userSession.getOrCreate();
-  const isLoggedInIsCloudProjectAndIsNotGitRepo = userSession.id && activeProject.remoteId && !gitRepository;
-  let vcsVersion = null;
-  if (isLoggedInIsCloudProjectAndIsNotGitRepo) {
-    try {
-      const vcs = VCSInstance();
-      await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
-      if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
-        await pushSnapshotOnInitialize({ vcs, workspace: activeWorkspace, project: activeProject });
-      }
-      vcsVersion = await vcs.getVersion();
-    } catch (err) {
-      console.warn('Failed to initialize VCS', err);
     }
-  }
+    return { gitRepository, vcsVersion };
+  };
 
-  const workspaces = await models.workspace.findByParentId(projectId);
+  const [
+    { activeApiSpec, activeMockServer, clientCertificates, caCertificate },
+    {
+      activeEnvironment,
+      activeGlobalEnvironment,
+      subEnvironments,
+      globalSubEnvironments,
+      globalBaseEnvironmentsWithWorkspaceName,
+    },
+    { gitRepository, vcsVersion },
+    { collection, grpcReqs, requestTree },
+    projects,
+    workspaces,
+  ] = await Promise.all([
+    getMisc(),
+    getEnvironments(),
+    getVCS(),
+    getCollection(),
+    getProjects(),
+    models.workspace.findByParentId(projectId),
+  ]);
 
-  const collection = flattenTree();
+  const nodesById = collection.reduce((o, n) => ((o[n.doc._id] = n), o), {} as Record<string, Child>);
 
   // If there is a filter then we need to show all the parents of the requests that are not hidden.
   collection.forEach(node => {
@@ -276,7 +322,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
 
     if (!node.hidden) {
       ancestors.forEach(ancestorId => {
-        const ancestor = collection.find(n => n.doc._id === ancestorId);
+        const ancestor = nodesById[ancestorId];
 
         if (ancestor) {
           ancestor.hidden = false;
@@ -301,7 +347,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     activeApiSpec,
     activeMockServer,
     clientCertificates,
-    caCertificate: await models.caCertificate.findByParentId(workspaceId),
+    caCertificate,
     projects,
     requestTree,
     // TODO: remove this state hack when the grpc responses go somewhere else

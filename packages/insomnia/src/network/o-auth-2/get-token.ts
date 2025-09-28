@@ -408,7 +408,7 @@ const sendAccessTokenRequest = async (
   if (!settings.disableAppVersionUserAgent) {
     defaultHeaders.push(defaultUserAgentHeader);
   }
-  const newRequest: Request = await models.initModel(
+  const newRequest: Request = models.initModel(
     models.request.type,
     {
       // Do not inherit authentication from parent request or group since this is a special request

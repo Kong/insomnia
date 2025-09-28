@@ -35,7 +35,7 @@ describe('response.*', () => {
   it('works for basic and full response', async () => {
     const bodyPath = path.join(tmpdir(), 'response.zip');
     fs.writeFileSync(bodyPath, Buffer.from('Hello World!'));
-    const response = await models.initModel(models.response.type, {
+    const response = models.initModel(models.response.type, {
       bodyPath,
       bodyCompression: null,
       parentId: 'req_1',
