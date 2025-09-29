@@ -57,6 +57,11 @@ import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 import { useRequestMetaPatcher } from '~/ui/hooks/use-request';
 
+const emptyServerData: McpServerData = {
+  serverCapabilities: getDefaultServerCapabilities(),
+  primitives: { tools: [], resources: [], resourceTemplates: [], prompts: [] },
+};
+
 export const McpPane = () => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
@@ -70,10 +75,7 @@ export const McpPane = () => {
   const [allExpanded, setAllExpanded] = useState(true);
   const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:mcp-list-filter`);
   const { settings } = useRootLoaderData()!;
-  const [mcpServerData, setMcpServerData] = useState<McpServerData>({
-    serverCapabilities: getDefaultServerCapabilities(),
-    primitives: { tools: [], resources: [], resourceTemplates: [], prompts: [] },
-  });
+  const [mcpServerData, setMcpServerData] = useState<McpServerData>(emptyServerData);
   const [collapsedPrimitives, setCollapsedPrimitives] = useState<McpServerPrimitiveTypes[]>([]);
   const [selectedPrimitiveItem, setSelectedPrimitiveItem] = useState<PrimitiveSubItem | null>(null);
   const [primitiveNextCursor, setPrimitiveNextCursor] = useState<Partial<Record<McpServerPrimitiveTypes, string>>>({});
@@ -349,11 +351,14 @@ export const McpPane = () => {
         setMcpServerData(mcpServerData);
       }
     };
-    if (readyState) {
-      // Get MCP server data when connection is ready
+    if (activeResponse?._id) {
+      // Get MCP server data when active response changes
       updateServerData();
+    } else {
+      // Clear MCP server data when no active response
+      setMcpServerData(emptyServerData);
     }
-  }, [readyState, activeResponse?._id]);
+  }, [activeResponse?._id]);
 
   useEffect(() => {
     if (!readyState) {
