@@ -92,10 +92,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
       const caCertificatePath = caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
 
       const clientCert = clientCertificate?.cert
-        ? await window.main.secureReadFile({ path: clientCertificate.cert })
+        ? await window.main.secureReadFile({ path: clientCertificate.cert, overrideDataFolders: [clientCertificate.cert] })
         : undefined;
       const clientKey = clientCertificate?.key
-        ? await window.main.secureReadFile({ path: clientCertificate.key })
+        ? await window.main.secureReadFile({ path: clientCertificate.key, overrideDataFolders: [clientCertificate.key] })
         : undefined;
       // allow to read the file as it is chosen by user
       const caCertificate = caCertificatePath ? await window.main.secureReadFile({ path: caCertificatePath, overrideDataFolders: [caCertificatePath] }) : undefined;
@@ -157,11 +157,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           ...(request.url.toLowerCase().startsWith('grpcs:')
             ? {
               clientCert: (clientCertificate?.cert
-                ? await window.main.secureReadFile({ path: clientCertificate.cert })
+                ? await window.main.secureReadFile({ path: clientCertificate.cert, overrideDataFolders: [clientCertificate.cert] })
                 : undefined
               )?.content,
               clientKey: (clientCertificate?.key
-                ? await window.main.secureReadFile({ path: clientCertificate.key })
+                ? await window.main.secureReadFile({ path: clientCertificate.key, overrideDataFolders: [clientCertificate.key] })
                 : undefined
               )?.content,
               // allow to read the file as it is chosen by user
@@ -283,10 +283,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                     const caCertificateProp = await models.caCertificate.findByParentId(workspaceId);
                     const caCertificatePath = caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
                     const clientCert = clientCertificate?.cert
-                      ? await window.main.secureReadFile({ path: clientCertificate?.cert })
+                      ? await window.main.secureReadFile({ path: clientCertificate?.cert, overrideDataFolders: [clientCertificate?.cert] })
                       : undefined;
                     const clientKey = clientCertificate?.key
-                      ? await window.main.secureReadFile({ path: clientCertificate?.key })
+                      ? await window.main.secureReadFile({ path: clientCertificate?.key, overrideDataFolders: [clientCertificate?.key] })
                       : undefined;
                     // allow to read the file as it is chosen by user
                     const caCertificate = caCertificatePath
