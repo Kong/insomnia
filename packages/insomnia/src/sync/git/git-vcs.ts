@@ -291,7 +291,6 @@ export class GitVCS {
   async fileStatus(file: string) {
     const baseOpts = this._baseOpts;
 
-    console.log(`[git] Getting file status for ${file}`, git.WORKDIR(), git.STAGE(), git.TREE({ ref: 'HEAD' }));
     // Use isomorphic-git's walk API to traverse the HEAD, WORKDIR, and STAGE trees for the given file.
     // This is adapted from isomorphic-git's statusMatrix logic.
     const [blobs]: [[string, string, string, string]] = await git.walk({
