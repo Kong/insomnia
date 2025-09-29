@@ -362,13 +362,6 @@ export const McpPane = () => {
     }
   }, [activeResponse?._id]);
 
-  useEffect(() => {
-    if (!readyState && subscribeResources.length > 0) {
-      // clear subscriptions when connection is closed
-      patchRootsRequest(requestId, { subscribeResources: [] });
-    }
-  }, [patchRootsRequest, readyState, requestId, subscribeResources]);
-
   return (
     <PanelGroup
       ref={sidebarPanelRef}
