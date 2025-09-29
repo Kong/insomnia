@@ -280,38 +280,48 @@ export class GitVCS {
     }
   }
 
+  /**
+   * Returns the content of a file as it exists in three places:
+   * - HEAD (last commit)
+   * - Workdir (current working directory)
+   * - Stage (index/staging area)
+   *
+   * This is useful for showing diffs between committed, staged, and unstaged changes.
+   */
   async fileStatus(file: string) {
     const baseOpts = this._baseOpts;
-    // Adopted from statusMatrix of isomorphic-git https://github.com/isomorphic-git/isomorphic-git/blob/main/src/api/statusMatrix.js#L157
+
+    console.log(`[git] Getting file status for ${file}`, git.WORKDIR(), git.STAGE(), git.TREE({ ref: 'HEAD' }));
+    // Use isomorphic-git's walk API to traverse the HEAD, WORKDIR, and STAGE trees for the given file.
+    // This is adapted from isomorphic-git's statusMatrix logic.
     const [blobs]: [[string, string, string, string]] = await git.walk({
       ...baseOpts,
+      // trees: HEAD (last commit), WORKDIR (current files), STAGE (index)
       trees: [git.TREE({ ref: 'HEAD' }), git.WORKDIR(), git.STAGE()],
       map: async function map(filepath, [head, workdir, stage]) {
-        // Late filter against file names
+        // Only process the file we're interested in
         if (filepath !== file) {
           return;
         }
 
+        // Get the type of each tree entry (blob, tree, commit, special, etc.)
         const [headType, workdirType, stageType] = await Promise.all([
           head && head.type(),
           workdir && workdir.type(),
           stage && stage.type(),
         ]);
 
+        // If none of the entries are blobs, skip (we only care about file blobs)
         const isBlob = [headType, workdirType, stageType].includes('blob');
-
-        // For now, bail on directories unless the file is also a blob in another tree
         if ((headType === 'tree' || headType === 'special') && !isBlob) {
           return;
         }
         if (headType === 'commit') {
           return null;
         }
-
         if ((workdirType === 'tree' || workdirType === 'special') && !isBlob) {
           return;
         }
-
         if (stageType === 'commit') {
           return null;
         }
@@ -319,67 +329,66 @@ export class GitVCS {
           return;
         }
 
-        // Figure out the oids for files, using the staged oid for the working dir oid if the stats match.
+        // Get the object IDs (OIDs) for each tree entry if it's a blob
         const headOid = headType === 'blob' ? await head?.oid() : undefined;
         const stageOid = stageType === 'blob' ? await stage?.oid() : undefined;
         let workdirOid;
+        // Special case: if HEAD is not a blob, WORKDIR is a blob, and STAGE is not a blob, use a dummy OID
         if (headType !== 'blob' && workdirType === 'blob' && stageType !== 'blob') {
           workdirOid = '42';
         } else if (workdirType === 'blob') {
           workdirOid = await workdir?.oid();
         }
 
+        // Get the file content for each tree entry (may be undefined)
         let headBlob = await head?.content();
         let workdirBlob = await workdir?.content();
         let stageBlob = await stage?.content();
 
+        // If stageBlob is missing but we have a stageOid, read the blob directly
         if (!stageBlob && stageOid) {
           try {
             const { blob } = await git.readBlob({
               ...baseOpts,
-
               oid: stageOid,
             });
-
             stageBlob = blob;
           } catch (e) {
             console.log('[git] Failed to read blob', e);
           }
         }
 
+        // If headBlob is missing but we have a headOid, read the blob directly
         if (!headBlob && headOid) {
           try {
             const { blob } = await git.readBlob({
               ...baseOpts,
-
               oid: headOid,
             });
-
             headBlob = blob;
           } catch (e) {
             console.log('[git] Failed to read blob', e);
           }
         }
 
+        // If workdirBlob is missing but we have a workdirOid, read the blob directly
         if (!workdirBlob && workdirOid) {
           try {
             const { blob } = await git.readBlob({
               ...baseOpts,
-
               oid: workdirOid,
             });
-
             workdirBlob = blob;
           } catch (e) {
             console.log('[git] Failed to read blob', e);
           }
         }
 
+        // Convert blobs from Uint8Array to UTF-8 strings, or null if not present
         const blobsAsStrings = [headBlob, workdirBlob, stageBlob].map(blob => {
           if (!blob) {
             return null;
           }
-
           try {
             return Buffer.from(blob).toString('utf-8');
           } catch {
@@ -387,14 +396,16 @@ export class GitVCS {
           }
         });
 
+        // Return an array: [filepath, headContent, workdirContent, stageContent]
         return [filepath, ...blobsAsStrings];
       },
     });
 
+    // Build a diff object for easier access
     const diff = {
-      head: blobs[1],
-      workdir: blobs[2],
-      stage: blobs[3],
+      head: blobs[1], // Content from HEAD (last commit)
+      workdir: blobs[2], // Content from working directory
+      stage: blobs[3], // Content from staging area (index)
     };
 
     return diff;
@@ -1732,7 +1743,6 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
 
   async stageChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
     for (const change of changes) {
-      console.log(`[git] Stage ${change.path} | ${change.status}`);
       if (change.status[1] === 0) {
         await git.remove({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) });
       } else {
@@ -1747,20 +1757,57 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
     }
   }
 
-  async discardChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+  async discardChanges(
+    changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[],
+    options?: { discardStaged?: boolean; discardUnstaged?: boolean },
+  ) {
     for (const change of changes) {
-      // If the file didn't exist in HEAD, we need to remove it
+      // If the file didn't exist in HEAD, remove it
       if (change.status[0] === 0) {
         await git.remove({ ...this._baseOpts, filepath: change.path });
         // @ts-expect-error -- TSCONVERSION
         await this._baseOpts.fs.promises.unlink(change.path);
       } else {
-        await git.checkout({
-          ...this._baseOpts,
-          force: true,
-          ref: await this.getCurrentBranch(),
-          filepaths: [convertToPosixSep(change.path)],
-        });
+        // Discard staged changes only
+        if (options?.discardStaged) {
+          await git.resetIndex({ ...this._baseOpts, filepath: change.path });
+        }
+
+        // Discard unstaged changes only.
+        if (options?.discardUnstaged) {
+          // Restore workdir from index (staged version)
+          // 1. Get staged blob OID
+          const statusMatrix = await git.statusMatrix({ ...this._baseOpts });
+          const row = statusMatrix.find(([filepath]) => filepath === change.path);
+          if (row) {
+            const [, , , stageStatusCode] = row;
+            if (stageStatusCode !== 0) {
+              // 2. Get staged blob content
+              const index = await git.listFiles({ ...this._baseOpts });
+              if (index.includes(change.path)) {
+                // Use fileStatus logic to get staged content:
+                const { stage } = await this.fileStatus(change.path);
+                if (stage !== null) {
+                  // 3. Write staged content to workdir
+                  // @ts-expect-error -- TSCONVERSION
+                  await this._baseOpts.fs.promises.writeFile(change.path, stage, 'utf8');
+                }
+              }
+            }
+          }
+          // Do NOT touch the index (staged changes are preserved)
+          continue;
+        }
+
+        // Default: discard both (current behavior)
+        if (!options?.discardStaged && !options?.discardUnstaged) {
+          await git.checkout({
+            ...this._baseOpts,
+            force: true,
+            ref: await this.getCurrentBranch(),
+            filepaths: [convertToPosixSep(change.path)],
+          });
+        }
       }
     }
   }
