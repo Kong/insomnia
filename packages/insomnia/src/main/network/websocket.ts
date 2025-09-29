@@ -71,9 +71,38 @@ export type WebSocketEvent = WebSocketOpenEvent | WebSocketMessageEvent | WebSoc
 
 export type WebSocketEventLog = WebSocketEvent[];
 
+const protocolName = 'webSocket';
 const WebSocketConnections = new Map<string, WebSocket>();
+const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
+
+const getEventNotificationChannel = (responseId: string) => `${protocolName}.${responseId}.newEventReceived`;
+
+const writeEventLogAndNotify = ({
+  requestId,
+  data,
+  clearRequestIdMap = false,
+}: {
+  requestId: string;
+  data: any;
+  clearRequestIdMap?: boolean;
+}) => {
+  eventLogFileStreams.get(requestId)?.write(data, () => {
+    // notify all renderers of new event has been received
+    for (const window of BrowserWindow.getAllWindows()) {
+      const resId = requestIdToResponseIdMap.get(requestId);
+      if (resId) {
+        const notifyChannel = getEventNotificationChannel(resId);
+        notifyChannel && window.webContents.send(notifyChannel);
+        if (clearRequestIdMap) {
+          // clean up maps after last event has been written to file
+          requestIdToResponseIdMap.delete(requestId);
+        }
+      }
+    }
+  });
+};
 
 const parseResponseAndBuildTimeline = (url: string, incomingMessage: IncomingMessage, clientRequestHeaders: string) => {
   const statusMessage = incomingMessage.statusMessage || '';
@@ -129,6 +158,7 @@ const openWebSocketConnection = async (
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
+  requestIdToResponseIdMap.set(options.requestId, responseId);
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   // fallback to base environment
@@ -148,7 +178,7 @@ const openWebSocketConnection = async (
     if (!options.url) {
       throw new Error('URL is required');
     }
-    const readyStateChannel = `webSocket.${request._id}.readyState`;
+    const readyStateChannel = `${protocolName}.${request._id}.readyState`;
 
     const reduceArrayToLowerCaseKeyedDictionary = (
       acc: Record<string, string>,
@@ -354,8 +384,7 @@ const openWebSocketConnection = async (
         type: 'open',
         timestamp: Date.now(),
       };
-
-      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
+      writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(openEvent) + '\n' });
       timelineFileStreams
         .get(options.requestId)
         ?.write(
@@ -379,9 +408,7 @@ const openWebSocketConnection = async (
         direction: 'INCOMING',
         timestamp: Date.now(),
       };
-
-      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
-
+      writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(messageEvent) + '\n' });
       // send subscribe operation to graphql websocket server
       if (options.isGraphqlSubscriptionRequest) {
         handleGraphQLWsMessage(data, request as Request);
@@ -499,7 +526,11 @@ const deleteRequestMaps = async (
   event?: WebSocketCloseEvent | WebSocketErrorEvent,
 ) => {
   if (event) {
-    eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
+    writeEventLogAndNotify({
+      requestId,
+      data: JSON.stringify(event) + '\n',
+      clearRequestIdMap: true,
+    });
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);
@@ -535,7 +566,7 @@ const sendPayload = async (ws: WebSocket, options: { payload: string; requestId:
     timestamp: Date.now(),
   };
 
-  eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
+  writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(lastMessage) + '\n' });
   const response = await database.findOne<WebSocketResponse>(
     'WebSocketResponse',
     {

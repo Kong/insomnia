@@ -155,7 +155,6 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
       },
     });
 
-    const isConnectingOrClosed = !readyState;
     const getRequestLabel = () => {
       let requestTypeLabel = '';
       if (request.type === 'WebSocketRequest') {
@@ -179,7 +178,6 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
         )}
         <form
           className="flex flex-1"
-          aria-disabled={isOpen}
           onSubmit={event => {
             event.preventDefault();
             handleSubmit();
@@ -192,7 +190,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
               onKeyDown={createKeybindingsHandler({
                 Enter: () => handleSubmit(),
               })}
-              readOnly={readyState}
+              readOnly={isOpen}
               placeholder="wss://example.com/chat"
               defaultValue={defaultValue}
               onChange={onChange}
@@ -200,15 +198,15 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
             />
           </div>
           <div className="flex p-1">
-            {isConnectingOrClosed ? (
+            {isOpen ? (
+              <DisconnectButton requestId={request._id} />
+            ) : (
               <button
                 className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
                 type="submit"
               >
                 Connect
               </button>
-            ) : (
-              <DisconnectButton requestId={request._id} />
             )}
           </div>
         </form>

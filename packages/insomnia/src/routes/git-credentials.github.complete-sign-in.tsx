@@ -6,12 +6,10 @@ import type { Route } from './+types/git-credentials.github.complete-sign-in';
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const { code, state } = (await request.json()) as { code: string; state: string; path: string };
-  await window.main.git.completeSignInToGitHub({
+  return await window.main.git.completeSignInToGitHub({
     code,
     state,
   });
-
-  return null;
 }
 
 export const useGithubCompleteSignInFetcher = createFetcherSubmitHook(

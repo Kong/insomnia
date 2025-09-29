@@ -30,7 +30,6 @@ import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import type { Project, RemoteProject } from './models/project';
 import type { Stats } from './models/stats';
-import type { ToastNotification } from './ui/components/toast';
 
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
@@ -331,17 +330,16 @@ async function _trackStats() {
       return;
     }
     console.log('[main] App update detected', currentVersion, lastVersion);
-    const notification: ToastNotification = {
-      key: `updated-${currentVersion}`,
-      url: 'https://insomnia.rest/changelog',
-      cta: "See What's New",
-      message: `Updated to ${currentVersion}`,
-    };
     // Wait a bit before showing the user because the app just launched.
     setTimeout(async () => {
       for (const window of BrowserWindow.getAllWindows()) {
-        // @ts-expect-error -- TSCONVERSION likely needs to be window.webContents.send instead
-        window.send('show-notification', notification);
+        window.webContents.send('show-toast', {
+          content: {
+            title: `Updated to ${currentVersion}`,
+            status: 'info',
+            description: "See What's New https://insomnia.rest/changelog",
+          },
+        });
       }
     }, 5000);
   });

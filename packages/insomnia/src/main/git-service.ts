@@ -100,22 +100,22 @@ export function vcsSegmentEventProperties(type: 'git', action: VCSAction, error?
   return { type, action, error };
 }
 
-function parseGitToHttpsURL(s: string) {
+function parseGitToHttpsURL(url: string) {
   // try to convert any git URL to https URL
-  let parsed = fromUrl(s)?.https({ noGitPlus: true }) || '';
+  let parsed = fromUrl(url)?.https({ noGitPlus: true }) || '';
 
   // fallback for self-hosted git servers, see https://github.com/Kong/insomnia/issues/5967
   // and https://github.com/npm/hosted-git-info/issues/11
   if (parsed === '') {
-    let temp = s;
+    let tempURL = url;
     // handle "shorter scp-like syntax"
-    temp = temp.replace(/^git@([^:]+):/, 'https://$1/');
+    tempURL = tempURL.replace(/^git@([^:]+):/, 'https://$1/');
     // handle proper SSH URLs
-    temp = temp.replace(/^ssh:\/\//, 'https://');
+    tempURL = tempURL.replace(/^ssh:\/\//, 'https://');
 
     // final URL fallback for any other git URL
-    temp = new URL(temp).href;
-    parsed = temp;
+    tempURL = (URL.canParse(tempURL) ? URL.parse(tempURL)?.href : url) || '';
+    parsed = tempURL;
   }
 
   return parsed;
@@ -2118,15 +2118,22 @@ export const GITHUB_GRAPHQL_API_URL = getGitHubGraphQLApiURL();
 const statesCache = new Set<string>();
 
 async function initSignInToGitHub() {
-  const state = v4();
-  statesCache.add(state);
-  const url = new URL(getAppWebsiteBaseURL() + '/oauth/github-app');
+  try {
+    const state = v4();
+    statesCache.add(state);
+    const url = new URL(getAppWebsiteBaseURL() + '/oauth/github-app');
 
-  url.search = new URLSearchParams({
-    state,
-  }).toString();
+    url.search = new URLSearchParams({
+      state,
+    }).toString();
 
-  await shell.openExternal(url.toString());
+    await shell.openExternal(url.toString());
+    return {};
+  } catch (error) {
+    console.error('Failed to initiate the GitHub OAuth flow:', error);
+
+    return { errors: [`Failed to initiate the GitHub OAuth flow. ${getErrorMessage(error)}`] };
+  }
 }
 
 interface GitHubUserApiResponse {
@@ -2138,65 +2145,76 @@ interface GitHubUserApiResponse {
 }
 
 async function completeSignInToGitHub({ code, state }: { code: string; state: string }) {
-  if (!PLAYWRIGHT && !statesCache.has(state)) {
-    throw new Error('Invalid state parameter. It looks like the authorization flow was not initiated by the app.');
-  }
+  try {
+    if (!PLAYWRIGHT && !statesCache.has(state)) {
+      throw new Error('Invalid state parameter. It looks like the authorization flow was not initiated by the app.');
+    }
 
-  const response = await net.fetch(getApiBaseURL() + '/v1/oauth/github-app', {
-    method: 'POST',
-    body: JSON.stringify({
-      code,
-    }),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  const data = (await response.json()) as { access_token: string };
-  statesCache.delete(state);
-  const existingGitHubCredentials = await models.gitCredentials.getByProvider('github');
-
-  // need both requests because the email in GET /user
-  // is the public profile email and may not exist
-  const emailsPromise = fetch(getGitHubRestApiUrl() + '/user/emails', {
-    method: 'GET',
-    headers: {
-      Authorization: `token ${data.access_token}`,
-    },
-  }).then(response => response.json() as Promise<{ email: string; primary: boolean }[]>);
-
-  const userPromise = fetch(getGitHubRestApiUrl() + '/user', {
-    method: 'GET',
-    headers: {
-      Authorization: `token ${data.access_token}`,
-    },
-  }).then(response => response.json() as Promise<GitHubUserApiResponse>);
-
-  const [emails, user] = await Promise.all([emailsPromise, userPromise]);
-
-  const userProfileEmail = user.email ?? '';
-  const email = emails.find(e => e.primary)?.email ?? userProfileEmail ?? '';
-
-  if (existingGitHubCredentials) {
-    await models.gitCredentials.update(existingGitHubCredentials, {
-      token: data.access_token,
-      provider: 'githubapp',
-      author: {
-        email,
-        name: user.name ?? user.login ?? '',
-        avatarUrl: user.avatar_url,
+    const response = await net.fetch(getApiBaseURL() + '/v1/oauth/github-app', {
+      method: 'POST',
+      body: JSON.stringify({
+        code,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
       },
     });
-  } else {
-    await models.gitCredentials.create({
-      token: data.access_token,
-      provider: 'githubapp',
-      author: {
-        email,
-        name: user.name ?? user.login ?? '',
-        avatarUrl: user.avatar_url,
-      },
-    });
+
+    const data = (await response.json()) as { access_token: string };
+    statesCache.delete(state);
+    const existingGitHubCredentials = await models.gitCredentials.getByProvider('github');
+
+    // need both requests because the email in GET /user
+    // is the public profile email and may not exist
+    const emailsPromise = net
+      .fetch(getGitHubRestApiUrl() + '/user/emails', {
+        method: 'GET',
+        headers: {
+          Authorization: `token ${data.access_token}`,
+        },
+      })
+      .then(response => response.json() as Promise<{ email: string; primary: boolean }[]>);
+
+    const userPromise = net
+      .fetch(getGitHubRestApiUrl() + '/user', {
+        method: 'GET',
+        headers: {
+          Authorization: `token ${data.access_token}`,
+        },
+      })
+      .then(response => response.json() as Promise<GitHubUserApiResponse>);
+
+    const [emails, user] = await Promise.all([emailsPromise, userPromise]);
+
+    const userProfileEmail = user.email ?? '';
+    const email = emails.find(e => e.primary)?.email ?? userProfileEmail ?? '';
+
+    if (existingGitHubCredentials) {
+      await models.gitCredentials.update(existingGitHubCredentials, {
+        token: data.access_token,
+        provider: 'githubapp',
+        author: {
+          email,
+          name: user.name ?? user.login ?? '',
+          avatarUrl: user.avatar_url,
+        },
+      });
+    } else {
+      await models.gitCredentials.create({
+        token: data.access_token,
+        provider: 'githubapp',
+        author: {
+          email,
+          name: user.name ?? user.login ?? '',
+          avatarUrl: user.avatar_url,
+        },
+      });
+    }
+
+    return {};
+  } catch (error) {
+    console.error('Failed to complete the GitHub OAuth flow:', error);
+    return { errors: ['Failed to complete the GitHub OAuth flow.'] };
   }
 }
 
@@ -2237,7 +2255,7 @@ async function getGitHubRepositories({
       },
     };
 
-    const response = await fetch(url, opts);
+    const response = await net.fetch(url, opts);
     if (!response.ok) {
       const raw = await response.text();
       if (response.status === 401) {
@@ -2267,7 +2285,7 @@ async function getGitHubRepositories({
           const pages = Number(lastPage);
           const pageList = await Promise.all(
             Array.from({ length: pages - 1 }, (_, i) =>
-              fetch(`${GITHUB_USER_REPOS_URL}?per_page=100&page=${i + 2}`, opts),
+              net.fetch(`${GITHUB_USER_REPOS_URL}?per_page=100&page=${i + 2}`, opts),
             ),
           );
           for (const page of pageList) {
@@ -2286,8 +2304,8 @@ async function getGitHubRepositories({
       }
     }
     return { repos, errors: [] };
-  } catch (e) {
-    const errorMessage = `Failed to fetch repositories from GitHub: ${e.message}`;
+  } catch (error) {
+    const errorMessage = `Failed to fetch repositories from GitHub. ${getErrorMessage(error)}`;
     return { repos: [], errors: [errorMessage] };
   }
 }
@@ -2303,7 +2321,7 @@ async function getGitHubRepository({ uri }: { uri: string }) {
       },
     };
 
-    const response = await fetch(`${getGitHubRestApiUrl()}/repos/${owner}/${name}`, opts);
+    const response = await net.fetch(`${getGitHubRestApiUrl()}/repos/${owner}/${name}`, opts);
     if (!response.ok) {
       const raw = await response.text();
       return {
@@ -2313,8 +2331,8 @@ async function getGitHubRepository({ uri }: { uri: string }) {
     }
 
     return { repo: (await response.json()) as GitHubRepositoryApiResponse, errors: [], notFound: false };
-  } catch (e) {
-    const errorMessage = `Failed to fetch repository from GitHub: ${e.message}`;
+  } catch (error) {
+    const errorMessage = `Failed to fetch repository from GitHub. ${getErrorMessage(error)}`;
     return {
       errors: [errorMessage],
       notFound: false,
@@ -2345,7 +2363,7 @@ const getGitLabConfig = async () => {
     };
   }
 
-  const configResponse = await fetch(getApiBaseURL() + '/v1/oauth/gitlab/config', {
+  const configResponse = await net.fetch(getApiBaseURL() + '/v1/oauth/gitlab/config', {
     method: 'GET',
   });
 
@@ -2367,92 +2385,114 @@ function base64URLEncode(buffer: Buffer) {
 export const getGitLabOauthApiURL = () => INSOMNIA_GITLAB_API_URL || 'https://gitlab.com';
 
 async function initSignInToGitLab() {
-  const state = v4();
+  try {
+    const state = v4();
 
-  const verifier = base64URLEncode(randomBytes(32));
-  gitLabStatesCache.set(state, verifier);
+    const verifier = base64URLEncode(randomBytes(32));
+    gitLabStatesCache.set(state, verifier);
 
-  const scopes = [
-    // Needed to read the user's email address, username and avatar_url from the /user GitLab API
-    'read_user',
-    // Read/Write access to the user's projects to allow for syncing (push/pull etc.)
-    'write_repository',
-  ];
+    const scopes = [
+      // Needed to read the user's email address, username and avatar_url from the /user GitLab API
+      'read_user',
+      // Read/Write access to the user's projects to allow for syncing (push/pull etc.)
+      'write_repository',
+    ];
 
-  const scope = scopes.join(' ');
+    const scope = scopes.join(' ');
 
-  function sha256(str: string) {
-    return createHash('sha256').update(str).digest();
+    function sha256(str: string) {
+      return createHash('sha256').update(str).digest();
+    }
+
+    const challenge = base64URLEncode(sha256(verifier));
+
+    const gitlabURL = new URL(`${getGitLabOauthApiURL()}/oauth/authorize`);
+    const { clientId, redirectUri } = await getGitLabConfig();
+    gitlabURL.search = new URLSearchParams({
+      client_id: clientId,
+      scope,
+      state,
+      response_type: 'code',
+      redirect_uri: redirectUri,
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
+    }).toString();
+
+    await shell.openExternal(gitlabURL.toString());
+
+    return {};
+  } catch (err) {
+    console.error('Failed to initiate the GitLab OAuth flow:\n', err);
+    return {
+      errors: [`Failed to initiate the the GitLab OAuth flow. ${getErrorMessage(err)}`],
+    };
   }
-
-  const challenge = base64URLEncode(sha256(verifier));
-
-  const gitlabURL = new URL(`${getGitLabOauthApiURL()}/oauth/authorize`);
-  const { clientId, redirectUri } = await getGitLabConfig();
-  gitlabURL.search = new URLSearchParams({
-    client_id: clientId,
-    scope,
-    state,
-    response_type: 'code',
-    redirect_uri: redirectUri,
-    code_challenge: challenge,
-    code_challenge_method: 'S256',
-  }).toString();
-
-  await shell.openExternal(gitlabURL.toString());
 }
 
 async function completeSignInToGitLab({ code, state }: { code: string; state: string }) {
-  let verifier = gitLabStatesCache.get(state);
+  try {
+    let verifier = gitLabStatesCache.get(state);
 
-  if (PLAYWRIGHT) {
-    verifier = 'test-verifier';
-  }
-  if (!verifier) {
-    throw new Error('Invalid state parameter. It looks like the authorization flow was not initiated by the app.');
-  }
-  const { clientId, redirectUri } = await getGitLabConfig();
-  const url = new URL(`${getGitLabOauthApiURL()}/oauth/token`);
-  url.search = new URLSearchParams({
-    code,
-    state,
-    client_id: clientId,
-    grant_type: 'authorization_code',
-    redirect_uri: redirectUri,
-    code_verifier: verifier,
-  }).toString();
+    if (PLAYWRIGHT) {
+      verifier = 'test-verifier';
+    }
+    if (!verifier) {
+      throw new Error('Invalid state parameter. It looks like the authorization flow was not initiated by the app.');
+    }
+    const { clientId, redirectUri } = await getGitLabConfig();
+    const url = new URL(`${getGitLabOauthApiURL()}/oauth/token`);
+    url.search = new URLSearchParams({
+      code,
+      state,
+      client_id: clientId,
+      grant_type: 'authorization_code',
+      redirect_uri: redirectUri,
+      code_verifier: verifier,
+    }).toString();
 
-  const gitLabResponse = await fetch(getGitLabOauthApiURL() + url.pathname + url.search, {
-    method: 'POST',
-  });
+    const gitLabResponse = await net.fetch(getGitLabOauthApiURL() + url.pathname + url.search, {
+      method: 'POST',
+    });
 
-  const { access_token, refresh_token } = (await gitLabResponse.json()) as {
-    access_token: string;
-    refresh_token: string;
-  };
+    const { access_token, refresh_token } = (await gitLabResponse.json()) as {
+      access_token: string;
+      refresh_token: string;
+    };
 
-  gitLabStatesCache.delete(state);
-  const existingGitLabCredentials = await models.gitCredentials.getByProvider('gitlab');
+    gitLabStatesCache.delete(state);
+    const existingGitLabCredentials = await models.gitCredentials.getByProvider('gitlab');
 
-  const gitLabUserResponse = await fetch(`${getGitLabOauthApiURL()}/api/v4/user`, {
-    headers: {
-      Authorization: `Bearer ${access_token}`,
-    },
-  });
+    const gitLabUserResponse = await net.fetch(`${getGitLabOauthApiURL()}/api/v4/user`, {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+    });
 
-  const user = (await gitLabUserResponse.json()) as {
-    id: number;
-    username: string;
-    name: string;
-    avatar_url: string;
-    public_email: string;
-    email: string;
-    projects_limit: number;
-    commit_email: string;
-  };
+    const user = (await gitLabUserResponse.json()) as {
+      id: number;
+      username: string;
+      name: string;
+      avatar_url: string;
+      public_email: string;
+      email: string;
+      projects_limit: number;
+      commit_email: string;
+    };
 
-  if (existingGitLabCredentials) {
-    return await models.gitCredentials.update(existingGitLabCredentials, {
+    if (existingGitLabCredentials) {
+      return await models.gitCredentials.update(existingGitLabCredentials, {
+        token: access_token,
+        refreshToken: refresh_token,
+        provider: 'gitlab',
+        author: {
+          email: user.commit_email ?? user.public_email ?? user.email ?? '',
+          name: user.username ?? user.name ?? '',
+          avatarUrl: user.avatar_url,
+        },
+      });
+    }
+
+    return await models.gitCredentials.create({
       token: access_token,
       refreshToken: refresh_token,
       provider: 'gitlab',
@@ -2462,18 +2502,10 @@ async function completeSignInToGitLab({ code, state }: { code: string; state: st
         avatarUrl: user.avatar_url,
       },
     });
+  } catch (error) {
+    console.error('Failed to complete the GitLab OAuth flow:', error);
+    return { errors: [`Failed to complete the GitLab OAuth flow. ${getErrorMessage(error)}`] };
   }
-
-  return await models.gitCredentials.create({
-    token: access_token,
-    refreshToken: refresh_token,
-    provider: 'gitlab',
-    author: {
-      email: user.commit_email ?? user.public_email ?? user.email ?? '',
-      name: user.username ?? user.name ?? '',
-      avatarUrl: user.avatar_url,
-    },
-  });
 }
 
 async function signOutOfGitLab() {

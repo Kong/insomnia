@@ -3,7 +3,6 @@ import { href } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';
 import { removeAllSecrets } from '~/models/environment';
-import type { ToastNotification } from '~/ui/components/toast';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -32,11 +31,12 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     // Update vault salt and delete vault key from session
     sessionModel.update(userSession, { vaultSalt: newVaultSalt, vaultKey: '' });
     // show notification
-    const notification: ToastNotification = {
-      key: 'Vault key reset',
-      message: 'Your vault key has been reset, all you local secrets have been deleted.',
-    };
-    electron.ipcRenderer.emit('show-notification', null, notification);
+    electron.ipcRenderer.emit('show-toast', null, {
+      content: {
+        title: 'Your vault key has been reset, all you local secrets have been deleted.',
+        status: 'info',
+      },
+    });
     return true;
   }
   return false;

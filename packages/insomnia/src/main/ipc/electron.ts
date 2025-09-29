@@ -151,10 +151,10 @@ export type RendererOnChannels =
   | 'reload-plugins'
   | 'shell:open'
   | 'show-notification'
+  | 'show-toast'
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
-  | 'toggle-sidebar'
-  | 'updaterStatus';
+  | 'toggle-sidebar';
 
 export const ipcMainOn = (
   channel: MainOnChannels,

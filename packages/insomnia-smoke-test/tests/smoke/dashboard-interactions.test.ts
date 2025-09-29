@@ -85,7 +85,7 @@ test.describe('Dashboard', () => {
     // Create new collection
     await page.getByLabel('Create in project').click();
     await page.getByText('Request collection').click();
-    await page.getByRole('button', { name: 'Create' }).click();
+    await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.getByTestId('project').click();
 
     // Rename collection

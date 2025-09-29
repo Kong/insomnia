@@ -172,9 +172,9 @@ export const ContentTypeDropdown: FC = () => {
       onSelectionChange={mimeType => {
         if (mimeType === 'no-body') {
           handleChangeMimeType(EMPTY_MIME_TYPE);
-        } else {
-          handleChangeMimeType(mimeType.toString());
+          return;
         }
+        mimeType && handleChangeMimeType(mimeType.toString());
       }}
       selectedKey={body.mimeType ?? 'no-body'}
     >
