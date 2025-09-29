@@ -33,7 +33,6 @@ import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { Link } from '~/ui/components/base/link';
-import { ErrorBoundary as ErrorView } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
@@ -530,7 +529,7 @@ const Root = () => {
   ]);
 
   return (
-    <ErrorView>
+    <>
       <div className="app">
         <Outlet />
         <Toaster />
@@ -547,7 +546,7 @@ const Root = () => {
           from={{ type: 'uri', defaultValue: importUri }}
         />
       )}
-    </ErrorView>
+    </>
   );
 };
 
