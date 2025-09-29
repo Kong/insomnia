@@ -336,6 +336,7 @@ export const OAuth2Auth: FC = () => {
   Which is the epoch millisecond representation. (trims last 2 digits)
 */
 export function convertEpochToMilliseconds(epoch: number) {
+  epoch = Math.floor(epoch);
   const expDigitCount = epoch.toString().length;
   return parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
 }
