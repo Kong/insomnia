@@ -236,12 +236,16 @@ export const WorkspaceDropdown: FC<{}> = () => {
       id: 'actions',
       icon: 'cog',
       items: [
-        {
-          id: 'duplicate',
-          name: 'Duplicate',
-          icon: <Icon icon="bars" />,
-          action: () => setIsDuplicateModalOpen(true),
-        },
+        ...(isMcp(activeWorkspace)
+          ? []
+          : [
+              {
+                id: 'duplicate',
+                name: 'Duplicate',
+                icon: <Icon icon="bars" />,
+                action: () => setIsDuplicateModalOpen(true),
+              },
+            ]),
         {
           id: 'rename',
           name: 'Rename',
