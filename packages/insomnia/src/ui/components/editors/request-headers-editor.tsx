@@ -1,4 +1,4 @@
-import React, { type FC, useCallback } from 'react';
+import { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
@@ -101,6 +101,7 @@ export const RequestHeadersEditor: FC<Props> = ({ headers, bulk, isDisabled, req
       onChange={headers => patcher(id, { headers })}
       isDisabled={isDisabled}
       readOnlyPairs={isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs}
+      hideValueType
     />
   );
 };

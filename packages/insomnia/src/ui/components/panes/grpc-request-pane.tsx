@@ -1,4 +1,4 @@
-import React, { type FunctionComponent, useRef, useState } from 'react';
+import { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
@@ -468,6 +468,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                   handleGetAutocompleteNameConstants={getCommonHeaderNames}
                   handleGetAutocompleteValueConstants={getCommonHeaderValues}
                   onChange={(metadata: GrpcRequestHeader[]) => patchRequest(requestId, { metadata })}
+                  hideValueType
                 />
               </ErrorBoundary>
             </TabPanel>
