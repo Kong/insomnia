@@ -124,9 +124,11 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           </Button>
         }
       >
-        <DropdownItem aria-label="Duplicate / Move">
-          <ItemContent label="Duplicate / Move" icon="copy" onClick={() => setIsDuplicateModalOpen(true)} />
-        </DropdownItem>
+        {!isMcp(workspace) && (
+          <DropdownItem aria-label="Duplicate / Move">
+            <ItemContent label="Duplicate / Move" icon="copy" onClick={() => setIsDuplicateModalOpen(true)} />
+          </DropdownItem>
+        )}
         <DropdownItem aria-label="Rename">
           <ItemContent
             label="Rename"
