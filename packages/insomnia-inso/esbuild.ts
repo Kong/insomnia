@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 
-import { analyzeMetafile, type BuildOptions, build, context } from 'esbuild';
+import { analyzeMetafile, build, type BuildOptions, context } from 'esbuild';
 
 const isProd = Boolean(process.env.NODE_ENV === 'production');
 const watch = Boolean(process.env.ESBUILD_WATCH);
