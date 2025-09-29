@@ -179,7 +179,7 @@ export const McpRequestPane: FC<Props> = ({
     } else if (selectedPrimitiveItem?.type === 'prompts') {
       return 'Get Prompt';
     }
-    return 'Send';
+    return null;
   }, [selectedPrimitiveItem]);
 
   useEffect(() => {
@@ -282,15 +282,17 @@ export const McpRequestPane: FC<Props> = ({
                 <div className="flex h-full flex-col">
                   <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center justify-between gap-2 px-2 py-2">
                     <Heading className="text-xs font-bold uppercase text-[--hl]">Parameter Builder</Heading>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        isDisabled={!readyState}
-                        onClick={handleSend}
-                        className="rounded bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise]"
-                      >
-                        {sendButtonText}
-                      </Button>
-                    </div>
+                    {sendButtonText && (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          isDisabled={!readyState}
+                          onClick={handleSend}
+                          className="rounded bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise]"
+                        >
+                          {sendButtonText}
+                        </Button>
+                      </div>
+                    )}
                   </Toolbar>
                   {jsonSchema && (
                     <div className="overflow-auto p-4">

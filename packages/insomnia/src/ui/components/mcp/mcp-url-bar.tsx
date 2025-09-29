@@ -135,7 +135,13 @@ export const McpUrlActionBar = ({
     };
   }, [environmentId, request]);
 
+  const isConnecting = connectRequestFetcher.state === 'submitting' || connectRequestFetcher.state === 'loading';
+
   const handleSubmit = useCallback(async () => {
+    if (isConnecting) {
+      return;
+    }
+
     updateTabById?.(request._id, { temporary: false });
     if (isOpen) {
       window.main.mcp.close({ requestId: request._id });
@@ -153,7 +159,7 @@ export const McpUrlActionBar = ({
     }
 
     connectParams && connect(connectParams);
-  }, [connect, generateConnectParams, isOpen, project, request, updateTabById]);
+  }, [connect, generateConnectParams, isConnecting, isOpen, project, request, updateTabById]);
 
   const handleSubmitRef = useLatest(handleSubmit);
 
