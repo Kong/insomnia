@@ -77,7 +77,7 @@ jobs:
             <summary>Click to view all circular references (${count})</summary>
 
             \`\`\`
-            ${circularReferences.map(cycle => cycle.join(' -> ')).join('\n')}
+            ${circularReferences.sort().map(cycle => cycle.join(' -> ')).join('\n')}
             \`\`\`
 
             </details>
