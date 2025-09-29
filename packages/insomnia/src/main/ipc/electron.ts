@@ -74,6 +74,7 @@ export type HandleChannels =
   | 'lintSpec'
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
+  | 'openPath'
   | 'readCurlResponse'
   | 'readDir'
   | 'readFile'
@@ -117,7 +118,6 @@ export type MainOnChannels =
   | 'manualUpdateCheck'
   | 'openDeepLink'
   | 'openInBrowser'
-  | 'openPath'
   | 'readText'
   | 'restart'
   | 'set-hidden-window-busy-status'
@@ -306,9 +306,9 @@ export function registerElectronHandlers() {
     shell.showItemInFolder(name);
   });
 
-  ipcMainOn('openPath', (_, name: string) => {
+  ipcMainHandle('openPath', async (_, name: string) => {
     mkdirSync(name, { recursive: true });
-    shell.openPath(name);
+    return shell.openPath(name);
   });
 
   ipcMainOn('readText', event => {
