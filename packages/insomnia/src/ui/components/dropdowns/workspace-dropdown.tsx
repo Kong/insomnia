@@ -213,24 +213,24 @@ export const WorkspaceDropdown: FC<{}> = () => {
               },
             ],
           },
-        ]),
-    {
-      name: 'Runner',
-      id: 'runner',
-      icon: 'circle-play',
-      items: [
-        {
-          id: 'run',
-          name: 'Run Collection',
-          icon: <Icon icon="circle-play" />,
-          action: () => {
-            navigate(
-              `/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner?folder=`,
-            );
+          {
+            name: 'Runner',
+            id: 'runner',
+            icon: 'circle-play' as const,
+            items: [
+              {
+                id: 'run',
+                name: 'Run Collection',
+                icon: <Icon icon="circle-play" />,
+                action: () => {
+                  navigate(
+                    `/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner?folder=`,
+                  );
+                },
+              },
+            ],
           },
-        },
-      ],
-    },
+        ]),
     {
       name: 'Actions',
       id: 'actions',
