@@ -13,7 +13,6 @@ export const externalDependencies = [
   '@bufbuild/protobuf',
   '@connectrpc/connect',
   '@connectrpc/connect-node',
-  '@getinsomnia/node-libcurl',
   '@grpc/grpc-js',
   '@grpc/proto-loader',
   '@seald-io/nedb',
@@ -91,12 +90,8 @@ export default defineConfig(({ mode }) => {
     build: {
       target: 'esnext',
       sourcemap: true,
-      rollupOptions: {
-        external: ['@getinsomnia/node-libcurl'],
-      },
     },
     optimizeDeps: {
-      exclude: ['@getinsomnia/node-libcurl'],
       force: true, // wipe vite cache
       include: ['codemirror-graphql/utils/SchemaReference', '@stoplight/spectral-core', 'isomorphic-git'],
     },
