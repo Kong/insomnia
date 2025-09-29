@@ -41,8 +41,8 @@ test.describe('Vault key actions', () => {
     await page.getByRole('button', { name: 'Unlock' }).click();
     await modal.getByText("M2 didn't Check").click();
     // test reset vault key
-    await page.getByText('Reset Vault Key').click();
-    await page.getByText('Yes').click();
+    await page.getByRole('dialog').getByText('Reset Vault Key').click();
+    await page.getByRole('button', { name: 'Yes', exact: true }).click();
     await expect.soft(modal).toBeVisible();
     const vaultKeyValueInModal = await modal.getByTestId('VaultKeyDisplayPanel').innerText();
     expect.soft(vaultKeyValueInModal.length).toBeGreaterThan(0);
@@ -60,8 +60,8 @@ test.describe('Vault key actions', () => {
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     await page.getByText('Global env with secret vault').click();
-    await page.getByText('Reset Vault Key').click();
-    await page.getByText('Yes').click();
+    await page.getByRole('dialog').getByText('Reset Vault Key').click();
+    await page.getByRole('button', { name: 'Yes', exact: true }).click();
     const vaultKeyValueInModal = await page.getByTestId('VaultKeyDisplayPanel').innerText();
     expect.soft(vaultKeyValueInModal.length).toBeGreaterThan(0);
   });

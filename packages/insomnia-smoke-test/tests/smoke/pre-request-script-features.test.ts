@@ -582,7 +582,7 @@ test.describe('pre-request features tests', () => {
     await page.getByLabel('Manage Environments').click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.getByLabel('Table Edit').click();
-    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
     await page.locator('body').click();
 
     // send request
