@@ -150,7 +150,7 @@ test.describe('Check vault used in environment', () => {
     await page.getByRole('option', { name: 'New Global Vault Environment' }).click();
     await page.getByRole('option', { name: 'New Environment' }).click();
     await page.getByText('Base Environment1').click();
-    await page.getByTestId('underlay').click();
+    await page.locator('body').click();
 
     // activate request and validate newly created vault env has been applied
     await page.getByTestId('normal').getByLabel('GET normal', { exact: true }).click();
@@ -174,7 +174,7 @@ test.describe('Check vault used in environment', () => {
 
     // activate legacy array vault environment
     await page.getByText('legacy vault value array').click();
-    await page.getByTestId('underlay').click();
+    await page.locator('body').click();
     // activate request
     await page.getByTestId('legacy-array-vault').getByLabel('GET legacy-array-vault', { exact: true }).click();
     // Wait for tab appear
@@ -190,7 +190,7 @@ test.describe('Check vault used in environment', () => {
     // activate legacy object vault environment
     await page.getByLabel('Manage Environments').click();
     await page.getByText('legacy vault value object').click();
-    await page.getByTestId('underlay').click();
+    await page.locator('body').click();
     // activate request
     await page.getByTestId('legacy-object-vault').getByLabel('GET legacy-object-vault', { exact: true }).click();
     await expect.soft(page.getByLabel('Insomnia Tabs').getByText('legacy-object-vault', { exact: true })).toBeVisible();
@@ -205,7 +205,7 @@ test.describe('Check vault used in environment', () => {
     // activate invalid vault environment
     await page.getByLabel('Manage Environments').click();
     await page.getByText('base with vault').click();
-    await page.getByTestId('underlay').click();
+    await page.locator('body').click();
     // activate request
     await page.getByTestId('legacy-invalid-vault').getByLabel('GET legacy-invalid-vault', { exact: true }).click();
     await expect
