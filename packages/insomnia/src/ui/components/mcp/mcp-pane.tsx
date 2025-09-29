@@ -55,7 +55,7 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
-import { useRequestMetaPatcher } from '~/ui/hooks/use-request';
+import { useRequestMetaPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
 
 const emptyServerData: McpServerData = {
   serverCapabilities: getDefaultServerCapabilities(),
@@ -79,9 +79,11 @@ export const McpPane = () => {
   const [collapsedPrimitives, setCollapsedPrimitives] = useState<McpServerPrimitiveTypes[]>([]);
   const [selectedPrimitiveItem, setSelectedPrimitiveItem] = useState<PrimitiveSubItem | null>(null);
   const [primitiveNextCursor, setPrimitiveNextCursor] = useState<Partial<Record<McpServerPrimitiveTypes, string>>>({});
-  const [subscribeResources, setSubscribeResources] = useState<string[]>([]);
   const requestMetaPatcher = useRequestMetaPatcher();
   const [requestPaneActiveTab, setRequestPaneActiveTab] = useState<RequestPaneTabs>('params');
+  const patchRootsRequest = useRequestPatcher();
+
+  const subscribeResources = activeRequest.subscribeResources;
 
   const visibleCollection = useMemo(() => {
     const collection: (PrimitiveTypeItem | PrimitiveSubItem)[] = [];
@@ -214,14 +216,14 @@ export const McpPane = () => {
     if (isSubscribed) {
       try {
         await window.main.mcp.primitive.unsubscribeResource({ uri: item.uri, requestId: requestId });
-        setSubscribeResources(prev => prev.filter(name => name !== item.name));
+        patchRootsRequest(requestId, { subscribeResources: subscribeResources.filter(r => r !== item.name) });
       } catch (error) {
         console.error(`Failed to unsubscribe resource ${item.name}: ${error}`);
       }
     } else {
       try {
         await window.main.mcp.primitive.subscribeResource({ uri: item.uri, requestId: requestId });
-        setSubscribeResources(prev => [...prev, item.name]);
+        patchRootsRequest(requestId, { subscribeResources: [...subscribeResources, item.name] });
       } catch (error) {
         console.error(`Failed to subscribe resource ${item.name}: ${error}`);
       }
@@ -361,11 +363,11 @@ export const McpPane = () => {
   }, [activeResponse?._id]);
 
   useEffect(() => {
-    if (!readyState) {
+    if (!readyState && subscribeResources.length > 0) {
       // clear subscriptions when connection is closed
-      setSubscribeResources([]);
+      patchRootsRequest(requestId, { subscribeResources: [] });
     }
-  }, [readyState]);
+  }, [patchRootsRequest, readyState, requestId, subscribeResources]);
 
   return (
     <PanelGroup
@@ -496,7 +498,7 @@ export const McpPane = () => {
                       onRefreshPrimitive={updatePrimitiveData}
                       onLoadMorePrimitive={loadMorePrimitiveData}
                       allowSubscribeResources={allowSubscribeResources}
-                      subscribeResources={subscribeResources}
+                      subscribeResources={subscribeResources || []}
                       handleSubscribe={handleSubscribe}
                       style={{
                         height: `${virtualItem.size}px`,

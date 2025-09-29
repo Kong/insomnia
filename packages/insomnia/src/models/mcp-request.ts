@@ -27,6 +27,7 @@ export interface BaseMcpRequest {
   env: EnvironmentKvPairData[];
   mcpStdioAccess: boolean;
   roots: Root[];
+  subscribeResources: string[];
 }
 export type McpServerPrimitiveTypes = 'tools' | 'resources' | 'prompts' | 'resourceTemplates';
 
@@ -49,6 +50,7 @@ export function init(): BaseMcpRequest {
     env: [],
     mcpStdioAccess: false,
     roots: [],
+    subscribeResources: [],
   };
 }
 
