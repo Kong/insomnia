@@ -7,7 +7,6 @@ import { AlertModal } from './components/modals/alert-modal';
 import { AskModal } from './components/modals/ask-modal';
 import { CodePromptModal } from './components/modals/code-prompt-modal';
 import { ErrorModal } from './components/modals/error-modal';
-import { FilterHelpModal } from './components/modals/filter-help-modal';
 import { GenerateCodeModal } from './components/modals/generate-code-modal';
 import { NunjucksModal } from './components/modals/nunjucks-modal';
 import { PromptModal } from './components/modals/prompt-modal';
@@ -32,7 +31,6 @@ const Modals = () => {
         <WrapperModal ref={instance => registerModal(instance, 'WrapperModal')} />
         <AskModal ref={instance => registerModal(instance, 'AskModal')} />
         <SelectModal ref={instance => registerModal(instance, 'SelectModal')} />
-        <FilterHelpModal ref={instance => registerModal(instance, 'FilterHelpModal')} />
         <RequestRenderErrorModal ref={instance => registerModal(instance, 'RequestRenderErrorModal')} />
 
         <CodePromptModal ref={instance => registerModal(instance, 'CodePromptModal')} />
