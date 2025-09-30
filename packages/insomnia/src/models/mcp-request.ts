@@ -1,5 +1,7 @@
 import type { Root } from '@modelcontextprotocol/sdk/types.js';
 
+import { invariant } from '~/utils/invariant';
+
 import { database as db } from '../common/database';
 import { type EnvironmentKvPairData } from './environment';
 import type { BaseModel } from './index';
@@ -27,6 +29,7 @@ export interface BaseMcpRequest {
   env: EnvironmentKvPairData[];
   mcpStdioAccess: boolean;
   roots: Root[];
+  subscribeResources: string[];
 }
 export type McpServerPrimitiveTypes = 'tools' | 'resources' | 'prompts' | 'resourceTemplates';
 
@@ -49,6 +52,7 @@ export function init(): BaseMcpRequest {
     env: [],
     mcpStdioAccess: false,
     roots: [],
+    subscribeResources: [],
   };
 }
 
@@ -80,6 +84,12 @@ export function getById(id: string) {
   return db.findOne<McpRequest>(type, { _id: id });
 }
 
-export function update(mockServer: McpRequest, patch: Partial<McpRequest> = {}) {
-  return db.docUpdate<McpRequest>(mockServer, patch);
+export function update(request: McpRequest, patch: Partial<McpRequest> = {}) {
+  return db.docUpdate<McpRequest>(request, patch);
+}
+
+export async function clearResourceSubscriptions(requestId: string) {
+  const request = await getById(requestId);
+  invariant(request, 'McpRequest not found');
+  return update(request, { subscribeResources: [] });
 }
