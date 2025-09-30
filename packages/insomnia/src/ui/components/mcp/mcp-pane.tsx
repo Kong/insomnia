@@ -82,6 +82,13 @@ export const McpPane = () => {
   const requestMetaPatcher = useRequestMetaPatcher();
   const [requestPaneActiveTab, setRequestPaneActiveTab] = useState<RequestPaneTabs>('params');
   const patchRootsRequest = useRequestPatcher();
+  const requestId = activeRequest._id;
+  const { activeEnvironment } = useWorkspaceLoaderData()!;
+  const readyState = useReadyState({ requestId, protocol: 'mcp' });
+  const parentRef = useRef<HTMLDivElement>(null);
+  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
+    settings.forceVerticalLayout ? 'vertical' : 'horizontal',
+  );
 
   const subscribeResources = activeRequest.subscribeResources;
 
@@ -177,6 +184,9 @@ export const McpPane = () => {
     }
     return serverCapabilities;
   };
+  const serverCapabilities = getServerCapabilities();
+  const allowSubscribeResources =
+    readyState && serverCapabilities.resources.enabled && serverCapabilities.resources.subscribe;
 
   const updatePrimitiveNextCursor = (newNextCursor: string, type: McpServerPrimitiveTypes) => {
     setPrimitiveNextCursor(prev => ({
@@ -230,20 +240,12 @@ export const McpPane = () => {
     }
   };
 
-  const serverCapabilities = getServerCapabilities();
-  const allowSubscribeResources = serverCapabilities.resources.enabled && serverCapabilities.resources.subscribe;
-
   useEffect(() => {
     const [, type, name] = activeRequestMeta?.activeMcpPrimitive?.match(/^([^_]+)_(.+)$/) || [];
     const primitiveItem = visibleCollection.find(i => i.itemLevel === 1 && i.type === type && i.name === name);
     primitiveItem && setSelectedPrimitiveItem(primitiveItem as PrimitiveSubItem);
   }, [activeRequest._id, activeRequestMeta?.activeMcpPrimitive, visibleCollection]);
 
-  const requestId = activeRequest._id;
-  const { activeEnvironment } = useWorkspaceLoaderData()!;
-  const readyState = useReadyState({ requestId, protocol: 'mcp' });
-
-  const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer<HTMLDivElement, Element>({
     getScrollElement: () => parentRef.current,
     count: visibleCollection.length,
@@ -275,10 +277,6 @@ export const McpPane = () => {
     const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
     return unsubscribe;
   }, []);
-
-  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
-    settings.forceVerticalLayout ? 'vertical' : 'horizontal',
-  );
 
   useEffect(() => {
     if (settings.forceVerticalLayout) {
