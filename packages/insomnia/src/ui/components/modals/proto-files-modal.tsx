@@ -229,7 +229,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       return;
     }
     // allow to read the file as it is chosen by user
-    const { content } = await window.main.secureReadFile({ path: filePath, overrideDataFolders: [filePath] });
+    const { content } = await window.main.secureReadFile({ path: filePath, overrideAllowList: [filePath] });
 
     const updatedFile = await models.protoFile.update(protoFile, {
       name: path.basename(filePath),
@@ -284,7 +284,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       return;
     }
     // allow to read the file as it is chosen by user
-    const { content } = await window.main.secureReadFile({ path: filePath, overrideDataFolders: [filePath] });
+    const { content } = await window.main.secureReadFile({ path: filePath, overrideAllowList: [filePath] });
 
     const newFile = await models.protoFile.create({
       name: path.basename(filePath),

@@ -120,7 +120,7 @@ If you want to create a self-hosted mock server route from a request response in
             if (activeResponse && 'bodyPath' in activeResponse) {
               const { content: body } = await window.main.secureReadFile({
                 path: activeResponse.bodyPath,
-                overrideDataFolders: [activeResponse.bodyPath],
+                overrideAllowList: [activeResponse.bodyPath],
               });
               const headersWithoutContentLength = activeResponse.headers.filter(
                 h => h.name.toLowerCase() !== 'content-length',

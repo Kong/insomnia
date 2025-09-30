@@ -132,7 +132,6 @@ const main: Window['main'] = {
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
-  readFile: options => ipcRenderer.invoke('readFile', options),
   secureReadFile: options => ipcRenderer.invoke('secureReadFile', options),
   readDir: options => ipcRenderer.invoke('readDir', options),
   lintSpec: options => ipcRenderer.invoke('lintSpec', options),

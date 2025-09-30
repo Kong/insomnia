@@ -7,7 +7,6 @@ import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getContentDispositionHeader } from '~/common/misc';
-import { isFsAccessingAllowed } from '~/common/validators';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
@@ -200,8 +199,6 @@ export const sendActionImplementation = async (options: {
   parseGraphQLReqeustBody(renderedRequest);
 
   invariant(requestMeta, 'RequestMeta not found');
-
-  isFsAccessingAllowed(renderedRequest, mutatedContext.settings, mutatedContext.clientCertificates, requestData.caCert);
 
   window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
   const response = await sendCurlAndWriteTimeline(

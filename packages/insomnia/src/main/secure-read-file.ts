@@ -1,27 +1,19 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { throwError } from '../common/validators';
 import * as models from '../models/index';
 
 export const secureReadFile = async (
   filePath: string,
   options?: Parameters<typeof fs.promises.readFile>[1],
-  overrideDataFolders?: string[],
+  overrideAllowList?: string[],
 ) => {
   const settings = await models.settings.getOrCreate();
-  const dataFolders = overrideDataFolders || settings?.dataFolders || [];
-
-  if (dataFolders) {
-    filePath = path.resolve(filePath);
-
-    const allowed = dataFolders.some(allowedFolder => {
-      const absAllowedFolder = path.resolve(allowedFolder);
-      return absAllowedFolder !== '' && filePath?.startsWith(absAllowedFolder);
-    });
-    if (!allowed) {
-      throw throwError(filePath, false)
-    }
+  const allowList = overrideAllowList || settings?.dataFolders || [];
+  const fullPath = path.resolve(filePath);
+  const isAllowed = allowList.some(f => path.resolve(f) !== '' && fullPath.startsWith(path.resolve(f)));
+  if (!isAllowed) {
+    throw `Insomnia cannot access the file "${filePath}". You must specify which directories Insomnia can access in Insomnia's Preferences → Security`;
   }
 
   return fs.promises.readFile(filePath, options);

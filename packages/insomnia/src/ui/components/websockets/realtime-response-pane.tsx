@@ -128,7 +128,10 @@ const RealtimeActiveResponsePane: FC<{
       }
 
       // allow to read the file as it is chosen by user
-      const { content } = await window.main.secureReadFile({ path: response.timelinePath, overrideDataFolders: [response.timelinePath] });
+      const { content } = await window.main.secureReadFile({
+        path: response.timelinePath,
+        overrideAllowList: [response.timelinePath],
+      });
       const timelineParsed = deserializeNDJSON(content);
       if (isMounted) {
         setTimeline(timelineParsed);

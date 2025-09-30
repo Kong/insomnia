@@ -1,8 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { isFsAccessingAllowed } from '~/common/validators';
-
 import { type BaseModel } from '../models';
 import * as models from '../models';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
@@ -97,14 +95,6 @@ export async function getSendRequestCallbackMemDb(
     });
     // skip plugins
     const renderedRequest = renderedResult.request;
-
-    isFsAccessingAllowed(
-      renderedRequest,
-      mutatedContext.settings,
-      mutatedContext.clientCertificates,
-      requestData.caCert,
-      true,
-    );
 
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
