@@ -1,5 +1,3 @@
-import fs from 'node:fs/promises';
-
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
