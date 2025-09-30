@@ -79,4 +79,16 @@ export async function updateOrCreateByParentIdAndUrl(parentId: string, patch: Pa
   return create(newPatch);
 }
 
+export async function getOrCreateByParentIdAndUrl(parentId: string, url: string) {
+  const result = await database.findOne<McpPayload>(type);
+
+  if (!result) {
+    return await create({
+      parentId,
+      url,
+    });
+  }
+  return result;
+}
+
 export const all = () => database.find<McpPayload>(type);
