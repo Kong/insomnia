@@ -294,6 +294,7 @@ export const getAllDescendantMap = (): Partial<Record<AllTypes, AllTypes[]>> => 
       runnerTestResult.type,
       caCertificate.type,
       clientCertificate.type,
+      mcpRequest.type,
     ],
     [requestGroup.type]: [
       requestGroup.type,
@@ -309,6 +310,7 @@ export const getAllDescendantMap = (): Partial<Record<AllTypes, AllTypes[]>> => 
     [grpcRequest.type]: [grpcRequestMeta.type],
     [webSocketRequest.type]: [webSocketPayload.type, webSocketResponse.type, requestMeta.type],
     [socketIORequest.type]: [socketIOPayload.type, socketIOResponse.type, requestMeta.type],
+    [mcpRequest.type]: [mcpPayload.type, mcpResponse.type],
     [mockServer.type]: [mockRoute.type],
     [environment.type]: [environment.type],
     [unitTestSuite.type]: [unitTest.type, unitTestResult.type],
