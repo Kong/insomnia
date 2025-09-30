@@ -882,6 +882,9 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
   const responseEnvironmentId = environment ? environment._id : null;
 
+  // create MCP paylod model if not exists
+  await models.mcpPayload.getOrCreateByParentIdAndUrl(requestId, options.url);
+
   // create connection
   const mcpClient = new Client(
     {
@@ -1097,9 +1100,13 @@ const listResourceTemplates = async (options: CommonMcpOptions & ListResourcesRe
 };
 
 const getMcpReadyState = async (options: CommonMcpOptions) => {
-  const mcpClient = _getMcpClient(options.requestId);
-  // if no mcp client, it means it's disconnected
-  return !!mcpClient;
+  try {
+    const mcpClient = _getMcpClient(options.requestId);
+    // if no mcp client, it means it's disconnected
+    return !!mcpClient;
+  } catch (error) {
+    return false;
+  }
 };
 
 const readResource = async (options: CommonMcpOptions & ReadResourceRequest['params']) => {
