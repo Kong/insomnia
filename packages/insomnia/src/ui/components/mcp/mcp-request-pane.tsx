@@ -10,6 +10,7 @@ import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Link } from '~/ui/components/base/link';
 import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
+import { Icon } from '~/ui/components/icon';
 import { InsomniaRjsfForm, type InsomniaRjsfFormHandle } from '~/ui/components/rjsf';
 
 import { type AuthTypes } from '../../../common/constants';
@@ -65,6 +66,7 @@ export const McpRequestPane: FC<Props> = ({
 }) => {
   const primitiveId = `${selectedPrimitiveItem?.type}_${selectedPrimitiveItem?.name}`;
   const { activeRequest, activeRequestMeta, requestPayload } = useRequestLoaderData()! as McpRequestLoaderData;
+  const [isCalling, setIsCalling] = useState(false);
   const latestRequestPayloadRef = useLatest(requestPayload);
 
   const { activeProject } = useWorkspaceLoaderData()!;
@@ -127,30 +129,37 @@ export const McpRequestPane: FC<Props> = ({
     [primitiveId, selectedPrimitiveItem?.type],
   );
 
-  const handleSend = () => {
+  const handleSend = async () => {
     rjsfFormRef.current?.validate();
-    if (selectedPrimitiveItem?.type === 'tools') {
-      window.main.mcp.primitive.callTool({
-        name: selectedPrimitiveItem?.name || '',
-        parameters: mcpParams[primitiveId],
-        requestId: requestId,
-      });
-    } else if (selectedPrimitiveItem?.type === 'resources') {
-      window.main.mcp.primitive.readResource({
-        requestId,
-        uri: selectedPrimitiveItem?.uri || '',
-      });
-    } else if (selectedPrimitiveItem?.type === 'resourceTemplates') {
-      window.main.mcp.primitive.readResource({
-        requestId,
-        uri: fillUriTemplate(selectedPrimitiveItem.uriTemplate, mcpParams[primitiveId] || {}),
-      });
-    } else if (selectedPrimitiveItem?.type === 'prompts') {
-      window.main.mcp.primitive.getPrompt({
-        requestId,
-        name: selectedPrimitiveItem?.name || '',
-        parameters: mcpParams[primitiveId],
-      });
+    try {
+      setIsCalling(true);
+      if (selectedPrimitiveItem?.type === 'tools') {
+        await window.main.mcp.primitive.callTool({
+          name: selectedPrimitiveItem?.name || '',
+          parameters: mcpParams[primitiveId],
+          requestId: requestId,
+        });
+      } else if (selectedPrimitiveItem?.type === 'resources') {
+        await window.main.mcp.primitive.readResource({
+          requestId,
+          uri: selectedPrimitiveItem?.uri || '',
+        });
+      } else if (selectedPrimitiveItem?.type === 'resourceTemplates') {
+        await window.main.mcp.primitive.readResource({
+          requestId,
+          uri: fillUriTemplate(selectedPrimitiveItem.uriTemplate, mcpParams[primitiveId] || {}),
+        });
+      } else if (selectedPrimitiveItem?.type === 'prompts') {
+        await window.main.mcp.primitive.getPrompt({
+          requestId,
+          name: selectedPrimitiveItem?.name || '',
+          parameters: mcpParams[primitiveId],
+        });
+      }
+    } catch (err) {
+      console.warn('MCP primitive call error', err);
+    } finally {
+      setIsCalling(false);
     }
   };
 
@@ -293,6 +302,7 @@ export const McpRequestPane: FC<Props> = ({
                           onClick={handleSend}
                           className="rounded bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise]"
                         >
+                          {isCalling && <Icon className="mr-1 animate-spin" icon="spinner" />}
                           {sendButtonText}
                         </Button>
                       </div>
