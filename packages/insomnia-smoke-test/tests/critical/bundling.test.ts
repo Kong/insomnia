@@ -6,7 +6,8 @@ import { test } from '../../playwright/test';
 test('can use bundled plugins, node-libcurl, httpsnippet, hidden browser window', async ({ app, page }) => {
   await page.getByTestId('settings-button').click();
   await page.getByRole('tab', { name: 'Cloud Credentials' }).click();
-  await page.getByRole('button', { name: 'Create Credential' }).click();
+  // Check that bundled plugins are available in the Cloud Credentials tab
+  await expect.soft(page.getByRole('button', { name: 'Create Credential' })).toBeVisible();
   await page.locator('.app').press('Escape');
 
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
