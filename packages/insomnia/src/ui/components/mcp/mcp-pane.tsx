@@ -55,7 +55,12 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
-import { useRequestMetaPatcher } from '~/ui/hooks/use-request';
+import { useRequestMetaPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
+
+const emptyServerData: McpServerData = {
+  serverCapabilities: getDefaultServerCapabilities(),
+  primitives: { tools: [], resources: [], resourceTemplates: [], prompts: [] },
+};
 
 export const McpPane = () => {
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -70,16 +75,22 @@ export const McpPane = () => {
   const [allExpanded, setAllExpanded] = useState(true);
   const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:mcp-list-filter`);
   const { settings } = useRootLoaderData()!;
-  const [mcpServerData, setMcpServerData] = useState<McpServerData>({
-    serverCapabilities: getDefaultServerCapabilities(),
-    primitives: { tools: [], resources: [], resourceTemplates: [], prompts: [] },
-  });
+  const [mcpServerData, setMcpServerData] = useState<McpServerData>(emptyServerData);
   const [collapsedPrimitives, setCollapsedPrimitives] = useState<McpServerPrimitiveTypes[]>([]);
   const [selectedPrimitiveItem, setSelectedPrimitiveItem] = useState<PrimitiveSubItem | null>(null);
   const [primitiveNextCursor, setPrimitiveNextCursor] = useState<Partial<Record<McpServerPrimitiveTypes, string>>>({});
-  const [subscribeResources, setSubscribeResources] = useState<string[]>([]);
   const requestMetaPatcher = useRequestMetaPatcher();
   const [requestPaneActiveTab, setRequestPaneActiveTab] = useState<RequestPaneTabs>('params');
+  const patchRootsRequest = useRequestPatcher();
+  const requestId = activeRequest._id;
+  const { activeEnvironment } = useWorkspaceLoaderData()!;
+  const readyState = useReadyState({ requestId, protocol: 'mcp' });
+  const parentRef = useRef<HTMLDivElement>(null);
+  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
+    settings.forceVerticalLayout ? 'vertical' : 'horizontal',
+  );
+
+  const subscribeResources = activeRequest.subscribeResources;
 
   const visibleCollection = useMemo(() => {
     const collection: (PrimitiveTypeItem | PrimitiveSubItem)[] = [];
@@ -173,6 +184,9 @@ export const McpPane = () => {
     }
     return serverCapabilities;
   };
+  const serverCapabilities = getServerCapabilities();
+  const allowSubscribeResources =
+    readyState && serverCapabilities.resources.enabled && serverCapabilities.resources.subscribe;
 
   const updatePrimitiveNextCursor = (newNextCursor: string, type: McpServerPrimitiveTypes) => {
     setPrimitiveNextCursor(prev => ({
@@ -212,22 +226,19 @@ export const McpPane = () => {
     if (isSubscribed) {
       try {
         await window.main.mcp.primitive.unsubscribeResource({ uri: item.uri, requestId: requestId });
-        setSubscribeResources(prev => prev.filter(name => name !== item.name));
+        patchRootsRequest(requestId, { subscribeResources: subscribeResources.filter(r => r !== item.name) });
       } catch (error) {
         console.error(`Failed to unsubscribe resource ${item.name}: ${error}`);
       }
     } else {
       try {
         await window.main.mcp.primitive.subscribeResource({ uri: item.uri, requestId: requestId });
-        setSubscribeResources(prev => [...prev, item.name]);
+        patchRootsRequest(requestId, { subscribeResources: [...subscribeResources, item.name] });
       } catch (error) {
         console.error(`Failed to subscribe resource ${item.name}: ${error}`);
       }
     }
   };
-
-  const serverCapabilities = getServerCapabilities();
-  const allowSubscribeResources = serverCapabilities.resources.enabled && serverCapabilities.resources.subscribe;
 
   useEffect(() => {
     const [, type, name] = activeRequestMeta?.activeMcpPrimitive?.match(/^([^_]+)_(.+)$/) || [];
@@ -235,11 +246,6 @@ export const McpPane = () => {
     primitiveItem && setSelectedPrimitiveItem(primitiveItem as PrimitiveSubItem);
   }, [activeRequest._id, activeRequestMeta?.activeMcpPrimitive, visibleCollection]);
 
-  const requestId = activeRequest._id;
-  const { activeEnvironment } = useWorkspaceLoaderData()!;
-  const readyState = useReadyState({ requestId, protocol: 'mcp' });
-
-  const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer<HTMLDivElement, Element>({
     getScrollElement: () => parentRef.current,
     count: visibleCollection.length,
@@ -271,10 +277,6 @@ export const McpPane = () => {
     const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
     return unsubscribe;
   }, []);
-
-  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
-    settings.forceVerticalLayout ? 'vertical' : 'horizontal',
-  );
 
   useEffect(() => {
     if (settings.forceVerticalLayout) {
@@ -349,18 +351,14 @@ export const McpPane = () => {
         setMcpServerData(mcpServerData);
       }
     };
-    if (readyState) {
-      // Get MCP server data when connection is ready
+    if (activeResponse?._id) {
+      // Get MCP server data when active response changes
       updateServerData();
+    } else {
+      // Clear MCP server data when no active response
+      setMcpServerData(emptyServerData);
     }
-  }, [readyState, activeResponse?._id]);
-
-  useEffect(() => {
-    if (!readyState) {
-      // clear subscriptions when connection is closed
-      setSubscribeResources([]);
-    }
-  }, [readyState]);
+  }, [activeResponse?._id]);
 
   return (
     <PanelGroup
@@ -491,7 +489,7 @@ export const McpPane = () => {
                       onRefreshPrimitive={updatePrimitiveData}
                       onLoadMorePrimitive={loadMorePrimitiveData}
                       allowSubscribeResources={allowSubscribeResources}
-                      subscribeResources={subscribeResources}
+                      subscribeResources={subscribeResources || []}
                       handleSubscribe={handleSubscribe}
                       style={{
                         height: `${virtualItem.size}px`,
