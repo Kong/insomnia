@@ -112,7 +112,7 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
           !isOpen && hide();
         }}
       >
-        <Dialog aria-label="Some dialog fix me" className={classes}>
+        <Dialog aria-label="Modal" className={classes}>
           <div
             className="modal__backdrop overlay theme--transparent-overlay"
             {...(maskClosable ? { 'data-close-modal': true } : {})}
