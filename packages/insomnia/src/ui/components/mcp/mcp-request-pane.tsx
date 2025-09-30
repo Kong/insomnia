@@ -5,8 +5,10 @@ import { Button, Heading, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-ar
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useLatest } from 'react-use';
 
+import { docsBase } from '~/common/documentation';
 import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { Link } from '~/ui/components/base/link';
 import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
 import { InsomniaRjsfForm, type InsomniaRjsfFormHandle } from '~/ui/components/rjsf';
 
@@ -272,9 +274,11 @@ export const McpRequestPane: FC<Props> = ({
         </TabList>
         <TabPanel className="flex h-full w-full flex-1 flex-col overflow-y-auto" id="params">
           {!readyState ? (
-            <div className="flex h-full w-full flex-col items-center gap-3 pt-[5%] text-center">
+            <div className="flex h-full w-full flex-col items-center p-5 text-center">
               {/*  Hint when mcp server is not connected*/}
-              <span className="text-md">Enter MCP server url to discover capabilities</span>
+              <p className="notice info text-md no-margin-top w-full">
+                Connect to an MCP server URL to reveal capabilities. &nbsp;<Link href={docsBase}>Learn More</Link>
+              </p>
             </div>
           ) : (
             <PanelGroup className="flex-1 overflow-hidden" direction={'vertical'}>
@@ -294,6 +298,13 @@ export const McpRequestPane: FC<Props> = ({
                       </div>
                     )}
                   </Toolbar>
+                  {!selectedPrimitiveItem && (
+                    <div className="flex h-full w-full flex-col items-center p-5 text-center">
+                      <p className="notice info text-md no-margin-top w-full">
+                        Select an MCP server primitive from the list to start.
+                      </p>
+                    </div>
+                  )}
                   {jsonSchema && (
                     <div className="overflow-auto p-4">
                       <p>{selectedPrimitiveItem?.name}</p>
@@ -318,7 +329,7 @@ export const McpRequestPane: FC<Props> = ({
                 </div>
               </Panel>
               <PanelResizeHandle className="h-[1px] w-full bg-[--hl-md]" />
-              {selectedPrimitiveItem?.type !== 'resources' && selectedPrimitiveItem?.type !== 'resourceTemplates' && (
+              {selectedPrimitiveItem?.type === 'tools' && (
                 <Panel minSize={20}>
                   <div className="flex h-full flex-col">
                     <Heading className="p-4 text-xs font-bold text-[--hl]">Parameter Overview</Heading>
