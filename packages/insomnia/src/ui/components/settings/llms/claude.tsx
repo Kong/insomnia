@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Button, Input, Text } from 'react-aria-components';
 
-import * as models from '~/models/index';
-import type { LLMConfiguration } from '~/models/llm-configuration';
+import type { LLMBackend, LLMConfig } from '~/main/llm-config-service';
 import { Icon } from '~/ui/components/icon';
 
 interface AnthropicModelData {
@@ -15,12 +14,12 @@ export const Claude = ({
   saveLLMSettings,
   configuredLLMs,
   currentLLM,
-  setCurrentLLM,
+  deactivateCurrentLLM,
 }: {
-  currentLLM: LLMConfiguration | null;
-  setCurrentLLM: (llm: LLMConfiguration | null) => void;
-  saveLLMSettings: (setCurrent: boolean, backend: 'claude', extras?: Partial<LLMConfiguration>) => void;
-  configuredLLMs: LLMConfiguration[];
+  currentLLM: LLMConfig | null;
+  saveLLMSettings: (setCurrent: boolean, backend: LLMBackend, extras?: Partial<LLMConfig>) => void;
+  deactivateCurrentLLM: () => Promise<void>;
+  configuredLLMs: LLMConfig[];
 }) => {
   const apiKeyId = useId();
   const [apiKey, setApiKey] = useState('');
@@ -110,11 +109,7 @@ export const Claude = ({
       <div className="flex flex-row justify-between gap-2">
         <Button
           isDisabled={currentLLM?.backend !== 'claude'}
-          onClick={() => {
-            if (!currentLLM) return;
-            models.llmConfiguration.update(currentLLM, { current: 'no' });
-            setCurrentLLM(null);
-          }}
+          onClick={deactivateCurrentLLM}
           className="rounded-md border border-solid border-red-500 bg-[--color-bg] px-4 py-2 text-base text-red-500 ring-1 ring-transparent transition-all hover:border-red-600 hover:bg-[--hl-xs] focus:ring-inset focus:ring-red-300"
         >
           Deactivate

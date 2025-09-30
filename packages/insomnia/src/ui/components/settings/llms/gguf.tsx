@@ -4,8 +4,7 @@ import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Button, Input, Text } from 'react-aria-components';
 import z from 'zod/v4';
 
-import * as models from '~/models/index';
-import type { LLMConfiguration } from '~/models/llm-configuration';
+import type { LLMBackend, LLMConfig } from '~/main/llm-config-service';
 import { Icon } from '~/ui/components/icon';
 
 const modelParametersSchema = z.object({
@@ -28,12 +27,12 @@ export const GGUF = ({
   saveLLMSettings,
   configuredLLMs,
   currentLLM,
-  setCurrentLLM,
+  deactivateCurrentLLM,
 }: {
-  currentLLM: LLMConfiguration | null;
-  setCurrentLLM: (llm: LLMConfiguration | null) => void;
-  saveLLMSettings: (setCurrent: boolean, backend: 'gguf', extras?: Partial<LLMConfiguration>) => void;
-  configuredLLMs: LLMConfiguration[];
+  currentLLM: LLMConfig | null;
+  saveLLMSettings: (setCurrent: boolean, backend: LLMBackend, extras?: Partial<LLMConfig>) => void;
+  deactivateCurrentLLM: () => Promise<void>;
+  configuredLLMs: LLMConfig[];
 }) => {
   const [modelParameters, setModelParameters] = useState<z.infer<typeof modelParametersSchema>>({
     ...DEFAULT_MODEL_PARAMETERS,
@@ -66,11 +65,11 @@ export const GGUF = ({
       setSelectedModel(config.model);
 
       setModelParameters({
-        temperature: config.temperature !== null ? config.temperature : DEFAULT_MODEL_PARAMETERS.temperature,
-        topP: config.topP !== null ? config.topP : DEFAULT_MODEL_PARAMETERS.topP,
-        topK: config.topK !== null ? config.topK : DEFAULT_MODEL_PARAMETERS.topK,
-        seed: config.seed !== null ? config.seed : DEFAULT_MODEL_PARAMETERS.seed,
-        repeatPenalty: config.repeatPenalty !== null ? config.repeatPenalty : DEFAULT_MODEL_PARAMETERS.repeatPenalty,
+        temperature: config.temperature ?? DEFAULT_MODEL_PARAMETERS.temperature,
+        topP: config.topP ?? DEFAULT_MODEL_PARAMETERS.topP,
+        topK: config.topK ?? DEFAULT_MODEL_PARAMETERS.topK,
+        seed: config.seed ?? DEFAULT_MODEL_PARAMETERS.seed,
+        repeatPenalty: config.repeatPenalty ?? DEFAULT_MODEL_PARAMETERS.repeatPenalty,
       });
     }
   }, [configuredLLMs]);
@@ -247,11 +246,7 @@ export const GGUF = ({
       <div className="mt-4 flex flex-row justify-between gap-2">
         <Button
           isDisabled={currentLLM?.backend !== 'gguf'}
-          onClick={() => {
-            if (!currentLLM) return;
-            models.llmConfiguration.update(currentLLM, { current: 'no' });
-            setCurrentLLM(null);
-          }}
+          onClick={deactivateCurrentLLM}
           className="rounded-md border border-solid border-red-500 bg-[--color-bg] px-4 py-2 text-base text-red-500 ring-1 ring-transparent transition-all hover:border-red-600 hover:bg-[--hl-xs] focus:ring-inset focus:ring-red-300"
         >
           Deactivate

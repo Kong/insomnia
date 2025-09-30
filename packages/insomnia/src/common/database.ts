@@ -277,10 +277,6 @@ export const database = {
         ...defaultConfig,
         filename: fsPath.join(dbPath, 'insomnia.GrpcRequestMeta.db'),
       }),
-      LLMConfiguration: new NeDB({
-        ...defaultConfig,
-        filename: fsPath.join(dbPath, 'insomnia.LLMConfiguration.db'),
-      }),
       MockRoute: new NeDB({
         ...defaultConfig,
         filename: fsPath.join(dbPath, 'insomnia.MockRoute.db'),

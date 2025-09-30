@@ -1,51 +1,52 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 
-import * as models from '~/models/index';
-import type { LLMConfiguration } from '~/models/llm-configuration';
+import type { LLMBackend, LLMConfig } from '~/main/llm-config-service';
+import * as llmConfigService from '~/main/llm-config-service';
 import { Claude } from '~/ui/components/settings/llms/claude';
 import { GGUF } from '~/ui/components/settings/llms/gguf';
 import { OpenAI } from '~/ui/components/settings/llms/openai';
 
 export const LLMs = () => {
-  const [currentLLM, setCurrentLLM] = useState<LLMConfiguration | null>(null);
-  const [selectedBackend, setSelectedBackend] = useState<'gguf' | 'claude' | 'openai'>();
-  const [configuredLLMs, setConfiguredLLMs] = useState<LLMConfiguration[]>([]);
+  const [currentLLM, setCurrentLLM] = useState<LLMConfig | null>(null);
+  const [selectedBackend, setSelectedBackend] = useState<LLMBackend>();
+  const [configuredLLMs, setConfiguredLLMs] = useState<LLMConfig[]>([]);
 
   useEffect(() => {
-    models.llmConfiguration.all().then(configs => {
-      const current = configs.find(config => config.current === 'yes');
+    const loadConfigurations = async () => {
+      const configs = await llmConfigService.getAllConfigurations();
+      const current = await llmConfigService.getCurrentConfig();
+
+      setConfiguredLLMs(configs);
+      setCurrentLLM(current);
       if (current) {
         setSelectedBackend(current.backend);
-        setCurrentLLM(current);
       }
-      setConfiguredLLMs(configs);
-    });
+    };
+
+    loadConfigurations();
   }, []);
 
   const saveLLMSettings = useCallback(
-    async (setCurrent: boolean, backend: 'gguf' | 'claude' | 'openai', extras: Partial<LLMConfiguration> = {}) => {
-      const existingConfiguration = configuredLLMs.find(config => config.backend === backend);
-      let llmConfiguration: LLMConfiguration;
-      if (existingConfiguration) {
-        llmConfiguration = await models.llmConfiguration.update(existingConfiguration, {
-          backend,
-          ...extras,
-        });
-      } else {
-        llmConfiguration = await models.llmConfiguration.create({
-          backend,
-          ...extras,
-        });
-      }
+    async (setCurrent: boolean, backend: LLMBackend, extras: Partial<LLMConfig> = {}) => {
+      await llmConfigService.updateBackendConfig(backend, extras);
+
       if (setCurrent) {
-        models.llmConfiguration.setCurrent(llmConfiguration);
-        setCurrentLLM(llmConfiguration);
+        await llmConfigService.setActiveBackend(backend);
+        const newCurrentConfig = await llmConfigService.getCurrentConfig();
+        setCurrentLLM(newCurrentConfig);
       }
-      setConfiguredLLMs(configuredLLMs.map(config => (config.backend === backend ? llmConfiguration : config)));
+
+      const updatedConfigs = await llmConfigService.getAllConfigurations();
+      setConfiguredLLMs(updatedConfigs);
     },
-    [configuredLLMs],
+    [],
   );
+
+  const deactivateCurrentLLM = useCallback(async () => {
+    await llmConfigService.clearActiveBackend();
+    setCurrentLLM(null);
+  }, []);
 
   const activeBadge = (
     <span className="bg-surprise flex h-5 min-w-5 items-center justify-center rounded-full px-2 py-1 text-xs text-white">
@@ -53,7 +54,7 @@ export const LLMs = () => {
     </span>
   );
 
-  const getNavStyle = (backend: 'gguf' | 'claude' | 'openai') => {
+  const getNavStyle = (backend: LLMBackend) => {
     return `w-[140px] rounded-sm border border-solid px-4 py-2 text-base ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] ${
       selectedBackend === backend
         ? 'border-[--color-surprise] bg-[--hl-xs] text-[--color-font]'
@@ -92,24 +93,24 @@ export const LLMs = () => {
         {selectedBackend === 'gguf' && (
           <GGUF
             currentLLM={currentLLM}
-            setCurrentLLM={setCurrentLLM}
             saveLLMSettings={saveLLMSettings}
+            deactivateCurrentLLM={deactivateCurrentLLM}
             configuredLLMs={configuredLLMs.filter(llm => llm.backend === 'gguf')}
           />
         )}
         {selectedBackend === 'claude' && (
           <Claude
             currentLLM={currentLLM}
-            setCurrentLLM={setCurrentLLM}
             saveLLMSettings={saveLLMSettings}
+            deactivateCurrentLLM={deactivateCurrentLLM}
             configuredLLMs={configuredLLMs.filter(llm => llm.backend === 'claude')}
           />
         )}
         {selectedBackend === 'openai' && (
           <OpenAI
             currentLLM={currentLLM}
-            setCurrentLLM={setCurrentLLM}
             saveLLMSettings={saveLLMSettings}
+            deactivateCurrentLLM={deactivateCurrentLLM}
             configuredLLMs={configuredLLMs.filter(llm => llm.backend === 'openai')}
           />
         )}
