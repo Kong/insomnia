@@ -201,9 +201,10 @@ const writeEventLogAndNotify = (
 
 const _getMcpClient = (id: string) => {
   const mcpClient = mcpConnections.get(id);
-  if (!mcpClient) {
-    console.log(`No existing MCP client connection found for requestId: ${id}. It might have been disconnected.`);
-  }
+  invariant(
+    mcpClient,
+    `No existing MCP client connection found for requestId: ${id}. It might have been disconnected.`,
+  );
   return mcpClient;
 };
 
@@ -971,6 +972,8 @@ const closeMcpConnection = async (options: CommonMcpOptions) => {
       // Alway close the connection even the transport terminate session fails
       // This occurs when the server is not reachable, terminateSession failure will cause the connection to never close
       mcpClient.close();
+      // Execute clear resource subscription in main process rather than UI to make sure closeAllMcpConnections method will clear subscriptions
+      await models.mcpRequest.clearResourceSubscriptions(requestId);
     }
   }
 };
