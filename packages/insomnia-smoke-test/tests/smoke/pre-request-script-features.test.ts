@@ -421,7 +421,7 @@ test.describe('pre-request features tests', () => {
     await page.locator('text=Add PFX or PKCS12 file').click();
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles(path.join(fixturePath, 'fake.pfx'));
-    await page.getByRole('button', { name: 'Add certificate' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Add certificate' }).click();
     await page.getByRole('button', { name: 'Done' }).click();
 
     await page
@@ -507,12 +507,9 @@ test.describe('pre-request features tests', () => {
       },
     });
     // close modal and go back
-    await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
-    await page
-      .locator('[data-icon="chevron-left"]')
-      .filter({ has: page.locator(':visible') })
-      .first()
-      .click();
+    await page.locator('body').press('Escape');
+    await page.locator('body').press('Escape');
+    await page.getByTestId('project').click();
     // import global environment
     const globalEnvText = await loadFixture('script-global-environment.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), globalEnvText);
@@ -528,7 +525,7 @@ test.describe('pre-request features tests', () => {
     await page.getByPlaceholder('Choose a global environment').click();
     await page.getByRole('option', { name: 'Script Environment' }).click();
     await page.getByRole('option', { name: 'Base Script Env' }).click();
-    await page.getByTestId('underlay').click();
+    await page.locator('body').click();
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     // check when activate global base environment, globals and baseGlobals refer to the same env
@@ -554,7 +551,7 @@ test.describe('pre-request features tests', () => {
     // activate global sub environment
     await page.getByLabel('Manage Environments').click();
     await page.getByRole('option', { name: 'Sub Script Env' }).click();
-    await page.getByTestId('underlay').click();
+    await page.locator('body').click();
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     // check when activate global sub environment, globals refers to the selected while baseGlobals refers to the base env
@@ -582,8 +579,8 @@ test.describe('pre-request features tests', () => {
     await page.getByLabel('Manage Environments').click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.getByLabel('Table Edit').click();
-    await page.getByRole('button', { name: 'Close' }).click();
-    await page.getByTestId('underlay').click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
+    await page.locator('body').click();
 
     // send request
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();

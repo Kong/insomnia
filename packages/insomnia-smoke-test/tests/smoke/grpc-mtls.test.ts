@@ -43,8 +43,8 @@ test('can send gRPC requests using mTLS requests (with reflection)', async ({ ap
   await page.locator('[data-test-id="add-client-certificate-key-file-chooser"]').click();
   await (await fileChooserPromise).setFiles(path.join(fixturePath, 'client.key'));
 
-  await page.getByRole('button', { name: 'Add certificate' }).click();
-  await page.getByRole('button', { name: 'Done' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Add certificate' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Done' }).click();
 
   // initiates an mtls connection with the given certificates
   await page.getByTestId('button-server-reflection').click();

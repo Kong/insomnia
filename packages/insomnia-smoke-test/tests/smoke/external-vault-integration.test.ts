@@ -27,7 +27,7 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await page.getByRole('radio', { name: 'Credential File' }).check();
   await page.getByRole('textbox', { name: 'Section Name:' }).fill('aws-section-name');
   await page.getByRole('textbox', { name: 'Region:' }).fill('aws-region');
-  await page.getByRole('button', { name: 'Create' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Create', exact: true }).click();
   await expect.soft(page.getByRole('cell', { name: awsCredentialName })).toBeVisible();
   // create gcp credential
   const gcpCredentialName = 'smoke-test-gcp';
@@ -35,7 +35,7 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await page.getByRole('menuitemradio', { name: 'GCP' }).click();
   await page.getByRole('textbox', { name: 'Credential Name:' }).fill(gcpCredentialName);
   await page.getByRole('textbox', { name: 'Input Service Account Key Path' }).fill('gcp-path');
-  await page.getByRole('button', { name: 'Create' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Create', exact: true }).click();
   await expect.soft(page.getByRole('cell', { name: gcpCredentialName })).toBeVisible();
   // create hashicorp credential
   const hashicorpCredentialName = 'smoke-test-hashicorp';
@@ -45,7 +45,7 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await page.getByRole('textbox', { name: 'Server Address:' }).fill('http://127.0.0.1');
   await page.getByRole('textbox', { name: 'Role Id:' }).fill('role-id');
   await page.getByRole('textbox', { name: 'Secret Id:' }).fill('secret-id');
-  await page.getByRole('button', { name: 'Create' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Create', exact: true }).click();
   await expect.soft(page.getByRole('cell', { name: hashicorpCredentialName })).toBeVisible();
   // close the settings
   await page.locator('.app').press('Escape');

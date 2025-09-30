@@ -6,11 +6,9 @@ import { useRootLoaderData } from '~/root';
 import { useResetVaultKeyFetcher } from '~/routes/auth.reset-vault-key';
 import { useValidateVaultKeyActionFetcher } from '~/routes/auth.validate-vault-key';
 import { useOrganizationLoaderData } from '~/routes/organization';
+import { PromptButton } from '~/ui/components/base/prompt-button';
 import { Icon } from '~/ui/components/icon';
 import { VaultKeyDisplayInput } from '~/ui/components/settings/vault-key-panel';
-
-import { showModal } from '.';
-import { AskModal } from './ask-modal';
 
 export interface InputVaultKeyModalProps {
   onClose: (vaultKey?: string) => void;
@@ -70,23 +68,6 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
     });
   };
 
-  const resetVaultKey = () => {
-    showModal(AskModal, {
-      title: 'Reset Vault Key',
-      message:
-        'Are you sure you sure to reset vault key? This will clear all secrets in private environment among all devices.',
-      yesText: 'Yes',
-      noText: 'No',
-      onDone: async (yes: boolean) => {
-        if (yes) {
-          // clear all local secrets first
-          await removeAllSecrets(organizations.map(org => org.id));
-          resetVaultKeyFetcher.submit();
-        }
-      },
-    });
-  };
-
   return (
     <ModalOverlay
       isOpen
@@ -134,12 +115,15 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                   <div className="mt-2 flex items-center justify-between">
                     <div>
                       <span className="faint text-sm">Forget Vault Key?</span>
-                      <Button
+                      <PromptButton
                         className="h-full px-4 py-1 text-sm text-[--color-info] underline transition-all"
-                        onPress={resetVaultKey}
+                        onClick={async () => {
+                          await removeAllSecrets(organizations.map(org => org.id));
+                          resetVaultKeyFetcher.submit();
+                        }}
                       >
                         Reset Vault Key
-                      </Button>
+                      </PromptButton>
                     </div>
                     <Button
                       className="ml-4 flex items-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"

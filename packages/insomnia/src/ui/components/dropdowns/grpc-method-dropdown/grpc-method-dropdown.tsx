@@ -79,7 +79,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({ disabled, methods
       aria-label="Select gRPC method"
       name="method"
       onSelectionChange={key => {
-        handleChange(key.toString());
+        key && handleChange(key.toString());
       }}
       className="h-full"
       selectedKey={selectedPath}
