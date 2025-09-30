@@ -507,8 +507,8 @@ test.describe('pre-request features tests', () => {
       },
     });
     // close modal and go back
-    await page.locator('body').press('Escape');
-    await page.locator('body').press('Escape');
+    await page.locator('.app').press('Escape');
+    await page.locator('.app').press('Escape');
     await page.getByTestId('project').click();
     // import global environment
     const globalEnvText = await loadFixture('script-global-environment.yaml');

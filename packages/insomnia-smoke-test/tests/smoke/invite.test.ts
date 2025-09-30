@@ -19,7 +19,7 @@ test('Can invite users in app', async ({ page }) => {
     await organizationMembersSelector.getByRole('option').nth(i).click();
   }
 
-  await page.locator('body').press('Escape');
+  await page.locator('.app').press('Escape');
   await page.getByRole('dialog').getByRole('button', { name: 'Invite' }).click();
 
   const invitationListLocator = page.getByLabel('Invitation list');

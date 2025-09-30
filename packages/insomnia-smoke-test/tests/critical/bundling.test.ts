@@ -7,7 +7,7 @@ test('can use bundled plugins, node-libcurl, httpsnippet, hidden browser window'
   await page.getByTestId('settings-button').click();
   await page.getByRole('tab', { name: 'Cloud Credentials' }).click();
   await page.getByRole('button', { name: 'Create Credential' }).click();
-  await page.locator('body').press('Escape');
+  await page.locator('.app').press('Escape');
 
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.locator('[data-testid="CodeEditor"]:visible', {
