@@ -59,7 +59,10 @@ const config = {
     },
     // If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
     notarize: true,
-    asarUnpack: ['node_modules/@getinsomnia/node-libcurl'],
+    asarUnpack: [
+      'node_modules/@getinsomnia/node-libcurl',
+      'node_modules/@esbuild/darwin-x64/bin/esbuild',
+    ],
   },
   dmg: {
     window: {
