@@ -157,7 +157,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             {
               name: 'User-Agent',
               value: `insomnia/${getAppVersion()}`,
-              description: 'App Version Header',
+              description: '',
               disabled: false,
             },
           ];
