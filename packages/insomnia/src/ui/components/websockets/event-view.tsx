@@ -81,7 +81,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
           setPreviewMode={previewMode => patchRequestMeta(requestId, { previewMode })}
         />
       </div>
-      <div className="flex-grow p-4">
+      <div className="grow p-4">
         <CodeEditor
           id="websocket-body-preview"
           hideLineNumbers

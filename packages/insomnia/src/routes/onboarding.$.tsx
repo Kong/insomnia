@@ -52,7 +52,7 @@ const FeatureWizardView = () => {
             {features.map(feature => (
               <li key={feature.id}>
                 <Link
-                  className="flex w-full select-none items-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--hl-xs] px-8 py-4 transition-colors hover:bg-[--hl-sm] hover:no-underline"
+                  className="flex w-full select-none items-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xs) px-8 py-4 transition-colors hover:bg-(--hl-sm) hover:no-underline"
                   to={`/onboarding/${feature.id}`}
                 >
                   <i className={`fa fa-${feature.icon} text-xl`} />
@@ -73,16 +73,16 @@ const FeatureWizardView = () => {
               key={feature.id}
               path={feature.id}
               element={
-                <div className="relative flex h-80 flex-col gap-4 bg-[--color-bg] p-4 text-left">
+                <div className="relative flex h-80 flex-col gap-4 bg-(--color-bg) p-4 text-left">
                   <h1 className="flex justify-between text-lg">
                     <span>{feature.title}</span>
                     <span>
                       {index + 1}
-                      <span className="text-[--hl-xl]">/{features.length}</span>
+                      <span className="text-(--hl-xl)">/{features.length}</span>
                     </span>
                   </h1>
                   <div className="flex max-h-72 flex-col items-center gap-3 overflow-y-auto">
-                    <p className="text-sm text-[--color-font]">
+                    <p className="text-sm text-(--color-font)">
                       <span>{feature.description}</span>
                     </p>
                     <div className="h-32">
@@ -92,7 +92,7 @@ const FeatureWizardView = () => {
                         <img className="aspect-auto max-h-32" src={feature.image} />
                       )}
                     </div>
-                    <div className="sticky bottom-0 left-0 flex w-full justify-between bg-gradient-to-t from-[--color-bg] to-[rgba(var(--color-bg-rgb),80%)] p-4 text-sm font-normal">
+                    <div className="sticky bottom-0 left-0 flex w-full justify-between bg-linear-to-t from-(--color-bg) to-[rgba(var(--color-bg-rgb),80%)] p-4 text-sm font-normal">
                       {prevPath ? (
                         <Link className="hover:no-underline" to={prevPath}>
                           <i className="fa fa-arrow-left" /> Previous feature
@@ -126,12 +126,12 @@ const Component = () => {
   const location = useLocation();
 
   return (
-    <div className="relative flex h-full w-full bg-[--color-bg] text-left">
+    <div className="relative flex h-full w-full bg-(--color-bg) text-left">
       <TrailLinesContainer>
         <div className="flex h-full min-h-[465px] w-[600px] flex-col items-center justify-center">
-          <div className="relative flex h-[465px] w-full flex-col items-center justify-center gap-[var(--padding-sm)] rounded-[var(--radius-md)] border border-solid border-[--hl-sm] bg-[--hl-xs] p-[--padding-lg] pt-12">
+          <div className="relative flex h-[465px] w-full flex-col items-center justify-center gap-(--padding-sm) rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-(--padding-lg) pt-12">
             <InsomniaLogo className="absolute left-1/2 top-0 h-16 w-16 translate-x-[-50%] translate-y-[-50%] transform" />
-            <div className="flex h-full flex-col gap-6 text-[--color-font]">
+            <div className="flex h-full flex-col gap-6 text-(--color-font)">
               <h1 className="text-center text-xl">🚀 Welcome to Insomnia 11!</h1>
               <div>
                 <p>We shipped hundreds of improvements including the following notable features:</p>
@@ -149,7 +149,7 @@ const Component = () => {
                   <span />
                 )}
                 <Link
-                  className="rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-sm text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+                  className="rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-opacity-90 hover:no-underline"
                   to={window.localStorage.getItem('prefers-project-type') ? '/organization' : '/onboarding/migrate'}
                   onClick={() => window.localStorage.setItem('hasSeenOnboardingV11', 'true')}
                 >

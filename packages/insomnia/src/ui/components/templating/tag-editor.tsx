@@ -256,11 +256,11 @@ export const TagEditor: FC<Props> = props => {
   if (error) {
     if (error.startsWith('Insomnia cannot access')) {
       previewElement = (
-        <div className="danger min-h-[115px] rounded-md border border-solid border-[var(--hl-md)] bg-[var(--hl-xxs)] p-[var(--padding-sm)]">
+        <div className="danger min-h-[115px] rounded-md border border-solid border-(--hl-md) bg-(--hl-xxs) p-(--padding-sm)">
           {buildInteractiveMessage(error).map(({ text, handler }, index) =>
             handler ? (
               <Link
-                className="cursor-pointer text-[--color-surprise]"
+                className="cursor-pointer text-(--color-surprise)"
                 // eslint-disable-next-line react/no-array-index-key
                 key={index}
                 onPress={() => {

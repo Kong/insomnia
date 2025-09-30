@@ -57,7 +57,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
         {status === 'none' && 'Not in Authorization'}
         {status === 'getting_code' && (
           <>
-            <p className="text-[rgba(var(--color-font-rgb),0.8))] text-start">
+            <p className="text-[rgba(var(--color-font-rgb),0.8)] text-start">
               See your browser to finish authorization, if the browser didn’t open automatically, copy and paste this
               URL into your browser to authorize.
             </p>
@@ -78,7 +78,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
                 Copy
               </button>
             </div>
-            <p className="text-[rgba(var(--color-font-rgb),0.8))] text-start">
+            <p className="text-[rgba(var(--color-font-rgb),0.8)] text-start">
               Please copy the full redirect URL showed in the redirect page and paste it below after you complete the
               authorization in your browser.
             </p>

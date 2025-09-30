@@ -90,35 +90,35 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden">
-      <h1 className="flex items-center gap-2 text-2xl text-[--color-font]">
-        <Icon className="text-[--color-danger]" icon="exclamation-triangle" /> Application Error
+      <h1 className="flex items-center gap-2 text-2xl text-(--color-font)">
+        <Icon className="text-(--color-danger)" icon="exclamation-triangle" /> Application Error
       </h1>
-      <p className="text-[--color-font]">
+      <p className="text-(--color-font)">
         Failed to render. Please report to{' '}
         <a className="font-bold underline" href="https://github.com/Kong/insomnia/issues">
           our Github Issues
         </a>
       </p>
-      <div className="p-6 text-[--color-font]">
+      <div className="p-6 text-(--color-font)">
         <code className="break-words p-2">{errorMessage}</code>
       </div>
       <div className="flex items-center gap-2">
         <Button
-          className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-base font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
           onPress={() => navigate('/organization')}
         >
           Try to reload the app{' '}
           <span>{navigation.state === 'loading' ? <Icon icon="spinner" className="animate-spin" /> : null}</span>
         </Button>
         <Button
-          className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-base font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
           onPress={() => logoutFetcher.submit()}
         >
           Logout{' '}
           <span>{logoutFetcher.state === 'loading' ? <Icon icon="spinner" className="animate-spin" /> : null}</span>
         </Button>
       </div>
-      <div className="overflow-y-auto p-6 text-[--color-font]">
+      <div className="overflow-y-auto p-6 text-(--color-font)">
         <code className="break-all p-2">{getErrorStack(error)}</code>
       </div>
     </div>
@@ -350,8 +350,8 @@ const Root = () => {
         return showModal(AskModal, {
           title: 'Plugin Install',
           message: (
-            <p className="text-[--hl]">
-              Do you want to install <i className="font-bold text-[--hl]">{params.name}</i>?
+            <p className="text-(--hl)">
+              Do you want to install <i className="font-bold text-(--hl)">{params.name}</i>?
             </p>
           ),
           yesText: 'Install',
@@ -488,7 +488,7 @@ const Root = () => {
                   )}
                   <CopyButton
                     size="small"
-                    className="absolute right-[--padding-sm] top-[--padding-sm]"
+                    className="absolute right-(--padding-sm) top-(--padding-sm)"
                     content={error_description}
                     title="Copy Description"
                     style={{ borderWidth: 0 }}

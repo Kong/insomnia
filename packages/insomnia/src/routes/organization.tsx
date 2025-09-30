@@ -127,21 +127,21 @@ const NetworkAndSyncIndicator = ({ asyncTaskStatus, settings, sync }: IndicatorP
       {status === 'online' && asyncTaskStatus !== 'idle' ? (
         <TooltipTrigger>
           <Button
-            className="flex h-full items-center justify-center gap-1 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+            className="flex h-full items-center justify-center gap-1 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
             onPress={() => {
               asyncTaskStatus === 'error' && sync();
             }}
           >
             <Icon
               icon={asyncTaskStatus !== 'error' ? 'spinner' : 'circle'}
-              className={`${asyncTaskStatus === 'error' ? 'text-[--color-danger]' : 'text-[--color-font]'} w-5 ${asyncTaskStatus !== 'error' ? 'animate-spin' : ''}`}
+              className={`${asyncTaskStatus === 'error' ? 'text-(--color-danger)' : 'text-(--color-font)'} w-5 ${asyncTaskStatus !== 'error' ? 'animate-spin' : ''}`}
             />
             {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
           </Button>
           <Tooltip
             placement="top"
             offset={8}
-            className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+            className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
           >
             {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
           </Tooltip>
@@ -149,7 +149,7 @@ const NetworkAndSyncIndicator = ({ asyncTaskStatus, settings, sync }: IndicatorP
       ) : (
         <TooltipTrigger>
           <Button
-            className="flex h-full items-center justify-center gap-1 px-4 py-1 text-xs capitalize text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+            className="flex h-full items-center justify-center gap-1 px-4 py-1 text-xs capitalize text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
             onPress={() => {
               if (settings.proxyEnabled) {
                 showSettingsModal({
@@ -158,14 +158,14 @@ const NetworkAndSyncIndicator = ({ asyncTaskStatus, settings, sync }: IndicatorP
               }
             }}
           >
-            <Icon icon="circle" className={status === 'online' ? 'text-[--color-success]' : 'text-[--color-danger]'} />{' '}
+            <Icon icon="circle" className={status === 'online' ? 'text-(--color-success)' : 'text-(--color-danger)'} />{' '}
             {status}
             {status === 'online' && settings.proxyEnabled ? ' via proxy' : ''}
           </Button>
           <Tooltip
             placement="top"
             offset={8}
-            className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+            className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
           >
             {status === 'online'
               ? 'You have connectivity to the Internet' +
@@ -244,10 +244,10 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
       <InsomniaTabProvider>
         <div className="h-full w-full">
           <div
-            className={`h-full w-full divide-x divide-solid divide-[--hl-md] ${isOrganizationSidebarOpen ? 'with-navbar' : ''} grid-template-app-layout relative grid bg-[--color-bg]`}
+            className={`h-full w-full divide-x divide-solid divide-(--hl-md) ${isOrganizationSidebarOpen ? 'with-navbar' : ''} grid-template-app-layout relative grid bg-(--color-bg)`}
           >
             {!isMinimal && (
-              <header className="grid grid-cols-3 items-center border-b border-solid border-[--hl-md] [grid-area:Header]">
+              <header className="grid grid-cols-3 items-center border-b border-solid border-(--hl-md) [grid-area:Header]">
                 <div className="flex items-center gap-2">
                   <div className="flex w-[50px] shrink-0 justify-center py-2">
                     <InsomniaLogo />
@@ -255,23 +255,23 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   {!user ? <GitHubStarsButton /> : null}
                 </div>
                 <CommandPalette />
-                <div className="flex items-center justify-end gap-[--padding-sm] p-2">
+                <div className="flex items-center justify-end gap-(--padding-sm) p-2">
                   {user ? (
                     <Fragment>
                       <PresentUsers />
-                      <HeaderInviteButton className="border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 font-semibold text-[--color-font-surprise]" />
+                      <HeaderInviteButton className="border border-solid border-(--hl-md) bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 font-semibold text-(--color-font-surprise)" />
                       <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
                     </Fragment>
                   ) : (
                     <Fragment>
                       <NavLink
                         to={href('/auth/login')}
-                        className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                        className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                       >
                         Login
                       </NavLink>
                       <NavLink
-                        className="flex items-center justify-center gap-2 rounded-sm bg-[--color-surprise] px-4 py-1 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all focus:bg-[rgba(var(--color-surprise-rgb),0.9)] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)]"
+                        className="flex items-center justify-center gap-2 rounded-xs bg-(--color-surprise) px-4 py-1 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:bg-[rgba(var(--color-surprise-rgb),0.9)] focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)]"
                         to={href('/auth/login')}
                       >
                         Sign up for free
@@ -283,18 +283,18 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
             )}
             {isOrganizationSidebarOpen && (
               <div className={`overflow-hidden [grid-area:Navbar] ${isOrganizationSidebarOpen ? '' : 'hidden'}`}>
-                <nav className="flex h-full w-full flex-col place-content-stretch items-center gap-[--padding-md] overflow-y-auto py-[--padding-md]">
+                <nav className="flex h-full w-full flex-col place-content-stretch items-center gap-(--padding-md) overflow-y-auto py-(--padding-md)">
                   {organizations.map(organization => {
                     const isActive = organization.id === organizationId;
 
                     return (
                       <TooltipTrigger key={organization.id}>
-                        <Link className="relative outline-none">
+                        <Link className="relative outline-hidden">
                           <div
-                            className={`box-border flex h-[28px] w-[28px] select-none items-center justify-center overflow-hidden rounded-md bg-gradient-to-br from-[#4000BF] to-[#154B62] font-bold text-[--color-font-surprise] outline outline-[3px] outline-offset-[3px] transition-all duration-150 hover:no-underline active:outline ${
+                            className={`box-border flex h-[28px] w-[28px] select-none items-center justify-center overflow-hidden rounded-md bg-linear-to-br from-[#4000BF] to-[#154B62] font-bold text-(--color-font-surprise) outline outline-[3px] outline-offset-[3px] transition-all duration-150 hover:no-underline active:outline-solid ${
                               isActive
-                                ? 'outline-[--color-font]'
-                                : 'outline-transparent hover:outline-[--hl-md] focus:outline-[--hl-md]'
+                                ? 'outline-(--color-font)'
+                                : 'outline-transparent hover:outline-(--hl-md) focus:outline-(--hl-md)'
                             }`}
                             onClick={async () => {
                               const routeForOrganization = await getInitialRouteForOrganization({
@@ -318,7 +318,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                               <div className="flex items-center justify-center">
                                 <Icon icon="home" />
                                 <Icon
-                                  className={`absolute -right-1 -top-1 z-10 h-4 w-4 transition-opacity ease-in-out ${billing?.expirationErrorMessage ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'} ${isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) ? 'opacity-100' : 'opacity-0'} `}
+                                  className={`absolute -right-1 -top-1 z-10 h-4 w-4 transition-opacity ease-in-out ${billing?.expirationErrorMessage ? 'text-(--color-danger)' : 'text-(--color-warning)'} ${isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) ? 'opacity-100' : 'opacity-0'} `}
                                   icon="exclamation-circle"
                                 />
                               </div>
@@ -330,7 +330,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                                 />
 
                                 <Icon
-                                  className={`absolute -right-1 -top-1 z-10 h-4 w-4 transition-opacity ease-in-out ${billing?.expirationErrorMessage ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'} ${isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) ? 'opacity-100' : 'opacity-0'} `}
+                                  className={`absolute -right-1 -top-1 z-10 h-4 w-4 transition-opacity ease-in-out ${billing?.expirationErrorMessage ? 'text-(--color-danger)' : 'text-(--color-warning)'} ${isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) ? 'opacity-100' : 'opacity-0'} `}
                                   icon="exclamation-circle"
                                 />
                               </div>
@@ -340,7 +340,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                         <Tooltip
                           placement="right"
                           offset={8}
-                          className="max-h-[85vh] min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                          className="max-h-[85vh] min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
                         >
                           <span>{organization.display_name}</span>
                         </Tooltip>
@@ -348,7 +348,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     );
                   })}
                   <MenuTrigger>
-                    <Button className="box-border flex h-[28px] w-[28px] select-none items-center justify-center overflow-hidden rounded-md p-[--padding-sm] font-bold text-[--color-font] outline-none transition-all duration-150 hover:no-underline">
+                    <Button className="box-border flex h-[28px] w-[28px] select-none items-center justify-center overflow-hidden rounded-md p-(--padding-sm) font-bold text-(--color-font) outline-hidden transition-all duration-150 hover:no-underline">
                       <Icon icon="plus" />
                     </Button>
                     <Popover placement="left" className="min-w-max">
@@ -386,11 +386,11 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                             }
                           }
                         }}
-                        className="max-h-[85vh] min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                        className="max-h-[85vh] min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
                       >
                         <MenuItem
                           id="join-organization"
-                          className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                          className="text-md flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                           aria-label="Join an organization"
                         >
                           <Icon icon="city" />
@@ -398,7 +398,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                         </MenuItem>
                         <MenuItem
                           id="new-organization"
-                          className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                          className="text-md flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                           aria-label="Create new organization"
                         >
                           <Icon icon="sign-out" />
@@ -410,16 +410,16 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                 </nav>
               </div>
             )}
-            <div className="overflow-hidden border-b border-[--hl-md] [grid-area:Content]">
+            <div className="overflow-hidden border-b border-(--hl-md) [grid-area:Content]">
               <RunnerProvider>
                 <Outlet />
               </RunnerProvider>
             </div>
             <div className="relative flex items-center overflow-hidden [grid-area:Statusbar]">
-              <div className="flex h-full w-[50px] flex-shrink-0 items-center justify-center gap-2 border-r border-solid border-r-[--hl-md]">
+              <div className="flex h-full w-[50px] shrink-0 items-center justify-center gap-2 border-r border-solid border-r-(--hl-md)">
                 <TooltipTrigger>
                   <ToggleButton
-                    className="h-[10px] w-[10px] flex-grow-0 gap-2 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
+                    className="h-[10px] w-[10px] grow-0 gap-2 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md)"
                     onChange={setIsOrganizationSidebarOpen}
                     isSelected={isOrganizationSidebarOpen}
                   >
@@ -448,14 +448,14 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   <Tooltip
                     placement="top"
                     offset={8}
-                    className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                    className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
                   >
                     Toggle organizations sidebar
                   </Tooltip>
                 </TooltipTrigger>
                 <TooltipTrigger>
                   <ToggleButton
-                    className="h-[10px] w-[10px] flex-grow-0 rotate-90 gap-2 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
+                    className="h-[10px] w-[10px] grow-0 rotate-90 gap-2 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md)"
                     onChange={flag => {
                       setIsMinimal(!flag);
                     }}
@@ -486,18 +486,18 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   <Tooltip
                     placement="top"
                     offset={8}
-                    className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                    className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
                   >
                     Toggle header
                   </Tooltip>
                 </TooltipTrigger>
               </div>
               <div className="flex w-full items-center gap-2">
-                <div className="flex h-full flex-shrink flex-grow basis-1/3 items-center">
+                <div className="flex h-full shrink grow basis-1/3 items-center">
                   <TooltipTrigger>
                     <Button
                       data-testid="settings-button"
-                      className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                       onPress={() => showSettingsModal()}
                     >
                       <Icon icon="gear" /> Preferences
@@ -505,7 +505,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     <Tooltip
                       placement="top"
                       offset={8}
-                      className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                      className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
                     >
                       Preferences
                       <Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
@@ -514,7 +514,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   {!isScratchpadWorkspace && hasUntrackedData && !isMinimal ? (
                     <div>
                       <Button
-                        className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-warning] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                        className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                         onPress={() => showModal(SettingsModal, { tab: 'data' })}
                       >
                         <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click
@@ -525,7 +525,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   {!isScratchpadWorkspace && hasUntrackedData && isMinimal ? (
                     <TooltipTrigger delay={500}>
                       <Button
-                        className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-warning] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                        className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                         onPress={() => showModal(SettingsModal, { tab: 'data' })}
                       >
                         <Icon icon="exclamation-circle" />
@@ -533,7 +533,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       <Tooltip
                         placement="top"
                         offset={8}
-                        className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                        className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
                       >
                         We have detected orphaned projects on your computer, click here to view them.
                       </Tooltip>
@@ -547,10 +547,10 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     />
                   )}
                 </div>
-                <div className="min-w-[120px] flex-shrink flex-grow basis-1/3">
+                <div className="min-w-[120px] shrink grow basis-1/3">
                   {isMinimal && <CommandPalette style={{ width: '100%' }} />}
                 </div>
-                <div className="flex flex-shrink flex-grow basis-1/3 justify-end">
+                <div className="flex shrink grow basis-1/3 justify-end">
                   <div className="divide flex items-center gap-2">
                     {!isMinimal && (
                       <NetworkAndSyncIndicator
@@ -562,33 +562,33 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     {!isMinimal && (
                       <Link>
                         <a
-                          className="flex items-center gap-1 px-[--padding-md] text-xs text-[--color-font] focus:underline focus:outline-none"
+                          className="flex items-center gap-1 px-(--padding-md) text-xs text-(--color-font) focus:underline focus:outline-hidden"
                           href="https://konghq.com/"
                         >
                           Made with
-                          <Icon className="text-[--color-surprise-font]" icon="heart" /> by Kong
+                          <Icon className="text-(--color-surprise-font)" icon="heart" /> by Kong
                         </a>
                       </Link>
                     )}
                   </div>
                   {isMinimal && (
-                    <div className="flex items-center justify-end gap-[--padding-sm] p-2">
+                    <div className="flex items-center justify-end gap-(--padding-sm) p-2">
                       {user ? (
                         <Fragment>
                           <PresentUsers />
-                          <HeaderInviteButton className="text-[--color-font]" />
+                          <HeaderInviteButton className="text-(--color-font)" />
                           <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
                         </Fragment>
                       ) : (
                         <Fragment>
                           <NavLink
                             to={href('/auth/login')}
-                            className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                            className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                           >
                             Login
                           </NavLink>
                           <NavLink
-                            className="flex items-center justify-center gap-2 rounded-sm bg-[--color-surprise] px-4 py-1 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all focus:bg-[rgba(var(--color-surprise-rgb),0.9)] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)]"
+                            className="flex items-center justify-center gap-2 rounded-xs bg-(--color-surprise) px-4 py-1 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:bg-[rgba(var(--color-surprise-rgb),0.9)] focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)]"
                             to={href('/auth/login')}
                           >
                             Sign up for free

@@ -110,14 +110,14 @@ export const NewWorkspaceModal = ({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       isDismissable
-      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+      className="fixed left-0 top-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
-        className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] ${isGitProject(project) ? 'min-h-[420px]' : 'min-h-[220px]'}`}
+        className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) ${isGitProject(project) ? 'min-h-[420px]' : 'min-h-[220px]'}`}
       >
         <Dialog
           aria-label="Create or update dialog"
-          className="grid flex-1 gap-4 overflow-hidden outline-none [grid-template-rows:min-content_1fr_min-content]"
+          className="grid flex-1 gap-4 overflow-hidden outline-hidden grid-rows-[min-content_1fr_min-content]"
         >
           {({ close }) => (
             <Form
@@ -138,7 +138,7 @@ export const NewWorkspaceModal = ({
                   Create a new {titleByScope[workspaceData.scope]}
                 </Heading>
                 <Button
-                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                   onPress={close}
                 >
                   <Icon icon="x" />
@@ -147,7 +147,7 @@ export const NewWorkspaceModal = ({
 
               {createNewWorkspaceFetcher.data?.error && (
                 <div className="px-10">
-                  <div className="flex items-center gap-2 rounded-sm bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-[--color-font-danger]">
+                  <div className="flex items-center gap-2 rounded-xs bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-(--color-font-danger)">
                     <Icon icon="triangle-exclamation" />
                     <span>
                       Error:
@@ -166,10 +166,10 @@ export const NewWorkspaceModal = ({
                   onChange={name => setWorkspaceData({ ...workspaceData, name })}
                   className="group relative flex flex-col gap-2"
                 >
-                  <Label className="text-sm text-[--hl]">Name</Label>
+                  <Label className="text-sm text-(--hl)">Name</Label>
                   <Input
                     placeholder={`Enter a name for your ${titleByScope[workspaceData.scope]}...`}
-                    className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                    className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
                   />
                   <FieldError className="text-xs text-red-500" />
                 </TextField>
@@ -190,27 +190,27 @@ export const NewWorkspaceModal = ({
                       className="group relative flex max-w-full flex-col gap-2 overflow-hidden"
                     >
                       <Label className="group relative flex flex-col gap-2 overflow-hidden">
-                        <span className="text-sm text-[--hl]">File name</span>
+                        <span className="text-sm text-(--hl)">File name</span>
 
-                        <div className="grid w-full overflow-hidden rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors [grid-template-areas:'input_extension'] [grid-template-columns:min-content_auto] focus:outline-none focus:ring-1 focus:ring-[--hl-md]">
+                        <div className="grid w-full overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] grid-cols-[min-content_auto] focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)">
                           <Input
                             placeholder={workspaceData.name ? safeToUseInsomniaFileName(workspaceData.name) : 'name'}
-                            className="w-full min-w-[3ch] outline-none [grid-area:input] placeholder:italic focus:outline-none"
+                            className="w-full min-w-[3ch] outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
                           />
                           <span className="-z-10 w-min truncate opacity-0 [grid-area:input]">
                             {safeToUseInsomniaFileName(workspaceData.fileName || workspaceData.name || 'name')}
                           </span>
-                          <span className="text-[--hl] [grid-area:extension]">.yaml</span>
+                          <span className="text-(--hl) [grid-area:extension]">.yaml</span>
                         </div>
                       </Label>
                       <FieldError className="text-xs text-red-500" />
                     </TextField>
-                    <Label className="text-sm text-[--hl]">
+                    <Label className="text-sm text-(--hl)">
                       Folder where the file will be saved in the repository:
                     </Label>
 
                     <Tree
-                      className="grid max-h-52 gap-0 overflow-auto rounded-sm border border-solid border-[--hl-sm]"
+                      className="grid max-h-52 gap-0 overflow-auto rounded-xs border border-solid border-(--hl-sm)"
                       defaultSelectedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
                       disallowEmptySelection
                       defaultExpandedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
@@ -226,7 +226,7 @@ export const NewWorkspaceModal = ({
                       selectionMode="single"
                       items={gitRepoTreeFetcher.data?.repositoryTree ? [gitRepoTreeFetcher.data?.repositoryTree] : []}
                       renderEmptyState={() => (
-                        <div className="flex h-full items-center justify-center gap-2 p-2 text-sm text-[--hl]">
+                        <div className="flex h-full items-center justify-center gap-2 p-2 text-sm text-(--hl)">
                           <Icon icon="spinner" className="size-5 animate-spin" />
                           Loading files...
                         </div>
@@ -235,7 +235,7 @@ export const NewWorkspaceModal = ({
                       {function renderItem(item) {
                         return (
                           <TreeItem
-                            className="group flex flex-col rounded-sm border border-solid border-transparent px-2 py-1 pl-[--tree-item-level] outline-none transition-colors duration-300 odd:bg-[--hl-xxs] aria-disabled:text-[--hl] aria-selected:border-[--color-surprise] aria-selected:bg-[--hl-lg]"
+                            className="group flex flex-col rounded-xs border border-solid border-transparent px-2 py-1 pl-(--tree-item-level) outline-hidden transition-colors duration-300 odd:bg-(--hl-xxs) aria-disabled:text-(--hl) aria-selected:border-(--color-surprise) aria-selected:bg-(--hl-lg)"
                             style={{
                               // @ts-expect-error --tree-item-level is a custom property
                               '--tree-item-level': `${(item.type === 'root' ? 0 : item.id.split('/').length * 1) + 0.5}rem`,
@@ -246,7 +246,7 @@ export const NewWorkspaceModal = ({
                           >
                             <TreeItemContent>
                               {({ isExpanded }) => (
-                                <div className="flex items-center gap-2 data-[disabled=true]:text-[--hl]">
+                                <div className="flex items-center gap-2 data-[disabled=true]:text-(--hl)">
                                   {'children' in item ? (
                                     item.children.length ? (
                                       <Button slot="chevron">
@@ -279,12 +279,12 @@ export const NewWorkspaceModal = ({
                       }}
                       className="flex flex-col gap-2"
                     >
-                      <Label className="text-sm text-[--hl]">Mock server type</Label>
+                      <Label className="text-sm text-(--hl)">Mock server type</Label>
                       <div className="flex gap-2">
                         <Radio
                           value="cloud"
                           isDisabled={isCloudProjectDisabled}
-                          className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                          className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-selected:border-(--color-surprise) data-disabled:opacity-25 data-selected:ring-2 data-selected:ring-(--color-surprise)"
                         >
                           <div className="flex items-center gap-2">
                             <Icon icon="globe" />
@@ -299,7 +299,7 @@ export const NewWorkspaceModal = ({
                         <Radio
                           value="self-hosted"
                           isDisabled={isSelfHostedDisabled}
-                          className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                          className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-selected:border-(--color-surprise) data-disabled:opacity-25 data-selected:ring-2 data-selected:ring-(--color-surprise)"
                         >
                           <div className="flex items-center gap-2">
                             <Icon icon="server" />
@@ -327,11 +327,11 @@ export const NewWorkspaceModal = ({
                         onChange={url => setWorkspaceData({ ...workspaceData, mockServerUrl: url })}
                         className={`group relative flex flex-1 flex-col gap-2 ${workspaceData.mockServerType === 'cloud' ? 'disabled' : ''}`}
                       >
-                        <Label className="text-sm text-[--hl]">Self-hosted mock server URL</Label>
+                        <Label className="text-sm text-(--hl)">Self-hosted mock server URL</Label>
                         <Input
                           disabled={workspaceData.mockServerType === 'cloud'}
                           placeholder={workspaceData.mockServerType === 'cloud' ? '' : 'https://example.com'}
-                          className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
                         />
                       </TextField>
                     )}
@@ -343,14 +343,14 @@ export const NewWorkspaceModal = ({
                   <Button
                     onPress={close}
                     isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
-                    className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+                    className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:bg-opacity-90 hover:no-underline"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
                     isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
-                    className="flex w-[10ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-center text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+                    className="flex w-[10ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-center text-(--color-font-surprise) transition-colors hover:bg-opacity-90 hover:no-underline"
                   >
                     {createNewWorkspaceFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
                     <span>Create</span>

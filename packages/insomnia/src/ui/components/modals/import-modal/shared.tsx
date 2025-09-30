@@ -21,7 +21,7 @@ export const disclaimer =
   'Insomnia provides features that may automatically execute code. Only import files from trusted sources.';
 
 const Pill: FC<PropsWithChildren> = ({ children }) => (
-  <div className="flex items-center gap-[var(--padding-xs)] rounded-[var(--radius-md)] p-[var(--padding-sm)] text-[length:var(--font-size-xs)]">
+  <div className="flex items-center gap-(--padding-xs) rounded-md p-(--padding-sm) text-(length:--font-size-xs)">
     {children}
   </div>
 );
@@ -146,8 +146,8 @@ const CurlIcon = (props: React.SVGProps<SVGSVGElement>) => {
 export const SupportedFormats = () => {
   return (
     <div>
-      <div className="pb-[var(--padding-sm)]">Supported Formats</div>
-      <div className="flex flex-wrap gap-[var(--padding-sm)]">
+      <div className="pb-(--padding-sm)">Supported Formats</div>
+      <div className="flex flex-wrap gap-(--padding-sm)">
         <Pill>
           <InsomniaIcon />
           Insomnia
@@ -187,7 +187,7 @@ export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] })
 
   if (!scanResults.length) {
     return (
-      <div className="flex items-center gap-[var(--padding-sm)] border border-solid border-[color:var(--hl-md)] bg-[color:var(--hl-xxs)] p-[var(--padding-sm)]">
+      <div className="flex items-center gap-(--padding-sm) border border-solid border-(--hl-md) bg-(--hl-xxs) p-(--padding-sm)">
         <i className="fa-regular fa-file fa-lg" />
         No valid resources found
       </div>
@@ -203,13 +203,13 @@ export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] })
           return (
             <React.Fragment key={uniqueKey}>
               <tr className="table--no-outline-row">
-                <td className="bg-[color:var(--hl-xxs)]">
+                <td className="bg-(--hl-xxs)">
                   <div
                     className={classNames(
                       {
                         'text-danger': hasErrors,
                       },
-                      'flex items-center gap-[var(--padding-sm)]',
+                      'flex items-center gap-(--padding-sm)',
                     )}
                   >
                     {hasErrors ? (
@@ -259,7 +259,7 @@ export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] })
                   {scanResult.apiSpecs && scanResult.apiSpecs?.length > 0 && (
                     <tr key={scanResult.apiSpecs[0]._id} className="table--no-outline-row">
                       <td>
-                        <div className="flex items-center gap-[var(--padding-md)]">
+                        <div className="flex items-center gap-(--padding-md)">
                           {scanResult.apiSpecs.length}{' '}
                           {scanResult.apiSpecs.length === 1 ? 'OpenAPI Spec' : 'OpenAPI Specs'}
                         </div>

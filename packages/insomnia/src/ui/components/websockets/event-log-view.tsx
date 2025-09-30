@@ -61,8 +61,8 @@ const getMessage = (event: WebSocketEvent | CurlEvent | SocketIOEvent): string |
       if (isSocketIOEvent(event)) {
         return (
           <div className="flex items-center">
-            <span className="bg-success mr-2 rounded-sm px-2 py-1">{event.eventName}</span>
-            <span className="flex-shrink">{event?.data?.[0]?.toString()}</span>
+            <span className="bg-success mr-2 rounded-xs px-2 py-1">{event.eventName}</span>
+            <span className="shrink">{event?.data?.[0]?.toString()}</span>
             {event?.data?.length > 1 && (
               <span className="bg-info ml-2 rounded-md px-2 py-1">
                 +{event.data.length - 1} {event.data.length - 1 > 1 ? 'Args' : 'Arg'}
@@ -112,7 +112,7 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
 
   return (
     <>
-      <div className="max-h-96 w-full flex-1 select-none overflow-hidden overflow-y-auto border border-solid border-[--hl-sm]">
+      <div className="max-h-96 w-full flex-1 select-none overflow-hidden overflow-y-auto border border-solid border-(--hl-sm)">
         <Table
           selectionMode="single"
           selectedKeys={selectionId ? [selectionId] : []}
@@ -131,30 +131,30 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
           aria-label="Modified objects"
           className="w-full border-separate border-spacing-0"
         >
-          <TableHeader className="sticky top-0 z-10 bg-[--hl-xs] backdrop-blur backdrop-filter">
-            <Column isRowHeader className="p-3 text-left text-xs font-semibold focus:outline-none">
+          <TableHeader className="sticky top-0 z-10 bg-(--hl-xs) backdrop-blur-sm backdrop-filter">
+            <Column isRowHeader className="p-3 text-left text-xs font-semibold focus:outline-hidden">
               <span />
             </Column>
-            <Column className="p-3 text-left text-xs font-semibold focus:outline-none">Data</Column>
-            <Column className="p-3 text-left text-xs font-semibold focus:outline-none">Time</Column>
+            <Column className="p-3 text-left text-xs font-semibold focus:outline-hidden">Data</Column>
+            <Column className="p-3 text-left text-xs font-semibold focus:outline-hidden">Time</Column>
           </TableHeader>
           <TableBody
             style={{ height: virtualizer.getTotalSize() }}
             ref={parentRef}
-            className="divide divide-solid divide-[--hl-sm]"
+            className="divide divide-solid divide-(--hl-sm)"
             items={virtualizer.getVirtualItems()}
           >
             {item => {
               const event = events[item.index];
               return (
-                <Row className="group transition-colors focus-within:bg-[--hl-sm] focus:outline-none">
-                  <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] p-2 text-sm font-medium focus:outline-none group-last-of-type:border-none">
+                <Row className="group transition-colors focus-within:bg-(--hl-sm) focus:outline-hidden">
+                  <Cell className="whitespace-nowrap border-b border-solid border-(--hl-sm) p-2 text-sm font-medium focus:outline-hidden group-last-of-type:border-none">
                     <SvgIcon icon={getIcon(event)} />
                   </Cell>
-                  <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
+                  <Cell className="whitespace-nowrap border-b border-solid border-(--hl-sm) text-sm font-medium focus:outline-hidden group-last-of-type:border-none">
                     {getMessage(event)}
                   </Cell>
-                  <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
+                  <Cell className="whitespace-nowrap border-b border-solid border-(--hl-sm) text-sm font-medium focus:outline-hidden group-last-of-type:border-none">
                     <Timestamp time={event.timestamp} />
                   </Cell>
                 </Row>

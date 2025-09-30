@@ -105,19 +105,19 @@ export const scopeToIconMap: Record<string, IconName> = {
 };
 
 export const scopeToBgColorMap: Record<string, string> = {
-  'design': 'bg-[--color-info]',
-  'collection': 'bg-[--color-surprise]',
-  'mock-server': 'bg-[--color-warning]',
-  'unsynced': 'bg-[--hl-md]',
-  'environment': 'bg-[--color-font]',
+  'design': 'bg-(--color-info)',
+  'collection': 'bg-(--color-surprise)',
+  'mock-server': 'bg-(--color-warning)',
+  'unsynced': 'bg-(--hl-md)',
+  'environment': 'bg-(--color-font)',
 };
 
 export const scopeToTextColorMap: Record<string, string> = {
-  'design': 'text-[--color-font-info]',
-  'collection': 'text-[--color-font-surprise]',
-  'mock-server': 'text-[--color-font-warning]',
-  'unsynced': 'text-[--color-font]',
-  'environment': 'text-[--color-bg]',
+  'design': 'text-(--color-font-info)',
+  'collection': 'text-(--color-font-surprise)',
+  'mock-server': 'text-(--color-font-warning)',
+  'unsynced': 'text-(--color-font)',
+  'environment': 'text-(--color-bg)',
 };
 
 export interface InsomniaFile {
@@ -768,7 +768,7 @@ const Component = () => {
         <PanelGroup
           autoSaveId="insomnia-sidebar"
           id="wrapper"
-          className="new-sidebar h-full w-full text-[--color-font]"
+          className="new-sidebar h-full w-full text-(--color-font)"
           direction="horizontal"
         >
           <Panel
@@ -779,8 +779,8 @@ const Component = () => {
             minSize={10}
             collapsible
           >
-            <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
-              <div className="flex h-[40px] flex-col items-start justify-center p-[--padding-sm]">
+            <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
+              <div className="flex h-[40px] flex-col items-start justify-center p-(--padding-sm)">
                 <Select
                   aria-label="Organizations"
                   onSelectionChange={id => {
@@ -788,7 +788,7 @@ const Component = () => {
                   }}
                   selectedKey={organizationId}
                 >
-                  <Button className="flex flex-1 items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm font-bold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+                  <Button className="flex flex-1 items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm font-bold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)">
                     <SelectValue<Organization> className="flex items-center justify-center gap-2 truncate">
                       {({ selectedItem }) => {
                         return selectedItem?.display_name || 'Select an organization';
@@ -799,13 +799,13 @@ const Component = () => {
                   <Popover className="flex min-w-max flex-col overflow-y-hidden">
                     <ListBox
                       items={organizationData?.organizations}
-                      className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                      className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
                     >
                       {item => (
                         <ListBoxItem
                           id={item.id}
                           key={item.id}
-                          className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                          className="text-md flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                           aria-label={item.display_name}
                           textValue={item.display_name}
                           value={item}
@@ -813,7 +813,7 @@ const Component = () => {
                           {({ isSelected }) => (
                             <Fragment>
                               <span>{item.display_name}</span>
-                              {isSelected && <Icon icon="check" className="justify-self-end text-[--color-success]" />}
+                              {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                             </Fragment>
                           )}
                         </ListBoxItem>
@@ -823,8 +823,8 @@ const Component = () => {
                 </Select>
               </div>
               <div className="flex flex-1 flex-col overflow-hidden">
-                <Heading className="p-[--padding-sm] text-xs uppercase">Projects ({projectsCount})</Heading>
-                <div className="flex justify-between gap-1 p-[--padding-sm]">
+                <Heading className="p-(--padding-sm) text-xs uppercase">Projects ({projectsCount})</Heading>
+                <div className="flex justify-between gap-1 p-(--padding-sm)">
                   <SearchField
                     aria-label="Projects filter"
                     className="group relative flex-1"
@@ -834,10 +834,10 @@ const Component = () => {
                   >
                     <Input
                       placeholder="Filter"
-                      className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                      className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
                     />
                     <div className="absolute right-0 top-0 flex h-full items-center px-2">
-                      <Button className="flex aspect-square w-5 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] group-data-[empty]:hidden">
+                      <Button className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) group-data-empty:hidden">
                         <Icon icon="close" />
                       </Button>
                     </div>
@@ -846,7 +846,7 @@ const Component = () => {
                     aria-label="Create new Project"
                     onPress={() => setIsNewProjectModalOpen(true)}
                     isDisabled={activeProject === undefined}
-                    className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                   >
                     <Icon icon="plus-circle" />
                   </Button>
@@ -855,7 +855,7 @@ const Component = () => {
                 <GridList
                   aria-label="Projects"
                   items={projectsWithPresence}
-                  className="flex-1 overflow-y-auto py-[--padding-sm] data-[empty]:py-0"
+                  className="flex-1 overflow-y-auto py-(--padding-sm) data-empty:py-0"
                   disallowEmptySelection
                   selectedKeys={[activeProject?._id || '']}
                   selectionMode="single"
@@ -875,10 +875,10 @@ const Component = () => {
                         key={item._id}
                         id={item._id}
                         textValue={item.name}
-                        className="group select-none outline-none"
+                        className="group select-none outline-hidden"
                       >
-                        <div className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:text-[--color-font]">
-                          <span className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-[--color-surprise]" />
+                        <div className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
+                          <span className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
                           <Icon
                             icon={
                               isRemoteProject(item)
@@ -912,7 +912,7 @@ const Component = () => {
                   <GridList
                     aria-label="Scope filter"
                     items={scopeActionList}
-                    className="flex-1 flex-shrink-0 overflow-y-auto py-[--padding-sm] data-[empty]:py-0"
+                    className="flex-1 shrink-0 overflow-y-auto py-(--padding-sm) data-empty:py-0"
                     disallowEmptySelection
                     selectedKeys={[workspaceListScope || 'all']}
                     selectionMode="single"
@@ -926,8 +926,8 @@ const Component = () => {
                   >
                     {item => {
                       return (
-                        <GridListItem textValue={item.label} className="group select-none outline-none">
-                          <div className="relative flex h-12 w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:bg-[--hl-sm] group-aria-selected:text-[--color-font]">
+                        <GridListItem textValue={item.label} className="group select-none outline-hidden">
+                          <div className="relative flex h-12 w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
                             <span className="flex h-6 w-6 items-center justify-center">
                               <Icon icon={item.icon} className="w-6" />
                             </span>
@@ -938,7 +938,7 @@ const Component = () => {
                               <Button
                                 onPress={item.action.run}
                                 aria-label={item.action.label}
-                                className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-80 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                                className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-80 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-(--hl-md) group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                               >
                                 <Icon icon={item.action.icon} />
                               </Button>
@@ -959,7 +959,7 @@ const Component = () => {
                 </>
               )}
               {!isLearningFeatureDismissed && learningFeature?.active && (
-                <div className="flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]">
+                <div className="flex shrink-0 flex-col gap-2 p-(--padding-sm)">
                   <div className="flex items-center justify-between gap-2">
                     <Heading className="text-base">
                       <Icon icon="graduation-cap" />
@@ -973,7 +973,7 @@ const Component = () => {
                       <Icon icon="close" />
                     </Button>
                   </div>
-                  <p className="text-sm text-[--hl]">{learningFeature.message}</p>
+                  <p className="text-sm text-(--hl)">{learningFeature.message}</p>
                   <a href={learningFeature.url} className="flex items-center gap-2 text-sm underline">
                     {learningFeature.cta}
                     <Icon icon="arrow-up-right-from-square" />
@@ -982,14 +982,14 @@ const Component = () => {
               )}
             </div>
           </Panel>
-          <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
+          <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
           <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
             <OrganizationTabList showActiveStatus={false} />
             {activeProject ? (
               <div className="flex w-full flex-col overflow-hidden">
                 {billing.isActive ? null : (
-                  <div className="p-[--padding-md] pb-0">
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded border border-solid border-[--hl-md] bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-50 p-[--padding-sm] text-[--color-font-warning]">
+                  <div className="p-(--padding-md) pb-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-md) bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-50 p-(--padding-sm) text-(--color-font-warning)">
                       <p className="text-base">
                         <Icon icon="exclamation-triangle" className="mr-2" />
                         {isUserOwner
@@ -999,7 +999,7 @@ const Component = () => {
                       {isUserOwner && (
                         <a
                           href={`${getAppWebsiteBaseURL()}/app/subscription/past-due`}
-                          className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-1 text-sm font-semibold text-[--color-bg] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                          className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-1 text-sm font-semibold text-(--color-bg) ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-(--hl-md) aria-pressed:opacity-80"
                         >
                           Update payment method
                         </a>
@@ -1008,9 +1008,9 @@ const Component = () => {
                   </div>
                 )}
                 {billing?.expirationErrorMessage || billing?.expirationWarningMessage ? (
-                  <div className="p-[--padding-md] pb-0">
+                  <div className="p-(--padding-md) pb-0">
                     <div
-                      className={`flex flex-wrap items-center justify-between gap-2 rounded border border-solid border-[--hl-md] bg-opacity-50 p-[--padding-sm] text-[--color-font-warning] ${billing?.expirationWarningMessage ? 'bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))]' : 'bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))]'}`}
+                      className={`flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-md) bg-opacity-50 p-(--padding-sm) text-(--color-font-warning) ${billing?.expirationWarningMessage ? 'bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))]' : 'bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))]'}`}
                     >
                       <p className="text-base">
                         <Icon icon="exclamation-triangle" className="mr-2" />
@@ -1019,7 +1019,7 @@ const Component = () => {
                       {isUserOwner && (
                         <a
                           href="https://insomnia.rest/pricing/contact"
-                          className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-1 text-sm font-semibold text-[--color-bg] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                          className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-1 text-sm font-semibold text-(--color-bg) ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-(--hl-md) aria-pressed:opacity-80"
                         >
                           Contact sales
                         </a>
@@ -1028,8 +1028,8 @@ const Component = () => {
                   </div>
                 ) : null}
                 {isProjectInconsistent && (
-                  <div className="p-[--padding-md] pb-0">
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded border border-solid border-[--hl-md] bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-50 p-[--padding-sm] text-[--color-font-warning]">
+                  <div className="p-(--padding-md) pb-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-md) bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-50 p-(--padding-sm) text-(--color-font-warning)">
                       <p className="text-base">
                         <Icon icon="exclamation-triangle" className="mr-2" />
                         The organization owner mandates that projects must be created and stored using{' '}
@@ -1037,7 +1037,7 @@ const Component = () => {
                       </p>
                       <Button
                         onPress={() => setIsUpdateProjectModalOpen(true)}
-                        className="flex items-center justify-center rounded-sm border border-solid border-white px-2 py-1"
+                        className="flex items-center justify-center rounded-xs border border-solid border-white px-2 py-1"
                       >
                         Update
                       </Button>
@@ -1046,7 +1046,7 @@ const Component = () => {
                 )}
                 {/* Show filter UI if there are files with presence or if the user has entered any filter input(even no match) */}
                 {(filesWithPresence.length > 0 || workspaceListFilter) && (
-                  <div className="flex w-full max-w-xl justify-between gap-2 p-[--padding-md]">
+                  <div className="flex w-full max-w-xl justify-between gap-2 p-(--padding-md)">
                     <SearchField
                       aria-label="Files filter"
                       className="group relative flex-1"
@@ -1055,10 +1055,10 @@ const Component = () => {
                     >
                       <Input
                         placeholder="Filter"
-                        className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                        className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
                       />
                       <div className="absolute right-0 top-0 flex h-full items-center px-2">
-                        <Button className="flex aspect-square w-5 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] group-data-[empty]:hidden">
+                        <Button className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) group-data-empty:hidden">
                           <Icon icon="close" />
                         </Button>
                       </div>
@@ -1071,7 +1071,7 @@ const Component = () => {
                     >
                       <Button
                         aria-label="Select sort order"
-                        className="flex aspect-square h-full flex-shrink-0 items-center justify-center rounded-sm bg-[--hl-xxs] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                        className="flex aspect-square h-full shrink-0 items-center justify-center rounded-xs bg-(--hl-xxs) text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                       >
                         <Icon icon="sort" />
                       </Button>
@@ -1083,13 +1083,13 @@ const Component = () => {
                               name: dashboardSortOrderName[order],
                             };
                           })}
-                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
                         >
                           {item => (
                             <ListBoxItem
                               id={item.id}
                               key={item.id}
-                              className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="text-md flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
                               textValue={item.name}
                               value={item}
@@ -1098,7 +1098,7 @@ const Component = () => {
                                 <Fragment>
                                   <span>{item.name}</span>
                                   {isSelected && (
-                                    <Icon icon="check" className="justify-self-end text-[--color-success]" />
+                                    <Icon icon="check" className="justify-self-end text-(--color-success)" />
                                   )}
                                 </Fragment>
                               )}
@@ -1111,7 +1111,7 @@ const Component = () => {
                     <MenuTrigger>
                       <Button
                         aria-label="Create in project"
-                        className="flex h-full items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                        className="flex h-full items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                       >
                         <Icon icon="plus-circle" /> <span className="hidden md:block">Create</span>
                       </Button>
@@ -1126,13 +1126,13 @@ const Component = () => {
                             }
                           }}
                           items={createInProjectActionList}
-                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
                         >
                           {item => (
                             <MenuItem
                               key={item.id}
                               id={item.id}
-                              className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="text-md flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
                             >
                               <Icon icon={item.icon} />
@@ -1154,7 +1154,7 @@ const Component = () => {
                         setImportModalType('file');
                       }}
                       aria-label="Import"
-                      className="flex h-full items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      className="flex h-full items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                     >
                       <Icon icon="file-import" /> <span className="hidden md:block">Import</span>
                     </Button>
@@ -1164,7 +1164,7 @@ const Component = () => {
                 <div className="flex-1 overflow-y-auto">
                   <GridList
                     aria-label="Files"
-                    className="grid gap-4 p-[--padding-md] [grid-template-columns:repeat(auto-fit,200px)] [grid-template-rows:repeat(auto-fit,200px)] data-[empty]:flex data-[empty]:justify-center"
+                    className="grid gap-4 p-(--padding-md) grid-cols-[repeat(auto-fit,200px)] grid-rows-[repeat(auto-fit,200px)] data-empty:flex data-empty:justify-center"
                     items={filesWithPresence}
                     renderEmptyState={() => {
                       if (workspaceListFilter) {
@@ -1186,7 +1186,7 @@ const Component = () => {
                           />
                           {createNewWorkspaceFetcher.data?.error && (
                             <div className="px-10">
-                              <div className="flex items-center gap-2 rounded-sm bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-[--color-font-danger]">
+                              <div className="flex items-center gap-2 rounded-xs bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-(--color-font-danger)">
                                 <Icon icon="triangle-exclamation" />
                                 <span>{createNewWorkspaceFetcher.data?.error}</span>
                               </div>
@@ -1203,10 +1203,10 @@ const Component = () => {
                           id={item.id}
                           textValue={item.name}
                           onAction={item.action}
-                          className={`flex aspect-square w-full flex-1 select-none flex-col overflow-hidden rounded-md p-[--padding-md] outline-none ring-1 ring-[--hl-md] transition-all hover:bg-[--hl-xs] hover:shadow-md hover:ring-[--hl-sm] focus:bg-[--hl-sm] focus:ring-[--hl-lg] ${item.loading ? 'animate-pulse' : ''}`}
+                          className={`flex aspect-square w-full flex-1 select-none flex-col overflow-hidden rounded-md p-(--padding-md) outline-hidden ring-1 ring-(--hl-md) transition-all hover:bg-(--hl-xs) hover:shadow-md hover:ring-(--hl-sm) focus:bg-(--hl-sm) focus:ring-(--hl-lg) ${item.loading ? 'animate-pulse' : ''}`}
                         >
                           <div className="flex h-[20px] gap-2">
-                            <div className="flex h-full flex-shrink-0 items-center gap-2 rounded-sm bg-[--hl-xs] pr-2 text-sm text-[--color-font]">
+                            <div className="flex h-full shrink-0 items-center gap-2 rounded-xs bg-(--hl-xs) pr-2 text-sm text-(--color-font)">
                               <div
                                 className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
                               >
@@ -1233,17 +1233,17 @@ const Component = () => {
                             )}
                           </div>
                           <TooltipTrigger>
-                            <Link onPress={item.action} className="line-clamp-4 pt-4 text-base font-bold outline-none">
+                            <Link onPress={item.action} className="line-clamp-4 pt-4 text-base font-bold outline-hidden">
                               {item.name}
                             </Link>
                             <Tooltip
                               offset={8}
-                              className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                              className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
                             >
                               <span>{item.name}</span>
                             </Tooltip>
                           </TooltipTrigger>
-                          <div className="flex flex-1 flex-col justify-end gap-2 text-sm text-[--hl]">
+                          <div className="flex flex-1 flex-col justify-end gap-2 text-sm text-(--hl)">
                             {item.gitFilePath && (
                               <div className="flex items-center gap-2 text-sm">
                                 <Icon icon="file-alt" />

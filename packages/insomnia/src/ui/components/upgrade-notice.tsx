@@ -29,7 +29,7 @@ export const UpgradeNotice = (props: UpgradeNoticeProps) => {
       <p>{message}</p>
       <p>{upgradeDetail}</p>
       {isOwner && (
-        <Button aria-label="Upgrade Plan" className="btn btn--clicky mt-[--padding-md]" onPress={handleUpgradePlan}>
+        <Button aria-label="Upgrade Plan" className="btn btn--clicky mt-(--padding-md)" onPress={handleUpgradePlan}>
           Upgrade <i className="fa fa-external-link" />
         </Button>
       )}

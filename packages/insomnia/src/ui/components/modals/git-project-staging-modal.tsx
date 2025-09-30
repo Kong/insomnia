@@ -185,42 +185,42 @@ export const GitProjectStagingModal: FC<{
           !isOpen && onClose();
         }}
         isDismissable
-        className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+        className="fixed left-0 top-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
       >
         <Modal
           onOpenChange={isOpen => {
             !isOpen && onClose();
           }}
-          className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
+          className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
         >
           <Dialog
             data-loading={gitChangesFetcher.state === 'loading' ? 'true' : undefined}
-            className="flex h-full flex-1 flex-col overflow-hidden outline-none data-[loading]:animate-pulse"
+            className="flex h-full flex-1 flex-col overflow-hidden outline-hidden data-loading:animate-pulse"
           >
             {({ close }) => (
               <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-                <div className="flex flex-shrink-0 items-center justify-between gap-2">
+                <div className="flex shrink-0 items-center justify-between gap-2">
                   <Heading slot="title" className="flex items-center gap-2 text-2xl">
                     {mode === StagingModalModes.commitAndPull ? 'Uncommitted changes' : 'Commit Changes'}{' '}
                     {gitChangesFetcher.state === 'loading' && <Icon icon="spinner" className="animate-spin" />}
                   </Heading>
 
                   <Button
-                    className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                     onPress={close}
                   >
                     <Icon icon="x" />
                   </Button>
                 </div>
                 {mode === StagingModalModes.commitAndPull && (
-                  <div className="'text-[--color-font-warning] flex flex-wrap items-center justify-between gap-2 rounded border border-solid border-[--hl-md] bg-[rgba(var(--color-warning-rgb),0.5)] p-[--padding-sm]">
+                  <div className="'text-(--color-font-warning) flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-md) bg-[rgba(var(--color-warning-rgb),0.5)] p-(--padding-sm)">
                     <p className="text-base">
                       <Icon icon="exclamation-triangle" className="mr-2" />
                       You have uncommitted changes. Commit or discard them to proceed with pull.
                     </p>
                   </div>
                 )}
-                <div className="grid h-full gap-2 divide-x divide-solid divide-[--hl-md] overflow-hidden [grid-template-columns:300px_1fr]">
+                <div className="grid h-full gap-2 divide-x divide-solid divide-(--hl-md) overflow-hidden grid-cols-[300px_1fr]">
                   <div className="flex flex-1 flex-col gap-4 overflow-hidden">
                     <form
                       onSubmit={e => {
@@ -240,12 +240,12 @@ export const GitProjectStagingModal: FC<{
                       }}
                       className="flex flex-col gap-2"
                     >
-                      <TextField className="flex flex-shrink-0 flex-col gap-2">
+                      <TextField className="flex shrink-0 flex-col gap-2">
                         <Label className="font-bold">Message</Label>
                         <TextArea
                           rows={3}
                           name="message"
-                          className="resize-none rounded-sm border border-solid border-[--hl-sm] p-2 placeholder:text-[--hl-md]"
+                          className="resize-none rounded-xs border border-solid border-(--hl-sm) p-2 placeholder:text-(--hl-md)"
                           placeholder="This is a helpful message that describes the changes made in this commit."
                           required
                           value={message}
@@ -257,7 +257,7 @@ export const GitProjectStagingModal: FC<{
                           <Button
                             type="submit"
                             isDisabled={isCommitting || changes.staged.length === 0}
-                            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                           >
                             {canCommitAndPull ? (
                               <>
@@ -280,7 +280,7 @@ export const GitProjectStagingModal: FC<{
                           <Button
                             type="button"
                             isDisabled={isCommitting}
-                            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                             onPress={() => {
                               setShowConfirmDiscardAndPullModal(true);
                             }}
@@ -297,11 +297,11 @@ export const GitProjectStagingModal: FC<{
                           </Button>
                         </div>
                       ) : (
-                        <div className="flex flex-shrink-0 items-center justify-stretch gap-2">
+                        <div className="flex shrink-0 items-center justify-stretch gap-2">
                           <Button
                             type="submit"
                             isDisabled={(committingAction === 'commit' && isCommitting) || changes.staged.length === 0}
-                            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                           >
                             <Icon
                               icon={committingAction === 'commit' && isCommitting ? 'spinner' : 'check'}
@@ -317,7 +317,7 @@ export const GitProjectStagingModal: FC<{
                             }
                             name="push"
                             value="true"
-                            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                           >
                             <Icon
                               icon={committingAction === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
@@ -328,7 +328,7 @@ export const GitProjectStagingModal: FC<{
                         </div>
                       )}
                       {operationError && (
-                        <p className="rounded-sm bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))] bg-opacity-20 p-2 text-sm text-[--color-font-danger]">
+                        <p className="rounded-xs bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))] bg-opacity-20 p-2 text-sm text-(--color-font-danger)">
                           <Icon icon="exclamation-triangle" /> {operationError}
                         </p>
                       )}
@@ -336,11 +336,11 @@ export const GitProjectStagingModal: FC<{
 
                     <div className="grid auto-rows-auto gap-2 overflow-y-auto">
                       <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
-                        <Heading className="group flex w-full flex-shrink-0 items-center justify-between gap-2 py-1 font-semibold">
+                        <Heading className="group flex w-full shrink-0 items-center justify-between gap-2 py-1 font-semibold">
                           <span className="flex-1">Staged changes</span>
                           <TooltipTrigger>
                             <Button
-                              className="flex aspect-square h-6 items-center justify-center rounded-sm text-base text-[--color-font] opacity-100 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:text-[rgba(var(--color-font-rgb),0.5)] aria-pressed:bg-[--hl-sm]"
+                              className="flex aspect-square h-6 items-center justify-center rounded-xs text-base text-(--color-font) opacity-100 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) disabled:text-[rgba(var(--color-font-rgb),0.5)] aria-pressed:bg-(--hl-sm)"
                               slot={null}
                               name="Unstage all changes"
                               isDisabled={changes.staged.length === 0}
@@ -352,12 +352,12 @@ export const GitProjectStagingModal: FC<{
                             </Button>
                             <Tooltip
                               offset={8}
-                              className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                              className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
                             >
                               Unstage all changes
                             </Tooltip>
                           </TooltipTrigger>
-                          <span className="flex size-6 items-center justify-center rounded-full bg-[--hl-sm] px-1 text-sm text-[--hl]">
+                          <span className="flex size-6 items-center justify-center rounded-full bg-(--hl-sm) px-1 text-sm text-(--hl)">
                             {changes.staged.length}
                           </span>
                         </Heading>
@@ -377,12 +377,12 @@ export const GitProjectStagingModal: FC<{
                               });
                             }}
                             renderEmptyState={() => (
-                              <p className="p-2 text-sm text-[--hl]">Stage your changes to commit them.</p>
+                              <p className="p-2 text-sm text-(--hl)">Stage your changes to commit them.</p>
                             )}
                           >
                             {item => {
                               return (
-                                <GridListItem className="group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
+                                <GridListItem className="group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
                                   <span
                                     className={`truncate ${item.entry.type === GitFileType.Deleted ? 'line-through' : ''}`}
                                   >
@@ -391,7 +391,7 @@ export const GitProjectStagingModal: FC<{
                                   <div className="flex items-center gap-1">
                                     <TooltipTrigger>
                                       <Button
-                                        className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                                        className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-(--hl-md) group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                                         slot={null}
                                         name="Unstage change"
                                         onPress={() => {
@@ -402,7 +402,7 @@ export const GitProjectStagingModal: FC<{
                                       </Button>
                                       <Tooltip
                                         offset={8}
-                                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
                                       >
                                         Unstage change
                                       </Tooltip>
@@ -415,7 +415,7 @@ export const GitProjectStagingModal: FC<{
                                       </Button>
                                       <Tooltip
                                         offset={8}
-                                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm capitalize text-[--color-font] shadow-lg focus:outline-none"
+                                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm capitalize text-(--color-font) shadow-lg focus:outline-hidden"
                                       >
                                         {item.entry.type}
                                       </Tooltip>
@@ -428,12 +428,12 @@ export const GitProjectStagingModal: FC<{
                         </div>
                       </div>
                       <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
-                        <Heading className="group flex w-full flex-shrink-0 items-center justify-between py-1 font-semibold">
+                        <Heading className="group flex w-full shrink-0 items-center justify-between py-1 font-semibold">
                           <span>Changes</span>
                           <div className="flex items-center gap-2">
                             <TooltipTrigger>
                               <Button
-                                className="flex aspect-square h-6 items-center justify-center rounded-sm text-base text-[--color-font] opacity-100 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:text-[rgba(var(--color-font-rgb),0.5)] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                                className="flex aspect-square h-6 items-center justify-center rounded-xs text-base text-(--color-font) opacity-100 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) disabled:text-[rgba(var(--color-font-rgb),0.5)] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                                 slot={null}
                                 name="Discard all changes"
                                 isDisabled={changes.unstaged.length === 0}
@@ -455,14 +455,14 @@ export const GitProjectStagingModal: FC<{
                               </Button>
                               <Tooltip
                                 offset={8}
-                                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
                               >
                                 Discard all changes
                               </Tooltip>
                             </TooltipTrigger>
                             <TooltipTrigger>
                               <Button
-                                className="flex aspect-square h-6 items-center justify-center gap-2 rounded-sm px-2 text-base text-[--color-font] opacity-100 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:text-[rgba(var(--color-font-rgb),0.5)] aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                                className="flex aspect-square h-6 items-center justify-center gap-2 rounded-xs px-2 text-base text-(--color-font) opacity-100 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) disabled:text-[rgba(var(--color-font-rgb),0.5)] aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                                 slot={null}
                                 name="Stage all changes"
                                 isDisabled={changes.unstaged.length === 0}
@@ -474,12 +474,12 @@ export const GitProjectStagingModal: FC<{
                               </Button>
                               <Tooltip
                                 offset={8}
-                                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
                               >
                                 Stage all changes
                               </Tooltip>
                             </TooltipTrigger>
-                            <span className="flex size-6 items-center justify-center rounded-full bg-[--hl-sm] px-1 text-sm text-[--hl]">
+                            <span className="flex size-6 items-center justify-center rounded-full bg-(--hl-sm) px-1 text-sm text-(--hl)">
                               {changes.unstaged.length}
                             </span>
                           </div>
@@ -503,7 +503,7 @@ export const GitProjectStagingModal: FC<{
                           >
                             {item => {
                               return (
-                                <GridListItem className="group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
+                                <GridListItem className="group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
                                   <span
                                     className={`truncate ${item.entry.type === GitFileType.Deleted ? 'line-through' : ''}`}
                                   >
@@ -512,7 +512,7 @@ export const GitProjectStagingModal: FC<{
                                   <div className="flex items-center gap-1">
                                     <TooltipTrigger>
                                       <Button
-                                        className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                                        className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-(--hl-md) group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                                         slot={null}
                                         name="Discard change"
                                         onPress={() => {
@@ -533,14 +533,14 @@ export const GitProjectStagingModal: FC<{
                                       </Button>
                                       <Tooltip
                                         offset={8}
-                                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
                                       >
                                         Discard change
                                       </Tooltip>
                                     </TooltipTrigger>
                                     <TooltipTrigger>
                                       <Button
-                                        className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                                        className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-(--hl-md) group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                                         slot={null}
                                         name="Stage change"
                                         onPress={() => {
@@ -551,7 +551,7 @@ export const GitProjectStagingModal: FC<{
                                       </Button>
                                       <Tooltip
                                         offset={8}
-                                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
                                       >
                                         Stage change
                                       </Tooltip>
@@ -564,7 +564,7 @@ export const GitProjectStagingModal: FC<{
                                       </Button>
                                       <Tooltip
                                         offset={8}
-                                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm capitalize text-[--color-font] shadow-lg focus:outline-none"
+                                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm capitalize text-(--color-font) shadow-lg focus:outline-hidden"
                                       >
                                         {item.entry.type}
                                       </Tooltip>
@@ -585,18 +585,18 @@ export const GitProjectStagingModal: FC<{
                         {previewDiffItem.name}
                       </Heading>
                       {previewDiffItem && (
-                        <div className="flex-1 overflow-y-auto rounded-sm bg-[--hl-xs] p-2 text-[--color-font]">
+                        <div className="flex-1 overflow-y-auto rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
                           <DiffEditor original={previewDiffItem.diff.before} modified={previewDiffItem.diff.after} />
                         </div>
                       )}
                     </div>
                   ) : (
                     <div className="flex h-full flex-col items-center justify-center gap-4 p-2">
-                      <Heading className="flex items-center justify-center gap-2 text-4xl font-semibold text-[--hl-md]">
+                      <Heading className="flex items-center justify-center gap-2 text-4xl font-semibold text-(--hl-md)">
                         <Icon icon="code-compare" />
                         Diff view
                       </Heading>
-                      <p className="text-[--hl]">Select an item to compare</p>
+                      <p className="text-(--hl)">Select an item to compare</p>
                     </div>
                   )}
                 </div>
@@ -665,39 +665,39 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
         !isOpen && onClose?.();
       }}
       isDismissable
-      className="fixed left-0 top-[50%] z-10 flex h-[--visual-viewport-height] w-full translate-y-[-50%] items-center justify-center bg-black/30"
+      className="fixed left-0 top-[50%] z-10 flex h-(--visual-viewport-height) w-full translate-y-[-50%] items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose?.();
         }}
-        className="flex w-full max-w-2xl flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
+        className="flex w-full max-w-2xl flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
       >
-        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none data-[loading]:animate-pulse">
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden data-loading:animate-pulse">
           {({ close }) => (
             <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-              <div className="flex flex-shrink-0 items-center justify-between gap-2">
+              <div className="flex shrink-0 items-center justify-between gap-2">
                 <Heading slot="title" className="flex items-center gap-2 text-2xl">
                   Discard Changes
                 </Heading>
 
                 <Button
-                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
               <div className="">{message}</div>
-              <div className="flex h-10 flex-shrink-0 items-center justify-end gap-2">
+              <div className="flex h-10 shrink-0 items-center justify-end gap-2">
                 <Button
-                  className="h-full gap-2 rounded-md bg-[--color-bg] px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-pressed:opacity-80"
+                  className="h-full gap-2 rounded-md bg-(--color-bg) px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:bg-opacity-80 focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) aria-pressed:opacity-80"
                   onPress={() => close?.()}
                 >
                   Cancel
                 </Button>
                 <Button
-                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-(--hl-md) aria-pressed:opacity-80"
                   onPress={() => {
                     if (typeof onConfirm === 'function') {
                       onConfirm();

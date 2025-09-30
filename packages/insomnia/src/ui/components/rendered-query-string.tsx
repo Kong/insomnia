@@ -147,12 +147,12 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
     : [{ text: previewString }];
 
   return (
-    <div className="relative flex h-full w-full justify-between gap-[var(--padding-sm)] overflow-auto">
+    <div className="relative flex h-full w-full justify-between gap-(--padding-sm) overflow-auto">
       <span className={classNames('my-auto', className)}>
         {messages.map(({ text, handler }, index) =>
           handler ? (
             <Link
-              className="cursor-pointer text-[--color-surprise]"
+              className="cursor-pointer text-(--color-surprise)"
               // eslint-disable-next-line react/no-array-index-key
               key={index}
               onPress={handler}

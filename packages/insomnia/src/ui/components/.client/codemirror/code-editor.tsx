@@ -600,8 +600,8 @@ export const CodeEditor = memo(
 
       useEffect(() => {
         const handleOnBlur = (_: CodeMirror.Editor, e: FocusEvent) => onBlur?.(e);
-        codeMirror.current?.on('blur', handleOnBlur);
-        return () => codeMirror.current?.off('blur', handleOnBlur);
+        codeMirror.current?.on('blur-sm', handleOnBlur);
+        return () => codeMirror.current?.off('blur-sm', handleOnBlur);
       }, [onBlur]);
 
       useEffect(() => {
@@ -775,7 +775,7 @@ export const CodeEditor = memo(
           {showFilter || showPrettify ? (
             <div
               key={uniquenessKey}
-              className="flex h-[--line-height-sm] w-full items-center border-t border-solid border-[--hl-md] text-[--font-size-sm]"
+              className="flex h-(--line-height-sm) w-full items-center border-t border-solid border-(--hl-md) text-(--font-size-sm)"
             >
               {showFilter ? (
                 <input
@@ -810,7 +810,7 @@ export const CodeEditor = memo(
                   <MenuTrigger>
                     <Button
                       aria-label="Filter History"
-                      className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                     >
                       <Icon icon="clock" />
                     </Button>
@@ -834,11 +834,11 @@ export const CodeEditor = memo(
                           name: filter,
                           key: index,
                         }))}
-                        className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                        className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
                       >
                         {item => (
                           <MenuItem
-                            className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                            className="text-md flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                             aria-label={item.name}
                           >
                             <span>{item.name}</span>
@@ -852,7 +852,7 @@ export const CodeEditor = memo(
                 {showFilter ? (
                   <Button
                     key="help"
-                    className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                     onPress={() => showModal(FilterHelpModal, { isJSON: Boolean(mode?.includes('json')) })}
                   >
                     <i className="fa fa-question-circle" />
@@ -861,7 +861,7 @@ export const CodeEditor = memo(
                 {showPrettify ? (
                   <Button
                     key="prettify"
-                    className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                     aria-label="Auto-format request body whitespace"
                     onPress={() => {
                       if (mode?.includes('json') || mode?.includes('xml')) {

@@ -313,7 +313,7 @@ export const OAuth2Auth: FC = () => {
               <td className="wide">
                 <div className="pad-top text-right">
                   <button
-                    className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                    className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                     onClick={initNewOAuthSession}
                   >
                     Clear OAuth 2 session
@@ -502,7 +502,7 @@ const OAuth2Tokens: FC = () => {
       <div className="pad-top text-right">
         {token ? (
           <button
-            className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+            className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
             disabled={!token}
             onClick={() => {
               if (token) {
@@ -516,7 +516,7 @@ const OAuth2Tokens: FC = () => {
         ) : null}
         &nbsp;&nbsp;
         <button
-          className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+          className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
           onClick={async () => {
             setError('');
             setLoading(true);

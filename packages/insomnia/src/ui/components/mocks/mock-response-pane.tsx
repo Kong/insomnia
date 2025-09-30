@@ -101,36 +101,36 @@ export const MockResponsePane = () => {
       )}
       <Tabs aria-label="Mock response" className="flex h-full w-full flex-1 flex-col">
         <TabList
-          className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+          className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
           aria-label="Request pane tabs"
         >
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="preview"
           >
             Preview
           </Tab>
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="headers"
           >
             Headers
           </Tab>
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="timeline"
           >
             Console
           </Tab>
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="history"
           >
             History
           </Tab>
         </TabList>
         <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="preview">
-          <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
+          <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
             {activeResponse ? (
               <PreviewModeDropdown
                 activeResponse={activeResponse}
@@ -228,42 +228,42 @@ const HistoryViewWrapperComponentFactory = ({
   return (
     <div className="grid h-full w-full grid-rows-[repeat(auto-fit,minmax(0,1fr))]">
       <div className="box-border w-full flex-1 overflow-hidden overflow-y-scroll">
-        <div className="grid grid-cols-[repeat(5,auto)] divide-y divide-solid divide-[--hl-sm]">
-          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">Method</div>
-          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">Size</div>
-          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">Date</div>
-          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">IP</div>
-          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">Path</div>
+        <div className="grid grid-cols-[repeat(5,auto)] divide-y divide-solid divide-(--hl-sm)">
+          <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">Method</div>
+          <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">Size</div>
+          <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">Date</div>
+          <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">IP</div>
+          <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">Path</div>
           {logs?.log.entries
             ?.map((row, index) => (
               <Fragment key={row.startedDateTime}>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-hidden group-last-of-type:border-none`}
                 >
                   <div className="p-2">{row.request.method}</div>
                 </div>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-hidden group-last-of-type:border-none`}
                 >
                   <div className="p-2">{row.request.bodySize + row.request.headersSize}</div>
                 </div>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-hidden group-last-of-type:border-none`}
                 >
                   <div className="truncate p-2">{getTimeFromNow(row.startedDateTime, false)}</div>
                 </div>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-hidden group-last-of-type:border-none`}
                 >
                   <div className="truncate p-2">{row.clientIPAddress}</div>
                 </div>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-hidden group-last-of-type:border-none`}
                 >
                   <div className="truncate p-2">{row.request.url}</div>
                 </div>
@@ -273,7 +273,7 @@ const HistoryViewWrapperComponentFactory = ({
         </div>
       </div>
       {logEntryId !== null && logs?.log.entries?.[logEntryId] && (
-        <div className="h-full flex-1 border border-solid border-[--hl-md]">
+        <div className="h-full flex-1 border border-solid border-(--hl-md)">
           <CodeEditor
             id="log-body-preview"
             key={logEntryId + logs?.log.entries?.[logEntryId].startedDateTime}
@@ -301,7 +301,7 @@ const PreviewModeDropdown = ({
     <Dropdown
       aria-label="Preview Mode Dropdown"
       triggerButton={
-        <Button className="text-[--hl]">
+        <Button className="text-(--hl)">
           {getPreviewModeName(previewMode)}
           <i className="fa fa-caret-down space-left" />
         </Button>

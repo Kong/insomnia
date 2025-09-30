@@ -35,11 +35,11 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(
         defaultSelectedKey={defaultValue ? 'preview' : 'write'}
       >
         <TabList
-          className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center gap-2 overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg] px-2"
+          className="flex h-(--line-height-sm) w-full shrink-0 items-center gap-2 overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg) px-2"
           aria-label="Request scripts tabs"
         >
           <Tab
-            className="flex h-[--line-height-xxs] w-[10.5rem] flex-shrink-0 cursor-pointer select-none items-center justify-between rounded-md px-2 py-1 text-sm text-[--hl] outline-none transition-colors duration-300 hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-[--color-font-surprise]"
+            className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer select-none items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
             id="write"
           >
             <div className="flex flex-1 items-center gap-2">
@@ -47,7 +47,7 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(
             </div>
           </Tab>
           <Tab
-            className="flex h-[--line-height-xxs] w-[10.5rem] flex-shrink-0 cursor-pointer select-none items-center justify-between rounded-md px-2 py-1 text-sm text-[--hl] outline-none transition-colors duration-300 hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-[--color-font-surprise]"
+            className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer select-none items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
             id="preview"
           >
             <div className="flex flex-1 items-center gap-2">
@@ -57,7 +57,7 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(
         </TabList>
         <TabPanel className="m-2 w-full flex-1 overflow-hidden" id="write">
           <ErrorBoundary errorClassName="tall wide vertically-align font-error pad text-center">
-            <div className="flex h-full flex-col divide-y divide-solid divide-[--hl-md]">
+            <div className="flex h-full flex-col divide-y divide-solid divide-(--hl-md)">
               <CodeEditor
                 id="markdown-editor"
                 ref={ref}

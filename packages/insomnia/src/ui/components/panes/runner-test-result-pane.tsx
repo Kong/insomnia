@@ -7,9 +7,9 @@ import { RequestTestResultRows } from './request-test-result-pane';
 type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
 
 const filterClassnames =
-  'mx-1 w-[6rem] text-center rounded-md h-[--line-height-xxs] text-sm cursor-pointer outline-none select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
+  'mx-1 w-24 text-center rounded-md h-(--line-height-xxs) text-sm cursor-pointer outline-hidden select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-(--hl) aria-selected:text-(--color-font-surprise) hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
 const activeFilterClassnames =
-  'text-white mx-1 w-[6rem] text-center rounded-md h-[--line-height-xxs] text-sm cursor-pointer outline-none select-none px-2 py-1 bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
+  'text-white mx-1 w-24 text-center rounded-md h-(--line-height-xxs) text-sm cursor-pointer outline-hidden select-none px-2 py-1 bg-[rgba(var(--color-surprise-rgb),50%)] text-(--hl) aria-selected:text-(--color-font-surprise) text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
 
 interface Props {
   result: BaseRunnerTestResult | null;
@@ -56,9 +56,9 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
       });
 
       return (
-        <div key={key} data-testid={key} className="border-b border-dashed border-b-[--hl-md] pb-6 pt-6">
+        <div key={key} data-testid={key} className="border-b border-dashed border-b-(--hl-md) pb-6 pt-6">
           <div className="mb-3 pl-3 font-bold uppercase leading-10"> Iteration {i + 1} </div>
-          <div className="border-1 border-solid border-gray-600" />
+          <div className="border border-solid border-gray-600" />
           {resultByRequest}
         </div>
       );
@@ -68,9 +68,9 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
 
   return (
     <>
-      <div className="flex h-full flex-col divide-y divide-solid divide-[--hl-md]">
+      <div className="flex h-full flex-col divide-y divide-solid divide-(--hl-md)">
         <div className="h-[calc(100%-var(--line-height-sm))]">
-          <Toolbar className="box-border flex h-[--line-height-sm] flex-row items-center overflow-x-auto border-b border-solid border-b-[--hl-md] pl-2 text-[var(--font-size-sm)]">
+          <Toolbar className="box-border flex h-(--line-height-sm) flex-row items-center overflow-x-auto border-b border-solid border-b-(--hl-md) pl-2 text-(--font-size-sm)">
             <button
               className={targetTests === 'all' ? activeFilterClassnames : filterClassnames}
               onClick={selectAllTests}
@@ -100,7 +100,7 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
             {resultsByIteration}
           </div>
         </div>
-        <Toolbar className="box-border flex h-[--line-height-sm] flex-shrink-0 flex-row items-center overflow-x-auto text-[var(--font-size-sm)]">
+        <Toolbar className="box-border flex h-(--line-height-sm) shrink-0 flex-row items-center overflow-x-auto text-(--font-size-sm)">
           <input
             key="test-results-filter"
             type="text"

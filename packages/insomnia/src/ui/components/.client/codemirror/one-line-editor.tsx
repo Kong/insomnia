@@ -157,7 +157,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         }
       });
 
-      codeMirror.current.on('blur', (_, e) => {
+      codeMirror.current.on('blur-sm', (_, e) => {
         if (onBlur) {
           onBlur(e);
         }
@@ -204,7 +204,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           codeMirror.current?.on(eventName, handler);
         });
       }
-      codeMirror.current.on('blur', () =>
+      codeMirror.current.on('blur-sm', () =>
         codeMirror.current?.getTextArea().parentElement?.removeAttribute('data-focused'),
       );
       codeMirror.current.on('focus', () =>

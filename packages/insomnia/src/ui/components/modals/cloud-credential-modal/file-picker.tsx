@@ -28,7 +28,7 @@ export const FilePicker = (props: FilePickerProps) => {
   return (
     <>
       <Input
-        className="col-span-3 w-4/5 flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+        className="col-span-3 w-4/5 flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
         placeholder={placeholder}
         aria-label={ariaLabel}
         name={name}
@@ -36,7 +36,7 @@ export const FilePicker = (props: FilePickerProps) => {
         onChange={e => onSelectFile(e.target.value)}
       />
       <Button
-        className="flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] px-4 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]"
+        className="shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) px-4 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)"
         onPress={handleSelectFile}
       >
         <Icon icon="file" className="mr-2" />
