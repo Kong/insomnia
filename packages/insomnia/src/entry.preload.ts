@@ -194,6 +194,7 @@ const main: Window['main'] = {
       useDynamicMockResponses,
       mockServerAdditionalFiles,
     ),
+  getUserDataPath: () => ipcRenderer.invoke('getUserDataPath'),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {

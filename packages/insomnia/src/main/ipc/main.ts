@@ -1,6 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import {
+  generateMockRouteDataFromOpenAPISpec,
+  generateMockRouteDataFromText,
+  generateMockRouteDataFromUrl,
+  type MockRouteData,
+} from '@kong/insomnia-plugin-ai';
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 import chardet from 'chardet';
 import type { MarkerRange } from 'codemirror';
@@ -45,12 +51,6 @@ import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
 import type { secretStorageBridgeAPI } from './secret-storage';
-import {
-  generateMockRouteDataFromOpenAPISpec,
-  generateMockRouteDataFromText,
-  generateMockRouteDataFromUrl,
-  type MockRouteData,
-} from '@kong-insomnia/insomnia-plugin-ai';
 
 let lintProcess: Electron.UtilityProcess | null = null;
 
@@ -125,6 +125,7 @@ export interface RendererToMainBridgeAPI {
     useDynamicMockResponses: boolean,
     mockServerAdditionalFiles: string[],
   ) => Promise<{ error: string; routes: MockRouteData[] }>;
+  getUserDataPath: () => Promise<string>;
 }
 
 export function registerMainHandlers() {
@@ -379,4 +380,8 @@ export function registerMainHandlers() {
       }
     },
   );
+
+  ipcMainHandle('getUserDataPath', () => {
+    return app.getPath('userData');
+  });
 }

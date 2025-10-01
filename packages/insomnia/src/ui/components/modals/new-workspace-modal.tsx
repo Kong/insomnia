@@ -546,7 +546,7 @@ export const NewWorkspaceModal = ({
                                 <div className="max-h-32 space-y-1 overflow-y-auto">
                                   {workspaceData.mockServerAdditionalFiles.map((filePath, index) => (
                                     <div
-                                      key={index}
+                                      key={filePath}
                                       className="flex items-center justify-between rounded bg-[--hl-xs] p-2 text-sm"
                                     >
                                       <span className="flex-1 truncate">{filePath.split('/').pop()}</span>

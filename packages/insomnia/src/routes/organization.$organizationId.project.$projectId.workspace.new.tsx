@@ -1,11 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import type { MockRouteData } from '@kong/insomnia-plugin-ai';
 import { href, redirect } from 'react-router';
 
-import { getAppVersion, METHOD_GET } from '~/common/constants';
+import { getAppVersion, getMockServiceURL, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
+import { getCurrentConfig } from '~/main/llm-config-service';
 import * as models from '~/models';
+import { userSession } from '~/models';
+import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import { isGitProject, isLocalProject } from '~/models/project';
 import { isCollection, isEnvironment, scopeToActivity, type WorkspaceScope } from '~/models/workspace';
@@ -14,12 +18,12 @@ import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initiali
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
+import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
+
+import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.new';
 import { mockRouteToHar } from './organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
-import { getMockServiceURL } from '~/common/constants';
-import { insomniaFetch } from '~/ui/insomniaFetch';
-import { userSession } from '~/models';
 
 interface NewWorkspaceData {
   name: string;
@@ -38,11 +42,6 @@ interface NewWorkspaceData {
   withRequest?: boolean;
   mockServerDynamicResponses?: boolean;
 }
-
-import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.new';
-import { cwd } from 'node:process';
-import type { MockRoute } from '~/models/mock-route';
-import type { MockRouteData } from '@kong-insomnia/insomnia-plugin-ai';
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
@@ -66,14 +65,17 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       const mockServerType = workspaceData.mockServerType;
       invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
 
+      const modelConfig = await getCurrentConfig();
       if (workspaceData.mockServerCreationType === 'ai') {
+        invariant(modelConfig, 'You must setup LLM configuration in your Preferences before using AI features.');
+
         const validationError = validateMockServerSpec(workspaceData);
         if (validationError) {
           return validationError;
         }
 
-        if (workspaceData.mockServerSpecSource == 'url' || workspaceData.mockServerSpecSource == 'text') {
-          // TODO error if configured model is gguf
+        if (workspaceData.mockServerSpecSource === 'url' || workspaceData.mockServerSpecSource === 'text') {
+          invariant(modelConfig.backend !== 'gguf', 'The URL and Text options are not supported with GGUF models.');
         }
       }
 
@@ -265,12 +267,7 @@ async function continueMockServerCreation(
       specText = workspaceData.mockServerSpecText!;
     }
 
-    const modelConfig = {
-      backend: 'gguf',
-      modelDir: cwd() + '/models/',
-      model: 'Llama-3.2-3B-Instruct-Q6_K.gguf',
-    };
-
+    const modelConfig = await getCurrentConfig();
     const result = await window.main.generateMockRouteDataFromSpec(
       openapiSpec,
       specUrl,
@@ -280,7 +277,7 @@ async function continueMockServerCreation(
       workspaceData.mockServerAdditionalFiles || [],
     );
 
-    if (result.error && result.error != '') {
+    if (result.error && result.error !== '') {
       mockRouteGenerationError = result.error;
     } else {
       const { id: sessionId } = await userSession.getOrCreate();
@@ -418,10 +415,10 @@ async function createMockRoutes(
             body: mockRoute.body || '',
           }),
         });
-        console.log(`Route registered: ${mockRoute.method} ${mockRoute.name}`);
       }
     } catch (error) {
-      console.error(`Failed to register route ${mockRoute.method} ${mockRoute.name}:`, error);
+      const msg = `Failed to register route ${mockRoute.method} ${mockRoute.name}:`
+      console.error(msg, error);
     }
   }
 }
