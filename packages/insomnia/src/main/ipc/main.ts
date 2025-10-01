@@ -16,6 +16,8 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
+import { AI_PLUGIN_NAME } from '~/common/constants';
+
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
 import type { PluginTemplateTag } from '../../templating/types';
@@ -46,7 +48,6 @@ import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
 import type { secretStorageBridgeAPI } from './secret-storage';
-import { AI_PLUGIN_NAME } from '~/common/constants';
 
 let lintProcess: Electron.UtilityProcess | null = null;
 
