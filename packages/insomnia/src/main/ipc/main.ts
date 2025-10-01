@@ -51,6 +51,13 @@ import type { secretStorageBridgeAPI } from './secret-storage';
 
 let lintProcess: Electron.UtilityProcess | null = null;
 
+export const openInBrowser = (href: string) => {
+  const { protocol } = new URL(href);
+  if (protocol === 'http:' || protocol === 'https:') {
+    shell.openExternal(href);
+  }
+};
+
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
   openInBrowser: (url: string) => void;
@@ -280,11 +287,8 @@ export function registerMainHandlers() {
     app.exit();
   });
 
-  ipcMainOn('openInBrowser', (_, href: string) => {
-    const { protocol } = new URL(href);
-    if (protocol === 'http:' || protocol === 'https:') {
-      shell.openExternal(href);
-    }
+  ipcMainOn('openInBrowser', async (_, href: string) => {
+    return openInBrowser(href);
   });
 
   ipcMainHandle('extractJsonFileFromPostmanDataDumpArchive', extractPostmanDataDumpHandler);

@@ -8,7 +8,7 @@ declare global {
     bridge: HiddenBrowserWindowToMainBridgeAPI;
     dialog: Pick<Electron.Dialog, 'showOpenDialog' | 'showSaveDialog'>;
     app: Pick<Electron.App, 'getPath' | 'getAppPath'>;
-    shell: Pick<Electron.Shell, 'showItemInFolder'>;
+    shell: Pick<Electron.Shell, 'showItemInFolder' | 'openPath'>;
     clipboard: Pick<Electron.Clipboard, 'readText' | 'writeText' | 'clear'>;
     webUtils: Pick<Electron.WebUtils, 'getPathForFile'>;
     showAlert: (options?: Record<string, any>) => void;

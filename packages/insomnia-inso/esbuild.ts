@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
 import { analyzeMetafile, build, type BuildOptions, context } from 'esbuild';
+
 const isProd = Boolean(process.env.NODE_ENV === 'production');
 const watch = Boolean(process.env.ESBUILD_WATCH);
 const isDebug = Boolean(process.env.DEBUG);
@@ -36,6 +37,7 @@ const config: BuildOptions = {
     'process.env.VERSION': JSON.stringify(isProd ? version : 'dev'),
     '__DEV__': JSON.stringify(!isProd),
   },
+  // node-llama-cpp is not included here because inso does not need it
   external: ['@getinsomnia/node-libcurl', 'fsevents', 'mocha'],
   entryPoints: ['./src/index.ts'],
 };
