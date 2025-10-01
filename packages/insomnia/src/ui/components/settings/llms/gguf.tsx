@@ -42,20 +42,14 @@ export const GGUF = ({
   const userDataPath = resolve(window.app.getPath('userData'));
   const llmsFolder = resolve(userDataPath, 'llms');
   const [availableLLMs, setAvailableLLMs] = useState<string[]>([]);
-  const [loadingLLMs, setLoadingLLMs] = useState(false);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const refreshModelsDirectory = useCallback(() => {
-    setLoadingLLMs(true);
     window.main.readDir({ path: llmsFolder }).then(models => {
       const currentlyAvailableLLMs = models
         .filter(model => model.type === 'file' && model.name.toLowerCase().endsWith('.gguf'))
         .map(model => model.name);
 
       setAvailableLLMs(currentlyAvailableLLMs);
-
-      setTimeout(() => {
-        setLoadingLLMs(false);
-      }, 700);
     });
   }, [llmsFolder]);
 
@@ -111,7 +105,6 @@ export const GGUF = ({
           <select
             id={modelId}
             className=""
-            disabled={loadingLLMs || availableLLMs.length === 0}
             onChange={e => {
               setSelectedModel(e.target.value);
             }}
@@ -130,9 +123,8 @@ export const GGUF = ({
               refreshModelsDirectory();
               setSelectedModel('');
             }}
-            isDisabled={loadingLLMs}
           >
-            {loadingLLMs ? <Icon icon="refresh" className="animate-spin" /> : <Icon icon="refresh" />}
+            <Icon icon="refresh" />
           </Button>
         </div>
       </div>
@@ -252,7 +244,7 @@ export const GGUF = ({
           Deactivate
         </Button>
         <Button
-          isDisabled={!hasChanges || loadingLLMs || !selectedModel}
+          isDisabled={!hasChanges || !selectedModel}
           onClick={() => {
             const validationResult = modelParametersSchema.safeParse(modelParameters);
 

@@ -9,18 +9,18 @@ import { OpenAI } from '~/ui/components/settings/llms/openai';
 
 export const LLMs = () => {
   const [currentLLM, setCurrentLLM] = useState<LLMConfig | null>(null);
-  const [selectedBackend, setSelectedBackend] = useState<LLMBackend>();
+  const [selectedBackend, setSelectedBackend] = useState<LLMBackend>('gguf');
   const [configuredLLMs, setConfiguredLLMs] = useState<LLMConfig[]>([]);
 
   useEffect(() => {
     const loadConfigurations = async () => {
       const configs = await llmConfigService.getAllConfigurations();
-      const current = await llmConfigService.getCurrentConfig();
+      const current = await llmConfigService.getActiveBackend();
 
       setConfiguredLLMs(configs);
-      setCurrentLLM(current);
       if (current) {
-        setSelectedBackend(current.backend);
+        setCurrentLLM(configs.find(llm => llm.backend === current) || null);
+        setSelectedBackend(current);
       }
     };
 
