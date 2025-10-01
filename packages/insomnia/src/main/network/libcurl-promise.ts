@@ -129,7 +129,8 @@ export const curlRequest = (options: CurlRequestOptions) =>
         noDecompress = false,
       } = options;
       // allow reading the file as the caCert is chosen by user
-      const caCert = caCertficatePath && (await secureReadFile(caCertficatePath, undefined, [caCertficatePath])).toString();
+      const caCert =
+        caCertficatePath && (await secureReadFile(caCertficatePath, undefined, [caCertficatePath])).toString();
 
       const { curl, debugTimeline } = createConfiguredCurlInstance({
         req,
@@ -160,6 +161,12 @@ export const curlRequest = (options: CurlRequestOptions) =>
       let requestFileDescriptor: number | undefined;
       const { authentication } = req;
       if (requestBodyPath) {
+        const allowList = settings?.dataFolders || [];
+        const fullPath = path.resolve(requestBodyPath);
+        const isAllowed = allowList.some(f => path.resolve(f) !== '' && fullPath.startsWith(path.resolve(f)));
+        if (!isAllowed) {
+          throw `Insomnia cannot access the file "${requestBodyPath}". You must specify which directories Insomnia can access in Insomnia's Preferences → Security, or using --dataFolders if using inso CLI.`;
+        }
         // AWS IAM file upload not supported
         const isAWSIAM = 'type' in authentication && authentication.type === 'iam';
         invariant(!isAWSIAM, 'AWS authentication not supported for provided body type');
