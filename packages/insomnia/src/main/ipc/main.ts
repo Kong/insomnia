@@ -1,12 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import {
-  generateMockRouteDataFromOpenAPISpec,
-  generateMockRouteDataFromText,
-  generateMockRouteDataFromUrl,
-  type MockRouteData,
-} from '@kong/insomnia-plugin-ai';
+import type { MockRouteData }  from '@kong/insomnia-plugin-ai';
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 import chardet from 'chardet';
 import type { MarkerRange } from 'codemirror';
@@ -51,6 +46,7 @@ import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
 import type { secretStorageBridgeAPI } from './secret-storage';
+import { AI_PLUGIN_NAME } from '~/common/constants';
 
 let lintProcess: Electron.UtilityProcess | null = null;
 
@@ -353,16 +349,19 @@ export function registerMainHandlers() {
         let routes;
 
         if (openApiSpec) {
+          const { generateMockRouteDataFromOpenAPISpec } = await import(AI_PLUGIN_NAME);
           routes = await generateMockRouteDataFromOpenAPISpec(openApiSpec, modelConfig, {
             additionalFiles: mockServerAdditionalFiles,
             useDynamicMockResponses: useDynamicMockResponses,
           });
         } else if (specUrl) {
+          const { generateMockRouteDataFromUrl } = await import(AI_PLUGIN_NAME);
           routes = await generateMockRouteDataFromUrl(specUrl!, modelConfig, {
             additionalFiles: mockServerAdditionalFiles,
             useDynamicMockResponses: useDynamicMockResponses,
           });
         } else if (specText) {
+          const { generateMockRouteDataFromText } = await import(AI_PLUGIN_NAME);
           routes = await generateMockRouteDataFromText(specText!, modelConfig, {
             additionalFiles: mockServerAdditionalFiles,
             useDynamicMockResponses: useDynamicMockResponses,
