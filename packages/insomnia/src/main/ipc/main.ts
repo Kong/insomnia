@@ -15,6 +15,8 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
+import type { LLMConfigServiceAPI } from '~/main/llm-config-service';
+
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
 import type { PluginTemplateTag } from '../../templating/types';
@@ -81,6 +83,7 @@ export interface RendererToMainBridgeAPI {
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
   git: GitServiceAPI;
+  llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
