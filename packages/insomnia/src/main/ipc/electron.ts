@@ -1,3 +1,5 @@
+import { mkdirSync } from 'node:fs';
+
 import type {
   IpcMainEvent,
   IpcMainInvokeEvent,
@@ -72,6 +74,7 @@ export type HandleChannels =
   | 'lintSpec'
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
+  | 'openPath'
   | 'readCurlResponse'
   | 'readDir'
   | 'readFile'
@@ -301,6 +304,11 @@ export function registerElectronHandlers() {
 
   ipcMainOn('showItemInFolder', (_, name: string) => {
     shell.showItemInFolder(name);
+  });
+
+  ipcMainHandle('openPath', async (_, name: string) => {
+    mkdirSync(name, { recursive: true });
+    return shell.openPath(name);
   });
 
   ipcMainOn('readText', event => {
