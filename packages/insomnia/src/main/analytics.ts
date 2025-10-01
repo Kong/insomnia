@@ -43,6 +43,8 @@ export enum SegmentEvent {
   documentCreate = 'Document Created',
   kongConnected = 'Kong Connected',
   kongSync = 'Kong Synced',
+  llmActivate = 'LLM Activated',
+  llmDeactivate = 'LLM Deactivated',
   requestBodyTypeSelect = 'Request Body Type Selected',
   requestCreate = 'Request Created',
   requestExecute = 'Request Executed',

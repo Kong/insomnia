@@ -1,3 +1,4 @@
+import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 import { ipcMainHandle } from '~/main/ipc/electron';
 
 import * as models from '../models';
@@ -24,10 +25,15 @@ export const getActiveBackend = async (): Promise<LLMBackend | null> => {
 };
 
 export const setActiveBackend = async (backend: LLMBackend): Promise<void> => {
+  trackSegmentEvent(SegmentEvent.llmActivate, {backend: backend});
   await models.pluginData.upsertByKey(LLM_PLUGIN_NAME, 'model.active', backend);
 };
 
-export const clearActiveBackend = async (): Promise<void> => {
+export const clearActiveBackend = async (): Promise<void | null> => {
+  const active = await models.pluginData.getByKey(LLM_PLUGIN_NAME, 'model.active');
+  if (!active) return null;
+
+  trackSegmentEvent(SegmentEvent.llmDeactivate, {backend: active.value});
   await models.pluginData.removeByKey(LLM_PLUGIN_NAME, 'model.active');
 };
 
