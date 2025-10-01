@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
+import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
+
 import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
@@ -108,6 +110,17 @@ const git: GitServiceAPI = {
   signOutOfGitLab: () => ipcRenderer.invoke('git.signOutOfGitLab'),
 };
 
+const llm: LLMConfigServiceAPI = {
+  getActiveBackend: () => ipcRenderer.invoke('llm.getActiveBackend'),
+  setActiveBackend: (backend: LLMBackend) => ipcRenderer.invoke('llm.setActiveBackend', backend),
+  clearActiveBackend: () => ipcRenderer.invoke('llm.clearActiveBackend'),
+  getBackendConfig: (backend: LLMBackend) => ipcRenderer.invoke('llm.getBackendConfig', backend),
+  updateBackendConfig: (backend: LLMBackend, config: Partial<LLMConfig>) =>
+    ipcRenderer.invoke('llm.updateBackendConfig', backend, config),
+  getAllConfigurations: () => ipcRenderer.invoke('llm.getAllConfigurations'),
+  getCurrentConfig: () => ipcRenderer.invoke('llm.getCurrentConfig'),
+};
+
 const main: Window['main'] = {
   startExecution: options => ipcRenderer.send('startExecution', options),
   addExecutionStep: options => ipcRenderer.send('addExecutionStep', options),
@@ -142,6 +155,7 @@ const main: Window['main'] = {
   webSocket,
   socketIO,
   git,
+  llm,
   grpc,
   curl,
   secretStorage,

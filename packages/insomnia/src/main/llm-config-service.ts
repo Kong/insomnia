@@ -1,5 +1,7 @@
 import path from 'node:path';
 
+import { ipcMainHandle } from '~/main/ipc/electron';
+
 import * as models from '../models';
 
 const LLM_PLUGIN_NAME = 'insomnia-llm';
@@ -68,7 +70,7 @@ export const getBackendConfig = async (backend: LLMBackend): Promise<Partial<LLM
   if (backend === 'gguf') {
     // TODO front service with electron handlers so we can use the below
     // const llmDir = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'llms');
-    const userDataPath = process.env['INSOMNIA_DATA_PATH'] || await window.main.getUserDataPath();
+    const userDataPath = process.env['INSOMNIA_DATA_PATH'] || (await window.main.getUserDataPath());
     const llmDir = path.join(userDataPath, 'llms');
     config.modelDir = llmDir;
   }
@@ -107,4 +109,26 @@ export const getCurrentConfig = async (): Promise<LLMConfig | null> => {
 
   const config = await getBackendConfig(activeBackend);
   return { ...config, backend: activeBackend } as LLMConfig;
+};
+
+export interface LLMConfigServiceAPI {
+  getActiveBackend: typeof getActiveBackend;
+  setActiveBackend: typeof setActiveBackend;
+  clearActiveBackend: typeof clearActiveBackend;
+  getBackendConfig: typeof getBackendConfig;
+  updateBackendConfig: typeof updateBackendConfig;
+  getAllConfigurations: typeof getAllConfigurations;
+  getCurrentConfig: typeof getCurrentConfig;
+}
+
+export const registerLLMConfigServiceAPI = () => {
+  ipcMainHandle('llm.getActiveBackend', async () => getActiveBackend());
+  ipcMainHandle('llm.setActiveBackend', async (_, backend: LLMBackend) => setActiveBackend(backend));
+  ipcMainHandle('llm.clearActiveBackend', async () => clearActiveBackend());
+  ipcMainHandle('llm.getBackendConfig', async (_, backend: LLMBackend) => getBackendConfig(backend));
+  ipcMainHandle('llm.updateBackendConfig', async (_, backend: LLMBackend, config: Partial<LLMConfig>) =>
+    updateBackendConfig(backend, config),
+  );
+  ipcMainHandle('llm.getAllConfigurations', async () => getAllConfigurations());
+  ipcMainHandle('llm.getCurrentConfig', async () => getCurrentConfig());
 };

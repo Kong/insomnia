@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import type { LLMBackend, LLMConfig } from '~/main/llm-config-service';
-import * as llmConfigService from '~/main/llm-config-service';
 import { Claude } from '~/ui/components/settings/llms/claude';
 import { GGUF } from '~/ui/components/settings/llms/gguf';
 import { OpenAI } from '~/ui/components/settings/llms/openai';
@@ -14,8 +13,8 @@ export const LLMs = () => {
 
   useEffect(() => {
     const loadConfigurations = async () => {
-      const configs = await llmConfigService.getAllConfigurations();
-      const current = await llmConfigService.getActiveBackend();
+      const configs = await window.main.llm.getAllConfigurations();
+      const current = await window.main.llm.getActiveBackend();
 
       setConfiguredLLMs(configs);
       if (current) {
@@ -29,22 +28,22 @@ export const LLMs = () => {
 
   const saveLLMSettings = useCallback(
     async (setCurrent: boolean, backend: LLMBackend, extras: Partial<LLMConfig> = {}) => {
-      await llmConfigService.updateBackendConfig(backend, extras);
+      await window.main.llm.updateBackendConfig(backend, extras);
 
       if (setCurrent) {
-        await llmConfigService.setActiveBackend(backend);
-        const newCurrentConfig = await llmConfigService.getCurrentConfig();
+        await window.main.llm.setActiveBackend(backend);
+        const newCurrentConfig = await window.main.llm.getCurrentConfig();
         setCurrentLLM(newCurrentConfig);
       }
 
-      const updatedConfigs = await llmConfigService.getAllConfigurations();
+      const updatedConfigs = await window.main.llm.getAllConfigurations();
       setConfiguredLLMs(updatedConfigs);
     },
     [],
   );
 
   const deactivateCurrentLLM = useCallback(async () => {
-    await llmConfigService.clearActiveBackend();
+    await window.main.llm.clearActiveBackend();
     setCurrentLLM(null);
   }, []);
 
