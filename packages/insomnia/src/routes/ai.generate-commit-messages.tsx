@@ -19,6 +19,12 @@ export async function clientAction(args: Route.ClientActionArgs) {
   const { projectId } = (await args.request.json()) as { projectId: string };
 
   try {
+    const { changes } = await window.main.git.gitChangesLoader({ projectId });
+    if (changes.staged.length > 0) {
+      return {
+        error: 'You have staged changes. Please commit or unstage them and try again.',
+      };
+    }
     const diff = await window.main.git.diff();
 
     console.log('Diff for AI:\n', diff);
