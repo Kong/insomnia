@@ -104,7 +104,7 @@ export interface ResponsePatch {
   timelinePath?: string;
   url?: string;
 }
-const getDataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
+const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
 
 // NOTE: this is a dictionary of functions to close open listeners
 const cancelCurlRequestHandlers: Record<string, () => void> = {};
@@ -112,7 +112,7 @@ export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]()
 export const curlRequest = (options: CurlRequestOptions) =>
   new Promise<CurlRequestOutput>(async resolve => {
     try {
-      const responsesDir = path.join(getDataDirectory(), 'responses');
+      const responsesDir = path.join(userdataDirectory, 'responses');
       // TODO: remove this check, its only used for network.test.ts
       await fs.promises.mkdir(responsesDir, { recursive: true });
       const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
@@ -161,7 +161,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       let requestFileDescriptor: number | undefined;
       const { authentication } = req;
       if (requestBodyPath) {
-        const allowList = settings?.dataFolders || [];
+        const allowList = [process.cwd(), userdataDirectory, ...settings.dataFolders];
         const fullPath = path.resolve(requestBodyPath);
         const isAllowed = allowList.some(f => path.resolve(f) !== '' && fullPath.startsWith(path.resolve(f)));
         if (!isAllowed) {

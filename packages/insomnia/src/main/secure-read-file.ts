@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import electron from 'electron';
+
 import * as models from '../models/index';
 
 export const secureReadFile = async (
@@ -9,7 +11,8 @@ export const secureReadFile = async (
   overrideAllowList?: string[],
 ) => {
   const settings = await models.settings.getOrCreate();
-  const allowList = overrideAllowList || settings?.dataFolders || [];
+  const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
+  const allowList = [process.cwd(), userdataDirectory, ...settings.dataFolders, ...(overrideAllowList || [])];
   const fullPath = path.resolve(filePath);
   const isAllowed = allowList.some(f => path.resolve(f) !== '' && fullPath.startsWith(path.resolve(f)));
   if (!isAllowed) {
