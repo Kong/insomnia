@@ -33,7 +33,6 @@ export type HandleChannels =
   | 'extractJsonFileFromPostmanDataDumpArchive'
   | 'getExecution'
   | 'getLocalStorageDataFromFileOrigin'
-  | 'getUserDataPath'
   | 'git.canPushLoader'
   | 'git.checkoutGitBranch'
   | 'git.cloneGitRepo'
