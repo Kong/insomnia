@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
+import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
+
 import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
@@ -108,6 +110,17 @@ const git: GitServiceAPI = {
   signOutOfGitLab: () => ipcRenderer.invoke('git.signOutOfGitLab'),
 };
 
+const llm: LLMConfigServiceAPI = {
+  getActiveBackend: () => ipcRenderer.invoke('llm.getActiveBackend'),
+  setActiveBackend: (backend: LLMBackend) => ipcRenderer.invoke('llm.setActiveBackend', backend),
+  clearActiveBackend: () => ipcRenderer.invoke('llm.clearActiveBackend'),
+  getBackendConfig: (backend: LLMBackend) => ipcRenderer.invoke('llm.getBackendConfig', backend),
+  updateBackendConfig: (backend: LLMBackend, config: Partial<LLMConfig>) =>
+    ipcRenderer.invoke('llm.updateBackendConfig', backend, config),
+  getAllConfigurations: () => ipcRenderer.invoke('llm.getAllConfigurations'),
+  getCurrentConfig: () => ipcRenderer.invoke('llm.getCurrentConfig'),
+};
+
 const main: Window['main'] = {
   startExecution: options => ipcRenderer.send('startExecution', options),
   addExecutionStep: options => ipcRenderer.send('addExecutionStep', options),
@@ -142,6 +155,7 @@ const main: Window['main'] = {
   webSocket,
   socketIO,
   git,
+  llm,
   grpc,
   curl,
   secretStorage,
@@ -177,6 +191,23 @@ const main: Window['main'] = {
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
   getLocalStorageDataFromFileOrigin: () => ipcRenderer.invoke('getLocalStorageDataFromFileOrigin'),
+  generateMockRouteDataFromSpec: (
+    openApiSpec: string | undefined,
+    specUrl: string | undefined,
+    specText: string | undefined,
+    modelConfig: any,
+    useDynamicMockResponses: boolean,
+    mockServerAdditionalFiles: string[],
+  ) =>
+    ipcRenderer.invoke(
+      'generateMockRouteDataFromSpec',
+      openApiSpec,
+      specUrl,
+      specText,
+      modelConfig,
+      useDynamicMockResponses,
+      mockServerAdditionalFiles,
+    ),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {
@@ -195,6 +226,7 @@ const app: Window['app'] = {
 };
 const shell: Window['shell'] = {
   showItemInFolder: options => ipcRenderer.send('showItemInFolder', options),
+  openPath: options => ipcRenderer.invoke('openPath', options),
 };
 const clipboard: Window['clipboard'] = {
   readText: () => ipcRenderer.sendSync('readText'),

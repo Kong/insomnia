@@ -2,10 +2,11 @@ import fs from 'node:fs/promises';
 import inspector from 'node:inspector';
 import path from 'node:path';
 
-import electron, { app, session } from 'electron';
-import { BrowserWindow } from 'electron';
+import electron, { app, BrowserWindow, session } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+
+import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
@@ -71,6 +72,7 @@ app.on('ready', async () => {
   registerMainHandlers();
   registergRPCHandlers();
   registerGitServiceAPI();
+  registerLLMConfigServiceAPI();
   registerWebSocketHandlers();
   registerSocketIOHandlers();
   registerCurlHandlers();

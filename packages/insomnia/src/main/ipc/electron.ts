@@ -1,3 +1,5 @@
+import { mkdirSync } from 'node:fs';
+
 import type {
   IpcMainEvent,
   IpcMainInvokeEvent,
@@ -22,6 +24,7 @@ export type HandleChannels =
   | 'authorizeUserInWindow'
   | 'backup'
   | 'cancelAuthorizationInDefaultBrowser'
+  | 'generateMockRouteDataFromSpec'
   | 'curl.event.findMany'
   | 'curl.open'
   | 'curl.readyState'
@@ -70,8 +73,16 @@ export type HandleChannels =
   | 'grpc.loadMethodsFromReflection'
   | 'installPlugin'
   | 'lintSpec'
+  | 'llm.getActiveBackend'
+  | 'llm.setActiveBackend'
+  | 'llm.clearActiveBackend'
+  | 'llm.getBackendConfig'
+  | 'llm.updateBackendConfig'
+  | 'llm.getAllConfigurations'
+  | 'llm.getCurrentConfig'
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
+  | 'openPath'
   | 'readCurlResponse'
   | 'readDir'
   | 'readFile'
@@ -301,6 +312,11 @@ export function registerElectronHandlers() {
 
   ipcMainOn('showItemInFolder', (_, name: string) => {
     shell.showItemInFolder(name);
+  });
+
+  ipcMainHandle('openPath', async (_, name: string) => {
+    mkdirSync(name, { recursive: true });
+    return shell.openPath(name);
   });
 
   ipcMainOn('readText', event => {
