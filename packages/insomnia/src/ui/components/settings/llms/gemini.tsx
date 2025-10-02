@@ -4,14 +4,14 @@ import { Button, Input, Text } from 'react-aria-components';
 import type { LLMBackend, LLMConfig } from '~/main/llm-config-service';
 import { Icon } from '~/ui/components/icon';
 
-interface OpenAIModelData {
-  id: string;
-  object: string;
-  created: number;
-  owned_by: string;
+interface GeminiModelData {
+  name: string;
+  displayName: string;
+  description: string;
+  supportedGenerationMethods: string[];
 }
 
-export const OpenAI = ({
+export const Gemini = ({
   saveLLMSettings,
   configuredLLMs,
   currentLLM,
@@ -25,36 +25,32 @@ export const OpenAI = ({
   const apiKeyId = useId();
   const [apiKey, setApiKey] = useState('');
   const [isLoadingModels, setIsLoadingModels] = useState(false);
-  const [availableModels, setAvailableModels] = useState<OpenAIModelData[]>([]);
+  const [availableModels, setAvailableModels] = useState<GeminiModelData[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('');
 
-  const fetchOpenAIAvailableModels = useCallback(
+  const fetchGeminiAvailableModels = useCallback(
     async (apiKeyOverride?: string) => {
       const realApiKey = apiKeyOverride || apiKey;
       setIsLoadingModels(true);
       try {
-        const response = await fetch('https://api.openai.com/v1/models', {
-          headers: {
-            Authorization: `Bearer ${realApiKey}`,
-          },
-        });
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${realApiKey}`);
         if (!response.ok) {
           setIsLoadingModels(false);
           return;
         }
         const data = await response.json();
 
-        if (data?.data?.length) {
-          const gptModels = (data.data as OpenAIModelData[])
-            .filter(model => model.id.includes('gpt') && model.object === 'model')
-            .sort((a, b) => b.id.localeCompare(a.id));
-          setAvailableModels(gptModels);
+        if (data?.models?.length) {
+          const geminiModels = (data.models as GeminiModelData[])
+            .filter(model => model.supportedGenerationMethods.includes('generateContent'))
+            .sort((a, b) => b.name.localeCompare(a.name));
+          setAvailableModels(geminiModels);
           if (configuredLLMs.length === 1 && configuredLLMs[0].apiKey !== realApiKey) {
-            saveLLMSettings(false, 'openai', { apiKey: realApiKey });
+            saveLLMSettings(false, 'gemini', { apiKey: realApiKey });
           }
         }
       } catch (error) {
-        console.error('Error fetching OpenAI models:', error);
+        console.error('Error fetching Gemini models:', error);
       }
       setIsLoadingModels(false);
     },
@@ -86,7 +82,7 @@ export const OpenAI = ({
             className="border-md rounded-md border border-solid border-[--hl-md] px-4 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]"
             isDisabled={isLoadingModels}
             onPress={() => {
-              fetchOpenAIAvailableModels();
+              fetchGeminiAvailableModels();
             }}
           >
             Load Models
@@ -107,8 +103,8 @@ export const OpenAI = ({
           <select id={modelsId} value={selectedModel} onChange={e => setSelectedModel(e.target.value)}>
             <option value="">Select a model</option>
             {availableModels.map(model => (
-              <option key={model.id} value={model.id}>
-                {model.id}
+              <option key={model.name} value={model.name}>
+                {model.displayName}
               </option>
             ))}
           </select>
@@ -116,7 +112,7 @@ export const OpenAI = ({
       )}
       <div className="flex flex-row justify-between gap-2">
         <Button
-          isDisabled={currentLLM?.backend !== 'openai'}
+          isDisabled={currentLLM?.backend !== 'gemini'}
           onClick={deactivateCurrentLLM}
           className="rounded-md border border-solid border-red-500 bg-[--color-bg] px-4 py-2 text-base text-red-500 ring-1 ring-transparent transition-all hover:border-red-600 hover:bg-[--hl-xs] focus:ring-inset focus:ring-red-300"
         >
@@ -125,7 +121,7 @@ export const OpenAI = ({
         <Button
           isDisabled={!hasChanges || isLoadingModels || !selectedModel || !availableModels.length}
           onClick={() => {
-            saveLLMSettings(true, 'openai', { model: selectedModel, apiKey });
+            saveLLMSettings(true, 'gemini', { model: selectedModel, apiKey });
           }}
           className="border-md rounded-md border border-solid border-[--hl-md] px-4 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]"
         >
