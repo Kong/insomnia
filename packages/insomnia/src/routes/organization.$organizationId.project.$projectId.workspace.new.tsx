@@ -6,7 +6,6 @@ import { href, redirect } from 'react-router';
 
 import { getAppVersion, getMockServiceURL, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
-import { getCurrentConfig } from '~/main/llm-config-service';
 import * as models from '~/models';
 import { userSession } from '~/models';
 import type { MockRoute } from '~/models/mock-route';
@@ -65,7 +64,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       const mockServerType = workspaceData.mockServerType;
       invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
 
-      const modelConfig = await getCurrentConfig();
+      const modelConfig = await window.main.llm.getCurrentConfig();
       if (workspaceData.mockServerCreationType === 'ai') {
         invariant(modelConfig, 'You must setup LLM configuration in your Preferences before using AI features.');
 
@@ -267,7 +266,7 @@ async function continueMockServerCreation(
       specText = workspaceData.mockServerSpecText!;
     }
 
-    const modelConfig = await getCurrentConfig();
+    const modelConfig = await window.main.llm.getCurrentConfig();
     const result = await window.main.generateMockRouteDataFromSpec(
       openapiSpec,
       specUrl,

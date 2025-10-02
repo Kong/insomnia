@@ -1,5 +1,7 @@
 import path from 'node:path';
 
+import { app } from 'electron';
+
 import { ipcMainHandle } from '~/main/ipc/electron';
 
 import * as models from '../models';
@@ -68,10 +70,7 @@ export const getBackendConfig = async (backend: LLMBackend): Promise<Partial<LLM
   }
 
   if (backend === 'gguf') {
-    // TODO front service with electron handlers so we can use the below
-    // const llmDir = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'llms');
-    const userDataPath = process.env['INSOMNIA_DATA_PATH'] || (await window.main.getUserDataPath());
-    const llmDir = path.join(userDataPath, 'llms');
+    const llmDir = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'llms');
     config.modelDir = llmDir;
   }
 

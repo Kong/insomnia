@@ -124,7 +124,6 @@ export interface RendererToMainBridgeAPI {
     useDynamicMockResponses: boolean,
     mockServerAdditionalFiles: string[],
   ) => Promise<{ error: string; routes: MockRouteData[] }>;
-  getUserDataPath: () => Promise<string>;
 }
 
 export function registerMainHandlers() {
@@ -382,8 +381,4 @@ export function registerMainHandlers() {
       }
     },
   );
-
-  ipcMainHandle('getUserDataPath', () => {
-    return app.getPath('userData');
-  });
 }
