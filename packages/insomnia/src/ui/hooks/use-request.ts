@@ -1,5 +1,6 @@
 import { useParams } from 'react-router';
 
+import { useRootLoaderData } from '~/root';
 import { useRequestUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';
 import { useRequestUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-meta';
 import { useRequestUpdatePayloadActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-payload';
@@ -108,6 +109,14 @@ export const useSettingsPatcher = () => {
   const fetcher = useSettingsUpdateActionFetcher();
   return (patch: Partial<Settings>) => {
     fetcher.submit({ patch });
+  };
+};
+
+export const useDataFoldersPatcher = () => {
+  const settingsPatcher = useSettingsPatcher();
+  const { settings } = useRootLoaderData()!;
+  return (setter: (value: Settings['dataFolders']) => Settings['dataFolders']) => {
+    settingsPatcher({ dataFolders: setter(settings['dataFolders']) });
   };
 };
 

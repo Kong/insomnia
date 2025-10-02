@@ -32,7 +32,7 @@ import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/u
 import { SegmentEvent } from '../analytics';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import { useReadyState } from '../hooks/use-ready-state';
-import { useRequestPatcher } from '../hooks/use-request';
+import { useDataFoldersPatcher, useRequestPatcher } from '../hooks/use-request';
 import { useRequestMetaPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
@@ -66,6 +66,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const [showInputVaultKeyModal, setShowInputVaultKeyModal] = useState(false);
     const [undefinedEnvironmentVariables, setUndefinedEnvironmentVariables] = useState('');
     const undefinedEnvironmentVariableList = undefinedEnvironmentVariables?.split(',');
+    const dataFoldersPatcher = useDataFoldersPatcher();
     if (searchParams.has('error')) {
       if (searchParams.has('envVariableMissing') && searchParams.get('undefinedEnvironmentVariables')) {
         setShowEnvVariableMissingModal(true);
@@ -73,17 +74,33 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       } else {
         // only for request render error
         const errorMessage = searchParams.get('error') || '';
+        // TODO: error type and more details for example which file are missing permission
         const messages = errorMessage.includes('Insomnia cannot access')
           ? buildInteractiveMessage(errorMessage)
           : [{ text: errorMessage }];
+        // TODO: better way to handle multiple files
+        const files = errorMessage
+          .split(/\s*<br\/>\s*/)
+          .slice(1)
+          .filter(Boolean);
         const close = showModal(AlertModal, {
           title: 'Unexpected Request Failure',
+          operationSlot: files.length ? (
+            <Button
+              onPress={() => {
+                close();
+                dataFoldersPatcher(prev => [...prev, ...files]);
+              }}
+            >
+              Add all to whitelist
+            </Button>
+          ) : undefined,
           message: (
             <div>
               <p>The request failed due to an unhandled error:</p>
               <code className="wide selectable">
                 <div className="w-full overflow-y-auto text-wrap">
-                  {messages.map(({ text, handler }, index) =>
+                  {messages.map(({ text, handler, Component }, index) =>
                     handler ? (
                       <Link
                         className="cursor-pointer text-[--color-surprise]"
@@ -96,6 +113,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                       >
                         {text}
                       </Link>
+                    ) : Component ? (
+                      <Component />
                     ) : (
                       text
                     ),
