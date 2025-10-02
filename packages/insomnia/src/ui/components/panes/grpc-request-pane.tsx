@@ -92,17 +92,16 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
       const caCertificatePath = caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
 
       const clientCert = clientCertificate?.cert
-        ? await window.main.secureReadFile({
+        ? await window.main.insecureReadFile({
             path: clientCertificate.cert,
-            overrideAllowList: [clientCertificate.cert],
           })
         : undefined;
       const clientKey = clientCertificate?.key
-        ? await window.main.secureReadFile({ path: clientCertificate.key, overrideAllowList: [clientCertificate.key] })
+        ? await window.main.insecureReadFile({ path: clientCertificate.key })
         : undefined;
       // allow to read the file as it is chosen by user
       const caCertificate = caCertificatePath
-        ? await window.main.secureReadFile({ path: caCertificatePath, overrideAllowList: [caCertificatePath] })
+        ? await window.main.insecureReadFile({ path: caCertificatePath })
         : undefined;
 
       const renderedWithCertificates = {
@@ -162,24 +161,21 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           ...(request.url.toLowerCase().startsWith('grpcs:')
             ? {
                 clientCert: (clientCertificate?.cert
-                  ? await window.main.secureReadFile({
+                  ? await window.main.insecureReadFile({
                       path: clientCertificate.cert,
-                      overrideAllowList: [clientCertificate.cert],
                     })
                   : undefined
                 )?.content,
                 clientKey: (clientCertificate?.key
-                  ? await window.main.secureReadFile({
+                  ? await window.main.insecureReadFile({
                       path: clientCertificate.key,
-                      overrideAllowList: [clientCertificate.key],
                     })
                   : undefined
                 )?.content,
                 // allow to read the file as it is chosen by user
                 caCertificate: (caCertificatePath
-                  ? await window.main.secureReadFile({
+                  ? await window.main.insecureReadFile({
                       path: caCertificatePath,
-                      overrideAllowList: [caCertificatePath],
                     })
                   : undefined
                 )?.content,
@@ -300,22 +296,19 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                     const caCertificatePath =
                       caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
                     const clientCert = clientCertificate?.cert
-                      ? await window.main.secureReadFile({
+                      ? await window.main.insecureReadFile({
                           path: clientCertificate?.cert,
-                          overrideAllowList: [clientCertificate?.cert],
                         })
                       : undefined;
                     const clientKey = clientCertificate?.key
-                      ? await window.main.secureReadFile({
+                      ? await window.main.insecureReadFile({
                           path: clientCertificate?.key,
-                          overrideAllowList: [clientCertificate?.key],
                         })
                       : undefined;
                     // allow to read the file as it is chosen by user
                     const caCertificate = caCertificatePath
-                      ? await window.main.secureReadFile({
+                      ? await window.main.insecureReadFile({
                           path: caCertificatePath,
-                          overrideAllowList: [caCertificatePath],
                         })
                       : undefined;
 

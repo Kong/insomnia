@@ -28,7 +28,7 @@ import { describeByteSize, hasAuthHeader } from '../../common/misc';
 import type { ClientCertificate } from '../../models/client-certificate';
 import type { RequestHeader } from '../../models/request';
 import type { ResponseHeader } from '../../models/response';
-import { secureReadFile } from '../secure-read-file';
+import { insecureReadFile } from '../secure-read-file';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
 export interface CurlRequestOptions {
@@ -129,8 +129,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
         noDecompress = false,
       } = options;
       // allow reading the file as the caCert is chosen by user
-      const caCert =
-        caCertficatePath && (await secureReadFile(caCertficatePath, undefined, [caCertficatePath])).toString();
+      const caCert = caCertficatePath && (await insecureReadFile(caCertficatePath)).toString();
 
       const { curl, debugTimeline } = createConfiguredCurlInstance({
         req,

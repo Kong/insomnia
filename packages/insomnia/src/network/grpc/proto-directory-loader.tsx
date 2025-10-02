@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { secureReadFile } from '../../main/secure-read-file';
+import { insecureReadFile } from '../../main/secure-read-file';
 import * as models from '../../models';
 import type { ProtoDirectory } from '../../models/proto-directory';
 
@@ -35,7 +35,7 @@ export class ProtoDirectoryLoader {
     }
 
     // allow to read the file as it is chosen by user
-    const contents = await secureReadFile(entryPath, undefined, [entryPath]);
+    const contents = await insecureReadFile(entryPath);
     const name = path.basename(entryPath);
     const { _id } = await models.protoFile.create({
       name,

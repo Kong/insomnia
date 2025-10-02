@@ -1,6 +1,6 @@
 import { z, type ZodError } from 'zod/v4';
 
-import { secureReadFile } from '~/main/secure-read-file';
+import { insecureReadFile } from '~/main/secure-read-file';
 import type { CurrentPlan } from '~/models/organization';
 
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
@@ -80,7 +80,7 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
     // allow reading the file as it is chosen by user
-    const content = await secureReadFile(path, undefined, [path]);
+    const content = await insecureReadFile(path);
 
     return content.toString();
   }
@@ -253,8 +253,8 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
     retObj.status === 'fulfilled'
       ? retObj.value
       : {
-        errors: [retObj.reason.toString()],
-      },
+          errors: [retObj.reason.toString()],
+        },
   );
 }
 

@@ -32,7 +32,7 @@ import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
-import { secureReadFile } from '../secure-read-file';
+import { insecureReadFile } from '../secure-read-file';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
@@ -174,7 +174,7 @@ const openWebSocketConnection = async (
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
   // allow to read the file as it is chosen by user
   const caCertificate =
-    (caCertficatePath && (await secureReadFile(caCertficatePath, undefined, [caCertficatePath])).toString()) || tls.rootCertificates.join('\n');
+    (caCertficatePath && (await insecureReadFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
 
   try {
     if (!options.url) {
