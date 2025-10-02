@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { MockRouteData }  from '@kong/insomnia-plugin-ai';
+import type { MockRouteData } from '@kong/insomnia-plugin-ai';
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 import chardet from 'chardet';
 import type { MarkerRange } from 'codemirror';
@@ -17,6 +17,7 @@ import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
+import type { LLMConfigServiceAPI } from '~/main/llm-config-service';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
@@ -84,6 +85,7 @@ export interface RendererToMainBridgeAPI {
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
   git: GitServiceAPI;
+  llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
@@ -122,7 +124,6 @@ export interface RendererToMainBridgeAPI {
     useDynamicMockResponses: boolean,
     mockServerAdditionalFiles: string[],
   ) => Promise<{ error: string; routes: MockRouteData[] }>;
-  getUserDataPath: () => Promise<string>;
 }
 
 export function registerMainHandlers() {
@@ -380,8 +381,4 @@ export function registerMainHandlers() {
       }
     },
   );
-
-  ipcMainHandle('getUserDataPath', () => {
-    return app.getPath('userData');
-  });
 }
