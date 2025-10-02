@@ -180,6 +180,24 @@ const main: Window['main'] = {
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
   getLocalStorageDataFromFileOrigin: () => ipcRenderer.invoke('getLocalStorageDataFromFileOrigin'),
+  generateMockRouteDataFromSpec: (
+    openApiSpec: string | undefined,
+    specUrl: string | undefined,
+    specText: string | undefined,
+    modelConfig: any,
+    useDynamicMockResponses: boolean,
+    mockServerAdditionalFiles: string[],
+  ) =>
+    ipcRenderer.invoke(
+      'generateMockRouteDataFromSpec',
+      openApiSpec,
+      specUrl,
+      specText,
+      modelConfig,
+      useDynamicMockResponses,
+      mockServerAdditionalFiles,
+    ),
+  getUserDataPath: () => ipcRenderer.invoke('getUserDataPath'),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {

@@ -4,6 +4,7 @@ import * as models from '~/models';
 import { isRemoteProject, type Project } from '~/models/project';
 import type { Workspace } from '~/models/workspace';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -46,6 +47,12 @@ async function deleteWorkspace(workspace: Workspace | null, project: Project | n
   }
 
   await deleteWorkspaceFromLocal(workspace);
+
+  if (workspace.scope === 'mock-server') {
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.mockDelete,
+    });
+  }
 
   return null;
 }
