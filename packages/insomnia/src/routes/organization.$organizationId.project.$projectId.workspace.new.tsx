@@ -56,7 +56,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     const scope = workspaceData.scope;
     invariant(
-      scope === 'design' || scope === 'collection' || scope === 'mock-server' || scope === 'environment',
+      scope === 'design' ||
+        scope === 'collection' ||
+        scope === 'mock-server' ||
+        scope === 'environment' ||
+        scope === 'mcp',
       'Scope is required',
     );
 
@@ -137,7 +141,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     await database.flushChanges(flushId);
 
     const { id } = await models.userSession.getOrCreate();
-    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project)) {
+    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project) && scope !== 'mcp') {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs,
@@ -151,6 +155,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       event = SegmentEvent.collectionCreate;
     } else if (isEnvironment(workspace)) {
       event = SegmentEvent.environmentWorkspaceCreate;
+    } else if (scope === 'mcp') {
+      event = SegmentEvent.mcpClientWorkspaceCreate;
     }
 
     window.main.trackSegmentEvent({
@@ -180,6 +186,37 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           projectId,
           workspaceId: workspace._id,
           requestId: activeRequestId,
+        }),
+      );
+    }
+
+    if (workspaceData.scope === 'mcp') {
+      const settings = await models.settings.getOrCreate();
+      const defaultHeaders = settings.disableAppVersionUserAgent
+        ? []
+        : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
+      // Create mcp request when MCP workspace is created
+      const newMcpRequest = await models.mcpRequest.create({
+        parentId: workspace._id,
+        transportType: 'streamable-http',
+        url: '',
+        name: 'My first MCP Client',
+        headers: defaultHeaders,
+        description: '',
+      });
+      const requestId = newMcpRequest._id;
+
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.mcpClientRequestCreate,
+        properties: { transportType: 'streamable-http' },
+      });
+
+      return redirect(
+        href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId', {
+          organizationId,
+          projectId,
+          workspaceId: workspace._id,
+          requestId,
         }),
       );
     }

@@ -102,7 +102,21 @@ export type HandleChannels =
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
-  | 'writeFile';
+  | 'writeFile'
+  | 'mcp.connect'
+  | 'mcp.primitive.listTools'
+  | 'mcp.primitive.callTool'
+  | 'mcp.primitive.listPrompts'
+  | 'mcp.primitive.getPrompt'
+  | 'mcp.primitive.listResources'
+  | 'mcp.primitive.listResourceTemplates'
+  | 'mcp.primitive.readResource'
+  | 'mcp.primitive.subscribeResource'
+  | 'mcp.primitive.unsubscribeResource'
+  | 'mcp.notification.rootListChange'
+  | 'mcp.readyState'
+  | 'mcp.event.findMany'
+  | 'mcp.close';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
@@ -145,6 +159,8 @@ export type MainOnChannels =
   | 'updateLatestStepName'
   | 'webSocket.close'
   | 'webSocket.closeAll'
+  | 'mcp.closeAll'
+  | 'mcp.sendMCPRequest'
   | 'writeText';
 
 export type RendererOnChannels =
@@ -165,7 +181,11 @@ export type RendererOnChannels =
   | 'show-toast'
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
-  | 'toggle-sidebar';
+  | 'toggle-sidebar'
+  | 'show-oauth-authorization-modal'
+  | 'hide-oauth-authorization-modal'
+  | 'mcp-auth-confirmation'
+  | 'updaterStatus';
 
 export const ipcMainOn = (
   channel: MainOnChannels,

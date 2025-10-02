@@ -145,6 +145,7 @@ interface Props {
   authTypes?: AuthTypes[];
   disabled?: boolean;
   hideOthers?: boolean;
+  hideInherit?: boolean;
 }
 
 export const AuthDropdown: FC<Props> = ({
@@ -152,6 +153,7 @@ export const AuthDropdown: FC<Props> = ({
   authTypes = defaultTypes,
   disabled = false,
   hideOthers = false,
+  hideInherit = false,
 }) => {
   const { requestId, requestGroupId } = useParams() as {
     organizationId: string;
@@ -257,10 +259,14 @@ export const AuthDropdown: FC<Props> = ({
           name: 'Other',
           icon: 'ellipsis-h',
           items: [
-            {
-              id: 'inherit',
-              name: 'Inherit from parent',
-            },
+            ...(hideInherit
+              ? []
+              : [
+                  {
+                    id: 'inherit',
+                    name: 'Inherit from parent',
+                  } as const,
+                ]),
             {
               id: 'none',
               name: 'None',

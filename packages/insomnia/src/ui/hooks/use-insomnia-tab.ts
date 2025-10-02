@@ -1,6 +1,8 @@
 import { useCallback, useEffect } from 'react';
 import { matchPath, useLocation, useSearchParams } from 'react-router';
 
+import type { McpRequest } from '~/models/mcp-request';
+
 import type { GrpcRequest } from '../../models/grpc-request';
 import type { MockRoute } from '../../models/mock-route';
 import type { Project } from '../../models/project';
@@ -22,7 +24,7 @@ interface InsomniaTabProps {
   workspaceId: string;
   activeProject: Project;
   activeWorkspace: Workspace;
-  activeRequest?: Request | GrpcRequest | WebSocketRequest | SocketIORequest;
+  activeRequest?: Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest;
   activeRequestGroup?: RequestGroup;
   activeMockRoute?: MockRoute;
   unitTestSuite?: UnitTestSuite;

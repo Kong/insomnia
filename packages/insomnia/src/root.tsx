@@ -65,7 +65,7 @@ export const links: Route.LinksFunction = () => {
 export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
-      return err.data;
+      return typeof err.data === 'string' ? err.data : err.data?.message;
     }
 
     if (err?.message) {
@@ -138,12 +138,14 @@ export const useRootLoaderData = () => {
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await models.settings.get();
   const workspaceCount = await models.workspace.count();
+  const mcpWorkspaceCount = await models.workspace.count('mcp');
   const userSession = await models.userSession.getOrCreate();
   const cloudCredentials = await models.cloudCredential.all();
 
   return {
     settings,
     workspaceCount,
+    mcpWorkspaceCount,
     userSession,
     cloudCredentials,
   };

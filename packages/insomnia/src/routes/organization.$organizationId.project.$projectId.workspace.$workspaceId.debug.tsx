@@ -93,6 +93,7 @@ import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
+import { McpPane } from '~/ui/components/mcp/mcp-pane';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { CookiesModal } from '~/ui/components/modals/cookies-modal';
@@ -230,6 +231,40 @@ const RequestTiming = ({ requestId }: { requestId: string }) => {
   ) : null;
 };
 
+const DebugEntry = () => {
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+    requestId?: string;
+    requestGroupId?: string;
+  };
+  const { activeRequestGroup } = useRequestGroupLoaderData() || {};
+  const { activeWorkspace, activeProject } = useWorkspaceLoaderData()!;
+  const requestData = useRequestLoaderData();
+  const { activeRequest } = requestData || {};
+
+  useInsomniaTab({
+    organizationId,
+    projectId,
+    workspaceId,
+    activeWorkspace,
+    activeProject,
+    activeRequest,
+    activeRequestGroup,
+  });
+
+  useCloseConnection({
+    organizationId,
+  });
+
+  if (activeWorkspace.scope === 'mcp') {
+    // MCP request under mcp workspace has different layout so we need to render a different component
+    return <McpPane />;
+  }
+  return <Debug />;
+};
+
 const Debug = () => {
   const {
     activeWorkspace,
@@ -264,8 +299,6 @@ const Debug = () => {
 
   const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:collection-list-filter`);
   const collection = useFilteredRequests(_collection, filter ?? '');
-
-  const { activeRequestGroup } = useRequestGroupLoaderData() || {};
 
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(
     grpcRequests.map(r => ({
@@ -474,10 +507,6 @@ const Debug = () => {
         showModal(GenerateCodeModal, { request: activeRequest });
       }
     },
-  });
-
-  useCloseConnection({
-    organizationId,
   });
 
   const isRealtimeRequest =
@@ -780,16 +809,6 @@ const Debug = () => {
       mediaQuery.removeEventListener('change', handleChange);
     };
   }, [settings.forceVerticalLayout, direction]);
-
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
-    activeRequest,
-    activeRequestGroup,
-  });
 
   return (
     <PanelGroup
@@ -1265,7 +1284,7 @@ const Debug = () => {
   );
 };
 
-export default Debug;
+export default DebugEntry;
 
 const ScratchPadTutorialPanel = () => {
   const [signUpTipDismissedState, setSignUpTipDismissedState] = useLocalStorage<{
