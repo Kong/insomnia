@@ -190,6 +190,7 @@
     "type-fest": "^4.40.0",
     "typescript": "^5.8.3",
     "vite": "^7.1.3",
+    "@modelcontextprotocol/sdk": "^1.17.5",
     "@rjsf/core": "^6.0.0-beta.15",
     "@rjsf/utils": "^6.0.0-beta.15",
     "@rjsf/validator-ajv8": "^6.0.0-beta.15"
