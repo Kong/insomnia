@@ -242,9 +242,9 @@ const FieldTemplate = (props: FieldTemplateProps) => {
 };
 
 const ObjectFieldTemplate = (props: ObjectFieldTemplateProps) => {
-  const { title, description, properties, required, schema, idSchema, onAddClick } = props;
+  const { title, description, properties, required, schema, fieldPathId, onAddClick } = props;
 
-  const level = idSchema.$id.split('_').length;
+  const level = fieldPathId.$id.split('_').length;
 
   const canExpand = schema.additionalItems || schema.additionalProperties;
 

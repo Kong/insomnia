@@ -24,7 +24,7 @@ export const Select = ({ value, onChange, className, options, ...rest }: SelectP
     <RaSelect
       placeholder="Select an item"
       selectedKey={value}
-      onSelectionChange={onChange}
+      onSelectionChange={(key) => key !== null && onChange(key)}
       {...rest}
       className={cn('', className)}
     >
