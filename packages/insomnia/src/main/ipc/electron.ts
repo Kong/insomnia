@@ -75,6 +75,7 @@ export type HandleChannels =
   | 'readCurlResponse'
   | 'readDir'
   | 'readFile'
+  | 'insecureReadFile'
   | 'secureReadFile'
   | 'restoreBackup'
   | 'secretStorage.decryptString'

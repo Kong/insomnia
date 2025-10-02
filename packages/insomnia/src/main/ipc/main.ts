@@ -15,7 +15,7 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
-import { secureReadFile } from '~/main/secure-read-file';
+import { insecureReadFile, secureReadFile } from '~/main/secure-read-file';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
@@ -204,6 +204,9 @@ export function registerMainHandlers() {
 
       process.postMessage({ documentContent, rulesetPath });
     });
+  });
+  ipcMainHandle('insecureReadFile', async (_, options: { path: string; encoding?: string }) => {
+    return insecureReadFile(options.path);
   });
 
   ipcMainHandle('secureReadFile', async (_, options: { path: string; encoding?: string }) => {
