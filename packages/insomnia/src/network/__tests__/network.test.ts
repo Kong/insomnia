@@ -313,7 +313,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     });
   });
 
-  it.only('sends a file', async () => {
+  it('sends a file', async () => {
     const workspace = await models.workspace.create();
     const settings = await models.settings.getOrCreate();
     await models.settings.update(settings, { dataFolders: [pathResolve(__dirname)] });
