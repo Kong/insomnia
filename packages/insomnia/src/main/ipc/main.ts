@@ -18,6 +18,7 @@ import iconv from 'iconv-lite';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { convert } from '~/main/importers/convert';
+import type { LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { insecureReadFile, insecureReadFileWithEncoding, secureReadFile } from '~/main/secure-read-file';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
@@ -92,6 +93,7 @@ export interface RendererToMainBridgeAPI {
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
   git: GitServiceAPI;
+  llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
@@ -130,7 +132,6 @@ export interface RendererToMainBridgeAPI {
     useDynamicMockResponses: boolean,
     mockServerAdditionalFiles: string[],
   ) => Promise<{ error: string; routes: MockRouteData[] }>;
-  getUserDataPath: () => Promise<string>;
 }
 
 export function registerMainHandlers() {
@@ -393,8 +394,4 @@ export function registerMainHandlers() {
       }
     },
   );
-
-  ipcMainHandle('getUserDataPath', () => {
-    return app.getPath('userData');
-  });
 }
