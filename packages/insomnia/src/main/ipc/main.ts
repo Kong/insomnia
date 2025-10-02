@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import type { MockRouteData }  from '@kong/insomnia-plugin-ai';
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 import chardet from 'chardet';
 import type { MarkerRange } from 'codemirror';
@@ -14,6 +15,8 @@ import {
 } from 'electron';
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
+
+import { AI_PLUGIN_NAME } from '~/common/constants';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
@@ -111,6 +114,15 @@ export interface RendererToMainBridgeAPI {
   updateLatestStepName: (options: { requestId: string; stepName: string }) => void;
   extractJsonFileFromPostmanDataDumpArchive: (archivePath: string) => Promise<any>;
   getLocalStorageDataFromFileOrigin: () => Promise<Record<string, any>>;
+  generateMockRouteDataFromSpec: (
+    openApiSpec: string | undefined,
+    specUrl: string | undefined,
+    specText: string | undefined,
+    modelConfig: any,
+    useDynamicMockResponses: boolean,
+    mockServerAdditionalFiles: string[],
+  ) => Promise<{ error: string; routes: MockRouteData[] }>;
+  getUserDataPath: () => Promise<string>;
 }
 
 export function registerMainHandlers() {
@@ -321,5 +333,55 @@ export function registerMainHandlers() {
         reject(new Error('Failed to load file:// origin to get localStorage data'));
       });
     });
+  });
+
+  ipcMainHandle(
+    'generateMockRouteDataFromSpec',
+    async (
+      _,
+      openApiSpec: string | undefined,
+      specUrl: string | undefined,
+      specText: string | undefined,
+      modelConfig: any,
+      useDynamicMockResponses: boolean,
+      mockServerAdditionalFiles: string[],
+    ) => {
+      try {
+        let routes;
+
+        if (openApiSpec) {
+          const { generateMockRouteDataFromOpenAPISpec } = await import(AI_PLUGIN_NAME);
+          routes = await generateMockRouteDataFromOpenAPISpec(openApiSpec, modelConfig, {
+            additionalFiles: mockServerAdditionalFiles,
+            useDynamicMockResponses: useDynamicMockResponses,
+          });
+        } else if (specUrl) {
+          const { generateMockRouteDataFromUrl } = await import(AI_PLUGIN_NAME);
+          routes = await generateMockRouteDataFromUrl(specUrl!, modelConfig, {
+            additionalFiles: mockServerAdditionalFiles,
+            useDynamicMockResponses: useDynamicMockResponses,
+          });
+        } else if (specText) {
+          const { generateMockRouteDataFromText } = await import(AI_PLUGIN_NAME);
+          routes = await generateMockRouteDataFromText(specText!, modelConfig, {
+            additionalFiles: mockServerAdditionalFiles,
+            useDynamicMockResponses: useDynamicMockResponses,
+          });
+        } else {
+          const errorMessage = 'Failed to create mock server, no spec source was provided';
+          console.error(errorMessage);
+          return { error: errorMessage };
+        }
+        return { routes };
+      } catch (error) {
+        const errorMessage = 'Failed to create mock server from OpenAPI spec: ' + error;
+        console.error(errorMessage);
+        return { error: errorMessage };
+      }
+    },
+  );
+
+  ipcMainHandle('getUserDataPath', () => {
+    return app.getPath('userData');
   });
 }

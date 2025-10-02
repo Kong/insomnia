@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import * as models from '../models';
 
 const LLM_PLUGIN_NAME = 'insomnia-llm';
@@ -7,6 +9,7 @@ export type LLMBackend = 'gguf' | 'claude' | 'openai';
 export interface LLMConfig {
   backend: LLMBackend;
   model: string;
+  modelDir?: string;
   apiKey?: string;
   temperature?: number;
   topP?: number;
@@ -60,6 +63,14 @@ export const getBackendConfig = async (backend: LLMBackend): Promise<Partial<LLM
         break;
       }
     }
+  }
+
+  if (backend === 'gguf') {
+    // TODO front service with electron handlers so we can use the below
+    // const llmDir = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'llms');
+    const userDataPath = process.env['INSOMNIA_DATA_PATH'] || await window.main.getUserDataPath();
+    const llmDir = path.join(userDataPath, 'llms');
+    config.modelDir = llmDir;
   }
 
   return config;

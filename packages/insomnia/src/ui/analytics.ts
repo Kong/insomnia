@@ -10,6 +10,8 @@ export enum SegmentEvent {
   importCompleted = 'Import Completed',
   documentCreate = 'Document Created',
   mockCreate = 'Mock Created',
+  mockEdit = 'Mock Server Edited',
+  mockDelete = 'Mock Server Deleted',
   mockRouteCreate = 'Mock Route Created',
   mockRouteEdit = 'Mock Route Edited',
   mockRouteDelete = 'Mock Route Deleted',

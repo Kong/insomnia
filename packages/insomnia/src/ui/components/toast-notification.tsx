@@ -17,7 +17,7 @@ type Status = 'info' | 'success' | 'warning' | 'error';
 export interface RAToastContent {
   icon?: IconProp;
   title: string;
-  description?: string;
+  description?: string | React.ReactNode;
   status?: Status;
   time?: string;
 }
