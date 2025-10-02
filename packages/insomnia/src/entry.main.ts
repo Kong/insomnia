@@ -7,6 +7,7 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
+import { getProcessorArchitecture } from '~/main/system';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
@@ -51,7 +52,7 @@ if (checkIfRestartNeeded()) {
   process.exit(0);
 }
 
-log.info(`Running version ${getAppVersion()}`);
+log.info(`Running version ${getAppVersion()} on ${getProcessorArchitecture()}`);
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
