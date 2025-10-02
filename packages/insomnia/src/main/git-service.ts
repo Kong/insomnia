@@ -20,7 +20,7 @@ import path from 'node:path';
 import { shell } from 'electron';
 import { app, net } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
-import { Errors, type HeadStatus, type PromiseFsClient, type StageStatus, type WorkdirStatus } from 'isomorphic-git';
+import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
 
@@ -54,6 +54,7 @@ import GitVCS, {
   type GitFileStatusSymbol,
   GitVCSOperationErrors,
   MergeConflictError,
+  type Status,
 } from '../sync/git/git-vcs';
 import { MemClient } from '../sync/git/mem-client';
 import { NeDBClient } from '../sync/git/ne-db-client';
@@ -388,14 +389,14 @@ export interface GitChangesLoaderData {
     staged: {
       name: string;
       path: string;
-      status: [HeadStatus, WorkdirStatus, StageStatus];
+      status: Status;
       type: GitFileStatus;
       symbol: GitFileStatusSymbol;
     }[];
     unstaged: {
       name: string;
       path: string;
-      status: [HeadStatus, WorkdirStatus, StageStatus];
+      status: Status;
       type: GitFileStatus;
       symbol: GitFileStatusSymbol;
     }[];
@@ -523,7 +524,7 @@ async function containsLegacyInsomniaDir({ fsClient }: { fsClient: PromiseFsClie
  * @returns Object containing changes made during migration or errors
  */
 async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: PromiseFsClient; projectId: string }) {
-  const changes: { path: string; status: [HeadStatus, WorkdirStatus, StageStatus] }[] = [];
+  const changes: { path: string; status: Status }[] = [];
   try {
     // Check if the legacy .insomnia directory exists
     const legacyInsomniaFolderStat = await fsClient.promises.lstat(GIT_INSOMNIA_DIR_NAME);
