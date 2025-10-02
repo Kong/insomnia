@@ -20,7 +20,7 @@ import { filterClientCertificates } from '../../network/certificate';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
-import { insecureReadFile } from '../secure-read-file';
+import { insecureReadFile, secureReadFile } from '../secure-read-file';
 
 export interface SocketIOpenEvent {
   _id: string;
@@ -568,7 +568,7 @@ const findMany = async (options: { responseId: string }): Promise<SocketIOEvent[
   if (!response || !response.eventLogPath) {
     return [];
   }
-  const body = await fs.promises.readFile(response.eventLogPath);
+  const body = await secureReadFile(response.eventLogPath);
   return (
     body
       .toString()
