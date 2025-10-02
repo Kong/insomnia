@@ -121,7 +121,7 @@ export const Gemini = ({
         <Button
           isDisabled={!hasChanges || isLoadingModels || !selectedModel || !availableModels.length}
           onClick={() => {
-            saveLLMSettings(true, 'gemini', { model: selectedModel });
+            saveLLMSettings(true, 'gemini', { model: selectedModel, apiKey });
           }}
           className="border-md rounded-md border border-solid border-[--hl-md] px-4 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]"
         >
