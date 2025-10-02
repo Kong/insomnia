@@ -8,7 +8,7 @@ import * as models from '../models';
 
 const LLM_PLUGIN_NAME = 'insomnia-llm';
 
-export type LLMBackend = 'gguf' | 'claude' | 'openai';
+export type LLMBackend = 'gguf' | 'claude' | 'openai' | 'gemini';
 
 export interface LLMConfig {
   backend: LLMBackend;
@@ -88,7 +88,7 @@ export const updateBackendConfig = async (backend: LLMBackend, config: Partial<L
 };
 
 export const getAllConfigurations = async (): Promise<LLMConfig[]> => {
-  const backends: LLMBackend[] = ['gguf', 'claude', 'openai'];
+  const backends: LLMBackend[] = ['gguf', 'claude', 'openai', 'gemini'];
   const configs = await Promise.all(
     backends.map(
       async backend =>
