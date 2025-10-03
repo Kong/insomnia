@@ -15,6 +15,8 @@
 import { parse, stringify } from 'yaml';
 
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
+import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
+import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
 
 import * as models from '../models';
 import type { ApiSpec } from '../models/api-spec';
@@ -62,14 +64,12 @@ function mapHeaders(headers?: RequestHeader[]) {
     return [];
   }
 
-  return headers
-    .map(header => ({
-      name: header.name || '',
-      value: header.value || '',
-      description: header.description,
-      disabled: header.disabled,
-    }))
-    .filter(header => header.name && header.value);
+  return headers.map(header => ({
+    name: header.name || '',
+    value: header.value || '',
+    description: header.description,
+    disabled: header.disabled,
+  }));
 }
 
 /**
@@ -84,16 +84,14 @@ function mapParameters(parameters?: RequestParameter[]) {
     return [];
   }
 
-  return parameters
-    .map(param => ({
-      name: param.name || '',
-      value: param.value || '',
-      description: param.description,
-      disabled: param.disabled,
-      type: param.type,
-      multiline: param.multiline,
-    }))
-    .filter(param => param.name && param.value);
+  return parameters.map(param => ({
+    name: param.name || '',
+    value: param.value || '',
+    description: param.description,
+    disabled: param.disabled,
+    type: param.type,
+    multiline: param.multiline,
+  }));
 }
 
 /**
@@ -617,7 +615,9 @@ function getCollection(
 }
 
 function importData(rawData: string) {
-  const file = InsomniaFileSchema.parse(parse(rawData));
+  // Apply schema migration before parsing to handle older schema versions
+  const migratedData = migrateToLatestYaml(rawData);
+  const file = InsomniaFileSchema.parse(parse(migratedData));
 
   if (file.type === 'collection.insomnia.rest/5.0') {
     return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
@@ -694,7 +694,6 @@ export async function getInsomniaV5DataExport({
   try {
     const workspace = await models.workspace.getById(workspaceId);
 
-    console.log({ workspace });
     if (!workspace) {
       throw new Error('Workspace not found');
     }
@@ -1018,6 +1017,7 @@ export async function getInsomniaV5DataExport({
     if (workspace.scope === 'collection') {
       const collection: InsomniaFile = {
         type: 'collection.insomnia.rest/5.0',
+        schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
         meta: mapWorkspaceMeta(workspace),
         collection: getCollectionFromResources(
@@ -1044,6 +1044,7 @@ export async function getInsomniaV5DataExport({
     } else if (workspace.scope === 'design') {
       const spec: InsomniaFile = {
         type: 'spec.insomnia.rest/5.0',
+        schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
         meta: mapWorkspaceMeta(workspace),
         collection: getCollectionFromResources(
@@ -1075,6 +1076,7 @@ export async function getInsomniaV5DataExport({
     } else if (workspace.scope === 'environment') {
       const environment: InsomniaFile = {
         type: 'environment.insomnia.rest/5.0',
+        schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
         meta: mapWorkspaceMeta(workspace),
         environments: getEnvironmentsFromResources(
@@ -1091,6 +1093,7 @@ export async function getInsomniaV5DataExport({
 
       const mockServer: InsomniaFile = {
         type: 'mock.insomnia.rest/5.0',
+        schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
         meta: mapWorkspaceMeta(workspace),
         server: {

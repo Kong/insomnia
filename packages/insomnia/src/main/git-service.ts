@@ -39,6 +39,7 @@ import {
 } from '../common/constants';
 import { database } from '../common/database';
 import { InsomniaFileSchema } from '../common/import-v5-parser';
+import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import * as models from '../models';
 import type { GitRepository } from '../models/git-repository';
@@ -748,7 +749,10 @@ export const initGitRepoCloneAction = async ({
   const files = await Promise.all(
     insomniaFiles.map(async file => {
       const fileContents = await inMemoryFsClient.promises.readFile(path.join(GIT_CLONE_DIR, file), 'utf8');
-      const insomniaFile = InsomniaFileSchema.parse(YAML.parse(fileContents));
+
+      // Apply schema migration before parsing to handle older schema versions
+      const migratedContents = migrateToLatestYaml(fileContents);
+      const insomniaFile = InsomniaFileSchema.parse(YAML.parse(migratedContents));
 
       return {
         scope: insomniaSchemaTypeToScope(insomniaFile.type),

@@ -15,6 +15,8 @@
 
 import { z } from 'zod/v4';
 
+import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
+
 // This uses zod in order to ensure the parsed input matches our types before we insert it into the database
 
 // Basic literal types that can appear in JSON data
@@ -524,6 +526,7 @@ const SpecSchema = z.union([
 
 const CollectionSchema = z.object({
   type: z.literal('collection.insomnia.rest/5.0'),
+  schema_version: z.string().optional().default(INSOMNIA_SCHEMA_VERSION),
   name: z.string().optional(),
   meta: MetaSchema.optional(),
   collection: RequestCollectionSchema.optional(),
@@ -534,6 +537,7 @@ const CollectionSchema = z.object({
 
 export const ApiSpecSchema = z.object({
   type: z.literal('spec.insomnia.rest/5.0'),
+  schema_version: z.string().optional().default(INSOMNIA_SCHEMA_VERSION),
   name: z.string().optional(),
   meta: MetaSchema.optional(),
   collection: RequestCollectionSchema.optional(),
@@ -546,6 +550,7 @@ export const ApiSpecSchema = z.object({
 
 export const MockServerSchema = z.object({
   type: z.literal('mock.insomnia.rest/5.0'),
+  schema_version: z.string().optional().default(INSOMNIA_SCHEMA_VERSION),
   name: z.string().optional(),
   meta: MetaSchema.optional(),
   server: z
@@ -560,6 +565,7 @@ export const MockServerSchema = z.object({
 
 const GlobalEnvironmentsSchema = z.object({
   type: z.literal('environment.insomnia.rest/5.0'),
+  schema_version: z.string().optional().default(INSOMNIA_SCHEMA_VERSION),
   name: z.string().optional(),
   meta: MetaSchema.optional(),
   environments: EnvironmentSchema.optional(),
