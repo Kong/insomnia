@@ -867,6 +867,17 @@ export const GitProjectStagingModal: FC<{
   const generateCommitsFetcher = useAIGenerateActionFetcher({ key: commitGenerationKey.toString() });
   const isGeneratingCommits = generateCommitsFetcher.state !== 'idle';
 
+  useEffect(() => {
+    if (
+      undoUnstagedChangesFetcher.data &&
+      'success' in undoUnstagedChangesFetcher.data &&
+      undoUnstagedChangesFetcher.data.success &&
+      allChangesLength === 0
+    ) {
+      onClose();
+    }
+  }, [allChangesLength, onClose, undoUnstagedChangesFetcher.data]);
+
   return (
     <>
       <ModalOverlay
