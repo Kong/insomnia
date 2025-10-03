@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import type { Change } from 'diff';
 import { diffLines } from 'diff';
 import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
@@ -73,13 +74,6 @@ export enum GitFileType {
 }
 
 export type GitFileStatusSymbol = 'U' | 'A' | 'M' | 'D' | '-';
-
-export interface DiffChange {
-  count: number;
-  value: string;
-  added?: boolean;
-  removed?: boolean;
-}
 
 interface FileStatus {
   type: GitFileStatus;
@@ -570,8 +564,8 @@ export class GitVCS {
       workdir: { name: string; status: git.WorkdirStatus };
       stage: { name: string; status: git.StageStatus };
       classification: { type: GitFileStatus; symbol: GitFileStatusSymbol };
-      stagedDiff?: DiffChange[];
-      unstagedDiff?: DiffChange[];
+      stagedDiff?: Change[];
+      unstagedDiff?: Change[];
     }[] = await git.walk({
       ...baseOpts,
       trees: [
@@ -683,8 +677,8 @@ export class GitVCS {
         const stageContent = stageBlob ? Buffer.from(stageBlob).toString('utf-8') : '';
 
         // Calculate staged and unstaged diffs separately using diffLines
-        let stagedDiff: DiffChange[] | undefined;
-        let unstagedDiff: DiffChange[] | undefined;
+        let stagedDiff: Change[] | undefined;
+        let unstagedDiff: Change[] | undefined;
 
         // Check for staged changes (HEAD vs Stage)
         if (result[0] !== result[2]) {
