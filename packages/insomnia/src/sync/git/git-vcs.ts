@@ -8,6 +8,7 @@ import { parse, stringify } from 'yaml';
 import type { GitAuthor, GitCredentials, GitRemoteConfig } from '~/models/git-repository';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 
+import { hasSignificantChanges } from '../../common/significant-diff-detection';
 import { type MergeConflict, RESOLUTION_SOURCE } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
@@ -21,6 +22,10 @@ export type GitHash = string;
 
 export type GitRef = GitHash | string;
 
+export type HeadStatus = git.HeadStatus;
+export type WorkdirStatus = git.WorkdirStatus;
+export type StageStatus = git.StageStatus;
+export type Status = [HeadStatus, WorkdirStatus, StageStatus];
 export interface GitTimestamp {
   timezoneOffset: number;
   timestamp: number;
@@ -36,6 +41,14 @@ export interface GitLogEntry {
     parent: GitRef[];
   };
   payload: string;
+}
+
+export interface GitStatusWithIntelligentDiff {
+  filepath: string;
+  head: { name: string; status: HeadStatus };
+  workdir: { name: string; status: WorkdirStatus };
+  stage: { name: string; status: StageStatus };
+  includesSignificantChanges: boolean;
 }
 
 interface InitOptions {
@@ -416,9 +429,9 @@ export class GitVCS {
     // Adopted from statusMatrix of isomorphic-git https://github.com/isomorphic-git/isomorphic-git/blob/main/src/api/statusMatrix.js#L157
     const status: {
       filepath: string;
-      head: { name: string; status: git.HeadStatus };
-      workdir: { name: string; status: git.WorkdirStatus };
-      stage: { name: string; status: git.StageStatus };
+      head: { name: string; status: HeadStatus };
+      workdir: { name: string; status: WorkdirStatus };
+      stage: { name: string; status: StageStatus };
     }[] = await git.walk({
       ...baseOpts,
       trees: [
@@ -842,6 +855,65 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
 
     return diff;
   }
+  /**
+   * Enhanced status method that includes intelligent diff analysis
+   *
+   * This method extends the regular statusWithContent() to include intelligent
+   * change detection that can distinguish between meaningful changes and
+   * cosmetic changes like property reordering or timestamp updates.
+   *
+   * @returns Promise<GitStatusWithIntelligentDiff[]> Array of status objects with intelligent diff analysis
+   */
+  async statusWithIntelligentDiff(): Promise<GitStatusWithIntelligentDiff[]> {
+    // Get the regular status first
+    const status = await this.filesStatus();
+
+    // Enhance each status entry with intelligent diff analysis
+    const enhancedStatus = await Promise.all(
+      status.map(async entry => {
+        const { filepath, head, workdir, stage } = entry;
+
+        // Only analyze files that have changes and are YAML files
+        const hasChanges = head.status !== workdir.status || workdir.status !== stage.status;
+
+        const isYamlFile = path.extname(filepath) === '.yaml';
+
+        if (!hasChanges || !isYamlFile) {
+          return {
+            ...entry,
+            includesSignificantChanges: hasChanges,
+          };
+        }
+
+        try {
+          // Get the actual file content for comparison
+          const fileStatus = await this.fileStatus(filepath);
+
+          if (!fileStatus.head || !fileStatus.workdir) {
+            return {
+              ...entry,
+              includesSignificantChanges: hasChanges,
+            };
+          }
+
+          // Analyze the changes using intelligent diff detection
+          const includesSignificantChanges = hasSignificantChanges(fileStatus.head, fileStatus.workdir, filepath);
+
+          return {
+            ...entry,
+            includesSignificantChanges,
+          };
+        } catch (error) {
+          return {
+            ...entry,
+            includesSignificantChanges: hasChanges,
+          };
+        }
+      }),
+    );
+
+    return enhancedStatus;
+  }
 
   classifyStatus(head: git.StageStatus, workdir: git.WorkdirStatus, stage: git.StageStatus): FileStatus {
     // Untracked
@@ -886,23 +958,32 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
   async status(): Promise<{
     staged: {
       path: string;
-      status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus];
+      status: Status;
       name: string;
       type: GitFileStatus;
       symbol: GitFileStatusSymbol;
     }[];
     unstaged: {
       path: string;
-      status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus];
+      status: Status;
       name: string;
       type: GitFileStatus;
       symbol: GitFileStatusSymbol;
     }[];
   }> {
-    const status = await this.filesStatus();
+    const status = await this.statusWithIntelligentDiff();
 
-    const unstagedChanges = status.filter(({ workdir, stage }) => stage.status !== workdir.status);
-    const stagedChanges = status.filter(({ head, stage }) => stage.status !== head.status);
+    // Filter unstaged changes: files that have differences between working directory and staging area
+    // AND have significant changes (not just cosmetic changes like timestamps or ID updates)
+    const unstagedChanges = status.filter(
+      ({ workdir, stage, includesSignificantChanges }) => stage.status !== workdir.status && includesSignificantChanges,
+    );
+
+    // Filter staged changes: files that have differences between HEAD and staging area
+    // AND have significant changes (not just cosmetic changes like timestamps or ID updates)
+    const stagedChanges = status.filter(
+      ({ head, stage, includesSignificantChanges }) => stage.status !== head.status && includesSignificantChanges,
+    );
 
     return {
       staged: stagedChanges.map(({ filepath, head, workdir, stage }) => {
@@ -1740,7 +1821,7 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
     return true;
   }
 
-  async stageChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+  async stageChanges(changes: { path: string; status: Status }[]) {
     for (const change of changes) {
       if (change.status[1] === 0) {
         await git.remove({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) });
@@ -1750,14 +1831,14 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
     }
   }
 
-  async unstageChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+  async unstageChanges(changes: { path: string; status: Status }[]) {
     for (const change of changes) {
       await git.resetIndex({ ...this._baseOpts, filepath: change.path });
     }
   }
 
   async discardChanges(
-    changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[],
+    changes: { path: string; status: Status }[],
     options?: { discardStaged?: boolean; discardUnstaged?: boolean },
   ) {
     for (const change of changes) {
