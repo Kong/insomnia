@@ -5,6 +5,7 @@ import { diffLines } from 'diff';
 import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
+import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import type { GitAuthor, GitCredentials, GitRemoteConfig } from '~/models/git-repository';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 
@@ -413,11 +414,17 @@ export class GitVCS {
       },
     });
 
+    // Perform data migrations for existing projects (if applicable)
+    // to ensure users who haven’t pulled the latest changes can still
+    // view the migrated data correctly in the diff view.
+    const cleanedHead = migrateToLatestYaml(blobs[1]);
+    const cleanedStage = migrateToLatestYaml(blobs[3]);
+
     // Build a diff object for easier access
     const diff = {
-      head: blobs[1], // Content from HEAD (last commit)
+      head: cleanedHead, // Content from HEAD (last commit)
       workdir: blobs[2], // Content from working directory
-      stage: blobs[3], // Content from staging area (index)
+      stage: cleanedStage, // Content from staging area (index)
     };
 
     return diff;
