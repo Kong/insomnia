@@ -16,6 +16,7 @@ import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
+import { showError } from '~/ui/components/modals';
 import { showToast } from '~/ui/components/toast-notification';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
@@ -315,9 +316,22 @@ function showMockServerToast(error: string | undefined, mockServerName: string, 
         title: 'Mock server creation partially failed',
         description: (
           <>
-            <a href={mockServerUrl} style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}>
-              "{mockServerName}" has been created, but mock server routes could not be fully populated from the spec.
-              Error: {error}. Click to open.
+            <div style={{ marginBottom: '8px' }}>
+              <a href={mockServerUrl} style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}>
+                "{mockServerName}" has been created, but mock server routes could not be fully populated from the spec.
+              </a>
+            </div>
+            <a
+              onClick={(e) => {
+                e.preventDefault();
+                showError({
+                  title: 'Mock Route Generation Error',
+                  message: error,
+                });
+              }}
+              style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}
+            >
+              Click to view full error details.
             </a>
           </>
         ),
