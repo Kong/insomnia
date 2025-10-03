@@ -28,6 +28,7 @@ describe('getInsomniaV5DataExport', () => {
     const result = await getInsomniaV5DataExport({ workspaceId: 'wrk_id', includePrivateEnvironments: false });
 
     expect(result).toEqual(`type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: Workspace Name
 meta:
   id: wrk_id
