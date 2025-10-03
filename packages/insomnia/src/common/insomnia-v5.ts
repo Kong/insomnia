@@ -64,12 +64,14 @@ function mapHeaders(headers?: RequestHeader[]) {
     return [];
   }
 
-  return headers.map(header => ({
-    name: header.name || '',
-    value: header.value || '',
-    description: header.description,
-    disabled: header.disabled,
-  }));
+  return headers
+    .map(header => ({
+      name: header.name || '',
+      value: header.value || '',
+      description: header.description,
+      disabled: header.disabled,
+    }))
+    .filter(header => header.name || header.value);
 }
 
 /**
@@ -84,14 +86,16 @@ function mapParameters(parameters?: RequestParameter[]) {
     return [];
   }
 
-  return parameters.map(param => ({
-    name: param.name || '',
-    value: param.value || '',
-    description: param.description,
-    disabled: param.disabled,
-    type: param.type,
-    multiline: param.multiline,
-  }));
+  return parameters
+    .map(param => ({
+      name: param.name || '',
+      value: param.value || '',
+      description: param.description,
+      disabled: param.disabled,
+      type: param.type,
+      multiline: param.multiline,
+    }))
+    .filter(param => param.name || param.value);
 }
 
 /**
