@@ -25,7 +25,7 @@ interface IntelligentDiffConfig {
  * - Ignores specific keys only when they appear under specific parents.
  */
 const DEFAULT_CONFIG: IntelligentDiffConfig = {
-  ignoreKeys: [],
+  ignoreKeys: ['schema_version'],
   scopedIgnore: {
     parameters: ['id'],
     headers: ['id'],
