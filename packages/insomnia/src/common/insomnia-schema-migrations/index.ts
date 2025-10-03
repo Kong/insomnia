@@ -2,7 +2,7 @@ import { parse, stringify } from 'yaml';
 
 import type { InsomniaFile } from '~/common/import-v5-parser';
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
-import { removeScopedIdsFromYaml } from '~/common/insomnia-schema-migrations/v5.1';
+import { cleanHeadersAndParameters } from '~/common/insomnia-schema-migrations/v5.1';
 
 interface Migration<T> {
   version: string;
@@ -43,7 +43,7 @@ function getVersionFromParsed(parsed: InsomniaFile): string {
 const migrations: Migration<any>[] = [
   {
     version: '5.1',
-    up: removeScopedIdsFromYaml,
+    up: cleanHeadersAndParameters,
   },
   // ...add more migrations as needed
 ];
