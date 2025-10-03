@@ -978,22 +978,6 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
     return git.commit({ ...this._baseOpts, message });
   }
 
-  async stash({
-    message,
-    operation,
-  }: {
-    message?: string;
-    operation: 'apply' | 'pop' | 'push' | 'clear' | 'drop' | 'list';
-  }) {
-    console.log(`[git] Stash "${message || ''}"`);
-
-    await git.stash({
-      ...this._baseOpts,
-      message: message || '',
-      op: operation || 'push',
-    });
-  }
-
   /**
    * Check to see whether remote is different than local. This is here because
    * when pushing with isomorphic-git, if the HEAD of local is equal the HEAD
