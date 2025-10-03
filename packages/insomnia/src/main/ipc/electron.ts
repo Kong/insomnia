@@ -25,6 +25,7 @@ export type HandleChannels =
   | 'backup'
   | 'cancelAuthorizationInDefaultBrowser'
   | 'generateMockRouteDataFromSpec'
+  | 'generateCommitsFromDiff'
   | 'curl.event.findMany'
   | 'curl.open'
   | 'curl.readyState'

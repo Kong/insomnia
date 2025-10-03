@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import type { MockRouteData } from '@kong/insomnia-plugin-ai';
+import type { generateCommitsFromDiff, MockRouteData, ModelConfig } from '@kong/insomnia-plugin-ai';
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 import chardet from 'chardet';
 import type { MarkerRange } from 'codemirror';
@@ -18,7 +18,7 @@ import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
-import type { LLMConfigServiceAPI } from '~/main/llm-config-service';
+import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
@@ -125,6 +125,12 @@ export interface RendererToMainBridgeAPI {
     useDynamicMockResponses: boolean,
     mockServerAdditionalFiles: string[],
   ) => Promise<{ error: string; routes: MockRouteData[] }>;
+  generateCommitsFromDiff: (
+    input: Parameters<typeof generateCommitsFromDiff>[0],
+  ) => Promise<
+    | { commits: Awaited<ReturnType<typeof generateCommitsFromDiff>>; error: undefined }
+    | { commits: undefined; error: string }
+  >;
 }
 
 export function registerMainHandlers() {
@@ -396,4 +402,21 @@ export function registerMainHandlers() {
       });
     },
   );
+
+  ipcMainHandle('generateCommitsFromDiff', async (_, input) => {
+    try {
+      const { generateCommitsFromDiff } = await import('@kong/insomnia-plugin-ai');
+      const modelConfig = (await getCurrentConfig()) as ModelConfig | null;
+      if (!modelConfig) {
+        throw new Error('No LLM model configured');
+      }
+
+      const commits = await generateCommitsFromDiff(input, modelConfig);
+      return { commits };
+    } catch (error) {
+      const errorMessage = 'Failed to create commits from diff: ' + error;
+      console.error(errorMessage);
+      return { error: errorMessage };
+    }
+  });
 }

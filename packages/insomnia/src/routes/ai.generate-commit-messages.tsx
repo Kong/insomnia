@@ -1,19 +1,9 @@
 import { href } from 'react-router';
-import { z } from 'zod/v4';
 
 import { showToast } from '~/ui/components/toast-notification';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/ai.generate-commit-messages';
-
-const GeneratedCommitsSchema = z.object({
-  commits: z.array(
-    z.object({
-      message: z.string(),
-      files: z.array(z.string()),
-    }),
-  ),
-});
 
 export async function clientAction(args: Route.ClientActionArgs) {
   const { projectId } = (await args.request.json()) as { projectId: string };
@@ -30,24 +20,16 @@ export async function clientAction(args: Route.ClientActionArgs) {
     console.log('Diff for AI:\n', diff);
 
     const { log } = await window.main.git.gitLogLoader({ projectId });
-    const generatedCommitsResponse = await fetch('http://localhost:3000/generate-commit-message', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        diff,
-        recent_commits: log
-          .slice(0, 5)
-          .map(({ commit }) => commit.message)
-          .join('\n'),
-      }),
+
+    const { error, commits } = await window.main.generateCommitsFromDiff({
+      diff,
+      recent_commits: log
+        .slice(0, 5)
+        .map(({ commit }) => commit.message)
+        .join('\n'),
     });
 
-    const result = await generatedCommitsResponse.json();
-
-    const parsedResult = GeneratedCommitsSchema.safeParse(result);
-    if (!parsedResult.success) {
+    if (error || !commits) {
       showToast({
         title: 'Failed to generate commit messages',
         icon: 'star',
@@ -60,7 +42,7 @@ export async function clientAction(args: Route.ClientActionArgs) {
     }
 
     return {
-      commits: parsedResult.data.commits.map(commit => ({
+      commits: commits.map(commit => ({
         id: crypto.randomUUID(),
         ...commit,
       })),

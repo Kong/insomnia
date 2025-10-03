@@ -210,6 +210,8 @@ const main: Window['main'] = {
       useDynamicMockResponses,
       mockServerAdditionalFiles,
     ),
+  generateCommitsFromDiff: (input: { diff: string; recent_commits: string }) =>
+    ipcRenderer.invoke('generateCommitsFromDiff', input),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {
