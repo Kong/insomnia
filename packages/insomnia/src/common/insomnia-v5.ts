@@ -190,17 +190,34 @@ function mapBody(body?: RequestBody) {
 /**
  * Helper function to check if a value should be considered empty
  * Used to filter out null, undefined, and empty objects from export data
+ * Special handling for folder structures to preserve empty folders
  *
  * @param value - The value to check
  * @returns true if the value is not empty, false otherwise
  */
 function filterEmptyValue(value: string | number | boolean | null | undefined) {
-  return value !== null && value !== undefined && !(typeof value === 'object' && Object.keys(value).length === 0);
+  if (value === null || value === undefined) {
+    return false;
+  }
+
+  // Special case: preserve folder structures even if they appear empty
+  // This ensures empty folders are not removed during export
+  if (typeof value === 'object' && value !== null) {
+    // If it has a 'type' field (indicating it's a folder/workspace structure), preserve it
+    if ('type' in value && typeof (value as any).type === 'string') {
+      return true;
+    }
+    // Otherwise, check if it has any non-empty properties
+    return Object.keys(value).length > 0;
+  }
+
+  return true;
 }
 
 /**
  * Recursively removes empty fields from an object or array
  * This is used to clean up export data by removing null, undefined, and empty objects
+ * Special handling for folder structures to preserve empty children arrays
  *
  * @param data - The data structure to clean
  * @returns Cleaned data with empty fields removed, or undefined if all fields are empty
@@ -212,7 +229,13 @@ function removeEmptyFields(data: any): any {
   } else if (data && typeof data === 'object') {
     const object = Object.fromEntries(
       Object.entries(data)
-        .map(([key, value]) => [key, removeEmptyFields(value)])
+        .map(([key, value]) => {
+          // Special case: preserve empty children arrays for folder structures
+          if (key === 'children' && Array.isArray(value) && value.length === 0) {
+            return [key, value]; // Keep empty children array
+          }
+          return [key, removeEmptyFields(value)];
+        })
         .filter(([, value]) => value !== undefined),
     );
 
