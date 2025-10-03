@@ -1849,11 +1849,28 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
     options?: { discardStaged?: boolean; discardUnstaged?: boolean },
   ) {
     for (const change of changes) {
-      // If the file didn't exist in HEAD, remove it
+      // If the file didn't exist in HEAD, handle based on staging status
       if (change.status[0] === 0) {
-        await git.remove({ ...this._baseOpts, filepath: change.path });
-        // @ts-expect-error -- TSCONVERSION
-        await this._baseOpts.fs.promises.unlink(change.path);
+        // Check if the file is staged (stage status = 2 or 3)
+        const isStaged = change.status[2] === 2 || change.status[2] === 3;
+
+        if (options?.discardUnstaged) {
+          if (isStaged) {
+            // File is staged, restore staged content to workdir
+            const { stage } = await this.fileStatus(change.path);
+            if (stage !== null) {
+              // @ts-expect-error -- TSCONVERSION
+              await this._baseOpts.fs.promises.writeFile(change.path, stage, 'utf8');
+            }
+          } else {
+            // File is not staged, remove it
+            await git.remove({ ...this._baseOpts, filepath: change.path });
+            // @ts-expect-error -- TSCONVERSION
+            await this._baseOpts.fs.promises.unlink(change.path);
+          }
+        }
+        // If we're only discarding unstaged changes and the file is staged, do nothing
+        // This preserves staged files/folders
       } else {
         // Discard staged changes only
         if (options?.discardStaged) {
@@ -1886,14 +1903,28 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
           continue;
         }
 
-        // Default: discard both (current behavior)
+        // Default: discard unstaged only (conservative approach)
         if (!options?.discardStaged && !options?.discardUnstaged) {
-          await git.checkout({
-            ...this._baseOpts,
-            force: true,
-            ref: await this.getCurrentBranch(),
-            filepaths: [convertToPosixSep(change.path)],
-          });
+          // Only discard unstaged changes by default
+          // Restore workdir from index (staged version)
+          const statusMatrix = await git.statusMatrix({ ...this._baseOpts });
+          const row = statusMatrix.find(([filepath]) => filepath === change.path);
+          if (row) {
+            const [, , , stageStatusCode] = row;
+            if (stageStatusCode !== 0) {
+              // Get staged blob content
+              const index = await git.listFiles({ ...this._baseOpts });
+              if (index.includes(change.path)) {
+                // Use fileStatus logic to get staged content:
+                const { stage } = await this.fileStatus(change.path);
+                if (stage !== null) {
+                  // Write staged content to workdir
+                  // @ts-expect-error -- TSCONVERSION
+                  await this._baseOpts.fs.promises.writeFile(change.path, stage, 'utf8');
+                }
+              }
+            }
+          }
         }
       }
     }
