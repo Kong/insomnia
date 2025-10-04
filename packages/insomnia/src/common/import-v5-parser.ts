@@ -524,7 +524,7 @@ const SpecSchema = z.union([
   }),
 ]);
 
-const CollectionSchema = z.object({
+export const CollectionSchema = z.object({
   type: z.literal('collection.insomnia.rest/5.0'),
   schema_version: z.string().optional().default(INSOMNIA_SCHEMA_VERSION),
   name: z.string().optional(),
