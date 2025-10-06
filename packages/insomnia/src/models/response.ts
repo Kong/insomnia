@@ -2,8 +2,6 @@ import fs from 'node:fs';
 import type { Readable } from 'node:stream';
 import zlib from 'node:zlib';
 
-import { secureReadFile } from '~/main/secure-read-file';
-
 import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import { database as db } from '../common/database';
 import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
@@ -236,7 +234,8 @@ export const getBodyBuffer = async (
     return Buffer.alloc(0);
   }
   try {
-    const rawBuffer = await secureReadFile(response?.bodyPath);
+    // TODO: unpick theis read buffer so it can be used as a simple string reader
+    const rawBuffer = await fs.promises.readFile(response?.bodyPath);
     if (response?.bodyCompression === 'zip') {
       return new Promise((resolve, reject) =>
         zlib.gunzip(rawBuffer, (err, buffer) => (err ? reject(err) : resolve(buffer))),

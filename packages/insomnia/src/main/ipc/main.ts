@@ -66,12 +66,9 @@ export interface RendererToMainBridgeAPI {
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
+  secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFileWithEncoding: (options: {
-    path: string;
-    encoding?: string;
-  }) => Promise<{ content: string; encoding: string; error: string | undefined }>;
-  secureReadFile: (options: {
     path: string;
     encoding?: string;
   }) => Promise<{ content: string; encoding: string; error: string | undefined }>;
@@ -211,14 +208,13 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('insecureReadFileWithEncoding', async (_, options: { path: string; encoding: string }) => {
     try {
-      const defaultEncoding = 'utf8';
       const contentBuffer = await insecureReadFileWithEncoding(options.path, undefined);
       if (typeof contentBuffer === 'string') {
-        // return string directly
-        return { content: contentBuffer, encoding: defaultEncoding };
+        return { content: contentBuffer, encoding: 'utf8' };
       }
 
-      const { encoding } = options;
+      const encoding = options.encoding || (await chardet.detectFile(options.path));
+
       if (encoding) {
         if (iconv.encodingExists(encoding)) {
           const content = iconv.decode(contentBuffer, encoding);
@@ -226,19 +222,9 @@ export function registerMainHandlers() {
         }
         throw new Error(`Unsupported encoding: ${encoding} to read file`);
       }
-      // using chardet to detect encoding
-      const detecedEncoding = chardet.detect(contentBuffer);
-      if (detecedEncoding) {
-        if (iconv.encodingExists(detecedEncoding)) {
-          const content = iconv.decode(contentBuffer, detecedEncoding);
-          return { content, encoding: detecedEncoding };
-        }
-        throw new Error(`Unsupported encoding: ${detecedEncoding} to read file`);
-      }
-      // failed to detect encoding, use default utf-8 as fallback
       return {
-        content: iconv.decode(contentBuffer, defaultEncoding),
-        encoding: defaultEncoding,
+        content: iconv.decode(contentBuffer, 'utf8'),
+        encoding: 'utf8',
       };
     } catch (err) {
       return { content: '', encoding: '', error: err };
@@ -246,39 +232,7 @@ export function registerMainHandlers() {
   });
 
   ipcMainHandle('secureReadFile', async (_, options: { path: string; encoding?: string }) => {
-    try {
-      const defaultEncoding = 'utf8';
-      const contentBuffer = await secureReadFile(options.path);
-      if (typeof contentBuffer === 'string') {
-        // return string directly
-        return { content: contentBuffer, encoding: defaultEncoding };
-      }
-
-      const { encoding } = options;
-      if (encoding) {
-        if (iconv.encodingExists(encoding)) {
-          const content = iconv.decode(contentBuffer, encoding);
-          return { content, encoding };
-        }
-        throw new Error(`Unsupported encoding: ${encoding} to read file`);
-      }
-      // using chardet to detect encoding
-      const detecedEncoding = chardet.detect(contentBuffer);
-      if (detecedEncoding) {
-        if (iconv.encodingExists(detecedEncoding)) {
-          const content = iconv.decode(contentBuffer, detecedEncoding);
-          return { content, encoding: detecedEncoding };
-        }
-        throw new Error(`Unsupported encoding: ${detecedEncoding} to read file`);
-      }
-      // failed to detect encoding, use default utf-8 as fallback
-      return {
-        content: iconv.decode(contentBuffer, defaultEncoding),
-        encoding: defaultEncoding,
-      };
-    } catch (err) {
-      return { content: '', encoding: '', error: err };
-    }
+    return secureReadFile(options.path);
   });
 
   ipcMainHandle('readDir', async (_, options: { path: string }) => {

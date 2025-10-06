@@ -119,9 +119,8 @@ export default class BaseExtension {
             userInfo: os.userInfo(),
           };
         },
-        readFile: async (path: string, encoding = 'utf8') => {
-          const content = await secureReadFile(path);
-          return encoding === 'utf8' ? content.toString(encoding) : content;
+        readFile: async (path: string) => {
+          return secureReadFile(path);
         },
         decode: async (buffer: Buffer, encoding = 'utf8') => iconv.decode(buffer, encoding),
         encode: async (input: string, encoding: BinaryToTextEncoding) =>

@@ -611,7 +611,6 @@ const findMany = async (options: { responseId: string }): Promise<WebSocketEvent
   const body = await secureReadFile(response.eventLogPath);
   return (
     body
-      .toString()
       .split('\n')
       .filter(e => e?.trim())
       // Parse the message

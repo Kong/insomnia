@@ -118,7 +118,7 @@ If you want to create a self-hosted mock server route from a request response in
           e.preventDefault();
           if (selectedMockServer && selectedMockRoute) {
             if (activeResponse && 'bodyPath' in activeResponse) {
-              const { content: body } = await window.main.secureReadFile({
+              const body = await window.main.secureReadFile({
                 path: activeResponse.bodyPath,
               });
               const headersWithoutContentLength = activeResponse.headers.filter(

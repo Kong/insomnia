@@ -571,7 +571,6 @@ const findMany = async (options: { responseId: string }): Promise<SocketIOEvent[
   const body = await secureReadFile(response.eventLogPath);
   return (
     body
-      .toString()
       .split('\n')
       .filter(e => e?.trim())
       // Parse the message

@@ -128,7 +128,7 @@ const RealtimeActiveResponsePane: FC<{
       }
 
       // allow to read the file as it is chosen by user
-      const { content } = await window.main.secureReadFile({
+      const content = await window.main.secureReadFile({
         path: response.timelinePath,
       });
       const timelineParsed = deserializeNDJSON(content);

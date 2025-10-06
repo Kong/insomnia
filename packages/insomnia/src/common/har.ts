@@ -25,13 +25,13 @@ import { getRenderedRequestAndContext } from './render';
 
 const getDocWithDescendants =
   (includePrivateDocs = false) =>
-    async (parentDoc: BaseModel | null) => {
-      const docs = parentDoc ? await database.getWithDescendants(parentDoc) : [];
-      return docs.filter(
-        // Don't include if private, except if we want to
-        doc => !doc?.isPrivate || includePrivateDocs,
-      );
-    };
+  async (parentDoc: BaseModel | null) => {
+    const docs = parentDoc ? await database.getWithDescendants(parentDoc) : [];
+    return docs.filter(
+      // Don't include if private, except if we want to
+      doc => !doc?.isPrivate || includePrivateDocs,
+    );
+  };
 
 export async function exportWorkspacesHAR(workspaces: Workspace[], includePrivateDocs = false) {
   const promises = workspaces.map(getDocWithDescendants(includePrivateDocs));
@@ -344,7 +344,7 @@ export function getResponseCookiesFromHeaders(headers: Har.Cookie[]) {
 
     try {
       cookie = ToughCookie.parse(harCookie.value || '', { loose: true });
-    } catch (error) { }
+    } catch (error) {}
 
     if (cookie === null || cookie === undefined) {
       return accumulator;
@@ -444,10 +444,10 @@ async function getRequestPostData(renderedRequest: RenderedRequest): Promise<Har
   let body;
   if (renderedRequest.body.fileName) {
     try {
-      const text = (await window.main.secureReadFile({ path: renderedRequest.body.fileName })).content;
+      const text = await window.main.secureReadFile({ path: renderedRequest.body.fileName });
 
       body = {
-        text
+        text,
       };
     } catch (error) {
       console.warn('[code gen] Failed to read file', error);

@@ -274,7 +274,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           throw new Error('No file selected');
         }
 
-        return await context.util.readFile(path, 'utf8');
+        return await context.util.readFile(path);
       },
     },
   },

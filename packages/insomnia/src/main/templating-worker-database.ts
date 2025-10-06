@@ -67,8 +67,8 @@ const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
 
 // These are exposed to the templating worker and can be used by plugins from context.util
 const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
-  'readFile': async (body: { path: string; encoding: 'utf8' }) => {
-    return await secureReadFile(body.path, { encoding: body.encoding || 'utf8' });
+  'readFile': async (body: { path: string }) => {
+    return secureReadFile(body.path);
   },
   'nodeOS': async () => {
     return {
