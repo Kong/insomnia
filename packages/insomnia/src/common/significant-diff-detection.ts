@@ -12,7 +12,7 @@ import { parse } from 'yaml';
  *   scopedIgnore: {
  *     parameters: ["id"],   // ignore `id` under `parameters`
  *     headers: ["id"],      // ignore `id` under `headers`
- *     meta: ["id", "modified", "created"], // ignore these keys under `meta`
+ *     meta: ["modified", "created"], // ignore these keys under `meta`
  *   }
  */
 interface IntelligentDiffConfig {
