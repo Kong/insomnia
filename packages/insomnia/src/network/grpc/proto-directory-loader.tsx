@@ -35,12 +35,12 @@ export class ProtoDirectoryLoader {
     }
 
     // allow to read the file as it is chosen by user
-    const contents = await insecureReadFile(entryPath);
+    const protoText = await insecureReadFile(entryPath);
     const name = path.basename(entryPath);
     const { _id } = await models.protoFile.create({
       name,
       parentId,
-      protoText: contents.toString(),
+      protoText,
     });
     this.createdIds.push(_id);
     return true;

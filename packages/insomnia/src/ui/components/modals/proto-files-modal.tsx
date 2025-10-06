@@ -229,11 +229,11 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       return;
     }
     // allow to read the file as it is chosen by user
-    const { content } = await window.main.insecureReadFile({ path: filePath });
+    const protoText = await window.main.insecureReadFile({ path: filePath });
 
     const updatedFile = await models.protoFile.update(protoFile, {
       name: path.basename(filePath),
-      protoText: content,
+      protoText,
     });
     const impacted = await models.grpcRequest.findByProtoFileId(updatedFile._id);
     const requestIds = impacted.map(g => g._id);
@@ -284,12 +284,12 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       return;
     }
     // allow to read the file as it is chosen by user
-    const { content } = await window.main.insecureReadFile({ path: filePath });
+    const protoText = await window.main.insecureReadFile({ path: filePath });
 
     const newFile = await models.protoFile.create({
       name: path.basename(filePath),
       parentId: workspaceId,
-      protoText: content,
+      protoText,
     });
     setSelectedId(newFile._id);
   };

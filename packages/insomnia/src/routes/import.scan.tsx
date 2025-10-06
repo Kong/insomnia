@@ -82,7 +82,7 @@ export const scanImportResources = async (data: {
         const postmanArchiveFileContent = await window.main.insecureReadFile({
           path: postmanArchiveFile,
         });
-        postmanArchiveJsonData = JSON.parse(postmanArchiveFileContent.content);
+        postmanArchiveJsonData = JSON.parse(postmanArchiveFileContent);
       } catch (err) {
         return [
           {

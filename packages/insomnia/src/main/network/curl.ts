@@ -119,7 +119,7 @@ const openCurlConnection = async (
 
   const caCert = await models.caCertificate.findByParentId(options.workspaceId);
   const caCertficatePath = caCert?.path || null;
-  const caCertificate = caCertficatePath && (await insecureReadFile(caCertficatePath)).toString();
+  const caCertificate = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
   try {
     if (!options.url) {
@@ -375,7 +375,6 @@ const findMany = async (options: { responseId: string }): Promise<CurlEvent[]> =
   const body = await insecureReadFile(response.bodyPath);
   return (
     body
-      .toString()
       .split('\n')
       .filter(e => e?.trim())
       // Parse the message

@@ -109,9 +109,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
         rejectUnauthorized: settings.validateSSL,
         ...(activeRequest.url.toLowerCase().startsWith('grpcs:')
           ? {
-              clientCert: clientCert?.content,
-              clientKey: clientKey?.content,
-              caCertificate: caCertificate?.content,
+              clientCert: clientCert,
+              clientKey: clientKey,
+              caCertificate: caCertificate,
             }
           : {}),
       };
@@ -160,25 +160,22 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           rejectUnauthorized: settings.validateSSL,
           ...(request.url.toLowerCase().startsWith('grpcs:')
             ? {
-                clientCert: (clientCertificate?.cert
+                clientCert: clientCertificate?.cert
                   ? await window.main.insecureReadFile({
                       path: clientCertificate.cert,
                     })
-                  : undefined
-                )?.content,
-                clientKey: (clientCertificate?.key
+                  : undefined,
+                clientKey: clientCertificate?.key
                   ? await window.main.insecureReadFile({
                       path: clientCertificate.key,
                     })
-                  : undefined
-                )?.content,
+                  : undefined,
                 // allow to read the file as it is chosen by user
-                caCertificate: (caCertificatePath
+                caCertificate: caCertificatePath
                   ? await window.main.insecureReadFile({
                       path: caCertificatePath,
                     })
-                  : undefined
-                )?.content,
+                  : undefined,
               }
             : {}),
         });
@@ -317,9 +314,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                       rejectUnauthorized: settings.validateSSL,
                       ...(activeRequest.url.toLowerCase().startsWith('grpcs:')
                         ? {
-                            clientCert: clientCert?.content,
-                            clientKey: clientKey?.content,
-                            caCertificate: caCertificate?.content,
+                            clientCert: clientCert,
+                            clientKey: clientKey,
+                            caCertificate: caCertificate,
                           }
                         : {}),
                     };

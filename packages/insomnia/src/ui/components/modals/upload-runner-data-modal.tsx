@@ -113,7 +113,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
     }
     const filePath = window.webUtils.getPathForFile(file);
     try {
-      const { content, encoding } = await window.main.insecureReadFile({ path: filePath });
+      const { content, encoding } = await window.main.insecureReadFileWithEncoding({ path: filePath });
       setFileEncoding(encoding);
       parseFileContent(content, fileType);
     } catch (error) {
@@ -130,7 +130,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
       const filePath = window.webUtils.getPathForFile(file);
       const fileType = file.type;
       try {
-        const { content } = await window.main.insecureReadFile({
+        const { content } = await window.main.insecureReadFileWithEncoding({
           path: filePath,
           encoding: newEncoding,
         });

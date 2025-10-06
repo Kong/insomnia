@@ -76,6 +76,7 @@ export type HandleChannels =
   | 'readDir'
   | 'readFile'
   | 'insecureReadFile'
+  | 'insecureReadFileWithEncoding'
   | 'secureReadFile'
   | 'restoreBackup'
   | 'secretStorage.decryptString'

@@ -129,7 +129,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
         noDecompress = false,
       } = options;
       // allow reading the file as the caCert is chosen by user
-      const caCert = caCertficatePath && (await insecureReadFile(caCertficatePath)).toString();
+      const caCert = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
       const { curl, debugTimeline } = createConfiguredCurlInstance({
         req,
