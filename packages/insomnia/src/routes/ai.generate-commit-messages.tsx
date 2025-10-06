@@ -17,8 +17,6 @@ export async function clientAction(args: Route.ClientActionArgs) {
     }
     const diff = await window.main.git.diff();
 
-    console.log('Diff for AI:\n', diff);
-
     const { log } = await window.main.git.gitLogLoader({ projectId });
 
     const { error, commits } = await window.main.generateCommitsFromDiff({

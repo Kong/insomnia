@@ -103,7 +103,6 @@ const CommitSection = (props: {
   const { dragAndDropHooks } = useDragAndDrop({
     // Provide drag data in a custom format as well as plain text.
     getItems(keys) {
-      console.log('getItems', keys);
       const filesKeys = props.files
         .filter(item => keys.has(item.value.id))
         .map(item => {
@@ -112,8 +111,6 @@ const CommitSection = (props: {
             'text/plain': item.value.name,
           };
         });
-
-      console.log('filesKeys', filesKeys);
 
       return filesKeys;
     },
@@ -153,14 +150,6 @@ const CommitSection = (props: {
         props.commitsSections.moveAfter(e.target.key, e.keys);
       }
     },
-
-    // Remove the items from the source list on drop
-    // if they were moved to a different list.
-    // onDragEnd(e) {
-    //   if (e.dropOperation === 'move' && !e.isInternal) {
-    //     props.commitsSections.remove(...e.keys);
-    //   }
-    // },
   });
 
   return (
@@ -918,7 +907,6 @@ export const GitProjectStagingModal: FC<{
                   <div className="flex flex-1 flex-col gap-4 overflow-hidden">
                     <Button
                       onPress={() => {
-                        console.log('generateCommitsFetcher', generateCommitsFetcher);
                         if (generateCommitsFetcher.data && !('error' in generateCommitsFetcher.data)) {
                           setCommitGenerationKey(commitGenerationKey + 1);
                           return;
