@@ -2,8 +2,8 @@
 // Related issue https://github.com/JCMais/node-libcurl/issues/155
 import { invariant } from '../../utils/invariant';
 invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
-
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import type { Readable, Writable } from 'node:stream';
 import { parse as urlParse } from 'node:url';
@@ -160,7 +160,8 @@ export const curlRequest = (options: CurlRequestOptions) =>
       let requestFileDescriptor: number | undefined;
       const { authentication } = req;
       if (requestBodyPath) {
-        const allowList = [process.cwd(), userdataDirectory, ...settings.dataFolders];
+        const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
+        const allowList = [os.tmpdir(), process.cwd(), userdataDirectory, ...settings.dataFolders];
         const fullPath = path.resolve(requestBodyPath);
         const isAllowed = allowList.some(f => path.resolve(f) !== '' && fullPath.startsWith(path.resolve(f)));
         if (!isAllowed) {
@@ -276,7 +277,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
         }
         const patch = {
           statusMessage,
-          error: error || 'Something went wrong',
+          error: error || 'Something went wrong inside libcurl',
           elapsedTime,
         };
 
@@ -288,7 +289,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       console.error(error);
       const patch = {
         statusMessage: 'Error',
-        error: error.message || 'Something went wrong',
+        error: error.toString() || 'Something went wrong performing curl',
         elapsedTime: 0,
       };
       resolve({ patch, debugTimeline: [], headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });

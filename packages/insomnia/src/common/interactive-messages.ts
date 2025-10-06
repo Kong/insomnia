@@ -1,8 +1,8 @@
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
-const PREF_SECURITY = 'Insomnia’s Preferences → Security';
-
-const interactives = [{ text: PREF_SECURITY, handler: () => showSettingsModal({ tab: 'general' }) }];
+const interactives = [
+  { text: 'Insomnia’s Preferences → Security', handler: () => showSettingsModal({ tab: 'general' }) },
+];
 
 export function buildInteractiveMessage(message: string) {
   const parts = [];

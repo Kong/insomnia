@@ -171,7 +171,7 @@ const openCurlConnection = async (
             request._id,
             responseEnvironmentId,
             timelinePath,
-            error.message || 'Something went wrong',
+            error.message || 'Something went wrong creating curl response',
           );
         }
       }
@@ -293,13 +293,13 @@ const openCurlConnection = async (
   } catch (e) {
     console.error('unhandled error:', e);
 
-    deleteRequestMaps(request._id, e.message || 'Something went wrong');
+    deleteRequestMaps(request._id, e.message || 'Something went wrong opening curl connection');
     createErrorResponse(
       responseId,
       request._id,
       responseEnvironmentId,
       timelinePath,
-      e.message || 'Something went wrong',
+      e.message || 'Something went wrong creating curl connection',
     );
   }
 };
