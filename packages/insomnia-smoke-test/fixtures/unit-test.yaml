@@ -84,3 +84,4 @@ testSuites:
         code: |-
           const response1 = await insomnia.send();
           expect(response1.status).to.equal(404);
+schema_version: "5.1"

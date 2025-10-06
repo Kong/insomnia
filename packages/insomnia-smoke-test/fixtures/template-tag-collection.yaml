@@ -31,8 +31,7 @@ collection:
             {% request 'cookie', 'from', '' %}
 
         parameters:
-          - id: pair_10b0769f64bd47e5953e446085d801b1
-            name: foo
+          - name: foo
             value: bar
             disabled: false
         headers:
@@ -97,15 +96,10 @@ collection:
     method: GET
     body:
       mimeType: text/plain
-      text: >-
-        {% response 'body', 'req_60295920e8a9459fb32cacb739a261f5',
-        'b64::JC5tZXRob2Q=::46b', 'never', 60 %}
-
-        {% response 'header', 'req_60295920e8a9459fb32cacb739a261f5',
-        'b64::Y29udGVudC10eXBl::46b', 'never', 60 %}
-
-        {% response 'url', 'req_60295920e8a9459fb32cacb739a261f5', '', 'never',
-        60 %}
+      text: |-
+        {% response 'body', 'req_60295920e8a9459fb32cacb739a261f5', 'b64::JC5tZXRob2Q=::46b', 'never', 60 %}
+        {% response 'header', 'req_60295920e8a9459fb32cacb739a261f5', 'b64::Y29udGVudC10eXBl::46b', 'never', 60 %}
+        {% response 'url', 'req_60295920e8a9459fb32cacb739a261f5', '', 'never', 60 %}
     headers:
       - name: Content-Type
         value: text/plain
@@ -171,7 +165,7 @@ collection:
       cookies:
         send: true
         store: true
-      rebuildPath: true     
+      rebuildPath: true
   - url: http://127.0.0.1:4010/echo
     name: Base Response
     meta:
@@ -198,7 +192,7 @@ collection:
       cookies:
         send: true
         store: true
-      rebuildPath: true      
+      rebuildPath: true
 cookieJar:
   name: Default Jar
   meta:
@@ -221,3 +215,4 @@ environments:
     created: 1748314417145
     modified: 1748314417145
     isPrivate: false
+schema_version: "5.1"

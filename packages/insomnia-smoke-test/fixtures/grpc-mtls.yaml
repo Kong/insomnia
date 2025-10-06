@@ -31,6 +31,7 @@ collection:
     reflectionApi:
       enabled: false
       url: https://buf.build
+      apiKey: ""
       module: buf.build/connectrpc/eliza
 cookieJar:
   name: Default Jar
@@ -45,3 +46,4 @@ environments:
     created: 1732118001112
     modified: 1732118001112
     isPrivate: false
+schema_version: "5.1"

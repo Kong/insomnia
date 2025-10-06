@@ -62,3 +62,4 @@ environments:
     isPrivate: false
   data:
     srvr: https://localhost:4011
+schema_version: "5.1"

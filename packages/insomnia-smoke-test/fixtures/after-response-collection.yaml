@@ -160,7 +160,7 @@ collection:
       cookies:
         send: true
         store: true
-      rebuildPath: true  
+      rebuildPath: true
 cookieJar:
   name: Default Jar
   meta:
@@ -176,3 +176,4 @@ environments:
     isPrivate: false
   data:
     base_url: http://localhost:4010
+schema_version: "5.1"

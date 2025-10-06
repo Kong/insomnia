@@ -76,8 +76,7 @@ collection:
         send: true
         store: true
     headers:
-      - id: pair_d5c62785928d4cc3a09b297bfbb847f7
-        name: duration
+      - name: duration
         value: "5"
 cookieJar:
   name: Default Jar
@@ -92,3 +91,4 @@ environments:
     created: 1661942194375
     modified: 1661942194375
     isPrivate: false
+schema_version: "5.1"

@@ -418,3 +418,4 @@ environments:
       data:
         scope: collection_sub
         value: collection_sub
+schema_version: "5.1"

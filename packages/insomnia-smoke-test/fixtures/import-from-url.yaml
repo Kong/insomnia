@@ -79,3 +79,4 @@ environments:
       data:
         foo: bar
         current-env: staging
+schema_version: "5.1"

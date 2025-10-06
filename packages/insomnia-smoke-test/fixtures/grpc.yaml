@@ -31,6 +31,7 @@ collection:
         reflectionApi:
           enabled: false
           url: https://buf.build
+          apiKey: ""
           module: buf.build/connectrpc/eliza
       - url: localhost:50051
         name: UnaryWithOutProtoFile
@@ -49,6 +50,7 @@ collection:
         reflectionApi:
           enabled: false
           url: https://buf.build
+          apiKey: ""
           module: buf.build/connectrpc/eliza
       - url: localhost:50051
         name: Server Stream
@@ -75,6 +77,7 @@ collection:
         reflectionApi:
           enabled: false
           url: https://buf.build
+          apiKey: ""
           module: buf.build/connectrpc/eliza
       - url: localhost:50051
         name: Client Stream
@@ -95,6 +98,7 @@ collection:
         reflectionApi:
           enabled: false
           url: https://buf.build
+          apiKey: ""
           module: buf.build/connectrpc/eliza
       - url: localhost:50051
         name: Bidirectional Stream
@@ -118,6 +122,7 @@ collection:
         reflectionApi:
           enabled: false
           url: https://buf.build
+          apiKey: ""
           module: buf.build/connectrpc/eliza
 cookieJar:
   name: Default Jar
@@ -132,3 +137,4 @@ environments:
     created: 1635959595049
     modified: 1635959595049
     isPrivate: false
+schema_version: "5.1"

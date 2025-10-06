@@ -77,3 +77,4 @@ environments:
         exampleObject:
           anotherString: subenvB1
           anotherNumber: 2222
+schema_version: "5.1"

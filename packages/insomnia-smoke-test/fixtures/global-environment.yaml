@@ -24,3 +24,4 @@ environments:
       data:
         global-sub: 55555
         exampleString: globalenv1
+schema_version: "5.1"

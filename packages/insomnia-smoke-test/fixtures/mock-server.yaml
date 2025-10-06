@@ -14,8 +14,7 @@ routes:
       modified: 1707812450193
     body: '{"message":"welcome"}'
     headers:
-      - id: pair_b466a74db8ed40fcbbe8f84136f204f8
-        name: X-Mockbin-Test
+      - name: X-Mockbin-Test
         value: "true"
     method: GET
     mimeType: application/json
@@ -27,8 +26,7 @@ routes:
       modified: 1707812454502
     body: '{"uptime":12345678}'
     headers:
-      - id: pair_d0a6e2d6a3614e05943cf156e52134d8
-        name: X-Mockbin-Test
+      - name: X-Mockbin-Test
         value: test
     method: GET
     mimeType: application/json
@@ -42,3 +40,4 @@ routes:
     method: GET
     mimeType: application/json
     statusCode: 401
+schema_version: "5.1"

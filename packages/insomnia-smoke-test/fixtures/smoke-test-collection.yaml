@@ -41,8 +41,7 @@ collection:
       isPrivate: false
     method: GET
     headers:
-      - id: pair_4c3fe3092f1245eab6d960c633d8be9c
-        name: test
+      - name: test
         value: test
     settings:
       renderRequestBody: true
@@ -125,8 +124,7 @@ collection:
       isPrivate: false
     method: GET
     headers:
-      - id: pair_4c3fe3092f1245eab6d960c633d8be8c
-        name: Accept
+      - name: Accept
         value: text/event-stream
     settings:
       renderRequestBody: true
@@ -145,8 +143,7 @@ collection:
       isPrivate: false
     method: GET
     headers:
-      - id: pair_cbcd8bc34d494a3c83b29989d06cf005
-        name: Authorization
+      - name: Authorization
         value: Basic dXNlcjpwYXNz
         disabled: true
     authentication:
@@ -217,3 +214,4 @@ environments:
     isPrivate: false
   data:
     customValue: fromEnvManager
+schema_version: "5.1"
