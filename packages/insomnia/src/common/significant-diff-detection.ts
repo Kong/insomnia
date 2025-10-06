@@ -29,8 +29,7 @@ const DEFAULT_CONFIG: IntelligentDiffConfig = {
   scopedIgnore: {
     parameters: ['id'],
     headers: ['id'],
-    // @TODO check if we need to remove the id
-    meta: ['id', 'modified', 'created'],
+    meta: ['modified', 'created'],
   },
 };
 
