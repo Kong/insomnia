@@ -3,7 +3,6 @@
 import { invariant } from '../../utils/invariant';
 invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import type { Readable, Writable } from 'node:stream';
 import { parse as urlParse } from 'node:url';
@@ -28,7 +27,7 @@ import { describeByteSize, hasAuthHeader } from '../../common/misc';
 import type { ClientCertificate } from '../../models/client-certificate';
 import type { RequestHeader } from '../../models/request';
 import type { ResponseHeader } from '../../models/response';
-import { insecureReadFile } from '../secure-read-file';
+import { getSecuredFolderAllowList, insecureReadFile } from '../secure-read-file';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
 export interface CurlRequestOptions {
@@ -160,8 +159,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       let requestFileDescriptor: number | undefined;
       const { authentication } = req;
       if (requestBodyPath) {
-        const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
-        const allowList = [os.tmpdir(), process.cwd(), userdataDirectory, ...settings.dataFolders];
+        const allowList = getSecuredFolderAllowList(settings.dataFolders);
         const fullPath = path.resolve(requestBodyPath);
         const isAllowed = allowList.some(f => path.resolve(f) !== '' && fullPath.startsWith(path.resolve(f)));
         if (!isAllowed) {
