@@ -66,7 +66,34 @@ function cleanObject(obj: any, config: IntelligentDiffConfig, parentKey?: string
       const scopedKeys = parentKey ? config.scopedIgnore?.[parentKey] : undefined;
       if (scopedKeys && scopedKeys.includes(key)) continue;
 
-      // 3. Recurse
+      // 3. Special handling for script objects - normalize empty strings
+      if (key === 'scripts' && value && typeof value === 'object') {
+        const normalizedScripts: any = {};
+        let hasAnyContent = false;
+
+        for (const [scriptKey, scriptValue] of Object.entries(value)) {
+          if (scriptKey === 'preRequest' || scriptKey === 'afterResponse') {
+            // Normalize empty strings to undefined for comparison
+            if (scriptValue && scriptValue !== '') {
+              normalizedScripts[scriptKey] = scriptValue;
+              hasAnyContent = true;
+            }
+          } else {
+            // Keep other properties as-is
+            normalizedScripts[scriptKey] = cleanObject(scriptValue, config, key);
+            hasAnyContent = true;
+          }
+        }
+
+        // Only add scripts object if it has any content
+        if (hasAnyContent) {
+          cleaned[key] = normalizedScripts;
+        }
+        // If no content, skip the scripts object entirely
+        continue;
+      }
+
+      // 4. Recurse
       cleaned[key] = cleanObject(value, config, key);
     }
 
