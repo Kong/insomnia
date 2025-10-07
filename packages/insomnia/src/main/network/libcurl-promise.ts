@@ -160,9 +160,11 @@ export const curlRequest = (options: CurlRequestOptions) =>
       const { authentication } = req;
       if (requestBodyPath) {
         const { isAllowed, securedPath } = isPathAllowed(requestBodyPath, settings.dataFolders);
-        if (!isAllowed) {
-          throw `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia's Preferences → Security, or using --dataFolders if using inso CLI.`;
-        }
+        invariant(
+          isAllowed,
+          `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia's Preferences → Security`,
+        );
+
         // AWS IAM file upload not supported
         const isAWSIAM = 'type' in authentication && authentication.type === 'iam';
         invariant(!isAWSIAM, 'AWS authentication not supported for provided body type');
