@@ -80,9 +80,7 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
     // allow reading the file as it is chosen by user
-    const content = await insecureReadFile(path);
-
-    return content.toString();
+    return insecureReadFile(path);
   }
   // Treat everything else as raw text
   const content = decodeURIComponent(uri);

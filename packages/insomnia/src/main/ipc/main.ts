@@ -206,6 +206,9 @@ export function registerMainHandlers() {
   ipcMainHandle('insecureReadFile', async (_, options: { path: string }) => {
     return insecureReadFile(options.path);
   });
+  ipcMainHandle('secureReadFile', async (_, options: { path: string; encoding?: string }) => {
+    return secureReadFile(options.path);
+  });
   ipcMainHandle('insecureReadFileWithEncoding', async (_, options: { path: string; encoding: string }) => {
     try {
       const contentBuffer = await insecureReadFileWithEncoding(options.path, undefined);
@@ -229,10 +232,6 @@ export function registerMainHandlers() {
     } catch (err) {
       return { content: '', encoding: '', error: err };
     }
-  });
-
-  ipcMainHandle('secureReadFile', async (_, options: { path: string; encoding?: string }) => {
-    return secureReadFile(options.path);
   });
 
   ipcMainHandle('readDir', async (_, options: { path: string }) => {
