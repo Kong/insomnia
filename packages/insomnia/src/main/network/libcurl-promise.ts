@@ -27,7 +27,7 @@ import { describeByteSize, hasAuthHeader } from '../../common/misc';
 import type { ClientCertificate } from '../../models/client-certificate';
 import type { RequestHeader } from '../../models/request';
 import type { ResponseHeader } from '../../models/response';
-import { getSecuredFolderAllowList, insecureReadFile } from '../secure-read-file';
+import { getSecuredFolderAllowList, insecureReadFile, securePath } from '../secure-read-file';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
 export interface CurlRequestOptions {
@@ -160,21 +160,21 @@ export const curlRequest = (options: CurlRequestOptions) =>
       const { authentication } = req;
       if (requestBodyPath) {
         const allowList = getSecuredFolderAllowList(settings.dataFolders);
-        const fullPath = path.resolve(requestBodyPath);
-        const isAllowed = allowList.some(f => path.resolve(f) !== '' && fullPath.startsWith(path.resolve(f)));
+        const securedPath = securePath(requestBodyPath);
+        const isAllowed = allowList.some(f => path.resolve(f) !== '' && securedPath.startsWith(path.resolve(f)));
         if (!isAllowed) {
-          throw `Insomnia cannot access the file "${requestBodyPath}". You must specify which directories Insomnia can access in Insomnia's Preferences → Security, or using --dataFolders if using inso CLI.`;
+          throw `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia's Preferences → Security, or using --dataFolders if using inso CLI.`;
         }
         // AWS IAM file upload not supported
         const isAWSIAM = 'type' in authentication && authentication.type === 'iam';
         invariant(!isAWSIAM, 'AWS authentication not supported for provided body type');
-        const { size: contentLength } = fs.statSync(requestBodyPath);
+        const { size: contentLength } = fs.statSync(securedPath);
         curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
         curl.setOpt(Curl.option.UPLOAD, 1);
         // We need this, otherwise curl will send it as a POST
         curl.setOpt(Curl.option.CUSTOMREQUEST, method);
         // read file into request and close file descriptor
-        requestFileDescriptor = fs.openSync(requestBodyPath, 'r');
+        requestFileDescriptor = fs.openSync(securedPath, 'r');
         curl.setOpt(Curl.option.READDATA, requestFileDescriptor);
         curl.on('end', () => closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath));
         curl.on('error', () => closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath));
