@@ -32,10 +32,10 @@ export async function clientAction(args: Route.ClientActionArgs) {
         title: 'Failed to generate commit messages',
         icon: 'star',
         status: 'error',
-        description: 'The AI service returned invalid data. Please try again.',
+        description: `The AI service returned invalid data. Please try again. ${error}`,
       });
       return {
-        error: 'The AI service returned invalid data. Please try again.',
+        error: `The AI service returned invalid data. Please try again. ${error}`,
       };
     }
 
@@ -46,14 +46,15 @@ export async function clientAction(args: Route.ClientActionArgs) {
       })),
     };
   } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
     showToast({
       title: 'Failed to generate commit messages',
       icon: 'star',
       status: 'error',
-      description: 'There was an error communicating with the AI service. Please try again.',
+      description: `There was an error communicating with the AI service. Please try again. ${errorMessage}`,
     });
     return {
-      error: 'There was an error communicating with the AI service. Please try again.',
+      error: `There was an error communicating with the AI service. Please try again. ${errorMessage}`,
     };
   }
 }
