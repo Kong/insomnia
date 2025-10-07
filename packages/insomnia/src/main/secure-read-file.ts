@@ -36,7 +36,5 @@ export const insecureReadFileWithEncoding = async (
   filePath: string,
   options?: Parameters<typeof fs.promises.readFile>[1],
 ): Promise<string | Buffer> => {
-  const decodedPath = decodeURIComponent(filePath);
-  const resolvedPath = path.resolve(decodedPath);
-  return fs.promises.readFile(resolvedPath, options);
+  return fs.promises.readFile(securePath(filePath), options);
 };
