@@ -49,10 +49,15 @@ const migrations: Migration<any>[] = [
 ];
 
 /**
- * Accepts a YAML string, parses it, detects the version, and migrates to the latest schema.
- * Optimized to avoid unnecessary processing when data is already at the latest version.
+ * Enhanced version of migrateToLatestYaml that also normalizes property order.
+ * This combines data migration with property order normalization to prevent
+ * false positives from property reordering in diff detection.
+ *
+ * @param yamlContent - The YAML content to migrate
+ * @param referenceContent - Optional reference content to normalize property order against
+ * @returns Migrated and normalized YAML content
  */
-export function migrateToLatestYaml(yamlContent: string): any {
+export function migrateToLatestYaml(yamlContent: string, referenceContent?: string): string {
   try {
     const parsed = parse(yamlContent);
     const version = getVersionFromParsed(parsed);
@@ -62,7 +67,22 @@ export function migrateToLatestYaml(yamlContent: string): any {
       return yamlContent;
     }
 
-    return migrateToLatest(parsed, version);
+    // Migrate the data
+    const migrated = migrateToLatest(parsed, version);
+
+    // If reference content is provided, normalize property order
+    if (referenceContent) {
+      try {
+        const referenceParsed = parse(referenceContent);
+        const normalized = cleanHeadersAndParametersWithNormalization(migrated, referenceParsed);
+        return stringify(normalized);
+      } catch (refError) {
+        console.warn('Property order normalization failed, returning migrated content:', refError);
+        return stringify(migrated);
+      }
+    }
+
+    return stringify(migrated);
   } catch (error) {
     // If migration fails, return the original content
     console.warn('Schema migration failed, returning original content:', error);
@@ -85,4 +105,69 @@ function migrateToLatest(data: any, fromVersion: string): string {
   }
 
   return stringify(current);
+}
+
+/**
+ * Normalizes the property order of an object to match a reference object structure.
+ * This ensures consistent property ordering across migrated files.
+ *
+ * @param obj - The object to normalize
+ * @param reference - The reference object to match property order against
+ * @returns Object with property order normalized to match reference
+ */
+export function normalizePropertyOrder(obj: any, reference: any): any {
+  if (Array.isArray(obj)) {
+    if (Array.isArray(reference)) {
+      // For arrays, try to match elements by their content
+      return obj.map((item, index) => {
+        if (index < reference.length) {
+          return normalizePropertyOrder(item, reference[index]);
+        }
+        return item;
+      });
+    }
+    return obj;
+  }
+
+  if (obj && typeof obj === 'object' && reference && typeof reference === 'object') {
+    const normalized: Record<string, any> = {};
+
+    // First, add properties in the same order as the reference
+    for (const key of Object.keys(reference)) {
+      if (key in obj) {
+        normalized[key] = normalizePropertyOrder(obj[key], reference[key]);
+      }
+    }
+
+    // Then, add any remaining properties from obj that weren't in reference
+    for (const key of Object.keys(obj)) {
+      if (!(key in reference)) {
+        normalized[key] = normalizePropertyOrder(obj[key], reference[key]);
+      }
+    }
+
+    return normalized;
+  }
+
+  return obj;
+}
+
+/**
+ * Enhanced version of cleanHeadersAndParameters that also normalizes property order.
+ * This ensures both data cleaning and consistent property ordering.
+ *
+ * @param obj - The object to clean and normalize
+ * @param reference - Optional reference object for property order normalization
+ * @returns Cleaned and normalized object
+ */
+export function cleanHeadersAndParametersWithNormalization(obj: any, reference?: any): any {
+  // First, clean the object (remove IDs, empty fields, etc.)
+  const cleaned = cleanHeadersAndParameters(obj);
+
+  // If reference is provided, normalize property order
+  if (reference) {
+    return normalizePropertyOrder(cleaned, reference);
+  }
+
+  return cleaned;
 }

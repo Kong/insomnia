@@ -415,10 +415,11 @@ export class GitVCS {
     });
 
     // Perform data migrations for existing projects (if applicable)
-    // to ensure users who haven’t pulled the latest changes can still
+    // to ensure users who haven't pulled the latest changes can still
     // view the migrated data correctly in the diff view.
-    const cleanedHead = migrateToLatestYaml(blobs[1]);
-    const cleanedStage = migrateToLatestYaml(blobs[3]);
+    // Also normalize property order to prevent false positives from property reordering
+    const cleanedHead = migrateToLatestYaml(blobs[1], blobs[2]);
+    const cleanedStage = migrateToLatestYaml(blobs[3], blobs[2]);
 
     // Build a diff object for easier access
     const diff = {
