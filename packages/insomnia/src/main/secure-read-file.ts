@@ -4,6 +4,8 @@ import path from 'node:path';
 
 import electron from 'electron';
 
+import { invariant } from '~/utils/invariant';
+
 import * as models from '../models/index';
 
 export const getSecuredFolderAllowList = (userAllowList: string[]) => {
@@ -21,9 +23,10 @@ export const secureReadFile = async (filePath: string): Promise<string> => {
   const allowList = getSecuredFolderAllowList(settings.dataFolders);
   const resolvedPath = securePath(filePath);
   const isAllowed = allowList.some(f => path.resolve(f) !== '' && resolvedPath.startsWith(path.resolve(f)));
-  if (!isAllowed) {
-    throw `Insomnia cannot access the file "${resolvedPath}". You must specify which directories Insomnia can access in Insomnia's Preferences → Security`;
-  }
+  invariant(
+    isAllowed,
+    `Insomnia cannot access the file "${resolvedPath}". You must specify which directories Insomnia can access in Insomnia's Preferences → Security`,
+  );
 
   return fs.promises.readFile(resolvedPath, { encoding: 'utf8' });
 };
