@@ -315,8 +315,8 @@ describe('sendCurlAndWriteTimeline()', () => {
 
   it('sends a file', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
-    await models.settings.update(settings, { dataFolders: [pathResolve(__dirname)] });
+    let settings = await models.settings.getOrCreate();
+    settings = await models.settings.update(settings, { dataFolders: [pathResolve(__dirname)] });
     await models.cookieJar.create({
       parentId: workspace._id,
     });
