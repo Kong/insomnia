@@ -8,27 +8,31 @@ import { invariant } from '~/utils/invariant';
 
 import * as models from '../models/index';
 
-export const getSecuredFolderAllowList = (userAllowList: string[]) => {
+export const isPathAllowed = (filePath: string, userAllowList: string[]) => {
+  const allowList = getSecuredFolderAllowList(userAllowList);
+  const securedPath = securePath(filePath);
+  const isAllowed = allowList.some(f => path.resolve(f) !== '' && securedPath.startsWith(path.resolve(f)));
+  return { isAllowed, securedPath };
+};
+const securePath = (filePath: string) => path.resolve(decodeURIComponent(filePath));
+const getSecuredFolderAllowList = (userAllowList: string[]) => {
   const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
   // we use tmpdir for buildMultipart
-  // we may not be using cwd but it seems reasonable to allow it
   // we put the db in userData
   // the user can also specifiy other folders
-  return [os.tmpdir(), process.cwd(), userdataDirectory, ...userAllowList];
+  return [os.tmpdir(), userdataDirectory, ...userAllowList];
 };
-export const securePath = (filePath: string) => path.resolve(decodeURIComponent(filePath));
-// For reading files specified by plugins, environment variables, and scripts
+// For reading files specified by plugins, environment variables, and scripts which could come from an imported collection
 export const secureReadFile = async (filePath: string): Promise<string> => {
   const settings = await models.settings.getOrCreate();
-  const allowList = getSecuredFolderAllowList(settings.dataFolders);
-  const resolvedPath = securePath(filePath);
-  const isAllowed = allowList.some(f => path.resolve(f) !== '' && resolvedPath.startsWith(path.resolve(f)));
+  const { isAllowed, securedPath } = isPathAllowed(filePath, settings.dataFolders);
+
   invariant(
     isAllowed,
-    `Insomnia cannot access the file "${resolvedPath}". You must specify which directories Insomnia can access in Insomnia's Preferences → Security`,
+    `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia's Preferences → Security`,
   );
 
-  return fs.promises.readFile(resolvedPath, { encoding: 'utf8' });
+  return fs.promises.readFile(securedPath, { encoding: 'utf8' });
 };
 // For reading files selected by the user via a file dialog
 export const insecureReadFile = async (filePath: string): Promise<string> => {

@@ -27,7 +27,7 @@ import { describeByteSize, hasAuthHeader } from '../../common/misc';
 import type { ClientCertificate } from '../../models/client-certificate';
 import type { RequestHeader } from '../../models/request';
 import type { ResponseHeader } from '../../models/response';
-import { getSecuredFolderAllowList, insecureReadFile, securePath } from '../secure-read-file';
+import { insecureReadFile, isPathAllowed } from '../secure-read-file';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
 export interface CurlRequestOptions {
@@ -159,9 +159,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       let requestFileDescriptor: number | undefined;
       const { authentication } = req;
       if (requestBodyPath) {
-        const allowList = getSecuredFolderAllowList(settings.dataFolders);
-        const securedPath = securePath(requestBodyPath);
-        const isAllowed = allowList.some(f => path.resolve(f) !== '' && securedPath.startsWith(path.resolve(f)));
+        const { isAllowed, securedPath } = isPathAllowed(requestBodyPath, settings.dataFolders);
         if (!isAllowed) {
           throw `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia's Preferences → Security, or using --dataFolders if using inso CLI.`;
         }
