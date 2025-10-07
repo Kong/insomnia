@@ -9,6 +9,7 @@ export enum SegmentEvent {
   importScanned = 'Import Scanned',
   importCompleted = 'Import Completed',
   documentCreate = 'Document Created',
+  mockCreateModalOpened = 'Mock Server Create Modal Opened',
   mockCreate = 'Mock Created',
   mockEdit = 'Mock Server Edited',
   mockDelete = 'Mock Server Deleted',
