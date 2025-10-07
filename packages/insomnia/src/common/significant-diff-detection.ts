@@ -12,7 +12,10 @@ import { parse } from 'yaml';
  *   scopedIgnore: {
  *     parameters: ["id"],   // ignore `id` under `parameters`
  *     headers: ["id"],      // ignore `id` under `headers`
+ *     body: ["mimeType"],   // ignore `mimeType` under `body`
  *     meta: ["modified", "created"], // ignore these keys under `meta`
+ *     params: ["id"],       // ignore `id` under `params` (body.params)
+ *     cookies: ["creation", "lastAccessed"], // ignore these keys under `cookies`
  *   }
  */
 interface IntelligentDiffConfig {
@@ -29,7 +32,10 @@ const DEFAULT_CONFIG: IntelligentDiffConfig = {
   scopedIgnore: {
     parameters: ['id'],
     headers: ['id'],
+    body: ['mimeType'],
     meta: ['modified', 'created'],
+    params: ['id'],
+    cookies: ['creation', 'lastAccessed'],
   },
 };
 
