@@ -96,7 +96,9 @@ export interface RendererToMainBridgeAPI {
   writeFile: (options: { path: string; content: string }) => Promise<string>;
   readFile: (options: { path: string; encoding?: string }) => Promise<{ content: string; encoding: string }>;
   readDir: (options: { path: string }) => Promise<{ type: 'file' | 'directory'; name: string; path: string }[]>;
-  readDataDir: (options: { folder: string }) => Promise<{ type: 'file' | 'directory'; name: string; path: string }[]>;
+  readOrCreateDataDir: (options: {
+    folder: string;
+  }) => Promise<{ type: 'file' | 'directory'; name: string; path: string }[]>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
@@ -272,7 +274,7 @@ export function registerMainHandlers() {
 
   ipcMainHandle('readDir', readDir);
 
-  ipcMainHandle('readDataDir', async (_, options: { folder: string }) => {
+  ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
     const dataPath = app.getPath('userData');
     const folderPath = path.join(dataPath, options.folder);
     mkdirSync(folderPath, { recursive: true });

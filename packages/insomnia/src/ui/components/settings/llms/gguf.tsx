@@ -47,7 +47,7 @@ export const GGUF = ({
   const [selectedModel, setSelectedModel] = useState<string>('');
   const refreshModelsDirectory = useCallback(() => {
     window.main
-      .readDataDir({ folder: LLMS_FOLDER_NAME })
+      .readOrCreateDataDir({ folder: LLMS_FOLDER_NAME })
       .then(models => {
         const currentlyAvailableLLMs = models
           .filter(model => model.type === 'file' && model.name.toLowerCase().endsWith('.gguf'))
