@@ -149,6 +149,7 @@ const main: Window['main'] = {
   writeFile: options => ipcRenderer.invoke('writeFile', options),
   readFile: options => ipcRenderer.invoke('readFile', options),
   readDir: options => ipcRenderer.invoke('readDir', options),
+  readDataDir: options => ipcRenderer.invoke('readDataDir', options),
   lintSpec: options => ipcRenderer.invoke('lintSpec', options),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
