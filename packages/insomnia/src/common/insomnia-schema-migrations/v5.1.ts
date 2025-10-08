@@ -15,6 +15,44 @@
  */
 
 /**
+ * Normalizes script objects by removing empty strings and preserving non-empty content.
+ * This is used for both migration and diff detection to ensure consistent behavior.
+ *
+ * CRITICAL WARNING: This function is shared between migration and diff detection!
+ *    Any changes to this function will affect BOTH systems:
+ *    - Data migration (permanent changes to user files)
+ *    - Diff detection (comparison logic for commit prompts)
+ *    - User experience (false positives/negatives in change detection)
+ *
+ * @param scripts - The scripts object to normalize
+ * @returns Normalized scripts object or undefined if no content
+ */
+export function normalizeScripts(scripts: any): any {
+  if (!scripts || typeof scripts !== 'object') {
+    return scripts;
+  }
+
+  const normalized: any = {};
+  let hasAnyContent = false;
+
+  for (const [scriptKey, scriptValue] of Object.entries(scripts)) {
+    if (scriptKey === 'preRequest' || scriptKey === 'afterResponse') {
+      // Only keep non-empty script values
+      if (scriptValue && scriptValue !== '') {
+        normalized[scriptKey] = scriptValue;
+        hasAnyContent = true;
+      }
+    } else {
+      // Keep other properties as-is
+      normalized[scriptKey] = scriptValue;
+      hasAnyContent = true;
+    }
+  }
+
+  return hasAnyContent ? normalized : undefined;
+}
+
+/**
  * Recursively traverses an object and cleans headers/parameters/params/cookies arrays by:
  * - Removing `id` fields from objects inside `headers`, `parameters`, `body.params`, or `cookies` arrays
  * - Removing timestamp fields (`creation`, `lastAccessed`) from `cookies` arrays
@@ -62,26 +100,10 @@ export function cleanHeadersAndParameters(obj: any): any {
         continue;
       } else if (key === 'scripts' && value && typeof value === 'object') {
         // Clean scripts object by removing empty strings
-        const cleanedScripts: any = {};
-        let hasAnyContent = false;
+        const normalized = normalizeScripts(value);
 
-        for (const [scriptKey, scriptValue] of Object.entries(value)) {
-          if (scriptKey === 'preRequest' || scriptKey === 'afterResponse') {
-            // Only keep non-empty script values
-            if (scriptValue && scriptValue !== '') {
-              cleanedScripts[scriptKey] = scriptValue;
-              hasAnyContent = true;
-            }
-          } else {
-            // Keep other properties as-is
-            cleanedScripts[scriptKey] = cleanHeadersAndParameters(scriptValue);
-            hasAnyContent = true;
-          }
-        }
-
-        // Only add scripts object if it has any content
-        if (hasAnyContent) {
-          cleaned[key] = cleanedScripts;
+        if (normalized) {
+          cleaned[key] = normalized;
         }
         // If no content, skip the scripts object entirely
         continue;

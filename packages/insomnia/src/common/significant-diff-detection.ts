@@ -2,6 +2,8 @@ import path from 'node:path';
 
 import { parse } from 'yaml';
 
+import { normalizeScripts } from '~/common/insomnia-schema-migrations/v5.1';
+
 /**
  * Defines the configuration for intelligent YAML diffing.
  *
@@ -68,26 +70,16 @@ function cleanObject<T>(obj: T, config: IntelligentDiffConfig, parentKey?: strin
 
       // 3. Special handling for script objects - normalize empty strings
       if (key === 'scripts' && value && typeof value === 'object') {
-        const normalizedScripts: any = {};
-        let hasAnyContent = false;
+        // WARNING: This uses shared logic with migration system (v5.1.ts)
+        //    Changes to normalizeScripts() will affect BOTH migration AND diff detection
+        //    Be extremely careful when modifying this function as it impacts:
+        //    - Data migration (permanent changes to user files)
+        //    - Diff detection (comparison logic for commit prompts)
+        //    - User experience (false positives/negatives in change detection)
+        const normalized = normalizeScripts(value);
 
-        for (const [scriptKey, scriptValue] of Object.entries(value)) {
-          if (scriptKey === 'preRequest' || scriptKey === 'afterResponse') {
-            // Normalize empty strings to undefined for comparison
-            if (scriptValue && scriptValue !== '') {
-              normalizedScripts[scriptKey] = scriptValue;
-              hasAnyContent = true;
-            }
-          } else {
-            // Keep other properties as-is
-            normalizedScripts[scriptKey] = cleanObject(scriptValue, config, key);
-            hasAnyContent = true;
-          }
-        }
-
-        // Only add scripts object if it has any content
-        if (hasAnyContent) {
-          cleaned[key] = normalizedScripts;
+        if (normalized) {
+          cleaned[key] = normalized;
         }
         // If no content, skip the scripts object entirely
         continue;
