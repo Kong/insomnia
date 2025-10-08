@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-aria-components';
 
-import { buildInteractiveMessage } from '~/common/interactive-messages';
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -141,28 +141,20 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
   }, [tooLong]);
 
   const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
-  // naive way to detect the access file error
-  const messages = previewString.includes('Insomnia cannot access')
-    ? buildInteractiveMessage(previewString)
-    : [{ text: previewString }];
+
+  // detects a string to replace with a link to settings
+  const linkText = "Insomnia's Preferences → Security";
+  const modifiedString = previewString.endsWith(linkText)
+    ? previewString.slice(0, previewString.length - linkText.length)
+    : previewString;
 
   return (
     <div className="relative flex h-full w-full justify-between gap-[var(--padding-sm)] overflow-auto">
       <span className={classNames('my-auto', className)}>
-        {messages.map(({ text, handler }, index) =>
-          handler ? (
-            <Link
-              className="cursor-pointer text-[--color-surprise]"
-              // eslint-disable-next-line react/no-array-index-key
-              key={index}
-              onPress={handler}
-            >
-              {text}
-            </Link>
-          ) : (
-            text
-          ),
-        )}
+        {modifiedString}
+        <Link className="cursor-pointer text-[--color-surprise]" onPress={() => showSettingsModal({ tab: 'general' })}>
+          {linkText}
+        </Link>
       </span>
 
       <CopyButton

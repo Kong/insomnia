@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import clone from 'clone';
 import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
@@ -316,7 +314,7 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
     cookies: getRequestCookies(renderedRequest),
     headers: getRequestHeaders(renderedRequest),
     queryString: getRequestQueryString(renderedRequest),
-    postData: getRequestPostData(renderedRequest),
+    postData: await getRequestPostData(renderedRequest),
     headersSize: -1,
     bodySize: -1,
   };
@@ -442,12 +440,14 @@ function getRequestQueryString(renderedRequest: RenderedRequest): Har.QueryStrin
   }));
 }
 
-function getRequestPostData(renderedRequest: RenderedRequest): Har.PostData | undefined {
+async function getRequestPostData(renderedRequest: RenderedRequest): Promise<Har.PostData | undefined> {
   let body;
   if (renderedRequest.body.fileName) {
     try {
+      const text = await window.main.secureReadFile({ path: renderedRequest.body.fileName });
+
       body = {
-        text: fs.readFileSync(renderedRequest.body.fileName, 'base64'),
+        text,
       };
     } catch (error) {
       console.warn('[code gen] Failed to read file', error);

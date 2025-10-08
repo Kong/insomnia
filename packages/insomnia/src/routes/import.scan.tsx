@@ -79,8 +79,10 @@ export const scanImportResources = async (data: {
     let postmanArchiveJsonData: { environment?: Record<string, boolean> } | null = null;
     if (postmanArchiveFile) {
       try {
-        const postmanArchiveFileContent = await window.main.readFile({ path: postmanArchiveFile });
-        postmanArchiveJsonData = JSON.parse(postmanArchiveFileContent.content);
+        const postmanArchiveFileContent = await window.main.insecureReadFile({
+          path: postmanArchiveFile,
+        });
+        postmanArchiveJsonData = JSON.parse(postmanArchiveFileContent);
       } catch (err) {
         return [
           {

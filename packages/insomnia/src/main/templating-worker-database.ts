@@ -1,6 +1,5 @@
 import type { BinaryToTextEncoding } from 'node:crypto';
 import crypto from 'node:crypto';
-import fs from 'node:fs';
 import os from 'node:os';
 
 import { shell } from 'electron';
@@ -21,6 +20,7 @@ import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } f
 import { getPluginCommonContext, type Plugin, type TemplateTag } from '../plugins';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
 import { curlRequest } from './network/libcurl-promise';
+import { secureReadFile } from './secure-read-file';
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
@@ -67,15 +67,8 @@ const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
 
 // These are exposed to the templating worker and can be used by plugins from context.util
 const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
-  'readFile': async (body: { path: string; encoding: 'utf8' }) => {
-    const settings = await models.settings.get();
-    const isInAllowList = settings.dataFolders.some(folder => folder !== '' && body.path?.startsWith(folder));
-    if (!isInAllowList) {
-      throw new Error(
-        `Insomnia cannot access the file ‘${body.path}’. You must specify which directories Insomnia can access in Insomnia’s Preferences → Security.`,
-      );
-    }
-    return await fs.promises.readFile(body.path, { encoding: body.encoding || 'utf8' });
+  'readFile': async (body: { path: string }) => {
+    return secureReadFile(body.path);
   },
   'nodeOS': async () => {
     return {

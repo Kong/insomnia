@@ -5,7 +5,7 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
-import { buildInteractiveMessage } from '~/common/interactive-messages';
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../../common/database';
 import { docsAfterResponseScript } from '../../../common/documentation';
@@ -254,26 +254,21 @@ export const TagEditor: FC<Props> = props => {
   }
   let previewElement;
   if (error) {
-    if (error.startsWith('Insomnia cannot access')) {
+    // detects a string to replace with a link to settings
+    const linkText = "Insomnia's Preferences → Security";
+    if (error.endsWith(linkText)) {
       previewElement = (
         <div className="danger min-h-[115px] rounded-md border border-solid border-[var(--hl-md)] bg-[var(--hl-xxs)] p-[var(--padding-sm)]">
-          {buildInteractiveMessage(error).map(({ text, handler }, index) =>
-            handler ? (
-              <Link
-                className="cursor-pointer text-[--color-surprise]"
-                // eslint-disable-next-line react/no-array-index-key
-                key={index}
-                onPress={() => {
-                  props.close();
-                  handler();
-                }}
-              >
-                {text}
-              </Link>
-            ) : (
-              text
-            ),
-          )}
+          {error.slice(0, error.length - linkText.length)}
+          <Link
+            className="cursor-pointer text-[--color-surprise]"
+            onPress={() => {
+              props.close();
+              showSettingsModal({ tab: 'general' });
+            }}
+          >
+            {linkText}
+          </Link>
         </div>
       );
     } else {

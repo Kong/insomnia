@@ -33,7 +33,7 @@ test('can make socket.io connection', async ({ app, page }) => {
   await expect.soft(connections).toHaveCount(1);
 
   // Can disconnect from all connections
-  await page.locator('button[name="DisconnectDropdown__DropdownButton"]').click();
-  await page.getByRole('menuitem', { name: 'Disconnect all requests' }).click();
+  await page.getByTestId('request-pane').getByRole('button', { name: '' }).click();
+  await page.getByRole('button', { name: 'Disconnect all requests' }).click();
   await expect.soft(connections).toHaveCount(0);
 });
