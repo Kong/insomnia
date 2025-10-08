@@ -88,6 +88,7 @@ export type HandleChannels =
   | 'parseImport'
   | 'openPath'
   | 'readCurlResponse'
+  | 'readOrCreateDataDir'
   | 'readDir'
   | 'insecureReadFile'
   | 'insecureReadFileWithEncoding'

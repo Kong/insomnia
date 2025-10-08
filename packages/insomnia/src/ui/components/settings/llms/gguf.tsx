@@ -23,6 +23,8 @@ const DEFAULT_MODEL_PARAMETERS = {
   repeatPenalty: 1.1,
 };
 
+const LLMS_FOLDER_NAME = 'llms';
+
 export const GGUF = ({
   saveLLMSettings,
   configuredLLMs,
@@ -40,18 +42,23 @@ export const GGUF = ({
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   const userDataPath = resolve(window.app.getPath('userData'));
-  const llmsFolder = resolve(userDataPath, 'llms');
+  const llmsFolder = resolve(userDataPath, LLMS_FOLDER_NAME);
   const [availableLLMs, setAvailableLLMs] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const refreshModelsDirectory = useCallback(() => {
-    window.main.readDir({ path: llmsFolder }).then(models => {
-      const currentlyAvailableLLMs = models
-        .filter(model => model.type === 'file' && model.name.toLowerCase().endsWith('.gguf'))
-        .map(model => model.name);
+    window.main
+      .readOrCreateDataDir({ folder: LLMS_FOLDER_NAME })
+      .then(models => {
+        const currentlyAvailableLLMs = models
+          .filter(model => model.type === 'file' && model.name.toLowerCase().endsWith('.gguf'))
+          .map(model => model.name);
 
-      setAvailableLLMs(currentlyAvailableLLMs);
-    });
-  }, [llmsFolder]);
+        setAvailableLLMs(currentlyAvailableLLMs);
+      })
+      .catch(() => {
+        setAvailableLLMs([]);
+      });
+  }, []);
 
   useEffect(() => {
     if (configuredLLMs.length === 1) {

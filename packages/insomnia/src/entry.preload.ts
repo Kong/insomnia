@@ -152,6 +152,7 @@ const main: Window['main'] = {
   secureReadFile: options => ipcRenderer.invoke('secureReadFile', options),
   parseImport: (...args) => ipcRenderer.invoke('parseImport', ...args),
   readDir: options => ipcRenderer.invoke('readDir', options),
+  readOrCreateDataDir: options => ipcRenderer.invoke('readOrCreateDataDir', options),
   lintSpec: options => ipcRenderer.invoke('lintSpec', options),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);

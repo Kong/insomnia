@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import fs, { mkdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -62,6 +62,24 @@ export const openInBrowser = (href: string) => {
   }
 };
 
+const readDir = async (_: unknown, options: { path: string }) => {
+  try {
+    const files = await fs.promises.readdir(options.path);
+    return files
+      .map(file => {
+        const filePath = path.join(options.path, file);
+        return {
+          type: fs.statSync(filePath).isDirectory() ? 'directory' : fs.statSync(filePath).isFile() ? 'file' : 'other',
+          name: file,
+          path: filePath,
+        };
+      })
+      .filter(file => file.type !== 'other');
+  } catch (err) {
+    throw new Error(`Failed to read directory: ${err}`);
+  }
+};
+
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
   openInBrowser: (url: string) => void;
@@ -86,6 +104,9 @@ export interface RendererToMainBridgeAPI {
     encoding?: string;
   }) => Promise<{ content: string; encoding: string; error: string | undefined }>;
   readDir: (options: { path: string }) => Promise<{ type: 'file' | 'directory'; name: string; path: string }[]>;
+  readOrCreateDataDir: (options: {
+    folder: string;
+  }) => Promise<{ type: 'file' | 'directory'; name: string; path: string }[]>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
@@ -264,22 +285,13 @@ export function registerMainHandlers() {
     }
   });
 
-  ipcMainHandle('readDir', async (_, options: { path: string }) => {
-    try {
-      const files = await fs.promises.readdir(options.path);
-      return files
-        .map(file => {
-          const filePath = path.join(options.path, file);
-          return {
-            type: fs.statSync(filePath).isDirectory() ? 'directory' : fs.statSync(filePath).isFile() ? 'file' : 'other',
-            name: file,
-            path: filePath,
-          };
-        })
-        .filter(file => file.type !== 'other');
-    } catch (err) {
-      throw new Error(`Failed to read directory: ${err}`);
-    }
+  ipcMainHandle('readDir', readDir);
+
+  ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
+    const dataPath = app.getPath('userData');
+    const folderPath = path.join(dataPath, options.folder);
+    mkdirSync(folderPath, { recursive: true });
+    return readDir(_, { path: folderPath });
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
