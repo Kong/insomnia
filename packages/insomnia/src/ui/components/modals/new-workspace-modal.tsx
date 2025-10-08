@@ -28,6 +28,7 @@ import { type ApiSpec } from '../../../models/api-spec';
 import { isGitProject, type Project } from '../../../models/project';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
+import { SegmentEvent } from '../../analytics';
 import { Icon } from '../icon';
 
 const titleByScope: Record<WorkspaceScope, string> = {
@@ -118,6 +119,14 @@ export const NewWorkspaceModal = ({
       gitRepoTreeFetcher.load({ projectId: project._id });
     }
   }, [gitRepoTreeFetcher, isOpen, project]);
+
+  useEffect(() => {
+    if (isOpen && scope === WorkspaceScopeKeys.mockServer) {
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.mockCreateModalOpened,
+      });
+    }
+  }, [isOpen, scope]);
 
   const createNewWorkspace = () => {
     createNewWorkspaceFetcher.submit({
