@@ -1,4 +1,5 @@
 type: mock.insomnia.rest/5.0
+schema_version: "5.1"
 name: My API Mock
 meta:
   id: wrk_7b534dfd6f1e4362b7a87fcd181697a0
@@ -40,4 +41,3 @@ routes:
     method: GET
     mimeType: application/json
     statusCode: 401
-schema_version: "5.1"

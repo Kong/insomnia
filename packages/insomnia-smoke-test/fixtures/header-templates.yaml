@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: headerTemplates
 meta:
   id: wrk_bbe65db250e94e31a7d88d8f779c9dd5
@@ -47,4 +48,3 @@ environments:
   data:
     xHeaderExample: X-Foo-Bar
     baseUrl: http://localhost:4010
-schema_version: "5.1"

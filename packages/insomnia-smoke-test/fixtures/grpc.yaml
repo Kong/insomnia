@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: PreRelease gRPC
 meta:
   id: wrk_fa7f579cf7064595b89ff01f9c1846a7
@@ -137,4 +138,3 @@ environments:
     created: 1635959595049
     modified: 1635959595049
     isPrivate: false
-schema_version: "5.1"

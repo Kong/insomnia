@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: Smoke GraphQL
 meta:
   id: wrk_a2f079716d184765a97bf7e323266231
@@ -86,4 +87,3 @@ environments:
     isPrivate: false
   data:
     intVar: 3
-schema_version: "5.1"

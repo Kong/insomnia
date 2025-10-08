@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: grpc
 meta:
   id: wrk_a72883345e264d6696ef9294857f29c7
@@ -46,4 +47,3 @@ environments:
     created: 1732118001112
     modified: 1732118001112
     isPrivate: false
-schema_version: "5.1"

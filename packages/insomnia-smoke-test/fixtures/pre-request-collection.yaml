@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: Pre-request Scripts
 meta:
   id: wrk_528f9a4257864335afd9e02b584b6bd7
@@ -1451,4 +1452,3 @@ environments:
       b:
         c:
           url: http://127.0.0.1:4010/echo
-schema_version: "5.1"

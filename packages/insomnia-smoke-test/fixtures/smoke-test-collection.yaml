@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: Smoke tests
 meta:
   id: wrk_92410798721649cc8cd6f7c312a8764d
@@ -214,4 +215,3 @@ environments:
     isPrivate: false
   data:
     customValue: fromEnvManager
-schema_version: "5.1"

@@ -1,4 +1,5 @@
 type: spec.insomnia.rest/5.0
+schema_version: "5.1"
 name: unit-test.yaml
 meta:
   id: wrk_70e6a145cbf445d0948eed001afae869
@@ -84,4 +85,3 @@ testSuites:
         code: |-
           const response1 = await insomnia.send();
           expect(response1.status).to.equal(404);
-schema_version: "5.1"

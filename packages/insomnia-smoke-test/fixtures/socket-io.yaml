@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: Socket.io Collection
 meta:
   id: wrk_035b5b6b77784becbc88ae771deb8225
@@ -40,4 +41,3 @@ environments:
     created: 1753709124464
     modified: 1753709124464
     isPrivate: false
-schema_version: "5.1"
