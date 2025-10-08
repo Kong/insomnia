@@ -13,7 +13,7 @@ import {
 } from 'react-aria-components';
 
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
-import { translateHandlersInScript } from '~/utils/importers/importers/translate-postman-script';
+import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
 
 import {
   CookieObject,
