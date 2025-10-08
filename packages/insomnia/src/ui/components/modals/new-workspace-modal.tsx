@@ -101,7 +101,29 @@ export const NewWorkspaceModal = ({
 
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
 
+  const [progressMessage, setProgressMessage] = useState(0);
+  const progressMessages = [
+    'Creating...',
+    'Working...',
+    'Building...',
+    'Still going...',
+    'Almost there...',
+  ];
+
   const gitRepoTreeFetcher = useGitProjectRepositoryTreeLoaderFetcher();
+
+  useEffect(() => {
+    if (createNewWorkspaceFetcher.state !== 'idle' && scope === WorkspaceScopeKeys.mockServer) {
+      setProgressMessage(0);
+      const interval = setInterval(() => {
+        setProgressMessage(prev => (prev + 1) % progressMessages.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    } 
+      setProgressMessage(0);
+    
+    return undefined;
+  }, [createNewWorkspaceFetcher.state, scope, progressMessages.length]);
 
   useEffect(() => {
     if (
@@ -147,7 +169,7 @@ export const NewWorkspaceModal = ({
     <ModalOverlay
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      isDismissable
+      isDismissable={createNewWorkspaceFetcher.state === 'idle' && gitRepoTreeFetcher.state === 'idle'}
       className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
     >
       <Modal
@@ -179,6 +201,7 @@ export const NewWorkspaceModal = ({
                     : titleByScope[workspaceData.scope]}
                 </Heading>
                 <Button
+                  isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
                   className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   onPress={close}
                 >
@@ -310,7 +333,11 @@ export const NewWorkspaceModal = ({
                       name="mockServerCreationType"
                       defaultValue={workspaceData.mockServerCreationType}
                       onChange={creationType => {
-                        setWorkspaceData({ ...workspaceData, mockServerCreationType: creationType as 'ai' | 'manual' });
+                        setWorkspaceData({
+                          ...workspaceData,
+                          mockServerCreationType: creationType as 'ai' | 'manual',
+                          mockServerType: creationType === 'ai' ? 'self-hosted' : workspaceData.mockServerType,
+                        });
                       }}
                       className="mb-2 flex flex-col gap-2"
                     >
@@ -520,7 +547,7 @@ export const NewWorkspaceModal = ({
                           <div className="group relative">
                             <Icon icon="info-circle" className="cursor-help text-[--hl]" />
                             <div className="absolute left-1/2 top-full z-10 mt-2 hidden w-72 -translate-x-1/2 rounded-md border border-[--hl-sm] bg-[--color-bg] p-3 text-xs text-[--color-font] shadow-lg group-hover:block">
-                              Upload additional files to provide extra context when generating your mock server. These
+                              Add files to include as additional context for the LLM when generating your mock server. These
                               files can contain example data, schemas, or other relevant information.
                             </div>
                           </div>
@@ -654,23 +681,25 @@ export const NewWorkspaceModal = ({
                 )}
               </div>
               <div className="flex items-center justify-end gap-2 p-10">
-                <div className="flex items-center gap-2">
-                  <Button
-                    onPress={close}
-                    isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
-                    className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
-                    className="flex w-[10ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-center text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
-                  >
-                    {createNewWorkspaceFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
-                    <span>Create</span>
-                  </Button>
-                </div>
+                <Button
+                  onPress={close}
+                  isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
+                  className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
+                  className="flex min-w-[10ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-center text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+                >
+                  {createNewWorkspaceFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
+                  <span>
+                    {createNewWorkspaceFetcher.state !== 'idle' && scope === WorkspaceScopeKeys.mockServer
+                      ? progressMessages[progressMessage]
+                      : 'Create'}
+                  </span>
+                </Button>
               </div>
             </Form>
           )}

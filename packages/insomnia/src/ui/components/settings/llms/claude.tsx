@@ -57,15 +57,13 @@ export const Claude = ({
     if (configuredLLMs.length === 1) {
       setSelectedModel(configuredLLMs[0].model);
       const key = configuredLLMs[0].apiKey || '';
-      if (key && key !== apiKey) {
-        setApiKey(key);
-      }
+      setApiKey(key);
     }
-  }, [configuredLLMs, apiKey]);
+  }, [configuredLLMs]);
 
   const hasChanges = useMemo(() => {
-    return selectedModel !== currentLLM?.model;
-  }, [selectedModel, currentLLM]);
+    return selectedModel !== currentLLM?.model || apiKey !== currentLLM?.apiKey;
+  }, [selectedModel, currentLLM, apiKey]);
 
   const modelsId = useId();
   return (
@@ -115,7 +113,7 @@ export const Claude = ({
           Deactivate
         </Button>
         <Button
-          isDisabled={!hasChanges || isLoadingModels || !selectedModel || !availableModels.length}
+          isDisabled={!hasChanges || isLoadingModels || (!!apiKey && !selectedModel)}
           onClick={() => {
             saveLLMSettings(true, 'claude', { model: selectedModel, apiKey });
           }}
