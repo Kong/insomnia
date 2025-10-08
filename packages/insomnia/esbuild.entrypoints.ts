@@ -81,7 +81,15 @@ export default async function build(options: Options) {
     sourcemap: true,
     format: 'cjs',
     define: env,
-    external: ['electron', '@getinsomnia/node-libcurl', 'fsevents', ...Object.keys(builtinModules)],
+    external: [
+      'electron',
+      '@getinsomnia/node-libcurl',
+      'fsevents',
+      '@node-llama-cpp/*',
+      '@reflink/*',
+      '@connectrpc/*',
+      ...Object.keys(builtinModules),
+    ],
   };
 
   let electronProcess: ChildProcess;
