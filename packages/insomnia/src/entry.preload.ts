@@ -93,6 +93,8 @@ const git: GitServiceAPI = {
   discardChanges: options => ipcRenderer.invoke('git.discardChanges', options),
   abortMerge: () => ipcRenderer.invoke('git.abortMerge'),
   gitStatus: options => ipcRenderer.invoke('git.gitStatus', options),
+  diff: () => ipcRenderer.invoke('git.diff'),
+  multipleCommitToGitRepo: options => ipcRenderer.invoke('git.multipleCommitToGitRepo', options),
   stageChanges: options => ipcRenderer.invoke('git.stageChanges', options),
   unstageChanges: options => ipcRenderer.invoke('git.unstageChanges', options),
   diffFileLoader: options => ipcRenderer.invoke('git.diffFileLoader', options),
@@ -208,6 +210,8 @@ const main: Window['main'] = {
       useDynamicMockResponses,
       mockServerAdditionalFiles,
     ),
+  generateCommitsFromDiff: (input: { diff: string; recent_commits: string }) =>
+    ipcRenderer.invoke('generateCommitsFromDiff', input),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {
