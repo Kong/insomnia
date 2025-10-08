@@ -50,9 +50,9 @@ const DEFAULT_CONFIG: IntelligentDiffConfig = {
  * @param config - The intelligent diff configuration
  * @returns A new object with ignored keys removed
  */
-function cleanObject(obj: any, config: IntelligentDiffConfig, parentKey?: string): any {
+function cleanObject<T>(obj: T, config: IntelligentDiffConfig, parentKey?: string): T {
   if (Array.isArray(obj)) {
-    return obj.map(item => cleanObject(item, config, parentKey));
+    return obj.map(item => cleanObject(item, config, parentKey)) as T;
   }
 
   if (obj && typeof obj === 'object') {
@@ -97,7 +97,7 @@ function cleanObject(obj: any, config: IntelligentDiffConfig, parentKey?: string
       cleaned[key] = cleanObject(value, config, key);
     }
 
-    return cleaned;
+    return cleaned as T;
   }
 
   return obj;

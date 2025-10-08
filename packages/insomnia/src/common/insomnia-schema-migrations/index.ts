@@ -94,7 +94,7 @@ export function migrateToLatestYaml(yamlContent: string, referenceContent?: stri
  * Migrates data from a given version to the latest version using all necessary migrations.
  * Optimized to only apply migrations that are actually needed.
  */
-function migrateToLatest(data: any, fromVersion: string): any {
+function migrateToLatest<T>(data: InsomniaFile, fromVersion: string): T {
   let current = data;
 
   // Apply only the migrations that are needed
@@ -111,7 +111,7 @@ function migrateToLatest(data: any, fromVersion: string): any {
     current.schema_version = INSOMNIA_SCHEMA_VERSION;
   }
 
-  return current;
+  return current as T;
 }
 
 /**
@@ -122,7 +122,7 @@ function migrateToLatest(data: any, fromVersion: string): any {
  * @param reference - The reference object to match property order against
  * @returns Object with property order normalized to match reference
  */
-export function normalizePropertyOrder(obj: any, reference: any): any {
+export function normalizePropertyOrder<T>(obj: any, reference: any): T {
   if (Array.isArray(obj)) {
     if (Array.isArray(reference)) {
       // For arrays, try to match elements by their content
@@ -131,9 +131,9 @@ export function normalizePropertyOrder(obj: any, reference: any): any {
           return normalizePropertyOrder(item, reference[index]);
         }
         return item;
-      });
+      }) as T;
     }
-    return obj;
+    return obj as T;
   }
 
   if (obj && typeof obj === 'object' && reference && typeof reference === 'object') {
@@ -153,7 +153,7 @@ export function normalizePropertyOrder(obj: any, reference: any): any {
       }
     }
 
-    return normalized;
+    return normalized as T;
   }
 
   return obj;
@@ -167,7 +167,7 @@ export function normalizePropertyOrder(obj: any, reference: any): any {
  * @param reference - Optional reference object for property order normalization
  * @returns Cleaned and normalized object
  */
-export function cleanHeadersAndParametersWithNormalization(obj: any, reference?: any): any {
+export function cleanHeadersAndParametersWithNormalization<T>(obj: any, reference?: any): T {
   // First, clean the object (remove IDs, empty fields, etc.)
   const cleaned = cleanHeadersAndParameters(obj);
 
