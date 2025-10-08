@@ -1,9 +1,9 @@
-import crypto from 'node:crypto';
-
 import { Analytics } from '@segment/analytics-node';
 import * as Sentry from '@sentry/electron/main';
 import { net } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
+
+import { hashStringToHex } from '~/utils/hash-string';
 
 import {
   getApiBaseURL,
@@ -61,15 +61,11 @@ export enum SegmentEvent {
   buttonClick = 'Button Clicked',
 }
 
-function hashString(input: string) {
-  return crypto.createHash('sha256').update(input).digest('hex');
-}
-
 export async function trackSegmentEvent(event: SegmentEvent, properties?: Record<string, any>) {
   const settings = await models.settings.getOrCreate();
   const userSession = await models.userSession.getOrCreate();
   if (!userSession?.hashedAccountId) {
-    userSession.hashedAccountId = userSession?.accountId ? hashString(userSession.accountId) : '';
+    userSession.hashedAccountId = userSession?.accountId ? await hashStringToHex(userSession.accountId) : '';
   }
   const allowAnalytics = settings.enableAnalytics || userSession?.hashedAccountId;
   if (allowAnalytics) {
@@ -119,7 +115,7 @@ export async function trackPageView(name: string) {
   const settings = await models.settings.getOrCreate();
   const userSession = await models.userSession.getOrCreate();
   if (!userSession?.hashedAccountId) {
-    userSession.hashedAccountId = userSession?.accountId ? hashString(userSession.accountId) : '';
+    userSession.hashedAccountId = userSession?.accountId ? await hashStringToHex(userSession.accountId) : '';
   }
 
   const allowAnalytics = settings.enableAnalytics || userSession?.hashedAccountId;

@@ -3,6 +3,8 @@ import querystring from 'node:querystring';
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { hashStringToBuffer } from '~/utils/hash-string';
+
 import { version } from '../../../package.json';
 import { getOauthRedirectUrl } from '../../common/constants';
 import { database as db } from '../../common/database';
@@ -121,10 +123,9 @@ export const getOAuth2Token = async (
       const pkceMethod =
         authentication.usePkce && !authentication.pkceMethod ? PKCE_CHALLENGE_S256 : authentication.pkceMethod;
       const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
+      const hash = await hashStringToBuffer(codeVerifier);
       const codeChallenge =
-        authentication.usePkce && pkceMethod === PKCE_CHALLENGE_S256
-          ? encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest())
-          : codeVerifier;
+        authentication.usePkce && pkceMethod === PKCE_CHALLENGE_S256 ? encodePKCE(hash) : codeVerifier;
       const authCodeUrl = new URL(authentication.authorizationUrl);
       const responseType: OAuth2ResponseType = 'code';
       const redirectUrl = authentication.useDefaultBrowser ? getOauthRedirectUrl() : authentication.redirectUrl;

@@ -25,6 +25,7 @@ import {
   tryToTransformRequestWithPlugins,
 } from '~/network/network';
 import { parseGraphQLReqeustBody } from '~/utils/graph-ql';
+import { hashStringToHex } from '~/utils/hash-string';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -280,11 +281,21 @@ export const sendActionImplementation = async (options: {
     }, 0);
     testResultCollector.responseId = response._id;
   }
+  // TODO(george): this was in the component before but it should probably be moved to when these things are created
+  // in order not to delay this action.
+  const requestTestResults = await Promise.all(
+    [...preTestResults, ...postTestResults].map(async (result, index) => ({
+      ...result,
+      // ensure unique id for each test result
+      key: await hashStringToHex(`${result.testCase}"-${index}`),
+    })),
+  );
+
   const responsePatch = postMutatedContext
     ? {
         ...baseResponsePatch,
         // both pre-request and after-response test results are collected
-        requestTestResults: [...preTestResults, ...postTestResults],
+        requestTestResults,
       }
     : baseResponsePatch;
 

@@ -1,6 +1,6 @@
-import crypto from 'node:crypto';
-
 import { v4 as uuidv4 } from 'uuid';
+
+import { hashStringToHex } from '~/utils/hash-string';
 
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
@@ -69,11 +69,12 @@ export async function getOrCreateForParentId(parentId: string) {
   const cookieJars = await db.find<CookieJar>(type, { parentId });
 
   if (cookieJars.length === 0) {
+    const hash = await hashStringToHex(parentId, 'SHA-1');
     return create({
       parentId,
       // Deterministic ID. It helps reduce sync complexity since we won't have to
       // de-duplicate cookie jar.
-      _id: `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
+      _id: `${prefix}_${hash}`,
     });
   }
   return cookieJars[0];

@@ -1,3 +1,5 @@
+import { hashStringToHex } from '~/utils/hash-string';
+
 /** @ignore */
 export async function test(msg: string, fn: () => Promise<void>, log: (testResult: RequestTestResult) => void) {
   const wrapFn = async () => {
@@ -8,6 +10,7 @@ export async function test(msg: string, fn: () => Promise<void>, log: (testResul
 
       const executionTime = performance.now() - started;
       log({
+        key: await hashStringToHex(`${msg}-passed`),
         testCase: msg,
         status: 'passed',
         executionTime,
@@ -16,6 +19,7 @@ export async function test(msg: string, fn: () => Promise<void>, log: (testResul
     } catch (e) {
       const executionTime = performance.now() - started;
       log({
+        key: await hashStringToHex(`${msg}-failed`),
         testCase: msg,
         status: 'failed',
         executionTime,
@@ -43,6 +47,7 @@ function startTestObserver(promise: Promise<void>) {
 /** ignore */
 export async function skip(msg: string, _: () => Promise<void>, log: (testResult: RequestTestResult) => void) {
   log({
+    key: await hashStringToHex(`${msg}-skipped`, 'SHA-1'),
     testCase: msg,
     status: 'skipped',
     executionTime: 0,
@@ -57,6 +62,7 @@ export type TestCategory = 'unknown' | 'pre-request' | 'after-response';
 
 /** ignore */
 export interface RequestTestResult {
+  key: string;
   testCase: string;
   status: TestStatus;
   executionTime: number; // milliseconds
