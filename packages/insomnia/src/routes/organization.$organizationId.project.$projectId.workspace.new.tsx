@@ -16,6 +16,7 @@ import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
+import { showError } from '~/ui/components/modals';
 import { showToast } from '~/ui/components/toast-notification';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
@@ -287,6 +288,7 @@ async function continueMockServerCreation(
   })}/mock-server`;
 
   let mockRouteGenerationError: string | undefined;
+  const generationStartTime = Date.now();
 
   if (workspaceData.mockServerCreationType === 'ai') {
     let openapiSpec: string | undefined;
@@ -323,6 +325,8 @@ async function continueMockServerCreation(
 
   await database.flushChanges(flushId);
 
+  const generationDurationMs = Date.now() - generationStartTime;
+
   showMockServerToast(mockRouteGenerationError, mockServer.name, mockServerUrl);
 
   const { id } = await models.userSession.getOrCreate();
@@ -340,6 +344,7 @@ async function continueMockServerCreation(
       generation: workspaceData.mockServerCreationType || '',
       generation_from: workspaceData.apiSpecContents ? 'design_doc' : workspaceData.mockServerSpecSource || '',
       dynamic_responses: workspaceData.mockServerDynamicResponses ? 'yes' : 'no',
+      generation_duration_seconds: generationDurationMs / 1000,
     },
   });
 }
@@ -352,9 +357,22 @@ function showMockServerToast(error: string | undefined, mockServerName: string, 
         title: 'Mock server creation partially failed',
         description: (
           <>
-            <a href={mockServerUrl} style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}>
-              "{mockServerName}" has been created, but mock server routes could not be fully populated from the spec.
-              Error: {error}. Click to open.
+            <div style={{ marginBottom: '8px' }}>
+              <a href={mockServerUrl} style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}>
+                "{mockServerName}" has been created, but mock server routes could not be fully populated from the spec.
+              </a>
+            </div>
+            <a
+              onClick={(e) => {
+                e.preventDefault();
+                showError({
+                  title: 'Mock Route Generation Error',
+                  message: error,
+                });
+              }}
+              style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}
+            >
+              Click to view full error details.
             </a>
           </>
         ),

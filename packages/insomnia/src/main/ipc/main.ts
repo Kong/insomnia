@@ -1,7 +1,8 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
-import type { MockRouteData } from '@kong/insomnia-plugin-ai';
+import type { generateCommitsFromDiff, MockRouteData, ModelConfig } from '@kong/insomnia-plugin-ai';
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 import chardet from 'chardet';
 import type { MarkerRange } from 'codemirror';
@@ -17,7 +18,7 @@ import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
-import type { LLMConfigServiceAPI } from '~/main/llm-config-service';
+import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
@@ -126,6 +127,12 @@ export interface RendererToMainBridgeAPI {
     useDynamicMockResponses: boolean,
     mockServerAdditionalFiles: string[],
   ) => Promise<{ error: string; routes: MockRouteData[] }>;
+  generateCommitsFromDiff: (
+    input: Parameters<typeof generateCommitsFromDiff>[0],
+  ) => Promise<
+    | { commits: Awaited<ReturnType<typeof generateCommitsFromDiff>>; error: undefined }
+    | { commits: undefined; error: string }
+  >;
 }
 
 export function registerMainHandlers() {
@@ -349,38 +356,101 @@ export function registerMainHandlers() {
       useDynamicMockResponses: boolean,
       mockServerAdditionalFiles: string[],
     ) => {
-      try {
-        let routes;
+      return new Promise((resolve, reject) => {
+        const process = utilityProcess.fork(path.join(__dirname, 'main/mock-generation-process.mjs'));
 
-        if (openApiSpec) {
-          const { generateMockRouteDataFromOpenAPISpec } = await import(AI_PLUGIN_NAME);
-          routes = await generateMockRouteDataFromOpenAPISpec(openApiSpec, modelConfig, {
-            additionalFiles: mockServerAdditionalFiles,
-            useDynamicMockResponses: useDynamicMockResponses,
-          });
-        } else if (specUrl) {
-          const { generateMockRouteDataFromUrl } = await import(AI_PLUGIN_NAME);
-          routes = await generateMockRouteDataFromUrl(specUrl!, modelConfig, {
-            additionalFiles: mockServerAdditionalFiles,
-            useDynamicMockResponses: useDynamicMockResponses,
-          });
-        } else if (specText) {
-          const { generateMockRouteDataFromText } = await import(AI_PLUGIN_NAME);
-          routes = await generateMockRouteDataFromText(specText!, modelConfig, {
-            additionalFiles: mockServerAdditionalFiles,
-            useDynamicMockResponses: useDynamicMockResponses,
-          });
-        } else {
-          const errorMessage = 'Failed to create mock server, no spec source was provided';
-          console.error(errorMessage);
-          return { error: errorMessage };
-        }
-        return { routes };
-      } catch (error) {
-        const errorMessage = 'Failed to create mock server from OpenAPI spec: ' + error;
-        console.error(errorMessage);
-        return { error: errorMessage };
-      }
+        process.on('exit', code => {
+          console.log('[mock-generation-process] exited with code:', code);
+          let errorMessage: string;
+
+          const signals = os.constants.signals;
+          if (code === 0) {
+            errorMessage = 'Mock generation process exited with code 0.';
+          } else if (code === signals.SIGSEGV) {
+            errorMessage = `Mock generation process crashed with a segmentation fault (SIGSEGV). This may be due to system compatibility when running a GGUF model.`;
+          } else if (code === signals.SIGKILL) {
+            errorMessage = `Mock generation process was killed (SIGKILL). This may be due to memory limits or system resources.`;
+          } else if (code === signals.SIGTERM) {
+            errorMessage = `Mock generation process was terminated (SIGTERM).`;
+          } else if (code === signals.SIGABRT) {
+            errorMessage = `Mock generation process aborted (SIGABRT). This usually indicates an internal error.`;
+          } else {
+            errorMessage = `Mock generation process exited unexpectedly with code ${code}.`;
+          }
+
+          resolve({ error: errorMessage, routes: [] });
+        });
+
+        process.on('message', msg => {
+          console.log('[mock-generation-process] received message');
+          resolve(msg);
+          process.kill();
+        });
+
+        process.on('error', err => {
+          console.error('[mock-generation-process] error:', err);
+          reject({ error: err.toString() });
+        });
+
+        process.postMessage({
+          openApiSpec,
+          specUrl,
+          specText,
+          modelConfig,
+          useDynamicMockResponses,
+          mockServerAdditionalFiles,
+          aiPluginName: AI_PLUGIN_NAME,
+        });
+      });
     },
   );
+
+  ipcMainHandle('generateCommitsFromDiff', async (_, input) => {
+    return new Promise(async (resolve, reject) => {
+      const modelConfig = (await getCurrentConfig()) as ModelConfig | null;
+      if (!modelConfig) {
+        reject(new Error('No LLM model configured'));
+      }
+      const process = utilityProcess.fork(path.join(__dirname, 'main/git-commit-generation-process.mjs'));
+
+      process.on('exit', code => {
+        console.log('[git-commit-generation-process] exited with code:', code);
+        let errorMessage: string;
+
+        const signals = os.constants.signals;
+        if (code === 0) {
+          errorMessage = 'Git commit generation process exited with code 0.';
+        } else if (code === signals.SIGSEGV) {
+          errorMessage = `Git commit generation process crashed with a segmentation fault (SIGSEGV). This may be due to system compatibility when running a GGUF model.`;
+        } else if (code === signals.SIGKILL) {
+          errorMessage = `Git commit generation process was killed (SIGKILL). This may be due to memory limits or system resources.`;
+        } else if (code === signals.SIGTERM) {
+          errorMessage = `Git commit generation process was terminated (SIGTERM).`;
+        } else if (code === signals.SIGABRT) {
+          errorMessage = `Git commit generation process aborted (SIGABRT). This usually indicates an internal error.`;
+        } else {
+          errorMessage = `Git commit generation process exited unexpectedly with code ${code}.`;
+        }
+
+        resolve({ error: errorMessage });
+      });
+
+      process.on('message', msg => {
+        console.log('[git-commit-generation-process] received message');
+        resolve(msg);
+        process.kill();
+      });
+
+      process.on('error', err => {
+        console.error('[git-commit-generation-process] error:', err);
+        reject({ error: err.toString() });
+      });
+
+      process.postMessage({
+        input,
+        modelConfig,
+        aiPluginName: AI_PLUGIN_NAME,
+      });
+    });
+  });
 }

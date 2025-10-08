@@ -3,6 +3,7 @@ import { Button } from 'react-aria-components';
 
 import type { LLMBackend, LLMConfig } from '~/main/llm-config-service';
 import { Claude } from '~/ui/components/settings/llms/claude';
+import { Gemini } from '~/ui/components/settings/llms/gemini';
 import { GGUF } from '~/ui/components/settings/llms/gguf';
 import { OpenAI } from '~/ui/components/settings/llms/openai';
 
@@ -88,6 +89,12 @@ export const LLMs = () => {
               {currentLLM?.backend === 'openai' && activeBadge}
             </span>
           </Button>
+          <Button className={getNavStyle('gemini')} onClick={() => setSelectedBackend('gemini')}>
+            <span className="flex items-center gap-2">
+              Gemini
+              {currentLLM?.backend === 'gemini' && activeBadge}
+            </span>
+          </Button>
         </div>
         {selectedBackend === 'gguf' && (
           <GGUF
@@ -111,6 +118,14 @@ export const LLMs = () => {
             saveLLMSettings={saveLLMSettings}
             deactivateCurrentLLM={deactivateCurrentLLM}
             configuredLLMs={configuredLLMs.filter(llm => llm.backend === 'openai')}
+          />
+        )}
+        {selectedBackend === 'gemini' && (
+          <Gemini
+            currentLLM={currentLLM}
+            saveLLMSettings={saveLLMSettings}
+            deactivateCurrentLLM={deactivateCurrentLLM}
+            configuredLLMs={configuredLLMs.filter(llm => llm.backend === 'gemini')}
           />
         )}
       </div>
