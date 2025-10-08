@@ -87,6 +87,7 @@ export type HandleChannels =
   | 'open-channel-to-hidden-browser-window'
   | 'openPath'
   | 'readCurlResponse'
+  | 'readOrCreateDataDir'
   | 'readDir'
   | 'insecureReadFile'
   | 'insecureReadFileWithEncoding'

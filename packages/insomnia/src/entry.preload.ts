@@ -179,6 +179,7 @@ const main: Window['main'] = {
   insecureReadFileWithEncoding: options => ipcRenderer.invoke('insecureReadFileWithEncoding', options),
   secureReadFile: options => ipcRenderer.invoke('secureReadFile', options),
   readDir: options => ipcRenderer.invoke('readDir', options),
+  readOrCreateDataDir: options => ipcRenderer.invoke('readOrCreateDataDir', options),
   lintSpec: options => ipcRenderer.invoke('lintSpec', options),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
