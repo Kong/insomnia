@@ -94,7 +94,7 @@ export function migrateToLatestYaml(yamlContent: string, referenceContent?: stri
  * Migrates data from a given version to the latest version using all necessary migrations.
  * Optimized to only apply migrations that are actually needed.
  */
-function migrateToLatest(data: any, fromVersion: string): string {
+function migrateToLatest(data: any, fromVersion: string): any {
   let current = data;
 
   // Apply only the migrations that are needed
@@ -104,7 +104,14 @@ function migrateToLatest(data: any, fromVersion: string): string {
     }
   }
 
-  return stringify(current);
+  // Only add schema_version if it doesn't exist and we actually performed migrations
+  // Check if any migrations were actually applied by comparing the result with the original
+  const hasChanges = JSON.stringify(current) !== JSON.stringify(data);
+  if (!current.schema_version && hasChanges) {
+    current.schema_version = INSOMNIA_SCHEMA_VERSION;
+  }
+
+  return current;
 }
 
 /**
