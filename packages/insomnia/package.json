@@ -147,6 +147,7 @@
   },
   "devDependencies": {
     "@develohpanda/fluent-builder": "^2.1.2",
+    "@modelcontextprotocol/sdk": "^1.17.5",
     "@react-router/dev": "^7.7.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.0",
