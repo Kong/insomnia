@@ -29,7 +29,7 @@ import { McpRootsPanel } from './mcp-roots-panel';
 import { McpUrlActionBar } from './mcp-url-bar';
 import type { PrimitiveSubItem } from './types';
 
-const supportedAuthTypes: AuthTypes[] = ['basic', 'oauth2', 'bearer'];
+const supportedAuthTypes: AuthTypes[] = ['basic', 'oauth2', 'bearer', 'apikey'];
 export type RequestPaneTabs = 'params' | 'auth' | 'headers' | 'roots';
 
 const PaneReadOnlyBanner = () => {
@@ -371,6 +371,7 @@ export const McpRequestPane: FC<Props> = ({
             authTypes={supportedAuthTypes}
             hideInherit
             showMcpAuthFlow
+            addToHeaderOnly
           />
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="headers">
