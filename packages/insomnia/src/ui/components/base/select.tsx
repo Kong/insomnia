@@ -1,3 +1,4 @@
+import type { Key } from '@react-types/shared';
 import cn from 'classnames';
 import React from 'react';
 import {
@@ -14,7 +15,7 @@ import { Icon } from '../icon';
 
 interface SelectProps {
   value: string;
-  onChange: (value: string | number) => void;
+  onChange: (value: Key | null) => void;
   className?: string;
   options: { label: string; value: string }[];
 }
