@@ -296,9 +296,13 @@ export class GitVCS {
 
   async readContentsFromHead(file: string) {
     try {
+      const latestCommitOid = await git.resolveRef({
+        ...this._baseOpts,
+        ref: 'HEAD',
+      });
       const { blob } = await git.readBlob({
         ...this._baseOpts,
-        oid: 'HEAD',
+        oid: latestCommitOid,
         filepath: file,
       });
 
