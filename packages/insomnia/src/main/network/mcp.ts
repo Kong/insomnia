@@ -20,6 +20,7 @@ import {
 import type { GetPromptRequest, Notification, ReadResourceRequest } from '@modelcontextprotocol/sdk/types.js';
 import {
   type ClientRequest,
+  CompatibilityCallToolResultSchema,
   ElicitResultSchema,
   EmptyResultSchema,
   InitializeRequestSchema,
@@ -1015,7 +1016,7 @@ const callTool = async (options: CallToolOptions) => {
   const { requestId, name, parameters = {} } = options;
   const mcpClient = _getMcpClient(requestId);
   if (mcpClient) {
-    const response = await mcpClient.callTool({ name, arguments: parameters });
+    const response = await mcpClient.callTool({ name, arguments: parameters }, CompatibilityCallToolResultSchema);
     return response.content;
   }
   return null;
