@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises';
-
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
@@ -90,19 +88,30 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
       const clientCertificate = workspaceClientCertificates.find(
         c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
       );
-      const caCertificate = await models.caCertificate.findByParentId(workspaceId);
-      const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
-      const clientCert = clientCertificate?.cert ? await readFile(clientCertificate?.cert, 'utf8') : undefined;
-      const clientKey = clientCertificate?.key ? await readFile(clientCertificate?.key, 'utf8') : undefined;
+      const caCertificateProp = await models.caCertificate.findByParentId(workspaceId);
+      const caCertificatePath = caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
+
+      const clientCert = clientCertificate?.cert
+        ? await window.main.insecureReadFile({
+            path: clientCertificate.cert,
+          })
+        : undefined;
+      const clientKey = clientCertificate?.key
+        ? await window.main.insecureReadFile({ path: clientCertificate.key })
+        : undefined;
+      // allow to read the file as it is chosen by user
+      const caCertificate = caCertificatePath
+        ? await window.main.insecureReadFile({ path: caCertificatePath })
+        : undefined;
 
       const renderedWithCertificates = {
         ...rendered,
         rejectUnauthorized: settings.validateSSL,
         ...(activeRequest.url.toLowerCase().startsWith('grpcs:')
           ? {
-              clientCert,
-              clientKey,
-              caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+              clientCert: clientCert,
+              clientKey: clientKey,
+              caCertificate: caCertificate,
             }
           : {}),
       };
@@ -151,9 +160,22 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           rejectUnauthorized: settings.validateSSL,
           ...(request.url.toLowerCase().startsWith('grpcs:')
             ? {
-                clientCert: clientCertificate?.cert ? await readFile(clientCertificate?.cert || '', 'utf8') : undefined,
-                clientKey: clientCertificate?.key ? await readFile(clientCertificate?.key || '', 'utf8') : undefined,
-                caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+                clientCert: clientCertificate?.cert
+                  ? await window.main.insecureReadFile({
+                      path: clientCertificate.cert,
+                    })
+                  : undefined,
+                clientKey: clientCertificate?.key
+                  ? await window.main.insecureReadFile({
+                      path: clientCertificate.key,
+                    })
+                  : undefined,
+                // allow to read the file as it is chosen by user
+                caCertificate: caCertificatePath
+                  ? await window.main.insecureReadFile({
+                      path: caCertificatePath,
+                    })
+                  : undefined,
               }
             : {}),
         });
@@ -267,22 +289,34 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                     const clientCertificate = workspaceClientCertificates.find(
                       c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
                     );
-                    const caCertificate = await models.caCertificate.findByParentId(workspaceId);
-                    const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
+                    const caCertificateProp = await models.caCertificate.findByParentId(workspaceId);
+                    const caCertificatePath =
+                      caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
                     const clientCert = clientCertificate?.cert
-                      ? await readFile(clientCertificate?.cert, 'utf8')
+                      ? await window.main.insecureReadFile({
+                          path: clientCertificate?.cert,
+                        })
                       : undefined;
                     const clientKey = clientCertificate?.key
-                      ? await readFile(clientCertificate?.key, 'utf8')
+                      ? await window.main.insecureReadFile({
+                          path: clientCertificate?.key,
+                        })
                       : undefined;
+                    // allow to read the file as it is chosen by user
+                    const caCertificate = caCertificatePath
+                      ? await window.main.insecureReadFile({
+                          path: caCertificatePath,
+                        })
+                      : undefined;
+
                     rendered = {
                       ...rendered,
                       rejectUnauthorized: settings.validateSSL,
                       ...(activeRequest.url.toLowerCase().startsWith('grpcs:')
                         ? {
-                            clientCert,
-                            clientKey,
-                            caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+                            clientCert: clientCert,
+                            clientKey: clientKey,
+                            caCertificate: caCertificate,
                           }
                         : {}),
                     };

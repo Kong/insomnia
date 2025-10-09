@@ -93,7 +93,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -172,7 +172,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -276,7 +276,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -315,7 +315,8 @@ describe('sendCurlAndWriteTimeline()', () => {
 
   it('sends a file', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    let settings = await models.settings.getOrCreate();
+    settings = await models.settings.update(settings, { dataFolders: [pathResolve(__dirname)] });
     await models.cookieJar.create({
       parentId: workspace._id,
     });
@@ -340,7 +341,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -424,7 +425,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -489,7 +490,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -533,7 +534,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -576,7 +577,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -620,7 +621,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -725,7 +726,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       { ...settings, validateSSL: false },
       '/tmp/res_id',
       'res_id',
@@ -781,7 +782,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const responseV1 = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       {
         ...settings,
         preferredHttpVersion: HttpVersions.V1_0,

@@ -1,7 +1,6 @@
-import { readFile } from 'node:fs/promises';
-
 import { z, type ZodError } from 'zod/v4';
 
+import { insecureReadFile } from '~/main/secure-read-file';
 import type { CurrentPlan } from '~/models/organization';
 
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
@@ -80,9 +79,8 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     return content;
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
-    const content = await readFile(path, 'utf8');
-
-    return content;
+    // allow reading the file as it is chosen by user
+    return insecureReadFile(path);
   }
   // Treat everything else as raw text
   const content = decodeURIComponent(uri);
