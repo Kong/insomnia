@@ -21,9 +21,14 @@ export const PasteCurlModal = ({
   useEffect(() => {
     async function parseCurlToRequest() {
       try {
-        const { data } = await window.main.parseImport({
-          contentStr: defaultValue || '',
-        });
+        const { data } = await window.main.parseImport(
+          {
+            contentStr: defaultValue || '',
+          },
+          {
+            importerId: 'curl',
+          },
+        );
         const { resources } = data;
         const importedRequest = resources[0];
         setIsValid(true);
@@ -53,12 +58,19 @@ export const PasteCurlModal = ({
             defaultValue={defaultValue}
             onChange={async value => {
               if (!value) {
+                setIsValid(false);
+                setReq({});
                 return;
               }
               try {
-                const { data } = await window.main.parseImport({
-                  contentStr: value,
-                });
+                const { data } = await window.main.parseImport(
+                  {
+                    contentStr: value,
+                  },
+                  {
+                    importerId: 'curl',
+                  },
+                );
                 const { resources } = data;
                 const importedRequest = resources[0];
                 setIsValid(true);

@@ -18,9 +18,19 @@ export interface ConvertResult {
   };
 }
 
-export const convert = async (importEntry: ImportEntry) => {
-  const importers = (await import('./importers')).importers;
+export const convert = async (
+  importEntry: ImportEntry,
+  {
+    importerId,
+  }: {
+    importerId?: string;
+  } = {},
+) => {
+  let importers = (await import('./importers')).importers;
   const errMsgList: string[] = [];
+  if (importerId) {
+    importers = importers.filter(i => i.id === importerId);
+  }
   for (const importer of importers) {
     let resources;
     if (importer.acceptFilePath === true) {
