@@ -66,7 +66,7 @@ export interface RendererToMainBridgeAPI {
   cancelAuthorizationInDefaultBrowser: typeof cancelAuthorizationInDefaultBrowser;
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
-  parseImport: (options: { contentStr: string }) => Promise<{ data: { resources: models.BaseModel[] } }>;
+  parseImport: typeof convert;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
   secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
@@ -162,8 +162,8 @@ export function registerMainHandlers() {
       return cancelAuthorizationInDefaultBrowser(options);
     },
   );
-  ipcMainHandle('parseImport', async (_, options: { contentStr: string }) => {
-    return convert(options);
+  ipcMainHandle('parseImport', async (_, ...args: Parameters<typeof convert>) => {
+    return convert(...args);
   });
   ipcMainHandle('writeFile', async (_, options: { path: string; content: string }) => {
     try {
