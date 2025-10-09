@@ -12,8 +12,8 @@ import {
   Toolbar,
 } from 'react-aria-components';
 
+import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
-import { translateHandlersInScript } from '~/utils/importers/importers/translate-postman-script';
 
 import {
   CookieObject,

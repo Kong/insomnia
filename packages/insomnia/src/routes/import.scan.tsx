@@ -4,8 +4,8 @@ import { type ActionFunctionArgs, href } from 'react-router';
 
 import type { ScanResult } from '~/common/import';
 import { fetchImportContentFromURI, getFilesFromPostmanExportedDataDump, scanResources } from '~/common/import';
+import type { ImportEntry } from '~/main/importers/entities';
 import { SegmentEvent } from '~/ui/analytics';
-import type { ImportEntry } from '~/utils/importers/entities';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 

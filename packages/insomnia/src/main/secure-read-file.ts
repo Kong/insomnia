@@ -29,7 +29,7 @@ export const secureReadFile = async (filePath: string): Promise<string> => {
 
   invariant(
     isAllowed,
-    `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia's Preferences → Security`,
+    `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia Preferences → Security`,
   );
 
   return fs.promises.readFile(securedPath, { encoding: 'utf8' });
