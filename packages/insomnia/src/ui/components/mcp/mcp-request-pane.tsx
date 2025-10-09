@@ -5,9 +5,12 @@ import { Button, Heading, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-ar
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useLatest } from 'react-use';
 
+import { docsBase } from '~/common/documentation';
 import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { Link } from '~/ui/components/base/link';
 import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
+import { Icon } from '~/ui/components/icon';
 import { InsomniaRjsfForm, type InsomniaRjsfFormHandle } from '~/ui/components/rjsf';
 
 import { type AuthTypes } from '../../../common/constants';
@@ -26,7 +29,7 @@ import { McpRootsPanel } from './mcp-roots-panel';
 import { McpUrlActionBar } from './mcp-url-bar';
 import type { PrimitiveSubItem } from './types';
 
-const supportedAuthTypes: AuthTypes[] = ['basic', 'oauth2', 'bearer'];
+const supportedAuthTypes: AuthTypes[] = ['basic', 'oauth2', 'bearer', 'apikey'];
 export type RequestPaneTabs = 'params' | 'auth' | 'headers' | 'roots';
 
 const PaneReadOnlyBanner = () => {
@@ -63,6 +66,7 @@ export const McpRequestPane: FC<Props> = ({
 }) => {
   const primitiveId = `${selectedPrimitiveItem?.type}_${selectedPrimitiveItem?.name}`;
   const { activeRequest, activeRequestMeta, requestPayload } = useRequestLoaderData()! as McpRequestLoaderData;
+  const [isCalling, setIsCalling] = useState(false);
   const latestRequestPayloadRef = useLatest(requestPayload);
 
   const { activeProject } = useWorkspaceLoaderData()!;
@@ -125,30 +129,37 @@ export const McpRequestPane: FC<Props> = ({
     [primitiveId, selectedPrimitiveItem?.type],
   );
 
-  const handleSend = () => {
+  const handleSend = async () => {
     rjsfFormRef.current?.validate();
-    if (selectedPrimitiveItem?.type === 'tools') {
-      window.main.mcp.primitive.callTool({
-        name: selectedPrimitiveItem?.name || '',
-        parameters: mcpParams[primitiveId],
-        requestId: requestId,
-      });
-    } else if (selectedPrimitiveItem?.type === 'resources') {
-      window.main.mcp.primitive.readResource({
-        requestId,
-        uri: selectedPrimitiveItem?.uri || '',
-      });
-    } else if (selectedPrimitiveItem?.type === 'resourceTemplates') {
-      window.main.mcp.primitive.readResource({
-        requestId,
-        uri: fillUriTemplate(selectedPrimitiveItem.uriTemplate, mcpParams[primitiveId] || {}),
-      });
-    } else if (selectedPrimitiveItem?.type === 'prompts') {
-      window.main.mcp.primitive.getPrompt({
-        requestId,
-        name: selectedPrimitiveItem?.name || '',
-        parameters: mcpParams[primitiveId],
-      });
+    try {
+      setIsCalling(true);
+      if (selectedPrimitiveItem?.type === 'tools') {
+        await window.main.mcp.primitive.callTool({
+          name: selectedPrimitiveItem?.name || '',
+          parameters: mcpParams[primitiveId],
+          requestId: requestId,
+        });
+      } else if (selectedPrimitiveItem?.type === 'resources') {
+        await window.main.mcp.primitive.readResource({
+          requestId,
+          uri: selectedPrimitiveItem?.uri || '',
+        });
+      } else if (selectedPrimitiveItem?.type === 'resourceTemplates') {
+        await window.main.mcp.primitive.readResource({
+          requestId,
+          uri: fillUriTemplate(selectedPrimitiveItem.uriTemplate, mcpParams[primitiveId] || {}),
+        });
+      } else if (selectedPrimitiveItem?.type === 'prompts') {
+        await window.main.mcp.primitive.getPrompt({
+          requestId,
+          name: selectedPrimitiveItem?.name || '',
+          parameters: mcpParams[primitiveId],
+        });
+      }
+    } catch (err) {
+      console.warn('MCP primitive call error', err);
+    } finally {
+      setIsCalling(false);
     }
   };
 
@@ -272,9 +283,11 @@ export const McpRequestPane: FC<Props> = ({
         </TabList>
         <TabPanel className="flex h-full w-full flex-1 flex-col overflow-y-auto" id="params">
           {!readyState ? (
-            <div className="flex h-full w-full flex-col items-center gap-3 pt-[5%] text-center">
+            <div className="flex h-full w-full flex-col items-center p-5 text-center">
               {/*  Hint when mcp server is not connected*/}
-              <span className="text-md">Enter MCP server url to discover capabilities</span>
+              <p className="notice info text-md no-margin-top w-full">
+                Connect to an MCP server URL to reveal capabilities. &nbsp;<Link href={docsBase}>Learn More</Link>
+              </p>
             </div>
           ) : (
             <PanelGroup className="flex-1 overflow-hidden" direction={'vertical'}>
@@ -289,11 +302,19 @@ export const McpRequestPane: FC<Props> = ({
                           onClick={handleSend}
                           className="rounded bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise]"
                         >
+                          {isCalling && <Icon className="mr-1 animate-spin" icon="spinner" />}
                           {sendButtonText}
                         </Button>
                       </div>
                     )}
                   </Toolbar>
+                  {!selectedPrimitiveItem && (
+                    <div className="flex h-full w-full flex-col items-center p-5 text-center">
+                      <p className="notice info text-md no-margin-top w-full">
+                        Select an MCP server primitive from the list to start.
+                      </p>
+                    </div>
+                  )}
                   {jsonSchema && (
                     <div className="overflow-auto p-4">
                       <p>{selectedPrimitiveItem?.name}</p>
@@ -350,6 +371,7 @@ export const McpRequestPane: FC<Props> = ({
             authTypes={supportedAuthTypes}
             hideInherit
             showMcpAuthFlow
+            addToHeaderOnly
           />
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="headers">

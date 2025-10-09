@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
-import React, { useCallback } from 'react';
+import { CallToolResultSchema } from '@modelcontextprotocol/sdk/types.js';
+import React, { useCallback, useRef } from 'react';
 import { Button } from 'react-aria-components';
 import { useParams } from 'react-router';
 
@@ -11,9 +12,10 @@ import {
   PREVIEW_MODE_SOURCE,
   PREVIEW_MODES,
 } from '../../../common/constants';
+import { METHOD_CALL_TOOL } from '../../../common/mcp-utils';
 import type { McpEvent } from '../../../main/network/mcp';
 import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { CodeEditor } from '../../components/.client/codemirror/code-editor';
+import { CodeEditor, type CodeEditorHandle } from '../../components/.client/codemirror/code-editor';
 import { showError } from '../../components/modals';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -24,8 +26,10 @@ interface Props {
 
 export const MessageEventView = ({ event }: Props) => {
   const { requestId } = useParams() as { requestId: string };
+  const editorRef = useRef<CodeEditorHandle>(null);
 
   const isErrorEvent = event.type === 'error';
+  const isCallToolEvent = event.type === 'message' && event.method === METHOD_CALL_TOOL;
   const eventData = isErrorEvent ? event.error : 'data' in event ? event.data : '';
   const raw = JSON.stringify(eventData);
 
@@ -63,6 +67,27 @@ export const MessageEventView = ({ event }: Props) => {
   let pretty = raw;
   try {
     const parsed = JSON.parse(raw);
+    // If call tool response, try to parse the `result.content` field if it's JSON string
+    if (isCallToolEvent && 'result' in parsed) {
+      const callToolResult = parsed.result;
+      if ('content' in callToolResult) {
+        const callToolParsedResult = CallToolResultSchema.safeParse(callToolResult);
+        if (callToolParsedResult.success) {
+          const callToolResultContents = callToolParsedResult.data.content;
+          callToolResultContents.forEach((callToolResultContent, idx) => {
+            if (callToolResultContent.type === 'text') {
+              const callToolResultContentText = callToolResultContent.text;
+              // Try to parse JSON text content
+              try {
+                const callToolResultContentTextParsed = JSON.parse(callToolResultContentText);
+                callToolResultContent.text = callToolResultContentTextParsed;
+              } catch (err) {}
+            }
+            parsed.result.content[idx] = callToolResultContent;
+          });
+        }
+      }
+    }
     pretty = JSON.stringify(parsed, null, '\t');
   } catch {
     // Can't parse as JSON.
@@ -87,7 +112,10 @@ export const MessageEventView = ({ event }: Props) => {
                 <ItemContent
                   icon={previewMode === mode ? 'check' : 'empty'}
                   label={getPreviewModeName(mode, true)}
-                  onClick={() => patchRequestMeta(requestId, { previewMode: mode })}
+                  onClick={() => {
+                    patchRequestMeta(requestId, { previewMode: mode });
+                    editorRef.current?.setValue(mode === PREVIEW_MODE_FRIENDLY ? pretty : raw);
+                  }}
                 />
               </DropdownItem>
             ))}
@@ -109,6 +137,7 @@ export const MessageEventView = ({ event }: Props) => {
           mode={previewMode === PREVIEW_MODE_RAW ? 'text/plain' : 'text/json'}
           defaultValue={previewMode === PREVIEW_MODE_FRIENDLY ? pretty : raw}
           uniquenessKey={event._id}
+          ref={editorRef}
           readOnly
         />
       </div>
