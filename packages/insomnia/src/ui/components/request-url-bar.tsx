@@ -74,10 +74,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         // only for request render error
         const errorMessage = searchParams.get('error') || '';
         // detects a string to replace with a link to settings
-        const linkText = "Insomnia's Preferences → Security";
-        const modifiedString = errorMessage.endsWith(linkText)
-          ? errorMessage.slice(0, errorMessage.length - linkText.length)
-          : errorMessage;
+        const linkText = 'Insomnia Preferences → Security';
+        const hasLink = errorMessage.endsWith(linkText);
+
+        const modifiedString = hasLink ? errorMessage.slice(0, errorMessage.length - linkText.length) : errorMessage;
         const close = showModal(AlertModal, {
           title: 'Unexpected Request Failure',
           message: (
@@ -86,15 +86,17 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
               <code className="wide selectable">
                 <div className="w-full overflow-y-auto text-wrap">
                   {modifiedString}
-                  <Link
-                    className="cursor-pointer text-[--color-surprise]"
-                    onPress={() => {
-                      close();
-                      showSettingsModal({ tab: 'general' });
-                    }}
-                  >
-                    {linkText}
-                  </Link>
+                  {hasLink && (
+                    <Link
+                      className="cursor-pointer text-[--color-surprise]"
+                      onPress={() => {
+                        close();
+                        showSettingsModal({ tab: 'general' });
+                      }}
+                    >
+                      {linkText}
+                    </Link>
+                  )}
                 </div>
               </code>
             </div>

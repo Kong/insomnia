@@ -162,7 +162,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
         const { isAllowed, securedPath } = isPathAllowed(requestBodyPath, settings.dataFolders);
         invariant(
           isAllowed,
-          `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia's Preferences → Security`,
+          `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia Preferences → Security`,
         );
 
         // AWS IAM file upload not supported
