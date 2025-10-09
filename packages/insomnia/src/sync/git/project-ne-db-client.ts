@@ -3,6 +3,9 @@ import path from 'node:path';
 import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
 
+import { hasSignificantChanges } from '~/common/significant-diff-detection';
+import gitVcs from '~/sync/git/git-vcs';
+
 import { database, database as db } from '../../common/database';
 import type { InsomniaFile } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '../../common/insomnia-v5';
@@ -51,6 +54,16 @@ export class GitProjectNeDBClient {
       }
 
       const workspaceFile = await getInsomniaV5DataExport({ workspaceId, includePrivateEnvironments: false });
+
+      const headFileContents = await gitVcs.readContentsFromHead(filePath);
+
+      if (
+        headFileContents &&
+        headFileContents !== workspaceFile &&
+        !hasSignificantChanges(headFileContents, workspaceFile, filePath)
+      ) {
+        return headFileContents;
+      }
 
       const raw = Buffer.from(workspaceFile, 'utf8');
 
