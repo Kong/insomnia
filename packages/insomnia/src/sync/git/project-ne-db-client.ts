@@ -62,7 +62,13 @@ export class GitProjectNeDBClient {
         headFileContents !== workspaceFile &&
         !hasSignificantChanges(headFileContents, workspaceFile, filePath)
       ) {
-        return headFileContents;
+        const raw = Buffer.from(headFileContents, 'utf8');
+
+        if (options.encoding) {
+          return raw.toString(options.encoding);
+        }
+
+        return raw;
       }
 
       const raw = Buffer.from(workspaceFile, 'utf8');
