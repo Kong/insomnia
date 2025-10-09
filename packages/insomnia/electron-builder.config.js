@@ -52,7 +52,7 @@ const config = {
         arch: 'universal',
       },
     ],
-    x64ArchFiles: '*',
+    x64ArchFiles: '**/node_modules/@esbuild/darwin-x64/**',
     mergeASARs: false,
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
