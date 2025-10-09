@@ -74,7 +74,7 @@ export function cleanHeadersAndParameters(obj: any): any {
     for (const [key, value] of Object.entries(obj)) {
       if ((key === 'headers' || key === 'parameters' || key === 'params') && Array.isArray(value)) {
         const filteredAndCleaned = value
-          .filter(entry => entry && typeof entry === 'object' && (entry.name || entry.value))
+          .filter(entry => entry && typeof entry === 'object' && (entry.name || entry.value || entry.fileName))
           .map(entry => {
             const { id, ...rest } = entry; // remove `id` only here
             return cleanHeadersAndParameters(rest);
