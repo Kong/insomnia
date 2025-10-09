@@ -15,6 +15,7 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
+import { convert } from '~/main/importers/convert';
 import { insecureReadFile, insecureReadFileWithEncoding, secureReadFile } from '~/main/secure-read-file';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
@@ -65,6 +66,7 @@ export interface RendererToMainBridgeAPI {
   cancelAuthorizationInDefaultBrowser: typeof cancelAuthorizationInDefaultBrowser;
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
+  parseImport: (options: { contentStr: string }) => Promise<{ data: { resources: models.BaseModel[] } }>;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
   secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
@@ -160,7 +162,9 @@ export function registerMainHandlers() {
       return cancelAuthorizationInDefaultBrowser(options);
     },
   );
-
+  ipcMainHandle('parseImport', async (_, options: { contentStr: string }) => {
+    return convert(options);
+  });
   ipcMainHandle('writeFile', async (_, options: { path: string; content: string }) => {
     try {
       await fs.promises.writeFile(options.path, options.content);

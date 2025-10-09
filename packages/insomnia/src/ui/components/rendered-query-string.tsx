@@ -143,18 +143,22 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
   const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
 
   // detects a string to replace with a link to settings
-  const linkText = "Insomnia's Preferences → Security";
-  const modifiedString = previewString.endsWith(linkText)
-    ? previewString.slice(0, previewString.length - linkText.length)
-    : previewString;
+  const linkText = 'Insomnia Preferences → Security';
+  const hasLink = previewString.endsWith(linkText);
+  const modifiedString = hasLink ? previewString.slice(0, previewString.length - linkText.length) : previewString;
 
   return (
     <div className="relative flex h-full w-full justify-between gap-[var(--padding-sm)] overflow-auto">
       <span className={classNames('my-auto', className)}>
         {modifiedString}
-        <Link className="cursor-pointer text-[--color-surprise]" onPress={() => showSettingsModal({ tab: 'general' })}>
-          {linkText}
-        </Link>
+        {hasLink && (
+          <Link
+            className="cursor-pointer text-[--color-surprise]"
+            onPress={() => showSettingsModal({ tab: 'general' })}
+          >
+            {linkText}
+          </Link>
+        )}
       </span>
 
       <CopyButton

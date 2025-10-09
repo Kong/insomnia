@@ -72,6 +72,7 @@ export type HandleChannels =
   | 'lintSpec'
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
+  | 'parseImport'
   | 'readCurlResponse'
   | 'readDir'
   | 'insecureReadFile'
