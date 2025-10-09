@@ -26,14 +26,15 @@ export const AuthWrapper: FC<{
   hideOthers?: boolean;
   hideInherit?: boolean;
   showMcpAuthFlow?: boolean;
-}> = ({ authentication, disabled = false, authTypes, hideOthers, hideInherit, showMcpAuthFlow }) => {
+  addToHeaderOnly?: boolean;
+}> = ({ authentication, disabled = false, authTypes, hideOthers, hideInherit, showMcpAuthFlow, addToHeaderOnly }) => {
   const type = getAuthObjectOrNull(authentication)?.type || '';
   let authBody: ReactNode = null;
 
   if (type === 'basic') {
     authBody = <BasicAuth disabled={disabled} />;
   } else if (type === 'apikey') {
-    authBody = <ApiKeyAuth disabled={disabled} />;
+    authBody = <ApiKeyAuth disabled={disabled} addToHeaderOnly={addToHeaderOnly} />;
   } else if (type === 'oauth2') {
     authBody = <OAuth2Auth showMcpAuthFlow={showMcpAuthFlow} disabled={disabled} />;
   } else if (type === 'hawk') {

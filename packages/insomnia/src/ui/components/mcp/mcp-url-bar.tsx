@@ -109,6 +109,9 @@ export const McpUrlActionBar = ({
         } else if (authentication.type === 'bearer' && authentication.token) {
           const { token, prefix } = authentication;
           headers.push(getBearerAuthHeader(token, prefix));
+        } else if (authentication.type === 'apikey') {
+          const { key, value } = authentication;
+          headers.push({ name: key, value });
         } else if (authentication.type === 'oauth2') {
           const oAuth2Token = await getOAuth2Token(request._id, authentication as AuthTypeOAuth2);
           if (oAuth2Token) {
@@ -213,38 +216,35 @@ export const McpUrlActionBar = ({
   }, []);
 
   const isConnectingOrClosed = !readyState;
+  const isDropdownDisabled = isOpen || isConnecting;
 
   return (
     <>
-      {!isOpen && (
-        <div className="flex items-center">
-          <Dropdown
-            triggerButton={
-              <RaButton className="pl-2" aria-label="Request Method">
-                <span>{requestTransportTypeLabel}</span> <i className="fa fa-caret-down space-left" />
-              </RaButton>
-            }
-            placement="bottom start"
-          >
-            <DropdownSection>
-              {MCP_TRANSPORT_TYPES.map(transportType => (
-                <DropdownItem key={transportType}>
-                  <ItemContent
-                    label={getTransportLabel(transportType)}
-                    onClick={() => patchRequest(request._id, { transportType })}
-                  />
-                </DropdownItem>
-              ))}
-            </DropdownSection>
-          </Dropdown>
-        </div>
-      )}
-      {isOpen && (
-        <span className="text-success flex items-center pl-[--padding-md]">
-          <span className="mr-[--padding-sm] h-2.5 w-2.5 rounded-[50%] bg-[--color-success]" />
-          CONNECTED
-        </span>
-      )}
+      <div className="flex items-center">
+        <Dropdown
+          triggerButton={
+            <RaButton
+              className={`pl-2 ${isDropdownDisabled ? 'cursor-not-allowed opacity-30' : ''}`}
+              aria-label="Request Method"
+            >
+              <span>{requestTransportTypeLabel}</span> <i className="fa fa-caret-down space-left" />
+            </RaButton>
+          }
+          placement="bottom start"
+          isDisabled={isDropdownDisabled}
+        >
+          <DropdownSection>
+            {MCP_TRANSPORT_TYPES.map(transportType => (
+              <DropdownItem key={transportType}>
+                <ItemContent
+                  label={getTransportLabel(transportType)}
+                  onClick={() => patchRequest(request._id, { transportType })}
+                />
+              </DropdownItem>
+            ))}
+          </DropdownSection>
+        </Dropdown>
+      </div>
       <form
         className="flex flex-1"
         aria-disabled={isOpen}
@@ -273,7 +273,7 @@ export const McpUrlActionBar = ({
               disabled={connectRequestFetcher.state === 'submitting' || connectRequestFetcher.state === 'loading'}
               type="submit"
             >
-              Discover
+              Connect
             </button>
           ) : (
             <DisconnectButton requestId={request._id} />
