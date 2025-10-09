@@ -290,6 +290,22 @@ export const WorkspaceDropdown: FC<{}> = () => {
                 },
               },
             ]),
+        ...(activeWorkspace.scope === 'mock-server'
+          ? [
+              {
+                id: 'generate-collection',
+                name: 'Generate Collection',
+                icon: <Icon icon="code" />,
+                action: () => {
+                  generateCollectionFetcher.submit({
+                    organizationId,
+                    projectId: activeWorkspace.parentId,
+                    workspaceId: activeWorkspace._id,
+                  });
+                },
+              },
+            ]
+          : []),
         {
           id: 'settings',
           name: 'Settings',
