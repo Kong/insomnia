@@ -339,7 +339,7 @@ export const McpRequestPane: FC<Props> = ({
                 </div>
               </Panel>
               <PanelResizeHandle className="h-[1px] w-full bg-[--hl-md]" />
-              {selectedPrimitiveItem?.type === 'tools' && (
+              {selectedPrimitiveItem?.type !== 'resources' && selectedPrimitiveItem?.type !== 'resourceTemplates' && (
                 <Panel minSize={20}>
                   <div className="flex h-full flex-col">
                     <Heading className="p-4 text-xs font-bold text-[--hl]">Parameter Overview</Heading>
