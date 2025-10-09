@@ -1184,20 +1184,6 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
       throw new Error(GitVCSOperationErrors.UncommittedChangesError);
     }
 
-    // Get the status without significant diff detection so we can discard changes properly
-    const status = await this.statusWithContent();
-    const unstagedChanges = status.filter(({ workdir, stage }) => stage.status !== workdir.status);
-
-    if (unstagedChanges.length === 0) {
-      await this.discardChanges(
-        unstagedChanges?.map(u => ({
-          path: u.filepath,
-          status: [u.head.status, u.workdir.status, u.stage.status],
-        })),
-        { discardUnstaged: true },
-      );
-    }
-
     const writeFileMap = {};
 
     try {
