@@ -86,6 +86,7 @@ export type HandleChannels =
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
   | 'openPath'
+  | 'parseImport'
   | 'readCurlResponse'
   | 'readOrCreateDataDir'
   | 'readDir'

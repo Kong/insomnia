@@ -255,7 +255,7 @@ export const TagEditor: FC<Props> = props => {
   let previewElement;
   if (error) {
     // detects a string to replace with a link to settings
-    const linkText = "Insomnia's Preferences → Security";
+    const linkText = 'Insomnia Preferences → Security';
     if (error.endsWith(linkText)) {
       previewElement = (
         <div className="danger min-h-[115px] rounded-md border border-solid border-[var(--hl-md)] bg-[var(--hl-xxs)] p-[var(--padding-sm)]">
