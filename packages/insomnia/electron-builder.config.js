@@ -52,8 +52,8 @@ const config = {
         arch: 'universal',
       },
     ],
-    x64ArchFiles: '*',
-    mergeASARs: false,
+    x64ArchFiles: '**/node_modules/**/*.node',
+    mergeASARs: true,
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
     },
