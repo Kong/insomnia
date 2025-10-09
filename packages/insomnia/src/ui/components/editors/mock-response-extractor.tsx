@@ -1,5 +1,3 @@
-import fs from 'node:fs/promises';
-
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
@@ -120,7 +118,9 @@ If you want to create a self-hosted mock server route from a request response in
           e.preventDefault();
           if (selectedMockServer && selectedMockRoute) {
             if (activeResponse && 'bodyPath' in activeResponse) {
-              const body = await fs.readFile(activeResponse.bodyPath);
+              const body = await window.main.secureReadFile({
+                path: activeResponse.bodyPath,
+              });
               const headersWithoutContentLength = activeResponse.headers.filter(
                 h => h.name.toLowerCase() !== 'content-length',
               );

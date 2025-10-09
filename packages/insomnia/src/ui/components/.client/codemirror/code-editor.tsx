@@ -849,15 +849,7 @@ export const CodeEditor = memo(
                   </MenuTrigger>
                 )}
 
-                {showFilter ? (
-                  <Button
-                    key="help"
-                    className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                    onPress={() => showModal(FilterHelpModal, { isJSON: Boolean(mode?.includes('json')) })}
-                  >
-                    <i className="fa fa-question-circle" />
-                  </Button>
-                ) : null}
+                {showFilter ? <FilterHelpModal isJSON={Boolean(mode?.includes('json'))} /> : null}
                 {showPrettify ? (
                   <Button
                     key="prettify"

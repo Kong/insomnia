@@ -1,9 +1,9 @@
-import React, { type FC, forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { type FC } from 'react';
+import { Button, Dialog, DialogTrigger, Heading, Modal, ModalOverlay } from 'react-aria-components';
+
+import { Icon } from '~/ui/components/icon';
 
 import { Link } from '../base/link';
-import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
-import { ModalBody } from '../base/modal-body';
-import { ModalHeader } from '../base/modal-header';
 
 interface HelpExample {
   code: string;
@@ -26,7 +26,7 @@ const HelpExamples: FC<{ helpExamples: HelpExample[] }> = ({ helpExamples }) => 
 );
 
 const JSONPathHelp: FC = () => (
-  <ModalBody className="pad">
+  <div>
     <p>
       Use <Link href="http://goessner.net/articles/JsonPath/">JSONPath</Link> to filter the response body. Here are some
       examples that you might use on a book store API:
@@ -47,11 +47,11 @@ const JSONPathHelp: FC = () => (
       Note that there's <Link href="https://cburgmer.github.io/json-path-comparison/">no standard</Link> for JSONPath.
       Insomnia uses <Link href="https://www.npmjs.com/package/jsonpath-plus">jsonpath-plus</Link>.
     </p>
-  </ModalBody>
+  </div>
 );
 
 const XPathHelp: FC = () => (
-  <ModalBody className="pad">
+  <div>
     <p>
       Use <Link href="https://www.w3.org/TR/xpath/">XPath</Link> to filter the response body. Here are some examples
       that you might use on a book store API:
@@ -64,44 +64,54 @@ const XPathHelp: FC = () => (
         { code: 'count(/store/books)', description: 'Get the number of books in the store' },
       ]}
     />
-  </ModalBody>
+  </div>
 );
 interface FilterHelpModalOptions {
   isJSON: boolean;
 }
-export interface FilterHelpModalHandle {
-  show: (options: FilterHelpModalOptions) => void;
-  hide: () => void;
-}
 
-export const FilterHelpModal = forwardRef<FilterHelpModalHandle, ModalProps>((_, ref) => {
-  const modalRef = useRef<ModalHandle>(null);
-  const [state, setState] = useState<FilterHelpModalOptions>({
-    isJSON: true,
-  });
-
-  useImperativeHandle(
-    ref,
-    () => ({
-      hide: () => {
-        modalRef.current?.hide();
-      },
-      show: options => {
-        const { isJSON } = options;
-        setState({ isJSON });
-        modalRef.current?.show();
-      },
-    }),
-    [],
-  );
-  const { isJSON } = state;
-  const isXPath = !isJSON;
+export const FilterHelpModal: FC<FilterHelpModalOptions> = ({ isJSON }) => {
   return (
-    <Modal ref={modalRef}>
-      <ModalHeader>Response Filtering Help</ModalHeader>
-      {isJSON ? <JSONPathHelp /> : null}
-      {isXPath ? <XPathHelp /> : null}
-    </Modal>
+    <>
+      <DialogTrigger>
+        <Button
+          key="help"
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+        >
+          <i className="fa fa-question-circle" />
+        </Button>
+        <ModalOverlay
+          isDismissable
+          className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+        >
+          <Modal className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]">
+            <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none data-[loading]:animate-pulse">
+              {({ close }) => (
+                <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+                  <div className="flex flex-shrink-0 items-center justify-between gap-2">
+                    <Heading slot="title" className="flex items-center gap-2 text-2xl">
+                      Response Filtering Help
+                    </Heading>
+
+                    <Button
+                      className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      onPress={close}
+                    >
+                      <Icon icon="x" />
+                    </Button>
+                  </div>
+
+                  <div className="h-full gap-2 divide-x divide-solid divide-[--hl-md] overflow-hidden [grid-template-columns:300px_1fr]">
+                    <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+                      {isJSON ? <JSONPathHelp /> : <XPathHelp />}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </Dialog>
+          </Modal>
+        </ModalOverlay>
+      </DialogTrigger>
+    </>
   );
-});
-FilterHelpModal.displayName = 'FilterHelpModal';
+};

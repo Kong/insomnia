@@ -233,6 +233,11 @@ test.describe('pre-request features tests', () => {
     }
   });
   test('send request with content type', async ({ page }) => {
+    await page.getByTestId('settings-button').click();
+    await page.getByTestId('dataFolders').click();
+    await page.getByTestId('dataFolders').fill(process.cwd());
+    await page.getByTestId('dataFolders-btn').click();
+    await page.getByRole('button', { name: '' }).click();
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     const responseBody = page.getByTestId('response-pane').getByTestId('CodeEditor').locator('.CodeMirror-line');
 
@@ -507,8 +512,8 @@ test.describe('pre-request features tests', () => {
       },
     });
     // close modal and go back
-    await page.locator('body').press('Escape');
-    await page.locator('body').press('Escape');
+    await page.locator('.app').press('Escape');
+    await page.locator('.app').press('Escape');
     await page.getByTestId('project').click();
     // import global environment
     const globalEnvText = await loadFixture('script-global-environment.yaml');

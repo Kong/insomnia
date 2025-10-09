@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
-    "esbuild": "^0.25.2",
+    "esbuild": "^0.25.10",
     "esbuild-runner": "^2.2.2",
     "shellwords": "^1.0.1"
   },

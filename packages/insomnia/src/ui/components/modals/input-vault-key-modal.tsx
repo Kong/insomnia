@@ -78,9 +78,6 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
     >
       <Modal
         className="m-24 flex max-h-[75%] w-full max-w-3xl flex-col overflow-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
-        onOpenChange={isOpen => {
-          !isOpen && onClose();
-        }}
         data-testid="input-vault-key-modal"
       >
         <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">

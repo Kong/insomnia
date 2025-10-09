@@ -3,7 +3,6 @@ import { Button, Link } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { buildInteractiveMessage } from '~/common/interactive-messages';
 import { useRootLoaderData } from '~/root';
 import {
   type ConnectActionParams,
@@ -14,6 +13,7 @@ import {
   useDebugRequestSendActionFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -73,9 +73,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       } else {
         // only for request render error
         const errorMessage = searchParams.get('error') || '';
-        const messages = errorMessage.includes('Insomnia cannot access')
-          ? buildInteractiveMessage(errorMessage)
-          : [{ text: errorMessage }];
+        // detects a string to replace with a link to settings
+        const linkText = "Insomnia's Preferences → Security";
+        const modifiedString = errorMessage.endsWith(linkText)
+          ? errorMessage.slice(0, errorMessage.length - linkText.length)
+          : errorMessage;
         const close = showModal(AlertModal, {
           title: 'Unexpected Request Failure',
           message: (
@@ -83,23 +85,16 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
               <p>The request failed due to an unhandled error:</p>
               <code className="wide selectable">
                 <div className="w-full overflow-y-auto text-wrap">
-                  {messages.map(({ text, handler }, index) =>
-                    handler ? (
-                      <Link
-                        className="cursor-pointer text-[--color-surprise]"
-                        // eslint-disable-next-line react/no-array-index-key
-                        key={index}
-                        onPress={() => {
-                          close();
-                          handler();
-                        }}
-                      >
-                        {text}
-                      </Link>
-                    ) : (
-                      text
-                    ),
-                  )}
+                  {modifiedString}
+                  <Link
+                    className="cursor-pointer text-[--color-surprise]"
+                    onPress={() => {
+                      close();
+                      showSettingsModal({ tab: 'general' });
+                    }}
+                  >
+                    {linkText}
+                  </Link>
                 </div>
               </code>
             </div>

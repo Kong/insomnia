@@ -2,7 +2,6 @@
 // Related issue https://github.com/JCMais/node-libcurl/issues/155
 import { invariant } from '../../utils/invariant';
 invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
-
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Readable, Writable } from 'node:stream';
@@ -28,6 +27,7 @@ import { describeByteSize, hasAuthHeader } from '../../common/misc';
 import type { ClientCertificate } from '../../models/client-certificate';
 import type { RequestHeader } from '../../models/request';
 import type { ResponseHeader } from '../../models/response';
+import { insecureReadFile, isPathAllowed } from '../secure-read-file';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
 export interface CurlRequestOptions {
@@ -66,6 +66,7 @@ interface SettingsUsedHere {
   httpProxy: string;
   httpsProxy: string;
   noProxy: string;
+  dataFolders: string[];
 }
 
 export interface ResponseTimelineEntry {
@@ -102,7 +103,7 @@ export interface ResponsePatch {
   timelinePath?: string;
   url?: string;
 }
-const getDataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
+const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
 
 // NOTE: this is a dictionary of functions to close open listeners
 const cancelCurlRequestHandlers: Record<string, () => void> = {};
@@ -110,7 +111,7 @@ export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]()
 export const curlRequest = (options: CurlRequestOptions) =>
   new Promise<CurlRequestOutput>(async resolve => {
     try {
-      const responsesDir = path.join(getDataDirectory(), 'responses');
+      const responsesDir = path.join(userdataDirectory, 'responses');
       // TODO: remove this check, its only used for network.test.ts
       await fs.promises.mkdir(responsesDir, { recursive: true });
       const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
@@ -126,7 +127,8 @@ export const curlRequest = (options: CurlRequestOptions) =>
         authHeader,
         noDecompress = false,
       } = options;
-      const caCert = caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString();
+      // allow reading the file as the caCert is chosen by user
+      const caCert = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
       const { curl, debugTimeline } = createConfiguredCurlInstance({
         req,
@@ -157,16 +159,22 @@ export const curlRequest = (options: CurlRequestOptions) =>
       let requestFileDescriptor: number | undefined;
       const { authentication } = req;
       if (requestBodyPath) {
+        const { isAllowed, securedPath } = isPathAllowed(requestBodyPath, settings.dataFolders);
+        invariant(
+          isAllowed,
+          `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia's Preferences → Security`,
+        );
+
         // AWS IAM file upload not supported
         const isAWSIAM = 'type' in authentication && authentication.type === 'iam';
         invariant(!isAWSIAM, 'AWS authentication not supported for provided body type');
-        const { size: contentLength } = fs.statSync(requestBodyPath);
+        const { size: contentLength } = fs.statSync(securedPath);
         curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
         curl.setOpt(Curl.option.UPLOAD, 1);
         // We need this, otherwise curl will send it as a POST
         curl.setOpt(Curl.option.CUSTOMREQUEST, method);
         // read file into request and close file descriptor
-        requestFileDescriptor = fs.openSync(requestBodyPath, 'r');
+        requestFileDescriptor = fs.openSync(securedPath, 'r');
         curl.setOpt(Curl.option.READDATA, requestFileDescriptor);
         curl.on('end', () => closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath));
         curl.on('error', () => closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath));
@@ -267,7 +275,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
         }
         const patch = {
           statusMessage,
-          error: error || 'Something went wrong',
+          error: error || 'Something went wrong inside libcurl',
           elapsedTime,
         };
 
@@ -279,7 +287,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       console.error(error);
       const patch = {
         statusMessage: 'Error',
-        error: error.message || 'Something went wrong',
+        error: error.toString() || 'Something went wrong performing curl',
         elapsedTime: 0,
       };
       resolve({ patch, debugTimeline: [], headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });

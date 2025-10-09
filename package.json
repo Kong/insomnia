@@ -48,7 +48,7 @@
     "@types/node": "^24.2.1",
     "@typescript-eslint/eslint-plugin": "^8.29.0",
     "@typescript-eslint/parser": "^8.29.0",
-    "esbuild": "^0.24.0",
+    "esbuild": "^0.25.10",
     "esbuild-runner": "^2.2.2",
     "eslint": "^9.23.0",
     "eslint-config-prettier": "^10.1.1",
