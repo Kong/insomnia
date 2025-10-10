@@ -52,6 +52,7 @@ import {
   METHOD_UNSUBSCRIBE_RESOURCE,
 } from '~/common/mcp-utils';
 import { generateId } from '~/common/misc';
+import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 import { authorizeUserInDefaultBrowser } from '~/main/authorizeUserInDefaultBrowser';
 import * as models from '~/models';
 import { type McpRequest, TRANSPORT_TYPES, type TransportType } from '~/models/mcp-request';
@@ -861,6 +862,33 @@ const createTransportAndConnect = async (
     // Use a longer timeout for initial connection to allow for auth flow to complete
     await mcpClient.connect(transport, { timeout: 3 * 60 * 1000 });
   }
+  const mcpRequest = await models.mcpRequest.getById(connectionOptions.requestId);
+  invariant(mcpRequest, 'MCP Request not found');
+
+  let authType = 'none';
+  if ('type' in mcpRequest.authentication) {
+    if (mcpRequest.authentication.type === 'oauth2') {
+      authType = 'oauth2-' + mcpRequest.authentication.grantType;
+    } else {
+      authType = mcpRequest.authentication.type;
+    }
+  }
+  const authDisabled = 'disabled' in mcpRequest.authentication && mcpRequest.authentication.disabled;
+  const isFirstConnection = !mcpRequest.connected;
+  trackSegmentEvent(SegmentEvent.mcpClientConnected, {
+    transportType: connectionOptions.transportType,
+    firstTime: isFirstConnection,
+    ...(connectionOptions.transportType === TRANSPORT_TYPES.HTTP
+      ? {
+          authType,
+          authDisabled,
+        }
+      : {}),
+  });
+  if (isFirstConnection) {
+    // Mark as connected for the first time
+    await models.mcpRequest.update(mcpRequest, { connected: true });
+  }
 };
 
 const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) => {
@@ -979,6 +1007,7 @@ const closeMcpConnection = async (options: CommonMcpOptions) => {
       // Execute clear resource subscription in main process rather than UI to make sure closeAllMcpConnections method will clear subscriptions
       await models.mcpRequest.clearResourceSubscriptions(requestId);
     }
+    trackSegmentEvent(SegmentEvent.mcpClientDisconnected);
   }
 };
 
@@ -1020,6 +1049,7 @@ const callTool = async (options: CallToolOptions) => {
   const mcpClient = _getMcpClient(requestId);
   if (mcpClient) {
     const response = await mcpClient.callTool({ name, arguments: parameters }, CompatibilityCallToolResultSchema);
+    trackSegmentEvent(SegmentEvent.mcpToolCalled);
     return response.content;
   }
   return null;
@@ -1039,6 +1069,7 @@ const getPrompt = async (options: CommonMcpOptions & GetPromptRequest['params'])
   const mcpClient = _getMcpClient(options.requestId);
   if (mcpClient) {
     const prompt = await mcpClient.getPrompt(params);
+    trackSegmentEvent(SegmentEvent.mcpPromptCalled);
     return prompt;
   }
   return null;
@@ -1115,6 +1146,7 @@ const readResource = async (options: CommonMcpOptions & ReadResourceRequest['par
   const mcpClient = _getMcpClient(requestId);
   if (mcpClient) {
     const resource = await mcpClient.readResource(params);
+    trackSegmentEvent(SegmentEvent.mcpResourceRead);
     return resource;
   }
   return null;
