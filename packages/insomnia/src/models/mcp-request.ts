@@ -30,6 +30,7 @@ export interface BaseMcpRequest {
   mcpStdioAccess: boolean;
   roots: Root[];
   subscribeResources: string[];
+  connected: boolean;
 }
 export type McpServerPrimitiveTypes = 'tools' | 'resources' | 'prompts' | 'resourceTemplates';
 
@@ -53,6 +54,7 @@ export function init(): BaseMcpRequest {
     mcpStdioAccess: false,
     roots: [],
     subscribeResources: [],
+    connected: false,
   };
 }
 

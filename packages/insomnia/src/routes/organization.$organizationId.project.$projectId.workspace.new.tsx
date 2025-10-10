@@ -193,8 +193,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       const requestId = newMcpRequest._id;
 
       window.main.trackSegmentEvent({
-        event: SegmentEvent.mcpClientRequestCreate,
-        properties: { transportType: 'streamable-http' },
+        event: SegmentEvent.mcpClientAdded,
       });
 
       return redirect(
