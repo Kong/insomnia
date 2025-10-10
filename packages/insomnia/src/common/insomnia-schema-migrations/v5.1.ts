@@ -74,7 +74,17 @@ export function cleanHeadersAndParameters(obj: any): any {
     for (const [key, value] of Object.entries(obj)) {
       if ((key === 'headers' || key === 'parameters' || key === 'params') && Array.isArray(value)) {
         const filteredAndCleaned = value
-          .filter(entry => entry && typeof entry === 'object' && (entry.name || entry.value || entry.fileName))
+          .filter(entry => {
+            if (!entry || typeof entry !== 'object') return false;
+
+            // Keep file upload entries (they're valid even with empty name/value)
+            if (entry.type === 'file' && entry.fileName) {
+              return true;
+            }
+
+            // Keep regular entries with name or value
+            return entry.name || entry.value;
+          })
           .map(entry => {
             const { id, ...rest } = entry; // remove `id` only here
             return cleanHeadersAndParameters(rest);
