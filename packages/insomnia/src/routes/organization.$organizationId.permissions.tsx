@@ -12,6 +12,8 @@ export const fallbackFeatures = Object.freeze<FeatureList>({
   bulkImport: { enabled: false, reason: 'Insomnia API unreachable' },
   gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
   orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
+  aiMockServers: { enabled: false, reason: 'Insomnia API unreachable' },
+  aiCommitMessages: { enabled: false, reason: 'Insomnia API unreachable' },
 });
 
 // If network unreachable assume user has paid for the current period

@@ -83,6 +83,8 @@ export type HandleChannels =
   | 'llm.updateBackendConfig'
   | 'llm.getAllConfigurations'
   | 'llm.getCurrentConfig'
+  | 'llm.getAIFeatureEnabled'
+  | 'llm.setAIFeatureEnabled'
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
   | 'openPath'

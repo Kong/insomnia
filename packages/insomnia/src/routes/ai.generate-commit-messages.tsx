@@ -9,6 +9,15 @@ export async function clientAction(args: Route.ClientActionArgs) {
   const { projectId } = (await args.request.json()) as { projectId: string };
 
   try {
+    const isFeatureEnabled = await window.main.llm.getAIFeatureEnabled('aiCommitMessages');
+    const hasActiveLLM = (await window.main.llm.getCurrentConfig()) !== null;
+
+    if (!isFeatureEnabled || !hasActiveLLM) {
+      return {
+        error: 'Enable generating commit messages with AI in Insomnia Preferences → AI Settings to use this feature.',
+      };
+    }
+
     const { changes } = await window.main.git.gitChangesLoader({ projectId });
     if (changes.staged.length > 0) {
       return {
@@ -40,7 +49,7 @@ export async function clientAction(args: Route.ClientActionArgs) {
     }
 
     return {
-      commits: commits.map(commit => ({
+      commits: commits.map((commit: any) => ({
         id: crypto.randomUUID(),
         ...commit,
       })),
