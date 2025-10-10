@@ -74,7 +74,8 @@ export function migrateToLatestYaml(yamlContent: string, referenceContent?: stri
     if (referenceContent) {
       try {
         const referenceParsed = parse(referenceContent);
-        const normalized = cleanHeadersAndParametersWithNormalization(migrated, referenceParsed);
+        const normalized = runNormalization(migrated, referenceParsed);
+
         return stringify(normalized);
       } catch (refError) {
         console.warn('Property order normalization failed, returning migrated content:', refError);
@@ -125,10 +126,31 @@ function migrateToLatest<T>(data: InsomniaFile, fromVersion: string): T {
 export function normalizePropertyOrder<T>(obj: any, reference: any): T {
   if (Array.isArray(obj)) {
     if (Array.isArray(reference)) {
-      // For arrays, try to match elements by their content
-      return obj.map((item, index) => {
-        if (index < reference.length) {
-          return normalizePropertyOrder(item, reference[index]);
+      return obj.map(item => {
+        if (item && typeof item === 'object') {
+          // Try to find a matching reference item by key properties
+          const matchingRef = reference.find(
+            refItem =>
+              refItem &&
+              typeof refItem === 'object' &&
+              // Match by name for parameters/headers
+              ((item.name && refItem.name === item.name) ||
+                // Match by id if it exists
+                (item.id && refItem.id === item.id) ||
+                // Match by meta.id if it exists
+                (item.meta?.id && refItem.meta?.id === item.meta.id)),
+          );
+
+          if (matchingRef) {
+            return normalizePropertyOrder(item, matchingRef);
+          }
+
+          // If no specific match found, use the first reference item as a template
+          // This ensures consistent property ordering for similar objects
+          const templateRef = reference.find(ref => ref && typeof ref === 'object');
+          if (templateRef) {
+            return normalizePropertyOrder(item, templateRef);
+          }
         }
         return item;
       }) as T;
@@ -149,7 +171,7 @@ export function normalizePropertyOrder<T>(obj: any, reference: any): T {
     // Then, add any remaining properties from obj that weren't in reference
     for (const key of Object.keys(obj)) {
       if (!(key in reference)) {
-        normalized[key] = normalizePropertyOrder(obj[key], reference[key]);
+        normalized[key] = obj[key]; // Don't recurse with undefined reference
       }
     }
 
@@ -167,14 +189,11 @@ export function normalizePropertyOrder<T>(obj: any, reference: any): T {
  * @param reference - Optional reference object for property order normalization
  * @returns Cleaned and normalized object
  */
-export function cleanHeadersAndParametersWithNormalization<T>(obj: any, reference?: any): T {
-  // First, clean the object (remove IDs, empty fields, etc.)
-  const cleaned = cleanHeadersAndParameters(obj);
-
+export function runNormalization<T>(obj: any, reference?: any): T {
   // If reference is provided, normalize property order
   if (reference) {
-    return normalizePropertyOrder(cleaned, reference);
+    return normalizePropertyOrder(obj, reference);
   }
 
-  return cleaned;
+  return obj as T;
 }
