@@ -14,7 +14,6 @@ import {
 import { documentationLinks } from '../../../../common/documentation';
 import { getContentTypeHeader } from '../../../../common/misc';
 import { isEventStreamRequest, type Request, type RequestBodyParameter } from '../../../../models/request';
-import { NunjucksEnabledProvider } from '../../../context/nunjucks/nunjucks-enabled-context';
 import { useRequestPatcher } from '../../../hooks/use-request';
 import { ContentTypeDropdown } from '../../dropdowns/content-type-dropdown';
 import { AskModal } from '../../modals/ask-modal';
@@ -173,11 +172,11 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
   }
 
   return (
-    <NunjucksEnabledProvider disable={noRender}>
+    <>
       <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
         <ContentTypeDropdown />
       </Toolbar>
       {renderBodyEditor()}
-    </NunjucksEnabledProvider>
+    </>
   );
 };

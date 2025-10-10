@@ -336,10 +336,13 @@ const pairToParameters = (pair: Pair, allowFiles = false): Parameter[] => {
       return { name, fileName, type: 'file' };
     }
 
-    const [name, value] = pair.split('=');
-    if (!value && !pair.includes('=')) {
+    const equalIndex = pair.indexOf('=');
+    if (equalIndex === -1) {
       return { name: '', value: pair };
     }
+
+    const name = pair.slice(0, equalIndex);
+    const value = pair.slice(equalIndex + 1);
 
     return { name, value };
   });

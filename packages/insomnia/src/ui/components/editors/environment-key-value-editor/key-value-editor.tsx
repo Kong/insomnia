@@ -269,7 +269,6 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
                   modalRef.show({
                     submitName: 'Done',
                     title: `Edit ${name} value`,
-                    enableRender: true,
                     defaultValue: value.toString(),
                     mode: 'application/json',
                     onChange: (value: string) => {

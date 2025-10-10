@@ -1,12 +1,13 @@
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import { projectLock } from '~/common/project';
 import * as models from '~/models';
 import type { GitCredentials, OauthProviderName } from '~/models/git-repository';
+import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
 import { SegmentEvent } from '~/ui/analytics';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.new';
 
@@ -48,7 +49,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
         const project = await models.project.create({
           name: newProjectData.name,
           parentId: organizationId,
-          gitRepositoryId: 'empty',
+          gitRepositoryId: EMPTY_GIT_PROJECT_ID,
         });
 
         return project._id;
@@ -80,6 +81,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
           name: newProjectData.authorName || '',
           email: newProjectData.authorEmail || '',
         },
+        name: newProjectData.name,
         credentials: credentials || {
           username: '',
           password: '',
@@ -170,12 +172,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   }
 }
 
-export function useProjectNewActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useProjectNewActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({ organizationId, projectData }: { organizationId: string; projectData: CreateProjectData }) => {
-      return fetcherSubmit(JSON.stringify(projectData), {
+      return submit(JSON.stringify(projectData), {
         method: 'POST',
         action: href('/organization/:organizationId/project/new', {
           organizationId,
@@ -183,11 +183,5 @@ export function useProjectNewActionFetcher(args?: Parameters<typeof useFetcher>[
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

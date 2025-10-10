@@ -5,7 +5,6 @@ import path from 'node:path';
 import esbuild, { type BuildOptions, type Plugin } from 'esbuild';
 
 import pkg from './package.json';
-
 interface Options {
   mode?: 'development' | 'production';
   autoRestart?: boolean;
@@ -82,13 +81,7 @@ export default async function build(options: Options) {
     sourcemap: true,
     format: 'cjs',
     define: env,
-    external: [
-      'electron',
-      '@getinsomnia/node-libcurl',
-      'fsevents',
-      ...Object.keys(pkg.dependencies),
-      ...Object.keys(builtinModules),
-    ],
+    external: ['electron', '@getinsomnia/node-libcurl', 'fsevents', ...Object.keys(builtinModules)],
   };
 
   let electronProcess: ChildProcess;

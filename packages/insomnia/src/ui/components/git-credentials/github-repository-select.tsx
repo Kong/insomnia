@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, ComboBox, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
+import { Button, ComboBox, FieldError, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 
 import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { isGitHubAppUserToken } from '../github-app-config-link';
@@ -69,54 +69,33 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
           </div>
         )}
         {!uri && (
-          <>
-            <div className="flex flex-row items-center gap-2">
-              <ComboBox
-                aria-label="Repositories"
-                allowsCustomValue={false}
-                className="w-full"
-                isDisabled={loading}
-                defaultItems={repositories.map(repo => ({
-                  id: repo.clone_url,
-                  name: repo.full_name,
-                }))}
-                onSelectionChange={key => setSelectedRepository(repositories.find(r => r.clone_url === key) || null)}
-              >
-                <div className="group flex items-center gap-2 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]">
-                  <Input
-                    aria-label="Repository Search"
-                    placeholder={loading ? 'Fetching...' : 'Find a repository...'}
-                    className="w-full py-1 pl-2 pr-7 placeholder:italic"
-                  />
-                  <Button
-                    id="github_repo_select_dropdown_button"
-                    type="button"
-                    className="m-2 flex aspect-square items-center justify-center gap-2 truncate rounded-sm !border-none text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                  >
-                    <Icon icon="caret-down" className="w-5 flex-shrink-0" />
-                  </Button>
-                </div>
-                <Popover
-                  className="grid w-[--trigger-width] min-w-max select-none grid-flow-col divide-x divide-solid divide-[--hl-md] overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-sm shadow-lg focus:outline-none"
-                  placement="bottom start"
-                  offset={8}
+          <ComboBox
+            aria-label="Repositories"
+            allowsCustomValue={false}
+            className="w-full"
+            isRequired
+            isDisabled={loading}
+            defaultItems={repositories.map(repo => ({
+              id: repo.clone_url,
+              name: repo.full_name,
+            }))}
+            onSelectionChange={key => setSelectedRepository(repositories.find(r => r.clone_url === key) || null)}
+          >
+            <div className="flex w-full items-center gap-2">
+              <div className="group flex h-[--line-height-xs] flex-1 items-center gap-2 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]">
+                <Input
+                  aria-label="Repository Search"
+                  placeholder={loading ? 'Fetching...' : 'Find a repository...'}
+                  className="w-full py-1 pl-2 pr-7 placeholder:italic"
+                />
+                <Button
+                  id="github_repo_select_dropdown_button"
+                  type="button"
+                  className="m-2 flex aspect-square items-center justify-center gap-2 truncate rounded-sm !border-none text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                 >
-                  <ListBox<{
-                    id: string;
-                    name: string;
-                  }> className="flex min-w-max select-none flex-col p-2 text-sm focus:outline-none">
-                    {item => (
-                      <ListBoxItem
-                        textValue={item.name}
-                        className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap rounded bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] aria-selected:font-bold data-[focused]:bg-[--hl-xs]"
-                      >
-                        <span className="truncate">{item.name}</span>
-                      </ListBoxItem>
-                    )}
-                  </ListBox>
-                </Popover>
-                <input type="hidden" name="uri" value={selectedRepository?.clone_url || uri || ''} />
-              </ComboBox>
+                  <Icon icon="caret-down" className="w-5 flex-shrink-0" />
+                </Button>
+              </div>
               <Button
                 type="button"
                 isDisabled={loading}
@@ -130,16 +109,37 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
                 <Icon icon="refresh" className={loading ? 'animate-spin' : ''} />
               </Button>
             </div>
-            {errors.length > 0 && (
-              <div className="notice error margin-bottom-sm">
-                {errors.map(error => (
-                  <p key={error}>{error}</p>
-                ))}
-              </div>
-            )}
-          </>
+            <Popover
+              className="grid w-[--trigger-width] min-w-max select-none grid-flow-col divide-x divide-solid divide-[--hl-md] overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-sm shadow-lg focus:outline-none"
+              placement="bottom start"
+              offset={8}
+            >
+              <ListBox<{
+                id: string;
+                name: string;
+              }> className="flex min-w-max select-none flex-col p-2 text-sm focus:outline-none">
+                {item => (
+                  <ListBoxItem
+                    textValue={item.name}
+                    className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap rounded bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] aria-selected:font-bold data-[focused]:bg-[--hl-xs]"
+                  >
+                    <span className="truncate">{item.name}</span>
+                  </ListBoxItem>
+                )}
+              </ListBox>
+            </Popover>
+            <FieldError className="text-xs text-[--color-danger]" />
+            <input type="hidden" name="uri" value={selectedRepository?.clone_url || uri || ''} />
+          </ComboBox>
         )}
       </Label>
+      {errors.length > 0 && (
+        <div className="notice error margin-bottom-sm">
+          {errors.map(error => (
+            <p key={error}>{error}</p>
+          ))}
+        </div>
+      )}
       {cannotFindRepository && (
         <div className="text-sm text-red-500">
           <Icon icon="warning" /> Repository information could not be retrieved. Please <code>Reset</code> and select a

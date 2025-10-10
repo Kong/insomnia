@@ -89,6 +89,7 @@ const git: GitServiceAPI = {
   pullFromGitRemote: options => ipcRenderer.invoke('git.pullFromGitRemote', options),
   continueMerge: options => ipcRenderer.invoke('git.continueMerge', options),
   discardChanges: options => ipcRenderer.invoke('git.discardChanges', options),
+  abortMerge: () => ipcRenderer.invoke('git.abortMerge'),
   gitStatus: options => ipcRenderer.invoke('git.gitStatus', options),
   stageChanges: options => ipcRenderer.invoke('git.stageChanges', options),
   unstageChanges: options => ipcRenderer.invoke('git.unstageChanges', options),
@@ -131,7 +132,10 @@ const main: Window['main'] = {
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
-  readFile: options => ipcRenderer.invoke('readFile', options),
+  insecureReadFile: options => ipcRenderer.invoke('insecureReadFile', options),
+  insecureReadFileWithEncoding: options => ipcRenderer.invoke('insecureReadFileWithEncoding', options),
+  secureReadFile: options => ipcRenderer.invoke('secureReadFile', options),
+  parseImport: (...args) => ipcRenderer.invoke('parseImport', ...args),
   readDir: options => ipcRenderer.invoke('readDir', options),
   lintSpec: options => ipcRenderer.invoke('lintSpec', options),
   on: (channel, listener) => {
@@ -175,6 +179,7 @@ const main: Window['main'] = {
   },
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
+  getLocalStorageDataFromFileOrigin: () => ipcRenderer.invoke('getLocalStorageDataFromFileOrigin'),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {

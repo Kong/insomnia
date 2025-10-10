@@ -11,7 +11,7 @@ export const queryAllWorkspaceUrls = async (
 ): Promise<string[]> => {
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, `Workspace ${workspaceId} not found`);
-  const docs = (await db.withDescendants(workspace, reqType)) as (Request | GrpcRequest)[];
+  const docs = (await db.getWithDescendants(workspace, [reqType])) as (Request | GrpcRequest)[];
   const urls = docs
     .filter(
       d =>

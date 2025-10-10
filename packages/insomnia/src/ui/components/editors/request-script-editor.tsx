@@ -12,6 +12,7 @@ import {
   Toolbar,
 } from 'react-aria-components';
 
+import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import {
@@ -28,7 +29,6 @@ import {
 } from '../../../../../insomnia-scripting-environment/src/objects';
 import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
 import type { Settings } from '../../../models/settings';
-import { translateHandlersInScript } from '../../../utils/importers/importers/postman';
 import { Icon } from '../icon';
 
 interface Props {
@@ -590,7 +590,7 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
       clientCertificates: [],
       cookies: new CookieObject({
         _id: '',
-        type: '',
+        type: 'CookieJar',
         parentId: '',
         modified: 0,
         created: 0,

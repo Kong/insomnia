@@ -60,6 +60,7 @@ describe('curl', () => {
       },
       { flag: '--data', inputs: ['%3D'], expected: [{ name: '', value: '=' }] },
       { flag: '--data', inputs: ['%3D=%3D'], expected: [{ name: '=', value: '=' }] },
+      { flag: '--data', inputs: ['base64=SGVsbG8='], expected: [{ name: 'base64', value: 'SGVsbG8=' }] },
 
       // --data-ascii
       { flag: '--data-ascii', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
@@ -109,6 +110,16 @@ describe('curl', () => {
           { name: 'first', value: '1' },
           { name: 'second', value: '2' },
         ],
+      },
+      {
+        flag: '--data-binary',
+        inputs: ['{"foo":"sGrG5sXDP5vX=p41h9tBcaQ==","bar":"123"}'],
+        expected: [{ name: '{"foo":"sGrG5sXDP5vX', value: 'p41h9tBcaQ==","bar":"123"}' }],
+      },
+      {
+        flag: '--data-binary',
+        inputs: ['key=value=with=equals'],
+        expected: [{ name: 'key', value: 'value=with=equals' }],
       },
 
       // --data-raw

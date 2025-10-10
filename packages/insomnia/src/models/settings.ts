@@ -90,7 +90,7 @@ export function migrate(doc: Settings) {
 }
 
 export async function all() {
-  let settingsList = await db.all<Settings>(type);
+  let settingsList = await db.find<Settings>(type);
 
   if (settingsList?.length === 0) {
     settingsList = [await getOrCreate()];
@@ -116,18 +116,16 @@ export async function patch(settingsPatch: Partial<Settings>) {
 }
 
 export async function getOrCreate() {
-  const results = (await db.all<Settings>(type)) || [];
+  const result = await db.findOne<Settings>(type);
 
-  if (results.length === 0) {
+  if (!result) {
     return await create();
   }
-  return results[0];
+  return result;
 }
 
 export async function get() {
-  const results = (await db.all<Settings>(type)) || [];
-
-  return results[0];
+  return getOrCreate();
 }
 
 /**

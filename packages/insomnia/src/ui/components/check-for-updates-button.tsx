@@ -1,22 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-import type { UpdateStatus } from '../../main/updates';
 import { Icon } from './icon';
 
 type UpdateStatusIcon = 'refresh' | 'check' | null;
 
 export const CheckForUpdatesButton = () => {
   const [disabled, setDisabled] = useState(false);
-  const [status, setStatus] = useState<UpdateStatus>('Check Now');
-
-  useEffect(() => {
-    const unsubscribe = window.main.on('updaterStatus', (_e: Electron.IpcRendererEvent, status: UpdateStatus) => {
-      setStatus(status);
-    });
-    return () => {
-      unsubscribe();
-    };
-  });
 
   let statusIcon: UpdateStatusIcon = null;
   if (['Performing backup...', 'Downloading...', 'Checking'].includes(status)) {
@@ -38,7 +27,7 @@ export const CheckForUpdatesButton = () => {
       }}
     >
       {statusIcon && <Icon className={statusIcon === 'refresh' ? 'animate-spin' : ''} icon={statusIcon} />}
-      {status}
+      Check
     </button>
   );
 };

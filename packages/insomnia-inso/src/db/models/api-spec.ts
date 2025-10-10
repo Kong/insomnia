@@ -12,7 +12,7 @@ export const loadApiSpec = (db: Database, identifier: string): ApiSpec | null | 
   const items = db.ApiSpec.filter(
     spec => matchIdIsh(spec, identifier) || spec.fileName === identifier || spec.name === identifier,
   );
-  logger.trace('Found %d.', items.length);
+  logger.trace('Found %d api specification(s).', items.length);
   return ensureSingleOrNone(items, entity);
 };
 

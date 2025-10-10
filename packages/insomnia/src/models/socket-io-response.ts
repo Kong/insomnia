@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 
-import { database as db, type Query } from '../common/database';
+import { database as db } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';
@@ -51,22 +51,8 @@ export function update(doc: SocketIOResponse, patch: Partial<SocketIOResponse>) 
   return db.docUpdate(doc, patch);
 }
 
-export function hookDatabaseInit(consoleLog: typeof console.log = console.log) {
-  consoleLog('[db] Init SocketIO-responses DB');
-}
-
-export function hookRemove(doc: SocketIOResponse, consoleLog: typeof console.log = console.log) {
-  fs.unlink(doc.eventLogPath, () => {
-    consoleLog(`[response] Delete body ${doc.eventLogPath}`);
-  });
-
-  fs.unlink(doc.timelinePath, () => {
-    consoleLog(`[response] Delete timeline ${doc.timelinePath}`);
-  });
-}
-
 export function getById(id: string) {
-  return db.get<SocketIOResponse>(type, id);
+  return db.findOne<SocketIOResponse>(type, { _id: id });
 }
 
 export function findByParentId(parentId: string) {
@@ -74,7 +60,7 @@ export function findByParentId(parentId: string) {
 }
 
 export async function all() {
-  return db.all<SocketIOResponse>(type);
+  return db.find<SocketIOResponse>(type);
 }
 
 export async function removeForRequest(parentId: string, environmentId?: string | null) {
@@ -89,13 +75,19 @@ export async function removeForRequest(parentId: string, environmentId?: string 
   if (environmentId !== undefined && settings.filterResponsesByEnv) {
     query.environmentId = environmentId;
   }
-
+  const toDelete = await db.find<SocketIOResponse>(type, query);
+  for (const doc of toDelete) {
+    fs.promises.unlink(doc.eventLogPath);
+    fs.promises.unlink(doc.timelinePath);
+  }
   // Also delete legacy responses here or else the user will be confused as to
   // why some responses are still showing in the UI.
   await db.removeWhere(type, query);
 }
 
 export function remove(response: SocketIOResponse) {
+  fs.promises.unlink(response.eventLogPath);
+  fs.promises.unlink(response.timelinePath);
   return db.remove(response);
 }
 
@@ -119,7 +111,7 @@ export async function create(patch: Partial<SocketIOResponse> = {}, maxResponses
   }
 
   // Delete all other responses before creating the new one
-  const allResponses = await db.findMostRecentlyModified<SocketIOResponse>(type, query, Math.max(1, maxResponses));
+  const allResponses = await db.find<SocketIOResponse>(type, query, { modified: -1 }, Math.max(1, maxResponses));
   const recentIds = allResponses.map(r => r._id);
   // Remove all that were in the last query, except the first `maxResponses` IDs
   await db.removeWhere(type, {
@@ -132,27 +124,18 @@ export async function create(patch: Partial<SocketIOResponse> = {}, maxResponses
   return db.docCreate(type, patch);
 }
 
-async function _findRecentForRequest(requestId: string, environmentId: string | null, limit: number) {
-  const query: Query<SocketIOResponse> = {
-    parentId: requestId,
-  };
-
+export async function getLatestForRequestId(requestId: string, environmentId: string | null) {
   // Filter responses by environment if setting is enabled
-  if ((await models.settings.get()).filterResponsesByEnv) {
-    query.environmentId = environmentId;
-  }
 
-  return db.findMostRecentlyModified<SocketIOResponse>(type, query, limit);
-}
+  const shouldFilter = (await models.settings.get()).filterResponsesByEnv;
 
-export async function getLatestForRequest(requestId: string, environmentId: string | null) {
-  const responses = await _findRecentForRequest(requestId, environmentId, 1);
-  const response = responses[0] as SocketIOResponse | null | undefined;
-  return response || null;
-}
-
-export function getLatestByParentId(parentId: string) {
-  return db.getMostRecentlyModified<SocketIOResponse>(type, {
-    parentId,
-  });
+  const response = await db.findOne<SocketIOResponse>(
+    type,
+    {
+      parentId: requestId,
+      ...(shouldFilter ? { environmentId } : {}),
+    },
+    { modified: -1 },
+  );
+  return response;
 }

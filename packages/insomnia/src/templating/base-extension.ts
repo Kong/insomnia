@@ -1,11 +1,11 @@
 import type { BinaryToTextEncoding } from 'node:crypto';
 import crypto from 'node:crypto';
-import fs from 'node:fs';
 import os from 'node:os';
 
 import iconv from 'iconv-lite';
 
 import { database as db } from '../common/database';
+import { secureReadFile } from '../main/secure-read-file';
 import * as models from '../models/index';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
@@ -119,14 +119,8 @@ export default class BaseExtension {
             userInfo: os.userInfo(),
           };
         },
-        readFile: async (path: string, encoding = 'utf8') => {
-          const allowed = renderContext?.getSettings().dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
-          if (!allowed) {
-            throw `Insomnia cannot access the file ‘${path}’. You can adjust this in Preferences → Security.`;
-          }
-                    
-          const content = await fs.promises.readFile(path);
-          return encoding === 'utf8' ? content.toString(encoding) : content;
+        readFile: async (path: string) => {
+          return secureReadFile(path);
         },
         decode: async (buffer: Buffer, encoding = 'utf8') => iconv.decode(buffer, encoding),
         encode: async (input: string, encoding: BinaryToTextEncoding) =>
@@ -163,7 +157,7 @@ export default class BaseExtension {
             },
           },
           response: {
-            getLatestForRequestId: models.response.getLatestForRequest,
+            getLatestForRequestId: models.response.getLatestForRequestId,
             getBodyBuffer: models.response.getBodyBuffer,
           },
           settings: {

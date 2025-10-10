@@ -1,5 +1,4 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { parseApiSpec, type ParsedApiSpec } from '~/common/api-specs';
 import { database } from '~/common/database';
@@ -14,6 +13,7 @@ import { type Project } from '~/models/project';
 import { isDesign } from '~/models/workspace';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { invariant } from '~/utils/invariant';
+import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.list-workspaces';
 import { type InsomniaFile, scopeToLabelMap } from './organization.$organizationId.project.$projectId._index';
@@ -135,23 +135,15 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   };
 }
 
-export function useProjectListWorkspacesLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
-
-  const load = useCallback(
+export const useProjectListWorkspacesLoaderFetcher = createFetcherLoadHook(
+  load =>
     ({ organizationId, projectId }: { organizationId: string; projectId: string }) => {
-      return fetcherLoad(
+      return load(
         href('/organization/:organizationId/project/:projectId/list-workspaces', {
           organizationId,
           projectId,
         }),
       );
     },
-    [fetcherLoad],
-  );
-
-  return {
-    ...fetcherRest,
-    load,
-  };
-}
+  clientLoader,
+);

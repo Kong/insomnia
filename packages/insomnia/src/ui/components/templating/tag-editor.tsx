@@ -2,8 +2,10 @@ import classnames from 'classnames';
 import clone from 'clone';
 import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
-import { Button } from 'react-aria-components';
+import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
+
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../../common/database';
 import { docsAfterResponseScript } from '../../../common/documentation';
@@ -33,6 +35,7 @@ interface Props {
   onChange: (...args: any[]) => any;
   workspace: Workspace;
   editorId?: string;
+  close: () => void;
 }
 
 interface State {
@@ -84,7 +87,8 @@ export const TagEditor: FC<Props> = props => {
     for (const type of models.types()) {
       allDocs[type] = [];
     }
-    for (const doc of await db.withDescendants(props.workspace, models.request.type)) {
+    const descendants = await db.getWithDescendants(props.workspace, [models.request.type]);
+    for (const doc of descendants) {
       allDocs[doc.type].push(doc);
     }
     // add global Cloud Credential data
@@ -250,7 +254,26 @@ export const TagEditor: FC<Props> = props => {
   }
   let previewElement;
   if (error) {
-    previewElement = <textarea className="danger" value={error || 'Error'} readOnly rows={5} />;
+    // detects a string to replace with a link to settings
+    const linkText = 'Insomnia Preferences → Security';
+    if (error.endsWith(linkText)) {
+      previewElement = (
+        <div className="danger min-h-[115px] rounded-md border border-solid border-[var(--hl-md)] bg-[var(--hl-xxs)] p-[var(--padding-sm)]">
+          {error.slice(0, error.length - linkText.length)}
+          <Link
+            className="cursor-pointer text-[--color-surprise]"
+            onPress={() => {
+              props.close();
+              showSettingsModal({ tab: 'general' });
+            }}
+          >
+            {linkText}
+          </Link>
+        </div>
+      );
+    } else {
+      previewElement = <textarea className="danger" value={error || 'Error'} readOnly rows={5} />;
+    }
   } else if (rendering) {
     previewElement = <textarea value="rendering..." readOnly rows={5} />;
   } else {

@@ -1,5 +1,8 @@
 import classNames from 'classnames';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-aria-components';
+
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -74,6 +77,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         });
 
         if (!result) {
+          setTooLong(false);
           return;
         }
 
@@ -138,9 +142,24 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
 
   const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
 
+  // detects a string to replace with a link to settings
+  const linkText = 'Insomnia Preferences → Security';
+  const hasLink = previewString.endsWith(linkText);
+  const modifiedString = hasLink ? previewString.slice(0, previewString.length - linkText.length) : previewString;
+
   return (
     <div className="relative flex h-full w-full justify-between gap-[var(--padding-sm)] overflow-auto">
-      <span className={classNames('my-auto', className)}>{previewString}</span>
+      <span className={classNames('my-auto', className)}>
+        {modifiedString}
+        {hasLink && (
+          <Link
+            className="cursor-pointer text-[--color-surprise]"
+            onPress={() => showSettingsModal({ tab: 'general' })}
+          >
+            {linkText}
+          </Link>
+        )}
+      </span>
 
       <CopyButton
         size="small"

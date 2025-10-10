@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import path from 'node:path';
 
 import * as protoLoader from '@grpc/proto-loader';
@@ -122,7 +121,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
   }, [workspaceId]);
 
   useEffect(() => {
-    db.onChange(async (changes: ChangeBufferEvent[]) => {
+    const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [, doc] = change;
         if (isProtoFile(doc) || isProtoDirectory(doc)) {
@@ -130,11 +129,14 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
         }
       }
     });
+    return () => {
+      unsubscribe();
+    };
   }, [workspaceId]);
 
   const handleAddDirectory = async () => {
     let rollback = false;
-    let createdIds: string[];
+    let createdIds: string[] = [];
     const bufferId = await db.bufferChangesIndefinitely();
     const filePath = await tryToSelectFolderPath();
     if (!filePath) {
@@ -165,7 +167,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       }
 
       // Try parse all loaded proto files to make sure they are valid
-      const loadedEntities = await db.withDescendants(createdDir);
+      const loadedEntities = await db.getWithDescendants(createdDir);
       const loadedFiles = loadedEntities.filter(isProtoFile);
 
       for (const protoFile of loadedFiles) {
@@ -199,10 +201,22 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       await db.flushChanges(bufferId, rollback);
 
       if (rollback) {
-        // @ts-expect-error -- TSCONVERSION
-        await models.protoDirectory.batchRemoveIds(createdIds);
-        // @ts-expect-error -- TSCONVERSION
-        await models.protoFile.batchRemoveIds(createdIds);
+        const dirs = await db.find('ProtoDirectory', {
+          _id: {
+            $in: createdIds,
+          },
+        });
+        for (const dir of dirs) {
+          await db.unsafeRemove(dir);
+        }
+        const files = await db.find('ProtoFile', {
+          _id: {
+            $in: createdIds,
+          },
+        });
+        for (const file of files) {
+          await db.unsafeRemove(file);
+        }
       }
     }
   };
@@ -214,10 +228,12 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
     if (!(await isProtofileValid(filePath))) {
       return;
     }
-    const contents = await fs.promises.readFile(filePath, 'utf-8');
+    // allow to read the file as it is chosen by user
+    const protoText = await window.main.insecureReadFile({ path: filePath });
+
     const updatedFile = await models.protoFile.update(protoFile, {
       name: path.basename(filePath),
-      protoText: contents,
+      protoText,
     });
     const impacted = await models.grpcRequest.findByProtoFileId(updatedFile._id);
     const requestIds = impacted.map(g => g._id);
@@ -267,11 +283,13 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
     if (!(await isProtofileValid(filePath))) {
       return;
     }
-    const contents = await fs.promises.readFile(filePath, 'utf-8');
+    // allow to read the file as it is chosen by user
+    const protoText = await window.main.insecureReadFile({ path: filePath });
+
     const newFile = await models.protoFile.create({
       name: path.basename(filePath),
       parentId: workspaceId,
-      protoText: contents,
+      protoText,
     });
     setSelectedId(newFile._id);
   };

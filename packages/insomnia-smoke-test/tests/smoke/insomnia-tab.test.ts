@@ -20,7 +20,7 @@ test.describe('multiple-tab feature test', () => {
     await page.getByTestId('project').click();
     await page.getByLabel('Create in project').click();
     await page.getByText('Request collection').click();
-    await page.getByRole('button', { name: 'Create' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
 
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
@@ -51,7 +51,7 @@ test.describe('multiple-tab feature test', () => {
     await page.getByTestId('project').click();
     await page.getByLabel('Create in project').click();
     await page.getByText('Request collection').click();
-    await page.getByRole('button', { name: 'Create' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
     await expect.soft(page.getByLabel('tab-New Request').getByLabel('Tab Tag')).toHaveText('GET');
@@ -64,7 +64,7 @@ test.describe('multiple-tab feature test', () => {
     await page.getByTestId('project').click();
     await page.getByLabel('Create in project').click();
     await page.getByText('Request collection').click();
-    await page.getByRole('button', { name: 'Create' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
     await page.getByLabel('Tab Plus').click();
     await page.getByRole('menuitem', { name: 'add request to current' }).click();
     await page.getByTestId('New Request').click();
@@ -74,7 +74,7 @@ test.describe('multiple-tab feature test', () => {
     await page.getByLabel('Create in project').click();
     await page.getByLabel('Request collection', { exact: true }).click();
     await page.getByPlaceholder('Enter a name for your Request Collection').fill('Test add tab collection');
-    await page.getByRole('button', { name: 'Create', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
     await page.getByLabel('Tab Plus').click();
     await page.getByRole('menuitem', { name: 'add request to other' }).click();
     await page.getByLabel('Select Workspace').selectOption({ label: 'My first collection' });
@@ -85,7 +85,7 @@ test.describe('multiple-tab feature test', () => {
     await page.getByTestId('project').click();
     await page.getByLabel('Create in project').click();
     await page.getByText('Request collection').click();
-    await page.getByRole('button', { name: 'Create' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
     await page.getByTestId('New Request').click();

@@ -1,34 +1,24 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
+
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/git-credentials.github.complete-sign-in';
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const { code, state } = (await request.json()) as { code: string; state: string; path: string };
-  await window.main.git.completeSignInToGitHub({
+  return await window.main.git.completeSignInToGitHub({
     code,
     state,
   });
-
-  return null;
 }
 
-export function useGithubCompleteSignInFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
-    (data: { code: string; state: string }) => {
-      return fetcherSubmit(data, {
-        action: href('/git-credentials/github/complete-sign-in'),
-        method: 'POST',
-        encType: 'application/json',
-      });
-    },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+export const useGithubCompleteSignInFetcher = createFetcherSubmitHook(
+  submit => (data: { code: string; state: string }) => {
+    return submit(data, {
+      action: href('/git-credentials/github/complete-sign-in'),
+      method: 'POST',
+      encType: 'application/json',
+    });
+  },
+  clientAction,
+);

@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises';
-
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
@@ -32,7 +30,7 @@ import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/tr
 import { setDefaultProtocol } from '../../../utils/url/protocol';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
-import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
+import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
 import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
 import { ErrorBoundary } from '../error-boundary';
@@ -62,7 +60,7 @@ export const GrpcMethodTypeName = {
 
 export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcState, reloadRequests }) => {
   const { activeRequest } = useRequestLoaderData() as GrpcRequestLoaderData;
-  const { activeEnvironment } = useWorkspaceLoaderData()!;
+  const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
   const environmentId = activeEnvironment._id;
   const { settings } = useRootLoaderData()!;
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
@@ -90,19 +88,30 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
       const clientCertificate = workspaceClientCertificates.find(
         c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
       );
-      const caCertificate = await models.caCertificate.findByParentId(workspaceId);
-      const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
-      const clientCert = clientCertificate?.cert ? await readFile(clientCertificate?.cert, 'utf8') : undefined;
-      const clientKey = clientCertificate?.key ? await readFile(clientCertificate?.key, 'utf8') : undefined;
+      const caCertificateProp = await models.caCertificate.findByParentId(workspaceId);
+      const caCertificatePath = caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
+
+      const clientCert = clientCertificate?.cert
+        ? await window.main.insecureReadFile({
+            path: clientCertificate.cert,
+          })
+        : undefined;
+      const clientKey = clientCertificate?.key
+        ? await window.main.insecureReadFile({ path: clientCertificate.key })
+        : undefined;
+      // allow to read the file as it is chosen by user
+      const caCertificate = caCertificatePath
+        ? await window.main.insecureReadFile({ path: caCertificatePath })
+        : undefined;
 
       const renderedWithCertificates = {
         ...rendered,
         rejectUnauthorized: settings.validateSSL,
         ...(activeRequest.url.toLowerCase().startsWith('grpcs:')
           ? {
-              clientCert,
-              clientKey,
-              caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+              clientCert: clientCert,
+              clientKey: clientKey,
+              caCertificate: caCertificate,
             }
           : {}),
       };
@@ -112,14 +121,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
   });
   const editorRef = useRef<CodeEditorHandle>(null);
   const gitVersion = useGitVCSVersion();
-  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
   const patchRequest = useRequestPatcher();
 
   const { updateTabById } = useInsomniaTabContext();
 
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}`;
+  const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
   const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
   const methodType = method?.type;
   const handleRequestSend = async () => {
@@ -152,9 +160,22 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           rejectUnauthorized: settings.validateSSL,
           ...(request.url.toLowerCase().startsWith('grpcs:')
             ? {
-                clientCert: clientCertificate?.cert ? await readFile(clientCertificate?.cert || '', 'utf8') : undefined,
-                clientKey: clientCertificate?.key ? await readFile(clientCertificate?.key || '', 'utf8') : undefined,
-                caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+                clientCert: clientCertificate?.cert
+                  ? await window.main.insecureReadFile({
+                      path: clientCertificate.cert,
+                    })
+                  : undefined,
+                clientKey: clientCertificate?.key
+                  ? await window.main.insecureReadFile({
+                      path: clientCertificate.key,
+                    })
+                  : undefined,
+                // allow to read the file as it is chosen by user
+                caCertificate: caCertificatePath
+                  ? await window.main.insecureReadFile({
+                      path: caCertificatePath,
+                    })
+                  : undefined,
               }
             : {}),
         });
@@ -268,22 +289,34 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                     const clientCertificate = workspaceClientCertificates.find(
                       c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
                     );
-                    const caCertificate = await models.caCertificate.findByParentId(workspaceId);
-                    const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
+                    const caCertificateProp = await models.caCertificate.findByParentId(workspaceId);
+                    const caCertificatePath =
+                      caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
                     const clientCert = clientCertificate?.cert
-                      ? await readFile(clientCertificate?.cert, 'utf8')
+                      ? await window.main.insecureReadFile({
+                          path: clientCertificate?.cert,
+                        })
                       : undefined;
                     const clientKey = clientCertificate?.key
-                      ? await readFile(clientCertificate?.key, 'utf8')
+                      ? await window.main.insecureReadFile({
+                          path: clientCertificate?.key,
+                        })
                       : undefined;
+                    // allow to read the file as it is chosen by user
+                    const caCertificate = caCertificatePath
+                      ? await window.main.insecureReadFile({
+                          path: caCertificatePath,
+                        })
+                      : undefined;
+
                     rendered = {
                       ...rendered,
                       rejectUnauthorized: settings.validateSSL,
                       ...(activeRequest.url.toLowerCase().startsWith('grpcs:')
                         ? {
-                            clientCert,
-                            clientKey,
-                            caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+                            clientCert: clientCert,
+                            clientKey: clientKey,
+                            caCertificate: caCertificate,
                           }
                         : {}),
                     };

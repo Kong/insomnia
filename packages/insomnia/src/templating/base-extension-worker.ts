@@ -8,6 +8,7 @@ import type { NodeCurlRequestOptions } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';
 import * as templating from './worker';
+
 export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
     return value;
@@ -34,7 +35,11 @@ export const fetchFromTemplateWorkerDatabase = async (path: PluginToMainAPIPaths
     method: 'post',
     body: JSON.stringify(body),
   });
-  const result = await resp.json();
+  let result;
+  try {
+    // We expect this to throw if a db call returns undefined
+    result = await resp.json();
+  } catch {}
   if (!resp.ok) {
     throw new Error(result?.error || JSON.stringify(result));
   }
@@ -180,10 +185,6 @@ export default class BaseExtension {
       renderPurpose,
       util: {
         readFile: async (path: string, encoding?: string) => {
-          const allowed = renderContext?.getSettings().dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
-          if (!allowed) {
-            throw `Insomnia cannot access the file ‘${path}’. You can adjust this in Preferences → Security.`;
-          }
           return fetchFromTemplateWorkerDatabase('readFile', { path, encoding });
         },
         nodeOS: async () => fetchFromTemplateWorkerDatabase('nodeOS', {}),

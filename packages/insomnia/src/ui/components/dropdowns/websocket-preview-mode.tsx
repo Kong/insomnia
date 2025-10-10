@@ -29,7 +29,7 @@ export const WebSocketPreviewMode: FC<Props> = ({ previewMode, onSelect }) => {
       aria-label="Change Body Type"
       name="body-type"
       onSelectionChange={contentType => {
-        onSelect(contentType.toString());
+        contentType && onSelect(contentType.toString());
       }}
       selectedKey={previewMode}
     >

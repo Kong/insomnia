@@ -33,7 +33,6 @@ import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { Link } from '~/ui/components/base/link';
-import { ErrorBoundary as ErrorView } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
@@ -47,7 +46,6 @@ import {
 } from '~/ui/components/modals/settings-modal';
 import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
-import { NunjucksEnabledProvider } from '~/ui/context/nunjucks/nunjucks-enabled-context';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
 
@@ -531,26 +529,24 @@ const Root = () => {
   ]);
 
   return (
-    <NunjucksEnabledProvider>
-      <ErrorView>
-        <div className="app">
-          <Outlet />
-          <Toaster />
-        </div>
-        <Modals />
-        <AppHooks />
-        {/* triggered by insomnia://app/import */}
-        {importUri && (
-          <ImportModal
-            onHide={() => setImportUri('')}
-            projectName="Insomnia"
-            defaultProjectId={projectId}
-            organizationId={organizationId}
-            from={{ type: 'uri', defaultValue: importUri }}
-          />
-        )}
-      </ErrorView>
-    </NunjucksEnabledProvider>
+    <>
+      <div className="app">
+        <Outlet />
+        <Toaster />
+      </div>
+      <Modals />
+      <AppHooks />
+      {/* triggered by insomnia://app/import */}
+      {importUri && (
+        <ImportModal
+          onHide={() => setImportUri('')}
+          projectName="Insomnia"
+          defaultProjectId={projectId}
+          organizationId={organizationId}
+          from={{ type: 'uri', defaultValue: importUri }}
+        />
+      )}
+    </>
   );
 };
 

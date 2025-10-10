@@ -1,6 +1,5 @@
 import type { BinaryToTextEncoding } from 'node:crypto';
 import crypto from 'node:crypto';
-import fs from 'node:fs';
 import os from 'node:os';
 
 import { shell } from 'electron';
@@ -8,6 +7,7 @@ import iconv from 'iconv-lite';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
+import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import * as models from '../models';
 import type { CloudProviderCredential } from '../models/cloud-credential';
@@ -20,12 +20,17 @@ import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } f
 import { getPluginCommonContext, type Plugin, type TemplateTag } from '../plugins';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
 import { curlRequest } from './network/libcurl-promise';
+import { secureReadFile } from './secure-read-file';
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
 export const resolveDbByKey = async (request: Request) => {
   const url = new URL(request.url);
-  const body = await request.json();
+  let body;
+  try {
+    // We expect this to throw if a db call returns undefined
+    body = await request.json();
+  } catch {}
   // url get normalized to lowercase, so we need to normalize the keys to lower case as well
   const withLowercasedKeys = Object.fromEntries(
     Object.entries(pluginToMainAPI).map(([key, value]) => [key.toLowerCase(), value]),
@@ -49,15 +54,21 @@ const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
     bundlePluginModuleMap[pluginName] = module;
     return module;
   } catch (err) {
-    console.error(`Failed to load bundled plugin ${pluginName}`, err);
+    if (isDevelopment()) {
+      console.warn(
+        `[plugin] Failed to load bundled plugin ${pluginName}. You can ignore this warning if you not developing external vault feature.`,
+      );
+    } else {
+      console.error(`Failed to load bundled plugin ${pluginName}`, err);
+    }
   }
   return {};
 };
 
 // These are exposed to the templating worker and can be used by plugins from context.util
 const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
-  'readFile': async (body: { path: string; encoding: 'utf8' }) => {
-    return await fs.promises.readFile(body.path, { encoding: body.encoding || 'utf8' });
+  'readFile': async (body: { path: string }) => {
+    return secureReadFile(body.path);
   },
   'nodeOS': async () => {
     return {
@@ -79,7 +90,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
   'request.getById': async (body: { id: string }) => {
     return await models.request.getById(body.id);
   },
-  'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: string[] }) => {
+  'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: models.AllTypes[] }) => {
     return await db.withAncestors<DBRequest | RequestGroup | Workspace>(body.request, body.types);
   },
   'workspace.getById': async (body: { id: string }) => {
@@ -92,7 +103,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return await models.cookieJar.getOrCreateForParentId(body.parentId);
   },
   'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
-    return await models.response.getLatestForRequest(body.requestId, body.environmentId);
+    return await models.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
   'response.getBodyBuffer': async (body: { response: Response; readFailureValue: string }) => {
     return await models.response.getBodyBuffer(body.response, body.readFailureValue);
@@ -174,7 +185,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     const response = await curlRequest({
       requestId: `no-sideEffects-request-${requestId}`,
       req: {
-        authentication: {},
+        authentication: { type: 'none' },
         body: {},
         cookieJar: {
           cookies: [],
@@ -230,26 +241,22 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     const appBundlePluginTemplateTags: TemplateTag[] = [];
     appBundlePlugins.forEach(p => {
       const { name: pluginName } = p;
-      try {
-        const module = getBundlePluginModule(pluginName);
-        const pluginExportedTemplateTags: PluginTemplateTag[] = module?.templateTags || [];
-        const pluginTemplateTags: TemplateTag[] = pluginExportedTemplateTags.map(tt => ({
-          plugin: {
-            name: pluginName,
-            description: 'Bundle plugin',
-            version: 'Unknown',
-            directory: '',
-            config: {
-              disabled: false,
-            },
-            module,
+      const module = getBundlePluginModule(pluginName);
+      const pluginExportedTemplateTags: PluginTemplateTag[] = module?.templateTags || [];
+      const pluginTemplateTags: TemplateTag[] = pluginExportedTemplateTags.map(tt => ({
+        plugin: {
+          name: pluginName,
+          description: 'Bundle plugin',
+          version: 'Unknown',
+          directory: '',
+          config: {
+            disabled: false,
           },
-          templateTag: tt,
-        }));
-        appBundlePluginTemplateTags.push(...pluginTemplateTags);
-      } catch (err) {
-        console.error(`[plugin] Failed to load bundled plugin ${pluginName}`, err);
-      }
+          module,
+        },
+        templateTag: tt,
+      }));
+      appBundlePluginTemplateTags.push(...pluginTemplateTags);
     });
     return appBundlePluginTemplateTags;
   },

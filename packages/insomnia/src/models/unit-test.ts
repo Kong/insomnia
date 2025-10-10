@@ -51,9 +51,9 @@ export function update(unitTest: UnitTest, patch: Partial<UnitTest> = {}) {
 }
 
 export function getByParentId(parentId: string) {
-  return db.getWhere<UnitTest>(type, { parentId });
+  return db.findOne<UnitTest>(type, { parentId });
 }
 
 export function all() {
-  return db.all<UnitTest>(type);
+  return db.find<UnitTest>(type);
 }

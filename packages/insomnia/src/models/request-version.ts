@@ -1,6 +1,6 @@
 import deepEqual from 'deep-equal';
 
-import { database as db } from '../common/database';
+import { database, database as db } from '../common/database';
 import { compressObject, decompressObject } from '../common/misc';
 import * as requestOperations from '../models/helpers/request-operations';
 import type { GrpcRequest } from './grpc-request';
@@ -49,7 +49,7 @@ export function migrate(doc: RequestVersion) {
 }
 
 export function getById(id: string) {
-  return db.get<RequestVersion>(type, id);
+  return db.findOne<RequestVersion>(type, { _id: id });
 }
 
 export function findByParentId(parentId: string) {
@@ -62,7 +62,13 @@ export async function create(request: Request | WebSocketRequest | GrpcRequest |
   }
 
   const parentId = request._id;
-  const latestRequestVersion: RequestVersion | null = await getLatestByParentId(parentId);
+  const latestRequestVersion = await database.findOne<RequestVersion>(
+    'RequestVersion',
+    {
+      parentId,
+    },
+    { modified: -1 },
+  );
   const latestRequest = latestRequestVersion
     ? decompressObject<Request | WebSocketRequest | SocketIORequest>(latestRequestVersion.compressedRequest)
     : null;
@@ -79,10 +85,6 @@ export async function create(request: Request | WebSocketRequest | GrpcRequest |
   }
   // Re-use the latest version if not modified since
   return latestRequestVersion;
-}
-
-export function getLatestByParentId(parentId: string) {
-  return db.getMostRecentlyModified<RequestVersion>(type, { parentId });
 }
 
 export async function restore(requestVersionId: string) {
@@ -136,5 +138,5 @@ function _diffRequests(
 }
 
 export function all() {
-  return db.all<RequestVersion>(type);
+  return db.find<RequestVersion>(type);
 }

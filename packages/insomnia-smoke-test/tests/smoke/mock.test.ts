@@ -1,6 +1,7 @@
 import { test } from '../../playwright/test';
 
-// @TODO - Bring this back once the stage server is up and running
+// @TODO - Bring this back once the stage server is back up and running and remove the ignore line below
+// eslint-disable-next-line playwright/no-skipped-test
 test.skip('can make a mock route: WARNING: THIS TEST DEPENDS ON mock-stage.insomnia.run to be up', async ({ page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 

@@ -1,10 +1,10 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { getSyncItems } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.stage';
 
@@ -34,10 +34,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   return null;
 }
 
-export function useInsomniaSyncStageActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useInsomniaSyncStageActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       keys,
       organizationId,
@@ -49,7 +47,7 @@ export function useInsomniaSyncStageActionFetcher(args?: Parameters<typeof useFe
       projectId: string;
       workspaceId: string;
     }) => {
-      return fetcherSubmit(JSON.stringify({ keys }), {
+      return submit(JSON.stringify({ keys }), {
         method: 'POST',
         action: href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/stage`, {
           organizationId,
@@ -59,11 +57,5 @@ export function useInsomniaSyncStageActionFetcher(args?: Parameters<typeof useFe
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
 import * as models from '~/models';
 import type { CloudProviderCredential } from '~/models/cloud-credential';
 import { executePluginMainAction } from '~/plugins';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/cloud-credentials.create';
 
@@ -54,22 +54,13 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return { error: 'Unexpected response from ' + provider };
 }
 
-export function useCreateCloudCredentialActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcher } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
-    function submit(data: CreateCloudCredentialsData) {
-      return fetcherSubmit(JSON.stringify(data), {
-        method: 'POST',
-        action: href('/cloud-credentials/create'),
-        encType: 'application/json',
-      });
-    },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcher,
-    submit,
-  };
-}
+export const useCreateCloudCredentialActionFetcher = createFetcherSubmitHook(
+  submit => (data: CreateCloudCredentialsData) => {
+    return submit(JSON.stringify(data), {
+      method: 'POST',
+      action: href('/cloud-credentials/create'),
+      encType: 'application/json',
+    });
+  },
+  clientAction,
+);

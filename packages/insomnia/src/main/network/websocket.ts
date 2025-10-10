@@ -10,7 +10,8 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import { v4 as uuidV4 } from 'uuid';
 import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSocket } from 'ws';
 
-import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
+import { database } from '~/common/database';
+
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { webSocketRequest } from '../../models';
@@ -31,6 +32,7 @@ import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
+import { insecureReadFile, secureReadFile } from '../secure-read-file';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
@@ -70,9 +72,38 @@ export type WebSocketEvent = WebSocketOpenEvent | WebSocketMessageEvent | WebSoc
 
 export type WebSocketEventLog = WebSocketEvent[];
 
+const protocolName = 'webSocket';
 const WebSocketConnections = new Map<string, WebSocket>();
+const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
+
+const getEventNotificationChannel = (responseId: string) => `${protocolName}.${responseId}.newEventReceived`;
+
+const writeEventLogAndNotify = ({
+  requestId,
+  data,
+  clearRequestIdMap = false,
+}: {
+  requestId: string;
+  data: any;
+  clearRequestIdMap?: boolean;
+}) => {
+  eventLogFileStreams.get(requestId)?.write(data, () => {
+    // notify all renderers of new event has been received
+    for (const window of BrowserWindow.getAllWindows()) {
+      const resId = requestIdToResponseIdMap.get(requestId);
+      if (resId) {
+        const notifyChannel = getEventNotificationChannel(resId);
+        notifyChannel && window.webContents.send(notifyChannel);
+        if (clearRequestIdMap) {
+          // clean up maps after last event has been written to file
+          requestIdToResponseIdMap.delete(requestId);
+        }
+      }
+    }
+  });
+};
 
 const parseResponseAndBuildTimeline = (url: string, incomingMessage: IncomingMessage, clientRequestHeaders: string) => {
   const statusMessage = incomingMessage.statusMessage || '';
@@ -128,6 +159,7 @@ const openWebSocketConnection = async (
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
+  requestIdToResponseIdMap.set(options.requestId, responseId);
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   // fallback to base environment
@@ -140,14 +172,15 @@ const openWebSocketConnection = async (
   const caCert = await models.caCertificate.findByParentId(options.workspaceId);
   const caCertficatePath = caCert && !caCert.disabled ? caCert.path : null;
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
+  // allow to read the file as it is chosen by user
   const caCertificate =
-    (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
+    (caCertficatePath && (await insecureReadFile(caCertficatePath))) || tls.rootCertificates.join('\n');
 
   try {
     if (!options.url) {
       throw new Error('URL is required');
     }
-    const readyStateChannel = `webSocket.${request._id}.readyState`;
+    const readyStateChannel = `${protocolName}.${request._id}.readyState`;
 
     const reduceArrayToLowerCaseKeyedDictionary = (
       acc: Record<string, string>,
@@ -157,12 +190,12 @@ const openWebSocketConnection = async (
     let url = options.url;
     let authCookie = null;
     if (!options.authentication.disabled) {
-      if (options.authentication.type === AUTH_BASIC) {
+      if (options.authentication.type === 'basic') {
         const { username, password, useISO88591 } = options.authentication;
         const encoding = useISO88591 ? 'latin1' : 'utf8';
         headers.push(getBasicAuthHeader(username, password, encoding));
       }
-      if (options.authentication.type === AUTH_API_KEY) {
+      if (options.authentication.type === 'apikey') {
         const { key = '', value = '', addTo } = options.authentication; // Ensure key is not undefined
         if (addTo === HEADER) {
           headers.push({ name: key, value: value });
@@ -177,7 +210,7 @@ const openWebSocketConnection = async (
           url = joinUrlAndQueryString(options.url, qs);
         }
       }
-      if (options.authentication.type === AUTH_BEARER && options.authentication.token) {
+      if (options.authentication.type === 'bearer' && options.authentication.token) {
         const { token, prefix } = options.authentication;
         headers.push(getBearerAuthHeader(token, prefix));
       }
@@ -353,8 +386,7 @@ const openWebSocketConnection = async (
         type: 'open',
         timestamp: Date.now(),
       };
-
-      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
+      writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(openEvent) + '\n' });
       timelineFileStreams
         .get(options.requestId)
         ?.write(
@@ -378,9 +410,7 @@ const openWebSocketConnection = async (
         direction: 'INCOMING',
         timestamp: Date.now(),
       };
-
-      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
-
+      writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(messageEvent) + '\n' });
       // send subscribe operation to graphql websocket server
       if (options.isGraphqlSubscriptionRequest) {
         handleGraphQLWsMessage(data, request as Request);
@@ -498,7 +528,11 @@ const deleteRequestMaps = async (
   event?: WebSocketCloseEvent | WebSocketErrorEvent,
 ) => {
   if (event) {
-    eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
+    writeEventLogAndNotify({
+      requestId,
+      data: JSON.stringify(event) + '\n',
+      clearRequestIdMap: true,
+    });
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);
@@ -534,8 +568,14 @@ const sendPayload = async (ws: WebSocket, options: { payload: string; requestId:
     timestamp: Date.now(),
   };
 
-  eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
-  const response = await models.webSocketResponse.getLatestByParentId(options.requestId);
+  writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(lastMessage) + '\n' });
+  const response = await database.findOne<WebSocketResponse>(
+    'WebSocketResponse',
+    {
+      parentId: options.requestId,
+    },
+    { modified: -1 },
+  );
   if (!response) {
     console.error('something went wrong');
     return;
@@ -568,10 +608,9 @@ const findMany = async (options: { responseId: string }): Promise<WebSocketEvent
   if (!response || !response.eventLogPath) {
     return [];
   }
-  const body = await fs.promises.readFile(response.eventLogPath);
+  const body = await secureReadFile(response.eventLogPath);
   return (
     body
-      .toString()
       .split('\n')
       .filter(e => e?.trim())
       // Parse the message

@@ -1,7 +1,7 @@
 import type { Schema } from '@develohpanda/fluent-builder';
 import clone from 'clone';
 
-import { type BaseModel, environment, grpcRequest, request, requestGroup, workspace } from '..';
+import { type AllTypes, type BaseModel, environment, grpcRequest, request, requestGroup, workspace } from '..';
 import type { Environment } from '../environment';
 import type { GrpcRequest } from '../grpc-request';
 import type { Request } from '../request';
@@ -29,7 +29,7 @@ export const baseModelSchema: Schema<BaseModel> = {
   modified: () => 5678,
   name: () => 'name',
   parentId: () => '',
-  type: () => 'base',
+  type: () => 'base' as AllTypes,
 };
 
 export const workspaceModelSchema: Schema<Workspace> = {

@@ -8,7 +8,6 @@ import { HydratedRouter } from 'react-router/dom';
 
 import { migrateFromLocalStorage, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
-import { database } from './common/database';
 import { settings } from './models';
 import { initNewOAuthSession } from './network/o-auth-2/get-token';
 import { init as initPlugins } from './plugins';
@@ -22,6 +21,10 @@ import { initializeSentry } from './ui/sentry';
 import { getInitialEntry } from './utils/router';
 
 initializeSentry();
+
+await initPlugins();
+
+await migrateFromLocalStorage();
 
 try {
   window.showAlert = options => showModal(AlertModal, options);
@@ -47,11 +50,6 @@ try {
 } catch (e) {
   console.log('[onboarding] Failed to parse session data', e);
 }
-
-await database.initClient();
-await initPlugins();
-
-await migrateFromLocalStorage();
 
 // Check if there is a Session provided by an env variable and use this
 const insomniaSession = getInsomniaSession();

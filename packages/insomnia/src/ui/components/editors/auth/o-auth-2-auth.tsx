@@ -1,6 +1,8 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { type AUTH_OAUTH_2, getOauthRedirectUrl } from '../../../../common/constants';
+import { OAuthAuthorizationStatusModal } from '~/ui/components/modals/oauth-authorization-status-modal';
+
+import { getOauthRedirectUrl } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
@@ -95,7 +97,7 @@ const credentialsInBodyOptions = [
   },
 ];
 
-const getFields = (authentication: Extract<RequestAuthentication, { type: typeof AUTH_OAUTH_2 }>) => {
+const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth2' }>) => {
   const clientId = <AuthInputRow label="Client ID" property="clientId" key="clientId" />;
   const clientSecret = <AuthInputRow label="Client Secret" property="clientSecret" key="clientSecret" mask />;
   const usePkce = (
@@ -139,6 +141,16 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: typeof
       disabled={authentication.useDefaultBrowser}
       overrideValueWhenDisabled={getOauthRedirectUrl()}
       copyBtn={authentication.useDefaultBrowser}
+    />
+  );
+  const redirectUriWithoutDefaultBrowser = (
+    <AuthInputRow
+      label="Redirect URL"
+      property="redirectUrl"
+      key="redirectUrl"
+      help={
+        'This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL.'
+      }
     />
   );
   const useDefaultBrowser = (
@@ -204,6 +216,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: typeof
     authorizationUrl,
     accessTokenUrl,
     redirectUri,
+    redirectUriWithoutDefaultBrowser,
     useDefaultBrowser,
     state,
     scope,
@@ -218,7 +231,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: typeof
   };
 };
 
-const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { type: typeof AUTH_OAUTH_2 }>) => {
+const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { type: 'oauth2' }>) => {
   const {
     clientId,
     clientSecret,
@@ -227,6 +240,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
     authorizationUrl,
     accessTokenUrl,
     redirectUri,
+    redirectUriWithoutDefaultBrowser,
     useDefaultBrowser,
     state,
     scope,
@@ -267,7 +281,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
 
     advanced = [scope, credentialsInBody, tokenPrefix, audience];
   } else if (grantType === GRANT_TYPE_IMPLICIT) {
-    basic = [authorizationUrl, clientId, redirectUri];
+    basic = [authorizationUrl, clientId, redirectUriWithoutDefaultBrowser];
 
     advanced = [responseType, scope, state, tokenPrefix, audience];
   }
@@ -313,6 +327,7 @@ export const OAuth2Auth: FC = () => {
       <div className="pad">
         <OAuth2Tokens />
       </div>
+      <OAuthAuthorizationStatusModal />
     </>
   );
 };
@@ -321,6 +336,7 @@ export const OAuth2Auth: FC = () => {
   Which is the epoch millisecond representation. (trims last 2 digits)
 */
 export function convertEpochToMilliseconds(epoch: number) {
+  epoch = Math.floor(epoch);
   const expDigitCount = epoch.toString().length;
   return parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
 }
@@ -374,7 +390,7 @@ const renderAccessTokenExpiry = (token?: Pick<OAuth2Token, 'accessToken' | 'expi
 };
 
 const OAuth2TokenInput: FC<{
-  token: OAuth2Token | null;
+  token?: OAuth2Token;
   label: string;
   property: keyof Pick<OAuth2Token, 'accessToken' | 'refreshToken' | 'identityToken'>;
 }> = ({ token, label, property }) => {
@@ -413,7 +429,7 @@ const OAuth2TokenInput: FC<{
   );
 };
 
-const OAuth2Error: FC<{ token: OAuth2Token | null }> = ({ token }) => {
+const OAuth2Error: FC<{ token?: OAuth2Token }> = ({ token }) => {
   const debug = () => {
     if (!token || !token.xResponseId) {
       return;
@@ -459,7 +475,7 @@ const OAuth2Tokens: FC = () => {
   const reqData = useRequestLoaderData() as RequestLoaderData;
   const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
-  const [token, setToken] = useState<OAuth2Token | null>(null);
+  const [token, setToken] = useState<OAuth2Token | undefined>();
   useEffect(() => {
     const fn = async () => {
       const token = await models.oAuth2Token.getByParentId(_id);
@@ -490,7 +506,7 @@ const OAuth2Tokens: FC = () => {
             disabled={!token}
             onClick={() => {
               if (token) {
-                setToken(null);
+                setToken(undefined);
                 models.oAuth2Token.remove(token);
               }
             }}
@@ -513,7 +529,7 @@ const OAuth2Tokens: FC = () => {
             } catch (err) {
               // Clear existing tokens if there's an error
               if (token) {
-                setToken(null);
+                setToken(undefined);
                 models.oAuth2Token.remove(token);
               }
               setError(err.message);

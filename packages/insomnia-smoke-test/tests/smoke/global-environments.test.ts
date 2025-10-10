@@ -23,7 +23,7 @@ test.describe('Global Environments', () => {
     await page.getByPlaceholder('Choose a global environment').click();
     await page.getByRole('option', { name: 'global-environment' }).click();
     await page.getByText('New Environment').click();
-    await page.getByTestId('underlay').click();
+    await page.locator('body').click();
     await page.getByRole('button', { name: 'Send' }).click();
 
     await page.getByRole('tab', { name: 'Console' }).click();

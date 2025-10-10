@@ -80,11 +80,11 @@ export async function getOrCreateForParentId(parentId: string) {
 }
 
 export async function all() {
-  return db.all<BaseModel>(type);
+  return db.find<BaseModel>(type);
 }
 
-export async function getById(id: string): Promise<CookieJar | null> {
-  return db.get(type, id);
+export async function getById(id: string): Promise<CookieJar | undefined> {
+  return db.findOne<CookieJar>(type, { _id: id });
 }
 
 export async function update(cookieJar: CookieJar, patch: Partial<CookieJar> = {}) {

@@ -43,7 +43,7 @@ export function create(patch: Partial<MockServer> = {}) {
   return db.docCreate<MockServer>(type, patch);
 }
 export async function getOrCreateForParentId(workspaceId: string, patch: Partial<MockServer> = {}) {
-  const mockServer = await db.getWhere<MockServer>(type, {
+  const mockServer = await db.findOne<MockServer>(type, {
     parentId: workspaceId,
   });
 
@@ -58,11 +58,11 @@ export function update(mockServer: MockServer, patch: Partial<MockServer> = {}) 
 }
 
 export function getById(id: string) {
-  return db.get<MockServer>(type, id);
+  return db.findOne<MockServer>(type, { _id: id });
 }
 
 export function getByParentId(parentId: string) {
-  return db.getWhere<MockServer>(type, { parentId });
+  return db.findOne<MockServer>(type, { parentId });
 }
 
 export async function findByProjectId(projectId: string) {
@@ -79,5 +79,5 @@ export function remove(mockServer: MockServer) {
 }
 
 export function all() {
-  return db.all<MockServer>(type);
+  return db.find<MockServer>(type);
 }

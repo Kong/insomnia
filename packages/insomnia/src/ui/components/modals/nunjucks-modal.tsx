@@ -75,6 +75,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
         defaultValue={template}
         workspace={workspace}
         editorId={state.editorId}
+        close={() => modalRef.current?.hide()}
       />
     );
   } else {

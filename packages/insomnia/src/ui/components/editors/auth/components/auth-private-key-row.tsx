@@ -11,7 +11,6 @@ import {
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { showModal } from '~/ui/components/modals';
 import { CodePromptModal } from '~/ui/components/modals/code-prompt-modal';
-import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useRequestGroupPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
 import { invariant } from '~/utils/invariant';
 
@@ -46,8 +45,6 @@ export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help }) => {
   const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   invariant('privateKey' in authentication, 'must have privateKey property in authentication object');
 
-  const { handleGetRenderContext, handleRender } = useNunjucks();
-
   const privateKey = authentication[property];
   const onChange = useCallback(
     (value: string) => patcher(_id, { authentication: { ...authentication, [property]: value } }),
@@ -60,7 +57,6 @@ export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help }) => {
       title: 'Edit Private Key',
       defaultValue: privateKey || '',
       onChange,
-      enableRender: Boolean(handleRender || handleGetRenderContext),
       placeholder: PRIVATE_KEY_PLACEHOLDER,
       mode: 'text/plain',
       hideMode: true,

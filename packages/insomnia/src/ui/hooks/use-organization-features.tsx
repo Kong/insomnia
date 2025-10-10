@@ -22,7 +22,7 @@ export function useOrganizationPermissions() {
   // Load organization permissions and features if they are not already loaded.
   useEffect(() => {
     const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
-    if (!isScratchpadOrganizationId(organizationId) && isIdleAndUninitialized) {
+    if (organizationId && !isScratchpadOrganizationId(organizationId) && isIdleAndUninitialized) {
       permissionsFetcher.load({
         organizationId,
       });
@@ -31,9 +31,9 @@ export function useOrganizationPermissions() {
 
   const { featuresPromise, billingPromise } = permissionsFetcher.data || {};
   // Features and billing return a promise using react-router's defer() so we need to wait for the data to be available.
-  const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise);
+  const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise, organizationId);
 
-  const [billing = fallbackBilling] = useLoaderDeferData(billingPromise);
+  const [billing = fallbackBilling] = useLoaderDeferData(billingPromise, organizationId);
 
   return { features, billing };
 }

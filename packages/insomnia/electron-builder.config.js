@@ -20,7 +20,7 @@ const config = {
     {
       from: './build',
       to: '.',
-      filter: ['**/*'],
+      filter: ['**/*', '!**/*.map'],
     },
     './package.json',
   ],

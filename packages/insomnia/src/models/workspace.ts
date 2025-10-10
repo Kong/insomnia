@@ -60,7 +60,7 @@ export function migrate(doc: Workspace) {
 }
 
 export function getById(id?: string) {
-  return db.get<Workspace>(type, id);
+  return db.findOne<Workspace>(type, { _id: id });
 }
 
 export function findByParentId(parentId: string) {
@@ -73,7 +73,7 @@ export async function create(patch: Partial<Workspace> = {}) {
 }
 
 export async function all() {
-  return await db.all<Workspace>(type);
+  return await db.find<Workspace>(type);
 }
 
 export function count() {

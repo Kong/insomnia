@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -28,6 +28,7 @@ import {
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
+  href,
   type NavigateFunction,
   NavLink,
   redirect,
@@ -38,9 +39,10 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router';
+import { useLocalStorage } from 'react-use';
 
 import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
-import { type ChangeBufferEvent, database as db } from '~/common/database';
+import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
@@ -48,6 +50,7 @@ import * as models from '~/models';
 import type { Environment } from '~/models/environment';
 import { type GrpcRequest, isGrpcRequest, isGrpcRequestId } from '~/models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '~/models/grpc-request-meta';
+import { isScratchpadOrganizationId } from '~/models/organization';
 import type { Project } from '~/models/project';
 import {
   isEventStreamRequest,
@@ -75,6 +78,9 @@ import { useRequestNewActionFetcher } from '~/routes/organization.$organizationI
 import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import Runner from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
+import Tutorial, {
+  scratchPadTutorialList,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.tutorial.$panel';
 import { useToggleExpandAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.toggle-expand-all';
 import { DropdownHint } from '~/ui/components/base/dropdown/dropdown-hint';
 import { DocumentTab } from '~/ui/components/document-tab';
@@ -93,7 +99,6 @@ import { CookiesModal } from '~/ui/components/modals/cookies-modal';
 import { ErrorModal } from '~/ui/components/modals/error-modal';
 import { GenerateCodeModal } from '~/ui/components/modals/generate-code-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
-import { OAuthAuthorizationStatusModal } from '~/ui/components/modals/oauth-authorization-status-modal';
 import { PasteCurlModal } from '~/ui/components/modals/paste-curl-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { RequestSettingsModal } from '~/ui/components/modals/request-settings-modal';
@@ -113,6 +118,7 @@ import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-reque
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useExecutionState } from '~/ui/hooks/use-execution-state';
+import { useFilteredRequests } from '~/ui/hooks/use-filtered-requests';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 import {
@@ -233,7 +239,7 @@ const Debug = () => {
     caCertificate,
     clientCertificates,
     grpcRequests,
-    collection,
+    collection: _collection,
   } = useWorkspaceLoaderData()!;
 
   const requestData = useRequestLoaderData();
@@ -247,13 +253,17 @@ const Debug = () => {
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
   const [pastedCurl, setPastedCurl] = useState('');
 
-  const { organizationId, projectId, workspaceId, requestId, requestGroupId } = useParams() as {
+  const { organizationId, projectId, workspaceId, requestId, requestGroupId, panel } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
     requestId?: string;
     requestGroupId?: string;
+    panel?: string;
   };
+
+  const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:collection-list-filter`);
+  const collection = useFilteredRequests(_collection, filter ?? '');
 
   const { activeRequestGroup } = useRequestGroupLoaderData() || {};
 
@@ -274,7 +284,7 @@ const Debug = () => {
   const patchGroup = useRequestGroupPatcher();
   const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
-    db.onChange(async (changes: ChangeBufferEvent[]) => {
+    const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [event, doc] = change;
         if (isGrpcRequest(doc) && event === 'insert') {
@@ -282,6 +292,9 @@ const Debug = () => {
         }
       }
     });
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const { settings } = useRootLoaderData()!;
@@ -790,7 +803,7 @@ const Debug = () => {
         <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
           <div className="flex flex-col items-start divide-y divide-solid divide-[--hl-md]">
             <div className={`flex w-full h-[${INSOMNIA_TAB_HEIGHT}px]`}>
-              <Breadcrumbs className="m-0 flex h-[--line-height-sm] w-full list-none items-center gap-2 px-[--padding-sm] font-bold">
+              <Breadcrumbs className="m-0 flex h-full w-full list-none items-center gap-2 px-[--padding-sm] font-bold">
                 <Breadcrumb className="flex h-full select-none items-center gap-2 text-[--color-font] outline-none data-[focused]:outline-none">
                   <NavLink
                     data-testid="project"
@@ -852,19 +865,13 @@ const Debug = () => {
               </Button>
             </div>
           </div>
-
           <div className="flex flex-1 flex-col overflow-hidden">
             <div className="flex justify-between gap-1 p-[--padding-sm]">
               <SearchField
                 aria-label="Request filter"
                 className="group relative flex-1"
-                defaultValue={searchParams.get('filter')?.toString() ?? ''}
-                onChange={filter => {
-                  setSearchParams({
-                    ...Object.fromEntries(searchParams.entries()),
-                    filter,
-                  });
-                }}
+                value={filter ?? ''}
+                onChange={setFilter}
               >
                 <Input
                   placeholder="Filter"
@@ -881,6 +888,7 @@ const Debug = () => {
                 className="aspect-square h-full"
                 selectedKey={sortOrder}
                 onSelectionChange={order =>
+                  order &&
                   setSearchParams({
                     ...Object.fromEntries(searchParams.entries()),
                     sortOrder: order.toString(),
@@ -1072,7 +1080,13 @@ const Debug = () => {
                           }
                         }}
                       />
-                      {item.pinned && <Icon className="text-[--font-size-sm]" icon="thumb-tack" />}
+                      {item.pinned && (
+                        <Icon
+                          className="text-[--font-size-sm]"
+                          icon="thumb-tack"
+                          onDoubleClick={() => patchRequestMeta(item.doc._id, { pinned: !item.pinned })}
+                        />
+                      )}
                     </div>
                   </GridListItem>
                 );
@@ -1143,8 +1157,9 @@ const Debug = () => {
             </div>
           </div>
 
-          <WorkspaceSyncDropdown />
+          {isScratchpadOrganizationId(organizationId) && <ScratchPadTutorialPanel />}
 
+          <WorkspaceSyncDropdown />
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
           {isImportModalOpen && (
             <ImportModal
@@ -1176,7 +1191,8 @@ const Debug = () => {
       </Panel>
       <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
       <Panel className="flex flex-col">
-        <OrganizationTabList currentPage="debug" />
+        {/* Hide tabs when it's on the tutorial panel */}
+        {!panel && <OrganizationTabList currentPage="debug" />}
         <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
           <Routes>
             <RouteComponent
@@ -1237,11 +1253,11 @@ const Debug = () => {
                       </Panel>
                     </>
                   ) : null}
-                  <OAuthAuthorizationStatusModal />
                 </>
               }
             />
             <RouteComponent path="runner" element={<Runner />} />
+            <RouteComponent path="tutorial/:panel" element={<Tutorial />} />
           </Routes>
         </PanelGroup>
       </Panel>
@@ -1250,6 +1266,106 @@ const Debug = () => {
 };
 
 export default Debug;
+
+const ScratchPadTutorialPanel = () => {
+  const [signUpTipDismissedState, setSignUpTipDismissedState] = useLocalStorage<{
+    dismissed: boolean;
+    dismissedAt: number;
+  }>('scratchpad-sign-up-tip-dismissed', { dismissed: false, dismissedAt: 0 });
+
+  const handleDismiss = () => {
+    setSignUpTipDismissedState({ dismissed: true, dismissedAt: Date.now() });
+  };
+
+  const {
+    organizationId,
+    projectId,
+    workspaceId,
+    panel = 'all',
+  } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+    panel?: string;
+  };
+
+  const navigate = useNavigate();
+  const handleSignUp = () => {
+    navigate(href('/auth/login'));
+  };
+
+  const shouldShowSignUpTip = useMemo(() => {
+    if (!signUpTipDismissedState || !signUpTipDismissedState.dismissed) {
+      return true;
+    }
+
+    const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    return now - signUpTipDismissedState.dismissedAt >= twoWeeksInMs;
+  }, [signUpTipDismissedState]);
+
+  return (
+    <>
+      {shouldShowSignUpTip ? (
+        <div className="m-2 rounded-lg !border border-solid border-[--hl-sm] bg-[--color-bg] p-4">
+          <div className="flex flex-col items-start justify-between">
+            <div className="flex w-full justify-between">
+              <h3 className="mb-2 text-lg font-semibold text-[--color-font]">Unlock full features</h3>
+              <Button
+                onPress={handleDismiss}
+                className="ml-4 flex h-6 w-6 items-center justify-center rounded-sm text-[--color-font-secondary] transition-colors hover:bg-[--hl-xs] hover:text-[--color-font] focus:outline-none"
+                aria-label="Dismiss tutorial"
+              >
+                <Icon icon="times" className="h-3 w-3" />
+              </Button>
+            </div>
+            <p className="mb-4 text-sm text-[--color-font-secondary]">
+              Create multiple collections, design APIs, manage projects, and collaborate with your team.
+            </p>
+            <Button
+              onPress={handleSignUp}
+              className="rounded-md bg-[--color-surprise] px-4 py-2 text-sm font-medium text-white transition-colors"
+            >
+              Sign up for free
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      <GridList
+        aria-label="Scope filter"
+        items={scratchPadTutorialList}
+        className="flex-shrink-0 overflow-y-auto py-[--padding-sm] data-[empty]:py-0"
+        disallowEmptySelection
+        selectedKeys={[panel]}
+        selectionMode="single"
+        onSelectionChange={keys => {
+          if (keys !== 'all') {
+            const selected = Array.from(keys.values())[0].toString();
+            navigate(
+              `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/tutorial/${selected}`,
+            );
+          }
+        }}
+      >
+        {item => {
+          return (
+            <GridListItem textValue={item.title} className="group select-none outline-none">
+              <div className="relative flex h-12 w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:bg-[--hl-sm] group-aria-selected:text-[--color-font]">
+                <span className="flex h-6 w-6 items-center justify-center">
+                  <Icon icon={item.icon} className="w-6" />
+                </span>
+
+                <span className="truncate">{item.title}</span>
+              </div>
+            </GridListItem>
+          );
+        }}
+      </GridList>
+    </>
+  );
+};
 
 const CollectionGridListItem = ({
   label,
@@ -1280,6 +1396,7 @@ const CollectionGridListItem = ({
   const [isEditable, setIsEditable] = useState(false);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
+  const patchRequestMeta = useRequestMetaPatcher();
 
   const action = isRequestGroup(item.doc)
     ? `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}/update`
@@ -1406,7 +1523,13 @@ const CollectionGridListItem = ({
         {isGraphqlSubscriptionRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
         {isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
-        {item.pinned && <Icon className="text-[--font-size-sm]" icon="thumb-tack" />}
+        {item.pinned && (
+          <Icon
+            className="text-[--font-size-sm]"
+            icon="thumb-tack"
+            onDoubleClick={() => patchRequestMeta(item.doc._id, { pinned: !item.pinned })}
+          />
+        )}
         {isRequestGroup(item.doc) ? (
           <RequestGroupActionsDropdown
             requestGroup={item.doc}

@@ -6,10 +6,11 @@ import { Curl, CurlFeature, CurlInfoDebug, type HeaderInfo } from '@getinsomnia/
 import electron, { BrowserWindow } from 'electron';
 import { v4 as uuidV4 } from 'uuid';
 
+import { insecureReadFile } from '~/main/secure-read-file';
+
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
 import * as models from '../../models';
 import type { CookieJar } from '../../models/cookie-jar';
-import type { Environment } from '../../models/environment';
 import type { RequestAuthentication, RequestHeader } from '../../models/request';
 import type { Response } from '../../models/response';
 import { readCurlResponse } from '../../models/response';
@@ -113,12 +114,12 @@ const openCurlConnection = async (
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
-  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
+  const environment = await models.environment.getById(environmentId || 'n/a');
   const responseEnvironmentId = environment ? environment._id : null;
 
   const caCert = await models.caCertificate.findByParentId(options.workspaceId);
   const caCertficatePath = caCert?.path || null;
-  const caCertificate = caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString();
+  const caCertificate = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
   try {
     invariant(options.url, 'URL must be defined');
@@ -169,7 +170,7 @@ const openCurlConnection = async (
             request._id,
             responseEnvironmentId,
             timelinePath,
-            error.message || 'Something went wrong',
+            error.message || 'Something went wrong creating curl response',
           );
         }
       }
@@ -291,13 +292,13 @@ const openCurlConnection = async (
   } catch (e) {
     console.error('unhandled error:', e);
 
-    deleteRequestMaps(request._id, e.message || 'Something went wrong');
+    deleteRequestMaps(request._id, e.message || 'Something went wrong opening curl connection');
     createErrorResponse(
       responseId,
       request._id,
       responseEnvironmentId,
       timelinePath,
-      e.message || 'Something went wrong',
+      e.message || 'Something went wrong creating curl connection',
     );
   }
 };
@@ -370,10 +371,9 @@ const findMany = async (options: { responseId: string }): Promise<CurlEvent[]> =
   if (!response || !response.bodyPath) {
     return [];
   }
-  const body = await fs.promises.readFile(response.bodyPath);
+  const body = await insecureReadFile(response.bodyPath);
   return (
     body
-      .toString()
       .split('\n')
       .filter(e => e?.trim())
       // Parse the message
