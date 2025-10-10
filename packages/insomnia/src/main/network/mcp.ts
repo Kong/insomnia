@@ -874,7 +874,7 @@ const createTransportAndConnect = async (
     }
   }
   const authDisabled = 'disabled' in mcpRequest.authentication && mcpRequest.authentication.disabled;
-  const isFirstConnection = mcpRequest.connected === false;
+  const isFirstConnection = !mcpRequest.connected;
   trackSegmentEvent(SegmentEvent.mcpClientConnected, {
     transportType: connectionOptions.transportType,
     firstTime: isFirstConnection,
