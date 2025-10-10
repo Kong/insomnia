@@ -33,7 +33,7 @@ jobs:
           dir: .
           upload-sbom-release-assets: false
   build-and-upload-release-artifacts:
-    timeout-minutes: 30
+    timeout-minutes: 45
     runs-on: ${{ matrix.os }}
     env:
       INSO_PACKAGE_NAME: insomnia-inso
