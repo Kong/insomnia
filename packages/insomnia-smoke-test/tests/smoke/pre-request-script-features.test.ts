@@ -639,15 +639,16 @@ test.describe('unhappy paths', () => {
   test('custom errors are returned', async ({ page }) => {
     await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
 
-    // set request body
-    await page.getByRole('tab', { name: 'Body' }).click();
-    await page.getByRole('button', { name: 'Body' }).click();
-    await page.getByRole('option', { name: 'JSON' }).click();
-
     // enter script
     await page.getByRole('tab', { name: 'Scripts' }).click();
     const editor = page.getByTestId('CodeEditor').getByRole('textbox');
     await editor.fill(`throw Error('my custom error');`);
+    await page.getByText('throw Error').click();
+
+    // set request body
+    await page.getByRole('tab', { name: 'Body' }).click();
+    await page.getByRole('button', { name: 'Body' }).click();
+    await page.getByRole('option', { name: 'JSON' }).click();
 
     await page.getByRole('tab', { name: 'Body' }).click();
 
