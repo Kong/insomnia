@@ -59,8 +59,13 @@ export enum SegmentEvent {
   vcsSyncComplete = 'VCS Sync Completed',
   vcsAction = 'VCS Action Executed',
   buttonClick = 'Button Clicked',
-  aiFeatureEnabled = "AI Feature Enabled",
-  aiFeatureDisabled = "AI Feature Disabled",
+  aiFeatureEnabled = 'AI Feature Enabled',
+  aiFeatureDisabled = 'AI Feature Disabled',
+  mcpClientConnected = 'MCP Client Connected',
+  mcpClientDisconnected = 'MCP Client Disconnected',
+  mcpToolCalled = 'MCP Tool Called',
+  mcpResourceRead = 'MCP Resource Read',
+  mcpPromptCalled = 'MCP Prompt Called',
 }
 
 function hashString(input: string) {
