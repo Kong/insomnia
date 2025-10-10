@@ -270,7 +270,7 @@ export const NewWorkspaceModal = ({
                     </Label>
 
                     <Tree
-                      className="grid max-h-52 gap-0 overflow-auto rounded-sm border border-solid border-[--hl-sm]"
+                      className="grid min-h-24 max-h-52 gap-0 overflow-auto rounded-sm border border-solid border-[--hl-sm]"
                       defaultSelectedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
                       disallowEmptySelection
                       defaultExpandedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
