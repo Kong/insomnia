@@ -194,7 +194,7 @@ export const McpUrlActionBar = ({
       let answered = false;
       showModal(AskModal, {
         title: 'MCP Authentication Confirmation',
-        message: 'The MCP server is requesting authentication to proceed. Type "confirm" to proceed.',
+        message: 'The MCP server is requesting authentication to proceed. Do you wish to continue?',
         onDone: async (yes: boolean) => {
           if (answered) {
             console.error('Already answered MCP auth confirmation, this should not happen.');
