@@ -20,7 +20,7 @@ const config = {
     {
       from: './build',
       to: '.',
-      filter: ['**/*'],
+      filter: ['**/*', '!**/*.map'],
     },
     './package.json',
   ],
@@ -52,7 +52,6 @@ const config = {
         arch: 'universal',
       },
     ],
-    x64ArchFiles: '*',
     mergeASARs: false,
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,

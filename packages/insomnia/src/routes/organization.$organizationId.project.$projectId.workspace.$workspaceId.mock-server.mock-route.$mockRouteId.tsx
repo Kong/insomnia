@@ -38,6 +38,7 @@ import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { useMockServerLoaderData } from './organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server';
 
 export interface MockRouteLoaderData {
   mockServer: MockServer;
@@ -150,6 +151,7 @@ export function useMockRouteLoaderData() {
 
 export const MockRouteRoute = () => {
   const { mockServer, mockRoute } = useMockRouteLoaderData()!;
+  const { mockRoutes } = useMockServerLoaderData()!;
 
   const { userSession } = useRootLoaderData()!;
   const patchMockRoute = useMockRoutePatcher();
@@ -211,6 +213,23 @@ export const MockRouteRoute = () => {
       patch,
     });
   const upsertMockbinHar = async (pathInput?: string) => {
+    const hasRouteInServer = mockRoutes
+      .filter(m => m._id !== mockRoute._id)
+      .find(m => m.name === pathInput && m.method.toUpperCase() === mockRoute.method.toUpperCase());
+    if (hasRouteInServer) {
+      showModal(AlertModal, {
+        title: 'Error',
+        message: `Path "${pathInput}" and method must be unique. Please enter a different name.`,
+      });
+      return;
+    }
+    if (pathInput?.[0] !== '/') {
+      showModal(AlertModal, {
+        title: 'Error',
+        message: 'Path must begin with a /',
+      });
+      return;
+    }
     const compoundId = mockRoute.parentId + pathInput;
     const error = await upsertBinOnRemoteFromResponse(compoundId);
     if (error) {
@@ -226,8 +245,28 @@ export const MockRouteRoute = () => {
       });
       return;
     }
+    patchMockRoute(mockRoute._id, {
+      name: pathInput,
+    });
   };
   const onSend = async (pathInput: string) => {
+    const hasRouteInServer = mockRoutes
+      .filter(m => m._id !== mockRoute._id)
+      .find(m => m.name === pathInput && m.method.toUpperCase() === mockRoute.method.toUpperCase());
+    if (hasRouteInServer) {
+      showModal(AlertModal, {
+        title: 'Error',
+        message: `Path "${pathInput}" and method must be unique. Please enter a different name.`,
+      });
+      return;
+    }
+    if (pathInput[0] !== '/') {
+      showModal(AlertModal, {
+        title: 'Error',
+        message: 'Path must begin with a /',
+      });
+      return;
+    }
     await upsertMockbinHar(pathInput);
     createAndSendPrivateRequest({
       url: getMockServiceBinURL(mockServer, pathInput),
@@ -242,7 +281,7 @@ export const MockRouteRoute = () => {
   return (
     <Pane type="request">
       <PaneHeader>
-        <MockUrlBar key={mockRoute._id + mockRoute.name} onSend={onSend} />
+        <MockUrlBar key={mockRoute._id + mockRoute.name} onSend={onSend} onPathUpdate={upsertMockbinHar} />
       </PaneHeader>
       <PaneBody>
         <Tabs aria-label="Mock response config" className="flex h-full w-full flex-1 flex-col">

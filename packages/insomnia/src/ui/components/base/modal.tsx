@@ -8,12 +8,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { FocusScope } from 'react-aria';
-
-import { createKeybindingsHandler } from '../keydown-binder';
-// Keep global z-index reference so that every modal will
-// appear over top of an existing one.
-let globalZIndex = 1000;
+import { Dialog, Modal as RACModal } from 'react-aria-components';
 
 export interface ModalProps {
   centered?: boolean;
@@ -52,14 +47,12 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
   ) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [open, setOpen] = useState(false);
-    const [zIndex, setZIndex] = useState(globalZIndex);
     const [onHideArgument, setOnHideArgument] = useState<() => void>();
 
     const show: ModalHandle['show'] = useCallback(
       options => {
         options?.onHide && setOnHideArgument(options.onHide);
         setOpen(true);
-        setZIndex(globalZIndex++);
         onShow?.();
       },
       [onShow],
@@ -93,6 +86,7 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
       { 'modal--fixed-height': tall },
       { 'modal--wide': wide },
       { 'modal--skinny': skinny },
+      'z-10',
     );
 
     useEffect(() => {
@@ -109,34 +103,16 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
       };
     }, [hide, open, maskClosable, keyboardClosable]);
 
-    const handleKeydown = createKeybindingsHandler({
-      Escape: () => {
-        if (!keyboardClosable) {
-          return;
-        }
-        hide();
-      },
-    });
-
-    useEffect(() => {
-      document.body.addEventListener('keydown', handleKeydown);
-
-      return () => {
-        document.body.removeEventListener('keydown', handleKeydown);
-      };
-    }, [handleKeydown]);
-
     return open ? (
-      <FocusScope autoFocus>
-        <div
-          ref={containerRef}
-          onKeyDown={handleKeydown}
-          tabIndex={-1}
-          className={classes}
-          style={{ zIndex }}
-          aria-hidden={false}
-          role="dialog"
-        >
+      <RACModal
+        ref={containerRef}
+        isOpen={open}
+        isDismissable={keyboardClosable}
+        onOpenChange={isOpen => {
+          !isOpen && hide();
+        }}
+      >
+        <Dialog aria-label="Modal" className={classes}>
           <div
             className="modal__backdrop overlay theme--transparent-overlay"
             {...(maskClosable ? { 'data-close-modal': true } : {})}
@@ -144,8 +120,8 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
           <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
             <div className="modal__content">{children}</div>
           </div>
-        </div>
-      </FocusScope>
+        </Dialog>
+      </RACModal>
     ) : null;
   },
 );

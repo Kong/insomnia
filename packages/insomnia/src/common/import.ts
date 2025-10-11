@@ -1,8 +1,12 @@
-import { readFile } from 'node:fs/promises';
-
 import { type CurrentPlan } from 'insomnia-core/insomnia-api';
 import { z, type ZodError } from 'zod/v4';
 
+import { insecureReadFile } from '~/main/secure-read-file';
+import type { CurrentPlan } from '~/models/organization';
+
+import { type InsomniaImporter } from '../main/importers/convert';
+import type { ImportEntry } from '../main/importers/entities';
+import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';
 import { type BaseEnvironment, type Environment, isEnvironment } from '../models/environment';
@@ -18,9 +22,6 @@ import { isUnitTest, type UnitTest } from '../models/unit-test';
 import { isUnitTestSuite, type UnitTestSuite } from '../models/unit-test-suite';
 import { isWebSocketRequest, type WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
-import { convert, type InsomniaImporter } from '../utils/importers/convert';
-import type { ImportEntry } from '../utils/importers/entities';
-import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
 import { database as db } from './database';
 import { tryImportV5Data } from './insomnia-v5';
@@ -79,9 +80,8 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     return content;
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
-    const content = await readFile(path, 'utf8');
-
-    return content;
+    // allow reading the file as it is chosen by user
+    return insecureReadFile(path);
   }
   // Treat everything else as raw text
   const content = decodeURIComponent(uri);
@@ -178,7 +178,9 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
             },
           };
         } else {
-          result = (await convert(importEntry)) as unknown as ConvertResult;
+          const processFork =
+            process.type === 'renderer' ? window.main.parseImport : (await import('../main/importers/convert')).convert;
+          result = (await processFork(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {
         if (v5Error) {

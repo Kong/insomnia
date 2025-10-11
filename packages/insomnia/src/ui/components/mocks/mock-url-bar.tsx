@@ -1,13 +1,15 @@
-import React, { useEffect,useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
 import {
   useMockRouteLoaderData,
+  useMockRoutePatcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import type { OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 
-import { getMockServiceBinURL } from '../../../common/constants';
+import { getMockServiceBinURL, HTTP_METHODS } from '../../../common/constants';
 import * as models from '../../../models';
 import { useTimeoutWhen } from '../../hooks/useTimeoutWhen';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -19,22 +21,22 @@ import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { PromptModal } from '../modals/prompt-modal';
 
 export const MockUrlBar = ({
+  onPathUpdate,
   onSend,
 }: {
+  onPathUpdate: (path: string) => void;
   onSend: (path: string) => void;
 }) => {
   const { mockServer, mockRoute } = useMockRouteLoaderData()!;
   const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
+  const patchMockRoute = useMockRoutePatcher();
   const [pathInput, setPathInput] = useState<string>(mockRoute.name);
+  const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
+  const inputRef = useRef<OneLineEditorHandle>(null);
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
-
-  useEffect(() => {
-    setPathInput(mockRoute.name);
-  }, [mockRoute.name]);
-
   const send = () => {
     setCurrentTimeout(undefined);
     onSend(pathInput);
@@ -42,10 +44,16 @@ export const MockUrlBar = ({
   reactUse.useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);
   useDocBodyKeyboardShortcuts({
+    request_focusUrl: () => {
+      inputRef.current?.selectAll();
+    },
     request_send: () => {
       if (mockRoute.name) {
         send();
       }
+    },
+    request_toggleHttpMethodMenu: () => {
+      methodDropdownRef.current?.toggle();
     },
     request_showOptions: () => {
       dropdownRef.current?.toggle(true);
@@ -53,41 +61,60 @@ export const MockUrlBar = ({
   });
   const isCancellable = currentInterval || currentTimeout;
   return (
-    <div className="flex w-full items-center gap-2 self-stretch p-2">
-      <div className="flex-shrink-0 rounded-sm bg-[--hl-xs] px-3 py-1">
-        <span className={`http-method-${mockRoute.method} text-sm font-medium`}>{mockRoute.method}</span>
-      </div>
-      <div className="flex flex-1 items-center rounded-sm border border-[--hl-sm] bg-[--color-bg] px-3 py-1">
-        <span className="flex-1 text-[--color-font] font-mono text-sm">
-          {pathInput}
-        </span>
-      </div>
-
-      <Button
-        className="flex-shrink-0 rounded-sm bg-[--hl-sm] px-3 py-1 text-sm text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-xs]"
-        onPress={() => {
-          showModal(AlertModal, {
-            title: 'Full URL',
-            message: getMockServiceBinURL(mockServer, pathInput),
-            onConfirm: () => window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput)),
-            addCancel: true,
-            okLabel: 'Copy',
-          });
-        }}
+    <div className="flex w-full justify-between self-stretch">
+      <Dropdown
+        ref={methodDropdownRef}
+        triggerButton={
+          <Button className="pad-right pad-left vertically-center hover:bg-[--color-surprise] focus:bg-[--color-surprise]">
+            <span className={`http-method-${mockRoute.method}`}>{mockRoute.method}</span>{' '}
+            <i className="fa fa-caret-down space-left" />
+          </Button>
+        }
       >
-        <Icon icon="eye" /> Show URL
-      </Button>
+        {HTTP_METHODS.map(method => (
+          <DropdownItem key={method}>
+            <ItemContent
+              className={`http-method-${method}`}
+              label={method}
+              onClick={() => patchMockRoute(mockRoute._id, { method })}
+            />
+          </DropdownItem>
+        ))}
+      </Dropdown>
+      <div className="flex p-1">
+        <Button
+          className="rounded-sm bg-[--hl-sm] px-3"
+          onPress={() => {
+            showModal(AlertModal, {
+              title: 'Full URL',
+              message: getMockServiceBinURL(mockServer, pathInput),
+              onConfirm: () => window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput)),
+              addCancel: true,
+              okLabel: 'Copy',
+            });
+          }}
+        >
+          <Icon icon="eye" /> Show URL
+        </Button>
+      </div>
 
-      <Button
-        className="flex-shrink-0 rounded-sm bg-[--hl-sm] px-3 py-1 text-sm text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-xs]"
-        onPress={() => {
-          window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput));
-        }}
-      >
-        <Icon icon="copy" /> Copy
-      </Button>
-
-      <div className="flex flex-shrink-0">
+      <div className="flex flex-1 items-center p-1">
+        <input
+          className="flex-1"
+          onBlur={() => onPathUpdate(pathInput)}
+          value={pathInput}
+          onChange={e => setPathInput(e.currentTarget.value)}
+        />
+      </div>
+      <div className="flex p-1">
+        <Button
+          className="rounded-sm bg-[--hl-sm] px-3 aria-pressed:bg-[--hl-xs] data-[pressed]:bg-[--hl-xs]"
+          onPress={() => {
+            window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput));
+          }}
+        >
+          <Icon icon="copy" />
+        </Button>
         <Button
           className="ml-1 rounded-l-sm bg-[--color-surprise] px-5 text-[--color-font-surprise] hover:bg-opacity-90 focus:bg-opacity-90"
           onPress={() => {

@@ -234,6 +234,7 @@ export const getBodyBuffer = async (
     return Buffer.alloc(0);
   }
   try {
+    // TODO: unpick theis read buffer so it can be used as a simple string reader
     const rawBuffer = await fs.promises.readFile(response?.bodyPath);
     if (response?.bodyCompression === 'zip') {
       return new Promise((resolve, reject) =>

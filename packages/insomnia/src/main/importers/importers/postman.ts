@@ -3,7 +3,7 @@ import type { AuthTypeOAuth2 } from 'insomnia/src/models/request';
 import { fakerFunctions } from 'insomnia/src/templating/faker-functions';
 import { forceBracketNotation } from 'insomnia/src/templating/utils';
 
-import { translateHandlersInScript } from '~/utils/importers/importers/translate-postman-script';
+import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
 
 import type { Converter, ImportRequest, Parameter, PathParameters } from '../entities';
 import type {
