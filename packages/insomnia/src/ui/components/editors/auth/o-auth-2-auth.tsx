@@ -1,7 +1,5 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { OAuthAuthorizationStatusModal } from '~/ui/components/modals/oauth-authorization-status-modal';
-
 import { getOauthRedirectUrl } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
@@ -327,7 +325,6 @@ export const OAuth2Auth: FC = () => {
       <div className="pad">
         <OAuth2Tokens />
       </div>
-      <OAuthAuthorizationStatusModal />
     </>
   );
 };
