@@ -88,7 +88,10 @@ export const MessageEventView = ({ event }: Props) => {
         }
       }
     }
-    pretty = JSON.stringify(parsed, null, '\t');
+    // Escape tabs and new lines for CodeMirror display
+    pretty = JSON.stringify(parsed, null, '\t')
+      .replace(/\\n|\\r\\n|\\r/g, '\n')
+      .replace(/\\t/g, '\t');
   } catch {
     // Can't parse as JSON.
   }
