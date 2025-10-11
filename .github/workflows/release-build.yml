@@ -279,6 +279,8 @@ jobs:
           path: |
             packages/insomnia/build/*.js
             packages/insomnia/build/*.map
+            packages/insomnia/build/client/assets/*.js
+            packages/insomnia/build/client/assets/*.map
             !packages/insomnia/build/yarn-standalone.js
 
   update-pull-request:
