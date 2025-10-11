@@ -264,3 +264,10 @@ export function unescapeForwardSlash(str: string): string {
     return match;
   });
 }
+
+export function cannotAccessError(securedPath: string, callFromCLI: boolean): string {
+  if (callFromCLI) {
+    return `Insomnia cannot access the file ‘${securedPath}’. You can specify paths with one or more "--dataFolders <directory>" or "-f <directory>" to allow accessing.`;
+  }
+  return `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia Preferences → Security`;
+}
