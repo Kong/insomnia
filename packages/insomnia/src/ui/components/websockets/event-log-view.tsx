@@ -111,7 +111,7 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
   });
 
   useEffect(() => {
-    // re-measure the virtualizer when EventLogView mounted, especially when used in tabs
+    // re-measure the virtualizer when EventLogView mounted, especially when switched in a tab
     virtualizer.measure();
   }, [virtualizer]);
 
