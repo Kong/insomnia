@@ -294,27 +294,6 @@ export class GitVCS {
     }
   }
 
-  async readContentsFromHead(file: string) {
-    try {
-      const latestCommitOid = await git.resolveRef({
-        ...this._baseOpts,
-        ref: 'HEAD',
-      });
-      const { blob } = await git.readBlob({
-        ...this._baseOpts,
-        oid: latestCommitOid,
-        filepath: file,
-      });
-
-      if (!blob) {
-        return null;
-      }
-      return Buffer.from(blob).toString('utf-8');
-    } catch (err) {
-      return null;
-    }
-  }
-
   /**
    * Returns the content of a file as it exists in three places:
    * - HEAD (last commit)
