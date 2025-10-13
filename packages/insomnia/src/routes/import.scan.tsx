@@ -4,8 +4,8 @@ import { type ActionFunctionArgs, href } from 'react-router';
 
 import type { ScanResult } from '~/common/import';
 import { fetchImportContentFromURI, getFilesFromPostmanExportedDataDump, scanResources } from '~/common/import';
+import type { ImportEntry } from '~/main/importers/entities';
 import { SegmentEvent } from '~/ui/analytics';
-import type { ImportEntry } from '~/utils/importers/entities';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -79,8 +79,10 @@ export const scanImportResources = async (data: {
     let postmanArchiveJsonData: { environment?: Record<string, boolean> } | null = null;
     if (postmanArchiveFile) {
       try {
-        const postmanArchiveFileContent = await window.main.readFile({ path: postmanArchiveFile });
-        postmanArchiveJsonData = JSON.parse(postmanArchiveFileContent.content);
+        const postmanArchiveFileContent = await window.main.insecureReadFile({
+          path: postmanArchiveFile,
+        });
+        postmanArchiveJsonData = JSON.parse(postmanArchiveFileContent);
       } catch (err) {
         return [
           {

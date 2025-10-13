@@ -1,5 +1,3 @@
-import fs from 'node:fs/promises';
-
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
@@ -115,8 +113,9 @@ If you want to create a self-hosted mock server route from a request response in
           e.preventDefault();
           if (selectedMockServer && selectedMockRoute) {
             if (activeResponse && 'bodyPath' in activeResponse) {
-              // TODO: move this out of the renderer, and upsert mock
-              const body = await fs.readFile(activeResponse.bodyPath);
+              const body = await window.main.secureReadFile({
+                path: activeResponse.bodyPath,
+              });
 
               patchMockRoute(selectedMockRoute, {
                 body: body.toString(),
@@ -141,7 +140,7 @@ If you want to create a self-hosted mock server route from a request response in
               label: 'Name',
               onComplete: async name => {
                 invariant(activeResponse, 'Active response must be defined');
-                const body = 'bodyPath' in activeResponse ? await fs.readFile(activeResponse.bodyPath) : '';
+                const body = 'bodyPath' in activeResponse ? await window.main.secureReadFile({ path: activeResponse.bodyPath }) : '';
                 // auth mechanism is too sensitive to allow content length checks
                 const headersWithoutContentLength: ResponseHeader[] = activeResponse.headers.filter(
                   h => h.name.toLowerCase() !== 'content-length',
@@ -172,7 +171,7 @@ If you want to create a self-hosted mock server route from a request response in
               label: 'Name',
               onComplete: async name => {
                 invariant(activeResponse, 'Active response must be defined');
-                const body = 'bodyPath' in activeResponse ? await fs.readFile(activeResponse.bodyPath) : '';
+                const body = 'bodyPath' in activeResponse ? await window.main.secureReadFile({ path: activeResponse.bodyPath }) : '';
                 const hasRouteInServer = mockServerAndRoutes
                   .find(s => s._id === selectedMockServer)
                   ?.routes.find(r => r.name === name && r.method.toUpperCase() === 'GET');

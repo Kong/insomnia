@@ -888,6 +888,7 @@ const Debug = () => {
                 className="aspect-square h-full"
                 selectedKey={sortOrder}
                 onSelectionChange={order =>
+                  order &&
                   setSearchParams({
                     ...Object.fromEntries(searchParams.entries()),
                     sortOrder: order.toString(),

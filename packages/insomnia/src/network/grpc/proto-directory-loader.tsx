@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { insecureReadFile } from '../../main/secure-read-file';
 import * as models from '../../models';
 import type { ProtoDirectory } from '../../models/proto-directory';
 
@@ -33,12 +34,13 @@ export class ProtoDirectoryLoader {
       return false;
     }
 
-    const contents = await fs.promises.readFile(entryPath, 'utf-8');
+    // allow to read the file as it is chosen by user
+    const protoText = await insecureReadFile(entryPath);
     const name = path.basename(entryPath);
     const { _id } = await models.protoFile.create({
       name,
       parentId,
-      protoText: contents,
+      protoText,
     });
     this.createdIds.push(_id);
     return true;

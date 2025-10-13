@@ -258,7 +258,7 @@ export interface PluginTemplateTagContext {
       platform: NodeJS.Platform;
       release: string;
     }>;
-    readFile: (path: string, encoding?: string) => Promise<string | Buffer>;
+    readFile: (path: string) => Promise<string>;
     decode: (buffer: Buffer, encoding?: string) => Promise<string>;
     encode: (input: string, encoding: BinaryToTextEncoding) => Promise<string>;
     render: (str: string) => string | Promise<string | null>;

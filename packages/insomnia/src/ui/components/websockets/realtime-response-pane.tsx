@@ -127,9 +127,11 @@ const RealtimeActiveResponsePane: FC<{
         }
       }
 
-      const rawBuffer = await fs.promises.readFile(response.timelinePath);
-      const timelineString = rawBuffer.toString();
-      const timelineParsed = deserializeNDJSON(timelineString);
+      // allow to read the file as it is chosen by user
+      const content = await window.main.secureReadFile({
+        path: response.timelinePath,
+      });
+      const timelineParsed = deserializeNDJSON(content);
       if (isMounted) {
         setTimeline(timelineParsed);
       }
