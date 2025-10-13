@@ -23,7 +23,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../../package.json';
 import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
-import { describeByteSize, hasAuthHeader } from '../../common/misc';
+import { cannotAccessPathError, describeByteSize, hasAuthHeader } from '../../common/misc';
 import type { ClientCertificate } from '../../models/client-certificate';
 import type { RequestHeader } from '../../models/request';
 import type { ResponseHeader } from '../../models/response';
@@ -162,7 +162,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
         const { isAllowed, securedPath } = isPathAllowed(requestBodyPath, settings.dataFolders);
         invariant(
           isAllowed,
-          `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia Preferences → Security`,
+          cannotAccessPathError(securedPath),
         );
 
         // AWS IAM file upload not supported
@@ -333,16 +333,34 @@ export const createConfiguredCurlInstance = ({
   certificates.forEach(validCert => {
     const { passphrase, cert, key, pfx } = validCert;
     if (cert) {
+      const { isAllowed, securedPath } = isPathAllowed(cert, settings.dataFolders);
+      invariant(
+        isAllowed,
+        cannotAccessPathError(securedPath),
+      );
+
       curl.setOpt(Curl.option.SSLCERT, cert);
       curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
       debugTimeline.push({ value: 'Adding SSL PEM certificate', name: 'Text', timestamp: Date.now() });
     }
     if (pfx) {
+      const { isAllowed, securedPath } = isPathAllowed(pfx, settings.dataFolders);
+      invariant(
+        isAllowed,
+        cannotAccessPathError(securedPath),
+      );
+
       curl.setOpt(Curl.option.SSLCERT, pfx);
       curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
       debugTimeline.push({ value: 'Adding SSL P12 certificate', name: 'Text', timestamp: Date.now() });
     }
     if (key) {
+      const { isAllowed, securedPath } = isPathAllowed(key, settings.dataFolders);
+      invariant(
+        isAllowed,
+        cannotAccessPathError(securedPath),
+      );
+
       curl.setOpt(Curl.option.SSLKEY, key);
       debugTimeline.push({ value: 'Adding SSL KEY certificate', name: 'Text', timestamp: Date.now() });
     }
