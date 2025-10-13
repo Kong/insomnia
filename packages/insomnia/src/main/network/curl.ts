@@ -64,9 +64,37 @@ export interface CurlCloseEvent {
 
 export type CurlEvent = CurlOpenEvent | CurlMessageEvent | CurlErrorEvent | CurlCloseEvent;
 
+const protocolName = 'curl';
 const CurlConnections = new Map<string, Curl>();
+const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
+
+const getEventNotificationChannel = (responseId: string) => `${protocolName}.${responseId}.newEventReceived`;
+const writeEventLogAndNotify = ({
+  requestId,
+  data,
+  clearRequestIdMap = false,
+}: {
+  requestId: string;
+  data: any;
+  clearRequestIdMap?: boolean;
+}) => {
+  eventLogFileStreams.get(requestId)?.write(data, () => {
+    // notify all renderers of new event has been received
+    for (const window of BrowserWindow.getAllWindows()) {
+      const resId = requestIdToResponseIdMap.get(requestId);
+      if (resId) {
+        const notifyChannel = getEventNotificationChannel(resId);
+        notifyChannel && window.webContents.send(notifyChannel);
+        if (clearRequestIdMap) {
+          // clean up maps after last event has been written to file
+          requestIdToResponseIdMap.delete(requestId);
+        }
+      }
+    }
+  });
+};
 
 const parseHeadersAndBuildTimeline = (url: string, headersWithStatus: HeaderInfo) => {
   const { result, ...headers } = headersWithStatus;
@@ -111,6 +139,7 @@ const openCurlConnection = async (
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
+  requestIdToResponseIdMap.set(options.requestId, responseId);
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
@@ -268,7 +297,7 @@ const openCurlConnection = async (
             timestamp: Date.now(),
             direction: 'INCOMING',
           };
-          eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
+          writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(messageEvent) + '\n' });
         }
 
         // NOTE: when stream is closed by remote server
@@ -326,7 +355,11 @@ const createErrorResponse = async (
 
 const deleteRequestMaps = async (requestId: string, message: string, event?: CurlCloseEvent | CurlErrorEvent) => {
   if (event) {
-    eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
+    writeEventLogAndNotify({
+      requestId: requestId,
+      data: JSON.stringify(event) + '\n',
+      clearRequestIdMap: true,
+    });
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);

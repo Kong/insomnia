@@ -1,6 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
-import React, { type FC, useRef } from 'react';
+import React, { type FC, useEffect, useRef } from 'react';
 import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
 
 import type { CurlEvent } from '../../../main/network/curl';
@@ -109,6 +109,11 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
     overscan: 30,
     getItemKey: index => events[index]._id,
   });
+
+  useEffect(() => {
+    // re-measure the virtualizer when EventLogView mounted, especially when switched in a tab
+    virtualizer.measure();
+  }, [virtualizer]);
 
   return (
     <>
