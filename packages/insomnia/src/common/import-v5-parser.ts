@@ -383,7 +383,7 @@ export const RequestSchema = z.object({
         .array(
           z.object({
             name: z.string().default(''),
-            value: z.string().optional().default(''),
+            value: z.string().optional(),
             description: z.string().optional(),
             disabled: z.boolean().optional(),
             multiline: z.boolean().optional(),

@@ -200,7 +200,7 @@ export interface RequestParameter {
 
 export interface RequestBodyParameter {
   name: string;
-  value: string;
+  value?: string;
   description?: string;
   disabled?: boolean;
   multiline?: boolean;
