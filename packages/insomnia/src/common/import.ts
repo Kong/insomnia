@@ -1,7 +1,6 @@
 import { z, type ZodError } from 'zod/v4';
 
 import { insecureReadFile } from '~/main/secure-read-file';
-import type { CurrentPlan } from '~/models/organization';
 
 import { type InsomniaImporter } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
@@ -10,7 +9,7 @@ import { type ApiSpec, isApiSpec } from '../models/api-spec';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';
 import { type BaseEnvironment, type Environment, isEnvironment } from '../models/environment';
 import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
-import { type AllTypes, type BaseModel, getModel, userSession } from '../models/index';
+import { type AllTypes, type BaseModel, getModel } from '../models/index';
 import * as models from '../models/index';
 import { isMockRoute, type MockRoute } from '../models/mock-route';
 import { isGitProject } from '../models/project';
@@ -404,11 +403,6 @@ function filterResourcesInWorkspace(resources: BaseModel[], workspace: Workspace
   return resources.filter(resource => findRootId(resource._id, new Set()) === workspaceId);
 }
 
-const isTeamOrAbove = async () => {
-  const { accountId } = await userSession.getOrCreate();
-  const currentPlan = (JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan) || {};
-  return ['team', 'enterprise', 'enterprise-member'].includes(currentPlan?.type);
-};
 const updateIdsInString = (str: string, ResourceIdMap: Map<string, string>) => {
   let newString = str;
   for (const [idA, idB] of ResourceIdMap.entries()) {
