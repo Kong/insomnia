@@ -1203,85 +1203,48 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
 
       return { success: true };
     } catch (err) {
-      const { oursBranch, theirsBranch } = await this.getBranchPair();
+      if (err instanceof git.Errors.CheckoutConflictError) {
+        console.log('[git] CheckoutConflictError detected, resetting working directory and retrying pull');
 
-      // merge conflict from pull
-      if (err instanceof git.Errors.MergeConflictError) {
-        return await this.collectMergeConflicts(err, oursBranch, theirsBranch, writeFileMap);
+        try {
+          const currentBranch = await this.getCurrentBranch();
+
+          // Reset working directory to HEAD to resolve checkout conflicts
+          await git.checkout({
+            ...this._baseOpts,
+            ref: currentBranch,
+            force: true,
+          });
+
+          // Retry the pull operation
+          await git.pull({
+            ...this._baseOpts,
+            ...gitCallbacks(gitCredentials),
+            remote: 'origin',
+            singleBranch: true,
+            ref: currentBranch,
+          });
+
+          console.log('[git] Pull successful after resolving checkout conflicts');
+          return { success: true };
+        } catch (retryError) {
+          console.error('[git] Retry pull failed after resolving checkout conflicts:', retryError);
+
+          const handledError = await this.handleGitPullErrors(err, gitCredentials, writeFileMap);
+
+          if (handledError) {
+            return handledError;
+          }
+
+          throw retryError;
+        }
       }
 
-      // merge not supported by native pull: fallback
-      if (err instanceof git.Errors.MergeNotSupportedError) {
-        console.log('[git] Falling back to manual diff UI (merge driver not supported)');
-        try {
-          await this.fetch({
-            singleBranch: true,
-            depth: 1,
-            credentials: gitCredentials,
-          });
+      // Handle other specific git errors (e.g., merge conflicts, merge not supported)
+      const handledError = await this.handleGitPullErrors(err, gitCredentials, writeFileMap);
 
-          await git.merge({
-            ...this._baseOpts,
-            ours: oursBranch,
-            theirs: theirsBranch,
-            abortOnConflict: false,
-          });
-
-          return { success: true };
-        } catch (mergeErr) {
-          // If the merge operation reported conflicts, collect them
-          if (mergeErr instanceof git.Errors.MergeConflictError) {
-            return await this.collectMergeConflicts(mergeErr, oursBranch, theirsBranch, writeFileMap);
-          }
-
-          // If still MergeNotSupportedError or unexpected, fall back to manual detection and UI
-          if (mergeErr instanceof git.Errors.MergeNotSupportedError) {
-            console.log('[git] Falling back to manual diff UI (merge driver not supported)');
-            return await this.buildManualResolutionFromTrees();
-          }
-        }
-
-        const statusMatrix = await git.statusMatrix({ fs: this._baseOpts.fs, dir: this._baseOpts.dir });
-        const conflicted = statusMatrix.filter(row => row[3] === 3).map(row => row[0]);
-
-        const conflictData = [];
-
-        for (const filepath of conflicted) {
-          const fullPath = path.join(this._baseOpts.dir, filepath);
-          // @ts-expect-error -- TSCONVERSION
-          const content = await this._baseOpts.fs.promises.readFile(fullPath, 'utf8');
-          const conflict = this.extractConflictParts(content);
-
-          if (conflict) {
-            conflictData.push({
-              filepath,
-              fullContent: content,
-              ...conflict,
-            });
-          }
-        }
-
-        const oursHeadCommitOid = await git.resolveRef({
-          ...this._baseOpts,
-          ref: oursBranch,
-        });
-
-        const theirsHeadCommitOid = await git.resolveRef({
-          ...this._baseOpts,
-          ref: theirsBranch,
-        });
-
-        // The return value is never used?
-        return {
-          success: false,
-          conflicts: conflictData,
-          labels: {
-            ours: oursBranch,
-            theirs: theirsBranch,
-          },
-          commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
-          commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
-        };
+      if (handledError) {
+        return handledError;
       }
 
       console.error('[git] Pull failed with unexpected error', err);
@@ -1293,6 +1256,89 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
       ) {
         this._baseOpts.fs.stopCollectWriteAction();
       }
+    }
+  }
+
+  async handleGitPullErrors(err: unknown, gitCredentials?: GitCredentials | null, writeFileMap: WriteFileMap = {}) {
+    const { oursBranch, theirsBranch } = await this.getBranchPair();
+
+    // merge conflict from pull
+    if (err instanceof git.Errors.MergeConflictError) {
+      return await this.collectMergeConflicts(err, oursBranch, theirsBranch, writeFileMap);
+    }
+
+    // merge not supported by native pull: fallback
+    if (err instanceof git.Errors.MergeNotSupportedError) {
+      console.log('[git] Falling back to manual diff UI (merge driver not supported)');
+      try {
+        await this.fetch({
+          singleBranch: true,
+          depth: 1,
+          credentials: gitCredentials,
+        });
+
+        await git.merge({
+          ...this._baseOpts,
+          ours: oursBranch,
+          theirs: theirsBranch,
+          abortOnConflict: false,
+        });
+
+        return { success: true };
+      } catch (mergeErr) {
+        // If the merge operation reported conflicts, collect them
+        if (mergeErr instanceof git.Errors.MergeConflictError) {
+          return await this.collectMergeConflicts(mergeErr, oursBranch, theirsBranch, writeFileMap);
+        }
+
+        // If still MergeNotSupportedError or unexpected, fall back to manual detection and UI
+        if (mergeErr instanceof git.Errors.MergeNotSupportedError) {
+          console.log('[git] Falling back to manual diff UI (merge driver not supported)');
+          return await this.buildManualResolutionFromTrees();
+        }
+      }
+
+      const statusMatrix = await git.statusMatrix({ fs: this._baseOpts.fs, dir: this._baseOpts.dir });
+      const conflicted = statusMatrix.filter(row => row[3] === 3).map(row => row[0]);
+
+      const conflictData = [];
+
+      for (const filepath of conflicted) {
+        const fullPath = path.join(this._baseOpts.dir, filepath);
+        // @ts-expect-error -- TSCONVERSION
+        const content = await this._baseOpts.fs.promises.readFile(fullPath, 'utf8');
+        const conflict = this.extractConflictParts(content);
+
+        if (conflict) {
+          conflictData.push({
+            filepath,
+            fullContent: content,
+            ...conflict,
+          });
+        }
+      }
+
+      const oursHeadCommitOid = await git.resolveRef({
+        ...this._baseOpts,
+        ref: oursBranch,
+      });
+
+      const theirsHeadCommitOid = await git.resolveRef({
+        ...this._baseOpts,
+        ref: theirsBranch,
+      });
+
+      // The return value is never used?
+      return {
+        success: false,
+        conflicts: conflictData,
+        labels: {
+          ours: oursBranch,
+          theirs: theirsBranch,
+        },
+        commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
+        commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
+      };
     }
   }
 
