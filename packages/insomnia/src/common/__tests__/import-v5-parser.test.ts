@@ -344,7 +344,7 @@ describe('RequestSchema settings & scripts', () => {
       }),
     );
     expect(r.body?.params?.[0].name).toBe('');
-    expect(r.body?.params?.[0].value).toBe('');
+    expect(r.body?.params?.[0].value).toBeUndefined();
   });
 });
 
