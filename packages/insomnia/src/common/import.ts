@@ -416,12 +416,8 @@ const updateIdsInString = (str: string, ResourceIdMap: Map<string, string>) => {
   }
   return newString;
 };
-const importRequestWithNewIds = (request: Request, ResourceIdMap: Map<string, string>, canTransform: boolean) => {
-  let transformedRequest = request;
-  if (canTransform) {
-    // if not logged in, this wont run
-    transformedRequest = JSON.parse(updateIdsInString(JSON.stringify(request), ResourceIdMap));
-  }
+const importRequestWithNewIds = (request: Request, ResourceIdMap: Map<string, string>) => {
+  const transformedRequest = JSON.parse(updateIdsInString(JSON.stringify(request), ResourceIdMap));
   return {
     ...transformedRequest,
     _id: ResourceIdMap.get(request._id),
@@ -475,7 +471,6 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
       model && ResourceIdMap.set(resource._id, generateId(model.prefix));
     }
 
-    const canTransform = await isTeamOrAbove();
     // Preserve optionalResource relationships
     for (const resource of optionalResources) {
       const model = getModel(resource.type);
@@ -498,7 +493,7 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
             parentId: ResourceIdMap.get(resource.parentId),
           });
         } else if (isRequest(resource)) {
-          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap, canTransform));
+          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap));
         } else {
           await db.docCreate(model.type, {
             ...resource,
@@ -594,7 +589,6 @@ export const importResourcesToNewWorkspace = async ({
       model && ResourceIdMap.set(resource._id, generateId(model.prefix));
     }
 
-    const canTransform = await isTeamOrAbove();
     for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
       const model = getModel(resource.type);
 
@@ -619,7 +613,7 @@ export const importResourcesToNewWorkspace = async ({
             parentId: newParentId,
           });
         } else if (isRequest(resource)) {
-          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap, canTransform));
+          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap));
         } else {
           await db.docCreate(model.type, {
             ...resource,
