@@ -103,7 +103,6 @@ export interface ResponsePatch {
   timelinePath?: string;
   url?: string;
 }
-const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
 
 // NOTE: this is a dictionary of functions to close open listeners
 const cancelCurlRequestHandlers: Record<string, () => void> = {};
@@ -111,6 +110,7 @@ export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]()
 export const curlRequest = (options: CurlRequestOptions) =>
   new Promise<CurlRequestOutput>(async resolve => {
     try {
+      const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
       const responsesDir = path.join(userdataDirectory, 'responses');
       // TODO: remove this check, its only used for network.test.ts
       await fs.promises.mkdir(responsesDir, { recursive: true });
@@ -160,10 +160,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       const { authentication } = req;
       if (requestBodyPath) {
         const { isAllowed, securedPath } = isPathAllowed(requestBodyPath, settings.dataFolders);
-        invariant(
-          isAllowed,
-          cannotAccessPathError(securedPath),
-        );
+        invariant(isAllowed, cannotAccessPathError(securedPath));
 
         // AWS IAM file upload not supported
         const isAWSIAM = 'type' in authentication && authentication.type === 'iam';
@@ -334,10 +331,7 @@ export const createConfiguredCurlInstance = ({
     const { passphrase, cert, key, pfx } = validCert;
     if (cert) {
       const { isAllowed, securedPath } = isPathAllowed(cert, settings.dataFolders);
-      invariant(
-        isAllowed,
-        cannotAccessPathError(securedPath),
-      );
+      invariant(isAllowed, cannotAccessPathError(securedPath));
 
       curl.setOpt(Curl.option.SSLCERT, cert);
       curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
@@ -345,10 +339,7 @@ export const createConfiguredCurlInstance = ({
     }
     if (pfx) {
       const { isAllowed, securedPath } = isPathAllowed(pfx, settings.dataFolders);
-      invariant(
-        isAllowed,
-        cannotAccessPathError(securedPath),
-      );
+      invariant(isAllowed, cannotAccessPathError(securedPath));
 
       curl.setOpt(Curl.option.SSLCERT, pfx);
       curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
@@ -356,10 +347,7 @@ export const createConfiguredCurlInstance = ({
     }
     if (key) {
       const { isAllowed, securedPath } = isPathAllowed(key, settings.dataFolders);
-      invariant(
-        isAllowed,
-        cannotAccessPathError(securedPath),
-      );
+      invariant(isAllowed, cannotAccessPathError(securedPath));
 
       curl.setOpt(Curl.option.SSLKEY, key);
       debugTimeline.push({ value: 'Adding SSL KEY certificate', name: 'Text', timestamp: Date.now() });
