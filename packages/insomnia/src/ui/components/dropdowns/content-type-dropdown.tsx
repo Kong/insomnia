@@ -41,82 +41,6 @@ import { AlertModal } from '../modals/alert-modal';
 
 const EMPTY_MIME_TYPE = null;
 
-const contentTypeSections: {
-  id: string;
-  icon: IconName;
-  name: string;
-  items: {
-    id: string;
-    name: string;
-  }[];
-}[] = [
-  {
-    id: 'structured',
-    name: 'Structured',
-    icon: 'bars',
-    items: [
-      {
-        id: CONTENT_TYPE_FORM_DATA,
-        name: 'Form Data',
-      },
-      {
-        id: CONTENT_TYPE_FORM_URLENCODED,
-        name: 'Form URL Encoded',
-      },
-      {
-        id: CONTENT_TYPE_GRAPHQL,
-        name: 'GraphQL',
-      },
-    ],
-  },
-  {
-    id: 'text',
-    icon: 'code',
-    name: 'Text',
-    items: [
-      {
-        id: CONTENT_TYPE_JSON,
-        name: 'JSON',
-      },
-      {
-        id: CONTENT_TYPE_XML,
-        name: 'XML',
-      },
-      {
-        id: CONTENT_TYPE_YAML,
-        name: 'YAML',
-      },
-      {
-        id: CONTENT_TYPE_EDN,
-        name: 'EDN',
-      },
-      {
-        id: CONTENT_TYPE_PLAINTEXT,
-        name: 'Plain Text',
-      },
-      {
-        id: CONTENT_TYPE_OTHER,
-        name: 'Other',
-      },
-    ],
-  },
-  {
-    id: 'other',
-    icon: 'ellipsis-h',
-    name: 'Other',
-    items: [
-      {
-        id: CONTENT_TYPE_FILE,
-        name: 'File',
-      },
-      {
-        id: 'no-body',
-        name: 'No Body',
-      },
-    ],
-  },
-];
-
 export const ContentTypeDropdown: FC = () => {
   const { activeRequest } = useRequestLoaderData()! as RequestLoaderData;
   const patchRequest = useRequestPatcher();
@@ -165,6 +89,82 @@ export const ContentTypeDropdown: FC = () => {
   const hasParams = body && 'params' in body && body.params;
   const numBodyParams = hasParams ? body.params?.filter(({ disabled }) => !disabled).length : 0;
 
+  // !Note: after bumping react-aria-components to 1.12.2, the ListBox Collection items are missing once the outer key changes and the items' reference is not changed. So here we always use the new array reference to force the ListBox to re-render.
+  const contentTypeSections: {
+    id: string;
+    icon: IconName;
+    name: string;
+    items: {
+      id: string;
+      name: string;
+    }[];
+  }[] = [
+    {
+      id: 'structured',
+      name: 'Structured',
+      icon: 'bars',
+      items: [
+        {
+          id: CONTENT_TYPE_FORM_DATA,
+          name: 'Form Data',
+        },
+        {
+          id: CONTENT_TYPE_FORM_URLENCODED,
+          name: 'Form URL Encoded',
+        },
+        {
+          id: CONTENT_TYPE_GRAPHQL,
+          name: 'GraphQL',
+        },
+      ],
+    },
+    {
+      id: 'text',
+      icon: 'code',
+      name: 'Text',
+      items: [
+        {
+          id: CONTENT_TYPE_JSON,
+          name: 'JSON',
+        },
+        {
+          id: CONTENT_TYPE_XML,
+          name: 'XML',
+        },
+        {
+          id: CONTENT_TYPE_YAML,
+          name: 'YAML',
+        },
+        {
+          id: CONTENT_TYPE_EDN,
+          name: 'EDN',
+        },
+        {
+          id: CONTENT_TYPE_PLAINTEXT,
+          name: 'Plain Text',
+        },
+        {
+          id: CONTENT_TYPE_OTHER,
+          name: 'Other',
+        },
+      ],
+    },
+    {
+      id: 'other',
+      icon: 'ellipsis-h',
+      name: 'Other',
+      items: [
+        {
+          id: CONTENT_TYPE_FILE,
+          name: 'File',
+        },
+        {
+          id: 'no-body',
+          name: 'No Body',
+        },
+      ],
+    },
+  ];
   return (
     <Select
       aria-label="Change Body Type"
