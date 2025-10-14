@@ -80,6 +80,8 @@ export interface FeatureList {
   bulkImport: FeatureStatus;
   gitSync: FeatureStatus;
   orgBasicRbac: FeatureStatus;
+  aiMockServers: FeatureStatus;
+  aiCommitMessages: FeatureStatus;
 }
 
 export interface Billing {

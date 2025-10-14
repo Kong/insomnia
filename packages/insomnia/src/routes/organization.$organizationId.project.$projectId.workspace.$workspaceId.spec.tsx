@@ -57,6 +57,7 @@ import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
@@ -170,6 +171,8 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const { storagePromise } = storageRuleFetcher.data || {};
   const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
+
+  const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
 
   const { apiSpec, rulesetPath, parsedSpec } = useLoaderData<typeof clientLoader>();
 
@@ -481,14 +484,16 @@ const Component = ({ params }: Route.ComponentProps) => {
           <div className="flex flex-shrink-0 items-center gap-2 p-[--padding-sm]">
             <Heading className="uppercase text-[--hl]">Spec</Heading>
             <span className="flex-1" />
-            <Button
-              onPress={() => setNewMockServerModalOpen(true)}
-              isDisabled={!apiSpec.contents}
-              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Icon icon="server" className="w-5 flex-shrink-0" />
-              <span className="truncate">Generate Mock</span>
-            </Button>
+            {isGenerateMockServersWithAIEnabled && (
+              <Button
+                onPress={() => setNewMockServerModalOpen(true)}
+                isDisabled={!apiSpec.contents}
+                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Icon icon="server" className="w-5 flex-shrink-0" />
+                <span className="truncate">Generate Mock</span>
+              </Button>
+            )}
             <ToggleButton
               aria-label="Toggle preview"
               isSelected={isSpecPaneOpen}
