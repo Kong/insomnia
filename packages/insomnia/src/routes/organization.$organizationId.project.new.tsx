@@ -1,9 +1,11 @@
 import { href, redirect } from 'react-router';
 
+import { database } from '~/common/database';
+import { isNotNullOrUndefined } from '~/common/misc';
 import { projectLock } from '~/common/project';
 import * as models from '~/models';
 import type { GitCredentials, OauthProviderName } from '~/models/git-repository';
-import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
+import { EMPTY_GIT_PROJECT_ID, type Project } from '~/models/project';
 import { SegmentEvent } from '~/ui/analytics';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
@@ -29,6 +31,34 @@ export interface CreateProjectData {
   connectRepositoryLater?: boolean;
 }
 
+export const reportGitProjectCount = async (organizationId: string, sessionId: string, maxRetries = 3) => {
+  const projects = await database.find<Project>(models.project.type, {
+    parentId: organizationId,
+  });
+  const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
+  const gitProjectsCount = gitRepositoryIds.length;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await insomniaFetch({
+        method: 'PATCH',
+        path: `/v1/organizations/${organizationId}/git-projects`,
+        sessionId,
+        onlyResolveOnSuccess: true,
+        data: {
+          count: gitProjectsCount,
+        },
+      });
+      return;
+    } catch (err) {
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+      }
+    }
+  }
+
+  console.warn('Report git project count failed');
+};
+
 export const createProject = async (organizationId: string, newProjectData: CreateProjectData) => {
   const createProjectImpl = async (organizationId: string, newProjectData: CreateProjectData) => {
     const user = await models.userSession.getOrCreate();
@@ -51,6 +81,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
           parentId: organizationId,
           gitRepositoryId: EMPTY_GIT_PROJECT_ID,
         });
+        reportGitProjectCount(organizationId, sessionId);
 
         return project._id;
       }
@@ -91,6 +122,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
       if (errors) {
         throw new Error(errors.join(', '));
       }
+      reportGitProjectCount(organizationId, sessionId);
 
       return projectId;
     }
