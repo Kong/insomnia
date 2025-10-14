@@ -70,7 +70,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
       const modelConfig = await window.main.llm.getCurrentConfig();
       if (workspaceData.mockServerCreationType === 'ai') {
-        invariant(modelConfig, 'You must setup LLM configuration in your Preferences before using AI features.');
+        const isFeatureEnabled = await window.main.llm.getAIFeatureEnabled('aiMockServers');
+        invariant(isFeatureEnabled, 'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.');
 
         const validationError = validateMockServerSpec(workspaceData);
         if (validationError) {
@@ -78,7 +79,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         }
 
         if (workspaceData.mockServerSpecSource === 'url' || workspaceData.mockServerSpecSource === 'text') {
-          invariant(modelConfig.backend !== 'gguf', 'The URL and Text options are not supported with GGUF models.');
+          invariant(modelConfig && modelConfig.backend !== 'gguf', 'The URL and Text options are not supported with GGUF models.');
         }
       }
 

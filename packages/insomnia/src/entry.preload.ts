@@ -149,6 +149,10 @@ const llm: LLMConfigServiceAPI = {
     ipcRenderer.invoke('llm.updateBackendConfig', backend, config),
   getAllConfigurations: () => ipcRenderer.invoke('llm.getAllConfigurations'),
   getCurrentConfig: () => ipcRenderer.invoke('llm.getCurrentConfig'),
+  getAIFeatureEnabled: (feature: 'aiMockServers' | 'aiCommitMessages') =>
+    ipcRenderer.invoke('llm.getAIFeatureEnabled', feature),
+  setAIFeatureEnabled: (feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean) =>
+    ipcRenderer.invoke('llm.setAIFeatureEnabled', feature, enabled),
 };
 
 const main: Window['main'] = {

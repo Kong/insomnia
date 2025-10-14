@@ -59,6 +59,8 @@ export enum SegmentEvent {
   vcsSyncComplete = 'VCS Sync Completed',
   vcsAction = 'VCS Action Executed',
   buttonClick = 'Button Clicked',
+  aiFeatureEnabled = "AI Feature Enabled",
+  aiFeatureDisabled = "AI Feature Disabled",
 }
 
 function hashString(input: string) {

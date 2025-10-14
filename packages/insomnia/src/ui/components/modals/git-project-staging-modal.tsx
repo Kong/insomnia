@@ -26,6 +26,7 @@ import { useGitProjectDiffLoaderFetcher } from '~/routes/git.diff';
 import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
+import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
 import { GitFileType, GitVCSOperationErrors } from '../../../sync/git/git-vcs';
 import { DiffEditor } from '../diff-view-editor';
@@ -811,6 +812,8 @@ export const GitProjectStagingModal: FC<{
   const undoUnstagedChangesFetcher = useGitProjectDiscardActionFetcher();
   const diffChangesFetcher = useGitProjectDiffLoaderFetcher();
 
+  const { isGenerateCommitMessagesWithAIEnabled } = useAIFeatureStatus();
+
   function diffChanges({ path, staged }: { path: string; staged: boolean }) {
     diffChangesFetcher.load({
       projectId,
@@ -906,6 +909,7 @@ export const GitProjectStagingModal: FC<{
                 <div className="grid h-full gap-2 divide-x divide-solid divide-[--hl-md] overflow-hidden [grid-template-columns:300px_1fr]">
                   <div className="flex flex-1 flex-col gap-4 overflow-hidden">
                     <Button
+                      isDisabled={!isGenerateCommitMessagesWithAIEnabled}
                       onPress={() => {
                         if (generateCommitsFetcher.data && !('error' in generateCommitsFetcher.data)) {
                           setCommitGenerationKey(commitGenerationKey + 1);
@@ -916,7 +920,7 @@ export const GitProjectStagingModal: FC<{
                           projectId,
                         });
                       }}
-                      className="hover:bg-[rgba(var(--color-surprise-rgb),0.8] flex h-8 flex-shrink-0 items-center justify-center gap-2 rounded-sm bg-[--color-surprise] px-4 text-[--color-font-surprise] ring-1 ring-transparent transition-all focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      className="hover:bg-[rgba(var(--color-surprise-rgb),0.8] flex h-8 flex-shrink-0 items-center justify-center gap-2 rounded-sm bg-[--color-surprise] px-4 text-[--color-font-surprise] ring-1 ring-transparent transition-all focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50"
                     >
                       <Icon
                         icon={
@@ -936,7 +940,13 @@ export const GitProjectStagingModal: FC<{
                             : 'Recommend commits and comments'}
                       </span>
                     </Button>
-                    {generateCommitsFetcher.state === 'idle' &&
+                    {!isGenerateCommitMessagesWithAIEnabled && (
+                      <p className="text-xs text-[--hl]">
+                        Enable generating commit messages with AI in Insomnia Preferences → AI Settings to use this feature.
+                      </p>
+                    )}
+                    {isGenerateCommitMessagesWithAIEnabled &&
+                      generateCommitsFetcher.state === 'idle' &&
                       generateCommitsFetcher.data &&
                       'error' in generateCommitsFetcher.data && (
                         <p className="flex items-center gap-2 rounded-sm bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))] bg-opacity-20 p-2 text-sm text-[--color-font-danger]">

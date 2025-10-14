@@ -23,6 +23,7 @@ import { useParams } from 'react-router';
 import type { StorageRules } from '~/models/organization';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
+import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
 import { type ApiSpec } from '../../../models/api-spec';
 import { isGitProject, type Project } from '../../../models/project';
@@ -73,6 +74,8 @@ export const NewWorkspaceModal = ({
 
   const canOnlyCreateSelfHosted = isLocalProject && isEnterprise;
 
+  const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
+
   const [workspaceData, setWorkspaceData] = useState<{
     name: string;
     scope: WorkspaceScope;
@@ -94,7 +97,7 @@ export const NewWorkspaceModal = ({
     fileName: safeToUseInsomniaFileName(defaultNameByScope[scope]),
     mockServerType: canOnlyCreateSelfHosted ? 'self-hosted' : 'cloud',
     mockServerUrl: '',
-    mockServerCreationType: 'ai',
+    mockServerCreationType: sourceApiSpec?.contents ? 'ai' : 'manual',
     mockServerSpecSource: 'file',
     mockServerSpecText: '',
     mockServerAdditionalFiles: [],
@@ -346,16 +349,6 @@ export const NewWorkspaceModal = ({
                       <Label className="text-sm text-[--hl]">How do you want to create your mock server?</Label>
                       <div className="flex gap-2">
                         <Radio
-                          value="ai"
-                          className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Icon icon="robot" />
-                            <Heading className="text-lg font-bold">Auto Generate</Heading>
-                          </div>
-                          <p className="pt-2">Automatically generate a mock server from an OpenAPI spec.</p>
-                        </Radio>
-                        <Radio
                           value="manual"
                           isDisabled={!!sourceApiSpec?.contents}
                           className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
@@ -368,6 +361,21 @@ export const NewWorkspaceModal = ({
                             {sourceApiSpec?.contents
                               ? 'Not available when creating from a design document'
                               : 'Create an empty mock server.'}
+                          </p>
+                        </Radio>
+                        <Radio
+                          value="ai"
+                          isDisabled={!isGenerateMockServersWithAIEnabled}
+                          className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Icon icon="robot" />
+                            <Heading className="text-lg font-bold">Auto Generate</Heading>
+                          </div>
+                          <p className="pt-2">
+                            {!isGenerateMockServersWithAIEnabled
+                              ? 'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.'
+                              : 'Automatically generate a mock server from an OpenAPI spec.'}
                           </p>
                         </Radio>
                       </div>

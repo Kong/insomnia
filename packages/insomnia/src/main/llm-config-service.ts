@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { app } from 'electron';
 
+import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 import { ipcMainHandle } from '~/main/ipc/electron';
 
 import * as models from '../models';
@@ -110,6 +111,23 @@ export const getCurrentConfig = async (): Promise<LLMConfig | null> => {
   return { ...config, backend: activeBackend } as LLMConfig;
 };
 
+export const getAIFeatureEnabled = async (feature: 'aiMockServers' | 'aiCommitMessages'): Promise<boolean> => {
+  const data = await models.pluginData.getByKey(LLM_PLUGIN_NAME, `feature.${feature}`);
+  return data?.value === 'true';
+};
+
+export const setAIFeatureEnabled = async (feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean): Promise<void> => {
+  await models.pluginData.upsertByKey(LLM_PLUGIN_NAME, `feature.${feature}`, String(enabled));
+
+  trackSegmentEvent(
+    enabled ? SegmentEvent.aiFeatureEnabled : SegmentEvent.aiFeatureDisabled,
+    {
+      feature: feature,
+      set_for: "user",
+    }
+  );
+};
+
 export interface LLMConfigServiceAPI {
   getActiveBackend: typeof getActiveBackend;
   setActiveBackend: typeof setActiveBackend;
@@ -118,6 +136,8 @@ export interface LLMConfigServiceAPI {
   updateBackendConfig: typeof updateBackendConfig;
   getAllConfigurations: typeof getAllConfigurations;
   getCurrentConfig: typeof getCurrentConfig;
+  getAIFeatureEnabled: typeof getAIFeatureEnabled;
+  setAIFeatureEnabled: typeof setAIFeatureEnabled;
 }
 
 export const registerLLMConfigServiceAPI = () => {
@@ -130,4 +150,6 @@ export const registerLLMConfigServiceAPI = () => {
   );
   ipcMainHandle('llm.getAllConfigurations', async () => getAllConfigurations());
   ipcMainHandle('llm.getCurrentConfig', async () => getCurrentConfig());
+  ipcMainHandle('llm.getAIFeatureEnabled', async (_, feature: 'aiMockServers' | 'aiCommitMessages') => getAIFeatureEnabled(feature));
+  ipcMainHandle('llm.setAIFeatureEnabled', async (_, feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean) => setAIFeatureEnabled(feature, enabled));
 };
