@@ -25,7 +25,7 @@ import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repositor
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 
 import { isGitProject, type Project } from '../../../models/project';
-import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
+import { isMcp, type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { Icon } from '../icon';
 
@@ -66,8 +66,12 @@ export const NewWorkspaceModal = ({
   const isEnterprise = currentPlan?.type.includes('enterprise');
   const isSelfHostedDisabled = !isEnterprise || !storageRules.enableLocalVault;
   const isCloudProjectDisabled = isLocalProject || !storageRules.enableCloudSync;
+  const isMcpWorkspace = isMcp({ scope });
+  // Mcp workspaces do not support Git sync for now
+  const isGitProjectAndNotMcpWorkspace = isGitProject(project) && !isMcpWorkspace;
 
   const canOnlyCreateSelfHosted = isLocalProject && isEnterprise;
+  const defaultFileName = safeToUseInsomniaFileName(defaultNameByScope[scope]);
 
   const [workspaceData, setWorkspaceData] = useState<{
     name: string;
@@ -80,7 +84,8 @@ export const NewWorkspaceModal = ({
     name: defaultNameByScope[scope],
     scope,
     folderPath: '',
-    fileName: safeToUseInsomniaFileName(defaultNameByScope[scope]),
+    // Add a unique timestamp for mcp file name to avoid conflicts since we hide the Git file and folder selector for it.
+    fileName: !isMcpWorkspace ? defaultFileName : `${defaultFileName}_${Date.now()}`,
     mockServerType: canOnlyCreateSelfHosted ? 'self-hosted' : 'cloud',
     mockServerUrl: '',
   });
@@ -115,7 +120,7 @@ export const NewWorkspaceModal = ({
       className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
     >
       <Modal
-        className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] ${isGitProject(project) ? 'min-h-[420px]' : 'min-h-[220px]'}`}
+        className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] ${isGitProjectAndNotMcpWorkspace ? 'min-h-[420px]' : 'min-h-[220px]'}`}
       >
         <Dialog
           aria-label="Create or update dialog"
@@ -175,7 +180,8 @@ export const NewWorkspaceModal = ({
                   />
                   <FieldError className="text-xs text-red-500" />
                 </TextField>
-                {isGitProject(project) && (
+                {/* Mcp workspaces do not support Git sync for now */}
+                {isGitProjectAndNotMcpWorkspace && (
                   <>
                     <TextField
                       name="fileName"
