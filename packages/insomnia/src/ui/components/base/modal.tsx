@@ -8,7 +8,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Dialog, Modal as RACModal } from 'react-aria-components';
+import { Dialog, Modal as RACModal, ModalOverlay } from 'react-aria-components';
 
 export interface ModalProps {
   centered?: boolean;
@@ -104,24 +104,26 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
     }, [hide, open, maskClosable, keyboardClosable]);
 
     return open ? (
-      <RACModal
-        ref={containerRef}
+      <ModalOverlay
         isOpen={open}
-        isDismissable={keyboardClosable}
         onOpenChange={isOpen => {
           !isOpen && hide();
         }}
+        isDismissable={keyboardClosable}
+        className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
       >
-        <Dialog aria-label="Modal" className={classes}>
-          <div
-            className="modal__backdrop overlay theme--transparent-overlay"
-            {...(maskClosable ? { 'data-close-modal': true } : {})}
-          />
-          <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
-            <div className="modal__content">{children}</div>
-          </div>
-        </Dialog>
-      </RACModal>
+        <RACModal ref={containerRef}>
+          <Dialog aria-label="Modal" className={classes}>
+            <div
+              className="modal__backdrop overlay theme--transparent-overlay"
+              {...(maskClosable ? { 'data-close-modal': true } : {})}
+            />
+            <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
+              <div className="modal__content">{children}</div>
+            </div>
+          </Dialog>
+        </RACModal>
+      </ModalOverlay>
     ) : null;
   },
 );
