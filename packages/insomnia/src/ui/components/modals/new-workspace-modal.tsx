@@ -85,7 +85,7 @@ export const NewWorkspaceModal = ({
     scope,
     folderPath: '',
     // Add a unique timestamp for mcp file name to avoid conflicts since we hide the Git file and folder selector for it.
-    fileName: !isMcpWorkspace ? defaultFileName : `${defaultFileName}_${Date.now()}`,
+    fileName: isGitProject(project) && isMcpWorkspace ? `${defaultFileName}_${Date.now()}` : defaultFileName,
     mockServerType: canOnlyCreateSelfHosted ? 'self-hosted' : 'cloud',
     mockServerUrl: '',
   });
