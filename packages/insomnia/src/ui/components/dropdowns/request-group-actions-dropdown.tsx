@@ -368,7 +368,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
                     <MenuItem
                       key={item.id}
                       id={item.id}
-                      className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                      className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                       aria-label={item.name}
                     >
                       <Icon icon={item.icon} />

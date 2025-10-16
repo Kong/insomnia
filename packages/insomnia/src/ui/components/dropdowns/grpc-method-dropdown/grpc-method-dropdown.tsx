@@ -122,7 +122,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({ disabled, methods
                 <ListBoxItem
                   id={grpcMethod.id}
                   key={grpcMethod.id}
-                  className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                  className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                   aria-label={grpcMethod.display_name}
                   textValue={grpcMethod.display_name}
                   value={grpcMethod}

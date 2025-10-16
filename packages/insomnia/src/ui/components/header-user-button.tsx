@@ -83,7 +83,7 @@ export const HeaderUserButton = ({ user, currentPlan, isMinimal = false }: UserB
       </Button>
       <Popover className="max-h-[85vh] min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none">
         {currentPlan && Boolean(currentPlan.type) && (
-          <div className="text-md flex h-[--line-height-xs] w-full items-center justify-between gap-2 whitespace-nowrap border-b border-solid border-[--hl-sm] px-[--padding-md] pb-2 capitalize text-[--color-font]">
+          <div className="flex h-[--line-height-xs] w-full items-center justify-between gap-2 whitespace-nowrap border-b border-solid border-[--hl-sm] px-[--padding-md] pb-2 capitalize text-[--color-font]">
             <span>{currentPlan?.planName ?? formatCurrentPlanType(currentPlan.type)} Plan</span>
             <UpgradeButton currentPlan={currentPlan} />
           </div>
@@ -106,7 +106,7 @@ export const HeaderUserButton = ({ user, currentPlan, isMinimal = false }: UserB
         >
           <MenuItem
             id="manage-organizations"
-            className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+            className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
             aria-label="Manage organizations"
           >
             <Icon icon="users" />
@@ -114,7 +114,7 @@ export const HeaderUserButton = ({ user, currentPlan, isMinimal = false }: UserB
           </MenuItem>
           <MenuItem
             id="account-settings"
-            className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+            className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
             aria-label="Account settings"
           >
             <Icon icon="gear" />
@@ -122,7 +122,7 @@ export const HeaderUserButton = ({ user, currentPlan, isMinimal = false }: UserB
           </MenuItem>
           <MenuItem
             id="logout"
-            className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+            className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
             aria-label="logout"
           >
             <Icon icon="sign-out" />

@@ -816,7 +816,7 @@ export const Runner: FC<{}> = () => {
           </TabPanel>
           <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="test-results">
             {isRunning && (
-              <div className="text-md flex h-full w-full items-center">
+              <div className="flex h-full w-full items-center">
                 <ResponseTimer
                   handleCancel={() => cancelExecution(runnerId)}
                   activeRequestId={runnerId}
