@@ -16,7 +16,8 @@ export const isPathAllowed = (filePath: string, userAllowList: string[]) => {
 };
 const securePath = (filePath: string) => path.resolve(decodeURIComponent(filePath));
 const getSecuredFolderAllowList = (userAllowList: string[]) => {
-  const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
+  const userDataPath = process.type === 'renderer' ? window.app.getPath('userData') : electron.app.getPath('userData');
+  const userdataDirectory = process.env.INSOMNIA_DATA_PATH || userDataPath;
   // we use tmpdir for buildMultipart
   // we put the db in userData
   // the user can also specifiy other folders
