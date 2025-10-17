@@ -17,7 +17,12 @@ import {
   type OAuthClientMetadata,
   type OAuthTokens,
 } from '@modelcontextprotocol/sdk/shared/auth.js';
-import type { GetPromptRequest, Notification, ReadResourceRequest } from '@modelcontextprotocol/sdk/types.js';
+import type {
+  CallToolRequest,
+  GetPromptRequest,
+  Notification,
+  ReadResourceRequest,
+} from '@modelcontextprotocol/sdk/types.js';
 import {
   type ClientRequest,
   CompatibilityCallToolResultSchema,
@@ -95,11 +100,6 @@ export interface McpRequestOptions {
   schema: z.ZodType;
   signal?: AbortSignal;
 }
-interface CallToolOptions extends CommonMcpOptions {
-  name: string;
-  parameters: Record<string, any>;
-}
-
 interface McpEventBase {
   _id: string;
   requestId: string;
@@ -1044,11 +1044,11 @@ const listTools = async (options: CommonMcpOptions) => {
   return null;
 };
 
-const callTool = async (options: CallToolOptions) => {
-  const { requestId, name, parameters = {} } = options;
+const callTool = async (options: CommonMcpOptions & CallToolRequest['params']) => {
+  const { requestId, ...params } = options;
   const mcpClient = _getMcpClient(requestId);
   if (mcpClient) {
-    const response = await mcpClient.callTool({ name, arguments: parameters }, CompatibilityCallToolResultSchema);
+    const response = await mcpClient.callTool(params, CompatibilityCallToolResultSchema);
     trackSegmentEvent(SegmentEvent.mcpToolCalled);
     return response.content;
   }
