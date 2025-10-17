@@ -2,7 +2,7 @@ import CodeMirror, { type Token } from 'codemirror';
 
 import * as misc from '~/common/misc';
 import { getTagDefinitions } from '~/templating/index';
-import type { HandleRender, RenderContextAndKeys } from '~/templating/types';
+import type { RenderContextAndKeys } from '~/templating/types';
 import { tokenizeTag } from '~/templating/utils';
 import { showModal } from '~/ui/components/modals/index';
 import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
@@ -11,8 +11,8 @@ CodeMirror.defineExtension(
   'enableNunjucksTags',
   function (
     this: CodeMirror.Editor,
-    handleRender: HandleRender,
-    handleGetRenderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
+    handleRender: (input: string) => Promise<string>,
+    handleGetRenderContext: () => Promise<RenderContextAndKeys>,
     showVariableSourceAndValue = false,
     editorId = '',
   ) {
@@ -51,16 +51,11 @@ CodeMirror.defineExtension(
 
 async function _highlightNunjucksTags(
   this: CodeMirror.Editor,
-  render: HandleRender,
-  renderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
+  render: (input: string) => Promise<string>,
+  renderContext: () => Promise<RenderContextAndKeys>,
   showVariableSourceAndValue: boolean,
   editorId: string,
 ) {
-  const renderCacheKey = Math.random() + '';
-
-  const renderString = (text: any) => render(text, renderCacheKey);
-  const renderContextWithCacheKey = () => renderContext(renderCacheKey);
-
   const activeMarks: CodeMirror.TextMarker[] = [];
   const doc: CodeMirror.Doc = this.getDoc();
 
@@ -147,12 +142,12 @@ async function _highlightNunjucksTags(
       });
 
       (async function () {
-        await _updateElementText(renderString, mark, tok.string, renderContextWithCacheKey, showVariableSourceAndValue);
+        await _updateElementText(render, mark, tok.string, renderContext, showVariableSourceAndValue);
       })();
 
       // Update it every mouseenter because it may generate a new value every time
       el.addEventListener('mouseenter', async () => {
-        await _updateElementText(renderString, mark, tok.string, renderContextWithCacheKey, showVariableSourceAndValue);
+        await _updateElementText(render, mark, tok.string, renderContext, showVariableSourceAndValue);
       });
       activeMarks.push(mark);
       el.addEventListener('click', async () => {
@@ -262,10 +257,10 @@ async function _highlightNunjucksTags(
 }
 
 async function _updateElementText(
-  render: HandleRender,
+  render: (input: string) => Promise<string>,
   mark: CodeMirror.TextMarker<CodeMirror.MarkerRange>,
   text: string,
-  renderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
+  renderContext: () => Promise<RenderContextAndKeys>,
   showVariableSourceAndValue: boolean,
 ) {
   const el = mark.replacedWith!;

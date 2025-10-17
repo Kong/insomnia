@@ -1,13 +1,13 @@
-import { useCallback } from 'react';
+import { memoize } from '@formatjs/fast-memoize';
 
-import { getRenderContext, getRenderContextAncestors, render } from '~/common/render';
+import { getRenderContext, render } from '~/common/render';
+import type { RequestGroup } from '~/models/request-group';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/templating';
-import type { HandleRender, RenderContextOptions } from '~/templating/types';
+import type { BaseRenderContext, RenderContextOptions } from '~/templating/types';
 import { getKeys } from '~/templating/utils';
-
 let getRenderContextPromiseCache: any = {};
 
 export interface UseNunjucksOptions {
@@ -19,6 +19,24 @@ export const initializeNunjucksRenderPromiseCache = () => {
 
 initializeNunjucksRenderPromiseCache();
 
+const getMemoizedRenderContext = memoize(
+  async ({
+    requestData,
+    workspaceData,
+    options,
+  }: {
+    requestData: ReturnType<typeof useRequestLoaderData>;
+    workspaceData: ReturnType<typeof useWorkspaceLoaderData>;
+    activeRequestGroup?: RequestGroup;
+    options?: { renderContext: RenderContextOptions };
+  }): Promise<BaseRenderContext> =>
+    await getRenderContext({
+      request: requestData?.activeRequest || undefined,
+      environment: workspaceData?.activeEnvironment._id,
+      ...options?.renderContext,
+    }),
+);
+
 /**
  * Access to functions useful for Nunjucks rendering
  */
@@ -29,63 +47,25 @@ export const useNunjucks = (options?: UseNunjucksOptions) => {
   const { activeRequestGroup } = useRequestGroupLoaderData() || {};
   const workspaceData = useWorkspaceLoaderData();
 
-  const fetchRenderContext = useCallback(async () => {
-    const ancestors = await getRenderContextAncestors(
-      requestData?.activeRequest || activeRequestGroup || workspaceData?.activeWorkspace,
-    );
-    return getRenderContext({
-      request: requestData?.activeRequest || undefined,
-      environment: workspaceData?.activeEnvironment._id,
-      ancestors,
-      ...options?.renderContext,
-    });
-  }, [
-    requestData?.activeRequest,
-    workspaceData?.activeWorkspace,
-    workspaceData?.activeEnvironment._id,
-    options?.renderContext,
-    activeRequestGroup,
-  ]);
-
-  const handleGetRenderContext = useCallback(
-    async (contextCacheKey?: string) => {
-      const context =
-        contextCacheKey && getRenderContextPromiseCache[contextCacheKey]
-          ? await getRenderContextPromiseCache[contextCacheKey]
-          : await fetchRenderContext();
+  return {
+    handleRender: async (input: string) => {
+      const context = await getMemoizedRenderContext({
+        requestData,
+        workspaceData,
+        activeRequestGroup,
+        options,
+      });
+      return render(input, context);
+    },
+    handleGetRenderContext: async () => {
+      const context = await getMemoizedRenderContext({
+        requestData,
+        workspaceData,
+        activeRequestGroup,
+        options,
+      });
       const keys = getKeys(context, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME);
       return { context, keys };
     },
-    [fetchRenderContext],
-  );
-  /**
-   * Heavily optimized render function
-   *
-   * @param text - template to render
-   * @param contextCacheKey - if rendering multiple times in parallel, set this
-   * @returns {Promise}
-   * @private
-   */
-  const handleRender: HandleRender = useCallback(
-    async <T>(obj: T, contextCacheKey: string | null = null) => {
-      if (!contextCacheKey || !getRenderContextPromiseCache[contextCacheKey]) {
-        // NOTE: We're caching promises here to avoid race conditions
-        // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-        getRenderContextPromiseCache[contextCacheKey] = fetchRenderContext();
-      }
-
-      // Set timeout to delete the key eventually
-      // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-      setTimeout(() => delete getRenderContextPromiseCache[contextCacheKey], 5000);
-      // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-      const context = await getRenderContextPromiseCache[contextCacheKey];
-      return render(obj, context);
-    },
-    [fetchRenderContext],
-  );
-
-  return {
-    handleRender,
-    handleGetRenderContext,
   };
 };

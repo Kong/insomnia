@@ -4,7 +4,7 @@ import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import { GraphQLSchema } from 'graphql';
 
-import { HandleRender } from '../src/common/render';
+import { RenderContextAndKeys } from '../src/templating/types';
 import { Settings } from '../src/models/settings';
 import { NunjucksParsedTag } from '../src/templating/utils';
 
@@ -13,8 +13,8 @@ type LinkClickCallback = (url: string) => void;
 interface InsomniaExtensions {
   closeHintDropdown: () => void;
   enableNunjucksTags: (
-    handleRender: HandleRender,
-    handleGetRenderContext?: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
+    handleRender: (input: string) => Promise<string>,
+    handleGetRenderContext?: () => Promise<RenderContextAndKeys>,
     showVariableSourceAndValue?: boolean,
     editorId?: string,
   ) => void;
