@@ -136,7 +136,7 @@ export const McpRequestPane: FC<Props> = ({
       if (selectedPrimitiveItem?.type === 'tools') {
         await window.main.mcp.primitive.callTool({
           name: selectedPrimitiveItem?.name || '',
-          parameters: mcpParams[primitiveId],
+          arguments: mcpParams[primitiveId],
           requestId: requestId,
         });
       } else if (selectedPrimitiveItem?.type === 'resources') {
@@ -153,7 +153,7 @@ export const McpRequestPane: FC<Props> = ({
         await window.main.mcp.primitive.getPrompt({
           requestId,
           name: selectedPrimitiveItem?.name || '',
-          parameters: mcpParams[primitiveId],
+          arguments: mcpParams[primitiveId],
         });
       }
     } catch (err) {
