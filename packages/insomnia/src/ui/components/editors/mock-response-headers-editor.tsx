@@ -96,7 +96,6 @@ export const MockResponseHeadersEditor: FC<Props> = ({ bulk, isDisabled, onBlur 
       onChange={onChangeHeaders}
       isDisabled={isDisabled}
       onBlur={onBlur}
-      hideValueType
     />
   );
 };

@@ -58,7 +58,6 @@ interface Props {
   valuePlaceholder?: string;
   onBlur?: (e: FocusEvent) => void;
   readOnlyPairs?: Pair[];
-  hideValueType?: boolean;
 }
 
 export const KeyValueEditor: FC<Props> = ({
@@ -73,7 +72,6 @@ export const KeyValueEditor: FC<Props> = ({
   pairs,
   valuePlaceholder,
   readOnlyPairs,
-  hideValueType = false,
 }) => {
   const [showDescription, setShowDescription] = React.useState(
     pairs.some(p => p.description && p.description.trim() !== '') || false,
@@ -374,6 +372,7 @@ export const KeyValueEditor: FC<Props> = ({
             const isFile = pair.type === 'file';
             const isMultiline = pair.type === 'text' && pair.multiline;
             const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+            const isOnlyTextAllowed = !allowFile && !allowMultiline;
 
             let valueEditor = (
               <OneLineEditor
@@ -471,7 +470,7 @@ export const KeyValueEditor: FC<Props> = ({
                   </div>
                 )}
                 <Toolbar className="flex items-center gap-1">
-                  {!hideValueType && (
+                  {!isOnlyTextAllowed && (
                     <MenuTrigger>
                       <Button
                         aria-label="Text mode"

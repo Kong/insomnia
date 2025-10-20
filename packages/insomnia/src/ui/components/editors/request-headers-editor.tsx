@@ -101,7 +101,6 @@ export const RequestHeadersEditor: FC<Props> = ({ headers, bulk, isDisabled, req
       onChange={headers => patcher(id, { headers })}
       isDisabled={isDisabled}
       readOnlyPairs={isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs}
-      hideValueType
     />
   );
 };

@@ -468,7 +468,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                   handleGetAutocompleteNameConstants={getCommonHeaderNames}
                   handleGetAutocompleteValueConstants={getCommonHeaderValues}
                   onChange={(metadata: GrpcRequestHeader[]) => patchRequest(requestId, { metadata })}
-                  hideValueType
                 />
               </ErrorBoundary>
             </TabPanel>
