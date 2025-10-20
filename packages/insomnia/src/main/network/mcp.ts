@@ -746,8 +746,8 @@ function resolveShellPath(): Promise<string> {
     // 3. Prepare the command to get PATH
     // -l: Start the shell as a login shell to ensure it loads profile scripts
     // -c: Run the following command
-    // "echo -n $PATH": Print the full PATH variable, -n avoids trailing newline
-    const command = `"${shell}" -l -c "echo -n $PATH"`;
+    // "echo -n \$PATH": Print the full PATH variable, -n avoids trailing newline, escape $ to avoid early interpolation
+    const command = `"${shell}" -l -c "echo -n \$PATH"`;
 
     // 4. Execute the command
     exec(command, (error, stdout, stderr) => {
