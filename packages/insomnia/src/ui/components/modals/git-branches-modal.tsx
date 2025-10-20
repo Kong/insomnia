@@ -1,4 +1,4 @@
-import React, { type FC, useEffect, useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -22,8 +22,8 @@ import { useGitProjectChangesFetcher } from '~/routes/git.changes';
 import type { MergeConflict } from '../../../sync/types';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
-import { showModal } from '.';
 import { AlertModal } from './alert-modal';
+import { showModal } from './index';
 import { SyncMergeModal } from './sync-merge-modal';
 
 const LocalBranchItem = ({
@@ -309,7 +309,7 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
         workspaceId,
       });
     }
-  }, [organizationId, projectId, workspaceId, gitChangesFetcher]);
+  }, [projectId, workspaceId, gitChangesFetcher]);
 
   const hasUncommittedChanges = Boolean(
     gitChangesFetcher.data?.changes &&
