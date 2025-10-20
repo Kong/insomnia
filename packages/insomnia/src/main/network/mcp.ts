@@ -1,3 +1,4 @@
+import { exec } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -731,7 +732,43 @@ const createStreamableHTTPTransport = async (
   return transport;
 };
 
-const createStdioTransport = (
+function resolveShellPath(): Promise<string> {
+  return new Promise(resolve => {
+    const defaultPath = process.env.PATH || '';
+    // 1. For Windows, we just return the existing PATH
+    if (process.platform === 'win32') {
+      return resolve(defaultPath);
+    }
+
+    // 2. Get the user's default shell
+    const shell = process.env.SHELL || '/bin/bash'; // Fallback to /bin/bash if SHELL is not set
+
+    // 3. Prepare the command to get PATH
+    // -l: Start the shell as a login shell to ensure it loads profile scripts
+    // -c: Run the following command
+    // "echo -n $PATH": Print the full PATH variable, -n avoids trailing newline
+    const command = `"${shell}" -l -c "echo -n $PATH"`;
+
+    // 4. Execute the command
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.warn(`[PATH Resolver] Unresolved shell PATH: ${stderr}`);
+        return resolve(defaultPath);
+      }
+
+      const resolvedPath = stdout.trim();
+      if (resolvedPath) {
+        console.log(`[PATH Resolver] Resolved Shell PATH: ${resolvedPath}`);
+        resolve(resolvedPath);
+      } else {
+        console.warn(`[PATH Resolver] Shell returned an empty PATH.`);
+        resolve(defaultPath); // Return defaultPath if empty
+      }
+    });
+  });
+}
+
+const createStdioTransport = async (
   options: OpenMcpStdioClientConnectionOptions,
   {
     responseId,
@@ -780,10 +817,12 @@ const createStdioTransport = (
   console.log(process.env['PATH']);
   console.log(JSON.stringify(getDefaultEnvironment()));
   const start = performance.now();
+  const shellPath = await resolveShellPath();
   const transport = new StdioClientTransport({
     command,
     args,
     env: {
+      PATH: shellPath || process.env.PATH || '',
       ...env,
     },
     stderr: 'pipe',
