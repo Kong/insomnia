@@ -776,6 +776,8 @@ const createStdioTransport = (
   initialTimelines.map(t => timelineFileStreams.get(requestId)?.write(JSON.stringify(t) + '\n'));
 
   console.log('----MCP STDIO Transport Command----');
+  console.log(process.env);
+  console.log(process.env['PATH']);
   console.log(JSON.stringify(getDefaultEnvironment()));
   const start = performance.now();
   const transport = new StdioClientTransport({
