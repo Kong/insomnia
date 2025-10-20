@@ -28,7 +28,7 @@ export interface RequestBodyOptions {
   raw?: string;
   urlencoded?: {
     key: string;
-    value: string;
+    value?: string;
     type?: string;
     disabled?: boolean;
     multiline?: boolean | string;

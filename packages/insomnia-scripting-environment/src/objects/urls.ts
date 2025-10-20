@@ -8,7 +8,7 @@ export function setUrlSearchParams(provider: any) {
 
 export interface QueryParamOptions {
   key: string;
-  value: string;
+  value?: string;
   type?: string;
   multiline?: string | boolean;
   disabled?: boolean;
@@ -19,7 +19,7 @@ export class QueryParam extends Property {
   override _kind = 'QueryParam';
 
   key: string;
-  value: string;
+  value?: string;
   type?: string;
   // the `multiline` and `fileName` are properties from Insomnia
   // they are added here to avoid being dropped
@@ -77,7 +77,7 @@ export class QueryParam extends Property {
     const searchParams = new UrlSearchParams();
 
     if (Array.isArray(params)) {
-      params.forEach((entry: QueryParamOptions) => searchParams.append(entry.key, entry.value));
+      params.forEach((entry: QueryParamOptions) => searchParams.append(entry.key, entry.value || ''));
     } else {
       Object.entries(params).forEach(entry => searchParams.append(entry[0], entry[1]));
     }
@@ -97,7 +97,7 @@ export class QueryParam extends Property {
 
   override toString() {
     const params = new UrlSearchParams();
-    params.append(this.key, this.value);
+    params.append(this.key, this.value || '');
 
     return params.toString();
   }
