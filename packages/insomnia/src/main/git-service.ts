@@ -74,7 +74,7 @@ function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     const message = error.message || '';
 
-    // Check for network-related errors
+    // Check for network-related errors.
     if (
       message.includes('net::ERR_UNEXPECTED') ||
       message.includes('net::ERR_INTERNET_DISCONNECTED') ||
