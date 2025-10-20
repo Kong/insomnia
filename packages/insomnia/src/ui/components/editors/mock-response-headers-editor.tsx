@@ -1,4 +1,4 @@
-import React, { type FC, useCallback } from 'react';
+import { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
 import {
@@ -96,6 +96,7 @@ export const MockResponseHeadersEditor: FC<Props> = ({ bulk, isDisabled, onBlur 
       onChange={onChangeHeaders}
       isDisabled={isDisabled}
       onBlur={onBlur}
+      hideValueType
     />
   );
 };
