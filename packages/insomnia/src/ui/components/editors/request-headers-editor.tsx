@@ -1,4 +1,4 @@
-import { type FC, useCallback } from 'react';
+import React, { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
