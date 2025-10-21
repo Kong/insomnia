@@ -764,9 +764,11 @@ const createStdioTransport = async (
     timestamp: Date.now(),
   });
   const pathEnv = (await shellPath()) || process.env.PATH || '';
+  // Filter out empty keys from env
+  const filteredEnv = Object.fromEntries(Object.entries(env).filter(([key]) => key.trim().length));
   const finalEnv = {
     PATH: pathEnv,
-    ...env,
+    ...filteredEnv,
   };
   const stringifiedEnv = Object.entries(finalEnv)
     .map(([key, value]) => `${key}=${value}`)
@@ -781,10 +783,6 @@ const createStdioTransport = async (
   }
   initialTimelines.map(t => timelineFileStreams.get(requestId)?.write(JSON.stringify(t) + '\n'));
 
-  console.log('----MCP STDIO Transport Command----');
-  console.log(process.env);
-  console.log(process.env['PATH']);
-  console.log(JSON.stringify(getDefaultEnvironment()));
   const start = performance.now();
   const transport = new StdioClientTransport({
     command,
