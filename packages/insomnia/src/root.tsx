@@ -6,6 +6,7 @@ import { Button } from 'react-aria-components';
 import {
   href,
   Links,
+  matchPath,
   Meta,
   Outlet,
   Scripts,
@@ -61,6 +62,27 @@ export const links: Route.LinksFunction = () => {
     { rel: 'mask-icon', href: '/safari-pinned-tab.svg', color: '#5bbad5' },
   ];
 };
+
+const locationHistoryMiddleware: Route.ClientMiddlewareFunction = async ({ request }, next) => {
+  await next();
+
+  try {
+    const url = new URL(request.url);
+    const match = matchPath('/organization/:organizationId/*', url.pathname);
+
+    if (!match || !match.params.organizationId) {
+      return;
+    }
+
+    const organizationId = match.params.organizationId;
+    window.localStorage.setItem(`locationHistoryEntry:${organizationId}`, url.pathname);
+    window.localStorage.setItem('lastVisitedOrganizationId', organizationId);
+  } catch (err) {
+    console.log('[locationHistoryMiddleware] Failed to store location history entry', err);
+  }
+};
+
+export const clientMiddleware: Route.ClientMiddlewareFunction[] = [locationHistoryMiddleware];
 
 export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   const getErrorMessage = (err: any) => {
