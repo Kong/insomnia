@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import { app, autoUpdater, BrowserWindow, dialog } from 'electron';
 
+import packageJSON from '../../package.json';
 import { CHECK_FOR_UPDATES_INTERVAL, getAppId, getAppVersion, isDevelopment, UpdateURL } from '../common/constants';
 import { delay } from '../common/misc';
 import * as models from '../models/index';
@@ -11,31 +12,25 @@ import { invariant } from '../utils/invariant';
 import { ipcMainOn } from './ipc/electron';
 import { initNsisUpdater } from './nsisUpdate';
 
-export type UpdateStatus =
-  | 'Update Error'
-  | 'Up to Date'
-  | 'Downloading...'
-  | 'Performing backup...'
-  | 'Updated (Restart Required)'
-  | 'Checking'
-  | 'Updates Not Supported'
-  | 'Check Now';
-
 export const isUpdateSupported = () => {
   if (process.platform === 'linux') {
     console.log('[updater] Not supported on this platform', process.platform);
+    showUpdateStatusToast('Updates disabled on linux');
     return false;
   }
   if (process.platform === 'win32' && process.env['PORTABLE_EXECUTABLE_DIR']) {
     console.log('[updater] Not supported on portable windows binary');
+    showUpdateStatusToast('Updates disabled on portable windows binary');
     return false;
   }
   if (process.env.INSOMNIA_DISABLE_AUTOMATIC_UPDATES) {
     console.log('[updater] Disabled by INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable');
+    showUpdateStatusToast('Updates disabled by administrator');
     return false;
   }
   if (isDevelopment()) {
     console.log('[updater] Disabled in dev mode');
+    showUpdateStatusToast('Updates disabled in development mode');
     return false;
   }
   return true;
@@ -50,11 +45,12 @@ const getUpdateUrl = (updateChannel: string): string | null => {
   return fullUrl.toString();
 };
 
-export const showUpdateStatusToast = (title: UpdateStatus) => {
+export const showUpdateStatusToast = (title: string, description?: string) => {
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send('show-toast', {
       content: {
         title,
+        description,
         status: 'info',
       },
     });
@@ -91,20 +87,20 @@ export const init = async () => {
   }
   autoUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
-    showUpdateStatusToast('Update Error');
+    showUpdateStatusToast('Update Error', error.message);
   });
   autoUpdater.on('update-not-available', () => {
     console.log('[updater] Not Available');
-    showUpdateStatusToast('Up to Date');
+    showUpdateStatusToast(`Up to Date`, packageJSON.version);
   });
   autoUpdater.on('update-available', () => {
     console.log('[updater] Update Available');
-    showUpdateStatusToast('Downloading...');
+    showUpdateStatusToast('Downloading update...');
   });
   autoUpdater.on('update-downloaded', async (_error, releaseNotes, releaseName) => {
     console.log(`[updater] Downloaded ${releaseName}`);
     showUpdateStatusToast('Performing backup...');
-    showUpdateStatusToast('Updated (Restart Required)');
+    showUpdateStatusToast(`Downloaded ${releaseName}`, 'Restart to apply the updates.');
 
     dialog
       .showMessageBox({
@@ -154,10 +150,9 @@ export const init = async () => {
     console.log('[updater] Manual update check');
 
     if (!updateUrl) {
-      showUpdateStatusToast('Updates Not Supported');
       return;
     }
-    showUpdateStatusToast('Checking');
+    showUpdateStatusToast('Checking for updates...');
     await delay(300); // Pacing
     _checkForUpdates(updateUrl);
   });
@@ -170,6 +165,6 @@ const _checkForUpdates = (updateUrl: string) => {
     autoUpdater.checkForUpdates();
   } catch (err) {
     console.warn('[updater] Failed to check for updates:', err.message);
-    showUpdateStatusToast('Update Error');
+    showUpdateStatusToast('Update Error', err.message);
   }
 };

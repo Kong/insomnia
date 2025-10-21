@@ -2,6 +2,7 @@ import { dialog } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 
+import packageJSON from '../../package.json';
 import { CHECK_FOR_UPDATES_INTERVAL } from '../common/constants';
 import { delay } from '../common/misc';
 import * as models from '../models/index';
@@ -12,21 +13,21 @@ export const initNsisUpdater = async () => {
   autoUpdater.logger = log;
   autoUpdater.disableDifferentialDownload = true;
   autoUpdater.on('error', error => {
-    console.warn(`[NSIS updater] Error: ${error.message}`);
-    showUpdateStatusToast('Update Error');
+    console.warn(`[updater] Error: ${error.message}`);
+    showUpdateStatusToast('Update Error', error.message);
   });
   autoUpdater.on('update-not-available', () => {
-    console.log('[NSIS updater] Not Available');
-    showUpdateStatusToast('Up to Date');
+    console.log('[updater] Not Available');
+    showUpdateStatusToast(`Up to Date`, packageJSON.version);
   });
   autoUpdater.on('update-available', () => {
-    console.log('[NSIS updater] Update Available');
-    showUpdateStatusToast('Downloading...');
+    console.log('[updater] Update Available');
+    showUpdateStatusToast('Downloading update...');
   });
   autoUpdater.on('update-downloaded', async ({ version }) => {
     console.log(`[NSIS updater] Downloaded ${version}`);
     showUpdateStatusToast('Performing backup...');
-    showUpdateStatusToast('Updated (Restart Required)');
+    showUpdateStatusToast(`Downloaded ${version}`, 'Restart to apply the updates.');
 
     dialog
       .showMessageBox({
