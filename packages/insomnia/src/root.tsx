@@ -76,6 +76,7 @@ const locationHistoryMiddleware: Route.ClientMiddlewareFunction = async ({ reque
 
     const organizationId = match.params.organizationId;
     window.localStorage.setItem(`locationHistoryEntry:${organizationId}`, url.pathname);
+    window.localStorage.setItem('lastVisitedOrganizationId', organizationId);
   } catch (err) {
     console.log('[locationHistoryMiddleware] Failed to store location history entry', err);
   }
