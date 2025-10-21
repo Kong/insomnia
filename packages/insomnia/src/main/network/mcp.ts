@@ -9,7 +9,7 @@ import {
   UnauthorizedError,
 } from '@modelcontextprotocol/sdk/client/auth.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { getDefaultEnvironment, StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import {
   type OAuthClientInformationFull,
@@ -43,6 +43,7 @@ import {
   type UnsubscribeRequest,
 } from '@modelcontextprotocol/sdk/types.js';
 import electron, { BrowserWindow, ipcMain } from 'electron';
+import { shellPath } from 'shell-path';
 import { parse } from 'shell-quote';
 import { v4 as uuidV4 } from 'uuid';
 import type { z } from 'zod';
@@ -731,7 +732,7 @@ const createStreamableHTTPTransport = async (
   return transport;
 };
 
-const createStdioTransport = (
+const createStdioTransport = async (
   options: OpenMcpStdioClientConnectionOptions,
   {
     responseId,
@@ -762,7 +763,14 @@ const createStdioTransport = (
     name: 'HeaderOut',
     timestamp: Date.now(),
   });
-  const stringifiedEnv = Object.entries(env)
+  const pathEnv = (await shellPath()) || process.env.PATH || '';
+  // Filter out empty keys from env
+  const filteredEnv = Object.fromEntries(Object.entries(env).filter(([key]) => key.trim().length));
+  const finalEnv = {
+    PATH: pathEnv,
+    ...filteredEnv,
+  };
+  const stringifiedEnv = Object.entries(finalEnv)
     .map(([key, value]) => `${key}=${value}`)
     .join(' ')
     .trim();
@@ -779,10 +787,7 @@ const createStdioTransport = (
   const transport = new StdioClientTransport({
     command,
     args,
-    env: {
-      ...getDefaultEnvironment(),
-      ...env,
-    },
+    env: finalEnv,
     stderr: 'pipe',
   });
 

@@ -133,6 +133,7 @@
     "react-router": "^7.9.4",
     "react-stately": "3.41.0",
     "react-use": "^17.6.0",
+    "shell-path": "^3.1.0",
     "shell-quote": "^1.8.2",
     "socket.io-client": "^4.8.1",
     "swagger-ui-dist": "^5.21.0",
