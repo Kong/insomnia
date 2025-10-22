@@ -546,7 +546,7 @@ class McpOAuthClientProvider implements OAuthClientProvider {
   }
   private isUsingMcpAuthFlow() {
     const { authentication } = this.mcpRequest;
-    return 'grantType' in authentication && authentication.grantType === 'mcp-auth-flow' && !authentication.disabled;
+    return 'grantType' in authentication && authentication.grantType === 'mcp_auth_flow' && !authentication.disabled;
   }
   private async updateAuthentication(auth: Partial<RequestAuthentication>) {
     await models.mcpRequest.update(this.mcpRequest, {
@@ -572,7 +572,7 @@ class McpOAuthClientProvider implements OAuthClientProvider {
           } else {
             await this.updateAuthentication({
               type: 'oauth2',
-              grantType: 'mcp-auth-flow',
+              grantType: 'mcp_auth_flow',
               disabled: false,
             });
             resolve();
