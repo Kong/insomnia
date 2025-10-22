@@ -1,6 +1,8 @@
+import type { DefaultBrowserRedirectParam } from '~/common/misc';
+
 const { shell } = require('electron');
 
-let pendingOAuthResolver: ((code: string) => void) | null = null;
+let pendingOAuthResolver: ((param: DefaultBrowserRedirectParam) => void) | null = null;
 let pendingOAuthRejector: ((err: Error) => void) | null = null;
 
 function clearPendingResolverAndRejector() {
@@ -14,7 +16,7 @@ export async function authorizeUserInDefaultBrowser({ url }: { url: string }) {
     clearPendingResolverAndRejector();
   }
 
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<DefaultBrowserRedirectParam>((resolve, reject) => {
     pendingOAuthResolver = resolve;
     pendingOAuthRejector = reject;
 
@@ -25,10 +27,10 @@ export async function authorizeUserInDefaultBrowser({ url }: { url: string }) {
   });
 }
 
-export function onDefaultBrowserOAuthRedirect({ url }: { url: string }) {
+export function onDefaultBrowserOAuthRedirect(param: DefaultBrowserRedirectParam) {
   try {
     if (pendingOAuthResolver) {
-      pendingOAuthResolver(url);
+      pendingOAuthResolver(param);
       clearPendingResolverAndRejector();
     }
   } catch (e) {}
