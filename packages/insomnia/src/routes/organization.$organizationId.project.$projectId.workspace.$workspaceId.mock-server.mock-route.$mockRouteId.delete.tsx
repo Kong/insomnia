@@ -1,6 +1,7 @@
 import { href, redirect } from 'react-router';
 
 import * as models from '~/models';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -14,6 +15,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { isSelected } = await request.json();
 
   await models.mockRoute.remove(mockRoute);
+
+  window.main.trackSegmentEvent({
+    event: SegmentEvent.mockRouteDelete,
+  });
+
   if (isSelected) {
     return redirect(
       href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server', {

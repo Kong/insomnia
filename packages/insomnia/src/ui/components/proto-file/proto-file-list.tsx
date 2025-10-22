@@ -109,7 +109,6 @@ const recursiveRender = (
           <Button
             variant="text"
             title="Delete Proto File"
-            bg="danger"
             onClick={event => {
               event.stopPropagation();
               handleDelete(f);

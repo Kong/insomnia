@@ -277,8 +277,8 @@ jobs:
         with:
           name: ${{ runner.os }}-${{ runner.arch }}-sentry
           path: |
-            packages/insomnia/build/*.js
-            packages/insomnia/build/*.map
+            packages/insomnia/build/**/*.js
+            packages/insomnia/build/**/*.map
             !packages/insomnia/build/yarn-standalone.js
 
   update-pull-request:

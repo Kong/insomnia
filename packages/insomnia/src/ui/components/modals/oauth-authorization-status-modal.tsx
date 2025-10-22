@@ -95,7 +95,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
                 }
                 setSubmitting(true);
                 window.main.onDefaultBrowserOAuthRedirect({
-                  url,
+                  redirectUrl: url,
                 });
               }}
             >

@@ -28,17 +28,13 @@ import type { MockRoute } from '~/models/mock-route';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useMockRouteDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.delete';
-import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
-import { useMockRouteNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.new';
 import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
-import { EditableInput } from '~/ui/components/editable-input';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showModal } from '~/ui/components/modals';
-import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
-import { PromptModal } from '~/ui/components/modals/prompt-modal';
+import { MockRouteModal } from '~/ui/components/modals/mock-route-modal';
 import { EmptyStatePane } from '~/ui/components/panes/empty-state-pane';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
@@ -50,8 +46,7 @@ import { invariant } from '~/utils/invariant';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server';
 import {
   MockRouteResponse,
-  MockRouteRoute,
-  useMockRoutePatcher,
+  MockRouteRoute
 } from './organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 
 export interface MockServerLoaderData {
@@ -93,10 +88,7 @@ const Component = () => {
   const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
 
   const deleteMockRouteFetcher = useMockRouteDeleteActionFetcher();
-  const createMockRouteFetcher = useMockRouteNewActionFetcher();
-  const updateMockRouteFetcher = useMockRouteUpdateActionFetcher();
   const navigate = useNavigate();
-  const patchMockRoute = useMockRoutePatcher();
   const mockRouteActionList: {
     id: string;
     name: string;
@@ -104,48 +96,29 @@ const Component = () => {
     action: (id: string, name: string) => void;
   }[] = [
     {
-      id: 'rename',
-      name: 'Rename',
+      id: 'edit-route',
+      name: 'Edit',
       icon: 'edit',
-      action: id => {
-        showModal(PromptModal, {
-          title: 'Rename mock route',
-          defaultValue: mockRoutes.find(s => s._id === id)?.name,
-          submitName: 'Rename',
-          onComplete: name => {
-            const hasRouteInServer = mockRoutes
-              .filter(m => m._id !== id)
-              .find(
-                m =>
-                  m.name === name &&
-                  m.method.toUpperCase() === mockRoutes.find(m => m._id !== id)?.method.toUpperCase(),
-              );
-            if (hasRouteInServer) {
-              showModal(AlertModal, {
-                title: 'Error',
-                message: `Path "${name}" and method must be unique. Please enter a different name.`,
-              });
-              return;
-            }
-            if (name[0] !== '/') {
-              showModal(AlertModal, {
-                title: 'Error',
-                message: 'Path must begin with a /',
-              });
-              return;
-            }
-            name && patchMockRoute(id, { name });
-          },
+      action: (id) => {
+        const currentRoute = mockRoutes.find(m => m._id === id);
+        setMockRouteModalState({
+          isOpen: true,
+          title: 'Edit Mock Route',
+          defaultPath: currentRoute?.name,
+          defaultMethod: currentRoute?.method,
+          mode: 'edit',
+          mockRouteId: id,
+          mockServerId: mockServerId,
         });
       },
     },
     {
       id: 'delete-route',
-      name: 'Delete mock route',
+      name: 'Delete',
       icon: 'trash',
       action: (id, name) => {
         showModal(AskModal, {
-          title: 'Delete route',
+          title: 'Delete Mock Route',
           message: `Do you really want to delete "${name}"?`,
           yesText: 'Delete',
           noText: 'Cancel',
@@ -196,6 +169,16 @@ const Component = () => {
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
     settings.forceVerticalLayout ? 'vertical' : 'horizontal',
   );
+
+  const [mockRouteModalState, setMockRouteModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    defaultPath?: string;
+    defaultMethod?: string;
+    mode: 'create' | 'edit';
+    mockRouteId?: string;
+    mockServerId?: string;
+  } | null>(null);
   useLayoutEffect(() => {
     if (settings.forceVerticalLayout) {
       setDirection('vertical');
@@ -224,6 +207,10 @@ const Component = () => {
     activeProject,
     activeMockRoute: mockRoutes.find(s => s._id === mockRouteId),
   });
+
+  useEffect(() => {
+    setMockRouteModalState(null);
+  }, [mockRouteId]);
 
   return (
     <PanelGroup
@@ -263,37 +250,13 @@ const Component = () => {
             <Button
               className="flex items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
               onPress={() => {
-                showModal(PromptModal, {
-                  title: 'New mock route',
-                  defaultValue: '/',
-                  submitName: 'Create',
-                  placeholder: '/path/to/resource',
-                  onComplete: name => {
-                    const hasRouteInServer = mockRoutes.find(m => m.name === name && m.method.toUpperCase() === 'GET');
-                    if (hasRouteInServer) {
-                      showModal(AlertModal, {
-                        title: 'Error',
-                        message: `Path "${name}" and must be unique. Please enter a different name.`,
-                      });
-                      return;
-                    }
-                    if (name[0] !== '/') {
-                      showModal(AlertModal, {
-                        title: 'Error',
-                        message: 'Path must begin with a /',
-                      });
-                      return;
-                    }
-                    createMockRouteFetcher.submit({
-                      organizationId,
-                      projectId,
-                      workspaceId,
-                      patch: {
-                        name,
-                        parentId: mockServerId,
-                      },
-                    });
-                  },
+                setMockRouteModalState({
+                  isOpen: true,
+                  title: 'New Mock Route',
+                  defaultPath: '/',
+                  defaultMethod: 'GET',
+                  mode: 'create',
+                  mockServerId: mockServerId,
                 });
               }}
             >
@@ -346,41 +309,7 @@ const Component = () => {
                     >
                       {formatMethodName(item.method)}
                     </span>
-                    <EditableInput
-                      value={item.name}
-                      name="name"
-                      ariaLabel="Mock route name"
-                      className="hover:!bg-transparent"
-                      onSubmit={name => {
-                        const hasRouteInServer = mockRoutes
-                          .filter(m => m._id !== item._id)
-                          .find(m => m.name === name && m.method.toUpperCase() === item.method.toUpperCase());
-                        if (hasRouteInServer) {
-                          showModal(AlertModal, {
-                            title: 'Error',
-                            message: `Path "${name}" and method must be unique. Please enter a different name.`,
-                          });
-                          return;
-                        }
-                        if (name[0] !== '/') {
-                          showModal(AlertModal, {
-                            title: 'Error',
-                            message: 'Path must begin with a /',
-                          });
-                          return;
-                        }
-                        name &&
-                          updateMockRouteFetcher.submit({
-                            organizationId,
-                            projectId,
-                            workspaceId,
-                            mockRouteId: item._id,
-                            patch: {
-                              name,
-                            },
-                          });
-                      }}
-                    />
+                    <span className="flex-1 truncate">{item.name}</span>
                     <span className="flex-1" />
                     <MenuTrigger>
                       <Button
@@ -475,6 +404,20 @@ const Component = () => {
           </Panel>
         </PanelGroup>
       </Panel>
+      {mockRouteModalState && (
+        <MockRouteModal
+          isOpen={mockRouteModalState.isOpen}
+          onOpenChange={isOpen => {
+            setMockRouteModalState(isOpen ? mockRouteModalState : null);
+          }}
+          title={mockRouteModalState.title}
+          defaultPath={mockRouteModalState.defaultPath}
+          defaultMethod={mockRouteModalState.defaultMethod}
+          mode={mockRouteModalState.mode}
+          mockRouteId={mockRouteModalState.mockRouteId}
+          mockServerId={mockRouteModalState.mockServerId}
+        />
+      )}
     </PanelGroup>
   );
 };
