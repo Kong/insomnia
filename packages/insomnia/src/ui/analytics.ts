@@ -50,6 +50,10 @@ export enum SegmentEvent {
   projectUpdated = 'Project Updated',
   exportStarted = 'Export Started',
   exportRequestsChosen = 'Export Requests Chosen',
+  recommendCommitsGenerated = 'Recommend Commits Generated',
+  recommendCommitsSaved = 'Recommend Commits Saved',
+  recommendCommitsCancelled = 'Recommend Commits Cancelled',
+  recommendCommitsClicked = 'Recommend Commits Clicked',
 }
 
 type PushPull = 'push' | 'pull';

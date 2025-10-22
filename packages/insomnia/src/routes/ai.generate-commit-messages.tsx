@@ -1,5 +1,6 @@
 import { href } from 'react-router';
 
+import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -28,12 +29,23 @@ export async function clientAction(args: Route.ClientActionArgs) {
 
     const { log } = await window.main.git.gitLogLoader({ projectId });
 
+    const startTime = performance.now();
     const { error, commits } = await window.main.generateCommitsFromDiff({
       diff,
       recent_commits: log
         .slice(0, 5)
         .map(({ commit }) => commit.message)
         .join('\n'),
+    });
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.recommendCommitsGenerated,
+      properties: {
+        file_count: commits?.map(commit => commit.files?.length || 0)?.reduce((a, b) => a + b, 0),
+        group_count: commits?.length || 0,
+        time_to_generate_in_seconds: (performance.now() - startTime) / 1000,
+        has_error: Boolean(error),
+      },
     });
 
     if (error || !commits) {
