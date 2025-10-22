@@ -43,11 +43,11 @@ export function create(patch: Partial<ProtoDirectory> = {}) {
 }
 
 export function getById(_id: string) {
-  return db.getWhere<ProtoDirectory>(type, { _id });
+  return db.findOne<ProtoDirectory>(type, { _id });
 }
 
 export function getByParentId(parentId: string) {
-  return db.getWhere<ProtoDirectory>(type, { parentId });
+  return db.findOne<ProtoDirectory>(type, { parentId });
 }
 
 export function findByParentId(parentId: string) {
@@ -58,18 +58,6 @@ export function remove(obj: ProtoDirectory) {
   return db.remove(obj);
 }
 
-export async function batchRemoveIds(ids: string[]) {
-  const dirs = await db.find(type, {
-    _id: {
-      $in: ids,
-    },
-  });
-  await db.batchModifyDocs({
-    upsert: [],
-    remove: dirs,
-  });
-}
-
 export function all() {
-  return db.all<ProtoDirectory>(type);
+  return db.find<ProtoDirectory>(type);
 }

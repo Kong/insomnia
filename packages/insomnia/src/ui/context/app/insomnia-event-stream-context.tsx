@@ -1,5 +1,5 @@
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
-import { useParams, useRevalidator } from 'react-router';
+import { useFetchers, useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { CDN_INVALIDATION_TTL } from '~/common/constants';
@@ -152,6 +152,9 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   }, [organizationId, remoteId, userSession.id, workspaceId]);
 
   const { revalidate } = useRevalidator();
+  const inflightFetchers = useFetchers();
+  const ifInSubmission = inflightFetchers.some(f => f.formMethod === 'POST');
+  const latestInSubmission = reactUse.useLatest(ifInSubmission);
 
   useEffect(() => {
     const sessionId = userSession.id;
@@ -211,7 +214,9 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               // we don't need to revalidate if the user is in workspace page
               !latestWorkspaceId.current
             ) {
-              revalidate();
+              if (!latestInSubmission.current) {
+                revalidate();
+              }
             } else if (event.type === 'VaultKeyChanged') {
               const accountId = userSession.accountId;
               const organizations = JSON.parse(
@@ -236,7 +241,9 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                 });
               } else if (event.type === 'FileChanged' && !latestWorkspaceId.current) {
                 // FileChanged could be a new file has been added, we need to revalidate the workspace list
-                revalidate();
+                if (!latestInSubmission.current) {
+                  revalidate();
+                }
               }
             }
           } catch (e) {
@@ -265,6 +272,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     syncStorageRulesSubmit,
     userSession.accountId,
     userSession.id,
+    latestInSubmission,
   ]);
 
   return (

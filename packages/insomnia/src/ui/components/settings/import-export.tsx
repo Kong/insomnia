@@ -449,7 +449,7 @@ const UntrackedProject = ({
           aria-label="Select an organization"
           name="organizationId"
           onSelectionChange={key => {
-            setSelectedOrganizationId(key.toString());
+            key && setSelectedOrganizationId(key.toString());
           }}
           selectedKey={selectedOrganizationId}
           isDisabled={organizations.length === 0}
@@ -540,7 +540,7 @@ const UntrackedWorkspace = ({
           aria-label="Select a project"
           name="projectId"
           onSelectionChange={key => {
-            setSelectedProjectId(key.toString());
+            key && setSelectedProjectId(key.toString());
           }}
           selectedKey={selectedProjectId}
           isDisabled={projects.length === 0}
@@ -667,7 +667,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const isScratchPadWorkspace = isScratchpad(workspaceData?.activeWorkspace);
   const hasUntrackedWorkspaces = untrackedWorkspaces.length > 0;
   const hasUntrackedProjects = untrackedProjects.length > 0;
-  const showImportButtons = !isScratchPadWorkspace;
+  const showImportButtons =
+    !isScratchPadWorkspace && (activeProject || features.bulkImport.enabled || isEnterprisePlan);
   if (!isScratchPadWorkspace && !isLoggedIn) {
     return (
       <Button

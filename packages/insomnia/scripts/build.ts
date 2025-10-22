@@ -1,7 +1,7 @@
 import { cp, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
-import buildMainAndPreload from '../esbuild.main';
+import buildEntrypoints from '../esbuild.entrypoints';
 
 // Start build if ran from CLI
 if (require.main === module) {
@@ -27,8 +27,8 @@ export const start = async () => {
 
   const buildFolder = path.join('../build');
 
-  console.log('[build] Building main.min.js and preload');
-  await buildMainAndPreload({
+  console.log('[build] Building entry.main.min.js and entry.preload.min.js');
+  await buildEntrypoints({
     mode: 'production',
   });
 

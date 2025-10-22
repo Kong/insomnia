@@ -79,7 +79,6 @@ test.describe('test hidden window handling', () => {
 
     // it should still work
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
     await expect.soft(statusTag).toContainText('200 OK');
   });
 
@@ -119,7 +118,6 @@ test.describe('test hidden window handling', () => {
 
     // it should still work
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
     await expect.soft(statusTag).toContainText('200 OK');
   });
 });

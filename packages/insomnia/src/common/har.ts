@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import clone from 'clone';
 import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
@@ -28,7 +26,7 @@ import { getRenderedRequestAndContext } from './render';
 const getDocWithDescendants =
   (includePrivateDocs = false) =>
   async (parentDoc: BaseModel | null) => {
-    const docs = await database.withDescendants(parentDoc);
+    const docs = parentDoc ? await database.getWithDescendants(parentDoc) : [];
     return docs.filter(
       // Don't include if private, except if we want to
       doc => !doc?.isPrivate || includePrivateDocs,
@@ -138,7 +136,7 @@ export async function exportHar(exportRequests: ExportRequest[]) {
   const entries: Har.Entry[] = [];
 
   for (const exportRequest of exportRequests) {
-    const request: Request | null = await models.request.getById(exportRequest.requestId);
+    const request = await models.request.getById(exportRequest.requestId);
 
     if (!request) {
       continue;
@@ -150,11 +148,11 @@ export async function exportHar(exportRequests: ExportRequest[]) {
       continue;
     }
 
-    let response: Response | null = null;
+    let response;
     if (exportRequest.responseId) {
       response = await models.response.getById(exportRequest.responseId);
     } else {
-      response = await models.response.getLatestForRequest(
+      response = await models.response.getLatestForRequestId(
         exportRequest.requestId,
         exportRequest.environmentId || null,
       );
@@ -199,7 +197,7 @@ export async function exportHar(exportRequests: ExportRequest[]) {
   return har;
 }
 
-export async function exportHarResponse(response: Response | null) {
+export async function exportHarResponse(response?: Response) {
   if (!response) {
     return {
       status: 0,
@@ -316,7 +314,7 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
     cookies: getRequestCookies(renderedRequest),
     headers: getRequestHeaders(renderedRequest),
     queryString: getRequestQueryString(renderedRequest),
-    postData: getRequestPostData(renderedRequest),
+    postData: await getRequestPostData(renderedRequest),
     headersSize: -1,
     bodySize: -1,
   };
@@ -442,12 +440,14 @@ function getRequestQueryString(renderedRequest: RenderedRequest): Har.QueryStrin
   }));
 }
 
-function getRequestPostData(renderedRequest: RenderedRequest): Har.PostData | undefined {
+async function getRequestPostData(renderedRequest: RenderedRequest): Promise<Har.PostData | undefined> {
   let body;
   if (renderedRequest.body.fileName) {
     try {
+      const text = await window.main.secureReadFile({ path: renderedRequest.body.fileName });
+
       body = {
-        text: fs.readFileSync(renderedRequest.body.fileName, 'base64'),
+        text,
       };
     } catch (error) {
       console.warn('[code gen] Failed to read file', error);

@@ -19,7 +19,7 @@ test.describe('Environment Editor', () => {
     await page.getByTestId('CreateEnvironmentDropdown').click();
     await page.getByRole('menuitemradio', { name: 'Shared Environment' }).press('Enter');
     await page.getByRole('row', { name: 'New Environment' }).click();
-    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
 
     await page.getByRole('option', { name: 'New Environment' }).press('Enter');
     await page.getByRole('option', { name: 'New Environment' }).press('Escape');
@@ -44,7 +44,7 @@ test.describe('Environment Editor', () => {
     await page.getByRole('row', { name: 'ExampleB' }).locator('input').fill('Gandalf');
     await page.getByRole('row', { name: 'ExampleB' }).locator('input').press('Enter');
 
-    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByRole('button', { name: 'Close', exact: true }).click();
 
     await page.getByRole('option', { name: 'Gandalf' }).press('Enter');
     await page.getByRole('option', { name: 'Gandalf' }).press('Escape');
@@ -63,14 +63,15 @@ test.describe('Environment Editor', () => {
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     // add a new string environment variable
     await page.locator('pre').filter({ hasText: '"exampleNumber": 2222,' }).click();
-    await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
-    await page.getByTestId('CodeEditor').getByRole('textbox').fill('"testNumber":9000,');
-    await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
-    await page.getByTestId('CodeEditor').getByRole('textbox').fill('"testString":"Gandalf",');
+    const dialog = page.getByRole('dialog');
+    await dialog.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
+    await dialog.getByTestId('CodeEditor').getByRole('textbox').fill('"testNumber":9000,');
+    await dialog.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
+    await dialog.getByTestId('CodeEditor').getByRole('textbox').fill('"testString":"Gandalf",');
 
     // Open request
     // Delay the click to let debounce finish
-    await page.getByRole('button', { name: 'Close' }).click({ delay: 200 });
+    await dialog.getByRole('button', { name: 'Close' }).click({ delay: 200 });
     await page.getByLabel('Manage collection environments').press('Escape');
     await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
 
@@ -86,7 +87,7 @@ test.describe('Environment Editor', () => {
     // check row has been disabled
     await expect.soft(firstRow).toHaveCSS('opacity', '0.4');
     // delete all items
-    await page.getByRole('button', { name: 'Delete All' }).dblclick();
+    await page.getByRole('dialog').getByRole('button', { name: 'Delete All' }).dblclick();
     // check items have been deleted
     await expect.soft(kvTable.getByRole('option').nth(2)).toBeHidden();
 
@@ -108,7 +109,7 @@ test.describe('Environment Editor', () => {
     await secondRow.getByRole('button', { name: 'Edit JSON' }).click();
     // wait for modal to show
     await expect.soft(page.getByRole('dialog').getByTestId('CodeEditor')).toBeVisible();
-    const bodyEditor = page.getByTestId('CodeEditor').getByRole('textbox');
+    const bodyEditor = page.getByRole('dialog').getByTestId('CodeEditor').getByRole('textbox');
     // move cursor right and input json string
     await bodyEditor.focus();
     await bodyEditor.press('ArrowRight');
@@ -117,7 +118,7 @@ test.describe('Environment Editor', () => {
     await page.getByRole('button', { name: 'Modal Submit' }).click({ delay: 200 });
 
     // Open request
-    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByRole('button', { name: 'Close', exact: true }).click();
     await page.getByLabel('Manage collection environments').press('Escape');
     await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
     await page.getByRole('button', { name: 'Send' }).click();

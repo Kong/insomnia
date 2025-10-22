@@ -4,7 +4,7 @@ import querystring from 'node:querystring';
 import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../../package.json';
-import { getOauthRedirectUrl } from '../../common/constants';
+import { getOauthRedirectUrl, getOauthRelayUrl } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
@@ -51,7 +51,7 @@ export const getOAuth2Token = async (
   requestId: string,
   authentication: AuthTypeOAuth2,
   forceRefresh = false,
-): Promise<OAuth2Token | null> => {
+): Promise<OAuth2Token | undefined> => {
   try {
     const { oAuth2Token, closestAuthId } = await getExistingAccessTokenAndRefreshIfExpired(
       requestId,
@@ -147,16 +147,49 @@ export const getOAuth2Token = async (
       let redirectedTo: string | null = null;
       if (authentication.useDefaultBrowser) {
         const authCodeUrlStr = authCodeUrl.toString();
+
+        const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+          modulusLength: 3072,
+          publicKeyEncoding: { type: 'spki', format: 'pem' },
+          privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+        });
+
+        const relayUrl = `${getOauthRelayUrl()}?authCodeUrl=${encodeURIComponent(authCodeUrlStr)}&publicKey=${encodeURIComponent(publicKey)}`;
+
         uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
           status: 'getting_code',
-          authCodeUrlStr,
+          authCodeUrlStr: relayUrl,
         });
         // If the user has selected to use the default browser, we will open the
         // authorization URL in the default browser and wait for the user to
         // authorize the application.
-        redirectedTo = await window.main.authorizeUserInDefaultBrowser({
-          url: authCodeUrlStr,
+        const result = await window.main.authorizeUserInDefaultBrowser({
+          url: relayUrl,
         });
+        if ('redirectUrl' in result) {
+          redirectedTo = result.redirectUrl;
+        } else {
+          const { encryptedRedirectUrl, encryptedKey, iv } = result;
+          const aesKey = crypto.privateDecrypt(
+            {
+              key: privateKey,
+              padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+              oaepHash: 'sha256',
+            },
+            Buffer.from(encryptedKey, 'base64'),
+          );
+          const encryptedBuf = Buffer.from(encryptedRedirectUrl, 'base64');
+          const authTag = encryptedBuf.slice(encryptedBuf.length - 16);
+          const ciphertext = encryptedBuf.slice(0, encryptedBuf.length - 16);
+          // nosemgrep: javascript.node-crypto.security.gcm-no-tag-length.gcm-no-tag-length
+          const decipher = crypto.createDecipheriv('aes-256-gcm', aesKey, Buffer.from(iv, 'base64'), {
+            authTagLength: 16,
+          });
+          decipher.setAuthTag(authTag);
+
+          const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf-8');
+          redirectedTo = decrypted;
+        }
       } else {
         redirectedTo = await window.main.authorizeUserInWindow({
           url: authCodeUrl.toString(),
@@ -251,7 +284,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   requestId: string,
   authentication: AuthTypeOAuth2,
   forceRefresh: boolean,
-): Promise<{ oAuth2Token: OAuth2Token | null; closestAuthId: string }> {
+): Promise<{ oAuth2Token: OAuth2Token | undefined; closestAuthId: string }> {
   const activeRequest = await models.request.getById(requestId);
   const requestGroups = (
     await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
@@ -262,9 +295,9 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   const isRequestAuthEnabled =
     getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);
   const closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
-  const token: OAuth2Token | null = await models.oAuth2Token.getByParentId(closestAuthId);
+  const token = await models.oAuth2Token.getByParentId(closestAuthId);
   if (!token) {
-    return { oAuth2Token: null, closestAuthId };
+    return { oAuth2Token: undefined, closestAuthId };
   }
   const expiresAt = token.expiresAt || Infinity;
   const isExpired = Date.now() > expiresAt;
@@ -275,7 +308,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   // token is expired
 
   if (!token.refreshToken) {
-    return { oAuth2Token: null, closestAuthId };
+    return { oAuth2Token: undefined, closestAuthId };
   }
 
   let params = [
@@ -293,8 +326,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   } else {
     headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
   }
-  // Why not send headers here?
-  const response = await sendAccessTokenRequest(requestId, authentication, params, []);
+  const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
 
   const statusCode = response.statusCode || 0;
   const bodyBuffer = await models.response.getBodyBuffer(response);
@@ -305,7 +337,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
     // brand new refresh and access tokens.
     const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
     models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
-    return { oAuth2Token: null, closestAuthId };
+    return { oAuth2Token: undefined, closestAuthId };
   }
   const isSuccessful = statusCode >= 200 && statusCode < 300;
   const hasBodyAndIsError = bodyBuffer && statusCode === 400;
@@ -328,7 +360,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   invariant(bodyBuffer, `[oauth2] No body returned from ${authentication.accessTokenUrl}`);
   const data = tryToParse(bodyBuffer.toString());
   if (!data) {
-    return { oAuth2Token: null, closestAuthId };
+    return { oAuth2Token: undefined, closestAuthId };
   }
   const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
   const oAuth2Token = await models.oAuth2Token.update(

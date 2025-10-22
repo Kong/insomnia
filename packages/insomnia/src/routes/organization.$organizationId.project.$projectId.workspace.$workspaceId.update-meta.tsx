@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-meta';
 
@@ -16,10 +16,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   return null;
 }
 
-export function useWorkspaceUpdateMetaActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useWorkspaceUpdateMetaActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -31,7 +29,7 @@ export function useWorkspaceUpdateMetaActionFetcher(args?: Parameters<typeof use
       workspaceId: string;
       patch: Partial<WorkspaceMeta>;
     }) => {
-      return fetcherSubmit(JSON.stringify(patch), {
+      return submit(JSON.stringify(patch), {
         method: 'POST',
         action: href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/update-meta`, {
           organizationId,
@@ -41,11 +39,5 @@ export function useWorkspaceUpdateMetaActionFetcher(args?: Parameters<typeof use
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

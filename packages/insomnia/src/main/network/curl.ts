@@ -6,10 +6,11 @@ import { Curl, CurlFeature, CurlInfoDebug, type HeaderInfo } from '@getinsomnia/
 import electron, { BrowserWindow } from 'electron';
 import { v4 as uuidV4 } from 'uuid';
 
+import { insecureReadFile } from '~/main/secure-read-file';
+
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
 import * as models from '../../models';
 import type { CookieJar } from '../../models/cookie-jar';
-import type { Environment } from '../../models/environment';
 import type { RequestAuthentication, RequestHeader } from '../../models/request';
 import type { Response } from '../../models/response';
 import { readCurlResponse } from '../../models/response';
@@ -63,9 +64,37 @@ export interface CurlCloseEvent {
 
 export type CurlEvent = CurlOpenEvent | CurlMessageEvent | CurlErrorEvent | CurlCloseEvent;
 
+const protocolName = 'curl';
 const CurlConnections = new Map<string, Curl>();
+const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
+
+const getEventNotificationChannel = (responseId: string) => `${protocolName}.${responseId}.newEventReceived`;
+const writeEventLogAndNotify = ({
+  requestId,
+  data,
+  clearRequestIdMap = false,
+}: {
+  requestId: string;
+  data: any;
+  clearRequestIdMap?: boolean;
+}) => {
+  eventLogFileStreams.get(requestId)?.write(data, () => {
+    // notify all renderers of new event has been received
+    for (const window of BrowserWindow.getAllWindows()) {
+      const resId = requestIdToResponseIdMap.get(requestId);
+      if (resId) {
+        const notifyChannel = getEventNotificationChannel(resId);
+        notifyChannel && window.webContents.send(notifyChannel);
+        if (clearRequestIdMap) {
+          // clean up maps after last event has been written to file
+          requestIdToResponseIdMap.delete(requestId);
+        }
+      }
+    }
+  });
+};
 
 const parseHeadersAndBuildTimeline = (url: string, headersWithStatus: HeaderInfo) => {
   const { result, ...headers } = headersWithStatus;
@@ -110,15 +139,16 @@ const openCurlConnection = async (
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
+  requestIdToResponseIdMap.set(options.requestId, responseId);
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
-  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
+  const environment = await models.environment.getById(environmentId || 'n/a');
   const responseEnvironmentId = environment ? environment._id : null;
 
   const caCert = await models.caCertificate.findByParentId(options.workspaceId);
   const caCertficatePath = caCert?.path || null;
-  const caCertificate = caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString();
+  const caCertificate = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
   try {
     if (!options.url) {
@@ -170,7 +200,7 @@ const openCurlConnection = async (
             request._id,
             responseEnvironmentId,
             timelinePath,
-            error.message || 'Something went wrong',
+            error.message || 'Something went wrong creating curl response',
           );
         }
       }
@@ -267,7 +297,7 @@ const openCurlConnection = async (
             timestamp: Date.now(),
             direction: 'INCOMING',
           };
-          eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
+          writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(messageEvent) + '\n' });
         }
 
         // NOTE: when stream is closed by remote server
@@ -292,13 +322,13 @@ const openCurlConnection = async (
   } catch (e) {
     console.error('unhandled error:', e);
 
-    deleteRequestMaps(request._id, e.message || 'Something went wrong');
+    deleteRequestMaps(request._id, e.message || 'Something went wrong opening curl connection');
     createErrorResponse(
       responseId,
       request._id,
       responseEnvironmentId,
       timelinePath,
-      e.message || 'Something went wrong',
+      e.message || 'Something went wrong creating curl connection',
     );
   }
 };
@@ -325,7 +355,11 @@ const createErrorResponse = async (
 
 const deleteRequestMaps = async (requestId: string, message: string, event?: CurlCloseEvent | CurlErrorEvent) => {
   if (event) {
-    eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
+    writeEventLogAndNotify({
+      requestId: requestId,
+      data: JSON.stringify(event) + '\n',
+      clearRequestIdMap: true,
+    });
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);
@@ -371,10 +405,9 @@ const findMany = async (options: { responseId: string }): Promise<CurlEvent[]> =
   if (!response || !response.bodyPath) {
     return [];
   }
-  const body = await fs.promises.readFile(response.bodyPath);
+  const body = await insecureReadFile(response.bodyPath);
   return (
     body
-      .toString()
       .split('\n')
       .filter(e => e?.trim())
       // Parse the message

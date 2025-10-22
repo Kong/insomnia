@@ -1,3 +1,5 @@
+import { projectLock } from '~/common/project';
+
 import { database } from '../common/database';
 import { project, userSession } from '../models';
 import { updateLocalProjectToRemote } from '../models/helpers/project';
@@ -218,8 +220,6 @@ async function syncTeamProjects({
   );
 
   const remoteProjectsThatNeedToBeUpdated = await database.find<Project>(project.type, {
-    // Name is not in the list of remote projects
-    name: { $nin: teamProjects.map(p => p.name) },
     // Remote ID is in the list of remote projects
     remoteId: { $in: teamProjects.map(p => p.id) },
   });
@@ -227,7 +227,7 @@ async function syncTeamProjects({
   await Promise.all(
     remoteProjectsThatNeedToBeUpdated.map(async prj => {
       const remoteProject = teamProjects.find(p => p.id === prj.remoteId);
-      if (remoteProject) {
+      if (remoteProject && remoteProject.name !== prj.name) {
         await project.update(prj, {
           name: remoteProject.name,
         });
@@ -257,7 +257,7 @@ async function syncTeamProjects({
   );
 }
 
-export const syncProjects = async (organizationId: string) => {
+export const syncProjects = projectLock.wrapWithLock(async (organizationId: string) => {
   const user = await userSession.getOrCreate();
   const teamProjects = await getAllTeamProjects(organizationId);
   // ensure we don't sync projects in the wrong place
@@ -267,4 +267,4 @@ export const syncProjects = async (organizationId: string) => {
       teamProjects,
     });
   }
-};
+});

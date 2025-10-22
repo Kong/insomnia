@@ -44,19 +44,15 @@ export function update(unitTest: UnitTestResult, patch: Partial<UnitTestResult>)
 }
 
 export function getByParentId(parentId: string) {
-  return db.getWhere<UnitTestResult>(type, { parentId });
-}
-
-export function getLatestByParentId(parentId: string) {
-  return db.getMostRecentlyModified<UnitTestResult>(type, { parentId });
+  return db.findOne<UnitTestResult>(type, { parentId });
 }
 
 export function getById(_id: string) {
-  return db.getWhere<UnitTestResult>(type, {
+  return db.findOne<UnitTestResult>(type, {
     _id,
   });
 }
 
 export function all() {
-  return db.all<UnitTestResult>(type);
+  return db.find<UnitTestResult>(type);
 }

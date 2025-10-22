@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 
@@ -42,10 +42,8 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   );
 }
 
-export function useRequestDuplicateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useRequestDuplicateActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -71,17 +69,11 @@ export function useRequestDuplicateActionFetcher(args?: Parameters<typeof useFet
         },
       );
 
-      return fetcherSubmit(JSON.stringify({ name, parentId }), {
+      return submit(JSON.stringify({ name, parentId }), {
         action: url,
         method: 'POST',
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

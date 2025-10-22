@@ -63,7 +63,7 @@ export function create(patch: Partial<GitRepository> = {}) {
 }
 
 export async function getById(id: string) {
-  return db.getWhere<GitRepository>(type, { _id: id });
+  return db.findOne<GitRepository>(type, { _id: id });
 }
 
 export function update(repo: GitRepository, patch: Partial<GitRepository>) {
@@ -75,7 +75,7 @@ export function remove(repo: GitRepository) {
 }
 
 export function all() {
-  return db.all<GitRepository>(type);
+  return db.find<GitRepository>(type);
 }
 export interface GitAuthor {
   name: string;

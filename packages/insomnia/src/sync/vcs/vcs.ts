@@ -62,6 +62,16 @@ export function chunkArray<T>(arr: T[], chunkSize: number) {
 // Unstaged items have changed compared to staged or not and can be staged
 //
 export class VCS {
+  async getVersion(): Promise<string> {
+    const branch = await this._getCurrentBranch();
+    // branch can be null if there is no backend project
+    if (branch && branch.modified) {
+      const date = new Date(branch.modified);
+      return date.toISOString();
+    }
+
+    return '';
+  }
   _store: Store;
   _driver: BaseDriver;
   // stored by key `/projects/${project.id}/meta.json`
@@ -85,7 +95,7 @@ export class VCS {
 
   async setBackendProject(backendProject: BackendProject) {
     this._backendProject = backendProject;
-    console.log(`[sync] Activated project ${backendProject.id}`);
+    console.debug(`[sync] Activated project ${backendProject.id}`);
     // Store it because it might not be yet
     await this._storeBackendProject(backendProject);
   }
@@ -302,8 +312,34 @@ export class VCS {
   }
 
   static validateBranchName(branchName: string) {
-    if (!branchName.match(/^[a-zA-Z0-9][a-zA-Z0-9-_.]{2,}$/)) {
-      return 'Branch names must be at least 3 characters long and can only contain ' + 'letters, numbers, - and _';
+    if (!branchName.match(/^[a-zA-Z0-9._/-]{3,}$/)) {
+      return 'Branch names must be at least 3 characters long and can only contain English letters, numbers, period (.), hyphen (-), underscore (_) and forward slash (/)';
+    }
+    if (!branchName.match(/^[a-zA-Z0-9].*$/)) {
+      return 'Branch names must start with a letter or number';
+    }
+    if (branchName.endsWith('/')) {
+      return 'Branch names must not end with a forward slash (/)';
+    }
+    if (branchName.includes('//')) {
+      return 'Branch names must not contain consecutive forward slashes (//)';
+    }
+    if (branchName.endsWith('.')) {
+      return 'Branch names must not end with a period (.)';
+    }
+    if (branchName.includes('..')) {
+      return 'Branch names must not contain consecutive periods (..)';
+    }
+    const parts = branchName.split('/');
+    if (parts.length > 1) {
+      for (const part of parts) {
+        if (part.startsWith('.')) {
+          return 'No slash-separated component in branch name can begin with a period (.)';
+        }
+        if (part.endsWith('.lock')) {
+          return 'No slash-separated component in branch name can end with the sequence .lock';
+        }
+      }
     }
 
     return '';
@@ -1336,7 +1372,7 @@ export class VCS {
   }
 
   async _getBranch(name: string): Promise<Branch | null> {
-    return this._store.getItem(`/projects/${this._backendProjectId()}/branches/${name}.json`);
+    return this._store.getItem(`/projects/${this._backendProjectId()}/branches/${encodeBranchName(name)}.json`);
   }
 
   async _getBranches(backendProjectId?: string) {
@@ -1506,14 +1542,17 @@ export class VCS {
     }
 
     branch.modified = new Date();
+    // toLowerCase may introduce issues under case sensitive filesystems
     return this._store.setItem(
-      `/projects/${this._backendProjectId()}/branches/${branch.name.toLowerCase()}.json`,
+      `/projects/${this._backendProjectId()}/branches/${encodeBranchName(branch.name).toLowerCase()}.json`,
       branch,
     );
   }
 
   async _removeBranch(branch: Branch) {
-    return this._store.removeItem(`/projects/${this._backendProjectId()}/branches/${branch.name}.json`);
+    return this._store.removeItem(
+      `/projects/${this._backendProjectId()}/branches/${encodeBranchName(branch.name)}.json`,
+    );
   }
 
   async _removeProject(project: BackendProject) {
@@ -1604,4 +1643,8 @@ function _generateSnapshotID(parentId: string, backendProjectId: string, state: 
   }
 
   return hash.digest('hex');
+}
+
+function encodeBranchName(branchName: string) {
+  return branchName.replaceAll('/', '~');
 }

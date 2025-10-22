@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 
-import {
-  type BaseCloudCredential,
-  type CloudProviderCredential,
-  type CloudProviderName,
-  type GCPCloudCredential,
-} from '../../../../models/cloud-credential';
+import type { CloudProviderCredential, CloudProviderName } from '../../../../models/cloud-credential';
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 
+type GCPCloudCredential = Extract<CloudProviderCredential, { provider: 'gcp' }>;
 export interface GCPCredentialFormProps {
-  data?: CloudProviderCredential;
-  onSubmit: (newData: BaseCloudCredential) => void;
+  data?: GCPCloudCredential;
+  onSubmit: (newData: GCPCloudCredential) => void;
   isLoading: boolean;
   errorMessage?: string;
 }
@@ -25,9 +21,7 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
   const { data, onSubmit, isLoading, errorMessage } = props;
   const [inputKeyPath, setInputKeyPath] = useState(
     // for backward compatibility, gcp credential used to be a string of service account key file path
-    typeof data?.credentials === 'string'
-      ? data?.credentials
-      : (data as GCPCloudCredential)?.credentials?.serviceAccountKeyFilePath || '',
+    typeof data?.credentials === 'string' ? data?.credentials : data?.credentials?.serviceAccountKeyFilePath || '',
   );
   const isEdit = !!data;
   const { name } = data || initialFormValue;
@@ -61,7 +55,7 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
             serviceAccountKeyFilePath: inputKeyPath!,
           },
         };
-        onSubmit(newData);
+        onSubmit(newData as GCPCloudCredential);
       }}
     >
       <div className="flex flex-col gap-2">

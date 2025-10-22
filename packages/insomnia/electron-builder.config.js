@@ -20,7 +20,7 @@ const config = {
     {
       from: './build',
       to: '.',
-      filter: ['**/*'],
+      filter: ['**/*', '!**/*.map'],
     },
     './package.json',
   ],
@@ -33,7 +33,7 @@ const config = {
     },
   ],
   extraMetadata: {
-    main: 'main.min.js', // Override the main path in package.json
+    main: 'entry.main.min.js', // Override the main path in package.json
   },
   fileAssociations: [],
   mac: {

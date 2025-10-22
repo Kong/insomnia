@@ -24,32 +24,34 @@ Sentry.init({
   ...SENTRY_OPTIONS,
 });
 
-window.bridge.onmessage(async (data, callback) => {
-  window.bridge.setBusy(true);
+window.bridge.onmessage(
+  async (data: { script: string; context: RequestContext }, callback: ({ error }: { error: string }) => void) => {
+    window.bridge.setBusy(true);
 
-  try {
-    const timeout = data.context.timeout || 5000;
-    const timeoutPromise = new window.bridge.Promise(resolve => {
-      setTimeout(() => {
-        resolve({ error: 'Timeout: Running script took too long' });
-      }, timeout);
-    });
-    const result = await window.bridge.Promise.race([timeoutPromise, runScript(data)]);
-    callback(result);
-  } catch (err) {
-    const errMessage = err.message ? `Error from Pre-request or after-response script:\n${err.message};` : err;
-    const errStack = err.stack ? `Stack: ${err.stack};` : '';
-    const fullErrMessage = `${errMessage}\n${errStack}`;
-    Sentry.captureException(errMessage, {
-      tags: {
-        source: 'hidden-window',
-      },
-    });
-    callback({ error: fullErrMessage });
-  } finally {
-    window.bridge.setBusy(false);
-  }
-});
+    try {
+      const timeout = data.context.timeout || 5000;
+      const timeoutPromise = new window.bridge.Promise((resolve: ({ error }: { error: string }) => void) => {
+        setTimeout(() => {
+          resolve({ error: 'Timeout: Running script took too long' });
+        }, timeout);
+      });
+      const result = await window.bridge.Promise.race([timeoutPromise, runScript(data)]);
+      callback(result);
+    } catch (err) {
+      const errMessage = err.message ? `Error from Pre-request or after-response script:\n${err.message};` : err;
+      const errStack = err.stack ? `Stack: ${err.stack};` : '';
+      const fullErrMessage = `${errMessage}\n${errStack}`;
+      Sentry.captureException(errMessage, {
+        tags: {
+          source: 'hidden-window',
+        },
+      });
+      callback({ error: fullErrMessage });
+    } finally {
+      window.bridge.setBusy(false);
+    }
+  },
+);
 
 // This function is duplicated in scriptExecutor.ts to run in nodejs
 // TODO: consider removing this implementation and using only nodejs scripting

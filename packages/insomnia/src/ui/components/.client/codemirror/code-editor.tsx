@@ -31,7 +31,7 @@ import { showModal } from '~/ui/components/modals/index';
 import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
 import { UpgradeModal } from '~/ui/components/modals/upgrade-modal';
 import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
-import { useGatedNunjucks } from '~/ui/context/nunjucks/use-gated-nunjucks';
+import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { usePlanData } from '~/ui/hooks/use-plan';
 import { ednPrettify } from '~/utils/prettify/edn';
@@ -222,7 +222,8 @@ export const CodeEditor = memo(
         }),
         [indentChars],
       );
-      const { handleRender, handleGetRenderContext } = useGatedNunjucks({ disabled: !enableNunjucks });
+      const { handleRender, handleGetRenderContext } = useNunjucks();
+      const isNunjucksEnabled = enableNunjucks && handleRender;
 
       const maybePrettifyAndSetValue = useCallback(
         (code?: string, forcePrettify?: boolean, filter?: string) => {
@@ -306,8 +307,13 @@ export const CodeEditor = memo(
       // NOTE: maybe we don't need this anymore? Maybe not.
       const persistState = useCallback(() => {
         if (uniquenessKey && codeMirror.current) {
+          const scrollInfo = codeMirror.current.getScrollInfo();
+          // ignore invalid scroll positions
+          if (scrollInfo.height <= 0 || scrollInfo.width <= 0) {
+            return;
+          }
           editorStates[uniquenessKey] = {
-            scroll: codeMirror.current.getScrollInfo(),
+            scroll: scrollInfo,
             selections: codeMirror.current.listSelections(),
             cursor: codeMirror.current.getCursor(),
             history: codeMirror.current.getHistory(),
@@ -381,7 +387,7 @@ export const CodeEditor = memo(
           foldOptions: {
             widget: (from: CodeMirror.Position, to: CodeMirror.Position) => widget(codeMirror.current, from, to),
           },
-          mode: !handleRender ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) },
+          mode: !isNunjucksEnabled ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) },
           environmentAutocomplete: {
             getVariables: async () => (!handleGetRenderContext ? [] : (await handleGetRenderContext())?.keys || []),
             getTags: async () => (!handleGetRenderContext ? [] : (await getTagDefinitions()).flatMap(transformEnums)),
@@ -478,7 +484,7 @@ export const CodeEditor = memo(
         // Clear history so we can't undo the initial set
         codeMirror.current?.clearHistory();
         // Setup nunjucks listeners
-        if (!readOnly && handleRender && !settings.nunjucksPowerUserMode) {
+        if (!readOnly && isNunjucksEnabled && !settings.nunjucksPowerUserMode) {
           codeMirror.current?.enableNunjucksTags(
             handleRender,
             handleGetRenderContext,
@@ -661,9 +667,9 @@ export const CodeEditor = memo(
         () =>
           tryToSetOption(
             'mode',
-            !handleRender ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) },
+            !isNunjucksEnabled ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) },
           ),
-        [handleRender, mode],
+        [isNunjucksEnabled, mode],
       );
 
       useImperativeHandle(
@@ -843,15 +849,7 @@ export const CodeEditor = memo(
                   </MenuTrigger>
                 )}
 
-                {showFilter ? (
-                  <Button
-                    key="help"
-                    className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                    onPress={() => showModal(FilterHelpModal, { isJSON: Boolean(mode?.includes('json')) })}
-                  >
-                    <i className="fa fa-question-circle" />
-                  </Button>
-                ) : null}
+                {showFilter ? <FilterHelpModal isJSON={Boolean(mode?.includes('json'))} /> : null}
                 {showPrettify ? (
                   <Button
                     key="prettify"

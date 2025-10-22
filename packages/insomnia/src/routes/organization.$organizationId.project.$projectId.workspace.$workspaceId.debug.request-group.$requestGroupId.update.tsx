@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import type { RequestGroup } from '~/models/request-group';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId.update-meta';
 
@@ -20,10 +20,8 @@ export async function clientAction({ request, params }: Route.ActionArgs) {
   return null;
 }
 
-export function useRequestGroupUpdateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useRequestGroupUpdateActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -47,17 +45,11 @@ export function useRequestGroupUpdateActionFetcher(args?: Parameters<typeof useF
         },
       );
 
-      return fetcherSubmit(JSON.stringify(patch), {
+      return submit(JSON.stringify(patch), {
         action: url,
         method: 'POST',
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { type BaseModel, types as modelTypes } from '../models';
+import { type BaseModel } from '../models';
 import * as models from '../models';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
 import { getBodyBuffer } from '../models/response';
@@ -19,7 +19,7 @@ import { database } from './database';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
-type SettingsOverride = Pick<Settings, 'validateSSL'>;
+type SettingsOverride = Pick<Settings, 'validateSSL' | 'dataFolders'>;
 const wrapAroundIterationOverIterationData = (
   list?: UserUploadEnvironment[],
   currentIteration?: number,
@@ -43,12 +43,10 @@ export async function getSendRequestCallbackMemDb(
 ) {
   // Initialize the DB in-memory and fill it with data if we're given one
   await database.init(
-    modelTypes(),
     {
       inMemoryOnly: true,
     },
     true,
-    () => {},
   );
   const docs: BaseModel[] = [];
 
@@ -60,7 +58,8 @@ export async function getSendRequestCallbackMemDb(
       docs.push(doc);
     }
   }
-
+  // init database with the provided documents
+  // TODO: this could be done with database.init instead
   await database.batchModifyDocs({
     upsert: docs,
     remove: [],

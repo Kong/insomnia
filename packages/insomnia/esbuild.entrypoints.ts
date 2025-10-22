@@ -5,7 +5,6 @@ import path from 'node:path';
 import esbuild, { type BuildOptions, type Plugin } from 'esbuild';
 
 import pkg from './package.json';
-
 interface Options {
   mode?: 'development' | 'production';
   autoRestart?: boolean;
@@ -35,8 +34,8 @@ export default async function build(options: Options) {
       };
 
   const preloadBuildOptions: BuildOptions = {
-    entryPoints: ['./src/preload.ts'],
-    outfile: path.join(outdir, 'preload.js'),
+    entryPoints: ['./src/entry.preload.ts'],
+    outfile: path.join(outdir, 'entry.preload.min.js'),
     target: 'esnext',
     bundle: true,
     platform: 'node',
@@ -46,8 +45,8 @@ export default async function build(options: Options) {
   };
 
   const hiddenBrowserWindowPreloadBuildOptions: BuildOptions = {
-    entryPoints: ['./src/hidden-window-preload.ts'],
-    outfile: path.join(outdir, 'hidden-window-preload.js'),
+    entryPoints: ['./src/entry.hidden-window-preload.ts'],
+    outfile: path.join(outdir, 'entry.hidden-window-preload.min.js'),
     target: 'esnext',
     bundle: true,
     platform: 'node',
@@ -60,9 +59,8 @@ export default async function build(options: Options) {
   };
 
   const hiddenBrowserWindowBuildOptions: BuildOptions = {
-    entryPoints: ['./src/hidden-window.ts'],
-    // TODO: make all of these outputs use a .min.js convention to simplify ignore files
-    outfile: path.join(outdir, 'hidden-window.js'),
+    entryPoints: ['./src/entry.hidden-window.ts'],
+    outfile: path.join(outdir, 'entry.hidden-window.min.js'),
     target: 'esnext',
     bundle: true,
     platform: 'node',
@@ -76,20 +74,14 @@ export default async function build(options: Options) {
   };
 
   const mainBuildOptions: BuildOptions = {
-    entryPoints: ['./src/main.development.ts'],
-    outfile: path.join(outdir, 'main.min.js'),
+    entryPoints: ['./src/entry.main.ts'],
+    outfile: path.join(outdir, 'entry.main.min.js'),
     bundle: true,
     platform: 'node',
     sourcemap: true,
     format: 'cjs',
     define: env,
-    external: [
-      'electron',
-      '@getinsomnia/node-libcurl',
-      'fsevents',
-      ...Object.keys(pkg.dependencies),
-      ...Object.keys(builtinModules),
-    ],
+    external: ['electron', '@getinsomnia/node-libcurl', 'fsevents', ...Object.keys(builtinModules)],
   };
 
   let electronProcess: ChildProcess;

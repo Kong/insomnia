@@ -67,5 +67,5 @@ export async function removeAll(plugin: string) {
 }
 
 export async function getByKey(plugin: string, key: string) {
-  return db.getWhere<PluginData>(type, { plugin, key });
+  return db.findOne<PluginData>(type, { plugin, key });
 }

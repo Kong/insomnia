@@ -534,6 +534,7 @@ export function mergeClientCertificates(
   if (updatedReq.certificate.pfx && updatedReq.certificate.pfx?.src !== '') {
     const specifiedCert: ClientCertificate = {
       ...baseCertificate,
+      type: 'ClientCertificate',
       key: null,
       cert: null,
       name: updatedReq.certificate.name || '',
@@ -555,7 +556,7 @@ export function mergeClientCertificates(
       ...baseCertificate,
 
       _id: '',
-      type: '',
+      type: 'ClientCertificate',
       parentId: '',
       modified: 0,
       created: 0,

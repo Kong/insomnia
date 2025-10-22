@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { getSyncItems, remoteCompareCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.checkout';
 
@@ -22,6 +22,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   try {
     const delta = await vcs.checkout(syncItems, branch);
+    // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(delta as Operation);
     delete remoteCompareCache[workspaceId];
   } catch (err) {
@@ -41,10 +42,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   );
 }
 
-export function useInsomniaSyncBranchCheckoutActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useInsomniaSyncBranchCheckoutActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       branch,
       organizationId,
@@ -59,7 +58,7 @@ export function useInsomniaSyncBranchCheckoutActionFetcher(args?: Parameters<typ
       const formData = new FormData();
       formData.set('branch', branch);
 
-      return fetcherSubmit(formData, {
+      return submit(formData, {
         method: 'POST',
         action: href(
           `/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/branch/checkout`,
@@ -71,11 +70,5 @@ export function useInsomniaSyncBranchCheckoutActionFetcher(args?: Parameters<typ
         ),
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

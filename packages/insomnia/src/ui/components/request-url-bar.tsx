@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { Button } from 'react-aria-components';
+import { Button, Link } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
@@ -13,6 +13,7 @@ import {
   useDebugRequestSendActionFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -71,13 +72,32 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         setUndefinedEnvironmentVariables(searchParams.get('undefinedEnvironmentVariables')!);
       } else {
         // only for request render error
-        showModal(AlertModal, {
+        const errorMessage = searchParams.get('error') || '';
+        // detects a string to replace with a link to settings
+        const linkText = 'Insomnia Preferences → Security';
+        const hasLink = errorMessage.endsWith(linkText);
+
+        const modifiedString = hasLink ? errorMessage.slice(0, errorMessage.length - linkText.length) : errorMessage;
+        const close = showModal(AlertModal, {
           title: 'Unexpected Request Failure',
           message: (
             <div>
               <p>The request failed due to an unhandled error:</p>
               <code className="wide selectable">
-                <pre>{searchParams.get('error')}</pre>
+                <div className="w-full overflow-y-auto text-wrap">
+                  {modifiedString}
+                  {hasLink && (
+                    <Link
+                      className="cursor-pointer text-[--color-surprise]"
+                      onPress={() => {
+                        close();
+                        showSettingsModal({ tab: 'general' });
+                      }}
+                    >
+                      {linkText}
+                    </Link>
+                  )}
+                </div>
               </code>
             </div>
           ),

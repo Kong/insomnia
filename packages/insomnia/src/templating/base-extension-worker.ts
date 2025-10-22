@@ -8,6 +8,7 @@ import type { NodeCurlRequestOptions } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';
 import * as templating from './worker';
+
 export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
     return value;
@@ -34,7 +35,11 @@ export const fetchFromTemplateWorkerDatabase = async (path: PluginToMainAPIPaths
     method: 'post',
     body: JSON.stringify(body),
   });
-  const result = await resp.json();
+  let result;
+  try {
+    // We expect this to throw if a db call returns undefined
+    result = await resp.json();
+  } catch {}
   if (!resp.ok) {
     throw new Error(result?.error || JSON.stringify(result));
   }
@@ -179,11 +184,14 @@ export default class BaseExtension {
       meta: renderMeta,
       renderPurpose,
       util: {
-        readFile: async (path: string, encoding?: string) =>
-          fetchFromTemplateWorkerDatabase('readFile', { path, encoding }),
+        readFile: async (path: string, encoding?: string) => {
+          return fetchFromTemplateWorkerDatabase('readFile', { path, encoding });
+        },
         nodeOS: async () => fetchFromTemplateWorkerDatabase('nodeOS', {}),
         decode: async (buffer: Buffer, encoding?: string) =>
           fetchFromTemplateWorkerDatabase('decode', { buffer, encoding }),
+        encode: async (input: string, encoding?: string) =>
+          fetchFromTemplateWorkerDatabase('encode', { input, encoding }),
         render: (str: string) => templating.render(str, { context: renderContext }),
         openInBrowser: (url: string) => fetchFromTemplateWorkerDatabase('openInBrowser', { url }),
         models: {

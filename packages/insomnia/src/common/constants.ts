@@ -134,6 +134,7 @@ export enum UpdateURL {
 
 // Oauth redirect URL
 export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.insomnia.rest/oauth/redirect';
+export const getOauthRelayUrl = () => env.OAUTH_RELAY_URL || 'https://app.insomnia.rest/oauth/relay';
 
 // API
 export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
@@ -282,40 +283,27 @@ export const contentTypesMap: Record<string, string[]> = {
   [CONTENT_TYPE_YAML]: ['YAML', 'YAML'],
 };
 
-// Auth Types
-export const AUTH_NONE = 'none';
-export const AUTH_API_KEY = 'apikey';
-export const AUTH_OAUTH_2 = 'oauth2';
-export const AUTH_OAUTH_1 = 'oauth1';
-export const AUTH_BASIC = 'basic';
-export const AUTH_DIGEST = 'digest';
-export const AUTH_BEARER = 'bearer';
-export const AUTH_NTLM = 'ntlm';
-export const AUTH_HAWK = 'hawk';
-export const AUTH_AWS_IAM = 'iam';
-export const AUTH_NETRC = 'netrc';
-export const AUTH_ASAP = 'asap';
+export type AuthTypes =
+  | 'none'
+  | 'apikey'
+  | 'oauth2'
+  | 'oauth1'
+  | 'basic'
+  | 'digest'
+  | 'bearer'
+  | 'ntlm'
+  | 'hawk'
+  | 'iam'
+  | 'netrc'
+  | 'asap'
+  | 'singleToken';
+
 export const HAWK_ALGORITHM_SHA256 = 'sha256';
 export const HAWK_ALGORITHM_SHA1 = 'sha1';
 
 // json-order constants
 export const JSON_ORDER_PREFIX = '&';
 export const JSON_ORDER_SEPARATOR = '~|';
-
-const authTypesMap: Record<string, string[]> = {
-  [AUTH_API_KEY]: ['API Key', 'API Key Auth'],
-  [AUTH_BASIC]: ['Basic', 'Basic Auth'],
-  [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
-  [AUTH_NTLM]: ['NTLM', 'Microsoft NTLM'],
-  [AUTH_BEARER]: ['Bearer', 'Bearer Token'],
-  [AUTH_OAUTH_1]: ['OAuth 1', 'OAuth 1.0'],
-  [AUTH_OAUTH_2]: ['OAuth 2', 'OAuth 2.0'],
-  [AUTH_HAWK]: ['Hawk', 'Hawk'],
-  [AUTH_AWS_IAM]: ['AWS', 'AWS IAM v4'],
-  [AUTH_ASAP]: ['ASAP', 'Atlassian ASAP'],
-  [AUTH_NETRC]: ['Netrc', 'Netrc File'],
-  [AUTH_NONE]: ['None', 'No Auth'],
-};
 
 // Sort Orders
 export type SortOrder =
@@ -327,35 +315,26 @@ export type SortOrder =
   | 'type-desc'
   | 'type-asc'
   | 'type-manual';
-export const SORT_NAME_ASC = 'name-asc';
-export const SORT_NAME_DESC = 'name-desc';
-export const SORT_CREATED_ASC = 'created-asc';
-export const SORT_CREATED_DESC = 'created-desc';
-export const SORT_MODIFIED_ASC = 'modified-asc';
-export const SORT_MODIFIED_DESC = 'modified-desc';
-export const SORT_HTTP_METHOD = 'http-method';
-export const SORT_TYPE_DESC = 'type-desc';
-export const SORT_TYPE_ASC = 'type-asc';
-export const SORT_TYPE_MANUAL = 'type-manual';
+
 export const SORT_ORDERS = [
-  SORT_TYPE_MANUAL,
-  SORT_NAME_ASC,
-  SORT_NAME_DESC,
-  SORT_CREATED_ASC,
-  SORT_CREATED_DESC,
-  SORT_HTTP_METHOD,
-  SORT_TYPE_DESC,
-  SORT_TYPE_ASC,
+  'type-manual',
+  'name-asc',
+  'name-desc',
+  'created-asc',
+  'created-desc',
+  'http-method',
+  'type-desc',
+  'type-asc',
 ] as const;
 export const sortOrderName: Record<SortOrder, string> = {
-  [SORT_TYPE_MANUAL]: 'Manual',
-  [SORT_NAME_ASC]: 'Name Ascending (A-Z)',
-  [SORT_NAME_DESC]: 'Name Descending (Z-A)',
-  [SORT_CREATED_ASC]: 'Oldest First',
-  [SORT_CREATED_DESC]: 'Newest First',
-  [SORT_HTTP_METHOD]: 'HTTP Method',
-  [SORT_TYPE_DESC]: 'Folders First',
-  [SORT_TYPE_ASC]: 'Requests First',
+  'type-manual': 'Manual',
+  'name-asc': 'Name Ascending (A-Z)',
+  'name-desc': 'Name Descending (Z-A)',
+  'created-asc': 'Oldest First',
+  'created-desc': 'Newest First',
+  'http-method': 'HTTP Method',
+  'type-desc': 'Folders First',
+  'type-asc': 'Requests First',
 };
 
 export const EXTERNAL_VAULT_PLUGIN_NAME = getAppBundlePlugins()[0].name;
@@ -363,19 +342,19 @@ export const EXTERNAL_VAULT_PLUGIN_NAME = getAppBundlePlugins()[0].name;
 export type DashboardSortOrder = 'name-asc' | 'name-desc' | 'created-asc' | 'created-desc' | 'modified-desc';
 
 export const DASHBOARD_SORT_ORDERS: DashboardSortOrder[] = [
-  SORT_MODIFIED_DESC,
-  SORT_NAME_ASC,
-  SORT_NAME_DESC,
-  SORT_CREATED_ASC,
-  SORT_CREATED_DESC,
+  'modified-desc',
+  'name-asc',
+  'name-desc',
+  'created-asc',
+  'created-desc',
 ];
 
 export const dashboardSortOrderName: Record<DashboardSortOrder, string> = {
-  [SORT_NAME_ASC]: 'Name Ascending (A-Z)',
-  [SORT_NAME_DESC]: 'Name Descending (Z-A)',
-  [SORT_CREATED_ASC]: 'Oldest First',
-  [SORT_CREATED_DESC]: 'Newest First',
-  [SORT_MODIFIED_DESC]: 'Last Modified',
+  'name-asc': 'Name Ascending (A-Z)',
+  'name-desc': 'Name Descending (Z-A)',
+  'created-asc': 'Oldest First',
+  'created-desc': 'Newest First',
+  'modified-desc': 'Last Modified',
 };
 
 export type PreviewMode = 'friendly' | 'source' | 'raw';
@@ -411,13 +390,6 @@ export function getContentTypeName(contentType?: string | null, useLong = false)
   }
 
   return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
-}
-
-export function getAuthTypeName(authType?: string, useLong = false) {
-  if (authType && authType in authTypesMap) {
-    return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
-  }
-  return 'Auth';
 }
 
 export function getContentTypeFromHeaders(headers: any[], defaultValue: string | null = null) {
@@ -576,27 +548,6 @@ export const RESPONSE_CODE_REASONS: Record<number, string> = {
   598: 'Network read timeout error',
   599: 'Network Connect Timeout Error',
 };
-
-export const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
-export const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
-export const EXPORT_TYPE_REQUEST = 'request';
-export const EXPORT_TYPE_GRPC_REQUEST = 'grpc_request';
-export const EXPORT_TYPE_WEBSOCKET_REQUEST = 'websocket_request';
-export const EXPORT_TYPE_WEBSOCKET_PAYLOAD = 'websocket_payload';
-export const EXPORT_TYPE_SOCKETIO_REQUEST = 'socketio_request';
-export const EXPORT_TYPE_SOCKETIO_PAYLOAD = 'socketio_payload';
-export const EXPORT_TYPE_MOCK_SERVER = 'mock';
-export const EXPORT_TYPE_MOCK_ROUTE = 'mock_route';
-export const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
-export const EXPORT_TYPE_UNIT_TEST_SUITE = 'unit_test_suite';
-export const EXPORT_TYPE_UNIT_TEST = 'unit_test';
-export const EXPORT_TYPE_WORKSPACE = 'workspace';
-export const EXPORT_TYPE_COOKIE_JAR = 'cookie_jar';
-export const EXPORT_TYPE_ENVIRONMENT = 'environment';
-export const EXPORT_TYPE_API_SPEC = 'api_spec';
-export const EXPORT_TYPE_PROTO_FILE = 'proto_file';
-export const EXPORT_TYPE_PROTO_DIRECTORY = 'proto_directory';
-export const EXPORT_TYPE_RUNNER_TEST_RESULT = 'runner_result';
 
 // (ms) curently server timeout is 30s
 export const INSOMNIA_FETCH_TIME_OUT = 30_000;

@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import * as models from '~/models';
 import { isRemoteProject, type Project } from '~/models/project';
 import type { Workspace } from '~/models/workspace';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.delete';
 
@@ -54,13 +54,14 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { organizationId, projectId } = params;
 
   const project = await models.project.getById(projectId);
-
+  invariant(project, 'Project not found');
   const formData = await request.formData();
 
   const workspaceId = formData.get('workspaceId');
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
   const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
 
   const msgObj = await deleteWorkspace(workspace, project);
 
@@ -76,10 +77,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   );
 }
 
-export function useWorkspaceDeleteActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useWorkspaceDeleteActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -97,16 +96,10 @@ export function useWorkspaceDeleteActionFetcher(args?: Parameters<typeof useFetc
       const formData = new FormData();
       formData.append('workspaceId', workspaceId);
 
-      return fetcherSubmit(formData, {
+      return submit(formData, {
         action: url,
         method: 'POST',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

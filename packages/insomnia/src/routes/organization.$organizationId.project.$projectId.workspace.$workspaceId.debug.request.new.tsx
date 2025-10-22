@@ -1,5 +1,4 @@
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import {
   CONTENT_TYPE_EVENT_STREAM,
@@ -14,6 +13,7 @@ import type { Request, RequestBody, RequestParameter } from '~/models/request';
 import { SegmentEvent } from '~/ui/analytics';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 
@@ -129,10 +129,8 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   );
 }
 
-export function useRequestNewActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useRequestNewActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -154,17 +152,11 @@ export function useRequestNewActionFetcher(args?: Parameters<typeof useFetcher>[
         workspaceId,
       });
 
-      return fetcherSubmit(JSON.stringify({ requestType, parentId, req }), {
+      return submit(JSON.stringify({ requestType, parentId, req }), {
         action: url,
         method: 'POST',
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

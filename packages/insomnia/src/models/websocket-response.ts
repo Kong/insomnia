@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 
-import { database as db, type Query } from '../common/database';
+import { database as db } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';
@@ -62,22 +62,8 @@ export function migrate(doc: WebSocketResponse) {
   return doc;
 }
 
-export function hookDatabaseInit(consoleLog: typeof console.log = console.log) {
-  consoleLog('[db] Init websocket-responses DB');
-}
-
-export function hookRemove(doc: WebSocketResponse, consoleLog: typeof console.log = console.log) {
-  fs.unlink(doc.eventLogPath, () => {
-    consoleLog(`[response] Delete body ${doc.eventLogPath}`);
-  });
-
-  fs.unlink(doc.timelinePath, () => {
-    consoleLog(`[response] Delete timeline ${doc.timelinePath}`);
-  });
-}
-
 export function getById(id: string) {
-  return db.get<WebSocketResponse>(type, id);
+  return db.findOne<WebSocketResponse>(type, { _id: id });
 }
 
 export function findByParentId(parentId: string) {
@@ -85,7 +71,7 @@ export function findByParentId(parentId: string) {
 }
 
 export async function all() {
-  return db.all<WebSocketResponse>(type);
+  return db.find<WebSocketResponse>(type);
 }
 
 export async function removeForRequest(parentId: string, environmentId?: string | null) {
@@ -100,13 +86,19 @@ export async function removeForRequest(parentId: string, environmentId?: string 
   if (environmentId !== undefined && settings.filterResponsesByEnv) {
     query.environmentId = environmentId;
   }
-
+  const toDelete = await db.find<WebSocketResponse>(type, query);
+  for (const doc of toDelete) {
+    fs.promises.unlink(doc.eventLogPath);
+    fs.promises.unlink(doc.timelinePath);
+  }
   // Also delete legacy responses here or else the user will be confused as to
   // why some responses are still showing in the UI.
   await db.removeWhere(type, query);
 }
 
 export function remove(response: WebSocketResponse) {
+  fs.promises.unlink(response.eventLogPath);
+  fs.promises.unlink(response.timelinePath);
   return db.remove(response);
 }
 
@@ -130,7 +122,10 @@ export async function create(patch: Partial<WebSocketResponse> = {}, maxResponse
   }
 
   // Delete all other responses before creating the new one
-  const allResponses = await db.findMostRecentlyModified<WebSocketResponse>(type, query, Math.max(1, maxResponses));
+  const responsesToShow = Math.max(1, maxResponses);
+
+  const allResponses = await db.find<WebSocketResponse>(type, query, { modified: -1 }, responsesToShow);
+
   const recentIds = allResponses.map(r => r._id);
   // Remove all that were in the last query, except the first `maxResponses` IDs
   await db.removeWhere(type, {
@@ -143,27 +138,18 @@ export async function create(patch: Partial<WebSocketResponse> = {}, maxResponse
   return db.docCreate(type, patch);
 }
 
-async function _findRecentForRequest(requestId: string, environmentId: string | null, limit: number) {
-  const query: Query<WebSocketResponse> = {
-    parentId: requestId,
-  };
-
+export async function getLatestForRequestId(requestId: string, environmentId: string | null) {
   // Filter responses by environment if setting is enabled
-  if ((await models.settings.get()).filterResponsesByEnv) {
-    query.environmentId = environmentId;
-  }
 
-  return db.findMostRecentlyModified<WebSocketResponse>(type, query, limit);
-}
+  const shouldFilter = (await models.settings.get()).filterResponsesByEnv;
 
-export async function getLatestForRequest(requestId: string, environmentId: string | null) {
-  const responses = await _findRecentForRequest(requestId, environmentId, 1);
-  const response = responses[0] as WebSocketResponse | null | undefined;
-  return response || null;
-}
-
-export function getLatestByParentId(parentId: string) {
-  return db.getMostRecentlyModified<WebSocketResponse>(type, {
-    parentId,
-  });
+  const response = await db.findOne<WebSocketResponse>(
+    type,
+    {
+      parentId: requestId,
+      ...(shouldFilter ? { environmentId } : {}),
+    },
+    { modified: -1 },
+  );
+  return response;
 }

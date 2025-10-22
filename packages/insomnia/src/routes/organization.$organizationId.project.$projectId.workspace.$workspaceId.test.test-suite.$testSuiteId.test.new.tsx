@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.new';
 
@@ -27,10 +27,8 @@ expect(response1.status).to.equal(200);`,
   return null;
 }
 
-export function useTestNewActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useTestNewActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -57,16 +55,10 @@ export function useTestNewActionFetcher(args?: Parameters<typeof useFetcher>[0])
       const formData = new FormData();
       formData.append('name', name);
 
-      return fetcherSubmit(formData, {
+      return submit(formData, {
         action: url,
         method: 'POST',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

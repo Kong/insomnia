@@ -133,7 +133,7 @@ const fetchGraphQLSchemaForRequest = async ({
       operationName: 'IntrospectionQuery',
     });
 
-    const introspectionRequest = await db.upsert(
+    const introspectionRequest = await db.update(
       Object.assign({}, req, {
         _id: req._id + '.graphql',
         settingMaxTimelineDataSize: 5000,

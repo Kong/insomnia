@@ -109,7 +109,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
           className="flex-shrink-0"
           aria-label="Request for test"
           onSelectionChange={key => {
-            const requestId = key.toString();
+            invariant(key, 'Expected request id');
             updateUnitTestFetcher.submit({
               organizationId,
               projectId,
@@ -117,7 +117,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
               testSuiteId: unitTestSuite._id,
               testId: unitTest._id,
               data: {
-                requestId,
+                requestId: key.toString(),
               },
             });
           }}
@@ -321,13 +321,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
-  const workspaceEntities = await database.withDescendants(workspace, models.request.type, [
-    models.request.type,
-    models.requestGroup.type,
-  ]);
+  const workspaceEntities = await database.getWithDescendants(workspace, [models.request.type]);
   const requests: Request[] = workspaceEntities.filter(isRequest);
 
-  const unitTestSuite = await database.getWhere<UnitTestSuite>(models.unitTestSuite.type, {
+  const unitTestSuite = await database.findOne<UnitTestSuite>(models.unitTestSuite.type, {
     _id: testSuiteId,
   });
 

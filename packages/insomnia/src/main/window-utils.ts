@@ -26,10 +26,10 @@ import {
   MNEMONIC_SYM,
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
-import * as log from '../common/log';
 import { invariant } from '../utils/invariant';
 import ElectronStorage from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
+import { getLogDirectory } from './log';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
@@ -110,7 +110,7 @@ export async function createHiddenBrowserWindow() {
       webPreferences: {
         contextIsolation: false,
         nodeIntegration: true,
-        preload: path.join(__dirname, 'hidden-window-preload.js'),
+        preload: path.join(__dirname, 'entry.hidden-window-preload.min.js'),
         spellcheck: false,
         devTools: process.env.NODE_ENV === 'development',
       },
@@ -209,7 +209,7 @@ export function createWindow(): ElectronBrowserWindow {
     acceptFirstMouse: true,
     icon: path.resolve(__dirname, appLogo),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'entry.preload.min.js'),
       zoomFactor: getZoomFactor(),
       nodeIntegration: true,
       nodeIntegrationInWorker: false, // must remain false to ensure the nunjucks web worker sandbox does not have access to Node.js APIs
@@ -493,7 +493,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: `Show App ${MNEMONIC_SYM}Logs Folder`,
         click: () => {
-          const directory = log.getLogDirectory();
+          const directory = getLogDirectory();
           shell.showItemInFolder(directory);
         },
       },
@@ -606,18 +606,6 @@ export function createWindow(): ElectronBrowserWindow {
             const dir = app.getPath('desktop');
             fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
           });
-        },
-      },
-      {
-        label: `${MNEMONIC_SYM}Clear a model`,
-        click: () => {
-          mainBrowserWindow.webContents?.send('clear-model');
-        },
-      },
-      {
-        label: `Clear ${MNEMONIC_SYM}all models`,
-        click: () => {
-          mainBrowserWindow.webContents?.send('clear-all-models');
         },
       },
       {

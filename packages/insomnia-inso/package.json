@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-inso",
-  "version": "11.4.0",
+  "version": "11.6.2",
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Insomnia - The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
-    "esbuild": "^0.25.2",
+    "esbuild": "^0.25.10",
     "esbuild-runner": "^2.2.2",
     "shellwords": "^1.0.1"
   },
@@ -65,6 +65,6 @@
     "yaml": "^2.7.1"
   },
   "optionalDependencies": {
-    "@kong/insomnia-plugin-external-vault": "0.0.1-alpha.3"
+    "@kong/insomnia-plugin-external-vault": "0.1.1-dev.0.20250902151320"
   }
 }

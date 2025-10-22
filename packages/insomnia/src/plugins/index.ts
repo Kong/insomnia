@@ -4,7 +4,7 @@ import path from 'node:path';
 import electron from 'electron';
 
 import type { ParsedApiSpec } from '../common/api-specs';
-import { getAppBundlePlugins } from '../common/constants';
+import { getAppBundlePlugins, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import type { PluginConfigMap } from '../common/settings';
 import * as models from '../models';
@@ -257,7 +257,13 @@ export function getBundlePluginMap() {
         module: module,
       };
     } catch (err) {
-      console.error(`[plugin] Failed to load bundled plugin ${pluginName}`, err);
+      if (isDevelopment()) {
+        console.warn(
+          `[plugin] Failed to load bundled plugin ${pluginName}. You can ignore this warning if you not developing external vault feature.`,
+        );
+      } else {
+        console.error(`Failed to load bundled plugin ${pluginName}`, err);
+      }
     }
   });
   return bundlePluginMap;
@@ -401,7 +407,7 @@ export function getPluginCommonContext({
           },
         },
         response: {
-          getLatestForRequestId: models.response.getLatestForRequest,
+          getLatestForRequestId: models.response.getLatestForRequestId,
           getBodyBuffer: models.response.getBodyBuffer,
         },
         settings: {

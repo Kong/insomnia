@@ -54,11 +54,10 @@
     "assets",
     "bin",
     "build",
+    "dist",
     "config",
     "node_modules",
     "src/coverage",
-    "src/hidden-window-preload.js",
-    "src/preload.js",
     "svgr.config.js",
   ]
 }

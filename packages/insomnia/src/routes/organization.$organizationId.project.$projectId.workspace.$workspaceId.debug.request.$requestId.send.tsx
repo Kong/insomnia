@@ -3,12 +3,10 @@ import path from 'node:path';
 
 import contentDisposition from 'content-disposition';
 import { extension as mimeExtension } from 'mime-types';
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getContentDispositionHeader } from '~/common/misc';
-import { isFsAccessingAllowed } from '~/common/validators';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
@@ -28,6 +26,7 @@ import {
 } from '~/network/network';
 import { parseGraphQLReqeustBody } from '~/utils/graph-ql';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
@@ -201,8 +200,6 @@ export const sendActionImplementation = async (options: {
 
   invariant(requestMeta, 'RequestMeta not found');
 
-  isFsAccessingAllowed(renderedRequest, requestData.settings);
-
   window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
   const response = await sendCurlAndWriteTimeline(
     renderedRequest,
@@ -370,10 +367,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   }
 }
 
-export function useDebugRequestSendActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useDebugRequestSendActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -387,7 +382,7 @@ export function useDebugRequestSendActionFetcher(args?: Parameters<typeof useFet
       requestId: string;
       params: { shouldPromptForPathAfterResponse?: boolean; ignoreUndefinedEnvVariable?: boolean };
     }) => {
-      return fetcherSubmit(JSON.stringify(params), {
+      return submit(JSON.stringify(params), {
         method: 'POST',
         action: href(
           `/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/send`,
@@ -401,11 +396,5 @@ export function useDebugRequestSendActionFetcher(args?: Parameters<typeof useFet
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

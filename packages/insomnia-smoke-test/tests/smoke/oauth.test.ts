@@ -144,11 +144,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await expect.soft(responseBody).toContainText('"sub": "fresh"');
 
   // Reset the OAuth 2 session from Preferences
-  if (process.platform === 'darwin') {
-    await page.keyboard.press('Meta+,');
-  } else {
-    await page.keyboard.press('Control+,');
-  }
+  await page.getByTestId('settings-button').click();
   await page.locator('button:has-text("Clear OAuth 2 session")').click();
   await page.keyboard.press('Escape');
 
@@ -177,11 +173,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await expect.soft(responseBody).toContainText('"sub": "admin"');
 
   // Reset the OAuth 2 session from Preferences
-  if (process.platform === 'darwin') {
-    await page.keyboard.press('Meta+,');
-  } else {
-    await page.keyboard.press('Control+,');
-  }
+  await page.getByTestId('settings-button').click();
   await page.locator('button:has-text("Clear OAuth 2 session")').click();
   await page.keyboard.press('Escape');
 
@@ -194,11 +186,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await expect.soft(responseBody).toContainText('"clientId": "client_credentials"');
 
   // Reset the OAuth 2 session from Preferences
-  if (process.platform === 'darwin') {
-    await page.keyboard.press('Meta+,');
-  } else {
-    await page.keyboard.press('Control+,');
-  }
+  await page.getByTestId('settings-button').click();
   await page.locator('button:has-text("Clear OAuth 2 session")').click();
   await page.keyboard.press('Escape');
 

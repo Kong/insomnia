@@ -15,7 +15,10 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
-import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
+import { convert } from '~/main/importers/convert';
+import { insecureReadFile, insecureReadFileWithEncoding, secureReadFile } from '~/main/secure-read-file';
+
+import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
 import type { PluginTemplateTag } from '../../templating/types';
 import type { SegmentEvent } from '../analytics';
@@ -63,8 +66,14 @@ export interface RendererToMainBridgeAPI {
   cancelAuthorizationInDefaultBrowser: typeof cancelAuthorizationInDefaultBrowser;
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
+  parseImport: typeof convert;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
-  readFile: (options: { path: string; encoding?: string }) => Promise<{ content: string; encoding: string }>;
+  secureReadFile: (options: { path: string }) => Promise<string>;
+  insecureReadFile: (options: { path: string }) => Promise<string>;
+  insecureReadFileWithEncoding: (options: {
+    path: string;
+    encoding?: string;
+  }) => Promise<{ content: string; encoding: string; error: string | undefined }>;
   readDir: (options: { path: string }) => Promise<{ type: 'file' | 'directory'; name: string; path: string }[]>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
@@ -103,6 +112,7 @@ export interface RendererToMainBridgeAPI {
   completeExecutionStep: (options: { requestId: string }) => void;
   updateLatestStepName: (options: { requestId: string; stepName: string }) => void;
   extractJsonFileFromPostmanDataDumpArchive: (archivePath: string) => Promise<any>;
+  getLocalStorageDataFromFileOrigin: () => Promise<Record<string, any>>;
 }
 
 export function registerMainHandlers() {
@@ -152,7 +162,9 @@ export function registerMainHandlers() {
       return cancelAuthorizationInDefaultBrowser(options);
     },
   );
-
+  ipcMainHandle('parseImport', async (_, ...args: Parameters<typeof convert>) => {
+    return convert(...args);
+  });
   ipcMainHandle('writeFile', async (_, options: { path: string; content: string }) => {
     try {
       await fs.promises.writeFile(options.path, options.content);
@@ -195,32 +207,35 @@ export function registerMainHandlers() {
       process.postMessage({ documentContent, rulesetPath });
     });
   });
+  ipcMainHandle('insecureReadFile', async (_, options: { path: string }) => {
+    return insecureReadFile(options.path);
+  });
+  ipcMainHandle('secureReadFile', async (_, options: { path: string; encoding?: string }) => {
+    return secureReadFile(options.path);
+  });
+  ipcMainHandle('insecureReadFileWithEncoding', async (_, options: { path: string; encoding: string }) => {
+    try {
+      const contentBuffer = await insecureReadFileWithEncoding(options.path, undefined);
+      if (typeof contentBuffer === 'string') {
+        return { content: contentBuffer, encoding: 'utf8' };
+      }
 
-  ipcMainHandle('readFile', async (_, options: { path: string; encoding?: string }) => {
-    const defaultEncoding = 'utf8';
-    const contentBuffer = await fs.promises.readFile(options.path);
-    const { encoding } = options;
-    if (encoding) {
-      if (iconv.encodingExists(encoding)) {
-        const content = iconv.decode(contentBuffer, encoding);
-        return { content, encoding };
+      const encoding = options.encoding || (await chardet.detectFile(options.path));
+
+      if (encoding) {
+        if (iconv.encodingExists(encoding)) {
+          const content = iconv.decode(contentBuffer, encoding);
+          return { content, encoding };
+        }
+        throw new Error(`Unsupported encoding: ${encoding} to read file`);
       }
-      throw new Error(`Unsupported encoding: ${encoding} to read file`);
+      return {
+        content: iconv.decode(contentBuffer, 'utf8'),
+        encoding: 'utf8',
+      };
+    } catch (err) {
+      return { content: '', encoding: '', error: err };
     }
-    // using chardet to detect encoding
-    const detecedEncoding = chardet.detect(contentBuffer);
-    if (detecedEncoding) {
-      if (iconv.encodingExists(detecedEncoding)) {
-        const content = iconv.decode(contentBuffer, detecedEncoding);
-        return { content, encoding: detecedEncoding };
-      }
-      throw new Error(`Unsupported encoding: ${detecedEncoding} to read file`);
-    }
-    // failed to detect encoding, use default utf-8 as fallback
-    return {
-      content: iconv.decode(contentBuffer, defaultEncoding),
-      encoding: defaultEncoding,
-    };
   });
 
   ipcMainHandle('readDir', async (_, options: { path: string }) => {
@@ -273,4 +288,48 @@ export function registerMainHandlers() {
   });
 
   ipcMainHandle('extractJsonFileFromPostmanDataDumpArchive', extractPostmanDataDumpHandler);
+
+  ipcMainHandle('getLocalStorageDataFromFileOrigin', async () => {
+    const tmpDir = app.getPath('userData');
+    const tmpHTMLFile = path.join(tmpDir, 'file.html');
+    // Create a temporary HTML file to load the file:// origin
+    await fs.promises.writeFile(tmpHTMLFile, '<html><body></body></html>', { encoding: 'utf8' });
+
+    // Create a hidden BrowserWindow to load the file:// origin
+    // This is necessary to access the localStorage of the file:// origin
+    // and retrieve the data.
+    const fileOriginWindow = new BrowserWindow({
+      show: false,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: true,
+      },
+    });
+
+    fileOriginWindow.loadURL(`file:${tmpHTMLFile}`);
+
+    return new Promise<Record<string, any>>((resolve, reject) => {
+      fileOriginWindow.webContents.on('did-finish-load', async () => {
+        const localStorageData = await fileOriginWindow.webContents.executeJavaScript(
+          'JSON.stringify(localStorage)',
+          true,
+        );
+
+        // Clear the localStorage of the file:// origin
+        await fileOriginWindow.webContents.executeJavaScript('localStorage.clear();', true);
+        // Close the hidden window after retrieving localStorage data
+        fileOriginWindow.close();
+        // Clean up the temporary file
+        fs.unlinkSync(tmpHTMLFile);
+        resolve(JSON.parse(localStorageData));
+      });
+      fileOriginWindow.webContents.on('did-fail-load', () => {
+        // Close the hidden window and clean up the temporary file on failure
+        fileOriginWindow.close();
+        tmpHTMLFile && fs.unlinkSync(tmpHTMLFile);
+        reject(new Error('Failed to load file:// origin to get localStorage data'));
+      });
+    });
+  });
 }

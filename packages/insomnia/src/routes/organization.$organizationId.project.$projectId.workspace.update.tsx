@@ -1,12 +1,12 @@
 import path from 'node:path';
 
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { isGitProject } from '~/models/project';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.update';
 
@@ -82,12 +82,10 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   };
 }
 
-export function useWorkspaceUpdateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useWorkspaceUpdateActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({ organizationId, projectId, patch }: { organizationId: string; projectId: string; patch: WorkspacePatch }) => {
-      return fetcherSubmit(JSON.stringify(patch), {
+      return submit(JSON.stringify(patch), {
         method: 'POST',
         action: href('/organization/:organizationId/project/:projectId/workspace/update', {
           organizationId,
@@ -96,11 +94,5 @@ export function useWorkspaceUpdateActionFetcher(args?: Parameters<typeof useFetc
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

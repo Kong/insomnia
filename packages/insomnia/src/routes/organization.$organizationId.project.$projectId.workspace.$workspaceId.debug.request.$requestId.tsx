@@ -33,7 +33,7 @@ export interface WebSocketRequestLoaderData {
 export interface SocketIORequestLoaderData {
   activeRequest: SocketIORequest;
   activeRequestMeta: RequestMeta;
-  activeResponse: null;
+  activeResponse: SocketIOResponse;
   responses: SocketIOResponse[];
   requestVersions: RequestVersion[];
   requestPayload: SocketIOPayload;
@@ -94,7 +94,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const activeResponse = activeRequestMeta.activeResponseId
     ? await models[responseModelName].getById(activeRequestMeta.activeResponseId)
-    : await models[responseModelName].getLatestForRequest(requestId, activeWorkspaceMeta.activeEnvironmentId);
+    : await models[responseModelName].getLatestForRequestId(requestId, activeWorkspaceMeta.activeEnvironmentId);
   const allResponses = (await models[responseModelName].findByParentId(requestId)) as (
     | Response
     | WebSocketResponse

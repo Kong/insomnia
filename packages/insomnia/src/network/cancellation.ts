@@ -81,7 +81,7 @@ export const cancellableCurlRequest = async (requestOptions: CurlRequestOptions)
       return { statusMessage: 'Cancelled', error: 'Request was cancelled' };
     }
     console.log('[network] Error', err);
-    return { statusMessage: 'Error', error: err.message || 'Something went wrong' };
+    return { statusMessage: 'Error', error: err.message || 'Something went wrong trying to create curl request' };
   }
 };
 

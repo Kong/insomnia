@@ -2,6 +2,7 @@ import React, { type FC, type InputHTMLAttributes, useCallback, useState } from 
 import { ListBox, ListBoxItem } from 'react-aria-components';
 
 import { useRootLoaderData } from '~/root';
+import { invariant } from '~/utils/invariant';
 
 import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
@@ -16,9 +17,8 @@ export const TextArraySetting: FC<{
   setting: SettingsOfType<string[] | null>;
 }> = ({ disabled, help, label, placeholder, setting }) => {
   const { settings } = useRootLoaderData()!;
-  if (!Object.prototype.hasOwnProperty.call(settings, setting)) {
-    throw new Error(`Invalid setting name ${setting}`);
-  }
+  invariant(setting in settings, `Invalid setting name ${setting}`);
+
   const patchSettings = useSettingsPatcher();
   const [folderToAdd, setFolderToAdd] = useState('');
 
@@ -65,6 +65,7 @@ export const TextArraySetting: FC<{
           />
           <button
             className="btn btn--outlined btn--super-compact flex items-center gap-2"
+            data-testid={`${setting}-btn`}
             disabled={disabled}
             onClick={onAddDataFolder}
           >

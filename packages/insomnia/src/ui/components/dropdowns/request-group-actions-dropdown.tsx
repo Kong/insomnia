@@ -221,6 +221,16 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
             }),
         },
         {
+          id: 'Socket.IO Request',
+          name: 'Socket.IO Request',
+          icon: 'plus-circle',
+          action: () =>
+            createRequest({
+              requestType: 'SocketIO',
+              parentId: requestGroup._id,
+            }),
+        },
+        {
           id: 'New Folder',
           name: 'New Folder',
           icon: 'folder',

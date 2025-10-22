@@ -2,55 +2,50 @@ import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
 export type CloudProviderName = 'aws' | 'azure' | 'gcp' | 'hashicorp';
+
+// AWS Credentials
 export enum AWSCredentialType {
   temp = 'temporary',
   file = 'file',
   sso = 'sso',
 }
-export interface AWSBaseCredential {
-  region: string;
-}
-export interface AWSTemporaryCredential extends AWSBaseCredential {
+export interface AWSTemporaryCredential {
   type: AWSCredentialType.temp;
   accessKeyId: string;
   secretAccessKey: string;
   sessionToken: string;
+  region: string;
 }
-export interface AWSFileCredential extends AWSBaseCredential {
+export interface AWSFileCredential {
   type: AWSCredentialType.file;
   section: string;
   filePath?: string;
   enableCache?: boolean;
+  region: string;
 }
-export interface AWSSSOCredential extends AWSBaseCredential {
+export interface AWSSSOCredential {
   type: AWSCredentialType.sso;
   section: string;
   filePath?: string;
   configFilePath?: string;
   enableCache?: boolean;
+  region: string;
 }
-export type AWSServiceCredential = AWSTemporaryCredential | AWSFileCredential | AWSSSOCredential;
-export interface IBaseCloudCredential {
-  name: string;
-  provider: CloudProviderName;
-}
-export interface AWSCloudCredential extends IBaseCloudCredential {
-  provider: 'aws';
-  credentials: AWSServiceCredential;
-}
-export interface GCPCredentials {
+// GCP Credentials
+export interface GCPCredential {
   serviceAccountKeyFilePath: string;
 }
-export interface GCPCloudCredential extends IBaseCloudCredential {
-  provider: 'gcp';
-  credentials: GCPCredentials;
-}
-export interface HashiCorpBaseCredential {
+
+// HashiCorp Credentials
+interface HashiCorpBaseCredential {
   access_token?: string;
   expires_at?: number;
 }
 export enum HashiCorpCredentialType {
-  cloud = 'cloud',
+  // Points to the EOS HCP Vault Secrets. Refer: https://developer.hashicorp.com/hcp/docs/vault-secrets/
+  cloudVaultSecrets = 'cloud',
+  // Points to the HCP Vault Dedicated. Refer: https://developer.hashicorp.com/hcp/docs/vault/
+  cloudVaultDedicated = 'cloudVaultDedicated',
   onPrem = 'onPrem',
 }
 export enum HashiCorpVaultAuthMethod {
@@ -60,7 +55,22 @@ export enum HashiCorpVaultAuthMethod {
 export interface HCPCredential extends HashiCorpBaseCredential {
   client_id: string;
   client_secret: string;
-  type: HashiCorpCredentialType.cloud;
+  type: HashiCorpCredentialType.cloudVaultSecrets;
+}
+export interface HCPVaultDedicatedAppRoleCredential extends HashiCorpBaseCredential {
+  role_id: string;
+  secret_id: string;
+  authMethod: HashiCorpVaultAuthMethod.appRole;
+  type: HashiCorpCredentialType.cloudVaultDedicated;
+  serverAddress: string;
+  namespace: string;
+}
+export interface HCPVaultDedicatedTokenCredential extends HashiCorpBaseCredential {
+  authMethod: HashiCorpVaultAuthMethod.token;
+  access_token: string;
+  type: HashiCorpCredentialType.cloudVaultDedicated;
+  serverAddress: string;
+  namespace: string;
 }
 export interface VaultAppRoleCredential extends HashiCorpBaseCredential {
   role_id: string;
@@ -75,11 +85,7 @@ export interface VaultTokenCredential extends HashiCorpBaseCredential {
   type: HashiCorpCredentialType.onPrem;
   serverAddress: string;
 }
-export type HashiCorpCredentials = HCPCredential | VaultAppRoleCredential | VaultTokenCredential;
-export interface HashiCorpCredential extends IBaseCloudCredential {
-  provider: 'hashicorp';
-  credentials: HashiCorpCredentials;
-}
+// Azure Credentials
 export interface AzureOAuthCredential {
   expiresOn: Date | null;
   uniqueId: string;
@@ -88,11 +94,25 @@ export interface AzureOAuthCredential {
   };
   accessToken: string;
 }
-export interface AzureCloudCredential extends IBaseCloudCredential {
-  provider: 'azure';
-  credentials: AzureOAuthCredential;
-}
-export type BaseCloudCredential = AWSCloudCredential | AzureCloudCredential | GCPCloudCredential | HashiCorpCredential;
+type BaseCloudCredential =
+  | {
+      provider: 'aws';
+      credentials: AWSTemporaryCredential | AWSFileCredential | AWSSSOCredential;
+    }
+  | {
+      provider: 'gcp';
+      credentials: GCPCredential;
+    }
+  | { provider: 'azure'; credentials: AzureOAuthCredential }
+  | {
+      provider: 'hashicorp';
+      credentials:
+        | HCPCredential
+        | VaultAppRoleCredential
+        | VaultTokenCredential
+        | HCPVaultDedicatedAppRoleCredential
+        | HCPVaultDedicatedTokenCredential;
+    };
 export type CloudProviderCredential = BaseModel & BaseCloudCredential;
 
 export const name = 'Cloud Credential';
@@ -115,7 +135,7 @@ export function getProviderDisplayName(provider: CloudProviderName) {
   );
 }
 
-export function init(): Partial<BaseCloudCredential> {
+export function init(): Partial<CloudProviderCredential> {
   return {
     name: '',
     provider: undefined,
@@ -132,7 +152,7 @@ export function create(patch: Partial<CloudProviderCredential> = {}) {
 }
 
 export async function getById(id: string) {
-  return db.getWhere<CloudProviderCredential>(type, { _id: id });
+  return db.findOne<CloudProviderCredential>(type, { _id: id });
 }
 
 export function update(credential: CloudProviderCredential, patch: Partial<CloudProviderCredential>) {
@@ -148,5 +168,5 @@ export function getByName(name: string, provider: CloudProviderName) {
 }
 
 export function all() {
-  return db.all<CloudProviderCredential>(type);
+  return db.find<CloudProviderCredential>(type);
 }

@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { remoteBranchesCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.delete';
 
@@ -40,10 +40,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   );
 }
 
-export function useInsomniaSyncBranchDeleteActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useInsomniaSyncBranchDeleteActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       branch,
       organizationId,
@@ -58,7 +56,7 @@ export function useInsomniaSyncBranchDeleteActionFetcher(args?: Parameters<typeo
       const formData = new FormData();
       formData.set('branch', branch);
 
-      return fetcherSubmit(formData, {
+      return submit(formData, {
         method: 'POST',
         action: href(
           `/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/branch/delete`,
@@ -70,11 +68,5 @@ export function useInsomniaSyncBranchDeleteActionFetcher(args?: Parameters<typeo
         ),
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

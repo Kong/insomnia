@@ -1,7 +1,7 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { gitCredentials } from '~/models';
+import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/git-credentials.gitlab';
 
@@ -11,15 +11,9 @@ export async function clientLoader(_args: Route.ClientActionArgs) {
   return credentials;
 }
 
-export function useGitLabCredentialsFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
-
-  const load = useCallback(() => {
-    return fetcherLoad(href('/git-credentials/gitlab'));
-  }, [fetcherLoad]);
-
-  return {
-    ...fetcherRest,
-    load,
-  };
-}
+export const useGitLabCredentialsFetcher = createFetcherLoadHook(
+  load => () => {
+    return load(href('/git-credentials/gitlab'));
+  },
+  clientLoader,
+);

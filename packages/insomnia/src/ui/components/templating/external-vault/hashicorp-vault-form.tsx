@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { type HashiCorpCredential, HashiCorpCredentialType } from '~/models/cloud-credential';
+import { type CloudProviderCredential, HashiCorpCredentialType } from '~/models/cloud-credential';
 import { useRootLoaderData } from '~/root';
 import type { NunjucksParsedTag } from '~/templating/types';
 
@@ -17,7 +17,10 @@ export interface HashiCorpVaultFormProps {
   onChange: (newConfig: HashiCorpSecretConfig) => void;
   activeTagData: NunjucksParsedTag;
 }
+type HashiCorpCredential = Extract<CloudProviderCredential, { provider: 'hashicorp' }>;
 type KeysOfUnion<T> = T extends T ? keyof T : never;
+
+const defaultKVVersion = 'v2';
 
 export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
   const { cloudCredentials } = useRootLoaderData()!;
@@ -26,17 +29,27 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
   const { secretName } = formData;
   // onPrem secret config
   const {
-    kvVersion = 'v1',
+    kvVersion = defaultKVVersion,
     secretEnginePath,
     secretKey,
+    sendNamespaceViaHeader = true,
   } = formData as HashiCorpVaultKVV1SecretConfig | HashiCorpVaultKVV2SecretConfig;
   // cloud secret config
   const { organizationId, projectId, appName, version: cloudSecretVersion } = formData as HCPSecretConfig;
   const credentialId = activeTagData.args[1].value as string;
   const selectedCredential = cloudCredentials.find(c => c._id === credentialId) as unknown as HashiCorpCredential;
   const credentialType = selectedCredential?.credentials?.type;
-  const handleOnChange = (name: KeysOfUnion<HashiCorpSecretConfig>, newValue: string) => {
+  const handleOnChange = <T extends KeysOfUnion<HashiCorpSecretConfig>>(
+    name: T,
+    newValue: string | boolean | number,
+  ) => {
+    // append default configs when not exist
+    const defaultConfig =
+      credentialType === HashiCorpCredentialType.cloudVaultSecrets
+        ? {}
+        : { kvVersion: defaultKVVersion, sendNamespaceViaHeader: true };
     const newConfig = {
+      ...defaultConfig,
       ...formData,
       [name]: newValue,
     };
@@ -45,19 +58,8 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
 
   return (
     <>
-      <div className="form-row">
-        <div className="form-control">
-          <label>
-            Secret Name:
-            <input
-              name="secretName"
-              defaultValue={secretName}
-              onChange={e => handleOnChange('secretName', e.target.value)}
-            />
-          </label>
-        </div>
-      </div>
-      {credentialType === HashiCorpCredentialType.onPrem && (
+      {(credentialType === HashiCorpCredentialType.onPrem ||
+        credentialType === HashiCorpCredentialType.cloudVaultDedicated) && (
         <>
           <div className="form-row">
             <div className="form-control">
@@ -91,14 +93,48 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
               </div>
             </div>
           </div>
+          {credentialType === HashiCorpCredentialType.cloudVaultDedicated && (
+            <div className="form-row">
+              <div className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={sendNamespaceViaHeader}
+                  onChange={e => handleOnChange('sendNamespaceViaHeader', e.target.checked)}
+                />
+                <span>
+                  Send Namespace Via Header
+                  <HelpTooltip className="space-left">
+                    Whether to send the namespace in the request header. Uncheck this to apply namespace via Secret
+                    Mount Path.
+                  </HelpTooltip>
+                </span>
+              </div>
+            </div>
+          )}
           <div className="form-row">
             <div className="form-control">
               <label>
-                Secret Engine Path:
+                Secret Mount Path:
+                <HelpTooltip className="space-left">
+                  The path where the secrets engine is mounted. It is displayed as the engine name in the UI.
+                </HelpTooltip>
                 <input
                   name="secretEnginePath"
                   defaultValue={secretEnginePath}
                   onChange={e => handleOnChange('secretEnginePath', e.target.value)}
+                />
+              </label>
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-control">
+              <label>
+                Secret Path:
+                <HelpTooltip className="space-left">The path of the secret to read</HelpTooltip>
+                <input
+                  name="secretName"
+                  defaultValue={secretName}
+                  onChange={e => handleOnChange('secretName', e.target.value)}
                 />
               </label>
             </div>
@@ -135,7 +171,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
           </div>
         </>
       )}
-      {credentialType === HashiCorpCredentialType.cloud && (
+      {credentialType === HashiCorpCredentialType.cloudVaultSecrets && (
         <>
           <div className="form-row">
             <div className="form-control">

@@ -1,9 +1,10 @@
-import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import * as models from '~/models';
 import type { MockRoute } from '~/models/mock-route';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.new';
 
@@ -12,58 +13,96 @@ type NewMockRoutePatch = { mockServerName?: string } & Partial<MockRoute>;
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const patch = (await request.json()) as NewMockRoutePatch;
-  invariant(typeof patch.name === 'string', 'Name is required');
-  // TODO: remove this hack which enables a mock server to be created alongside a route
-  // TODO: use an alternate method to create new workspace and server together
-  // create a mock server under the workspace with the same name
-  if (patch.mockServerName) {
-    const collectionWorkspace = await models.workspace.getById(workspaceId);
-    invariant(collectionWorkspace, 'Collection workspace not found');
-    const mockWorkspace = await models.workspace.create({
-      name: collectionWorkspace.name,
-      scope: 'mock-server',
-      parentId: projectId,
+  try {
+    const patch = (await request.json()) as NewMockRoutePatch;
+    invariant(typeof patch.name === 'string', 'Name is required');
+    invariant(patch.name.startsWith('/'), 'Path must begin with a /');
+
+    if (patch.parentId) {
+      const mockServer = await models.mockServer.getById(patch.parentId);
+      const existingRoutes = await models.mockRoute.findByParentId(patch.parentId);
+
+      if (mockServer?.useInsomniaCloud) {
+        const hasRouteInServer = existingRoutes.find(m => m.name === patch.name);
+        if (hasRouteInServer) {
+          invariant(false, `Path "${patch.name}" already exists. Please enter a different path.`);
+        }
+      } else {
+        const hasRouteInServer = existingRoutes.find(
+          m => m.name === patch.name && m.method.toUpperCase() === patch.method?.toUpperCase(),
+        );
+        if (hasRouteInServer) {
+          invariant(
+            false,
+            `Path "${patch.name}" with ${patch.method} method already exists. Please enter a different path or method.`,
+          );
+        }
+      }
+    }
+    // TODO: remove this hack which enables a mock server to be created alongside a route
+    // TODO: use an alternate method to create new workspace and server together
+    // create a mock server under the workspace with the same name
+    if (patch.mockServerName) {
+      const collectionWorkspace = await models.workspace.getById(workspaceId);
+      invariant(collectionWorkspace, 'Collection workspace not found');
+      const mockWorkspace = await models.workspace.create({
+        name: collectionWorkspace.name,
+        scope: 'mock-server',
+        parentId: projectId,
+      });
+      invariant(mockWorkspace, 'Workspace not found');
+      const newMockServer = await models.mockServer.getOrCreateForParentId(mockWorkspace._id, {
+        name: collectionWorkspace.name,
+      });
+      delete patch.mockServerName;
+      const mockRoute = await models.mockRoute.create({ ...patch, parentId: newMockServer._id });
+
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.mockRouteCreate,
+      });
+
+      return redirect(
+        href(
+          '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId',
+          {
+            organizationId,
+            projectId,
+            workspaceId: newMockServer.parentId,
+            mockRouteId: mockRoute._id,
+          },
+        ),
+      );
+    }
+    invariant(patch.parentId, 'parentId is required');
+    const mockServer = await models.mockServer.getById(patch.parentId);
+    invariant(mockServer, 'Mock server not found');
+    const mockRoute = await models.mockRoute.create(patch);
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.mockRouteCreate,
     });
-    invariant(mockWorkspace, 'Workspace not found');
-    const newMockServer = await models.mockServer.getOrCreateForParentId(mockWorkspace._id, {
-      name: collectionWorkspace.name,
-    });
-    delete patch.mockServerName;
-    const mockRoute = await models.mockRoute.create({ ...patch, parentId: newMockServer._id });
+
     return redirect(
       href(
         '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId',
         {
           organizationId,
           projectId,
-          workspaceId: newMockServer.parentId,
+          workspaceId: mockServer.parentId,
           mockRouteId: mockRoute._id,
         },
       ),
     );
+  } catch (err) {
+    console.error('Error creating mock route:', err);
+    return {
+      error: err instanceof Error ? err.message : 'Failed to create mock route',
+    };
   }
-  invariant(patch.parentId, 'parentId is required');
-  const mockServer = await models.mockServer.getById(patch.parentId);
-  invariant(mockServer, 'Mock server not found');
-  const mockRoute = await models.mockRoute.create(patch);
-  return redirect(
-    href(
-      '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId',
-      {
-        organizationId,
-        projectId,
-        workspaceId: mockServer.parentId,
-        mockRouteId: mockRoute._id,
-      },
-    ),
-  );
 }
 
-export function useMockRouteNewActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useMockRouteNewActionFetcher = createFetcherSubmitHook(
+  submit =>
     ({
       organizationId,
       projectId,
@@ -75,7 +114,7 @@ export function useMockRouteNewActionFetcher(args?: Parameters<typeof useFetcher
       workspaceId: string;
       patch: NewMockRoutePatch;
     }) => {
-      return fetcherSubmit(JSON.stringify(patch), {
+      return submit(JSON.stringify(patch), {
         method: 'POST',
         action: href(
           `/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/new`,
@@ -88,11 +127,5 @@ export function useMockRouteNewActionFetcher(args?: Parameters<typeof useFetcher
         encType: 'application/json',
       });
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

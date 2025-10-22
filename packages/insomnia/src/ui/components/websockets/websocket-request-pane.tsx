@@ -5,13 +5,14 @@ import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
-import { CONTENT_TYPE_JSON } from '../../../common/constants';
+import { type AuthTypes, CONTENT_TYPE_JSON } from '../../../common/constants';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
-import { type AuthTypes, getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
+import { getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import {
@@ -28,7 +29,7 @@ import {
 } from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
-import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
+import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { WebSocketPreviewMode } from '../dropdowns/websocket-preview-mode';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { readOnlyWebsocketPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
@@ -148,9 +149,6 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
     }
   };
 
-  // TODO(@dmarby): Wrap the CodeEditor in a NunjucksEnabledProvider here?
-  // To allow for disabling rendering of messages based on a per-request setting.
-  // Same as with regular requests
   return (
     <form
       id="websocketMessageForm"
@@ -184,7 +182,7 @@ interface Props {
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   const { activeRequest, activeRequestMeta } = useRequestLoaderData() as WebSocketRequestLoaderData;
-
+  const { vcsVersion } = useWorkspaceLoaderData()!;
   const { workspaceId, requestId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -268,11 +266,10 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   };
 
   const gitVersion = useGitVCSVersion();
-  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const patchRequest = useRequestPatcher();
   const urlHasQueryParameters = activeRequest.url.includes('?');
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta.activeResponseId}`;
+  const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${vcsVersion}::${activeRequestMeta.activeResponseId}`;
   const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
   const isNoneOrInherited = requestAuth?.type === 'none' || requestAuth === null;
 

@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import * as models from '~/models';
 import type { Workspace } from '~/models/workspace';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { invariant } from '~/utils/invariant';
+import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync';
 
@@ -60,10 +60,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   };
 }
 
-export function useInsomniaSyncLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
-
-  const load = useCallback(
+export const useInsomniaSyncLoaderFetcher = createFetcherLoadHook(
+  load =>
     ({
       organizationId,
       projectId,
@@ -79,13 +77,6 @@ export function useInsomniaSyncLoaderFetcher(args?: Parameters<typeof useFetcher
         workspaceId,
       });
 
-      return fetcherLoad(url);
+      return load(url);
     },
-    [fetcherLoad],
-  );
-
-  return {
-    ...fetcherRest,
-    load,
-  };
-}
+);

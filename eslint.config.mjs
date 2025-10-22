@@ -57,11 +57,11 @@ export default tseslint.config(
     rules: {
       ...playwright.configs['flat/recommended'].rules,
       'playwright/expect-expect': 'off',
-      'playwright/valid-title': 'off', //TODO: avoid using looping e2e tests
       'playwright/require-soft-assertions': 'error',
       'playwright/prefer-native-locators': 'error',
       'playwright/prefer-to-be': 'error',
       'playwright/prefer-to-contain': 'error',
+      'playwright/no-wait-for-timeout': 'error',
     },
   },
   {
@@ -166,10 +166,7 @@ export default tseslint.config(
       '**/docker/*',
       '**/electron/index.js',
       '**/fixtures',
-      '**/hidden-window.js',
-      '**/hidden-window-preload.js',
       '**/node_modules/*',
-      '**/preload.js',
       '**/svgr',
       '**/traces/*',
       '**/verify-pkg.js',

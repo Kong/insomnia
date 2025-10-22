@@ -27,6 +27,7 @@ import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { PlatformKeyCombinations } from '../../../common/settings';
+import * as models from '../../../models';
 import { isRemoteProject } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
@@ -38,6 +39,7 @@ import * as pluginData from '../../../plugins/context/data';
 import * as pluginNetwork from '../../../plugins/context/network';
 import * as pluginStore from '../../../plugins/context/store';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useMockServerGenerateRequestCollectionActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.generate-request-collection';
 import { invariant } from '../../../utils/invariant';
 import { SegmentEvent } from '../../analytics';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -70,6 +72,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
+  const generateCollectionFetcher = useMockServerGenerateRequestCollectionActionFetcher();
 
   // after duplicate workspace, close the modal
   useEffect(() => {
@@ -91,7 +94,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
           ...(pluginNetwork.init() as Record<string, any>),
         };
 
-        const docs = await db.withDescendants(workspace);
+        const docs = await db.getWithDescendants(workspace, [models.request.type]);
         const requests = docs.filter(isRequest).filter(doc => !doc.isPrivate);
         const requestGroups = docs.filter(isRequestGroup);
         await action(context, {
@@ -277,6 +280,22 @@ export const WorkspaceDropdown: FC<{}> = () => {
             return setIsExportModalOpen(true);
           },
         },
+        ...(activeWorkspace.scope === 'mock-server'
+          ? [
+              {
+                id: 'generate-collection',
+                name: 'Generate Collection',
+                icon: <Icon icon="code" />,
+                action: () => {
+                  generateCollectionFetcher.submit({
+                    organizationId,
+                    projectId: activeWorkspace.parentId,
+                    workspaceId: activeWorkspace._id,
+                  });
+                },
+              },
+            ]
+          : []),
         {
           id: 'settings',
           name: 'Settings',

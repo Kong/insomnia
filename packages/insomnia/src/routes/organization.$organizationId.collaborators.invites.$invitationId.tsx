@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
-import { href, useFetcher } from 'react-router';
+import { href } from 'react-router';
 
 import * as models from '~/models';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.collaborators.invites.$invitationId';
 
@@ -32,12 +32,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   }
 }
 
-export function useInviteFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
-
-  const submit = useCallback(
+export const useInviteFetcher = createFetcherSubmitHook(
+  submit =>
     ({ organizationId, invitationId, roleId }: { organizationId: string; invitationId: string; roleId: string }) => {
-      return fetcherSubmit(
+      return submit(
         { roleId },
         {
           action: href(`/organization/:organizationId/collaborators/invites/:invitationId`, {
@@ -48,11 +46,5 @@ export function useInviteFetcher(args?: Parameters<typeof useFetcher>[0]) {
         },
       );
     },
-    [fetcherSubmit],
-  );
-
-  return {
-    ...fetcherRest,
-    submit,
-  };
-}
+  clientAction,
+);

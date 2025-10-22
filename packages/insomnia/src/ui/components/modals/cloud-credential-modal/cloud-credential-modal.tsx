@@ -5,20 +5,16 @@ import { useUpdateCloudCredentialActionFetcher } from '~/routes/cloud-credential
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../../common/constants';
-import {
-  type BaseCloudCredential,
-  type CloudProviderCredential,
-  type CloudProviderName,
-  getProviderDisplayName,
-} from '../../../../models/cloud-credential';
+import { type CloudProviderCredential, getProviderDisplayName } from '../../../../models/cloud-credential';
 import { executePluginMainAction } from '../../../../plugins';
 import { Icon } from '../../icon';
 import { AWSCredentialForm } from './aws-credential-form';
 import { GCPCredentialForm } from './gcp-credential-form';
 import { HashiCorpCredentialForm } from './hashicorp-credential-form';
 
+type BaseCloudCredential = Pick<CloudProviderCredential, 'credentials' | 'provider' | 'name'>;
 export interface CloudCredentialModalProps {
-  provider: CloudProviderName;
+  provider: CloudProviderCredential['provider'];
   providerCredential?: CloudProviderCredential;
   authUrl?: string;
   onClose: (data?: any) => void;
@@ -43,16 +39,15 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
 
   const handleFormSubmit = (data: BaseCloudCredential & { isAuthenticated?: boolean }) => {
     const { name, credentials, isAuthenticated = false } = data;
+    const patch = { name, credentials, provider } as Partial<CloudProviderCredential>;
 
     if (isEditing) {
       return updateCloudCredentialsFetcher.submit({
-        // @ts-expect-error: TODO - @cwangsmv Type inference doesn't work well with BaseCloudCredential
-        patch: { name, credentials, provider },
+        patch,
         cloudCredentialId: providerCredential._id,
       });
     }
 
-    // @ts-expect-error: TODO - @cwangsmv Type inference doesn't work well with BaseCloudCredential
     return createCloudCredentialsFetcher.submit({
       name,
       credentials,
@@ -147,16 +142,16 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
               )}
               {provider === 'gcp' && (
                 <GCPCredentialForm
-                  data={providerCredential}
                   isLoading={isLoading}
+                  data={providerCredential as Extract<CloudProviderCredential, { provider: 'gcp' }>}
                   onSubmit={handleFormSubmit}
                   errorMessage={fetchErrorMessage}
                 />
               )}
               {provider === 'hashicorp' && (
                 <HashiCorpCredentialForm
-                  data={providerCredential}
                   isLoading={isLoading}
+                  data={providerCredential as Extract<CloudProviderCredential, { provider: 'hashicorp' }>}
                   onSubmit={handleFormSubmit}
                   errorMessage={fetchErrorMessage}
                 />
