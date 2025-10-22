@@ -45,10 +45,10 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
     const checkAiPlugin = async () => {
       const plugins = await getBundlePlugins();
       const aiPlugin = plugins.find(p => p.name === AI_PLUGIN_NAME);
-      setShouldShowAiSettingsTab(!!aiPlugin);
+      setShouldShowAiSettingsTab(!!aiPlugin && !!userSession.id);
     };
     checkAiPlugin();
-  }, []);
+  }, [userSession.id]);
 
   useImperativeHandle(
     ref,
