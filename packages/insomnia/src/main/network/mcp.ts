@@ -64,6 +64,7 @@ import * as models from '~/models';
 import { type McpRequest, TRANSPORT_TYPES, type TransportType } from '~/models/mcp-request';
 import { type McpResponse, prefix as mcpResponsePrefix } from '~/models/mcp-response';
 import type { RequestAuthentication, RequestHeader } from '~/models/request';
+import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 import { invariant } from '~/utils/invariant';
 
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
@@ -645,15 +646,17 @@ class McpOAuthClientProvider implements OAuthClientProvider {
     return this._resourceMetadataUrl;
   }
   async redirectToAuthorization(authorizationUrl: URL) {
+    const { relayUrl, decryptOAuthResult } = encryptOAuthUrl(authorizationUrl.toString());
     BrowserWindow.getAllWindows().forEach(window => {
-      window.webContents.send('show-oauth-authorization-modal', authorizationUrl.toString());
+      window.webContents.send('show-oauth-authorization-modal', relayUrl);
     });
-    const redirectedTo = await authorizeUserInDefaultBrowser({
-      url: authorizationUrl.toString(),
+    const redirectedResult = await authorizeUserInDefaultBrowser({
+      url: relayUrl,
     });
     BrowserWindow.getAllWindows().forEach(window => {
-      window.webContents.send('hide-oauth-authorization-modal', authorizationUrl.toString());
+      window.webContents.send('hide-oauth-authorization-modal');
     });
+    const redirectedTo = decryptOAuthResult(redirectedResult);
     const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
     const authorizationCode = redirectParams.code;
     if (!authorizationCode) {
