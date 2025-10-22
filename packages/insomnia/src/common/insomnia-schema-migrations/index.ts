@@ -124,38 +124,39 @@ function migrateToLatest<T>(data: InsomniaFile, fromVersion: string): T {
  * @returns Object with property order normalized to match reference
  */
 export function normalizePropertyOrder<T>(obj: any, reference: any): T {
-  if (Array.isArray(obj)) {
-    if (Array.isArray(reference)) {
-      return obj.map(item => {
-        if (item && typeof item === 'object') {
-          // Try to find a matching reference item by key properties
-          const matchingRef = reference.find(
-            refItem =>
-              refItem &&
-              typeof refItem === 'object' &&
-              // Match by name for parameters/headers
-              ((item.name && refItem.name === item.name) ||
-                // Match by id if it exists
-                (item.id && refItem.id === item.id) ||
-                // Match by meta.id if it exists
-                (item.meta?.id && refItem.meta?.id === item.meta.id)),
-          );
+  if (Array.isArray(obj) && Array.isArray(reference)) {
+    // Create a map of reference items by their IDs for faster lookup
+    const referenceMap = new Map();
+    const referenceOrder: string[] = [];
 
-          if (matchingRef) {
-            return normalizePropertyOrder(item, matchingRef);
-          }
+    reference.forEach(refItem => {
+      if (refItem?.meta?.id) {
+        referenceMap.set(refItem.meta.id, refItem);
+        referenceOrder.push(refItem.meta.id);
+      }
+    });
 
-          // If no specific match found, use the first reference item as a template
-          // This ensures consistent property ordering for similar objects
-          const templateRef = reference.find(ref => ref && typeof ref === 'object');
-          if (templateRef) {
-            return normalizePropertyOrder(item, templateRef);
-          }
-        }
-        return item;
-      }) as T;
+    // Sort obj items to match reference order
+    const sorted = [];
+    const unmatched = [];
+
+    // First, add items that match reference order
+    for (const refId of referenceOrder) {
+      const matchingItem = obj.find(item => item?.meta?.id === refId);
+      if (matchingItem) {
+        const refItem = referenceMap.get(refId);
+        sorted.push(normalizePropertyOrder(matchingItem, refItem));
+      }
     }
-    return obj as T;
+
+    // Then add any unmatched items
+    for (const item of obj) {
+      if (!item?.meta?.id || !referenceMap.has(item.meta.id)) {
+        unmatched.push(item);
+      }
+    }
+
+    return [...sorted, ...unmatched] as T;
   }
 
   if (obj && typeof obj === 'object' && reference && typeof reference === 'object') {
