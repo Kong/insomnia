@@ -1,8 +1,9 @@
 import { spawn } from 'node:child_process';
-import { promises as fsPromise } from 'node:fs';
 import path from 'node:path';
 
 import { app, autoUpdater, BrowserWindow, dialog } from 'electron';
+
+import type { Settings } from '~/models/settings';
 
 import packageJSON from '../../package.json';
 import { CHECK_FOR_UPDATES_INTERVAL, getAppId, getAppVersion, isDevelopment, UpdateURL } from '../common/constants';
@@ -10,7 +11,7 @@ import { delay } from '../common/misc';
 import * as models from '../models/index';
 import { invariant } from '../utils/invariant';
 import { ipcMainOn } from './ipc/electron';
-import { initNsisUpdater } from './nsisUpdate';
+import { initNsisUpdater, isNsisInstaller } from './nsisUpdate';
 
 export const isUpdateSupported = () => {
   if (process.platform === 'linux') {
@@ -18,6 +19,8 @@ export const isUpdateSupported = () => {
     showUpdateStatusToast('Updates disabled on linux');
     return false;
   }
+  // This does not appear to actually be implemented in insomnia.
+  // We distribute a regular windows exe which uses appData and an NSIS installer.
   if (process.platform === 'win32' && process.env['PORTABLE_EXECUTABLE_DIR']) {
     console.log('[updater] Not supported on portable windows binary');
     showUpdateStatusToast('Updates disabled on portable windows binary');
@@ -57,34 +60,56 @@ export const showUpdateStatusToast = (title: string, description?: string) => {
   }
 };
 
-const isNsisInstaller = async () => {
-  if (process.platform !== 'win32') {
-    return false;
-  }
-  try {
-    const installDir = path.dirname(process.execPath);
-    // we inject this file(nsisInstall.nsh) during the NSIS build process to indicate the installer type
-    const flagFilePath = path.join(installDir, 'installer-info.json');
-
-    const content = await fsPromise.readFile(flagFilePath, 'utf-8');
-    const json = JSON.parse(content);
-    console.log('installer type', json.installer);
-    return json.installer === 'nsis';
-  } catch (err) {
-    console.warn('Failed to read installer-info.json:', err);
-    return false;
-  }
-};
-
 export const init = async () => {
-  // use different update logic for windows nsis installer
-  if (process.platform === 'win32') {
-    const isNsis = await isNsisInstaller();
-    if (isNsis) {
-      initNsisUpdater();
+  // nsis installer uses electron-updater package rather than electron.autoUpdater
+  const isNsis = await isNsisInstaller();
+  const checkForUpdates = isNsis ? initNsisUpdater() : initAutoUpdater();
+  const settings = await models.settings.get();
+  const updateSupported = isUpdateSupported();
+  const updateUrl = updateSupported && getUpdateUrl(settings.updateChannel);
+  // perhaps disable this method of upgrading just in case it trigger before backup is complete
+  // on app start
+  if (updateSupported) {
+    if (settings.updateAutomatically) {
+      checkForUpdates(settings);
+    }
+    // on an interval (3h)
+    setInterval(async () => {
+      const settings = await models.settings.get();
+      if (settings.updateAutomatically) {
+        checkForUpdates(settings);
+      }
+    }, CHECK_FOR_UPDATES_INTERVAL);
+  }
+  // on check now button pushed
+  ipcMainOn('manualUpdateCheck', async () => {
+    console.log('[updater] Manual update check');
+
+    if (!updateUrl) {
       return;
     }
-  }
+    showUpdateStatusToast('Checking for updates...');
+    await delay(300); // Pacing
+    checkForUpdates(settings);
+  });
+};
+
+const initAutoUpdater = () => {
+  createListeners();
+  return (settings: Settings) => {
+    try {
+      const updateUrl = getUpdateUrl(settings.updateChannel);
+      invariant(updateUrl, 'update url is could not be determined');
+      console.log(`[updater] Checking for updates url=${updateUrl}`);
+      autoUpdater.setFeedURL({ url: updateUrl });
+      autoUpdater.checkForUpdates();
+    } catch (err) {
+      console.warn('[updater] Failed to check for updates:', err.message);
+      showUpdateStatusToast('Update Error', err.message);
+    }
+  };
+};
+const createListeners = () => {
   autoUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
     showUpdateStatusToast('Update Error', error.message);
@@ -101,7 +126,7 @@ export const init = async () => {
     console.log(`[updater] Downloaded ${releaseName}`);
     showUpdateStatusToast('Performing backup...');
     showUpdateStatusToast(`Downloaded ${releaseName}`, 'Restart to apply the updates.');
-
+    // documented: https://www.electronjs.org/docs/latest/tutorial/updates#step-3-notifying-users-when-updates-are-available
     dialog
       .showMessageBox({
         type: 'info',
@@ -112,59 +137,19 @@ export const init = async () => {
       })
       .then(returnValue => {
         if (returnValue.response === 0) {
-          if (process.platform === 'win32') {
-            const updateExe = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');
-            spawn(updateExe, ['--processStartAndWait', 'Insomnia.exe'], {
-              detached: true,
-              windowsHide: true,
-            });
-            app.quit();
-          } else {
+          if (process.platform !== 'win32') {
             autoUpdater.quitAndInstall();
+            return;
           }
+          // Workaround for the windows secure wrapper breaking quitAndInstall logic.
+          // This is related to PR 8451 / CVE-2025-1353 / which broke the auto restart after an in-place update
+          const updateExe = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');
+          spawn(updateExe, ['--processStartAndWait', 'Insomnia.exe'], {
+            detached: true,
+            windowsHide: true,
+          });
+          app.quit();
         }
       });
   });
-
-  const settings = await models.settings.get();
-  const updateSupported = isUpdateSupported();
-  const updateUrl = updateSupported && getUpdateUrl(settings.updateChannel);
-
-  // perhaps disable this method of upgrading just incase it trigger before backup is complete
-  // on app start
-  if (updateSupported) {
-    if (settings.updateAutomatically && updateUrl) {
-      _checkForUpdates(updateUrl);
-    }
-    // on an interval (3h)
-    setInterval(async () => {
-      const settings = await models.settings.get();
-      const updateUrl = getUpdateUrl(settings.updateChannel);
-      if (settings.updateAutomatically && updateUrl) {
-        _checkForUpdates(updateUrl);
-      }
-    }, CHECK_FOR_UPDATES_INTERVAL);
-  }
-  // on check now button pushed
-  ipcMainOn('manualUpdateCheck', async () => {
-    console.log('[updater] Manual update check');
-
-    if (!updateUrl) {
-      return;
-    }
-    showUpdateStatusToast('Checking for updates...');
-    await delay(300); // Pacing
-    _checkForUpdates(updateUrl);
-  });
-};
-
-const _checkForUpdates = (updateUrl: string) => {
-  try {
-    console.log(`[updater] Checking for updates url=${updateUrl}`);
-    autoUpdater.setFeedURL({ url: updateUrl });
-    autoUpdater.checkForUpdates();
-  } catch (err) {
-    console.warn('[updater] Failed to check for updates:', err.message);
-    showUpdateStatusToast('Update Error', err.message);
-  }
 };

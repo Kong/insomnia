@@ -1,34 +1,69 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { dialog } from 'electron';
 import log from 'electron-log';
-import { autoUpdater } from 'electron-updater';
+import { autoUpdater as electronUpdater } from 'electron-updater';
+
+import type { Settings } from '~/models/settings';
 
 import packageJSON from '../../package.json';
-import { CHECK_FOR_UPDATES_INTERVAL } from '../common/constants';
-import { delay } from '../common/misc';
-import * as models from '../models/index';
-import { ipcMainOn } from './ipc/electron';
-import { isUpdateSupported, showUpdateStatusToast } from './updates';
+import { showUpdateStatusToast } from './updates';
 
-export const initNsisUpdater = async () => {
-  autoUpdater.logger = log;
-  autoUpdater.disableDifferentialDownload = true;
-  autoUpdater.on('error', error => {
+export const isNsisInstaller = async () => {
+  if (process.platform !== 'win32') {
+    return false;
+  }
+  try {
+    const installDir = path.dirname(process.execPath);
+    // we inject this file(nsisInstall.nsh) during the NSIS build process to indicate the installer type
+    const flagFilePath = path.join(installDir, 'installer-info.json');
+
+    const content = await fs.promises.readFile(flagFilePath, 'utf-8');
+    const json = JSON.parse(content);
+    console.log('installer type', json.installer);
+    return json.installer === 'nsis';
+  } catch (err) {
+    console.warn('Failed to read installer-info.json:', err);
+    return false;
+  }
+};
+export const initNsisUpdater = () => {
+  electronUpdater.logger = log;
+  electronUpdater.disableDifferentialDownload = true;
+  createListeners();
+
+  return (settings: Settings) => {
+    try {
+      console.log(`[NSIS updater] Checking for updates`);
+      // set auto-update channel
+      electronUpdater.channel = settings.updateChannel;
+      electronUpdater.checkForUpdates();
+    } catch (err) {
+      console.warn('[NSIS updater] Failed to check for updates:', err.message);
+      showUpdateStatusToast('Update Error');
+    }
+  };
+};
+
+const createListeners = () => {
+  electronUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
     showUpdateStatusToast('Update Error', error.message);
   });
-  autoUpdater.on('update-not-available', () => {
+  electronUpdater.on('update-not-available', () => {
     console.log('[updater] Not Available');
     showUpdateStatusToast(`Up to Date`, packageJSON.version);
   });
-  autoUpdater.on('update-available', () => {
+  electronUpdater.on('update-available', () => {
     console.log('[updater] Update Available');
     showUpdateStatusToast('Downloading update...');
   });
-  autoUpdater.on('update-downloaded', async ({ version }) => {
+  electronUpdater.on('update-downloaded', async ({ version }) => {
     console.log(`[NSIS updater] Downloaded ${version}`);
     showUpdateStatusToast('Performing backup...');
     showUpdateStatusToast(`Downloaded ${version}`, 'Restart to apply the updates.');
-
+    // documented: https://www.electronjs.org/docs/latest/tutorial/updates#step-3-notifying-users-when-updates-are-available
     dialog
       .showMessageBox({
         type: 'info',
@@ -39,46 +74,8 @@ export const initNsisUpdater = async () => {
       })
       .then(returnValue => {
         if (returnValue.response === 0) {
-          autoUpdater.quitAndInstall();
+          electronUpdater.quitAndInstall();
         }
       });
   });
-  const settings = await models.settings.get();
-  const updateSupported = isUpdateSupported();
-
-  // perhaps disable this method of upgrading just incase it trigger before backup is complete
-  // on app start
-  if (updateSupported) {
-    if (settings.updateAutomatically) {
-      _checkForUpdates();
-    }
-    // on an interval (3h)
-    setInterval(async () => {
-      const settings = await models.settings.get();
-      if (settings.updateAutomatically) {
-        _checkForUpdates();
-      }
-    }, CHECK_FOR_UPDATES_INTERVAL);
-  }
-  // on check now button pushed
-  ipcMainOn('manualUpdateCheck', async () => {
-    console.log('[NSIS updater] Manual update check');
-
-    showUpdateStatusToast('Checking');
-    await delay(300); // Pacing
-    _checkForUpdates();
-  });
-};
-
-const _checkForUpdates = async () => {
-  try {
-    console.log(`[NSIS updater] Checking for updates`);
-    const settings = await models.settings.get();
-    // set auto-update channel
-    autoUpdater.channel = settings.updateChannel;
-    autoUpdater.checkForUpdates();
-  } catch (err) {
-    console.warn('[NSIS updater] Failed to check for updates:', err.message);
-    showUpdateStatusToast('Update Error');
-  }
 };
