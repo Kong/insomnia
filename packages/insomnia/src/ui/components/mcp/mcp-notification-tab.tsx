@@ -74,7 +74,7 @@ export const McpNotificationTab = ({ allEvents }: McpNotificationTabProps) => {
           <PanelResizeHandle className={'h-[1px] w-full bg-[--hl-md]'} />
           <Panel minSize={10} defaultSize={50}>
             <div className="h-full flex-1 border-t border-[var(--hl-md)]">
-              <McpEventView event={selectedEvent} key={selectedEvent._id} />;
+              <McpEventView event={selectedEvent} key={selectedEvent._id} />
             </div>
           </Panel>
         </>

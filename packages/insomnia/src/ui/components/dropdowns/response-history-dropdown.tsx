@@ -88,7 +88,7 @@ export const ResponseHistoryDropdown = ({
     } else if (isSocketIOResponse(activeResponse)) {
       window.main.socketIO.close({ requestId });
     } else if (isMcpResponse(activeResponse)) {
-      window.main.socketIO.close({ requestId });
+      window.main.mcp.close({ requestId });
     }
     deleteResponsesSubmit({
       organizationId,
@@ -106,7 +106,7 @@ export const ResponseHistoryDropdown = ({
       } else if (isSocketIOResponse(activeResponse)) {
         window.main.socketIO.close({ requestId });
       } else if (isMcpResponse(activeResponse)) {
-        window.main.socketIO.close({ requestId });
+        window.main.mcp.close({ requestId });
       }
     }
     deleteResponseSubmit({ organizationId, projectId, workspaceId, requestId, responseId: activeResponse._id });

@@ -60,5 +60,3 @@ export const Select = ({ value, onChange, className, options, ...rest }: SelectP
     </RaSelect>
   );
 };
-
-<select />;
