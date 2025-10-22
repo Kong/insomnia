@@ -151,7 +151,7 @@ const OAuth2AuthenticationSchema = z.object({
     'implicit',
     'password',
     'refresh_token',
-    'mcp-auth-flow',
+    'mcp_auth_flow',
   ]),
   accessTokenUrl: z.string().optional(),
   authorizationUrl: z.string().optional(),
