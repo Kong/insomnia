@@ -39,7 +39,7 @@ export async function clientAction(args: Route.ClientActionArgs) {
     });
 
     window.main.trackSegmentEvent({
-      event: SegmentEvent.recommend_commits_generated,
+      event: SegmentEvent.recommendCommitsGenerated,
       properties: {
         file_count: commits?.map(commit => commit.files?.length || 0)?.reduce((a, b) => a + b, 0),
         group_count: commits?.length || 0,

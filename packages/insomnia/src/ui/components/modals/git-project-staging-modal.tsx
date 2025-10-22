@@ -253,7 +253,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           .filter(commit => commit.id !== DO_NOT_COMMIT_ID && commit.files.length > 0);
 
         window.main.trackSegmentEvent({
-          event: SegmentEvent.recommend_commits_saved,
+          event: SegmentEvent.recommendCommitsSaved,
           properties: {
             group_count: commits.length,
             file_excluded_count: commitsSections.getItem(DO_NOT_COMMIT_ID)?.value?.files?.length || 0,
@@ -920,12 +920,12 @@ export const GitProjectStagingModal: FC<{
                       isDisabled={!isGenerateCommitMessagesWithAIEnabled}
                       onPress={() => {
                         if (generateCommitsFetcher.data && !('error' in generateCommitsFetcher.data)) {
-                          window.main.trackSegmentEvent({ event: SegmentEvent.recommend_commits_cancelled });
+                          window.main.trackSegmentEvent({ event: SegmentEvent.recommendCommitsCancelled });
                           setCommitGenerationKey(commitGenerationKey + 1);
                           return;
                         }
 
-                        window.main.trackSegmentEvent({ event: SegmentEvent.recommend_commits_clicked });
+                        window.main.trackSegmentEvent({ event: SegmentEvent.recommendCommitsClicked });
                         generateCommitsFetcher.submit({
                           projectId,
                         });
