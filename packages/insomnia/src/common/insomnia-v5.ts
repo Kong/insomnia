@@ -230,10 +230,6 @@ function removeEmptyFields(data: any): any {
     const object = Object.fromEntries(
       Object.entries(data)
         .map(([key, value]) => {
-          // Special case: preserve empty children arrays for folder structures
-          if (key === 'children' && Array.isArray(value) && value.length === 0) {
-            return [key, value]; // Keep empty children array
-          }
           return [key, removeEmptyFields(value)];
         })
         .filter(([, value]) => value !== undefined),
@@ -494,7 +490,10 @@ function getCollection(
       parentId: string,
     ) {
       collection?.forEach(item => {
-        if ('children' in item && item.children) {
+        // Detect folders: items that are NOT requests, gRPC, or WebSocket
+        const isFolder = !('method' in item) && !('reflectionApi' in item) && !('url' in item);
+
+        if (isFolder) {
           const requestGroup: WithExportType<RequestGroup> = {
             ...mapMetaToInsomniaMeta(
               item.meta || {
@@ -516,7 +515,10 @@ function getCollection(
 
           resources.push(requestGroup);
 
-          walkCollection(item.children, requestGroup._id);
+          // Process children if they exist
+          if (item.children && Array.isArray(item.children)) {
+            walkCollection(item.children, requestGroup._id);
+          }
         } else if ('method' in item && item.method) {
           const request: WithExportType<Request> = {
             ...mapMetaToInsomniaMeta(
