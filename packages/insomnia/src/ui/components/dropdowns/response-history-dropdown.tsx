@@ -45,7 +45,6 @@ export const ResponseHistoryDropdown = ({
   const dropdownRef = useRef<DropdownHandle>(null);
   const patchRequestMeta = useRequestMetaPatcher();
   const { activeEnvironment } = useWorkspaceLoaderData()!;
-  // const { responses, requestVersions } = useRequestLoaderData() as RequestLoaderData | WebSocketRequestLoaderData;
   const now = new Date();
   const categories: Record<string, ResponseType[]> = {
     minutes: [],
