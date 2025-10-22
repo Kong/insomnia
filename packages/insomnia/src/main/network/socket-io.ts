@@ -264,7 +264,7 @@ const openSocketIOConnection = async (
     if (!options.url) {
       throw new Error('URL is required');
     }
-    const readyStateChannel = `socketIO.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
+    const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
     const reduceArrayToLowerCaseKeyedDictionary = (
       acc: Record<string, string>,

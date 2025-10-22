@@ -140,6 +140,7 @@ export class GitProjectNeDBClient {
 
   async readdir(filePath: string) {
     filePath = path.normalize(filePath);
+    // Exclude the mcp workspace since it's not supported in git sync
     const workspaces = (await db.find<Workspace>(models.workspace.type, { parentId: this._projectId })).filter(
       w => !isMcp(w),
     );
