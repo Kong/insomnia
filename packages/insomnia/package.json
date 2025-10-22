@@ -178,7 +178,7 @@
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "5.0.1",
     "cross-env": "^7.0.3",
-    "electron": "38.3.0",
+    "electron": "38.4.0",
     "electron-builder": "26.0.20",
     "electron-builder-squirrel-windows": "26.0.13",
     "electron-devtools-installer": "^3.2.1",
