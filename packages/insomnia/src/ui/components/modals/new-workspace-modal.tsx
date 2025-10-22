@@ -621,7 +621,11 @@ export const NewWorkspaceModal = ({
 
                     <RadioGroup
                       name="mockServerType"
-                      defaultValue={workspaceData.mockServerType}
+                      value={
+                        isCloudProjectDisabled || workspaceData.mockServerCreationType === 'ai'
+                          ? 'self-hosted'
+                          : workspaceData.mockServerType
+                      }
                       onChange={serverType => {
                         setWorkspaceData({ ...workspaceData, mockServerType: serverType as 'self-hosted' | 'cloud' });
                       }}
