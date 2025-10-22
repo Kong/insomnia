@@ -265,6 +265,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
 // Use function instead of object to avoid issues with circular dependencies
 export const getAllDescendantMap = (): Partial<Record<AllTypes, AllTypes[]>> => {
   return {
+    [project.type]: [workspace.type],
     [workspace.type]: [
       requestGroup.type,
       request.type,

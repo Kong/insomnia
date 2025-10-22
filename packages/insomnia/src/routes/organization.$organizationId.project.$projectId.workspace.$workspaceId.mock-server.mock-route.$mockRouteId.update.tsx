@@ -2,6 +2,7 @@ import { href } from 'react-router';
 
 import * as models from '~/models';
 import type { MockRoute } from '~/models/mock-route';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -10,14 +11,53 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { mockRouteId } = params;
 
-  const patch = (await request.json()) as Partial<MockRoute>;
+  try {
+    const patch = (await request.json()) as Partial<MockRoute>;
 
-  const mockRoute = await models.mockRoute.getById(mockRouteId);
-  invariant(mockRoute, 'Mock route is required');
+    const mockRoute = await models.mockRoute.getById(mockRouteId);
+    invariant(mockRoute, 'Mock route is required');
 
-  await models.mockRoute.update(mockRoute, patch);
+    if (patch.name !== undefined) {
+      invariant(typeof patch.name === 'string', 'Name is required');
+      invariant(patch.name.startsWith('/'), 'Path must begin with a /');
 
-  return null;
+      const mockServer = await models.mockServer.getById(mockRoute.parentId);
+      const existingRoutes = await models.mockRoute.findByParentId(mockRoute.parentId);
+
+      if (mockServer?.useInsomniaCloud) {
+        const hasRouteInServer = existingRoutes.filter(m => m._id !== mockRouteId).find(m => m.name === patch.name);
+        if (hasRouteInServer) {
+          invariant(false, `Path "${patch.name}" already exists. Please enter a different path.`);
+        }
+      } else {
+        const hasRouteInServer = existingRoutes
+          .filter(m => m._id !== mockRouteId)
+          .find(
+            m => m.name === patch.name && m.method.toUpperCase() === (patch.method || mockRoute.method).toUpperCase(),
+          );
+
+        if (hasRouteInServer) {
+          invariant(
+            false,
+            `Path "${patch.name}" with ${patch.method || mockRoute.method} method already exists. Please enter a different path or method.`,
+          );
+        }
+      }
+    }
+
+    await models.mockRoute.update(mockRoute, patch);
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.mockRouteEdit,
+    });
+
+    return null;
+  } catch (err) {
+    console.error('Error updating mock route:', err);
+    return {
+      error: err instanceof Error ? err.message : 'Failed to update mock route',
+    };
+  }
 }
 
 export const useMockRouteUpdateActionFetcher = createFetcherSubmitHook(

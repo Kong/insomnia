@@ -4,7 +4,7 @@ import querystring from 'node:querystring';
 import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../../package.json';
-import { getOauthRedirectUrl } from '../../common/constants';
+import { getOauthRedirectUrl, getOauthRelayUrl } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
@@ -147,16 +147,49 @@ export const getOAuth2Token = async (
       let redirectedTo: string | null = null;
       if (authentication.useDefaultBrowser) {
         const authCodeUrlStr = authCodeUrl.toString();
+
+        const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+          modulusLength: 3072,
+          publicKeyEncoding: { type: 'spki', format: 'pem' },
+          privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+        });
+
+        const relayUrl = `${getOauthRelayUrl()}?authCodeUrl=${encodeURIComponent(authCodeUrlStr)}&publicKey=${encodeURIComponent(publicKey)}`;
+
         uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
           status: 'getting_code',
-          authCodeUrlStr,
+          authCodeUrlStr: relayUrl,
         });
         // If the user has selected to use the default browser, we will open the
         // authorization URL in the default browser and wait for the user to
         // authorize the application.
-        redirectedTo = await window.main.authorizeUserInDefaultBrowser({
-          url: authCodeUrlStr,
+        const result = await window.main.authorizeUserInDefaultBrowser({
+          url: relayUrl,
         });
+        if ('redirectUrl' in result) {
+          redirectedTo = result.redirectUrl;
+        } else {
+          const { encryptedRedirectUrl, encryptedKey, iv } = result;
+          const aesKey = crypto.privateDecrypt(
+            {
+              key: privateKey,
+              padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+              oaepHash: 'sha256',
+            },
+            Buffer.from(encryptedKey, 'base64'),
+          );
+          const encryptedBuf = Buffer.from(encryptedRedirectUrl, 'base64');
+          const authTag = encryptedBuf.slice(encryptedBuf.length - 16);
+          const ciphertext = encryptedBuf.slice(0, encryptedBuf.length - 16);
+          // nosemgrep: javascript.node-crypto.security.gcm-no-tag-length.gcm-no-tag-length
+          const decipher = crypto.createDecipheriv('aes-256-gcm', aesKey, Buffer.from(iv, 'base64'), {
+            authTagLength: 16,
+          });
+          decipher.setAuthTag(authTag);
+
+          const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf-8');
+          redirectedTo = decrypted;
+        }
       } else {
         redirectedTo = await window.main.authorizeUserInWindow({
           url: authCodeUrl.toString(),
