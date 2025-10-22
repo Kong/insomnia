@@ -26,6 +26,7 @@ import { useGitProjectDiffLoaderFetcher } from '~/routes/git.diff';
 import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
+import { SegmentEvent } from '~/ui/analytics';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
 import { GitFileType, GitVCSOperationErrors } from '../../../sync/git/git-vcs';
@@ -251,6 +252,13 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           }))
           .filter(commit => commit.id !== DO_NOT_COMMIT_ID && commit.files.length > 0);
 
+        window.main.trackSegmentEvent({
+          event: SegmentEvent.recommend_commits_saved,
+          properties: {
+            group_count: commits.length,
+            file_excluded_count: commitsSections.getItem(DO_NOT_COMMIT_ID)?.value?.files?.length || 0,
+          },
+        });
         commitsFetcher.submit({
           projectId,
           commits: commits.map(commit => ({
@@ -912,10 +920,12 @@ export const GitProjectStagingModal: FC<{
                       isDisabled={!isGenerateCommitMessagesWithAIEnabled}
                       onPress={() => {
                         if (generateCommitsFetcher.data && !('error' in generateCommitsFetcher.data)) {
+                          window.main.trackSegmentEvent({ event: SegmentEvent.recommend_commits_cancelled });
                           setCommitGenerationKey(commitGenerationKey + 1);
                           return;
                         }
 
+                        window.main.trackSegmentEvent({ event: SegmentEvent.recommend_commits_clicked });
                         generateCommitsFetcher.submit({
                           projectId,
                         });
@@ -942,7 +952,8 @@ export const GitProjectStagingModal: FC<{
                     </Button>
                     {!isGenerateCommitMessagesWithAIEnabled && (
                       <p className="text-xs text-[--hl]">
-                        Enable generating commit messages with AI in Insomnia Preferences → AI Settings to use this feature.
+                        Enable generating commit messages with AI in Insomnia Preferences → AI Settings to use this
+                        feature.
                       </p>
                     )}
                     {isGenerateCommitMessagesWithAIEnabled &&
