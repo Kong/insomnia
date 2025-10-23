@@ -87,14 +87,8 @@ export const clientMiddleware: Route.ClientMiddlewareFunction[] = [locationHisto
 export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
-      return typeof err.data === 'string' ? err.data : err.data?.message;
+      return typeof err.data === 'string' ? err.data : (err.data?.message ?? 'Unknown error');
     }
-
-    if (err?.message) {
-      return err?.message;
-    }
-
-    return 'Unknown error';
   };
 
   const getErrorStack = (err: any) => {

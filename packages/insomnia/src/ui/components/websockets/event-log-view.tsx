@@ -100,7 +100,6 @@ const getMessage = (event: EventTypes): string | JSX.Element => {
     case 'notification': {
       if (isMcpEvent(event)) {
         const eventMethod = event.method || '';
-        // @ts-expect-error check if the method is in the list
         if (NOTIFICATIONS_LIST_CHANGED.includes(eventMethod)) {
           return (
             <span>
