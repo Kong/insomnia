@@ -265,9 +265,18 @@ export function unescapeForwardSlash(str: string): string {
   });
 }
 
-
 export function cannotAccessPathError(accessingPath: string): string {
-  return process.type === 'renderer' || process.type === 'browser' ?
-    `Insomnia cannot access the file "${accessingPath}". You must specify which directories Insomnia can access in Insomnia Preferences → Security` :
-    `Insomnia cannot access the file ‘${accessingPath}’. You must specify which directories Insomnia can access with one or more "--dataFolders <directory>".`;
+  return process.type === 'renderer' || process.type === 'browser'
+    ? `Insomnia cannot access the file "${accessingPath}". You must specify which directories Insomnia can access in Insomnia Preferences → Security`
+    : `Insomnia cannot access the file ‘${accessingPath}’. You must specify which directories Insomnia can access with one or more "--dataFolders <directory>".`;
 }
+
+export type DefaultBrowserRedirectParam =
+  | {
+      redirectUrl: string;
+    }
+  | {
+      encryptedRedirectUrl: string;
+      encryptedKey: string;
+      iv: string;
+    };

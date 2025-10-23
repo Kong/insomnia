@@ -2,8 +2,9 @@ import { href, redirect } from 'react-router';
 
 import * as models from '~/models';
 import { isRemoteProject, type Project } from '~/models/project';
-import type { Workspace } from '~/models/workspace';
+import { isMcp, type Workspace } from '~/models/workspace';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -13,7 +14,7 @@ async function deleteWorkspaceFromCloud(workspace: Workspace, project: Project) 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
   const isGitSync = !!workspaceMeta.gitRepositoryId;
 
-  if (isRemoteProject(project) && !isGitSync) {
+  if (isRemoteProject(project) && !isGitSync && !isMcp(workspace)) {
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
@@ -46,6 +47,12 @@ async function deleteWorkspace(workspace: Workspace | null, project: Project | n
   }
 
   await deleteWorkspaceFromLocal(workspace);
+
+  if (workspace.scope === 'mock-server') {
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.mockDelete,
+    });
+  }
 
   return null;
 }

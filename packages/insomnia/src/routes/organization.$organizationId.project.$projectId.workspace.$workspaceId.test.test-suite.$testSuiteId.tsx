@@ -5,6 +5,7 @@ import {
   GridList,
   GridListItem,
   Heading,
+  Link,
   ListBox,
   ListBoxItem,
   Popover,
@@ -78,6 +79,14 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
 
   return (
     <div className="flex-shrink-0 overflow-hidden p-[--padding-sm]">
+      <div className="mb-4 w-full items-center gap-4 text-wrap rounded-lg border border-solid border-[rgba(var(--color-warning-rgb),1)] bg-[--color-bg] px-3 py-2 text-sm text-[rgba(var(--color-warning-rgb),1)] shadow-lg outline-none">
+        Some time in 2026, unit tests will be deprecated in favour of{' '}
+        <Link className="cursor-pointer text-[--color-surprise]" href="https://developer.konghq.com/insomnia/scripts/">
+          pre-request and after-response scripts.
+        </Link>{' '}
+        Exact timelines and how to migrate will be communicated well in advance. For now, we advise switching to scripts
+        where possible.
+      </div>
       <div className="flex w-full items-center gap-2" title={unitTest.name}>
         <Button
           className="flex aspect-square h-8 flex-shrink-0 flex-nowrap items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"

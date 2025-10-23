@@ -9,7 +9,14 @@ export enum SegmentEvent {
   importScanned = 'Import Scanned',
   importCompleted = 'Import Completed',
   documentCreate = 'Document Created',
+  mockCreateModalOpened = 'Mock Server Create Modal Opened',
   mockCreate = 'Mock Created',
+  mockEdit = 'Mock Server Edited',
+  mockDelete = 'Mock Server Deleted',
+  mockRouteCreate = 'Mock Route Created',
+  mockRouteEdit = 'Mock Route Edited',
+  mockRouteDelete = 'Mock Route Deleted',
+  generateCollectionFromMock = 'Generate Collection From Mock',
   environmentWorkspaceCreate = 'Environment Workspace Created',
   loginSuccess = 'Login Success',
   inviteTrigger = 'Invite Triggered From App',
@@ -43,6 +50,12 @@ export enum SegmentEvent {
   projectUpdated = 'Project Updated',
   exportStarted = 'Export Started',
   exportRequestsChosen = 'Export Requests Chosen',
+  recommendCommitsGenerated = 'Recommend Commits Generated',
+  recommendCommitsSaved = 'Recommend Commits Saved',
+  recommendCommitsCancelled = 'Recommend Commits Cancelled',
+  recommendCommitsClicked = 'Recommend Commits Clicked',
+  mcpClientWorkspaceCreate = 'MCP Client Workspace Created',
+  mcpClientAdded = 'MCP Client Added',
 }
 
 type PushPull = 'push' | 'pull';

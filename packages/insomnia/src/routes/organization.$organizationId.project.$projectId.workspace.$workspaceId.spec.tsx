@@ -31,11 +31,14 @@ import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce, isNotNullOrUndefined } from '~/common/misc';
 import * as models from '~/models/index';
+import { isScratchpadOrganizationId } from '~/models/organization';
 import { isGitProject } from '~/models/project';
 import { useRootLoaderData } from '~/root';
+import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 import { useSpecUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.update';
+import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { DesignEmptyState } from '~/ui/components/design-empty-state';
 import { DocumentTab } from '~/ui/components/document-tab';
@@ -46,13 +49,17 @@ import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showError } from '~/ui/components/modals';
 import { CookiesModal } from '~/ui/components/modals/cookies-modal';
+import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { CertificatesModal } from '~/ui/components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
+import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
+import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec';
@@ -150,6 +157,22 @@ const Component = ({ params }: Route.ComponentProps) => {
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
   const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
+  const [isNewMockServerModalOpen, setNewMockServerModalOpen] = useState(false);
+
+  const organizationData = useOrganizationLoaderData();
+  const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
+
+  useEffect(() => {
+    if (!isScratchpadOrganizationId(organizationId)) {
+      const load = storageRuleFetcher.load;
+      load({ organizationId });
+    }
+  }, [organizationId, storageRuleFetcher.load]);
+
+  const { storagePromise } = storageRuleFetcher.data || {};
+  const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
+
+  const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
 
   const { apiSpec, rulesetPath, parsedSpec } = useLoaderData<typeof clientLoader>();
 
@@ -461,6 +484,16 @@ const Component = ({ params }: Route.ComponentProps) => {
           <div className="flex flex-shrink-0 items-center gap-2 p-[--padding-sm]">
             <Heading className="uppercase text-[--hl]">Spec</Heading>
             <span className="flex-1" />
+            {isGenerateMockServersWithAIEnabled && (
+              <Button
+                onPress={() => setNewMockServerModalOpen(true)}
+                isDisabled={!apiSpec.contents}
+                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Icon icon="server" className="w-5 flex-shrink-0" />
+                <span className="truncate">Generate Mock</span>
+              </Button>
+            )}
             <ToggleButton
               aria-label="Toggle preview"
               isSelected={isSpecPaneOpen}
@@ -863,6 +896,17 @@ const Component = ({ params }: Route.ComponentProps) => {
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
           {isCookieModalOpen && <CookiesModal setIsOpen={setIsCookieModalOpen} />}
           {isCertificatesModalOpen && <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
+          {isNewMockServerModalOpen && (
+            <NewWorkspaceModal
+              isOpen={isNewMockServerModalOpen}
+              project={activeProject}
+              storageRules={storageRules}
+              currentPlan={organizationData?.currentPlan}
+              scope="mock-server"
+              sourceApiSpec={apiSpec}
+              onOpenChange={setNewMockServerModalOpen}
+            />
+          )}
         </div>
       </Panel>
       <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />

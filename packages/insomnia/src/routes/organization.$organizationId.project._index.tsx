@@ -86,13 +86,14 @@ import { invariant } from '~/utils/invariant';
 
 export const scopeToLabelMap: Record<
   WorkspaceScope | 'unsynced',
-  'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment'
+  'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client'
 > = {
   'design': 'Document',
   'collection': 'Collection',
   'mock-server': 'Mock Server',
   'unsynced': 'Unsynced',
   'environment': 'Environment',
+  'mcp': 'MCP Client',
 };
 
 export const scopeToIconMap: Record<string, IconName> = {
@@ -124,7 +125,7 @@ export interface InsomniaFile {
   name: string;
   remoteId?: string;
   scope: WorkspaceScope | 'unsynced';
-  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment';
+  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client';
   created: number;
   lastModifiedTimestamp: number;
   branch?: string;

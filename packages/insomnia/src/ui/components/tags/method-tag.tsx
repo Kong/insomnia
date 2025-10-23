@@ -1,5 +1,7 @@
 import React, { type FC, memo } from 'react';
 
+import { isMcpRequest, type McpRequest } from '~/models/mcp-request';
+
 import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';
 import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isEventStreamRequest, isRequest, type Request } from '../../../models/request';
@@ -37,7 +39,9 @@ export function formatMethodName(method: string) {
   return methodName;
 }
 
-export const getRequestMethodShortHand = (doc?: Request | WebSocketRequest | GrpcRequest | SocketIORequest) => {
+export const getRequestMethodShortHand = (
+  doc?: Request | WebSocketRequest | GrpcRequest | SocketIORequest | McpRequest,
+) => {
   if (!doc) {
     return '';
   }
@@ -55,6 +59,10 @@ export const getRequestMethodShortHand = (doc?: Request | WebSocketRequest | Grp
 
   if (isSocketIORequest(doc)) {
     return 'IO';
+  }
+
+  if (isMcpRequest(doc)) {
+    return 'MCP';
   }
 
   return '';

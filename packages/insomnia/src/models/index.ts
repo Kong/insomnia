@@ -10,6 +10,9 @@ import * as _gitCredentials from './git-credentials';
 import * as _gitRepository from './git-repository';
 import * as _grpcRequest from './grpc-request';
 import * as _grpcRequestMeta from './grpc-request-meta';
+import * as _mcpRequest from './mcp-request';
+import * as _mcpPayload from './mcp-request-payload';
+import * as _mcpResponse from './mcp-response';
 import * as _mockRoute from './mock-route';
 import * as _mockServer from './mock-server';
 import * as _oAuth2Token from './o-auth-2-token';
@@ -92,6 +95,9 @@ export const workspaceMeta = _workspaceMeta;
 export * as organization from './organization';
 export const userSession = _userSession;
 export const cloudCredential = _cloudCredential;
+export const mcpRequest = _mcpRequest;
+export const mcpResponse = _mcpResponse;
+export const mcpPayload = _mcpPayload;
 
 export function all() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
@@ -136,6 +142,9 @@ export function all() {
     socketIOPayload,
     socketIOResponse,
     cloudCredential,
+    mcpRequest,
+    mcpResponse,
+    mcpPayload,
   ] as const;
 }
 export function types() {
@@ -178,6 +187,9 @@ export type AllTypes =
   | 'WebSocketPayload'
   | 'WebSocketRequest'
   | 'WebSocketResponse'
+  | 'McpRequest'
+  | 'McpResponse'
+  | 'McpPayload'
   | 'Workspace'
   | 'WorkspaceMeta';
 
@@ -283,6 +295,7 @@ export const getAllDescendantMap = (): Partial<Record<AllTypes, AllTypes[]>> => 
       runnerTestResult.type,
       caCertificate.type,
       clientCertificate.type,
+      mcpRequest.type,
     ],
     [requestGroup.type]: [
       requestGroup.type,
@@ -298,6 +311,7 @@ export const getAllDescendantMap = (): Partial<Record<AllTypes, AllTypes[]>> => 
     [grpcRequest.type]: [grpcRequestMeta.type],
     [webSocketRequest.type]: [webSocketPayload.type, webSocketResponse.type, requestMeta.type],
     [socketIORequest.type]: [socketIOPayload.type, socketIOResponse.type, requestMeta.type],
+    [mcpRequest.type]: [mcpPayload.type, mcpResponse.type],
     [mockServer.type]: [mockRoute.type],
     [environment.type]: [environment.type],
     [unitTestSuite.type]: [unitTest.type, unitTestResult.type],

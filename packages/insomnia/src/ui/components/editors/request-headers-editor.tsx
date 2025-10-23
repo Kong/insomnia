@@ -14,7 +14,7 @@ interface Props {
   headers: RequestHeader[];
   bulk: boolean;
   isDisabled?: boolean;
-  requestType: 'Request' | 'RequestGroup' | 'WebSocketRequest';
+  requestType: 'Request' | 'RequestGroup' | 'WebSocketRequest' | 'McpRequest';
 }
 export const readOnlyWebsocketPairs = [
   { name: 'Connection', value: 'Upgrade' },

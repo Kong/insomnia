@@ -134,6 +134,7 @@ export enum UpdateURL {
 
 // Oauth redirect URL
 export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.insomnia.rest/oauth/redirect';
+export const getOauthRelayUrl = () => env.OAUTH_RELAY_URL || 'https://app.insomnia.rest/oauth/relay';
 
 // API
 export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
@@ -336,7 +337,8 @@ export const sortOrderName: Record<SortOrder, string> = {
   'type-asc': 'Requests First',
 };
 
-export const EXTERNAL_VAULT_PLUGIN_NAME = getAppBundlePlugins()[0].name;
+export const EXTERNAL_VAULT_PLUGIN_NAME = '@kong/insomnia-plugin-external-vault';
+export const AI_PLUGIN_NAME = '@kong/insomnia-plugin-ai';
 
 export type DashboardSortOrder = 'name-asc' | 'name-desc' | 'created-asc' | 'created-desc' | 'modified-desc';
 
@@ -550,3 +552,9 @@ export const RESPONSE_CODE_REASONS: Record<number, string> = {
 
 // (ms) curently server timeout is 30s
 export const INSOMNIA_FETCH_TIME_OUT = 30_000;
+
+// channel names for real time events (websocket/socket-io/mcp)
+export const REALTIME_EVENTS_CHANNELS = {
+  READY_STATE: 'readyState',
+  NEW_EVENT: 'newEventReceived',
+};

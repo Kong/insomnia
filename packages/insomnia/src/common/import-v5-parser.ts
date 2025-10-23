@@ -145,7 +145,14 @@ const ApiKeyAuthenticationSchema = z.object({
 const OAuth2AuthenticationSchema = z.object({
   type: z.literal('oauth2'),
   disabled: z.boolean().optional(),
-  grantType: z.enum(['authorization_code', 'client_credentials', 'implicit', 'password', 'refresh_token']),
+  grantType: z.enum([
+    'authorization_code',
+    'client_credentials',
+    'implicit',
+    'password',
+    'refresh_token',
+    'mcp_auth_flow',
+  ]),
   accessTokenUrl: z.string().optional(),
   authorizationUrl: z.string().optional(),
   clientId: z.string().optional(),

@@ -7,7 +7,7 @@ import { database, database as db } from '../../common/database';
 import type { InsomniaFile } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '../../common/insomnia-v5';
 import * as models from '../../models';
-import { isWorkspace, type Workspace } from '../../models/workspace';
+import { isMcp, isWorkspace, type Workspace } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import Stat from './stat';
 import { SystemError } from './system-error';
@@ -140,7 +140,10 @@ export class GitProjectNeDBClient {
 
   async readdir(filePath: string) {
     filePath = path.normalize(filePath);
-    const workspaces = await db.find<Workspace>(models.workspace.type, { parentId: this._projectId });
+    // Exclude the mcp workspace since it's not supported in git sync
+    const workspaces = (await db.find<Workspace>(models.workspace.type, { parentId: this._projectId })).filter(
+      w => !isMcp(w),
+    );
     const workspaceMetas = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
       parentId: {
         $in: workspaces.map(w => w._id),

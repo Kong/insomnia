@@ -3,27 +3,35 @@ import { format } from 'date-fns';
 import React, { type FC, useEffect, useRef } from 'react';
 import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
 
+import { HelpTooltip } from '~/ui/components/help-tooltip';
+
+import { METHOD_UNKNOWN, NOTIFICATIONS_LIST_CHANGED, unsupportedMethodPrefix } from '../../../common/mcp-utils';
 import type { CurlEvent } from '../../../main/network/curl';
+import type { McpEvent } from '../../../main/network/mcp';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
 import { type IconId, SvgIcon } from '../svg-icon';
 
+type EventTypes = WebSocketEvent | CurlEvent | SocketIOEvent | McpEvent;
 const Timestamp: FC<{ time: Date | number }> = ({ time }) => {
   const date = format(time, 'HH:mm:ss');
   return <>{date}</>;
 };
 
 interface Props {
-  events: (WebSocketEvent | CurlEvent | SocketIOEvent)[];
+  events: EventTypes[];
   selectionId?: string;
-  onSelect: (event: WebSocketEvent | CurlEvent | SocketIOEvent) => void;
+  onSelect: (event: EventTypes) => void;
+  autoSelectLatestEvent?: boolean;
 }
 
-const isSocketIOEvent = (event: WebSocketEvent | CurlEvent | SocketIOEvent): event is SocketIOEvent => {
+const isSocketIOEvent = (event: EventTypes): event is SocketIOEvent => {
   return 'eventName' in event && typeof event.eventName === 'string';
 };
 
-function getIcon(event: WebSocketEvent | CurlEvent | SocketIOEvent): IconId {
+const isMcpEvent = (event: EventTypes): event is McpEvent => event._id.toString().startsWith('mcp-');
+
+function getIcon(event: EventTypes): IconId {
   switch (event.type) {
     case 'message': {
       if (event.direction === 'OUTGOING') {
@@ -49,13 +57,16 @@ function getIcon(event: WebSocketEvent | CurlEvent | SocketIOEvent): IconId {
     case 'info': {
       return 'info';
     }
+    case 'notification': {
+      return 'receive';
+    }
     default: {
       return 'bug';
     }
   }
 }
 
-const getMessage = (event: WebSocketEvent | CurlEvent | SocketIOEvent): string | JSX.Element => {
+const getMessage = (event: EventTypes): string | JSX.Element => {
   switch (event.type) {
     case 'message': {
       if (isSocketIOEvent(event)) {
@@ -71,10 +82,37 @@ const getMessage = (event: WebSocketEvent | CurlEvent | SocketIOEvent): string |
           </div>
         );
       }
+      if (isMcpEvent(event)) {
+        const eventMethod = event.method || METHOD_UNKNOWN;
+        const isUnsupportedMethod = eventMethod.startsWith(unsupportedMethodPrefix);
+        return (
+          <div className="flex items-center">
+            {isUnsupportedMethod && <span className="bg-warning mr-2 rounded-sm px-2 py-1">Unsupported</span>}
+            <span className="flex-shrink">{eventMethod.replace(`${unsupportedMethodPrefix}`, '')}</span>
+          </div>
+        );
+      }
       if ('data' in event && typeof event.data === 'object') {
         return 'Binary data';
       }
       return event.data.toString();
+    }
+    case 'notification': {
+      if (isMcpEvent(event)) {
+        const eventMethod = event.method || '';
+        if (NOTIFICATIONS_LIST_CHANGED.includes(eventMethod)) {
+          return (
+            <span>
+              {eventMethod}
+              <HelpTooltip info className="space-left">
+                {`${eventMethod.split('/')[1]} list has been changed. Use the left panel to get the latest list.`}
+              </HelpTooltip>
+            </span>
+          );
+        }
+        return eventMethod;
+      }
+      return 'notification';
     }
     case 'open': {
       return 'Connected successfully';
@@ -100,8 +138,9 @@ const getMessage = (event: WebSocketEvent | CurlEvent | SocketIOEvent): string |
   }
 };
 
-export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
+export const EventLogView: FC<Props> = ({ events, onSelect, selectionId, autoSelectLatestEvent = false }) => {
   const parentRef = useRef<HTMLTableSectionElement>(null);
+
   const virtualizer = useVirtualizer({
     getScrollElement: () => parentRef.current,
     count: events.length,
@@ -151,8 +190,14 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
           >
             {item => {
               const event = events[item.index];
+              const isSelectedRow = event._id === selectionId;
+              // add focus style when autoSelectLatestEvent is true for the first row
+              const rowExtraClasses =
+                isSelectedRow && autoSelectLatestEvent
+                  ? 'bg-[--hl-sm] outline-none'
+                  : 'focus-within:bg-[--hl-sm] focus:outline-none';
               return (
-                <Row className="group transition-colors focus-within:bg-[--hl-sm] focus:outline-none">
+                <Row className={`group transition-colors ${rowExtraClasses}`}>
                   <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] p-2 text-sm font-medium focus:outline-none group-last-of-type:border-none">
                     <SvgIcon icon={getIcon(event)} />
                   </Cell>

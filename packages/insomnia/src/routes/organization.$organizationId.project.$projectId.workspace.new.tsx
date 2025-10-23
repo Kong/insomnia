@@ -1,10 +1,14 @@
+import fs from 'node:fs';
 import path from 'node:path';
 
+import type { MockRouteData } from '@kong/insomnia-plugin-ai';
 import { href, redirect } from 'react-router';
 
-import { getAppVersion, METHOD_GET } from '~/common/constants';
+import { getAppVersion, getMockServiceURL, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
 import * as models from '~/models';
+import { userSession } from '~/models';
+import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import { isGitProject, isLocalProject } from '~/models/project';
 import { isCollection, isEnvironment, scopeToActivity, type WorkspaceScope } from '~/models/workspace';
@@ -12,8 +16,13 @@ import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
+import { showToast } from '~/ui/components/toast-notification';
+import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
+
+import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.new';
+import { mockRouteToHar } from './organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 
 interface NewWorkspaceData {
   name: string;
@@ -21,11 +30,17 @@ interface NewWorkspaceData {
   folderPath?: string;
   mockServerType?: 'self-hosted' | 'cloud';
   mockServerUrl?: string;
+  mockServerCreationType?: 'ai' | 'manual';
+  mockServerOASFilePath?: string;
+  mockServerSpecURL?: string;
+  mockServerSpecSource?: 'file' | 'url' | 'text';
+  mockServerSpecText?: string;
+  mockServerAdditionalFiles?: string[];
+  apiSpecContents?: string;
   fileName?: string;
   withRequest?: boolean;
+  mockServerDynamicResponses?: boolean;
 }
-
-import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.new';
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
@@ -41,9 +56,38 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     const scope = workspaceData.scope;
     invariant(
-      scope === 'design' || scope === 'collection' || scope === 'mock-server' || scope === 'environment',
+      scope === 'design' ||
+        scope === 'collection' ||
+        scope === 'mock-server' ||
+        scope === 'environment' ||
+        scope === 'mcp',
       'Scope is required',
     );
+
+    if (scope === 'mock-server') {
+      const mockServerType = workspaceData.mockServerType;
+      invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
+
+      const modelConfig = await window.main.llm.getCurrentConfig();
+      if (workspaceData.mockServerCreationType === 'ai') {
+        const isFeatureEnabled = await window.main.llm.getAIFeatureEnabled('aiMockServers');
+        invariant(isFeatureEnabled, 'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.');
+
+        const validationError = validateMockServerSpec(workspaceData);
+        if (validationError) {
+          return validationError;
+        }
+
+        if (workspaceData.mockServerSpecSource === 'url' || workspaceData.mockServerSpecSource === 'text') {
+          invariant(modelConfig && modelConfig.backend !== 'gguf', 'The URL and Text options are not supported with GGUF models.');
+        }
+      }
+
+      if (mockServerType === 'self-hosted') {
+        const mockServerUrl = workspaceData.mockServerUrl;
+        invariant(typeof mockServerUrl === 'string' && mockServerUrl.trim() !== '', 'Mock Server URL is required');
+      }
+    }
 
     const flushId = await database.bufferChanges();
 
@@ -68,47 +112,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     if (scope === 'mock-server') {
-      const mockServerType = workspaceData.mockServerType;
-      invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
+      const mockServerError = await createMockServer(workspace, workspaceData, flushId, organizationId, projectId, name);
 
-      const mockServerPatch: Partial<MockServer> = {
-        name,
-      };
-
-      if (mockServerType === 'cloud') {
-        mockServerPatch.useInsomniaCloud = true;
+      if (mockServerError) {
+        return { error: mockServerError };
       }
 
-      if (mockServerType === 'self-hosted') {
-        const mockServerUrl = workspaceData.mockServerUrl;
-        invariant(typeof mockServerUrl === 'string', 'Mock Server URL is required');
-        mockServerPatch.useInsomniaCloud = false;
-        mockServerPatch.url = mockServerUrl;
-      }
-
-      await models.environment.getOrCreateForParentId(workspace._id);
-      const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-      await models.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
-      await database.flushChanges(flushId);
-
-      const { id } = await models.userSession.getOrCreate();
-      if (id && !workspaceMeta.gitRepositoryId) {
-        const vcs = VCSInstance();
-        await initializeLocalBackendProjectAndMarkForSync({
-          vcs,
-          workspace,
-        });
-      }
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.mockCreate,
-      });
-      return redirect(
-        `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
-          organizationId,
-          projectId,
-          workspaceId: workspace._id,
-        })}/${scopeToActivity(workspace.scope)}`,
-      );
+      return { error: undefined };
     }
 
     if (scope === 'design') {
@@ -123,7 +133,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     await database.flushChanges(flushId);
 
     const { id } = await models.userSession.getOrCreate();
-    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project)) {
+    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project) && scope !== 'mcp') {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs,
@@ -137,6 +147,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       event = SegmentEvent.collectionCreate;
     } else if (isEnvironment(workspace)) {
       event = SegmentEvent.environmentWorkspaceCreate;
+    } else if (scope === 'mcp') {
+      event = SegmentEvent.mcpClientWorkspaceCreate;
     }
 
     window.main.trackSegmentEvent({
@@ -166,6 +178,36 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           projectId,
           workspaceId: workspace._id,
           requestId: activeRequestId,
+        }),
+      );
+    }
+
+    if (workspaceData.scope === 'mcp') {
+      const settings = await models.settings.getOrCreate();
+      const defaultHeaders = settings.disableAppVersionUserAgent
+        ? []
+        : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
+      // Create mcp request when MCP workspace is created
+      const newMcpRequest = await models.mcpRequest.create({
+        parentId: workspace._id,
+        transportType: 'streamable-http',
+        url: '',
+        name: 'My first MCP Client',
+        headers: defaultHeaders,
+        description: '',
+      });
+      const requestId = newMcpRequest._id;
+
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.mcpClientAdded,
+      });
+
+      return redirect(
+        href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId', {
+          organizationId,
+          projectId,
+          workspaceId: workspace._id,
+          requestId,
         }),
       );
     }
@@ -204,3 +246,203 @@ export const useWorkspaceNewActionFetcher = createFetcherSubmitHook(
     },
   clientAction,
 );
+
+async function createMockServer(
+  workspace: any,
+  workspaceData: NewWorkspaceData,
+  flushId: number,
+  organizationId: string,
+  projectId: string,
+  name: string,
+): Promise<string | undefined> {
+  try {
+    const mockServerType = workspaceData.mockServerType!;
+    const mockServerPatch: Partial<MockServer> = {
+      name,
+    };
+
+    if (mockServerType === 'cloud') {
+      mockServerPatch.useInsomniaCloud = true;
+    } else {
+      mockServerPatch.useInsomniaCloud = false;
+      mockServerPatch.url = workspaceData.mockServerUrl!;
+    }
+
+    await models.environment.getOrCreateForParentId(workspace._id);
+    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+    const mockServer = await models.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
+
+    const mockServerUrl = `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
+      organizationId,
+      projectId,
+      workspaceId: workspace._id,
+    })}/mock-server`;
+
+    const generationStartTime = Date.now();
+
+    if (workspaceData.mockServerCreationType === 'ai') {
+      let openapiSpec: string | undefined;
+      let specUrl: string | undefined;
+      let specText: string | undefined;
+
+      if (workspaceData.apiSpecContents) {
+        openapiSpec = workspaceData.apiSpecContents;
+      } else if (workspaceData.mockServerSpecSource === 'file') {
+        openapiSpec = fs.readFileSync(workspaceData.mockServerOASFilePath!, 'utf8');
+      } else if (workspaceData.mockServerSpecSource === 'url') {
+        specUrl = workspaceData.mockServerSpecURL!;
+      } else if (workspaceData.mockServerSpecSource === 'text') {
+        specText = workspaceData.mockServerSpecText!;
+      }
+
+      const modelConfig = await window.main.llm.getCurrentConfig();
+      const result = await window.main.generateMockRouteDataFromSpec(
+        openapiSpec,
+        specUrl,
+        specText,
+        modelConfig,
+        workspaceData.mockServerDynamicResponses ?? false,
+        workspaceData.mockServerAdditionalFiles || [],
+      );
+
+      if (result.error && result.error !== '') {
+        try {
+          await models.workspace.remove(workspace);
+        } catch (removeError) {
+          console.error('Failed to rollback workspace creation:', removeError);
+        }
+        return result.error;
+      }
+
+      const { id: sessionId } = await userSession.getOrCreate();
+      await createMockRoutes(result.routes, mockServer, sessionId, organizationId);
+    }
+
+    await database.flushChanges(flushId);
+
+    const generationDurationMs = Date.now() - generationStartTime;
+
+    const { id } = await models.userSession.getOrCreate();
+    if (id && !workspaceMeta.gitRepositoryId) {
+      const vcs = VCSInstance();
+      await initializeLocalBackendProjectAndMarkForSync({
+        vcs,
+        workspace,
+      });
+    }
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.mockCreate,
+      properties: {
+        hosting: workspaceData.mockServerType || '',
+        generation: workspaceData.mockServerCreationType || '',
+        generation_from: workspaceData.apiSpecContents ? 'design_doc' : workspaceData.mockServerSpecSource || '',
+        dynamic_responses: workspaceData.mockServerDynamicResponses ? 'yes' : 'no',
+        generation_duration_seconds: generationDurationMs / 1000,
+      },
+    });
+
+    showToast(
+      {
+        icon: 'rocket',
+        title: 'Mock server has been created',
+        description: (
+          <>
+            <a href={mockServerUrl} style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}>
+              "{mockServer.name}" has been created and is ready to use. Click to open.
+            </a>
+          </>
+        ),
+        status: 'success',
+      },
+      { timeout: 10000 },
+    );
+
+    return undefined;
+  } catch (error) {
+    try {
+      await models.workspace.remove(workspace);
+    } catch (removeError) {
+      console.error('Failed to rollback workspace creation:', removeError);
+    }
+    return error instanceof Error ? error.message : String(error);
+  }
+}
+
+function validateMockServerSpec(workspaceData: NewWorkspaceData) {
+  if (workspaceData.apiSpecContents) {
+    return null;
+  }
+
+  if (workspaceData.mockServerSpecSource === 'file' && !workspaceData.mockServerOASFilePath) {
+    return {
+      error: 'OpenAPI specification file is required when file source is selected',
+    };
+  }
+
+  if (workspaceData.mockServerSpecSource === 'url' && !workspaceData.mockServerSpecURL) {
+    return {
+      error: 'URL is required when URL source is selected',
+    };
+  }
+
+  if (workspaceData.mockServerSpecSource === 'text' && !workspaceData.mockServerSpecText) {
+    return {
+      error: 'Text input is required when text source is selected',
+    };
+  }
+
+  return null;
+}
+
+async function createMockRoutes(
+  routes: MockRouteData[],
+  mockServer: MockServer,
+  sessionId: string,
+  organizationId: string,
+) {
+  for (const route of routes) {
+    const mockRouteCreateData: Partial<MockRoute> = {
+      parentId: mockServer._id,
+      name: route.path,
+      method: route.method,
+      statusCode: route.statusCode,
+      headers: route.headers,
+      body: route.body || '',
+    };
+
+    if (route.mimeType !== undefined) {
+      mockRouteCreateData.mimeType = route.mimeType;
+    }
+
+    const mockRoute = await models.mockRoute.create(mockRouteCreateData);
+
+    try {
+      const compoundId = mockRoute.parentId + mockRoute.name;
+      const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
+
+      if (mockbinUrl && sessionId) {
+        await insomniaFetch({
+          origin: mockbinUrl,
+          path: `/bin/upsert/${compoundId}`,
+          method: 'PUT',
+          organizationId,
+          sessionId,
+          headers: {
+            'insomnia-mock-method': route.method,
+          },
+          data: mockRouteToHar({
+            statusCode: mockRoute.statusCode,
+            statusText: mockRoute.statusText || '',
+            headersArray: mockRoute.headers,
+            mimeType: mockRoute.mimeType || '',
+            body: mockRoute.body || '',
+          }),
+        });
+      }
+    } catch (error) {
+      const msg = `Failed to register route ${mockRoute.method} ${mockRoute.name}:`
+      console.error(msg, error);
+    }
+  }
+}
