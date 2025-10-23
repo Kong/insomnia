@@ -1825,9 +1825,10 @@ export class GitVCS {
     await git.deleteBranch({ ...this._baseOpts, ref: branch });
   }
 
-  async checkout(branch: string) {
+  async checkout(branch: string, { force = false }: { force?: boolean } = { force: false }) {
     console.log('[git] Checkout', {
       branch,
+      force,
     });
     const localBranches = await this.listBranches();
     const syncedBranches = await this.listRemoteBranches();
@@ -1856,8 +1857,8 @@ export class GitVCS {
       await git.checkout({
         ...this._baseOpts,
         ref: branch,
-
         remote: 'origin',
+        force,
       });
       const branches = await this.listBranches();
       console.log('[git] Checkout branches', { branches });

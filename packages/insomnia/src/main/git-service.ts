@@ -1564,6 +1564,23 @@ export const checkoutGitBranchAction = async ({
     }
 
     if (err instanceof Errors.CheckoutConflictError) {
+      const { hasUncommittedChanges } = await getGitChanges();
+
+      if (!hasUncommittedChanges) {
+        // Retry checkout with force if there are no uncommitted changes
+        try {
+          await GitVCS.checkout(branch, { force: true });
+          return {
+            success: true,
+          };
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : error.toString();
+          return {
+            errors: [errorMessage],
+          };
+        }
+      }
+
       return {
         errors: [`${err.message} - Please commit or discard your changes before switching branches.`],
       };
