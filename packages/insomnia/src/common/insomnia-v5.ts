@@ -229,9 +229,7 @@ function removeEmptyFields(data: any): any {
   } else if (data && typeof data === 'object') {
     const object = Object.fromEntries(
       Object.entries(data)
-        .map(([key, value]) => {
-          return [key, removeEmptyFields(value)];
-        })
+        .map(([key, value]) => [key, removeEmptyFields(value)])
         .filter(([, value]) => value !== undefined),
     );
 
@@ -490,10 +488,10 @@ function getCollection(
       parentId: string,
     ) {
       collection?.forEach(item => {
-        // Detect folders: items that are NOT requests, gRPC, or WebSocket
-        const isFolder = !('method' in item) && !('reflectionApi' in item) && !('url' in item);
+        // Detect groups: items that are NOT requests, gRPC, or WebSocket
+        const isGroup = !('method' in item) && !('reflectionApi' in item) && !('url' in item);
 
-        if (isFolder) {
+        if (isGroup) {
           const requestGroup: WithExportType<RequestGroup> = {
             ...mapMetaToInsomniaMeta(
               item.meta || {

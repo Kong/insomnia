@@ -1330,7 +1330,7 @@ export const multipleCommitToGitRepoAction = async ({
 
   for (const commit of commits) {
     // Get current git status
-    const { changes } = await getGitChanges(GitVCS);
+    const { changes } = await getGitChanges();
 
     // First, unstage everything to start with a clean slate for this commit
     if (changes.staged.length > 0) {
@@ -1341,7 +1341,7 @@ export const multipleCommitToGitRepoAction = async ({
     const filesToStageForCommit: { path: string; status: [any, any, any] }[] = [];
 
     // Refresh changes after unstaging everything
-    const { changes: currentChanges } = await getGitChanges(GitVCS);
+    const { changes: currentChanges } = await getGitChanges();
 
     for (const file of commit.files) {
       const fileChange = currentChanges.unstaged.find(c => c.path === file);
@@ -1564,6 +1564,23 @@ export const checkoutGitBranchAction = async ({
     }
 
     if (err instanceof Errors.CheckoutConflictError) {
+      const { hasUncommittedChanges } = await getGitChanges();
+
+      if (!hasUncommittedChanges) {
+        // Retry checkout with force if there are no uncommitted changes
+        try {
+          await GitVCS.checkout(branch, { force: true });
+          return {
+            success: true,
+          };
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : error.toString();
+          return {
+            errors: [errorMessage],
+          };
+        }
+      }
+
       return {
         errors: [`${err.message} - Please commit or discard your changes before switching branches.`],
       };
