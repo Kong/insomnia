@@ -66,7 +66,6 @@ export const init = async () => {
   const checkForUpdates = isNsis ? initNsisUpdater() : initAutoUpdater();
   const settings = await models.settings.get();
   const updateSupported = isUpdateSupported();
-  const updateUrl = updateSupported && getUpdateUrl(settings.updateChannel);
   // perhaps disable this method of upgrading just in case it trigger before backup is complete
   // on app start
   if (updateSupported) {
@@ -83,12 +82,9 @@ export const init = async () => {
   }
   // on check now button pushed
   ipcMainOn('manualUpdateCheck', async () => {
+    showUpdateStatusToast('Checking for updates...');
     console.log('[updater] Manual update check');
 
-    if (!updateUrl) {
-      return;
-    }
-    showUpdateStatusToast('Checking for updates...');
     await delay(300); // Pacing
     checkForUpdates(settings);
   });
