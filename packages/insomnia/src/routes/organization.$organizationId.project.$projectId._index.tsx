@@ -700,12 +700,12 @@ const Component = () => {
       icon: ['fac', 'mcp'] as unknown as IconProp,
       action: createNewMcpClient,
     },
-    {
+    ...(canCreateMockServer ? [{
       id: 'new-mock-server',
       name: 'Mock Server',
-      icon: 'server',
+      icon: 'server' as IconProp,
       action: createNewMockServer,
-    },
+    }] : []),
     {
       id: 'new-environment',
       name: 'Environment',
@@ -759,16 +759,16 @@ const Component = () => {
         run: createNewMcpClient,
       },
     },
-    {
+    ...(canCreateMockServer ? [{
       id: 'mock-server',
       label: `Mock (${mockServersCount})`,
-      icon: 'server',
+      icon: 'server' as IconName,
       action: {
-        icon: 'plus',
+        icon: 'plus' as IconName,
         label: 'New Mock Server',
         run: createNewMockServer,
       },
-    },
+    }] : []),
     {
       id: 'environment',
       label: `Environments (${environmentsCount})`,

@@ -690,12 +690,12 @@ const Component = () => {
       icon: 'file',
       action: createNewDocument,
     },
-    {
+    ...(canCreateMockServer ? [{
       id: 'new-mock-server',
       name: 'Mock Server',
-      icon: 'server',
+      icon: 'server' as IconName,
       action: createNewMockServer,
-    },
+    }] : []),
     {
       id: 'new-environment',
       name: 'Environment',
@@ -739,16 +739,16 @@ const Component = () => {
         run: createNewCollection,
       },
     },
-    {
+    ...(canCreateMockServer ? [{
       id: 'mock-server',
       label: `Mock (${mockServersCount})`,
-      icon: 'server',
+      icon: 'server' as IconName,
       action: {
-        icon: 'plus',
+        icon: 'plus' as IconName,
         label: 'New Mock Server',
         run: createNewMockServer,
       },
-    },
+    }] : []),
     {
       id: 'environment',
       label: `Environments (${environmentsCount})`,
