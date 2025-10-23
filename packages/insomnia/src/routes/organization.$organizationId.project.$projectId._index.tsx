@@ -670,10 +670,7 @@ const Component = () => {
     });
   };
 
-  const isEnterprise = organizationData?.currentPlan?.type.includes('enterprise');
-  const isCloudProjectOrEnterprisePlan = activeProject?.remoteId || isEnterprise;
-  const canCreateMockServer = activeProject?._id && isCloudProjectOrEnterprisePlan;
-
+  const canCreateMockServer = activeProject?._id;
   const isGitSyncEnabled = features.gitSync.enabled;
 
   const createInProjectActionList: {
@@ -703,7 +700,7 @@ const Component = () => {
     ...(canCreateMockServer ? [{
       id: 'new-mock-server',
       name: 'Mock Server',
-      icon: 'server' as IconProp,
+      icon: 'server' as IconName,
       action: createNewMockServer,
     }] : []),
     {

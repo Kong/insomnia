@@ -69,7 +69,7 @@ export const NewWorkspaceModal = ({
 
   const isLocalProject = !project.remoteId;
   const isEnterprise = currentPlan?.type.includes('enterprise');
-  const isSelfHostedDisabled = !isEnterprise || !storageRules.enableLocalVault;
+  const isSelfHostedDisabled = !storageRules.enableLocalVault;
   const isCloudProjectDisabled = isLocalProject || !storageRules.enableCloudSync;
   const isMcpWorkspace = isMcp({ scope });
   // Mcp workspaces do not support Git sync for now
