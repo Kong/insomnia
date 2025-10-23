@@ -15,6 +15,9 @@ export const canSync = false;
 
 export interface BaseMcpResponse {
   environmentId: string | null;
+  // Only for STDIO transport
+  status: string;
+  // Only for HTTP transport
   statusCode: number;
   statusMessage: string;
   url: string;
@@ -41,6 +44,7 @@ export function init(): BaseMcpResponse {
     timelinePath: '',
     eventLogPath: '',
     error: '',
+    status: '',
     statusCode: 0,
     statusMessage: '',
     requestVersionId: null,

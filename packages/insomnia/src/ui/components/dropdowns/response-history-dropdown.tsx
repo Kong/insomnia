@@ -20,7 +20,7 @@ import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { SizeTag } from '../tags/size-tag';
-import { StatusTag } from '../tags/status-tag';
+import { StatusTag, StringStatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
 import { URLTag } from '../tags/url-tag';
 import { TimeFromNow } from '../time-from-now';
@@ -140,7 +140,14 @@ export const ResponseHistoryDropdown = ({
           onClick={() => handleSetActiveResponse(requestId, response)}
           label={
             <div className="leading-10">
-              {!isSocketIOResponse(response) && (
+              {isSocketIOResponse(response) ? null : isMcpResponse(response) && response.transportType === 'stdio' ? (
+                <StringStatusTag
+                  small
+                  status={response.status}
+                  statusMessage={response.statusMessage || undefined}
+                  tooltipDelay={1000}
+                />
+              ) : (
                 <StatusTag
                   small
                   statusCode={response.statusCode}
