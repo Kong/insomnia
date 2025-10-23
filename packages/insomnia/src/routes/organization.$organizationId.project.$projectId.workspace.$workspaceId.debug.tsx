@@ -117,7 +117,6 @@ import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-request-pane';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
-import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useExecutionState } from '~/ui/hooks/use-execution-state';
 import { useFilteredRequests } from '~/ui/hooks/use-filtered-requests';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
@@ -252,10 +251,6 @@ const DebugEntry = () => {
     activeProject,
     activeRequest,
     activeRequestGroup,
-  });
-
-  useCloseConnection({
-    organizationId,
   });
 
   if (activeWorkspace.scope === 'mcp') {
