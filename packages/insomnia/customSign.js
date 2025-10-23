@@ -1,7 +1,7 @@
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 const util = require('util');
 const path = require('path');
-const execAsync = util.promisify(exec);
+// No need for execAsync now.
 
 // adapted from https://www.electron.build/win.html#how-do-delegate-code-signing
 // It was possible code-sign installer after packaging, but some files are only available
@@ -41,14 +41,41 @@ exports.default = async function (configuration) {
         \`\`-input_file_path="${dockerInputFilePath}" \`\`-override`;
 
   try {
-    console.log('[customSign] Docker command:', dockerCommand);
+    // Build Docker arguments using array to avoid shell interpolation
+    const dockerArgs = [
+      'run', '--rm',
+      '-v', `${directoryPath}:${codeSignPath}`,
+      '-e', `USERNAME=${USERNAME}`,
+      '-e', `PASSWORD=${PASSWORD}`,
+      '-e', `CREDENTIAL_ID=${CREDENTIAL_ID}`,
+      '-e', `TOTP_SECRET=${TOTP_SECRET}`,
+      'ghcr.io/sslcom/codesigner-win:latest', 'sign',
+      `-input_file_path=${dockerInputFilePath}`,
+      '-override'
+    ];
+    
+    console.log('[customSign] Docker command:', 'docker', ...dockerArgs);
     console.log('[customSign] Starting to run sign cmd via docker...');
-    const { stdout, stderr } = await execAsync(dockerCommand);
-
-    console.log('[customSign] Docker command output:', stdout);
-    if (stderr) {
-      console.error('[customSign] Docker command error output:', stderr);
-    }
+    
+    // Run the docker command using spawn in a Promise
+    await new Promise((resolve, reject) => {
+      const child = spawn('docker', dockerArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
+      let stdout = '', stderr = '';
+      child.stdout.on('data', (data) => { stdout += data.toString(); });
+      child.stderr.on('data', (data) => { stderr += data.toString(); });
+      child.on('close', (code) => {
+        console.log('[customSign] Docker command output:', stdout);
+        if (stderr) {
+          console.error('[customSign] Docker command error output:', stderr);
+        }
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(new Error(`Docker exited with code ${code}`));
+        }
+      });
+      child.on('error', reject);
+    });
 
     console.log('[customSign] File signed successfully.');
   } catch (error) {
