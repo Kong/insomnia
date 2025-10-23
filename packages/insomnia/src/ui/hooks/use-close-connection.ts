@@ -77,6 +77,7 @@ export const useCloseConnection = ({ organizationId }: { organizationId: string 
       window.main.grpc.closeAll();
       window.main.curl.closeAll();
       window.main.socketIO.closeAll();
+      window.main.mcp.closeAll();
     };
   }, [organizationId]);
 };
