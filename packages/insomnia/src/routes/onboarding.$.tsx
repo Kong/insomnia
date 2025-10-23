@@ -1,4 +1,5 @@
-import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link, Route, Routes, useLocation } from 'react-router';
 
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
@@ -11,7 +12,7 @@ import smart_commits from '~/ui/images/onboarding/smart_commits.png';
 const features = [
   {
     id: 'mcp_client',
-    icon: 'window-restore',
+    icon: ['fac', 'mcp'] as unknown as IconProp,
     title: 'MCP Client',
     description:
       'Test and debug MCP servers with the same workflow you use for APIs including support for oAuth and Dynamic Client Registration.',
@@ -19,7 +20,7 @@ const features = [
   },
   {
     id: 'auto_generated_mock_servers',
-    icon: 'git',
+    icon: 'server',
     title: 'Auto-generated mock servers',
     description:
       'Automatically generate a mock server with executable routes from an OpenAPI spec, URL, or chat-based prompt.',
@@ -27,7 +28,7 @@ const features = [
   },
   {
     id: 'smart_commits',
-    icon: 'cloud',
+    icon: ['fas', 'code-commit'],
     title: 'Smart Commits',
     description:
       'Spend more time coding and less time cleaning up commits. Automatically create commits and comments from your staged changes using AI.',
@@ -35,7 +36,7 @@ const features = [
   },
   {
     id: 'git_sync_essentials',
-    icon: 'git',
+    icon: ['fab', 'git-alt'],
     title: 'Git Sync for all plans',
     description:
       'Now Essentials (free)  plan users can get the full benefits of Git Sync projects for up to 3 plan users.',
@@ -43,7 +44,7 @@ const features = [
   },
 ] satisfies {
   id: string;
-  icon: IconName;
+  icon: IconProp;
   title: string;
   description: string;
   image: string;
@@ -55,14 +56,14 @@ const FeatureWizardView = () => {
       <Route
         path="/"
         element={
-          <ul className="grid grid-cols-3 justify-center gap-2 p-4">
+          <ul className="grid grid-cols-2 justify-center gap-2 p-4">
             {features.map(feature => (
               <li key={feature.id}>
                 <Link
                   className="flex h-32 w-full select-none flex-col items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--hl-xs] p-4 transition-colors hover:bg-[--hl-sm] hover:no-underline"
                   to={`/onboarding/${feature.id}`}
                 >
-                  <i className={`fa fa-${feature.icon} text-xl`} />
+                  <FontAwesomeIcon icon={feature.icon} className="text-xl" />
                   <span className="text-center text-sm">{feature.title}</span>
                 </Link>
               </li>
