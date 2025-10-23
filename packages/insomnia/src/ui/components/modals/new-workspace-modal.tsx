@@ -372,8 +372,8 @@ export const NewWorkspaceModal = ({
                         >
                           <div className="flex items-center gap-2">
                             <Heading className="text-lg font-bold">
-                              <Badge color="surprise" icon={<SvgIcon icon="sparkles" />} label="AI" textSize="1rem" />
-                              <span className="ml-2">Auto Generate</span>
+                              <Badge color="surprise" icon={<SvgIcon icon="sparkles" />} label="AI" />
+                              <span>Auto Generate</span>
                             </Heading>
                           </div>
                           <p className="pt-2">

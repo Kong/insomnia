@@ -98,7 +98,8 @@ export const AISettings = () => {
         <div className="flex flex-col gap-4">
           <div>
             <h3 className="mb-3 text-base font-semibold text-[--color-font]">
-              <Badge color="surprise" icon={<SvgIcon icon="sparkles" />} label="AI" textSize="1rem" /> Features
+              <Badge color="surprise" icon={<SvgIcon icon="sparkles" />} label="AI" />
+              Features
             </h3>
             {!hasActiveLLM ? (
               <p className="mb-4 text-sm text-[--hl]">Configure and activate an LLM below to enable AI features.</p>

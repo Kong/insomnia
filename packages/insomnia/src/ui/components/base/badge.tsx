@@ -4,16 +4,27 @@ export interface BadgeProps {
   color: string;
   icon?: React.ReactNode;
   label: string;
-  textSize?: string;
 }
 
-export const Badge: FC<BadgeProps> = ({ color, icon, label, textSize = '0.8rem' }) => {
+export const Badge: FC<BadgeProps> = ({ color, icon, label }) => {
   return (
     <span
-      className={`mr-0.5 rounded-[2.5px] border-2 border-solid px-[0.25rem] py-[0.1rem] text-[${textSize}] text-[--color-${color}] border--[rgb(--color-${color}-rgb)]`}
+      style={{
+        borderWidth: '1.5px',
+        borderRadius: '2.5px',
+        borderStyle: 'solid',
+        marginRight: '6.5px',
+        padding: '1px 3.5px',
+        fontWeight: '500',
+        verticalAlign: 'middle',
+        position: 'relative',
+        top: '-1px',
+        color: `rgb(var(--color-${color}-rgb))`,
+        borderColor: `rgb(var(--color-${color}-rgb))`,
+      }}
     >
       {icon && icon}
-      <span className="ml-1">{label}</span>
+      <span className="ml-1 align-top">{label}</span>
     </span>
   );
 };
