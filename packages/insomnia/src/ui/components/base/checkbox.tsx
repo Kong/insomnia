@@ -24,7 +24,16 @@ export const Checkbox = memo(
       <RaCheckbox
         isSelected={isSelected}
         onChange={onChange}
-        className={classnames('group flex items-center gap-2 p-0', className)}
+        className={({ isDisabled, isReadOnly, isFocused, isFocusVisible, isHovered, isPressed }) =>
+          classnames('group flex items-center gap-2 p-0', className, {
+            '': isDisabled,
+            '': isReadOnly,
+            '': isFocused,
+            '': isFocusVisible,
+            '': isHovered,
+            '': isPressed,
+          })
+        }
         {...rest}
       >
         <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">

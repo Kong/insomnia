@@ -495,6 +495,9 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
               <div className="flex w-full items-center gap-2">
                 <div className="flex h-full flex-shrink flex-grow basis-1/3 items-center">
                   <TooltipTrigger>
+                    <NavLink className="text-[--color-font]" to={'/components-preview'}>
+                      components preview
+                    </NavLink>
                     <Button
                       data-testid="settings-button"
                       className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
