@@ -5,8 +5,10 @@ import { app, autoUpdater, BrowserWindow, dialog } from 'electron';
 
 import type { Settings } from '~/models/settings';
 
+import appConfig from '../../config/config.json';
+import { version } from '../../package.json';
 import packageJSON from '../../package.json';
-import { CHECK_FOR_UPDATES_INTERVAL, getAppId, getAppVersion, isDevelopment, UpdateURL } from '../common/constants';
+import { CHECK_FOR_UPDATES_INTERVAL, isDevelopment } from '../common/constants';
 import { delay } from '../common/misc';
 import * as models from '../models/index';
 import { invariant } from '../utils/invariant';
@@ -38,11 +40,15 @@ export const isUpdateSupported = () => {
   }
   return true;
 };
-const getUpdateUrl = (updateChannel: string): string | null => {
+
+const getUpdatesBaseURL = process.env.INSOMNIA_UPDATES_URL || 'https://updates.insomnia.rest';
+export const getUpdateUrl = (updateChannel: string): string | null => {
   invariant(isUpdateSupported(), 'auto update is not supported');
-  const fullUrl = new URL(process.platform === 'win32' ? UpdateURL.windows : UpdateURL.mac);
-  fullUrl.searchParams.append('v', getAppVersion());
-  fullUrl.searchParams.append('app', getAppId());
+  const fullUrl = new URL(
+    process.platform === 'win32' ? getUpdatesBaseURL + '/updates/win' : getUpdatesBaseURL + '/builds/check/mac',
+  );
+  fullUrl.searchParams.append('v', version);
+  fullUrl.searchParams.append('app', appConfig.appId);
   fullUrl.searchParams.append('channel', updateChannel);
   console.log(`[updater] Using url ${fullUrl.toString()}`);
   return fullUrl.toString();
