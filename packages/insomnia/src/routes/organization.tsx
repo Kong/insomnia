@@ -13,7 +13,7 @@ import {
 import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { getAppWebsiteBaseURL } from '~/common/constants';
+import { getAppWebsiteBaseURL, isDevelopment } from '~/common/constants';
 import { userSession } from '~/models';
 import { isOwnerOfOrganization, isPersonalOrganization, type Organization } from '~/models/organization';
 import { type CurrentPlan, type UserProfileResponse } from '~/models/organization';
@@ -260,6 +260,11 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     <InsomniaLogo />
                   </div>
                   {!user ? <GitHubStarsButton /> : null}
+                  {isDevelopment() && (
+                    <NavLink className="text-[--color-font]" to={'/components-preview'}>
+                      components preview
+                    </NavLink>
+                  )}
                 </div>
                 <CommandPalette />
                 <div className="flex min-w-min items-center justify-end gap-[--padding-sm] space-x-3 p-2">

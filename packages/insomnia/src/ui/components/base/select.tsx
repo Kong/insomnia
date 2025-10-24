@@ -1,8 +1,8 @@
-import type { Key } from '@react-types/shared';
 import cn from 'classnames';
 import React from 'react';
 import {
   Button,
+  type Key,
   ListBox,
   ListBoxItem,
   Popover,
@@ -13,22 +13,23 @@ import {
 
 import { Icon } from '../icon';
 
-interface SelectProps {
-  value: string;
-  onChange: (value: Key | null) => void;
-  className?: string;
+interface CustomSelectProps<T extends object> extends Omit<RaSelectProps<T>, 'children'> {
+  label?: string;
+  value?: Key | null;
+  onChange?: RaSelectProps<T>['onSelectionChange'];
   options: { label: string; value: string }[];
 }
-
-export const Select = ({ value, onChange, className, options, ...rest }: SelectProps & RaSelectProps) => {
+// current react-aria only supports single selection
+export const Select = <T extends object>({
+  value,
+  className,
+  onChange,
+  options,
+  label,
+  ...rest
+}: CustomSelectProps<T>) => {
   return (
-    <RaSelect
-      placeholder="Select an item"
-      selectedKey={value}
-      onSelectionChange={onChange}
-      {...rest}
-      className={cn('', className)}
-    >
+    <RaSelect placeholder="Select an item" selectedKey={value} onSelectionChange={onChange} {...rest}>
       {({ isInvalid, isDisabled }) => (
         <>
           <Button
@@ -43,7 +44,7 @@ export const Select = ({ value, onChange, className, options, ...rest }: SelectP
               <Icon icon="chevron-down" />
             </span>
           </Button>
-          <Popover className="w-[--trigger-width]">
+          <Popover className="min-w-[--trigger-width]">
             <ListBox className="rounded border border-solid border-[--hl-sm] bg-[--color-bg]">
               {options?.map(option => (
                 <ListBoxItem
