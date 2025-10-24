@@ -1,4 +1,4 @@
-import classnames from 'classnames';
+import cn from 'classnames';
 import React, { memo, type ReactNode } from 'react';
 import {
   Checkbox as RaCheckbox,
@@ -24,7 +24,7 @@ export const Checkbox = memo(
       <RaCheckbox
         isSelected={isSelected}
         onChange={onChange}
-        className={classnames('group flex items-center gap-2 p-0', className)}
+        className={cn('group flex items-center gap-2 p-0', className)}
         {...rest}
       >
         <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
