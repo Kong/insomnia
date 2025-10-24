@@ -5,11 +5,12 @@ import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
+import { useRealtimeConnectionNotifications } from '~/ui/hooks/use-realtime-connection-notifications';
 
 import { getSetCookieHeaders } from '../../../common/misc';
+import type { McpEvent } from '../../../main/mcp/types';
 import type { CurlEvent } from '../../../main/network/curl';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
-import type { McpEvent } from '../../../main/network/mcp';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
 import { TRANSPORT_TYPES } from '../../../models/mcp-request';
@@ -129,6 +130,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
   }, [response]);
 
   const allEvents = useRealtimeConnectionEvents({ responseId: response._id, protocol }) as EventType[];
+  const allNotifications = useRealtimeConnectionNotifications({ responseId: response._id, protocol });
   const handleSelection = (event: EventType) => {
     setSelectedEvent((selected: EventType | null) => (selected?._id === event._id ? null : event));
   };
@@ -152,11 +154,6 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
 
         // Filter out events that don't match the selected event type
         if (eventType && event.type !== eventType) {
-          return false;
-        }
-
-        // Filter out MCP notification events which will show on another tab
-        if (event.type === 'notification') {
           return false;
         }
 
@@ -195,8 +192,6 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
       setSelectedEvent(events[0]);
     }
   }, [events, autoSelectLatestEvent]);
-
-  const notificationEvents = useMemo(() => allEvents.filter(event => event.type === 'notification'), [allEvents]);
 
   useEffect(() => {
     setSelectedEvent(null);
@@ -272,9 +267,9 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
               id="notifications"
             >
               Notifications
-              {notificationEvents.length > 0 && (
+              {allNotifications.length > 0 && (
                 <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
-                  {notificationEvents.length}
+                  {allNotifications.length}
                 </span>
               )}
             </Tab>
@@ -374,6 +369,8 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
                       onSelect={handleSelection}
                       selectionId={selectedEvent?._id}
                       autoSelectLatestEvent
+                      protocol={protocol}
+                      readyState={connected}
                     />
                   )}
                 </Panel>
@@ -391,7 +388,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
         </TabPanel>
         {isMcpResponse(response) && (
           <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="notifications">
-            <McpNotificationTab allEvents={notificationEvents} />
+            <McpNotificationTab allEvents={allNotifications} />
           </TabPanel>
         )}
         {!isSocketIOResponse(response) && (

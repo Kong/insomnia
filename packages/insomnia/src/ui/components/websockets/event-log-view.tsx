@@ -1,13 +1,20 @@
+import type { CancelledNotification } from '@modelcontextprotocol/sdk/types.js';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import React, { type FC, useEffect, useRef } from 'react';
 import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
 
 import { HelpTooltip } from '~/ui/components/help-tooltip';
+import { Icon } from '~/ui/components/icon';
 
-import { METHOD_UNKNOWN, NOTIFICATIONS_LIST_CHANGED, unsupportedMethodPrefix } from '../../../common/mcp-utils';
+import {
+  METHOD_NOTIFICATION_CANCELLED,
+  METHOD_UNKNOWN,
+  NOTIFICATIONS_LIST_CHANGED,
+  unsupportedMethodPrefix,
+} from '../../../common/mcp-utils';
+import type { McpEvent, McpMessageEvent } from '../../../main/mcp/types';
 import type { CurlEvent } from '../../../main/network/curl';
-import type { McpEvent } from '../../../main/network/mcp';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
 import { type IconId, SvgIcon } from '../svg-icon';
@@ -23,6 +30,8 @@ interface Props {
   selectionId?: string;
   onSelect: (event: EventTypes) => void;
   autoSelectLatestEvent?: boolean;
+  readyState?: boolean;
+  protocol?: 'curl' | 'webSocket' | 'socketIO' | 'mcp';
 }
 
 const isSocketIOEvent = (event: EventTypes): event is SocketIOEvent => {
@@ -66,7 +75,7 @@ function getIcon(event: EventTypes): IconId {
   }
 }
 
-const getMessage = (event: EventTypes): string | JSX.Element => {
+const getMessage = (event: EventTypes, isLoading: boolean): string | JSX.Element => {
   switch (event.type) {
     case 'message': {
       if (isSocketIOEvent(event)) {
@@ -87,6 +96,7 @@ const getMessage = (event: EventTypes): string | JSX.Element => {
         const isUnsupportedMethod = eventMethod.startsWith(unsupportedMethodPrefix);
         return (
           <div className="flex items-center">
+            {isLoading && <Icon className="mr-2 animate-spin" icon="spinner" />}
             {isUnsupportedMethod && <span className="bg-warning mr-2 rounded-sm px-2 py-1">Unsupported</span>}
             <span className="flex-shrink">{eventMethod.replace(`${unsupportedMethodPrefix}`, '')}</span>
           </div>
@@ -138,7 +148,14 @@ const getMessage = (event: EventTypes): string | JSX.Element => {
   }
 };
 
-export const EventLogView: FC<Props> = ({ events, onSelect, selectionId, autoSelectLatestEvent = false }) => {
+export const EventLogView: FC<Props> = ({
+  events,
+  onSelect,
+  selectionId,
+  autoSelectLatestEvent = false,
+  protocol,
+  readyState,
+}) => {
   const parentRef = useRef<HTMLTableSectionElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -148,6 +165,7 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId, autoSel
     overscan: 30,
     getItemKey: index => events[index]._id,
   });
+  const isMcpEvents = protocol === 'mcp';
 
   useEffect(() => {
     // re-measure the virtualizer when EventLogView mounted, especially when switched in a tab
@@ -189,6 +207,7 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId, autoSel
             items={virtualizer.getVirtualItems()}
           >
             {item => {
+              let isLoading = false;
               const event = events[item.index];
               const isSelectedRow = event._id === selectionId;
               // add focus style when autoSelectLatestEvent is true for the first row
@@ -196,13 +215,41 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId, autoSel
                 isSelectedRow && autoSelectLatestEvent
                   ? 'bg-[--hl-sm] outline-none'
                   : 'focus-within:bg-[--hl-sm] focus:outline-none';
+              if (isMcpEvents && event.type === 'message' && readyState) {
+                // Adding loading indicator if the message has not been responded by the server from json-rpc id
+                const { direction, data } = event;
+                const jsonRPCId = 'id' in data && data.id;
+                const method = (event as McpMessageEvent).method;
+                const isUnsupportedMethod = method.startsWith(unsupportedMethodPrefix);
+                const isErrorRequest = event.data.error;
+                if (jsonRPCId && !isUnsupportedMethod && !isErrorRequest) {
+                  isLoading = !events.find(e => {
+                    if (e.type === 'message') {
+                      const eventMethod = (e as McpMessageEvent).method;
+                      if (eventMethod === METHOD_NOTIFICATION_CANCELLED) {
+                        const eventData = e.data as CancelledNotification;
+                        // find the cancelled notification message indicates cancellation of the request
+                        return e.direction === direction && eventData.params.requestId === jsonRPCId;
+                      }
+                      // find the response message from server with the same json-rpc id but different direction
+                      return (
+                        eventMethod === method && e.direction !== direction && 'id' in e.data && e.data.id === jsonRPCId
+                      );
+                    } else if (e.type === 'error' && e.error && direction === 'OUTGOING') {
+                      // find the error message with the same json-rpc id for all outgoing requests
+                      return e.error?.requestId === jsonRPCId;
+                    }
+                    return false;
+                  });
+                }
+              }
               return (
                 <Row className={`group transition-colors ${rowExtraClasses}`}>
                   <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] p-2 text-sm font-medium focus:outline-none group-last-of-type:border-none">
                     <SvgIcon icon={getIcon(event)} />
                   </Cell>
                   <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
-                    {getMessage(event)}
+                    {getMessage(event, isLoading)}
                   </Cell>
                   <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
                     <Timestamp time={event.timestamp} />

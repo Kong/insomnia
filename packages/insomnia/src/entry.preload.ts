@@ -74,8 +74,13 @@ const mcp: McpBridgeAPI = {
   readyState: {
     getCurrent: options => ipcRenderer.invoke('mcp.readyState', options),
   },
+  client: {
+    responseElicitationRequest: options => ipcRenderer.send('mcp.client.responseElicitationRequest', options),
+    hasRequestResponded: options => ipcRenderer.invoke('mcp.client.hasRequestResponded', options),
+  },
   event: {
     findMany: options => ipcRenderer.invoke('mcp.event.findMany', options),
+    findNotifications: options => ipcRenderer.invoke('mcp.event.findNotifications', options),
   },
 };
 

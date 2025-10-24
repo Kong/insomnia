@@ -551,4 +551,5 @@ export const INSOMNIA_FETCH_TIME_OUT = 30_000;
 export const REALTIME_EVENTS_CHANNELS = {
   READY_STATE: 'readyState',
   NEW_EVENT: 'newEventReceived',
+  MCP_NOTIFICATION: 'mcpNotification',
 };
