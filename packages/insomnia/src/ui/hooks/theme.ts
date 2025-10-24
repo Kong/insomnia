@@ -1,11 +1,11 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
 
 import type { ThemeSettings } from '../../models/settings';
 import { type ColorScheme, getThemes } from '../../plugins';
-import { applyColorScheme, type PluginTheme } from '../../plugins/misc';
+import { applyColorScheme, getColorScheme, type PluginTheme } from '../../plugins/misc';
 import { useSettingsPatcher } from './use-request';
 
 export const useThemes = () => {
@@ -87,4 +87,24 @@ export const useThemes = () => {
     changeAutoDetect,
     autoDetectColorScheme,
   };
+};
+
+export const useIsLightTheme = () => {
+  const rootLoaderData = useRootLoaderData();
+  const isLightTheme = useMemo(() => {
+    let isLightTheme = false;
+    if (rootLoaderData?.settings) {
+      const colorScheme = getColorScheme(rootLoaderData.settings);
+      if (colorScheme === 'light') {
+        isLightTheme = true;
+      } else if (colorScheme === 'dark') {
+        isLightTheme = false;
+      } else {
+        // check if user has selected a light theme
+        isLightTheme = rootLoaderData.settings.theme.includes('light');
+      }
+    }
+    return isLightTheme;
+  }, [rootLoaderData?.settings]);
+  return isLightTheme;
 };

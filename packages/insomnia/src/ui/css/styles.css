@@ -5,10 +5,14 @@
 @import 'codemirror/addon/search/matchesonscrollbar.css';
 @import 'codemirror/addon/lint/lint.css';
 @import 'codemirror/lib/codemirror.css';
+/* used by merge-editor */
+@import 'codemirror/addon/merge/merge.css';
+@import 'codemirror/theme/base16-dark.css';
+@import './lib/codemirror/merge-dark.css';
+
 @import './lib/codemirror/codemirror.css';
 @import './lib/codemirror/material.css';
 @import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css';
-@import '@mismerge/core/styles.css';
 @import './main.css';
 
 @tailwind base;
@@ -185,4 +189,14 @@ table.json-diff-viewer {
     translate: 100% 0;
     opacity: 0;
   }
+}
+
+.CodeMirror-merge {
+  height: 100%;
+}
+.CodeMirror-merge .CodeMirror-merge-pane {
+  height: 100%;
+}
+.CodeMirror-merge .CodeMirror {
+  height: 100%;
 }

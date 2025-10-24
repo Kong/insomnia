@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import type { HiddenBrowserWindowToMainBridgeAPI } from '../src/hidden-window-preload';
 import type { RendererToMainBridgeAPI } from '../src/main/ipc/main';
+import type { DiffMatchPatch, DiffOp } from 'diff-match-patch-ts';
 
 declare global {
   interface Window {
@@ -14,12 +15,12 @@ declare global {
     showAlert: (options?: Record<string, any>) => void;
     showWrapper: (options?: Record<string, any>) => void;
     showPrompt: (options?: Record<string, any>) => void;
-  }
-  namespace JSX {
-    interface IntrinsicElements {
-      'mis-merge2': React.DetailedHTMLProps<>;
-      'mis-merge3': React.DetailedHTMLProps<>;
-    }
+
+    // Required by codemirror merge addon
+    diff_match_patch: typeof DiffMatchPatch;
+    DIFF_DELETE: DiffOp;
+    DIFF_INSERT: DiffOp;
+    DIFF_EQUAL: DiffOp;
   }
 }
 
