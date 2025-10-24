@@ -2,7 +2,6 @@ import fs, { mkdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import type { generateCommitsFromDiff, MockRouteData, ModelConfig } from '@kong/insomnia-plugin-ai';
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 import chardet from 'chardet';
 import type { MarkerRange } from 'codemirror';
@@ -21,6 +20,7 @@ import { AI_PLUGIN_NAME } from '~/common/constants';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { insecureReadFile, insecureReadFileWithEncoding, secureReadFile } from '~/main/secure-read-file';
+import type { GenerateCommitsFromDiffFunction, MockRouteData, ModelConfig } from '~/plugins/types';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
@@ -157,9 +157,9 @@ export interface RendererToMainBridgeAPI {
     mockServerAdditionalFiles: string[],
   ) => Promise<{ error: string; routes: MockRouteData[] }>;
   generateCommitsFromDiff: (
-    input: Parameters<typeof generateCommitsFromDiff>[0],
+    input: Parameters<GenerateCommitsFromDiffFunction>[0],
   ) => Promise<
-    | { commits: Awaited<ReturnType<typeof generateCommitsFromDiff>>; error: undefined }
+    | { commits: Awaited<ReturnType<GenerateCommitsFromDiffFunction>>; error: undefined }
     | { commits: undefined; error: string }
   >;
 }

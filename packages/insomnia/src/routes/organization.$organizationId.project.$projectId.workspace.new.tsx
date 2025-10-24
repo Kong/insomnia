@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { MockRouteData } from '@kong/insomnia-plugin-ai';
 import { href, redirect } from 'react-router';
 
 import { getAppVersion, getMockServiceURL, METHOD_GET } from '~/common/constants';
@@ -12,6 +11,7 @@ import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import { isGitProject, isLocalProject } from '~/models/project';
 import { isCollection, isEnvironment, scopeToActivity, type WorkspaceScope } from '~/models/workspace';
+import type { MockRouteData } from '~/plugins/types';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
@@ -71,7 +71,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       const modelConfig = await window.main.llm.getCurrentConfig();
       if (workspaceData.mockServerCreationType === 'ai') {
         const isFeatureEnabled = await window.main.llm.getAIFeatureEnabled('aiMockServers');
-        invariant(isFeatureEnabled, 'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.');
+        invariant(
+          isFeatureEnabled,
+          'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.',
+        );
 
         const validationError = validateMockServerSpec(workspaceData);
         if (validationError) {
@@ -79,7 +82,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         }
 
         if (workspaceData.mockServerSpecSource === 'url' || workspaceData.mockServerSpecSource === 'text') {
-          invariant(modelConfig && modelConfig.backend !== 'gguf', 'The URL and Text options are not supported with GGUF models.');
+          invariant(
+            modelConfig && modelConfig.backend !== 'gguf',
+            'The URL and Text options are not supported with GGUF models.',
+          );
         }
       }
 
@@ -112,7 +118,14 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     if (scope === 'mock-server') {
-      const mockServerError = await createMockServer(workspace, workspaceData, flushId, organizationId, projectId, name);
+      const mockServerError = await createMockServer(
+        workspace,
+        workspaceData,
+        flushId,
+        organizationId,
+        projectId,
+        name,
+      );
 
       if (mockServerError) {
         return { error: mockServerError };
@@ -441,7 +454,7 @@ async function createMockRoutes(
         });
       }
     } catch (error) {
-      const msg = `Failed to register route ${mockRoute.method} ${mockRoute.name}:`
+      const msg = `Failed to register route ${mockRoute.method} ${mockRoute.name}:`;
       console.error(msg, error);
     }
   }
