@@ -24,7 +24,6 @@ import type { StorageRules } from '~/models/organization';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { Badge } from '~/ui/components/base/badge';
-import { SvgIcon } from '~/ui/components/svg-icon';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
 import { type ApiSpec } from '../../../models/api-spec';
@@ -372,7 +371,7 @@ export const NewWorkspaceModal = ({
                         >
                           <div className="flex items-center gap-2">
                             <Heading className="text-lg font-bold">
-                              <Badge color="surprise" icon={<SvgIcon icon="sparkles" />} label="AI" />
+                              <Badge color="surprise" icon="sparkles" label="AI" />
                               <span>Auto Generate</span>
                             </Heading>
                           </div>

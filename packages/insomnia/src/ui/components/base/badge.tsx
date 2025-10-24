@@ -1,8 +1,10 @@
 import type { FC } from 'react';
 
+import { type IconId, SvgIcon, type ThemeEnum } from '~/ui/components/svg-icon';
+
 export interface BadgeProps {
-  color: string;
-  icon?: React.ReactNode;
+  color: keyof typeof ThemeEnum;
+  icon?: IconId;
   label: string;
 }
 
@@ -23,7 +25,7 @@ export const Badge: FC<BadgeProps> = ({ color, icon, label }) => {
         borderColor: `rgb(var(--color-${color}-rgb))`,
       }}
     >
-      {icon && icon}
+      {icon && <SvgIcon icon={icon} />}
       <span className="ml-1 align-top">{label}</span>
     </span>
   );

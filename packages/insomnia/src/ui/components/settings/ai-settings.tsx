@@ -7,7 +7,6 @@ import { Claude } from '~/ui/components/settings/llms/claude';
 import { Gemini } from '~/ui/components/settings/llms/gemini';
 import { GGUF } from '~/ui/components/settings/llms/gguf';
 import { OpenAI } from '~/ui/components/settings/llms/openai';
-import { SvgIcon } from '~/ui/components/svg-icon';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 
 export const AISettings = () => {
@@ -98,7 +97,7 @@ export const AISettings = () => {
         <div className="flex flex-col gap-4">
           <div>
             <h3 className="mb-3 text-base font-semibold text-[--color-font]">
-              <Badge color="surprise" icon={<SvgIcon icon="sparkles" />} label="AI" />
+              <Badge color="surprise" icon="sparkles" label="AI" />
               Features
             </h3>
             {!hasActiveLLM ? (
