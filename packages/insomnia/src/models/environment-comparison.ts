@@ -7,6 +7,10 @@ export const prefix = 'envcomp';
 export const canDuplicate = true;
 export const canSync = true;
 
+/**
+ * Configuration options for customizing response comparison behavior.
+ * Controls which fields/headers to ignore and tolerance levels for numeric differences.
+ */
 export interface ComparisonConfig {
   ignoreFields: string[];
   tolerancePercent: number;
@@ -16,6 +20,10 @@ export interface ComparisonConfig {
   caseSensitive: boolean;
 }
 
+/**
+ * Represents a configured environment comparison that can be run multiple times.
+ * Stores source/target environment IDs, selected requests, and comparison rules.
+ */
 export interface BaseEnvironmentComparison {
   name: string;
   sourceEnvironmentId: string;

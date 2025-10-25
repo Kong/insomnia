@@ -8,6 +8,11 @@ import type { ComparisonConfig } from '../models/environment-comparison';
 import type { Response, ResponseHeader } from '../models/response';
 import { getBodyBuffer } from '../models/response';
 
+/**
+ * Compares two HTTP responses and generates detailed comparison results.
+ * Supports both JSON and text response bodies, with intelligent diff detection
+ * for JSON objects (field-level comparison) and text (line-by-line comparison).
+ */
 export class ResponseComparator {
   private config: ComparisonConfig;
 
@@ -81,12 +86,16 @@ export class ResponseComparator {
 
       const bodyBuffer = await getBodyBuffer(response);
       return bodyBuffer.toString('utf8');
-    } catch (error) {
-      console.warn('Failed to read response body:', error);
+    } catch {
       return '';
     }
   }
 
+  /**
+   * Compares response bodies, automatically detecting JSON vs text format.
+   * For JSON: performs deep field-level comparison with path tracking.
+   * For text: performs whole-body comparison.
+   */
   private async compareResponseBodies(sourceBody: string, targetBody: string): Promise<DiffResult[]> {
     if (!sourceBody && !targetBody) {
       return [];
@@ -292,6 +301,15 @@ export class ResponseComparator {
     return differences;
   }
 
+  /**
+   * Determines the severity level of a difference based on value types and field paths.
+   *
+   * Rules:
+   * - Numeric differences within tolerance: info
+   * - Large numeric differences (>50%): critical
+   * - Differences in critical fields (id, status, error): critical
+   * - All other differences: warning
+   */
   private determineSeverity(sourceValue: any, targetValue: any, path: string): 'critical' | 'warning' | 'info' {
     // Numbers with tolerance
     if (typeof sourceValue === 'number' && typeof targetValue === 'number') {
@@ -335,6 +353,15 @@ export class ResponseComparator {
     });
   }
 
+  /**
+   * Recursively counts total fields in a JSON structure.
+   * Used to calculate match percentage accurately.
+   *
+   * Counting rules:
+   * - Primitives: 1 field
+   * - Arrays: sum of all items
+   * - Objects: 1 per key + recursive count of values
+   */
   private countTotalFields(obj: any): number {
     let count = 0;
 
@@ -352,7 +379,7 @@ export class ResponseComparator {
 
     // Object: count each key-value pair
     for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         count += 1 + this.countTotalFields(obj[key]);
       }
     }

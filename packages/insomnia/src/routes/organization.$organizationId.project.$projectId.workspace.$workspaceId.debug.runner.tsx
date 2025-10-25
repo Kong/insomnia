@@ -193,14 +193,14 @@ export const Runner: FC<{}> = () => {
     const loadEnvironments = async () => {
       try {
         const baseEnvironment = await models.environment.getByParentId(workspaceId);
-        const subEnvironments = baseEnvironment 
+        const subEnvironments = baseEnvironment
           ? await models.environment.findByParentId(baseEnvironment._id)
           : [];
-        
+
         const allEnvironments = baseEnvironment ? [baseEnvironment, ...subEnvironments] : [];
         setEnvironments(allEnvironments);
-      } catch (error) {
-        console.error('Failed to load environments:', error);
+      } catch {
+        // Failed to load environments - continue with empty list
       }
     };
 
@@ -314,17 +314,11 @@ export const Runner: FC<{}> = () => {
         // Get the current workspace meta to store the active environment temporarily
         const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
         const originalEnvId = workspaceMeta?.activeEnvironmentId;
-        
-        console.log(`Executing request ${request.name} with source environment ${sourceEnvironmentId}`);
-        
+
         // Execute request with source environment
         await models.workspaceMeta.updateByParentId(workspaceId, {
           activeEnvironmentId: sourceEnvironmentId,
         });
-
-        // Clear any existing responses to ensure we get fresh data
-        const existingResponses = await models.response.findByParentId(request.id);
-        console.log(`Found ${existingResponses.length} existing responses for request`);
 
         const sourceResult = await sendActionImplementation({
           requestId: request.id,
@@ -356,14 +350,9 @@ export const Runner: FC<{}> = () => {
           },
         });
 
-        console.log('Source result:', sourceResult);
-
         // Get the source response that was created
         const sourceResponse = await models.response.getLatestForRequest(request.id, sourceEnvironmentId);
-        console.log('Source response:', sourceResponse);
 
-        console.log(`Executing request ${request.name} with target environment ${targetEnvironmentId}`);
-        
         // Execute request with target environment  
         await models.workspaceMeta.updateByParentId(workspaceId, {
           activeEnvironmentId: targetEnvironmentId,
@@ -399,12 +388,9 @@ export const Runner: FC<{}> = () => {
           },
         });
 
-        console.log('Target result:', targetResult);
-
         // Get the target response that was created
         const targetResponse = await models.response.getLatestForRequest(request.id, targetEnvironmentId);
-        console.log('Target response:', targetResponse);
-        
+
         // Restore original environment
         if (originalEnvId) {
           await models.workspaceMeta.updateByParentId(workspaceId, {
@@ -413,24 +399,11 @@ export const Runner: FC<{}> = () => {
         }
 
         if (sourceResponse && targetResponse) {
-          console.log('Both responses found, creating comparison...');
-          
-          // Get response bodies
-          const sourceBodyBuffer = await models.response.getBodyBuffer(sourceResponse);
-          const targetBodyBuffer = await models.response.getBodyBuffer(targetResponse);
-          const sourceBody = sourceBodyBuffer ? sourceBodyBuffer.toString('utf8') : '';
-          const targetBody = targetBodyBuffer ? targetBodyBuffer.toString('utf8') : '';
-          
-          console.log('Source body preview:', sourceBody?.slice(0, 200));
-          console.log('Target body preview:', targetBody?.slice(0, 200));
-          
           const comparisonData = await comparator.compare(
             sourceResponse,
             targetResponse,
             request.name
           );
-
-          console.log('Comparison data:', comparisonData);
 
           const result = await models.comparisonResult.create({
             ...comparisonData,
@@ -440,26 +413,20 @@ export const Runner: FC<{}> = () => {
             targetEnvironmentId: targetEnvironmentId,
           });
 
-          console.log('Created comparison result:', result);
           results.push(result);
         } else {
-          console.warn('Missing responses:', { sourceResponse: !!sourceResponse, targetResponse: !!targetResponse });
           showModal(AlertModal, {
             title: `Comparison Incomplete - ${request.name}`,
             message: `Failed to retrieve ${!sourceResponse ? 'source' : 'target'} response for ${request.name}. The request may have failed or returned no data.`,
           });
         }
       } catch (error) {
-        console.error(`Failed to compare request ${request.name}:`, error);
         showModal(AlertModal, {
           title: `Request Failed - ${request.name}`,
           message: error instanceof Error ? error.message : `Failed to execute ${request.name}. Check the request configuration and try again.`,
         });
       }
     }
-
-    console.log('Final results:', results);
-    console.log('Setting comparison results with', results.length, 'items');
 
     if (results.length === 0) {
       showModal(AlertModal, {
@@ -515,7 +482,6 @@ export const Runner: FC<{}> = () => {
         await runEnvironmentComparison(requests);
         return;
       } catch (error) {
-        console.error('Environment comparison failed:', error);
         showModal(AlertModal, {
           title: 'Comparison Failed',
           message: error instanceof Error ? error.message : 'An unexpected error occurred during comparison. Please check your network connection and try again.',
@@ -1272,36 +1238,39 @@ const ComparisonResultsPane: FC<ComparisonResultsPaneProps> = ({ results }) => {
 
   // Filter and sort results
   const filteredAndSortedResults = useMemo(() => {
-    let filtered = results.filter(result =>
+    const filtered = results.filter(result =>
       result.requestName.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     // Sort results
     switch (sortBy) {
-      case 'name':
+      case 'name': {
         filtered.sort((a, b) => a.requestName.localeCompare(b.requestName));
         break;
-      case 'match-desc':
+      }
+      case 'match-desc': {
         filtered.sort((a, b) => b.summary.matchPercentage - a.summary.matchPercentage);
         break;
-      case 'match-asc':
+      }
+      case 'match-asc': {
         filtered.sort((a, b) => a.summary.matchPercentage - b.summary.matchPercentage);
         break;
-      case 'diff-desc':
+      }
+      case 'diff-desc': {
         filtered.sort((a, b) => b.summary.totalDifferences - a.summary.totalDifferences);
         break;
-      case 'diff-asc':
+      }
+      case 'diff-asc': {
         filtered.sort((a, b) => a.summary.totalDifferences - b.summary.totalDifferences);
         break;
+      }
     }
 
     return filtered;
   }, [results, searchQuery, sortBy]);
 
   useEffect(() => {
-    console.log('ComparisonResultsPane received results:', results);
     if (filteredAndSortedResults.length > 0 && !selectedResult) {
-      console.log('Setting first result as selected:', filteredAndSortedResults[0]);
       setSelectedResult(filteredAndSortedResults[0]);
     }
   }, [filteredAndSortedResults, selectedResult]);
@@ -1319,8 +1288,8 @@ const ComparisonResultsPane: FC<ComparisonResultsPaneProps> = ({ results }) => {
       await navigator.clipboard.writeText(url);
       setCopiedUrl(type);
       setTimeout(() => setCopiedUrl(null), 2000);
-    } catch (error) {
-      console.error('Failed to copy URL to clipboard:', error);
+    } catch {
+      // Failed to copy - silently handle
     }
   };
 
@@ -1359,8 +1328,8 @@ const ComparisonResultsPane: FC<ComparisonResultsPaneProps> = ({ results }) => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Failed to export all results:', error);
+    } catch {
+      // Failed to export - silently handle
     }
   };
 
@@ -1630,12 +1599,12 @@ interface ResponseDiffViewerProps {
   requestName: string;
   sourceEnvironmentId?: string;
   targetEnvironmentId?: string;
-  headerDifferences?: Array<{
+  headerDifferences?: {
     name: string;
     sourceValue?: string;
     targetValue?: string;
     type: 'added' | 'removed' | 'modified';
-  }>;
+  }[];
 }
 
 const ResponseDiffViewer: FC<ResponseDiffViewerProps> = ({
@@ -1671,14 +1640,12 @@ const ResponseDiffViewer: FC<ResponseDiffViewerProps> = ({
       await navigator.clipboard.writeText(content);
       setCopiedLineIndex(index);
       setTimeout(() => setCopiedLineIndex(null), 2000);
-    } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+    } catch {
+      // Failed to copy - silently handle
     }
   };
 
   useEffect(() => {
-    console.log('ResponseDiffViewer loading responses:', { sourceResponseId, targetResponseId });
-    
     const loadResponses = async () => {
       setLoading(true);
       try {
@@ -1686,9 +1653,7 @@ const ResponseDiffViewer: FC<ResponseDiffViewerProps> = ({
           models.response.getById(sourceResponseId),
           models.response.getById(targetResponseId)
         ]);
-        
-        console.log('Loaded responses:', { source, target });
-        
+
         setSourceResponse(source);
         setTargetResponse(target);
 
@@ -1708,13 +1673,11 @@ const ResponseDiffViewer: FC<ResponseDiffViewerProps> = ({
         }
 
         if (source && target) {
-          console.log('Generating diff between responses...');
           const diff = await generateUnifiedDiff(source, target);
-          console.log('Generated diff lines:', diff.length);
           setDiffLines(diff);
         }
-      } catch (error) {
-        console.error('Failed to load responses for diff:', error);
+      } catch {
+        // Failed to load responses - will show error state in UI
       } finally {
         setLoading(false);
       }
@@ -1776,8 +1739,7 @@ const ResponseDiffViewer: FC<ResponseDiffViewerProps> = ({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Failed to export comparison:', error);
+    } catch {
       showModal(AlertModal, {
         title: 'Export Failed',
         message: 'Failed to export comparison results.',
@@ -2156,8 +2118,7 @@ async function generateUnifiedDiff(sourceResponse: any, targetResponse: any): Pr
     }
 
     return diffLines;
-  } catch (error) {
-    console.error('Failed to generate diff:', error);
+  } catch {
     return [{
       type: 'header',
       content: 'Failed to generate diff - responses may not be valid JSON'
@@ -2188,8 +2149,7 @@ async function getFormattedResponseBody(response: any): Promise<string | null> {
       // If not valid JSON, return as-is
       return bodyText;
     }
-  } catch (error) {
-    console.error('Failed to format response body:', error);
+  } catch {
     return null;
   }
 }

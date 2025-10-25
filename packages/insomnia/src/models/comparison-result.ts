@@ -7,6 +7,11 @@ export const prefix = 'compres';
 export const canDuplicate = false;
 export const canSync = false;
 
+/**
+ * Represents a single field difference found during response comparison.
+ * Tracks the path, values, type of change, and severity level.
+ */
+
 export interface DiffResult {
   path: string;
   sourceValue: any;
@@ -15,6 +20,10 @@ export interface DiffResult {
   severity: 'critical' | 'warning' | 'info';
 }
 
+/**
+ * Represents an HTTP header difference between source and target responses.
+ * Note: Header differences are informational and not included in match percentage calculations.
+ */
 export interface HeaderDiff {
   name: string;
   sourceValue?: string;
@@ -22,6 +31,10 @@ export interface HeaderDiff {
   type: 'added' | 'removed' | 'modified';
 }
 
+/**
+ * Summary statistics for a comparison result.
+ * Includes difference counts, status codes, timing, and the overall match percentage.
+ */
 export interface ComparisonSummary {
   totalDifferences: number;
   criticalDifferences: number;
