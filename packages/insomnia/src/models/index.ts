@@ -24,8 +24,10 @@ import * as _apiSpec from './api-spec';
 import * as _caCertificate from './ca-certificate';
 import * as _clientCertificate from './client-certificate';
 import * as _cloudCredential from './cloud-credential';
+import * as _comparisonResult from './comparison-result';
 import * as _cookieJar from './cookie-jar';
 import * as _environment from './environment';
+import * as _environmentComparison from './environment-comparison';
 import * as _gitCredentials from './git-credentials';
 import * as _gitRepository from './git-repository';
 import * as _grpcRequest from './grpc-request';
@@ -76,8 +78,10 @@ export interface BaseModel {
 export const apiSpec = _apiSpec;
 export const clientCertificate = _clientCertificate;
 export const caCertificate = _caCertificate;
+export const comparisonResult = _comparisonResult;
 export const cookieJar = _cookieJar;
 export const environment = _environment;
+export const environmentComparison = _environmentComparison;
 export const gitCredentials = _gitCredentials;
 export const gitRepository = _gitRepository;
 export const mockServer = _mockServer;
@@ -124,6 +128,8 @@ export function all() {
     workspace,
     workspaceMeta,
     environment,
+    environmentComparison,
+    comparisonResult,
     gitCredentials,
     gitRepository,
     cookieJar,

@@ -17,6 +17,7 @@ export type TabType =
   | 'document'
   | 'collection'
   | 'runner'
+  | 'comparison'
   | 'test'
   | 'testSuite';
 export interface BaseTab {
@@ -69,6 +70,11 @@ const WORKSPACE_TAB_UI_MAP: Partial<Record<TabType, any>> = {
     icon: 'file',
     bgColor: 'bg-[--color-info]',
     textColor: 'text-[--color-font-info]',
+  },
+  comparison: {
+    icon: 'compare',
+    bgColor: 'bg-[--color-notice]',
+    textColor: 'text-[--color-font-notice]',
   },
 };
 

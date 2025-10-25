@@ -84,6 +84,11 @@ export const useInsomniaTab = ({
       if (type === 'testSuite') {
         return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite?._id}`;
       }
+
+      if (type === 'comparison') {
+        return `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/comparison`;
+      }
+
       return '';
     },
     [
@@ -151,7 +156,7 @@ export const useInsomniaTab = ({
         return currentOrgTabs?.tabList.find(tab => tab.id === unitTestSuite?._id);
       }
 
-      const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test'];
+      const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test', 'comparison'];
       if (collectionTabTypes.includes(type)) {
         return currentOrgTabs?.tabList.find(tab => tab.id === workspaceId);
       }
@@ -194,7 +199,7 @@ export const useInsomniaTab = ({
       if (type === 'testSuite') {
         return unitTestSuite?._id || '';
       }
-      const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test'];
+      const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test', 'comparison'];
       if (collectionTabTypes.includes(type)) {
         return workspaceId;
       }
@@ -246,7 +251,7 @@ export const useInsomniaTab = ({
         };
       }
 
-      const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test'];
+      const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test', 'comparison'];
       if (collectionTabTypes.includes(type)) {
         return {
           type,

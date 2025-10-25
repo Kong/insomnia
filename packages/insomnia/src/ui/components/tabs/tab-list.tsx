@@ -45,6 +45,7 @@ export const TAB_ROUTER_PATH: Record<TabType, string> = {
   environment: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment',
   mockServer: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server',
   runner: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/runner',
+  comparison: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/comparison',
   document: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/spec',
   mockRoute:
     '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId',

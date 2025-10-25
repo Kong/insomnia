@@ -16,6 +16,10 @@ interface RunnerState {
   file: File | null;
   filePath: string;
   reqList: RequestRow[];
+  compareEnvironments: boolean;
+  sourceEnvironmentId: string;
+  targetEnvironmentId: string;
+  persistResponses: boolean;
 }
 
 type OrgRunnerStateMap = Record<string, Partial<RunnerState>>;
