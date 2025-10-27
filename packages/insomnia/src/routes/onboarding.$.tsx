@@ -56,7 +56,7 @@ const FeatureWizardView = () => {
       <Route
         path="/"
         element={
-          <ul className="grid grid-cols-2 justify-center gap-2 p-4">
+          <ul className="grid grid-cols-2 justify-center gap-2">
             {features.map(feature => (
               <li key={feature.id}>
                 <Link
