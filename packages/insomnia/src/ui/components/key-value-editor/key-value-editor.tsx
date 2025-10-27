@@ -73,7 +73,7 @@ export const KeyValueEditor: FC<Props> = ({
   valuePlaceholder,
   readOnlyPairs,
 }) => {
-  const [showDescription, setShowDescription] = React.useState(
+  const [showDescription, setShowDescription] = useState(
     pairs.some(p => p.description && p.description.trim() !== '') || false,
   );
   let pairsListItems = useMemo(
