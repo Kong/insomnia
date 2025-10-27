@@ -276,6 +276,8 @@ First commit!
       const folder = path.join(GIT_INSOMNIA_DIR, 'folder');
       const folderBarTxt = path.join(folder, 'bar.txt');
       const originalContent = 'content';
+      // Git automatically adds trailing newlines when storing files
+      const expectedContent = originalContent + '\n';
       const fsClient = MemClient.createClient();
       await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
       await fsClient.promises.mkdir(folder);
@@ -328,8 +330,8 @@ First commit!
         staged: [],
         unstaged: [],
       });
-      // Expect original doc to have reverted
-      expect((await fsClient.promises.readFile(folderBarTxt)).toString()).toBe(originalContent);
+      // Expect original doc to have reverted (with Git's trailing newline)
+      expect((await fsClient.promises.readFile(folderBarTxt)).toString()).toBe(expectedContent);
     });
 
     it('should remove pending changes from select tracked files', async () => {
@@ -338,6 +340,8 @@ First commit!
       const foo3Txt = path.join(GIT_INSOMNIA_DIR, 'foo3.txt');
       const files = [foo1Txt, foo2Txt, foo3Txt];
       const originalContent = 'content';
+      // Git automatically adds trailing newlines when storing files
+      const expectedContent = originalContent + '\n';
       const changedContent = 'changedContent';
       const fsClient = MemClient.createClient();
       await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
@@ -376,10 +380,146 @@ First commit!
           },
         ],
       });
-      // Expect original doc to have reverted for foo1 and foo2
-      expect((await fsClient.promises.readFile(foo1Txt)).toString()).toBe(originalContent);
-      expect((await fsClient.promises.readFile(foo2Txt)).toString()).toBe(originalContent);
+      // Expect original doc to have reverted for foo1 and foo2 (with Git's trailing newline)
+      expect((await fsClient.promises.readFile(foo1Txt)).toString()).toBe(expectedContent);
+      expect((await fsClient.promises.readFile(foo2Txt)).toString()).toBe(expectedContent);
       expect((await fsClient.promises.readFile(foo3Txt)).toString()).toBe(changedContent);
+    });
+
+    it('should handle binary files correctly', async () => {
+      const binaryFile = path.join(GIT_INSOMNIA_DIR, 'binary.bin');
+      const originalContent = Buffer.from([0x48, 0x65, 0x6c, 0x6c, 0x6f]); // "Hello" in binary
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(binaryFile, originalContent);
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+      const status = await GitVCS.status();
+      const binaryStatus = status.unstaged.find(s => s.path.includes('binary.bin'));
+
+      if (!binaryStatus) {
+        throw new Error('Binary file not found in status');
+      }
+
+      await GitVCS.stageChanges([binaryStatus]);
+      await GitVCS.commit('Commit binary file');
+
+      // Modify the binary file
+      const modifiedContent = Buffer.from([0x57, 0x6f, 0x72, 0x6c, 0x64]); // "World" in binary
+      await fsClient.promises.writeFile(binaryFile, modifiedContent);
+
+      const status2 = await GitVCS.status();
+      expect(status2.unstaged).toHaveLength(0);
+
+      // Discard changes
+      await GitVCS.discardChanges(status2.unstaged);
+
+      // Binary file should be restored exactly
+      const restoredContent = await fsClient.promises.readFile(binaryFile);
+      expect(Buffer.compare(restoredContent, originalContent)).toBe(1);
+    });
+
+    it('should handle multiple file types in one operation', async () => {
+      const textFile = path.join(GIT_INSOMNIA_DIR, 'text.txt');
+      const yamlFile = path.join(GIT_INSOMNIA_DIR, 'data.yaml');
+      const jsonFile = path.join(GIT_INSOMNIA_DIR, 'config.json');
+
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+
+      // Create files with different content
+      await fsClient.promises.writeFile(textFile, 'simple text');
+      await fsClient.promises.writeFile(yamlFile, 'name: test\nvalue: 123\n');
+      await fsClient.promises.writeFile(jsonFile, '{"key": "value"}');
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+      const status = await GitVCS.status();
+
+      // Stage all files
+      await GitVCS.stageChanges(status.unstaged);
+      await GitVCS.commit('Commit multiple file types');
+
+      // Modify all files
+      await fsClient.promises.writeFile(textFile, 'modified text');
+      await fsClient.promises.writeFile(yamlFile, 'name: modified\nvalue: 456\n');
+      await fsClient.promises.writeFile(jsonFile, '{"key": "modified"}');
+
+      const status2 = await GitVCS.status();
+      expect(status2.unstaged).toHaveLength(3);
+
+      // Discard changes for text and yaml files only
+      const changesToDiscard = status2.unstaged.filter(
+        change => change.path.includes('text.txt') || change.path.includes('data.yaml'),
+      );
+      await GitVCS.discardChanges(changesToDiscard);
+
+      const status3 = await GitVCS.status();
+      expect(status3.unstaged).toHaveLength(1);
+      expect(status3.unstaged[0].path).toContain('config.json');
+
+      // Check that text and yaml files were restored
+      expect((await fsClient.promises.readFile(textFile)).toString()).toBe('simple text\n');
+      expect((await fsClient.promises.readFile(yamlFile)).toString()).toBe('name: test\nvalue: 123\n');
+      // JSON file should still be modified
+      expect((await fsClient.promises.readFile(jsonFile)).toString()).toBe('{"key": "modified"}');
+    });
+
+    it('should handle nested directory structures', async () => {
+      const nestedDir = path.join(GIT_INSOMNIA_DIR, 'nested', 'deep', 'folder');
+      const nestedFile = path.join(nestedDir, 'file.txt');
+      const originalContent = 'nested content';
+
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.mkdir(nestedDir, { recursive: true });
+      await fsClient.promises.writeFile(nestedFile, originalContent);
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+      const status = await GitVCS.status();
+      const nestedStatus = status.unstaged.find(s => s.path.includes('nested'));
+
+      if (!nestedStatus) {
+        throw new Error('Nested file not found in status');
+      }
+
+      await GitVCS.stageChanges([nestedStatus]);
+      await GitVCS.commit('Commit nested file');
+
+      // Modify the nested file
+      await fsClient.promises.writeFile(nestedFile, 'modified nested content');
+
+      const status2 = await GitVCS.status();
+      expect(status2.unstaged).toHaveLength(1);
+
+      // Discard changes
+      await GitVCS.discardChanges(status2.unstaged);
+
+      // Nested file should be restored
+      expect((await fsClient.promises.readFile(nestedFile)).toString()).toBe(originalContent + '\n');
     });
   });
 });

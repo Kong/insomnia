@@ -1,3 +1,18 @@
+/**
+ * NeDB File System Client for Git Operations
+ *
+ * This module provides a file system client that allows isomorphic-git to read and write
+ * workspace data stored in NeDB as if it were regular files. This enables Git operations
+ * to work seamlessly with Insomnia's database-backed storage.
+ *
+ * Key responsibilities:
+ * - Implement the isomorphic-git FsClient interface
+ * - Convert between file paths and database records
+ * - Handle YAML serialization/deserialization
+ * - Manage workspace data during Git operations
+ *
+ */
+
 import path from 'node:path';
 
 import type { PromiseFsClient } from 'isomorphic-git';
@@ -37,6 +52,15 @@ export class NeDBClient {
     };
   }
 
+  /**
+   * Reads a file from the NeDB database as if it were a regular file
+   * Converts database records to YAML format for Git operations
+   *
+   * @param filePath - The file path to read (e.g., '.insomnia/Request/req-123.yml')
+   * @param options - Encoding options for the returned data
+   * @returns The file contents as a Buffer or string
+   * @throws SystemError if file is not found or is private
+   */
   async readFile(filePath: string, options?: BufferEncoding | { encoding?: BufferEncoding }) {
     filePath = path.normalize(filePath);
     options = options || {};
@@ -47,12 +71,14 @@ export class NeDBClient {
       };
     }
 
+    // Parse the file path to extract model type and document ID
     const { root, type, id } = parseGitPath(filePath);
 
     if (root === null || id === null || type === null) {
       throw this._errMissing(filePath);
     }
 
+    // Find the document in the database
     const doc = await db.findOne(type, { _id: id });
 
     if (!doc || doc.isPrivate) {
@@ -72,6 +98,8 @@ export class NeDBClient {
     //     throw new Error(`Not found under workspace ${filePath}`);
     //   }
     // }
+
+    // Convert the document to YAML format
     const raw = Buffer.from(YAML.stringify(doc), 'utf8');
 
     if (options.encoding) {
@@ -80,10 +108,18 @@ export class NeDBClient {
     return raw;
   }
 
+  /**
+   * Writes file data to the NeDB database as if it were a regular file
+   * Converts YAML data back to database records during Git operations
+   *
+   * @param filePath - The file path to write to
+   * @param data - The file contents as Buffer or string
+   */
   async writeFile(filePath: string, data: Buffer | string) {
     filePath = path.normalize(filePath);
     const { root, id, type } = parseGitPath(filePath);
 
+    // Only process files within the .insomnia directory
     if (root !== GIT_INSOMNIA_DIR_NAME) {
       console.log(`[git] Ignoring external file ${filePath}`);
       return;
@@ -91,21 +127,25 @@ export class NeDBClient {
 
     const dataStr = data.toString();
 
-    // Skip the file if there is a conflict marker
+    // Skip the file if there is a conflict marker (Git merge conflict)
     if (dataStr.split('\n').includes('=======')) {
       return;
     }
 
+    // Parse the YAML data back to a database document
     const doc: BaseModel = YAML.parse(dataStr);
 
+    // Validate that the document ID matches the file path
     if (id !== doc._id) {
       throw new Error(`Doc _id does not match file path [${doc._id} != ${id || 'null'}]`);
     }
 
+    // Validate that the document type matches the file path
     if (type !== doc.type) {
       throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
     }
 
+    // Special handling for workspaces: ensure they stay in the correct project
     if (isWorkspace(doc)) {
       console.log('[git] setting workspace parent to be that of the active project', {
         original: doc.parentId,
@@ -117,6 +157,7 @@ export class NeDBClient {
       doc.parentId = this._projectId;
     }
 
+    // Update the document in the database
     await db.update(doc);
   }
 
