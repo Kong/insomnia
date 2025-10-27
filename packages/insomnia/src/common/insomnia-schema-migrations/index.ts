@@ -74,7 +74,7 @@ export function migrateToLatestYaml(yamlContent: string, referenceContent?: stri
     if (referenceContent) {
       try {
         const referenceParsed = parse(referenceContent);
-        const normalized = runNormalization(migrated, referenceParsed);
+        const normalized = normalizeInsomniaFile(migrated, referenceParsed);
 
         return stringify(normalized);
       } catch (refError) {
