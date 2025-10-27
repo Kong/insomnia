@@ -29,7 +29,14 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   const settings = await models.settings.getOrCreate();
   const defaultHeaders = settings.disableAppVersionUserAgent
     ? []
-    : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
+    : [
+        {
+          name: 'User-Agent',
+          value: `insomnia/${getAppVersion()}`,
+          description: '',
+          disabled: false,
+        },
+      ];
 
   let activeRequestId;
   if (requestType === 'HTTP') {
