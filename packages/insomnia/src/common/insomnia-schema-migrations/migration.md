@@ -6,7 +6,7 @@ This document explains how schema migrations work in the Insomnia codebase, how 
 
 ---
 
-## How Migration Works
+## How the migration works
 
 - **Schema migrations** ensure that data exported from or imported into Insomnia is always compatible with the current application version.
 - Each Insomnia data file (YAML) uses a **versioning approach**:
