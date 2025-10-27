@@ -6,6 +6,7 @@ import { Curl, CurlFeature, CurlInfoDebug, type HeaderInfo } from '@getinsomnia/
 import electron, { BrowserWindow } from 'electron';
 import { v4 as uuidV4 } from 'uuid';
 
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { insecureReadFile } from '~/main/secure-read-file';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
@@ -70,7 +71,8 @@ const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
 
-const getEventNotificationChannel = (responseId: string) => `${protocolName}.${responseId}.newEventReceived`;
+const getEventNotificationChannel = (responseId: string) =>
+  `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
 const writeEventLogAndNotify = ({
   requestId,
   data,
@@ -154,7 +156,7 @@ const openCurlConnection = async (
     if (!options.url) {
       throw new Error('URL is required');
     }
-    const readyStateChannel = `curl.${request._id}.readyState`;
+    const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
     const settings = await models.settings.get();
     const start = performance.now();

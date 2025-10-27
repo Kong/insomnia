@@ -39,7 +39,8 @@ interface Props {
   activeRequestId: string;
 }
 export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
-  const { activeRequest, activeRequestMeta, activeResponse } = useRequestLoaderData() as RequestLoaderData;
+  const { activeRequest, activeRequestMeta, activeResponse, responses, requestVersions } =
+    useRequestLoaderData() as RequestLoaderData;
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
   const filter = activeRequestMeta.responseFilter || '';
   const patchRequestMeta = useRequestMetaPatcher();
@@ -161,7 +162,11 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             <TimeTag milliseconds={activeResponse.elapsedTime} steps={steps} />
             <SizeTag bytesRead={activeResponse.bytesRead} bytesContent={activeResponse.bytesContent} />
           </div>
-          <ResponseHistoryDropdown activeResponse={activeResponse} />
+          <ResponseHistoryDropdown
+            activeResponse={activeResponse}
+            responses={responses}
+            requestVersions={requestVersions}
+          />
         </PaneHeader>
       )}
       <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">

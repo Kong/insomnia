@@ -6,6 +6,7 @@ import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { CurlBridgeAPI } from './main/network/curl';
+import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 import { invariant } from './utils/invariant';
@@ -48,6 +49,33 @@ const socketIO: SocketIOBridgeAPI = {
     send: options => ipcRenderer.invoke('socketIO.event.send', options),
     on: options => ipcRenderer.send('socketIO.event.on', options),
     off: options => ipcRenderer.send('socketIO.event.off', options),
+  },
+};
+
+const mcp: McpBridgeAPI = {
+  connect: options => ipcRenderer.invoke('mcp.connect', options),
+  close: options => ipcRenderer.invoke('mcp.close', options),
+  closeAll: () => ipcRenderer.send('mcp.closeAll'),
+  authConfirmation: confirmed => ipcRenderer.send('mcp.authConfirmed', confirmed),
+  primitive: {
+    listTools: options => ipcRenderer.invoke('mcp.primitive.listTools', options),
+    callTool: options => ipcRenderer.invoke('mcp.primitive.callTool', options),
+    listResources: options => ipcRenderer.invoke('mcp.primitive.listResources', options),
+    listResourceTemplates: options => ipcRenderer.invoke('mcp.primitive.listResourceTemplates', options),
+    readResource: options => ipcRenderer.invoke('mcp.primitive.readResource', options),
+    subscribeResource: options => ipcRenderer.invoke('mcp.primitive.subscribeResource', options),
+    unsubscribeResource: options => ipcRenderer.invoke('mcp.primitive.unsubscribeResource', options),
+    listPrompts: options => ipcRenderer.invoke('mcp.primitive.listPrompts', options),
+    getPrompt: options => ipcRenderer.invoke('mcp.primitive.getPrompt', options),
+  },
+  notification: {
+    rootListChange: options => ipcRenderer.invoke('mcp.notification.rootListChange', options),
+  },
+  readyState: {
+    getCurrent: options => ipcRenderer.invoke('mcp.readyState', options),
+  },
+  event: {
+    findMany: options => ipcRenderer.invoke('mcp.event.findMany', options),
   },
 };
 
@@ -164,6 +192,7 @@ const main: Window['main'] = {
   },
   webSocket,
   socketIO,
+  mcp,
   git,
   llm,
   grpc,

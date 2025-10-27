@@ -1,4 +1,4 @@
-import React, { type FC, useEffect, useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -23,8 +23,8 @@ import { SyncMergeModal } from '~/ui/components/modals/sync-merge-modal';
 
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
-import { showModal } from '.';
 import { AlertModal } from './alert-modal';
+import { showModal } from './index';
 
 const LocalBranchItem = ({
   branch,
@@ -166,7 +166,13 @@ const LocalBranchItem = ({
                       onCancelUnresolved: () => {
                         // user aborted merge
                         window.main.git.abortMerge();
-                        reject(new Error('You aborted the merge, no changes were made to working tree.'));
+                        // TODO: the abortMerge method provided by isomorphic-git is unreliable
+                        // clean up any partial merges here
+                        reject(
+                          new Error(
+                            'You aborted the merge, some changes may be present in your working tree and staging area, please clean them up manually in the commit panel.',
+                          ),
+                        );
                       },
                     });
                   });
@@ -289,7 +295,7 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
         projectId,
       });
     }
-  }, [organizationId, projectId, gitChangesFetcher]);
+  }, [projectId, gitChangesFetcher]);
 
   const hasUncommittedChanges = Boolean(
     gitChangesFetcher.data?.changes &&

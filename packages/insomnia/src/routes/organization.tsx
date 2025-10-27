@@ -39,6 +39,7 @@ import { PresentUsers } from '~/ui/components/present-users';
 import { InsomniaEventStreamProvider } from '~/ui/context/app/insomnia-event-stream-context';
 import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
+import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { sortOrganizations } from '~/ui/organization-utils';
 import { AsyncTask, getInitialRouteForOrganization } from '~/utils/router';
@@ -240,6 +241,10 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     true,
   );
   const [isMinimal, setIsMinimal] = reactUse.useLocalStorage('isMinimal', false);
+
+  useCloseConnection({
+    organizationId,
+  });
 
   return (
     <InsomniaEventStreamProvider>

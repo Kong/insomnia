@@ -223,7 +223,6 @@ export const ImportProjectsResourceForm = ({
       <p>{disclaimer}</p>
       <Checkbox
         aria-label={'Skip importing projects that already exist'}
-        className="group flex h-full items-center p-0"
         isSelected={skipExisting}
         onChange={setSkipExisting}
       >

@@ -3,6 +3,7 @@ export const GRANT_TYPE_IMPLICIT = 'implicit';
 export const GRANT_TYPE_PASSWORD = 'password';
 export const GRANT_TYPE_CLIENT_CREDENTIALS = 'client_credentials';
 export const GRANT_TYPE_REFRESH = 'refresh_token';
+export const GRANT_TYPE_MCP_AUTH_FLOW = 'mcp_auth_flow';
 export type AuthKeys =
   | 'access_token'
   | 'id_token'

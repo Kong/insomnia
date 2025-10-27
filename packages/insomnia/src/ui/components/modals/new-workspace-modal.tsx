@@ -27,7 +27,7 @@ import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
 import { type ApiSpec } from '../../../models/api-spec';
 import { isGitProject, type Project } from '../../../models/project';
-import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
+import { isMcp, type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { SegmentEvent } from '../../analytics';
 import { Icon } from '../icon';
@@ -37,6 +37,7 @@ const titleByScope: Record<WorkspaceScope, string> = {
   [WorkspaceScopeKeys.environment]: 'Environment',
   [WorkspaceScopeKeys.mockServer]: 'Mock Server',
   [WorkspaceScopeKeys.design]: 'Design Document',
+  [WorkspaceScopeKeys.mcp]: 'MCP Client',
 };
 
 const defaultNameByScope: Record<WorkspaceScope, string> = {
@@ -44,6 +45,7 @@ const defaultNameByScope: Record<WorkspaceScope, string> = {
   [WorkspaceScopeKeys.environment]: 'My Environment',
   [WorkspaceScopeKeys.mockServer]: 'My Mock Server',
   [WorkspaceScopeKeys.design]: 'My Design Document',
+  [WorkspaceScopeKeys.mcp]: 'My MCP Client',
 };
 
 export const NewWorkspaceModal = ({
@@ -67,10 +69,14 @@ export const NewWorkspaceModal = ({
 
   const isLocalProject = !project.remoteId;
   const isEnterprise = currentPlan?.type.includes('enterprise');
-  const isSelfHostedDisabled = !isEnterprise || !storageRules.enableLocalVault;
+  const isSelfHostedDisabled = !storageRules.enableLocalVault;
   const isCloudProjectDisabled = isLocalProject || !storageRules.enableCloudSync;
+  const isMcpWorkspace = isMcp({ scope });
+  // Mcp workspaces do not support Git sync for now
+  const isGitProjectAndNotMcpWorkspace = isGitProject(project) && !isMcpWorkspace;
 
   const canOnlyCreateSelfHosted = isLocalProject && isEnterprise;
+  const defaultFileName = safeToUseInsomniaFileName(defaultNameByScope[scope]);
 
   const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
 
@@ -92,7 +98,8 @@ export const NewWorkspaceModal = ({
     name: defaultNameByScope[scope],
     scope,
     folderPath: '',
-    fileName: safeToUseInsomniaFileName(defaultNameByScope[scope]),
+    // Add a unique timestamp for mcp file name to avoid conflicts since we hide the Git file and folder selector for it.
+    fileName: isGitProject(project) && isMcpWorkspace ? `${defaultFileName}_${Date.now()}` : defaultFileName,
     mockServerType: canOnlyCreateSelfHosted ? 'self-hosted' : 'cloud',
     mockServerUrl: '',
     mockServerCreationType: sourceApiSpec?.contents ? 'ai' : 'manual',
@@ -176,7 +183,7 @@ export const NewWorkspaceModal = ({
       className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
     >
       <Modal
-        className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] ${isGitProject(project) ? 'min-h-[420px]' : 'min-h-[220px]'}`}
+        className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] ${isGitProjectAndNotMcpWorkspace ? 'min-h-[420px]' : 'min-h-[220px]'}`}
       >
         <Dialog
           aria-label="Create or update dialog"
@@ -234,7 +241,8 @@ export const NewWorkspaceModal = ({
                   />
                   <FieldError className="text-xs text-red-500" />
                 </TextField>
-                {isGitProject(project) && (
+                {/* Mcp workspaces do not support Git sync for now */}
+                {isGitProjectAndNotMcpWorkspace && (
                   <>
                     <TextField
                       name="fileName"

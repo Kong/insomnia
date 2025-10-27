@@ -5,6 +5,7 @@ import { compressObject, decompressObject } from '../common/misc';
 import * as requestOperations from '../models/helpers/request-operations';
 import type { GrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
+import { isMcpRequest, type McpRequest } from './mcp-request';
 import { isRequest, type Request } from './request';
 import { isSocketIORequest, type SocketIORequest } from './socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from './websocket-request';
@@ -56,8 +57,8 @@ export function findByParentId(parentId: string) {
   return db.find<RequestVersion>(type, { parentId });
 }
 
-export async function create(request: Request | WebSocketRequest | GrpcRequest | SocketIORequest) {
-  if (!isRequest(request) && !isWebSocketRequest(request) && !isSocketIORequest(request)) {
+export async function create(request: Request | WebSocketRequest | GrpcRequest | SocketIORequest | McpRequest) {
+  if (!isRequest(request) && !isWebSocketRequest(request) && !isSocketIORequest(request) && !isMcpRequest(request)) {
     throw new Error(`New ${type} was not given a valid ${request.type} instance`);
   }
 
@@ -117,8 +118,8 @@ export async function restore(requestVersionId: string) {
   return requestOperations.update(originalRequest, requestPatch);
 }
 function _diffRequests(
-  rOld: Request | WebSocketRequest | SocketIORequest | null,
-  rNew: Request | WebSocketRequest | SocketIORequest,
+  rOld: Request | WebSocketRequest | SocketIORequest | McpRequest | null,
+  rNew: Request | WebSocketRequest | SocketIORequest | McpRequest,
 ) {
   if (!rOld) {
     return true;

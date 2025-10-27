@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { MockRouteData } from '@kong/insomnia-plugin-ai';
 import { href, redirect } from 'react-router';
 
 import { getAppVersion, getMockServiceURL, METHOD_GET } from '~/common/constants';
@@ -12,6 +11,7 @@ import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import { isGitProject, isLocalProject } from '~/models/project';
 import { isCollection, isEnvironment, scopeToActivity, type WorkspaceScope } from '~/models/workspace';
+import type { MockRouteData } from '~/plugins/types';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
@@ -56,7 +56,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     const scope = workspaceData.scope;
     invariant(
-      scope === 'design' || scope === 'collection' || scope === 'mock-server' || scope === 'environment',
+      scope === 'design' ||
+        scope === 'collection' ||
+        scope === 'mock-server' ||
+        scope === 'environment' ||
+        scope === 'mcp',
       'Scope is required',
     );
 
@@ -67,7 +71,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       const modelConfig = await window.main.llm.getCurrentConfig();
       if (workspaceData.mockServerCreationType === 'ai') {
         const isFeatureEnabled = await window.main.llm.getAIFeatureEnabled('aiMockServers');
-        invariant(isFeatureEnabled, 'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.');
+        invariant(
+          isFeatureEnabled,
+          'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.',
+        );
 
         const validationError = validateMockServerSpec(workspaceData);
         if (validationError) {
@@ -75,7 +82,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         }
 
         if (workspaceData.mockServerSpecSource === 'url' || workspaceData.mockServerSpecSource === 'text') {
-          invariant(modelConfig && modelConfig.backend !== 'gguf', 'The URL and Text options are not supported with GGUF models.');
+          invariant(
+            modelConfig && modelConfig.backend !== 'gguf',
+            'The URL and Text options are not supported with GGUF models.',
+          );
         }
       }
 
@@ -108,7 +118,14 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     if (scope === 'mock-server') {
-      const mockServerError = await createMockServer(workspace, workspaceData, flushId, organizationId, projectId, name);
+      const mockServerError = await createMockServer(
+        workspace,
+        workspaceData,
+        flushId,
+        organizationId,
+        projectId,
+        name,
+      );
 
       if (mockServerError) {
         return { error: mockServerError };
@@ -129,7 +146,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     await database.flushChanges(flushId);
 
     const { id } = await models.userSession.getOrCreate();
-    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project)) {
+    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project) && scope !== 'mcp') {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs,
@@ -143,6 +160,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       event = SegmentEvent.collectionCreate;
     } else if (isEnvironment(workspace)) {
       event = SegmentEvent.environmentWorkspaceCreate;
+    } else if (scope === 'mcp') {
+      event = SegmentEvent.mcpClientWorkspaceCreate;
     }
 
     window.main.trackSegmentEvent({
@@ -153,7 +172,14 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       const settings = await models.settings.getOrCreate();
       const defaultHeaders = settings.disableAppVersionUserAgent
         ? []
-        : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
+        : [
+            {
+              name: 'User-Agent',
+              value: `insomnia/${getAppVersion()}`,
+              description: '',
+              disabled: false,
+            },
+          ];
 
       const activeRequestId = (
         await models.request.create({
@@ -172,6 +198,36 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           projectId,
           workspaceId: workspace._id,
           requestId: activeRequestId,
+        }),
+      );
+    }
+
+    if (workspaceData.scope === 'mcp') {
+      const settings = await models.settings.getOrCreate();
+      const defaultHeaders = settings.disableAppVersionUserAgent
+        ? []
+        : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
+      // Create mcp request when MCP workspace is created
+      const newMcpRequest = await models.mcpRequest.create({
+        parentId: workspace._id,
+        transportType: 'streamable-http',
+        url: '',
+        name: 'My first MCP Client',
+        headers: defaultHeaders,
+        description: '',
+      });
+      const requestId = newMcpRequest._id;
+
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.mcpClientAdded,
+      });
+
+      return redirect(
+        href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId', {
+          organizationId,
+          projectId,
+          workspaceId: workspace._id,
+          requestId,
         }),
       );
     }
@@ -405,7 +461,7 @@ async function createMockRoutes(
         });
       }
     } catch (error) {
-      const msg = `Failed to register route ${mockRoute.method} ${mockRoute.name}:`
+      const msg = `Failed to register route ${mockRoute.method} ${mockRoute.name}:`;
       console.error(msg, error);
     }
   }

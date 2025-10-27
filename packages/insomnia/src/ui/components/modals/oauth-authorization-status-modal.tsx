@@ -14,6 +14,27 @@ export const OAuthAuthorizationStatusModal: FC = () => {
   const [submitting, setSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
+    const unsubscribe = window.main.on('show-oauth-authorization-modal', (_, authCodeUrlStr: string) => {
+      uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
+        status: 'getting_code',
+        authCodeUrlStr,
+      });
+    });
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('hide-oauth-authorization-modal', _ => {
+      uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
+        status: 'none',
+      });
+    });
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
     const handleStatusChange = ({
       status: newStatus,
       authCodeUrlStr,
@@ -49,6 +70,8 @@ export const OAuthAuthorizationStatusModal: FC = () => {
       centered
       ref={modalRef}
       onHide={() => {
+        setStatus('none');
+        setSubmitting(false);
         window.main.cancelAuthorizationInDefaultBrowser('Canceled by user.');
       }}
     >
