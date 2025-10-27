@@ -59,6 +59,7 @@ export function normalizeScripts(scripts: any): any {
  * - Removing empty script objects (with only empty `preRequest` and `afterResponse` strings)
  * - Filtering out empty entries (those without name or value)
  * - Removing empty arrays if all entries were filtered out
+ * - Skipping `spec.contents` fields which contain OpenAPI specs that should not be migrated
  *
  * @param obj - The object to clean
  * @returns Cleaned object with scoped `id`s and cookie timestamps removed, empty entries filtered out, and empty arrays and objects removed
@@ -72,6 +73,13 @@ export function cleanHeadersAndParameters(obj: any): any {
     const cleaned: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(obj)) {
+      // Skip the contents field of spec objects - these contain OpenAPI specs
+      // which should not be migrated (they have their own schema)
+      if (key === 'contents' && value && typeof value === 'object') {
+        cleaned[key] = value;
+        continue;
+      }
+
       if ((key === 'headers' || key === 'parameters' || key === 'params') && Array.isArray(value)) {
         const filteredAndCleaned = value
           .filter(entry => {
@@ -96,9 +104,10 @@ export function cleanHeadersAndParameters(obj: any): any {
             return entry.name || entry.value;
           })
           .map(entry => {
-            // Don't modify $ref entries - return as-is
+            // Handle $ref entries: preserve the reference structure but remove the id field
+            // This keeps OpenAPI component references intact while cleaning up Insomnia-added ids
             if (entry.$ref || entry['$ref']) {
-              const { id, ...rest } = entry; // remove `id` only here
+              const { id, ...rest } = entry;
 
               return rest;
             }
@@ -117,7 +126,7 @@ export function cleanHeadersAndParameters(obj: any): any {
         const filteredAndCleaned = value
           .filter(entry => entry && typeof entry === 'object' && (entry.key || entry.value))
           .map(entry => {
-            const { creation, lastAccessed, ...rest } = entry; // remove `id` and timestamp fields
+            const { id, creation, lastAccessed, ...rest } = entry; // remove `id` and timestamp fields
             return cleanHeadersAndParameters(rest);
           });
 
