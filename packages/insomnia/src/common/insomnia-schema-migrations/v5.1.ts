@@ -82,11 +82,29 @@ export function cleanHeadersAndParameters(obj: any): any {
               return true;
             }
 
+            // Keep OpenAPI $ref entries (schema references)
+            if (entry.$ref || entry['$ref']) {
+              return true;
+            }
+
+            // Keep entries with OpenAPI-specific properties
+            if (entry.schema || entry.in || entry.required !== undefined) {
+              return true;
+            }
+
             // Keep regular entries with name or value
             return entry.name || entry.value;
           })
           .map(entry => {
+            // Don't modify $ref entries - return as-is
+            if (entry.$ref || entry['$ref']) {
+              const { id, ...rest } = entry; // remove `id` only here
+
+              return rest;
+            }
+
             const { id, ...rest } = entry; // remove `id` only here
+
             return cleanHeadersAndParameters(rest);
           });
 
