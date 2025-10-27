@@ -836,7 +836,7 @@ export const GitProjectStagingModal: FC<{
         projectId,
       });
     }
-  }, [organizationId, projectId, workspaceId, gitChangesFetcher]);
+  }, [projectId, gitChangesFetcher]);
 
   const { changes } = gitChangesFetcher.data || {
     changes: {
@@ -870,6 +870,16 @@ export const GitProjectStagingModal: FC<{
 
   const generateCommitsFetcher = useAIGenerateActionFetcher({ key: commitGenerationKey.toString() });
   const isGeneratingCommits = generateCommitsFetcher.state !== 'idle';
+  useEffect(() => {
+    if (
+      undoUnstagedChangesFetcher.data &&
+      'success' in undoUnstagedChangesFetcher.data &&
+      undoUnstagedChangesFetcher.data.success &&
+      allChangesLength === 0
+    ) {
+      onClose();
+    }
+  }, [allChangesLength, onClose, undoUnstagedChangesFetcher.data]);
 
   return (
     <>
@@ -1002,7 +1012,7 @@ export const GitProjectStagingModal: FC<{
                         {previewDiffItem.name}
                       </Heading>
                       {previewDiffItem && (
-                        <div className="flex-1 overflow-y-auto rounded-sm bg-[--hl-xs] p-2 text-[--color-font]">
+                        <div className="flex-1 overflow-hidden rounded-sm bg-[--hl-xs] p-2 text-[--color-font]">
                           <DiffEditor original={previewDiffItem.diff.before} modified={previewDiffItem.diff.after} />
                         </div>
                       )}

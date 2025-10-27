@@ -1,4 +1,4 @@
-import React, { type FC, useEffect } from 'react';
+import { type FC, useEffect } from 'react';
 import {
   Button,
   Dialog,
@@ -88,7 +88,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
         workspaceId,
       });
     }
-  }, [organizationId, projectId, workspaceId, gitChangesFetcher]);
+  }, [projectId, workspaceId, gitChangesFetcher]);
 
   const { changes } = gitChangesFetcher.data || {
     changes: {
