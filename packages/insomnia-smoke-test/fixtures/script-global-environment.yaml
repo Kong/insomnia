@@ -1,4 +1,5 @@
 type: environment.insomnia.rest/5.0
+schema_version: "5.1"
 name: Script Environment
 meta:
   id: wrk_bf4544d564f64a38b9628ae682158e56
