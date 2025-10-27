@@ -804,11 +804,7 @@ export const GitProjectStagingModal: FC<{
   onPullAfterCommit: () => void;
   onPushAfterPull: () => void;
 }> = ({ mode = StagingModalModes.default, onClose, onPullAfterCommit, onPushAfterPull }) => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-  };
+  const { projectId } = useParams() as { projectId: string };
 
   const [commitGenerationKey, setCommitGenerationKey] = useState(0);
 

@@ -1,6 +1,6 @@
 import { parse, stringify } from 'yaml';
 
-import type { InsomniaFile } from '~/common/import-v5-parse';
+import type { InsomniaFile } from '~/common/import-v5-parser';
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
 import { cleanHeadersAndParameters } from '~/common/insomnia-schema-migrations/v5.1';
 
