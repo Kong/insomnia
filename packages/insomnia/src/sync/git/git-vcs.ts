@@ -1893,7 +1893,7 @@ export class GitVCS {
     }
   }
 
-  async discardChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+  async discardChanges(changes: { path: string; status: Status }[]) {
     for (const change of changes) {
       // If the file didn't exist in HEAD, handle based on staging status
       if (change.status[0] === 0) {
@@ -1915,6 +1915,31 @@ export class GitVCS {
         }
         // If we're only discarding unstaged changes and the file is staged, do nothing
         // This preserves staged files/folders
+      } else {
+        // Discard unstaged changes only.
+
+        // Restore workdir from index (staged version)
+        // 1. Get staged blob OID
+        const statusMatrix = await git.statusMatrix({ ...this._baseOpts });
+        const row = statusMatrix.find(([filepath]) => filepath === change.path);
+        if (row) {
+          const [, , , stageStatusCode] = row;
+          if (stageStatusCode !== 0) {
+            // 2. Get staged blob content
+            const index = await git.listFiles({ ...this._baseOpts });
+            if (index.includes(change.path)) {
+              // Use fileStatus logic to get staged content:
+              const { stage } = await this.fileStatus(change.path);
+              if (stage !== null) {
+                // 3. Write staged content to workdir
+                // @ts-expect-error -- TSCONVERSION
+                await this._baseOpts.fs.promises.writeFile(change.path, stage, 'utf8');
+              }
+            }
+          }
+        }
+        // Do NOT touch the index (staged changes are preserved)
+        continue;
       }
     }
   }
