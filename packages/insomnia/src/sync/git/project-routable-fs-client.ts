@@ -32,6 +32,7 @@ export function projectRoutableFSClient(
   const execMethod = async (method: Methods, filePath: string, ...args: any[]) => {
     filePath = path.normalize(filePath);
 
+    // 1) Prefix routing: forward into any registered special FS (e.g. '.git')
     for (const prefix of Object.keys(otherFS)) {
       if (filePath.indexOf(path.normalize(prefix)) === 0) {
         // TODO: remove non-null assertion
@@ -45,8 +46,8 @@ export function projectRoutableFSClient(
     // Fallback to default if no prefix matched
     // TODO: remove non-null assertion
 
-    // We store insomnia files in the database and all other files in a folder named 'other' on disk
-    // When we read a directory, we need to merge the two lists to provide the full list of files
+    // 2) Directory reads merge: DB-backed list (insomniaFS) + disk list (defaultFS)
+    // This exposes a unified directory view combining virtual YAML files and on-disk files.
     if (method === 'readdir') {
       let insomniaFiles = [];
       try {
@@ -68,6 +69,8 @@ export function projectRoutableFSClient(
       return [...new Set([...insomniaFiles, ...defaultFiles])];
     }
 
+    // 3) YAML-first writes/reads: prefer insomniaFS (DB). If it throws, fall back to disk.
+    // Also, when writing, collect attempted content into writeFileMap to assist conflict UIs.
     if (filePath.endsWith('.yaml')) {
       try {
         const result = await insomniaFS.promises[method]!(filePath, ...args);
@@ -82,6 +85,7 @@ export function projectRoutableFSClient(
       }
     }
 
+    // 4) Fallback: everything else goes to the default on-disk FS (e.g. 'other').
     const result = await defaultFS.promises[method]!(filePath, ...args);
 
     // Uncomment this to debug operations
@@ -103,7 +107,8 @@ export function projectRoutableFSClient(
   methods.symlink = execMethod.bind(methods, 'symlink');
   return {
     promises: methods,
-    // Because when writing files using insomniaFS, in some cases write operations that contain conflicting content may be skipped by insomniaFS. Therefore, we added the startCollectWriteAction and stopCollectWriteAction methods to collect all attempted writes to insomniaFS within a certain period of time.
+    // Collect attempted DB-backed YAML writes during operations like pull/merge so
+    // the UI can surface suggested merge results even if actual writes were skipped.
     startCollectWriteAction: (oriWriteFileMap: WriteFileMap) => {
       writeFileMap = oriWriteFileMap;
     },
