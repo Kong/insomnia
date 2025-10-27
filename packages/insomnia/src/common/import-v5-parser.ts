@@ -1,17 +1,37 @@
+/**
+ * Insomnia v5 Import Parser
+ *
+ * This module defines Zod schemas for parsing and validating Insomnia v5 export files.
+ * It provides type-safe parsing of YAML files exported from Insomnia, ensuring data
+ * integrity before importing into the database.
+ *
+ * Key responsibilities:
+ * - Define Zod schemas for all v5 export types
+ * - Validate imported data structure and types
+ * - Provide TypeScript types for parsed data
+ * - Handle different workspace scopes and request types
+ *
+ */
+
 import { z } from 'zod/v4';
+
+import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
 
 // This uses zod in order to ensure the parsed input matches our types before we insert it into the database
 
-const LiteralSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
-const KeyLiteralSchema = z.union([z.string(), z.number()]);
+// Basic literal types that can appear in JSON data
+export const LiteralSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+export const KeyLiteralSchema = z.union([z.string(), z.number()]);
 
 type Literal = z.infer<typeof LiteralSchema>;
 type Json = Literal | { [key: string]: Json } | Json[];
-const JsonSchema: z.ZodType<Json> = z.lazy(() =>
+
+// Recursive JSON schema that can handle nested objects and arrays
+export const JsonSchema: z.ZodType<Json> = z.lazy(() =>
   z.union([LiteralSchema, z.array(JsonSchema), z.record(KeyLiteralSchema, JsonSchema)]),
 );
 
-const MetaSchema = z.object({
+export const MetaSchema = z.object({
   id: z.string(),
   created: z.number().optional(),
   modified: z.number().optional(),
@@ -19,6 +39,24 @@ const MetaSchema = z.object({
   description: z.string().optional(),
   sortKey: z.number().optional(),
 });
+
+export const MetaGroupSchema = z.object({
+  id: z.string(),
+  created: z.number().optional(),
+  modified: z.number().optional(),
+  isPrivate: z.boolean().optional(),
+  sortKey: z.number().optional(),
+  description: z.string().optional(),
+});
+
+export const HeadersSchema = z.array(
+  z.object({
+    name: z.string(),
+    value: z.string(),
+    description: z.string().optional(),
+    disabled: z.boolean().optional(),
+  }),
+);
 
 export type Meta = z.infer<typeof MetaSchema>;
 
@@ -48,40 +86,35 @@ const CookieSchema = z.object({
   lastAccessed: z.coerce.date().optional(),
 });
 
-const CookieJarSchema = z.object({
+export const CookieJarSchema = z.object({
   name: z.string().optional().default(''),
-  cookies: z.array(CookieSchema).optional(),
   meta: MetaSchema.optional(),
+  cookies: z.array(CookieSchema).optional(),
 });
 
-const EnvironmentSchema = z.object({
+export const EnvironmentSchema = z.object({
   name: z.string().optional(),
+  meta: MetaSchema.optional(),
   data: JsonSchema.optional(),
-  dataPropertyOrder: JsonSchema.optional(),
   color: z.string().optional().nullable(),
-  meta: MetaSchema.extend({
-    sortKey: z.number().optional(),
-  }).optional(),
   subEnvironments: z
     .array(
       z.object({
         name: z.string(),
+        meta: MetaSchema.optional(),
         data: JsonSchema.optional(),
         dataPropertyOrder: JsonSchema.optional(),
         color: z.string().optional().nullable(),
-        meta: MetaSchema.extend({
-          sortKey: z.number().optional(),
-        }).optional(),
       }),
     )
     .optional(),
+  dataPropertyOrder: JsonSchema.optional(),
 });
 
 export const GRPCRequestSchema = z.object({
-  name: z.string().optional().default(''),
   url: z.string().optional().default(''),
-  protoFileId: z.string().optional().nullable(),
-  protoMethodName: z.string().optional(),
+  name: z.string().optional().default(''),
+  meta: MetaSchema.optional(),
   body: z
     .object({
       text: z.string().optional(),
@@ -97,33 +130,34 @@ export const GRPCRequestSchema = z.object({
       }),
     )
     .optional(),
+  protoFileId: z.string().optional().nullable(),
+  protoMethodName: z.string().optional(),
   reflectionApi: z.object({
     enabled: z.boolean().optional().default(false),
     url: z.string().optional().default(''),
     apiKey: z.string().optional().default(''),
     module: z.string().optional().default(''),
   }),
-  meta: MetaSchema.extend({
-    sortKey: z.number().optional(),
-  }).optional(),
 });
 
-const MockRouteSchema = z.object({
-  body: z.string().optional(),
-  statusCode: z.number().optional().default(200),
-  statusText: z.string().optional(),
+export const MockRouteSchema = z.object({
   name: z.string().optional(),
-  mimeType: z.string().optional(),
-  method: z.string().optional(),
+  meta: MetaSchema.optional(),
+  body: z.string().optional(),
   headers: z
     .array(
       z.object({
         name: z.string(),
         value: z.string(),
+        description: z.string().optional(),
+        disabled: z.boolean().optional(),
       }),
     )
     .optional(),
-  meta: MetaSchema.optional(),
+  method: z.string().optional(),
+  mimeType: z.string().optional(),
+  statusCode: z.number().optional().default(200),
+  statusText: z.string().optional(),
 });
 
 const BasicAuthenticationSchema = z.object({
@@ -286,14 +320,14 @@ export const ScriptsSchema = z.object({
 });
 
 export const RequestSettingsSchema = z.object({
-  cookies: z.object({
-    store: z.boolean().default(false),
-    send: z.boolean().default(false),
-  }),
   renderRequestBody: z.boolean().default(true),
   encodeUrl: z.boolean().default(true),
-  rebuildPath: z.boolean().default(true),
   followRedirects: z.enum(['global', 'on', 'off']).default('global'),
+  cookies: z.object({
+    send: z.boolean().default(false),
+    store: z.boolean().default(false),
+  }),
+  rebuildPath: z.boolean().default(true),
 });
 
 export const WebSocketRequestSettingsSchema = z.object({
@@ -324,35 +358,28 @@ const RequestParametersSchema = z.array(
   z.object({
     name: z.string().optional().default(''),
     value: z.string().optional().default(''),
+    description: z.string().optional(),
     disabled: z.boolean().optional(),
-    id: z.string().optional(),
-    fileName: z.string().optional(),
-  }),
-);
-
-export const RequestHeadersSchema = z.array(
-  z.object({
-    name: z.string().optional().default(''),
-    value: z.string().optional().default(''),
+    type: z.string().optional(),
+    multiline: z.boolean().optional(),
   }),
 );
 
 export const RequestGroupSchema = z.object({
   name: z.string().optional().default(''),
-  description: z.string().optional(),
-  environment: JsonSchema.optional(),
-  environmentPropertyOrder: JsonSchema.optional(),
+  meta: MetaGroupSchema.optional(),
+  children: z.array(z.any()).optional(),
   scripts: ScriptsSchema.optional(),
   authentication: AuthenticationSchema.optional(),
-  headers: RequestHeadersSchema.optional(),
-  meta: MetaSchema.extend({
-    sortKey: z.number().optional(),
-  }).optional(),
+  environment: JsonSchema.optional(),
+  environmentPropertyOrder: JsonSchema.optional(),
+  headers: HeadersSchema.optional(),
 });
 
 export const RequestSchema = z.object({
   url: z.string().optional().default(''),
   name: z.string().optional().default(''),
+  meta: MetaSchema.optional(),
   method: z.string(),
   body: z
     .object({
@@ -363,11 +390,10 @@ export const RequestSchema = z.object({
         .array(
           z.object({
             name: z.string().default(''),
-            value: z.string().optional().default(''),
+            value: z.string().optional(),
             description: z.string().optional(),
             disabled: z.boolean().optional(),
             multiline: z.boolean().optional(),
-            id: z.string().optional(),
             fileName: z.string().optional(),
             type: z.string().optional(),
           }),
@@ -375,9 +401,8 @@ export const RequestSchema = z.object({
         .optional(),
     })
     .optional(),
-  headers: RequestHeadersSchema.optional(),
   parameters: RequestParametersSchema.optional(),
-  pathParameters: RequestPathParametersSchema.optional(),
+  headers: HeadersSchema.optional(),
   authentication: AuthenticationSchema.optional(),
   scripts: ScriptsSchema.optional(),
   settings: RequestSettingsSchema.optional().default({
@@ -390,18 +415,15 @@ export const RequestSchema = z.object({
       store: true,
     },
   }),
-  meta: MetaSchema.extend({
-    sortKey: z.number().optional(),
-  }).optional(),
+  pathParameters: RequestPathParametersSchema.optional(),
 });
 
 export const WebsocketRequestSchema = z.object({
-  name: z.string().optional().default(''),
   url: z.string().optional().default(''),
-  headers: RequestHeadersSchema.optional(),
-  authentication: AuthenticationSchema.optional(),
-  parameters: RequestParametersSchema.optional(),
-  pathParameters: RequestPathParametersSchema.optional(),
+  name: z.string().optional().default(''),
+  meta: MetaSchema.extend({
+    id: z.string().startsWith('ws-req'),
+  }).optional(),
   settings: WebSocketRequestSettingsSchema.optional().default({
     encodeUrl: true,
     followRedirects: 'global',
@@ -410,10 +432,10 @@ export const WebsocketRequestSchema = z.object({
       store: true,
     },
   }),
-  meta: MetaSchema.extend({
-    id: z.string().startsWith('ws-req'),
-    sortKey: z.number().optional(),
-  }).optional(),
+  authentication: AuthenticationSchema.optional(),
+  headers: HeadersSchema.optional(),
+  parameters: RequestParametersSchema.optional(),
+  pathParameters: RequestPathParametersSchema.optional(),
 });
 
 export const SocketIOEventListenerSchema = z.object({
@@ -424,12 +446,11 @@ export const SocketIOEventListenerSchema = z.object({
 });
 
 export const SocketIORequestSchema = z.object({
-  name: z.string().optional().default(''),
   url: z.string().optional().default(''),
-  headers: RequestHeadersSchema.optional(),
-  authentication: AuthenticationSchema.optional(),
-  parameters: RequestParametersSchema.optional(),
-  pathParameters: RequestParametersSchema.optional(),
+  name: z.string().optional().default(''),
+  meta: MetaSchema.extend({
+    id: z.string().startsWith('socketio-req'),
+  }).optional(),
   settings: SocketIORequestSettingsSchema.optional().default({
     encodeUrl: true,
     cookies: {
@@ -437,11 +458,11 @@ export const SocketIORequestSchema = z.object({
       store: true,
     },
   }),
+  authentication: AuthenticationSchema.optional(),
+  headers: HeadersSchema.optional(),
+  parameters: RequestParametersSchema.optional(),
+  pathParameters: RequestParametersSchema.optional(),
   eventListeners: SocketIOEventListenerSchema.array().optional(),
-  meta: MetaSchema.extend({
-    id: z.string().startsWith('socketio-req'),
-    sortKey: z.number().optional(),
-  }).optional(),
 });
 
 type Request = z.infer<typeof RequestSchema>;
@@ -461,7 +482,7 @@ const RequestGroupWithChildrenSchema: z.ZodType<RequestGroup> = RequestGroupSche
   pathParameters: z.undefined(),
 });
 
-const RequestCollectionSchema = z
+export const RequestCollectionSchema = z
   .union([
     GRPCRequestSchema.extend({
       // These undefined properties are added to differentiate between the different types of children in the union
@@ -488,61 +509,57 @@ const RequestCollectionSchema = z
 
 const TestSchema = z.object({
   name: z.string().optional().default(''),
-  code: z.string().optional().default(''),
+  meta: MetaSchema.optional(),
   requestId: z.string().nullable().optional().default(null),
-  meta: MetaSchema.extend({
-    sortKey: z.number().optional(),
-  }).optional(),
+  code: z.string().optional().default(''),
 });
 
 const TestSuiteSchema = z.object({
   name: z.string().optional().default(''),
-  meta: MetaSchema.extend({
-    sortKey: z.number().optional(),
-  }).optional(),
+  meta: MetaSchema.optional(),
   tests: z.array(TestSchema).optional(),
 });
 
 const SpecSchema = z.union([
   z.object({
-    meta: MetaSchema.optional(),
     file: z.string(),
+    meta: MetaSchema.optional(),
   }),
   z.object({
-    meta: MetaSchema.optional(),
     contents: JsonSchema.optional(),
+    meta: MetaSchema.optional(),
   }),
 ]);
 
-const CollectionSchema = z.object({
+export const CollectionSchema = z.object({
   type: z.literal('collection.insomnia.rest/5.0'),
-  meta: MetaSchema.optional(),
+  schema_version: z.string().optional().default(INSOMNIA_SCHEMA_VERSION),
   name: z.string().optional(),
-  description: z.string().optional(),
+  meta: MetaSchema.optional(),
   collection: RequestCollectionSchema.optional(),
-  certificates: z.array(CACertificateSchema).optional(),
-  environments: EnvironmentSchema.optional(),
   cookieJar: CookieJarSchema.optional(),
+  environments: EnvironmentSchema.optional(),
+  certificates: z.array(CACertificateSchema).optional(),
 });
 
-const ApiSpecSchema = z.object({
+export const ApiSpecSchema = z.object({
   type: z.literal('spec.insomnia.rest/5.0'),
-  meta: MetaSchema.optional(),
+  schema_version: z.string().optional().default(INSOMNIA_SCHEMA_VERSION),
   name: z.string().optional(),
-  description: z.string().optional(),
-  spec: SpecSchema.optional().default({ contents: {} }),
+  meta: MetaSchema.optional(),
   collection: RequestCollectionSchema.optional(),
-  certificates: z.array(CACertificateSchema).optional(),
-  environments: EnvironmentSchema.optional(),
   cookieJar: CookieJarSchema.optional(),
+  environments: EnvironmentSchema.optional(),
+  spec: SpecSchema.optional().default({ contents: {} }),
   testSuites: z.array(TestSuiteSchema).optional(),
+  certificates: z.array(CACertificateSchema).optional(),
 });
 
-const MockServerSchema = z.object({
+export const MockServerSchema = z.object({
   type: z.literal('mock.insomnia.rest/5.0'),
-  meta: MetaSchema.optional(),
+  schema_version: z.string().optional().default(INSOMNIA_SCHEMA_VERSION),
   name: z.string().optional(),
-  description: z.string().optional(),
+  meta: MetaSchema.optional(),
   server: z
     .object({
       meta: MetaSchema.optional(),
@@ -555,9 +572,9 @@ const MockServerSchema = z.object({
 
 const GlobalEnvironmentsSchema = z.object({
   type: z.literal('environment.insomnia.rest/5.0'),
-  meta: MetaSchema.optional(),
+  schema_version: z.string().optional().default(INSOMNIA_SCHEMA_VERSION),
   name: z.string().optional(),
-  description: z.string().optional(),
+  meta: MetaSchema.optional(),
   environments: EnvironmentSchema.optional(),
 });
 
@@ -575,3 +592,4 @@ export type Insomnia_RequestGroup = z.infer<typeof RequestGroupWithChildrenSchem
 export type Insomnia_Request = z.infer<typeof RequestSchema>;
 export type Insomnia_WebsocketRequest = z.infer<typeof WebsocketRequestSchema>;
 export type Insomnia_SocketIORequest = z.infer<typeof SocketIORequestSchema>;
+export type Insomnia_Meta = z.infer<typeof MetaSchema>;
