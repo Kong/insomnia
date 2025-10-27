@@ -190,7 +190,7 @@ export function normalizePropertyOrder<T>(obj: any, reference: any): T {
  * @param reference - Optional reference object for property order normalization
  * @returns Cleaned and normalized object
  */
-export function runNormalization<T>(obj: any, reference?: any): T {
+function normalizeInsomniaFile<T>(obj: any, reference?: any): T {
   // If reference is provided, normalize property order
   if (reference) {
     return normalizePropertyOrder(obj, reference);
