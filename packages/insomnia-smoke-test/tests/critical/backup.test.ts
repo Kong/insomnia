@@ -10,6 +10,8 @@ test('can backup data on new version available', async ({ app, page }) => {
   await page.getByRole('button', { name: 'Create request collection' }).click();
   await page.getByRole('button', { name: 'Send' }).click();
   await page.getByText('Error: URL using bad/illegal').click();
+  await page.getByRole('tab', { name: 'Console' }).click();
+  await page.getByText('No URL set').click();
   const rootBackupsFolder = fs.readdirSync(path.join(dataPath, 'backups'));
   const backupDir = fs.readdirSync(path.join(dataPath, 'backups', rootBackupsFolder[0]));
   const hasFilesInsideBackup = backupDir.length > 0;
