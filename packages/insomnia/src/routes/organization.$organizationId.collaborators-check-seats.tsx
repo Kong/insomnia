@@ -15,7 +15,7 @@ export interface CheckSeatsResponse {
   code?: typeof needsToUpgrade | typeof needsToIncreaseSeats;
 }
 
-export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { id: sessionId } = await userSession.get();
 
   const { organizationId } = params;
