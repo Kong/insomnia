@@ -2,7 +2,6 @@ import classnames from 'classnames';
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
-import { Button as ButtonBasic } from '~/basic-components/button';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { useRootLoaderData } from '~/root';
 import { useTrialCheckLoaderFetcher } from '~/routes/trial.check';
@@ -137,28 +136,27 @@ export const UpgradePlanModal = () => {
                 </ul>
               </div>
               <div className="mt-3 flex justify-start gap-[20px]">
-                <ButtonBasic
-                  type="primary"
+                <Button
                   className="h-[30px] rounded bg-[--color-surprise] px-[12px] text-center text-sm text-[--color-font-surprise]"
                   onPress={handleUpgrade}
                 >
                   Buy Now
-                </ButtonBasic>
+                </Button>
                 {checkerData?.isEligible && (
-                  <ButtonBasic
-                    className="h-[30px] rounded !border-[--hl-md] px-[12px] text-sm text-[--color-font] hover:bg-[--hl-xs]"
+                  <Button
+                    className="h-[30px] rounded border border-solid !border-[--hl-md] px-[12px] text-sm text-[--color-font] hover:bg-[--hl-xs]"
                     isDisabled={startFetcher.state !== 'idle'}
                     onPress={handleStartTrial}
                   >
                     Try Free for 14 Days
-                  </ButtonBasic>
+                  </Button>
                 )}
-                <ButtonBasic
+                <Button
                   className="ml-auto h-[30px] rounded !border-none px-[0px] text-sm text-[--color-font]"
                   onPress={() => close()}
                 >
                   No, Thanks
-                </ButtonBasic>
+                </Button>
               </div>
             </div>
           )}

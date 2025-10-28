@@ -1,45 +1,11 @@
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
-import type { CurrentPlan, PersonalPlanType, UserProfileResponse } from '~/models/organization';
+import type { CurrentPlan, UserProfileResponse } from '~/models/organization';
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { Avatar } from '~/ui/components/avatar';
 import { Icon } from '~/ui/components/icon';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
-
-const UpgradeButton = ({ currentPlan }: { currentPlan: CurrentPlan }) => {
-  // For the enterprise-member plan we don't show the upgrade button.
-  if (currentPlan?.type === 'enterprise-member') {
-    return null;
-  }
-
-  // If user has a team or enterprise plan we navigate them to the Enterprise contact page.
-  if (['team', 'enterprise'].includes(currentPlan?.type || '')) {
-    return (
-      <a
-        className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-        href={'https://insomnia.rest/pricing/contact'}
-      >
-        {currentPlan?.type === 'enterprise' ? '+ Add more seats' : 'Upgrade'}
-      </a>
-    );
-  }
-
-  let to = '/app/subscription/update?plan=team&pay_schedule=year';
-
-  if (currentPlan?.type === 'individual') {
-    to = `/app/subscription/update?plan=team&pay_schedule=${currentPlan?.period}`;
-  }
-
-  return (
-    <a
-      href={getAppWebsiteBaseURL() + to}
-      className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-    >
-      Upgrade
-    </a>
-  );
-};
 
 interface UserButtonProps {
   user: UserProfileResponse;

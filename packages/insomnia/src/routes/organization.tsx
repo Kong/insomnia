@@ -1,5 +1,3 @@
-import classNames from 'classnames';
-import { differenceInDays, format } from 'date-fns';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -24,7 +22,6 @@ import { isScratchpad } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
-import { useTrialStartActionFetcher } from '~/routes/trial.start';
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CommandPalette } from '~/ui/components/command-palette';
