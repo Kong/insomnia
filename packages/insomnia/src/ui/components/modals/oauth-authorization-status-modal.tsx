@@ -129,11 +129,10 @@ export const OAuthAuthorizationStatusModal: FC = () => {
                     encryptedKey,
                     iv,
                   });
-                } else if (url) {
-                  return redirectToDefaultBrowserSubmit({
-                    redirectUrl: url,
-                  });
                 }
+                return redirectToDefaultBrowserSubmit({
+                  redirectUrl: url,
+                });
               }}
             >
               <div className="form-control form-control--outlined no-pad-top" style={{ display: 'flex' }}>
