@@ -5,7 +5,7 @@ import { Button, Heading, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-ar
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useLatest } from 'react-use';
 
-import { docsBase } from '~/common/documentation';
+import { docsMcpClient } from '~/common/documentation';
 import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Link } from '~/ui/components/base/link';
@@ -286,7 +286,7 @@ export const McpRequestPane: FC<Props> = ({
             <div className="flex h-full w-full flex-col items-center p-5 text-center">
               {/*  Hint when mcp server is not connected*/}
               <p className="notice info text-md no-margin-top w-full">
-                Connect to an MCP server URL to reveal capabilities. &nbsp;<Link href={docsBase}>Learn More</Link>
+                Connect to an MCP server URL to reveal capabilities. &nbsp;<Link href={docsMcpClient}>Learn More</Link>
               </p>
             </div>
           ) : (

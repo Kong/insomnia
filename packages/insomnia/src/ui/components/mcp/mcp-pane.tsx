@@ -351,14 +351,14 @@ export const McpPane = () => {
         setMcpServerData(mcpServerData);
       }
     };
-    if (activeResponse?._id) {
-      // Get MCP server data when active response changes
+    if (activeResponse?._id || readyState) {
+      // Get MCP server data when active response changes or when connection is ready
       updateServerData();
     } else {
       // Clear MCP server data when no active response
       setMcpServerData(emptyServerData);
     }
-  }, [activeResponse?._id]);
+  }, [activeResponse?._id, readyState]);
 
   return (
     <PanelGroup
