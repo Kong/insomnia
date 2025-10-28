@@ -259,10 +259,7 @@ export function getTimeline(response: Response, showBody?: boolean) {
   try {
     const rawBuffer = fs.readFileSync(timelinePath);
     const timelineString = rawBuffer.toString();
-    const isLegacyTimelineFormat = timelineString.startsWith('[');
-    const timeline = isLegacyTimelineFormat
-      ? (JSON.parse(timelineString) as ResponseTimelineEntry[])
-      : deserializeNDJSON(timelineString);
+    const timeline = deserializeNDJSON(timelineString);
 
     const body: ResponseTimelineEntry[] = showBody
       ? [

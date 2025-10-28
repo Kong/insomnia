@@ -1,7 +1,18 @@
 export const serializeNDJSON = (data: any[]): string => {
-  return data.map((item: any) => JSON.stringify(item)).join('\n') + '\n';
+  return data.map((item: any) => JSON.stringify(item) + '\n').join('');
 };
 export const deserializeNDJSON = (data: string): any[] => {
+  if (data?.trim() === '') {
+    return [];
+  }
+  // Legacy content - a single JSON array
+  if (data.startsWith('[')) {
+    try {
+      return JSON.parse(data);
+    } catch (e) {
+      return [];
+    }
+  }
   return data
     .split('\n')
     .filter(e => e?.trim())
@@ -9,7 +20,6 @@ export const deserializeNDJSON = (data: string): any[] => {
       try {
         return JSON.parse(line);
       } catch (e) {
-        console.log('Failed to deserialize line', line, e);
         return undefined;
       }
     })
