@@ -1,28 +1,32 @@
+import classNames from 'classnames';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
-  Dialog,
   Heading,
   type Key,
   ListBox,
   ListBoxItem,
   type ListBoxItemProps,
-  Modal,
-  ModalOverlay,
   Popover,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 
-import { getAppWebsiteBaseURL } from '~/common/constants';
+import { getAppWebsiteBaseURL, pricingLearnMoreLink } from '~/common/constants';
 import { debounce } from '~/common/misc';
 import { isOwnerOfOrganization } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
+import {
+  type CheckSeatsResponse,
+  needsToIncreaseSeats,
+  needsToUpgrade,
+} from '~/routes/organization.$organizationId.collaborators-check-seats';
 import { useCollaboratorsSearchLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-search';
 import { SegmentEvent } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
+import { useIsLightTheme } from '~/ui/hooks/theme';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 
 import { startInvite } from './encryption';
@@ -51,32 +55,56 @@ interface EmailsInputProps {
   onInviteCompleted?: () => void;
 }
 
-const needsToUpgrade = 'NEEDS_TO_UPGRADE';
-const needsToIncreaseSeats = 'NEEDS_TO_INCREASE_SEATS';
-
 const upgradeModalWording = {
   [needsToUpgrade]: {
-    title: 'Upgrade to invite people',
-    ownerDescription: 'To collaborate on Git Sync projects with more than 3 people, please upgrade your Insomnia plan.',
-    memberDescription:
-      'To collaborate on Git Sync projects with more than 3 people, please ask your organization owner to upgrade Insomnia plan.',
-    submitText: 'Upgrade to Pro',
-    submitLink: getAppWebsiteBaseURL() + '/app/subscription/update?plan=team',
+    ownerTitle: 'Upgrade plan to invite more people',
+    memberTitle: 'Ask plan owner to upgrade to invite more people',
+    ownerDescription: (
+      <>
+        Your Essentials plan contains Git Sync projects, so you can only collaborate with up to 3 members. Upgrade to
+        collaborate with unlimited users.{' '}
+        <a href={pricingLearnMoreLink} className="underline">
+          Learn more ↗
+        </a>
+      </>
+    ),
+    memberDescription: (
+      <>
+        Your Essentials plan contains Git Sync projects, so you can only collaborate with up to 3 members.Contact your
+        plan owner to upgrade your team's plan to collaborate with more people.{' '}
+        <a href={pricingLearnMoreLink} className="underline">
+          Learn more ↗
+        </a>
+      </>
+    ),
+    submitText: 'Upgrade',
+    submitLink: getAppWebsiteBaseURL() + '/app/pricing',
   },
   [needsToIncreaseSeats]: {
-    title: 'Increase seats',
-    ownerDescription: 'Seat count is not enough for new collaborators, please increase your seats and try again.',
-    memberDescription:
-      'Seat count is not enough for new collaborators, please ask your organization owner to increase seats and try again.',
+    ownerTitle: 'Increase plan seats to invite more people',
+    memberTitle: 'Your team is full',
+    ownerDescription: (
+      <>
+        Your team has reached your plan's total purchased seats. Increase your plan's number of seats to continue
+        inviting new people.{' '}
+        <a href={pricingLearnMoreLink} className="underline">
+          Learn more ↗
+        </a>
+      </>
+    ),
+    memberDescription: (
+      <>
+        Your team has reached your plan's total purchased seats. Tell your plan's owner to increase the numberof seats
+        to continue inviting new people.{' '}
+        <a href={pricingLearnMoreLink} className="underline">
+          Learn more ↗
+        </a>
+      </>
+    ),
     submitText: 'Increase seats',
-    submitLink: getAppWebsiteBaseURL() + '/app/subscription/update',
+    submitLink: getAppWebsiteBaseURL() + '/app/pricing',
   },
 };
-
-interface CheckSeatsResponse {
-  isAllowed: boolean;
-  code?: typeof needsToUpgrade | typeof needsToIncreaseSeats;
-}
 
 export interface EmailInput {
   email: string;
@@ -95,7 +123,12 @@ const isValidEmail = (email: string): boolean => {
 
 const defaultRoleName = 'member';
 
-export const InviteForm = ({ allRoles, onInviteCompleted, senderRole }: EmailsInputProps) => {
+export const InviteForm = ({
+  allRoles,
+  onInviteCompleted,
+  senderRole,
+  checkSeatsResponseData,
+}: EmailsInputProps & { checkSeatsResponseData: CheckSeatsResponse | undefined }) => {
   const organizationId = useParams().organizationId as string;
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -118,16 +151,20 @@ export const InviteForm = ({ allRoles, onInviteCompleted, senderRole }: EmailsIn
   const selectedRoleRef = React.useRef<Role>(allRoles.find(role => role.name === defaultRoleName) as Role);
 
   const collaboratorSearchLoader = useCollaboratorsSearchLoaderFetcher();
+  let upgradeBannerStatus: 'closed' | typeof needsToUpgrade | typeof needsToIncreaseSeats = 'closed';
+  if (checkSeatsResponseData && !checkSeatsResponseData.isAllowed) {
+    if (checkSeatsResponseData.code === needsToUpgrade) {
+      upgradeBannerStatus = needsToUpgrade;
+    } else if (checkSeatsResponseData.code === needsToIncreaseSeats) {
+      upgradeBannerStatus = needsToIncreaseSeats;
+    }
+  }
 
   const searchResult = useMemo(() => collaboratorSearchLoader.data || [], [collaboratorSearchLoader.data]);
 
   useEffect(() => {
     setShowResults(searchResult.length > 0);
   }, [searchResult]);
-
-  const [upgradeModalStatus, setUpgradeModalStatus] = useState<
-    'closed' | typeof needsToUpgrade | typeof needsToIncreaseSeats
-  >('closed');
 
   useEffect(() => {
     const checkSeats = async () => {
@@ -215,8 +252,40 @@ export const InviteForm = ({ allRoles, onInviteCompleted, senderRole }: EmailsIn
     }
   };
 
+  const isLightTheme = useIsLightTheme();
+
   return (
     <div className="flex w-full flex-col gap-1">
+      {upgradeBannerStatus !== 'closed' && (
+        <div
+          className={classNames('mb-5 mt-3 flex items-start justify-start gap-5 rounded-md px-6 py-5', {
+            'bg-[#292535]': !isLightTheme,
+            'bg-[#EEEBFF]': isLightTheme,
+          })}
+        >
+          <Icon icon="circle-info" className="pt-1.5" />
+          <div className="flex flex-col items-start justify-start gap-3.5">
+            <Heading className="text-lg font-bold">
+              {isUserOwner
+                ? upgradeModalWording[upgradeBannerStatus].ownerTitle
+                : upgradeModalWording[upgradeBannerStatus].memberTitle}
+            </Heading>
+            <p>
+              {isUserOwner
+                ? upgradeModalWording[upgradeBannerStatus].ownerDescription
+                : upgradeModalWording[upgradeBannerStatus].memberDescription}
+            </p>
+            {isUserOwner && (
+              <a
+                href={upgradeModalWording[upgradeBannerStatus].submitLink}
+                className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+              >
+                {upgradeModalWording[upgradeBannerStatus].submitText}
+              </a>
+            )}
+          </div>
+        </div>
+      )}
       <div className="flex w-full items-center gap-4">
         <div
           className="flex flex-1 justify-between gap-3 rounded-md border border-[#4c4c4c] bg-[--hl-xs] p-2"
@@ -268,12 +337,13 @@ export const InviteForm = ({ allRoles, onInviteCompleted, senderRole }: EmailsIn
             <input
               ref={inputRef}
               type="text"
-              className="min-h-[24px] grow-[inherit] border-none px-2 py-1 leading-6 outline-none"
+              className="min-h-[24px] grow-[inherit] border-none px-2 py-1 leading-6 outline-none disabled:cursor-not-allowed"
               placeholder={emails.length > 0 ? 'Enter more emails...' : 'Enter emails, separated by comma...'}
               onKeyDown={handleInputKeyPress}
               onBlur={handleInputBlur}
               onPaste={handlePaste}
               onChange={e => handleSearch(e.currentTarget.value)}
+              disabled={checkSeatsResponseData && !checkSeatsResponseData.isAllowed}
             />
           </div>
           <div className="flex w-[81px] items-center">
@@ -289,28 +359,12 @@ export const InviteForm = ({ allRoles, onInviteCompleted, senderRole }: EmailsIn
           </div>
         </div>
         <Button
-          className="h-[40px] w-[67px] shrink-0 self-end rounded bg-[#4000bf] text-center text-[--color-font-surprise] disabled:opacity-70"
-          isDisabled={loading}
+          className="h-[40px] w-[67px] shrink-0 self-end rounded bg-[#4000bf] text-center text-[--color-font-surprise] disabled:cursor-not-allowed disabled:opacity-70"
+          isDisabled={loading || (checkSeatsResponseData && !checkSeatsResponseData.isAllowed)}
           onPress={async () => {
             if (emails.some(({ isValid }) => !isValid)) {
               setError('Some emails are invalid, please correct them before inviting.');
               return;
-            }
-            const checkResponseData = await insomniaFetch<CheckSeatsResponse>({
-              method: 'POST',
-              path: `/v1/organizations/${organizationId}/check-seats`,
-              data: { emails: emails.map(e => e.email) },
-              sessionId,
-            });
-
-            if (checkResponseData && !checkResponseData.isAllowed) {
-              if (checkResponseData.code === needsToUpgrade) {
-                setUpgradeModalStatus(needsToUpgrade);
-                return;
-              } else if (checkResponseData.code === needsToIncreaseSeats) {
-                setUpgradeModalStatus(needsToIncreaseSeats);
-                return;
-              }
             }
 
             setLoading(true);
@@ -400,63 +454,6 @@ export const InviteForm = ({ allRoles, onInviteCompleted, senderRole }: EmailsIn
         </Popover>
       </div>
       {error && <p className="text-red-500">{error}</p>}
-      {upgradeModalStatus !== 'closed' && (
-        <ModalOverlay
-          isDismissable={false}
-          isOpen={true}
-          onOpenChange={isOpen => {
-            setUpgradeModalStatus(isOpen ? needsToUpgrade : 'closed');
-          }}
-          className="theme--transparent-overlay fixed left-0 top-0 z-50 flex h-[--visual-viewport-height] w-full items-center justify-center bg-[--color-bg]"
-        >
-          <Modal className="theme--dialog fixed top-[100px] h-fit w-full max-w-[900px] rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[32px] text-[--color-font]">
-            <Dialog className="relative outline-none">
-              {({ close }) => (
-                <>
-                  <div className="flex items-center justify-between gap-2">
-                    <Heading slot="title" className="text-2xl">
-                      {upgradeModalWording[upgradeModalStatus].title}
-                    </Heading>
-                    <Button
-                      className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                      onPress={close}
-                    >
-                      <Icon icon="x" />
-                    </Button>
-                  </div>
-                  <p className="mt-8">
-                    {isUserOwner
-                      ? upgradeModalWording[upgradeModalStatus].ownerDescription
-                      : upgradeModalWording[upgradeModalStatus].memberDescription}
-                  </p>
-                  <div className="flex items-center justify-end gap-2 pt-10">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        onPress={close}
-                        className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
-                      >
-                        Cancel
-                      </Button>
-                      {isUserOwner && (
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            window.main.openInBrowser(upgradeModalWording[upgradeModalStatus].submitLink);
-                          }}
-                          className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-center text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
-                        >
-                          {upgradeModalWording[upgradeModalStatus].submitText}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
-            </Dialog>
-          </Modal>
-        </ModalOverlay>
-      )}
     </div>
   );
 };
