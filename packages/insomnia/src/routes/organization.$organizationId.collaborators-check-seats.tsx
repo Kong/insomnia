@@ -26,10 +26,12 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       path: `/v1/organizations/${organizationId}/check-seats`,
       data: { emails: [`insomnia-mock-check-seats-${uuidv4()}@konghq.com`] },
       sessionId,
+      onlyResolveOnSuccess: true,
     });
-
+    console.log('------------------------check seats response data', checkResponseData);
     return checkResponseData;
   } catch {
+    console.error('------------------------Error checking seats:');
     return { isAllowed: true };
   }
 }
