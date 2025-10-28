@@ -56,11 +56,11 @@ const FeatureWizardView = () => {
       <Route
         path="/"
         element={
-          <ul className="grid grid-cols-2 justify-center gap-2">
+          <ul className="grid h-full flex-1 grid-cols-2 content-stretch justify-center gap-2">
             {features.map(feature => (
               <li key={feature.id}>
                 <Link
-                  className="flex h-32 w-full select-none flex-col items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--hl-xs] p-4 transition-colors hover:bg-[--hl-sm] hover:no-underline"
+                  className="flex h-full w-full select-none flex-col items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--hl-xs] p-4 transition-colors hover:bg-[--hl-sm] hover:no-underline"
                   to={`/onboarding/${feature.id}`}
                 >
                   <FontAwesomeIcon icon={feature.icon} className="text-xl" />
@@ -81,7 +81,7 @@ const FeatureWizardView = () => {
               key={feature.id}
               path={feature.id}
               element={
-                <div className="relative flex h-96 flex-col gap-4 bg-[--color-bg] p-4 text-left">
+                <div className="relative flex h-full flex-col gap-4 bg-[--color-bg] p-4 text-left">
                   <h1 className="flex justify-between text-lg">
                     <span>{feature.title}</span>
                     <span>
