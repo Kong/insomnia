@@ -27,6 +27,7 @@ import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
 import { SegmentEvent } from '~/ui/analytics';
+import { Badge } from '~/ui/components/base/badge';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
 import { GitFileType, GitVCSOperationErrors } from '../../../sync/git/git-vcs';
@@ -871,6 +872,21 @@ export const GitProjectStagingModal: FC<{
   const generateCommitsFetcher = useAIGenerateActionFetcher({ key: commitGenerationKey.toString() });
   const isGeneratingCommits = generateCommitsFetcher.state !== 'idle';
 
+  const commitGenerationCompleted = generateCommitsFetcher.data && !('error' in generateCommitsFetcher.data);
+
+  const handleGenerateCommits = React.useCallback(() => {
+    if (commitGenerationCompleted) {
+      window.main.trackSegmentEvent({ event: SegmentEvent.recommendCommitsCancelled });
+      setCommitGenerationKey(commitGenerationKey + 1);
+      return;
+    }
+
+    window.main.trackSegmentEvent({ event: SegmentEvent.recommendCommitsClicked });
+    generateCommitsFetcher.submit({
+      projectId,
+    });
+  }, [commitGenerationKey, generateCommitsFetcher, projectId, commitGenerationCompleted]);
+
   return (
     <>
       <ModalOverlay
@@ -916,40 +932,33 @@ export const GitProjectStagingModal: FC<{
                 )}
                 <div className="grid h-full gap-2 divide-x divide-solid divide-[--hl-md] overflow-hidden [grid-template-columns:300px_1fr]">
                   <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-                    <Button
-                      isDisabled={!isGenerateCommitMessagesWithAIEnabled}
-                      onPress={() => {
-                        if (generateCommitsFetcher.data && !('error' in generateCommitsFetcher.data)) {
-                          window.main.trackSegmentEvent({ event: SegmentEvent.recommendCommitsCancelled });
-                          setCommitGenerationKey(commitGenerationKey + 1);
-                          return;
-                        }
-
-                        window.main.trackSegmentEvent({ event: SegmentEvent.recommendCommitsClicked });
-                        generateCommitsFetcher.submit({
-                          projectId,
-                        });
-                      }}
-                      className="hover:bg-[rgba(var(--color-surprise-rgb),0.8] flex h-8 flex-shrink-0 items-center justify-center gap-2 rounded-sm bg-[--color-surprise] px-4 text-[--color-font-surprise] ring-1 ring-transparent transition-all focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50"
-                    >
-                      <Icon
-                        icon={
-                          isGeneratingCommits
-                            ? 'spinner'
-                            : generateCommitsFetcher.data && !('error' in generateCommitsFetcher.data)
-                              ? 'chevron-left'
-                              : 'star'
-                        }
-                        className={`size-4 ${isGeneratingCommits ? 'animate-spin' : ''}`}
-                      />
-                      <span>
-                        {generateCommitsFetcher.state !== 'idle'
-                          ? 'Generating commits...'
-                          : generateCommitsFetcher.data && !('error' in generateCommitsFetcher.data)
+                    {isGenerateCommitMessagesWithAIEnabled && (
+                      <div className="flex flex-col gap-3 rounded border border-solid border-[--hl-md] p-3">
+                        <h3 className="font-semibold">
+                          <Badge icon="sparkles" color="surprise" label="AI" />
+                          Smart commits
+                        </h3>
+                        <div className="text-sm text-gray-300">
+                          Let AI create commits and comments from your staged changes.
+                        </div>
+                        <Button
+                          isDisabled={isGeneratingCommits}
+                          className="flex h-8 items-center gap-2 self-start rounded-md border border-solid border-[--hl-md] px-3 py-1 text-sm"
+                          onPress={handleGenerateCommits}
+                        >
+                          {commitGenerationCompleted ? (
+                            <Icon icon="chevron-left" className="size-3" />
+                          ) : (
+                            isGeneratingCommits && <Icon icon="spinner" className="animate-spin" />
+                          )}
+                          {commitGenerationCompleted
                             ? 'Back to manual commits'
-                            : 'Recommend commits and comments'}
-                      </span>
-                    </Button>
+                            : isGeneratingCommits
+                              ? 'Generating commits...'
+                              : 'Generate Commits'}
+                        </Button>
+                      </div>
+                    )}
                     {!isGenerateCommitMessagesWithAIEnabled && (
                       <p className="text-xs text-[--hl]">
                         Enable generating commit messages with AI in Insomnia Preferences → AI Settings to use this
