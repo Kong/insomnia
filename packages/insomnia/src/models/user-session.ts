@@ -2,6 +2,66 @@ import type { AESMessage } from '../account/crypt';
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
+const encryptionPrefix = 'encrypted_v1_';
+// deterministicStringify
+
+async function isomorphicEncryptString(raw: string) {
+  if (process.type === 'renderer') {
+    return await window.main.secretStorage.encryptString(raw);
+  }
+  const { decryptString, encryptString } = await import('../main/ipc/secret-storage');
+  return encryptString(raw);
+}
+
+async function isomorphicDecryptString(cipherText: string) {
+  if (process.type === 'renderer') {
+    return await window.main.secretStorage.decryptString(cipherText);
+  }
+  const { decryptString, encryptString } = await import('../main/ipc/secret-storage');
+  return decryptString(cipherText);
+}
+
+async function encrypt(raw: any) {
+  if (!raw) {
+    return raw;
+  }
+  const stringified = typeof raw === 'string' ? raw : JSON.stringify(raw);
+  return `${encryptionPrefix}${await isomorphicEncryptString(stringified)}`;
+}
+
+async function decrypt(encrypted: any) {
+  if (typeof encrypted !== 'string' || !encrypted.startsWith(encryptionPrefix)) {
+    return encrypted;
+  }
+  encrypted = encrypted.replace(encryptionPrefix, '');
+  const decrypted = await isomorphicDecryptString(encrypted);
+  try {
+    return JSON.parse(decrypted);
+  } catch (err) {
+    return decrypted;
+  }
+}
+
+const encryptFields = ['accountId', 'symmetricKey', 'publicKey', 'encPrivateKey'] as const;
+
+async function decryptSession(session: UserSession) {
+  for (const field of encryptFields) {
+    if (Object.prototype.hasOwnProperty.call(session, field)) {
+      session[field] = await decrypt(session[field]);
+    }
+  }
+  return session;
+}
+
+async function encryptSession(session: Partial<UserSession>) {
+  for (const field of encryptFields) {
+    if (Object.prototype.hasOwnProperty.call(session, field)) {
+      session[field] = await encrypt(session[field]);
+    }
+  }
+  return session;
+}
+
 export interface BaseUserSession {
   accountId: string;
   id: string;
@@ -48,6 +108,8 @@ export function migrate(doc: UserSession) {
 export async function all() {
   let userList = await db.find<UserSession>(type);
 
+  userList = await Promise.all(userList.map(decryptSession));
+
   if (userList?.length === 0) {
     userList = [await getOrCreate()];
   }
@@ -61,22 +123,29 @@ async function create() {
 }
 
 export async function update(user: UserSession, patch: Partial<UserSession>) {
-  const updatedUser = await db.docUpdate<UserSession>(user, patch);
+  user = await encryptSession(user);
+  patch = await encryptSession(patch);
+  let updatedUser = await db.docUpdate<UserSession>(user, patch);
+  updatedUser = await decryptSession(updatedUser);
   return updatedUser;
 }
 
 export async function patch(patch: Partial<UserSession>) {
-  const user = await getOrCreate();
-  const updatedUser = await db.docUpdate<UserSession>(user, patch);
+  let user = await getOrCreate();
+  user = await encryptSession(user);
+  patch = await encryptSession(patch);
+  let updatedUser = await db.docUpdate<UserSession>(user, patch);
+  updatedUser = await decryptSession(updatedUser);
   return updatedUser;
 }
 
 export async function getOrCreate() {
-  const result = await db.findOne<UserSession>(type);
+  let result = await db.findOne<UserSession>(type);
 
   if (!result) {
     return await create();
   }
+  result = await decryptSession(result);
   return result;
 }
 
