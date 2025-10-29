@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
@@ -38,7 +38,11 @@ export interface CodePromptModalHandle {
   hide: () => void;
   setError: (error: string) => void;
 }
-export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_, ref) => {
+export const CodePromptModal = ({
+  ref,
+}: ModalProps & {
+  ref: React.RefObject<CodePromptModalHandle | null> | React.RefCallback<CodePromptModalHandle>;
+}) => {
   const modalRef = useRef<ModalHandle>(null);
   const [error, setError] = useState('');
   const [state, setState] = useState<CodePromptModalOptions>({
@@ -167,5 +171,5 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
       </ModalFooter>
     </Modal>
   );
-});
+};
 CodePromptModal.displayName = 'CodePromptModal';

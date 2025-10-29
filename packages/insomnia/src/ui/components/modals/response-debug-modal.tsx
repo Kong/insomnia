@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { useImperativeHandle, useRef, useState } from 'react';
 
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models/index';
@@ -23,7 +23,11 @@ export interface ResponseDebugModalHandle {
   show: (options: ResponseDebugModalOptions) => void;
   hide: () => void;
 }
-export const ResponseDebugModal = forwardRef<ResponseDebugModalHandle, ModalProps>((_, ref) => {
+export const ResponseDebugModal = ({
+  ref,
+}: ModalProps & {
+  ref: React.RefCallback<ResponseDebugModalHandle>;
+}) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<State>({
     responseId: '',
@@ -76,6 +80,6 @@ export const ResponseDebugModal = forwardRef<ResponseDebugModalHandle, ModalProp
       </ModalBody>
     </Modal>
   );
-});
+};
 
 ResponseDebugModal.displayName = 'ResponseDebugModal';

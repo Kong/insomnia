@@ -46,7 +46,7 @@ import { invariant } from '~/utils/invariant';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server';
 import {
   MockRouteResponse,
-  MockRouteRoute
+  MockRouteRoute,
 } from './organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 
 export interface MockServerLoaderData {
@@ -99,7 +99,7 @@ const Component = () => {
       id: 'edit-route',
       name: 'Edit',
       icon: 'edit',
-      action: (id) => {
+      action: id => {
         const currentRoute = mockRoutes.find(m => m._id === id);
         setMockRouteModalState({
           isOpen: true,
@@ -275,8 +275,8 @@ const Component = () => {
             disallowEmptySelection
             selectedKeys={[mockRouteId]}
             selectionMode="single"
-            onSelectionChange={keys => {
-              if (keys !== 'all') {
+            onSelectionChange={(keys: Set<string>) => {
+              if ((keys as unknown as string) !== 'all') {
                 const value = keys.values().next().value;
                 navigate({
                   pathname: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${value}`,
@@ -284,7 +284,7 @@ const Component = () => {
               }
             }}
           >
-            {item => {
+            {(item: MockRoute) => {
               return (
                 <GridListItem
                   key={item._id}
@@ -322,13 +322,13 @@ const Component = () => {
                         <Menu
                           aria-label="Mock Route Action Menu"
                           selectionMode="single"
-                          onAction={key => {
+                          onAction={(key: string) => {
                             mockRouteActionList.find(({ id }) => key === id)?.action(item._id, item.name);
                           }}
                           items={mockRouteActionList}
                           className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
                         >
-                          {item => (
+                          {(item: (typeof mockRouteActionList)[0]) => (
                             <MenuItem
                               key={item.id}
                               id={item.id}

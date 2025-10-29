@@ -140,7 +140,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                 submitName: 'Rename',
                 selectText: true,
                 label: 'Name',
-                onComplete: name =>
+                onComplete: (name: string) =>
                   updateWorkspaceFetcher.submit({
                     organizationId,
                     projectId,

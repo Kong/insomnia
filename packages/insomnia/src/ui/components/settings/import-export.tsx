@@ -69,7 +69,7 @@ const showSelectExportTypeModal = ({ onDone }: { onDone: (selectedFormat: Select
     value: defaultValue,
     options,
     message: 'Which format would you like to export as?',
-    onDone: async selectedFormat => {
+    onDone: async (selectedFormat: 'yaml' | 'har') => {
       if (selectedFormat) {
         window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
         await onDone(selectedFormat as SelectedFormat);

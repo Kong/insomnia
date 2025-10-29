@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { useImperativeHandle, useRef, useState } from 'react';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -26,7 +26,11 @@ export interface AskModalHandle {
   show: (options: AskModalOptions) => void;
   hide: () => void;
 }
-export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
+export const AskModal = ({
+  ref,
+}: ModalProps & {
+  ref: React.RefObject<AskModalHandle | null> | React.RefCallback<AskModalHandle>;
+}) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<State>({
     title: '',
@@ -89,5 +93,5 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
       </ModalFooter>
     </Modal>
   );
-});
+};
 AskModal.displayName = 'AskModal';

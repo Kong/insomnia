@@ -152,7 +152,7 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
     return null;
   }
 
-  let child: JSX.Element | null = null;
+  let child: React.ReactElement | null = null;
 
   if (currentField) {
     child = <GraphQLExplorerField onNavigateType={handleNavigateType} field={currentField} />;

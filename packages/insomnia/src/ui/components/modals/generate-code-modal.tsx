@@ -1,5 +1,5 @@
 import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
@@ -42,7 +42,12 @@ export interface GenerateCodeModalHandle {
   show: (options: GenerateCodeModalOptions) => void;
   hide: () => void;
 }
-export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((props, ref) => {
+export const GenerateCodeModal = ({
+  ref,
+  ...props
+}: Props & {
+  ref: React.RefCallback<GenerateCodeModalHandle>;
+}) => {
   const modalRef = useRef<ModalHandle>(null);
   const editorRef = useRef<CodeEditorHandle>(null);
 
@@ -199,5 +204,5 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
       </ModalFooter>
     </Modal>
   );
-});
+};
 GenerateCodeModal.displayName = 'GenerateCodeModal';

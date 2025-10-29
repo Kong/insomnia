@@ -26,7 +26,7 @@ import { NumberSetting } from './number-setting';
 interface createCredentialItemType {
   name: string;
   id: CloudProviderName;
-  icon: JSX.Element;
+  icon: React.ReactElement;
 }
 const createCredentialItemList: createCredentialItemType[] = [
   {

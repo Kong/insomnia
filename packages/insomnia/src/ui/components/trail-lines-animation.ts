@@ -52,7 +52,7 @@ gsap.registerEffect({
   },
 });
 
-export function animateTrailPaths(totalActiveLines: number, scope: RefObject<Element>[]) {
+export function animateTrailPaths(totalActiveLines: number, scope: RefObject<Element | null>[]) {
   const animations = new Set<GSAPAnimation>();
 
   const ctx = gsap.context(() => {

@@ -1,4 +1,3 @@
-import { Fragment } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { href, redirect, useFetchers, useNavigate } from 'react-router';
 
@@ -101,7 +100,7 @@ const Component = () => {
     <div className="flex flex-col gap-[--padding-md] text-[--color-font]">
       <Heading className="px-3 text-center text-2xl font-bold">Authorizing Insomnia</Heading>
       {
-        <Fragment>
+        <>
           <p>
             A new page should have opened in your default web browser. Please log in. If you choose to login with SSO
             and it uses a different email to your previous login your teams will not be migrated.
@@ -166,7 +165,7 @@ const Component = () => {
               {authorizeFetcher.data?.errors?.message && <p>{authorizeFetcher.data.errors.message}</p>}
             </form>
           </div>
-        </Fragment>
+        </>
       }
       <div className="flex w-full justify-center">
         <Button

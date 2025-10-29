@@ -1,15 +1,6 @@
 import classnames from 'classnames';
-import React, {
-  forwardRef,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react';
-import { Dialog, Modal as RACModal, ModalOverlay } from 'react-aria-components';
-
+import React, { type ReactNode, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { Dialog, Modal as RACModal } from 'react-aria-components';
 export interface ModalProps {
   centered?: boolean;
   tall?: boolean;
@@ -29,102 +20,97 @@ export interface ModalHandle {
   toggle: () => void;
   isOpen: () => boolean;
 }
-export const Modal = forwardRef<ModalHandle, ModalProps>(
-  (
-    {
-      centered,
-      children,
-      className,
-      onHide: onHideProp,
-      onShow,
-      skinny,
-      tall,
-      wide,
-      maskClosable = true,
-      keyboardClosable = true,
+export const Modal = ({
+  ref,
+  centered,
+  children,
+  className,
+  onHide: onHideProp,
+  onShow,
+  skinny,
+  tall,
+  wide,
+  maskClosable = true,
+  keyboardClosable = true,
+}: ModalProps & {
+  ref: React.RefObject<ModalHandle | null>;
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [onHideArgument, setOnHideArgument] = useState<() => void>();
+
+  const show: ModalHandle['show'] = useCallback(
+    options => {
+      options?.onHide && setOnHideArgument(options.onHide);
+      setOpen(true);
+      onShow?.();
     },
+    [onShow],
+  );
+
+  const hide = useCallback(() => {
+    setOpen(false);
+    if (typeof onHideProp === 'function') {
+      onHideProp();
+    }
+    if (typeof onHideArgument === 'function') {
+      onHideArgument();
+    }
+  }, [onHideProp, onHideArgument]);
+
+  useImperativeHandle(
     ref,
-  ) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [open, setOpen] = useState(false);
-    const [onHideArgument, setOnHideArgument] = useState<() => void>();
+    () => ({
+      show,
+      hide,
+      toggle: () => (open ? hide() : show()),
+      isOpen: () => open,
+    }),
+    [show, open, hide],
+  );
 
-    const show: ModalHandle['show'] = useCallback(
-      options => {
-        options?.onHide && setOnHideArgument(options.onHide);
-        setOpen(true);
-        onShow?.();
-      },
-      [onShow],
-    );
+  const classes = classnames(
+    'modal',
+    'theme--dialog',
+    className,
+    { 'modal--fixed-height': tall },
+    { 'modal--wide': wide },
+    { 'modal--skinny': skinny },
+    'z-10',
+  );
 
-    const hide = useCallback(() => {
-      setOpen(false);
-      if (typeof onHideProp === 'function') {
-        onHideProp();
-      }
-      if (typeof onHideArgument === 'function') {
-        onHideArgument();
-      }
-    }, [onHideProp, onHideArgument]);
+  useEffect(() => {
+    const closeElements = containerRef.current?.querySelectorAll('[data-close-modal]');
 
-    useImperativeHandle(
-      ref,
-      () => ({
-        show,
-        hide,
-        toggle: () => (open ? hide() : show()),
-        isOpen: () => open,
-      }),
-      [show, open, hide],
-    );
+    for (const element of closeElements || []) {
+      element.addEventListener('click', hide);
+    }
 
-    const classes = classnames(
-      'modal',
-      'theme--dialog',
-      className,
-      { 'modal--fixed-height': tall },
-      { 'modal--wide': wide },
-      { 'modal--skinny': skinny },
-      'z-10',
-    );
-
-    useEffect(() => {
-      const closeElements = containerRef.current?.querySelectorAll('[data-close-modal]');
-
+    return () => {
       for (const element of closeElements || []) {
-        element.addEventListener('click', hide);
+        element.removeEventListener('click', hide);
       }
+    };
+  }, [hide, open, maskClosable, keyboardClosable]);
 
-      return () => {
-        for (const element of closeElements || []) {
-          element.removeEventListener('click', hide);
-        }
-      };
-    }, [hide, open, maskClosable, keyboardClosable]);
-
-    return open ? (
-      <ModalOverlay
-        isOpen={open}
-        onOpenChange={isOpen => {
-          !isOpen && hide();
-        }}
-        isDismissable={keyboardClosable}
-        className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
-      >
-        <RACModal ref={containerRef}>
-          <Dialog aria-label="Modal" className={classes}>
-            <div
-              className="modal__backdrop overlay theme--transparent-overlay"
-              {...(maskClosable ? { 'data-close-modal': true } : {})}
-            />
-            <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
-              <div className="modal__content">{children}</div>
-            </div>
-          </Dialog>
-        </RACModal>
-      </ModalOverlay>
-    ) : null;
-  },
-);
-Modal.displayName = 'Modal';
+  return open ? (
+    <RACModal
+      ref={containerRef}
+      isOpen={open}
+      isDismissable={keyboardClosable}
+      onOpenChange={(isOpen: boolean) => {
+        !isOpen && hide();
+      }}
+    >
+      <Dialog aria-label="Modal" className={classes}>
+        <div
+          className="modal__backdrop overlay theme--transparent-overlay"
+          {...(maskClosable ? { 'data-close-modal': true } : {})}
+        />
+        <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
+          <div className="modal__content">{children}</div>
+        </div>
+      </Dialog>
+    </RACModal>
+  ) : null;
+};

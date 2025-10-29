@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { useImperativeHandle, useRef, useState } from 'react';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -21,7 +21,11 @@ export interface SelectModalHandle {
   hide: () => void;
 }
 
-export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) => {
+export const SelectModal = ({
+  ref,
+}: ModalProps & {
+  ref: React.RefCallback<SelectModalHandle>;
+}) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<SelectModalOptions>({
     message: null,
@@ -76,7 +80,7 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
       </ModalFooter>
     </Modal>
   );
-});
+};
 SelectModal.displayName = 'SelectModal';
 
 export const showSelectModal = (opts: SelectModalOptions) => showModal(SelectModal, opts);

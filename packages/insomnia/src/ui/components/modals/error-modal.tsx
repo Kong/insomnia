@@ -1,4 +1,4 @@
-import React, { forwardRef, type ReactNode, useImperativeHandle, useRef, useState } from 'react';
+import React, { type ReactNode, useImperativeHandle, useRef, useState } from 'react';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -15,7 +15,11 @@ export interface ErrorModalHandle {
   show: (options: ErrorModalOptions) => void;
   hide: () => void;
 }
-export const ErrorModal = forwardRef<ErrorModalHandle, ModalProps>((_, ref) => {
+export const ErrorModal = ({
+  ref,
+}: ModalProps & {
+  ref: React.RefCallback<ErrorModalHandle>;
+}) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<ErrorModalOptions>({
     title: '',
@@ -67,5 +71,5 @@ export const ErrorModal = forwardRef<ErrorModalHandle, ModalProps>((_, ref) => {
       </ModalFooter>
     </Modal>
   );
-});
+};
 ErrorModal.displayName = 'ErrorModal';

@@ -1,5 +1,5 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
+import React, { useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { type Selection, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { getBundlePlugins } from '~/plugins';
@@ -33,7 +33,12 @@ export const TAB_INDEX_PLUGINS = 'plugins';
 export const TAB_INDEX_AI = 'ai';
 export const TAB_CLOUD_CREDENTIAL = 'cloudCred';
 
-export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
+export const SettingsModal = ({
+  ref,
+  ...props
+}: ModalProps & {
+  ref: React.RefCallback<SettingsModalHandle>;
+}) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
   const { userSession, settings } = useRootLoaderData()!;
   const modalRef = useRef<ModalHandle>(null);
@@ -76,7 +81,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
       <ModalBody noScroll>
         <Tabs
           selectedKey={defaultTabKey}
-          onSelectionChange={key => {
+          onSelectionChange={(key: Selection) => {
             setDefaultTabKey(key.toString());
           }}
           aria-label="Settings"
@@ -200,6 +205,6 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
       </ModalBody>
     </Modal>
   );
-});
+};
 SettingsModal.displayName = 'SettingsModal';
 export const showSettingsModal = (options?: { tab?: string }) => showModal(SettingsModal, options);

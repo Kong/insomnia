@@ -78,7 +78,7 @@ export const EnvironmentKVEditor = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(data)],
   );
-  const codeModalRef = useRef<CodePromptModalHandle>(null);
+  const codeModalRef = useRef<CodePromptModalHandle | null>(null);
   const [kvPairError, setKvPairError] = useState<{ id: string; error: string }[]>([]);
   const symmetricKey = vaultKey === '' ? {} : base64decode(vaultKey, true);
 

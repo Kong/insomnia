@@ -1,5 +1,5 @@
 import { isAfter } from 'date-fns';
-import React, { type FC, type MutableRefObject, useEffect, useRef, useState } from 'react';
+import React, { type FC, type MutableRefObject, type RefObject, useEffect, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -554,7 +554,7 @@ export const InviteModalContainer: FC<{
   const [allRoles, setAllRoles] = useState<Role[]>([]);
   const [currentUserRoleInOrg, setCurrentUserRoleInOrg] = useState<Role | null>(null);
   const [orgFeatures, setOrgFeatures] = useState<Features | null>(null);
-  const permissionRef = useRef<Record<Permission, boolean>>();
+  const permissionRef = useRef<Record<Permission, boolean>>(null);
   const [currentUserAccountId, setCurrentUserAccountId] = useState('');
   const [currentOrgInfo, setCurrentOrgInfo] = useState<OrganizationAuth0 | null>(null);
 
@@ -631,8 +631,8 @@ export const InviteModalContainer: FC<{
 };
 
 function checkPermissionRefType(
-  permissionRef: MutableRefObject<Record<Permission, boolean> | undefined>,
-): permissionRef is MutableRefObject<Record<Permission, boolean>> {
+  permissionRef: RefObject<Record<Permission, boolean> | null>,
+): permissionRef is RefObject<Record<Permission, boolean>> {
   return Boolean(permissionRef.current);
 }
 

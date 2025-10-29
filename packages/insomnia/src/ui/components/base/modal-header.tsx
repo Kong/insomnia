@@ -8,7 +8,7 @@ interface Props {
 }
 
 export const ModalHeader: FC<Props> = memo(({ hideCloseButton, className, children }) => {
-  let closeButton: null | JSX.Element = null;
+  let closeButton: null | React.ReactElement = null;
 
   if (!hideCloseButton) {
     closeButton = (

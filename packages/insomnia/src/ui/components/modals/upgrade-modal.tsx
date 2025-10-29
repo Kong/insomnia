@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { useImperativeHandle, useRef } from 'react';
 
 import type { PersonalPlanType } from '~/models/organization';
 
@@ -16,7 +16,11 @@ export interface UpgradeModalHandle {
   show: (options: UpgradeModalOptions) => void;
   hide: () => void;
 }
-export const UpgradeModal = forwardRef<UpgradeModalHandle, ModalProps>((_, ref) => {
+export const UpgradeModal = ({
+  ref,
+}: ModalProps & {
+  ref: React.RefCallback<UpgradeModalHandle>;
+}) => {
   const modalRef = useRef<AskModalHandle>(null);
   useImperativeHandle(
     ref,
@@ -65,5 +69,5 @@ export const UpgradeModal = forwardRef<UpgradeModalHandle, ModalProps>((_, ref) 
   );
 
   return <AskModal ref={modalRef} />;
-});
+};
 UpgradeModal.displayName = 'UpgradeModal';

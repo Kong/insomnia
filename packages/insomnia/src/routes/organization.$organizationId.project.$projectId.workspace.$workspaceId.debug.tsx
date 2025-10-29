@@ -484,7 +484,7 @@ const Debug = () => {
         submitName: 'Create',
         label: 'Name',
         selectText: true,
-        onComplete: name =>
+        onComplete: (name: string) =>
           createRequestGroupFetcher.submit({
             organizationId,
             projectId,
@@ -672,7 +672,7 @@ const Debug = () => {
               submitName: 'Create',
               label: 'Name',
               selectText: true,
-              onComplete: name =>
+              onComplete: (name: string) =>
                 createRequestGroupFetcher.submit({
                   organizationId,
                   projectId,

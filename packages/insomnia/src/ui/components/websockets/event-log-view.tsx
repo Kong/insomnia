@@ -1,7 +1,7 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import React, { type FC, useEffect, useRef } from 'react';
-import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
+import { Cell, Column, Row, type Selection, Table, TableBody, TableHeader } from 'react-aria-components';
 
 import { HelpTooltip } from '~/ui/components/help-tooltip';
 
@@ -66,7 +66,7 @@ function getIcon(event: EventTypes): IconId {
   }
 }
 
-const getMessage = (event: EventTypes): string | JSX.Element => {
+const getMessage = (event: EventTypes): string | React.JSX.Element => {
   switch (event.type) {
     case 'message': {
       if (isSocketIOEvent(event)) {
@@ -161,7 +161,7 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId, autoSel
           selectionMode="single"
           selectedKeys={selectionId ? [selectionId] : []}
           selectionBehavior="replace"
-          onSelectionChange={keys => {
+          onSelectionChange={(keys: Selection) => {
             if (keys !== 'all') {
               const key = keys.values().next().value;
 

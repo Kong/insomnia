@@ -1,7 +1,7 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { useImperativeHandle, useRef, useState } from 'react';
 
 import type { Workspace } from '../../../models/workspace';
-import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
+import { Modal, type ModalHandle } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -29,7 +29,7 @@ export interface NunjucksModalHandle {
   show: (options: NunjucksModalOptions) => void;
   hide: () => void;
 }
-export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>((props, ref) => {
+export const NunjucksModal = ({ ref, ...props }: Props & { ref: React.RefCallback<NunjucksModalHandle> }) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<State>({
     isTag: false,
@@ -67,7 +67,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
   const { workspace } = props;
   const { template, isTag } = state;
   const title = isTag ? 'Tag' : 'Variable';
-  let editor: JSX.Element | null = null;
+  let editor: React.ReactElement | null = null;
   if (isTag) {
     editor = (
       <TagEditor
@@ -112,5 +112,5 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
       </ModalFooter>
     </Modal>
   );
-});
+};
 NunjucksModal.displayName = 'NunjucksModal';

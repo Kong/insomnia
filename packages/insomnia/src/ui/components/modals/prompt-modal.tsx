@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { forwardRef, type ReactNode, useImperativeHandle, useRef, useState } from 'react';
+import React, { type ReactNode, useImperativeHandle, useRef, useState } from 'react';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -43,7 +43,11 @@ export interface PromptModalHandle {
   show: (options: PromptModalOptions) => void;
   hide: () => void;
 }
-export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) => {
+export const PromptModal = ({
+  ref,
+}: ModalProps & {
+  ref: React.RefCallback<PromptModalHandle>;
+}) => {
   const modalRef = useRef<ModalHandle>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -182,6 +186,6 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
       </ModalFooter>
     </Modal>
   );
-});
+};
 
 PromptModal.displayName = 'PromptModal';

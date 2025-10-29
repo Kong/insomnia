@@ -276,7 +276,9 @@ export const SocketIOBodyContent = ({
                   uniquenessKey={`${arg.id}:socket-io-payload`}
                   mode={arg.mode}
                   readOnly={readonly}
-                  ref={ref => editorsRef.current?.set(arg.id, ref)}
+                  ref={ref => {
+                    editorsRef.current?.set(arg.id, ref);
+                  }}
                   onChange={readonly ? undefined : value => handleChange?.(arg.id, value)}
                   enableNunjucks
                   className="w-full"
@@ -297,7 +299,9 @@ export const SocketIOBodyContent = ({
           uniquenessKey={`${tabs?.[0]?.id}:socket-io-payload`}
           mode={tabs?.[0]?.mode}
           readOnly={readonly}
-          ref={ref => editorsRef.current?.set(tabs?.[0]?.id, ref)}
+          ref={ref => {
+            editorsRef.current?.set(tabs?.[0]?.id, ref);
+          }}
           onChange={readonly ? undefined : value => handleChange?.(tabs?.[0]?.id, value)}
           enableNunjucks
           className="w-full"

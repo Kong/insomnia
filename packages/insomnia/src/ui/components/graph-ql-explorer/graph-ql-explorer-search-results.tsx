@@ -24,7 +24,7 @@ const BATCH_SIZE = 100;
 
 export class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
   // this ref is used to check if the component is still mounted while updating the search results
-  ref: React.RefObject<HTMLDivElement> = React.createRef();
+  ref: React.RefObject<HTMLDivElement | null> = React.createRef();
 
   state: State = {
     foundTypes: [],

@@ -1,5 +1,5 @@
 import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { useImperativeHandle, useRef, useState } from 'react';
 
 import type { McpRequest } from '../../..//models/mcp-request';
 import { docsTemplateTags } from '../../../common/documentation';
@@ -21,7 +21,11 @@ export interface RequestRenderErrorModalHandle {
   hide: () => void;
 }
 
-export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle, ModalProps>((_, ref) => {
+export const RequestRenderErrorModal = ({
+  ref,
+}: ModalProps & {
+  ref: React.RefCallback<RequestRenderErrorModalHandle>;
+}) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<RequestRenderErrorModalOptions>({
     error: null,
@@ -85,6 +89,6 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
       </ModalBody>
     </Modal>
   );
-});
+};
 
 RequestRenderErrorModal.displayName = 'RequestRenderErrorModal';

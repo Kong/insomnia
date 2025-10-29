@@ -33,7 +33,7 @@ import { RequestGroupSettingsModal } from '../modals/request-group-settings-moda
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
   isOpen: boolean;
-  triggerRef: React.RefObject<HTMLDivElement>;
+  triggerRef: React.RefObject<HTMLDivElement | null>;
   onOpenChange: (isOpen: boolean) => void;
   onRename: () => void;
 }
@@ -241,7 +241,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
               submitName: 'Create',
               label: 'Name',
               selectText: true,
-              onComplete: name =>
+              onComplete: (name: string) =>
                 newRequestGroupFetcher.submit({
                   organizationId,
                   projectId,

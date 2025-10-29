@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { forwardRef, type KeyboardEvent, useImperativeHandle, useRef, useState } from 'react';
+import React, { type KeyboardEvent, useImperativeHandle, useRef, useState } from 'react';
 
 import { constructKeyCombinationDisplay, isModifierKeyCode } from '../../../common/hotkeys';
 import { keyboardKeys } from '../../../common/keyboard-keys';
@@ -19,7 +19,11 @@ export interface AddKeyCombinationModalHandle {
   show: (options: AddKeyCombinationModalOptions) => void;
   hide: () => void;
 }
-export const AddKeyCombinationModal = forwardRef<AddKeyCombinationModalHandle, ModalProps>((_, ref) => {
+export const AddKeyCombinationModal = ({
+  ref,
+}: ModalProps & {
+  ref: React.RefCallback<AddKeyCombinationModalHandle>;
+}) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<AddKeyCombinationModalOptions>({
     keyboardShortcut: null,
@@ -127,5 +131,5 @@ export const AddKeyCombinationModal = forwardRef<AddKeyCombinationModalHandle, M
       </ModalBody>
     </Modal>
   );
-});
+};
 AddKeyCombinationModal.displayName = 'AddKeyCombinationModal';

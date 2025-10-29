@@ -5,7 +5,7 @@ export interface Size {
   height: number | undefined;
 }
 
-export const useResizeObserver = (ref: React.RefObject<HTMLElement>, onResize: (size: Size) => void) => {
+export const useResizeObserver = (ref: React.RefObject<HTMLElement | null>, onResize: (size: Size) => void) => {
   const onResizeRef = useRef<((size: Size) => void) | undefined>(undefined);
   onResizeRef.current = onResize;
 

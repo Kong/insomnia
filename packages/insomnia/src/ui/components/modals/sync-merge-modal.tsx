@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -56,7 +56,7 @@ export interface SyncMergeModalHandle {
   show: (options: SyncMergeModalOptions) => void;
   hide: () => void;
 }
-export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
+export const SyncMergeModal = ({ ref }: { ref: React.RefCallback<SyncMergeModalHandle> }) => {
   const [conflicts, setConflicts] = useState<MergeConflict[]>([]);
   const [errMsgMapForConflictMergeResult, setErrMsgMapForConflictMergeResult] = useState<Record<string, string>>({});
   const [isOpen, setIsOpen] = useState(false);
@@ -65,8 +65,8 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
 
   const [selectedConflictKey, setSelectedConflictKey] = useState<string | null>(null);
 
-  const onResolveAllRef = useRef<SyncMergeModalOptions['onResolveAll']>();
-  const onCancelUnresolvedRef = useRef<SyncMergeModalOptions['onCancelUnresolved']>();
+  const onResolveAllRef = useRef<SyncMergeModalOptions['onResolveAll']>(null);
+  const onCancelUnresolvedRef = useRef<SyncMergeModalOptions['onCancelUnresolved']>(null);
 
   const selectedConflict = useMemo(
     () => conflicts.find(c => c.key === selectedConflictKey),
@@ -104,8 +104,8 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
     setEditorType('diff');
     setSelectedConflictKey(null);
     setErrMsgMapForConflictMergeResult({});
-    onResolveAllRef.current = undefined;
-    onCancelUnresolvedRef.current = undefined;
+    onResolveAllRef.current = null;
+    onCancelUnresolvedRef.current = null;
   }, []);
 
   useImperativeHandle(
@@ -433,6 +433,6 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
       </ModalOverlay>
     </>
   );
-});
+};
 
 SyncMergeModal.displayName = 'SyncMergeModal';

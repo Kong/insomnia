@@ -257,7 +257,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
               submitName: 'Rename',
               selectText: true,
               label: 'Name',
-              onComplete: name =>
+              onComplete: (name: string) =>
                 updateWorkspaceFetcher.submit({
                   organizationId,
                   projectId: activeWorkspace.parentId,

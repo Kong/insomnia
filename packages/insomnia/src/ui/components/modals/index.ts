@@ -1,5 +1,4 @@
 import { invariant } from '../../../utils/invariant';
-import type { ModalProps } from '../base/modal';
 import { ErrorModal, type ErrorModalOptions } from './error-modal';
 
 interface ModalHandle {
@@ -18,34 +17,16 @@ export function registerModal(instance: any, modalName?: string) {
   modals[modalName ?? instance.constructor.name] = instance;
 }
 
-type GetRefHandleFromProps<Props> = Props extends React.RefAttributes<infer TModalHandle> ? TModalHandle : never;
-
-type ModalComponent<TModalProps> = React.ForwardRefExoticComponent<
-  TModalProps & React.RefAttributes<GetRefHandleFromProps<TModalProps>>
->;
-
-type ModalHandleShowOptions<TModalHandle> = TModalHandle extends {
-  show: (options: infer TOptions) => void;
-}
-  ? TOptions
-  : any;
-
-export function showModal<
-  TModalProps extends ModalProps &
-    React.RefAttributes<{
-      show: (options: any) => void;
-      hide: () => void;
-    }>,
->(modalComponent: ModalComponent<TModalProps>, config?: ModalHandleShowOptions<GetRefHandleFromProps<TModalProps>>) {
+export function showModal(modalComponent: any, config?: any) {
   const name = modalComponent.name || modalComponent.displayName;
   invariant(name, 'Modal must have a name or displayName');
   window.main.trackPageView({ name });
 
-  const modalHandle = getModalComponentHandle(name) as unknown as GetRefHandleFromProps<TModalProps>;
+  const modalHandle = getModalComponentHandle(name);
 
   modalHandle.show(config);
   return () => {
-    const modalHandle = getModalComponentHandle(name) as unknown as GetRefHandleFromProps<TModalProps>;
+    const modalHandle = getModalComponentHandle(name);
     if (modalHandle) {
       modalHandle.hide();
     }

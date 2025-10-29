@@ -171,7 +171,7 @@ const Component = () => {
           title: 'Rename test suite',
           defaultValue: unitTestSuites.find(s => s._id === suiteId)?.name,
           submitName: 'Rename',
-          onComplete: name => {
+          onComplete: (name: string) => {
             name &&
               updateTestSuiteFetcher.submit({
                 organizationId,

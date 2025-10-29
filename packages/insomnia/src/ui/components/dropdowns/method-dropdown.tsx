@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { HTTP_METHODS } from '../../../common/constants';
@@ -13,7 +13,13 @@ interface Props {
   onChange: (method: string) => void;
 }
 
-export const MethodDropdown = forwardRef<DropdownHandle, Props>(({ method, onChange }, ref) => {
+export const MethodDropdown = ({
+  ref,
+  method,
+  onChange,
+}: Props & {
+  ref: React.RefObject<DropdownHandle | null>;
+}) => {
   const localStorageHttpMethods = window.localStorage.getItem(LOCALSTORAGE_KEY);
   const parsedLocalStorageHttpMethods = localStorageHttpMethods
     ? (JSON.parse(localStorageHttpMethods) as string[])
@@ -31,7 +37,7 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({ method, onCha
       label: 'Name',
       placeholder: 'CUSTOM',
       hints: recent,
-      onDeleteHint: methodToDelete => {
+      onDeleteHint: (methodToDelete: string) => {
         // Note: We need to read and remove the method from localStorage and not rely on react state
         // It solves the case where you try to delete more than one method at a time, because recent is updated only once
         const localStorageHttpMethods = window.localStorage.getItem(LOCALSTORAGE_KEY);
@@ -40,7 +46,7 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({ method, onCha
         setRecent(newRecent);
         window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newRecent));
       },
-      onComplete: methodToAdd => {
+      onComplete: (methodToAdd: string) => {
         // Don't add empty methods
         if (!methodToAdd) {
           return;
@@ -89,6 +95,6 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({ method, onCha
       </DropdownSection>
     </Dropdown>
   );
-});
+};
 
 MethodDropdown.displayName = 'MethodDropdown';

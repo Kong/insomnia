@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { forwardRef, type ReactNode, useImperativeHandle, useRef, useState } from 'react';
+import React, { type ReactNode, useImperativeHandle, useRef, useState } from 'react';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -18,7 +18,11 @@ export interface AlertModalHandle {
   show: (options: AlertModalOptions) => void;
   hide: () => void;
 }
-export const AlertModal = forwardRef<AlertModalHandle, ModalProps>((_, ref) => {
+export const AlertModal = ({
+  ref,
+}: ModalProps & {
+  ref: React.RefCallback<AlertModalHandle>;
+}) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<AlertModalOptions>({
     title: '',
@@ -76,5 +80,5 @@ export const AlertModal = forwardRef<AlertModalHandle, ModalProps>((_, ref) => {
       </ModalFooter>
     </Modal>
   );
-});
+};
 AlertModal.displayName = 'AlertModal';

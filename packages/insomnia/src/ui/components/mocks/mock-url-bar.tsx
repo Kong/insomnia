@@ -153,7 +153,7 @@ export const MockUrlBar = ({
                     title: 'Send After Delay',
                     label: 'Delay in seconds',
                     defaultValue: '3',
-                    onComplete: seconds => {
+                    onComplete: (seconds: string) => {
                       setCurrentTimeout(+seconds * 1000);
                     },
                   })
@@ -171,7 +171,7 @@ export const MockUrlBar = ({
                     label: 'Interval in seconds',
                     defaultValue: '3',
                     submitName: 'Start',
-                    onComplete: seconds => {
+                    onComplete: (seconds: string) => {
                       setCurrentInterval(+seconds * 1000);
                     },
                   })

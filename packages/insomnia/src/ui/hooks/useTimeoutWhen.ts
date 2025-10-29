@@ -9,7 +9,7 @@ import { useEffect, useRef } from 'react';
  * @param when The condition which when true, sets the timeout
  */
 function useTimeoutWhen(callback_: () => void, timeoutDelayMs = 0, when = true): void {
-  const savedRefCallback = useRef<() => any>();
+  const savedRefCallback = useRef<() => any>(() => {});
 
   useEffect(() => {
     savedRefCallback.current = callback_;
