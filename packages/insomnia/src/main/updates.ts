@@ -168,7 +168,6 @@ const _checkForUpdates = (updateUrl: string) => {
     console.log(`[updater] Checking for updates url=${updateUrl}`);
     autoUpdater.setFeedURL({ url: updateUrl });
     autoUpdater.checkForUpdates();
-    showUpdateStatusToast('Up to Date');
   } catch (err) {
     console.warn('[updater] Failed to check for updates:', err.message);
     showUpdateStatusToast('Update Error');
