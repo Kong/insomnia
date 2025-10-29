@@ -28,10 +28,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       sessionId,
       onlyResolveOnSuccess: true,
     });
-    console.log('------------------------check seats response data', checkResponseData);
     return checkResponseData;
   } catch {
-    console.error('------------------------Error checking seats:');
     return { isAllowed: true };
   }
 }
