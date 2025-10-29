@@ -54,7 +54,7 @@ import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
-import { useReadyState } from '~/ui/hooks/use-ready-state';
+import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
 
 const emptyServerData: McpServerData = {
@@ -84,11 +84,13 @@ export const McpPane = () => {
   const patchRootsRequest = useRequestPatcher();
   const requestId = activeRequest._id;
   const { activeEnvironment } = useWorkspaceLoaderData()!;
-  const readyState = useReadyState({ requestId, protocol: 'mcp' });
+  const readyState = useMcpReadyState({ requestId });
   const parentRef = useRef<HTMLDivElement>(null);
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
     settings.forceVerticalLayout ? 'vertical' : 'horizontal',
   );
+
+  const isConnected = readyState === 'connected';
 
   const subscribeResources = activeRequest.subscribeResources;
 
@@ -186,7 +188,7 @@ export const McpPane = () => {
   };
   const serverCapabilities = getServerCapabilities();
   const allowSubscribeResources =
-    readyState && serverCapabilities.resources.enabled && serverCapabilities.resources.subscribe;
+    isConnected && serverCapabilities.resources.enabled && serverCapabilities.resources.subscribe;
 
   const updatePrimitiveNextCursor = (newNextCursor: string, type: McpServerPrimitiveTypes) => {
     setPrimitiveNextCursor(prev => ({
@@ -351,7 +353,8 @@ export const McpPane = () => {
         setMcpServerData(mcpServerData);
       }
     };
-    if (activeResponse?._id || readyState) {
+    // Use readyState instead of a boolean value to make sure this effect runs when readyState is connecting or connected
+    if (activeResponse?._id || readyState !== 'disconnected') {
       // Get MCP server data when active response changes or when connection is ready
       updateServerData();
     } else {

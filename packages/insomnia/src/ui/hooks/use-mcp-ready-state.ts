@@ -1,21 +1,16 @@
 import { useEffect, useState } from 'react';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import type { McpReadyState } from '~/main/network/mcp';
 
-export function useReadyState({
-  requestId,
-  protocol,
-}: {
-  requestId: string;
-  protocol: 'curl' | 'webSocket' | 'socketIO';
-}): boolean {
-  const [readyState, setReadyState] = useState<boolean>(false);
+export function useMcpReadyState({ requestId }: { requestId: string }): McpReadyState {
+  const [readyState, setReadyState] = useState<McpReadyState>('disconnected');
 
-  // get readyState when requestId or protocol changes
+  // get readyState when requestId changes
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      window.main[protocol].readyState.getCurrent({ requestId }).then((currentReadyState: boolean) => {
+      window.main.mcp.readyState.getCurrent({ requestId }).then(currentReadyState => {
         isMounted && setReadyState(currentReadyState);
       });
     };
@@ -23,14 +18,14 @@ export function useReadyState({
     return () => {
       isMounted = false;
     };
-  }, [protocol, requestId]);
+  }, [requestId]);
   // listen for readyState changes
   useEffect(() => {
     let isMounted = true;
     const unsubscribe = window.main.on(
       // @ts-expect-error -- we use a dynamic channel here
-      `${protocol}.${requestId}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`,
-      (_, incomingReadyState: boolean) => {
+      `mcp.${requestId}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`,
+      (_, incomingReadyState: McpReadyState) => {
         isMounted && setReadyState(incomingReadyState);
       },
     );
@@ -38,7 +33,7 @@ export function useReadyState({
       isMounted = false;
       unsubscribe();
     };
-  }, [protocol, requestId]);
+  }, [requestId]);
 
   return readyState;
 }

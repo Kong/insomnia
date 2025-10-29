@@ -159,7 +159,6 @@ interface ResponseEventOptions {
   authProvider: McpOAuthClientProvider;
 }
 
-const mcpConnections = new Map<string, McpClient>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
 const requestIdToResponseIdMap = new Map<string, string>();
@@ -203,18 +202,50 @@ const writeEventLogAndNotify = (
   });
 };
 
+export type McpReadyState = 'disconnected' | 'connecting' | 'connected';
+interface ConnectingState {
+  status: 'connecting';
+  client: McpClient | null;
+}
+interface ConnectedState {
+  status: 'connected';
+  client: McpClient;
+}
+interface DisconnectedState {
+  status: 'disconnected';
+}
+
+const mcpConnections = new Map<string, ConnectingState | ConnectedState>();
+
+function _updateMcpConnectionState(
+  requestId: string,
+  state: ConnectingState | ConnectedState | DisconnectedState,
+): void {
+  if (state.status === 'disconnected') {
+    mcpConnections.delete(requestId);
+  } else {
+    mcpConnections.set(requestId, state);
+  }
+  _notifyMcpClientStateChange(getMcpStateChannel(requestId), state.status);
+}
+
 const _getMcpClient = (id: string) => {
-  const mcpClient = mcpConnections.get(id);
+  const mcpConnection = mcpConnections.get(id);
   invariant(
-    mcpClient,
+    mcpConnection,
     `No existing MCP client connection found for requestId: ${id}. It might have been disconnected.`,
   );
-  return mcpClient;
+  return mcpConnection.client;
 };
 
-const _notifyMcpClientStateChange = (channel: string, isConnected: boolean) => {
+const _getMcpConnectionStatus = (requestId: string): McpReadyState => {
+  const mcpConnection = mcpConnections.get(requestId);
+  return mcpConnection ? mcpConnection.status : 'disconnected';
+};
+
+const _notifyMcpClientStateChange = (channel: string, readyState: McpReadyState) => {
   for (const window of BrowserWindow.getAllWindows()) {
-    window.webContents.send(channel, isConnected);
+    window.webContents.send(channel, readyState);
   }
 };
 
@@ -231,7 +262,6 @@ const _clearMcpMaps = (requestId: string, timelineMessage: string, event?: McpEv
     ?.write(JSON.stringify({ value: timelineMessage, name: 'Text', timestamp: Date.now() }) + '\n');
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
-  mcpConnections.delete(requestId);
 };
 
 const _handleCloseMcpConnection = (requestId: string) => {
@@ -241,10 +271,7 @@ const _handleCloseMcpConnection = (requestId: string) => {
   };
   // clear in-memory store
   _clearMcpMaps(requestId, 'Closed MCP connection', closeEvent);
-
-  const mcpStateChannel = getMcpStateChannel(requestId);
-  // notify renderer process about state change
-  _notifyMcpClientStateChange(mcpStateChannel, false);
+  _updateMcpConnectionState(requestId, { status: 'disconnected' });
 };
 
 const _handleMcpClientError = (requestId: string, error: Error, prefix?: string) => {
@@ -508,6 +535,11 @@ const fetchWithLogging = async (
           resourceMetadataUrl,
           authorizationCode,
           fetchFn: authFetchFn,
+        });
+
+        // Close the oauth authorization modal after authorization is complete
+        BrowserWindow.getAllWindows().forEach(window => {
+          window.webContents.send('hide-oauth-authorization-modal');
         });
       }
       if (authResult !== 'AUTHORIZED') {
@@ -901,6 +933,21 @@ const createTransportAndConnect = async (
 const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) => {
   const { requestId, workspaceId } = options;
 
+  const currentConnectionState = mcpConnections.get(requestId);
+  if (currentConnectionState) {
+    if (currentConnectionState.status === 'connected') {
+      // close existing connection if any, avoid multiple connections with same requestId
+      await closeMcpConnection({ requestId });
+    } else if (currentConnectionState.status === 'connecting') {
+      // if connecting, should not attempt to create another connection
+      // TODO: should find a way to close the pending connection safely and create a new one instead
+      console.error(`MCP client is already connecting for requestId: ${requestId}`);
+      return;
+    }
+  }
+
+  _updateMcpConnectionState(requestId, { status: 'connecting', client: null });
+
   // create response model and file streams
   const responseId = generateId(mcpResponsePrefix);
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
@@ -937,7 +984,11 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
     },
   );
   mcpClient.onerror = _error => _handleMcpClientError(requestId, _error, 'MCP Client Error');
-  const mcpStateChannel = getMcpStateChannel(requestId);
+
+  _updateMcpConnectionState(requestId, {
+    status: 'connecting',
+    client: mcpClient as McpClient,
+  });
 
   try {
     await createTransportAndConnect(mcpClient, options, {
@@ -969,11 +1020,6 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
     return { roots: mcpRequest.roots };
   });
 
-  if (mcpConnections.has(requestId)) {
-    // close existing connection if any, avoid multiple connections with same requestId
-    await closeMcpConnection({ requestId });
-  }
-  mcpConnections.set(requestId, mcpClient as McpClient);
   const serverCapabilities = mcpClient.getServerCapabilities();
   const primitivePromises: Promise<any>[] = [];
   // get server primitives if supported
@@ -993,16 +1039,7 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
     console.warn('Failed to fetch one or more primitive types from MCP server', error);
   }
   // notify connection ready after capabilities and primitives are fetched
-  _notifyMcpClientStateChange(mcpStateChannel, true);
-  const mcpRequest = await models.mcpRequest.getById(requestId);
-  invariant(mcpRequest, 'MCP Request not found');
-  const { authentication } = mcpRequest;
-  if ('grantType' in authentication && authentication.grantType === 'mcp_auth_flow' && !authentication.disabled) {
-    // Close the oauth authorization modal after connection and server capabilities are fetched
-    BrowserWindow.getAllWindows().forEach(window => {
-      window.webContents.send('hide-oauth-authorization-modal');
-    });
-  }
+  _updateMcpConnectionState(requestId, { status: 'connected', client: mcpClient as McpClient });
 };
 
 const closeMcpConnection = async (options: CommonMcpOptions) => {
@@ -1147,13 +1184,11 @@ const listResourceTemplates = async (options: CommonMcpOptions & ListResourcesRe
   return null;
 };
 
-const getMcpReadyState = async (options: CommonMcpOptions) => {
+const getMcpReadyState = async (options: CommonMcpOptions): Promise<McpReadyState> => {
   try {
-    const mcpClient = _getMcpClient(options.requestId);
-    // if no mcp client, it means it's disconnected
-    return !!mcpClient;
+    return _getMcpConnectionStatus(options.requestId);
   } catch (error) {
-    return false;
+    return 'disconnected';
   }
 };
 

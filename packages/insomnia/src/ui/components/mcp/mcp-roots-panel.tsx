@@ -2,13 +2,14 @@ import type { Root } from '@modelcontextprotocol/sdk/types.js';
 import { useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Toolbar } from 'react-aria-components';
 
+import type { McpReadyState } from '~/main/network/mcp';
 import type { McpRequest } from '~/models/mcp-request';
 import { PromptButton } from '~/ui/components/base/prompt-button';
 import { useRequestPatcher } from '~/ui/hooks/use-request';
 
 interface McpRootsPanelProps {
   request: McpRequest;
-  readyState: boolean;
+  readyState: McpReadyState;
 }
 
 const rootPrefix = 'file://';
@@ -19,6 +20,7 @@ export const McpRootsPanel = ({ request, readyState }: McpRootsPanelProps) => {
   const [isInvalidRoot, setIsInvalidRoot] = useState(true);
   const patchRootsRequest = useRequestPatcher();
   const requestId = request._id;
+  const isConnected = readyState === 'connected';
 
   const addRoot = () => {
     const parsedRoot = rootUri.trim();
@@ -52,7 +54,7 @@ export const McpRootsPanel = ({ request, readyState }: McpRootsPanelProps) => {
           onClick={() => {
             window.main.mcp.notification.rootListChange({ requestId });
           }}
-          isDisabled={!readyState}
+          isDisabled={!isConnected}
         >
           Notify Roots
         </Button>

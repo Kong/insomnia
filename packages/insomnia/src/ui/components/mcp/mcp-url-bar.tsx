@@ -4,6 +4,7 @@ import { Button as RaButton, Heading, Radio, RadioGroup } from 'react-aria-compo
 import { useParams } from 'react-router';
 import { useLatest } from 'react-use';
 
+import type { McpReadyState } from '~/main/network/mcp';
 import { type Project } from '~/models/project';
 import type { AuthTypeOAuth2 } from '~/models/request';
 import { _buildBearerHeader } from '~/network/authentication';
@@ -36,7 +37,7 @@ interface ActionBarProps {
   project: Project;
   environmentId: string;
   defaultValue: string;
-  readyState: boolean;
+  readyState: McpReadyState;
   onChange: (value: string) => void;
 }
 
@@ -51,7 +52,11 @@ export const McpUrlActionBar = ({
   onChange,
   readyState,
 }: ActionBarProps) => {
-  const isOpen = readyState;
+  // Use readyState as the source of truth, instead of connectRequestFetcher.state, since the fetcher state
+  // may not always reflect the true connection state (e.g. switching tabs)
+  const isConnected = readyState === 'connected';
+  const isConnecting = readyState === 'connecting';
+  const isDisconnected = readyState === 'disconnected';
   const patchRequest = useRequestPatcher();
   const oneLineEditorRef = useRef<OneLineEditorHandle>(null);
   const requestId = request._id;
@@ -138,15 +143,13 @@ export const McpUrlActionBar = ({
     };
   }, [environmentId, request]);
 
-  const isConnecting = connectRequestFetcher.state === 'submitting' || connectRequestFetcher.state === 'loading';
-
   const handleSubmit = useCallback(async () => {
     if (isConnecting) {
       return;
     }
 
     updateTabById?.(request._id, { temporary: false });
-    if (isOpen) {
+    if (isConnected) {
       window.main.mcp.close({ requestId: request._id });
       return;
     }
@@ -162,7 +165,7 @@ export const McpUrlActionBar = ({
     }
 
     connectParams && connect(connectParams);
-  }, [connect, generateConnectParams, isConnecting, isOpen, project, request, updateTabById]);
+  }, [connect, generateConnectParams, isConnected, isConnecting, project, request, updateTabById]);
 
   const handleSubmitRef = useLatest(handleSubmit);
 
@@ -215,23 +218,20 @@ export const McpUrlActionBar = ({
     return unsubscribe;
   }, []);
 
-  const isConnectingOrClosed = !readyState;
-  const isDropdownDisabled = isOpen || isConnecting;
-
   return (
     <>
       <div className="flex items-center">
         <Dropdown
           triggerButton={
             <RaButton
-              className={`pl-2 ${isDropdownDisabled ? 'cursor-not-allowed opacity-30' : ''}`}
+              className={`pl-2 ${!isDisconnected ? 'cursor-not-allowed opacity-30' : ''}`}
               aria-label="Request Method"
             >
               <span>{requestTransportTypeLabel}</span> <i className="fa fa-caret-down space-left" />
             </RaButton>
           }
           placement="bottom start"
-          isDisabled={isDropdownDisabled}
+          isDisabled={!isDisconnected}
         >
           <DropdownSection>
             {MCP_TRANSPORT_TYPES.map(transportType => (
@@ -247,7 +247,7 @@ export const McpUrlActionBar = ({
       </div>
       <form
         className="flex flex-1"
-        aria-disabled={isOpen}
+        aria-disabled={!isDisconnected}
         onSubmit={event => {
           event.preventDefault();
           handleSubmit();
@@ -260,17 +260,17 @@ export const McpUrlActionBar = ({
             onKeyDown={createKeybindingsHandler({
               Enter: () => handleSubmitRef.current(),
             })}
-            readOnly={readyState}
+            readOnly={!isDisconnected}
             defaultValue={defaultValue}
             onChange={onChange}
             type="text"
           />
         </div>
         <div className="flex p-1">
-          {isConnectingOrClosed ? (
+          {!isConnected ? (
             <button
               className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
-              disabled={connectRequestFetcher.state === 'submitting' || connectRequestFetcher.state === 'loading'}
+              disabled={isConnecting}
               type="submit"
             >
               Connect

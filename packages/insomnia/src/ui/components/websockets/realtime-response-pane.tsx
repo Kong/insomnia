@@ -4,6 +4,8 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
+import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
+
 import { getSetCookieHeaders } from '../../../common/misc';
 import type { CurlEvent } from '../../../main/network/curl';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
@@ -51,7 +53,7 @@ export const RealtimeResponsePane: FC<{ requestId?: string }> = () => {
     );
   }
   return (
-    <RealtimeActiveResponsePane
+    <RealTimeActiveResponsePaneWrapper
       response={activeResponse}
       responses={responses}
       requestVersions={requestVersions}
@@ -62,12 +64,54 @@ export const RealtimeResponsePane: FC<{ requestId?: string }> = () => {
 
 type ResponseType = WebSocketResponse | Response | SocketIOResponse | McpResponse;
 type EventType = CurlEvent | WebSocketEvent | SocketIOEvent | McpEvent;
-const RealtimeActiveResponsePane: FC<{
+interface RealtimeActiveResponsePaneProps {
   response: ResponseType;
   responses: ResponseType[];
   requestVersions: RequestVersion[];
   autoSelectLatestEvent?: boolean;
-}> = ({ response, responses, requestVersions, autoSelectLatestEvent }) => {
+}
+
+const RealTimeActiveResponsePaneWrapper: FC<RealtimeActiveResponsePaneProps> = props => {
+  const { response } = props;
+  const protocol = useMemo(() => {
+    if (isSocketIOResponse(response)) {
+      return 'socketIO';
+    }
+    if (isMcpResponse(response)) {
+      return 'mcp';
+    }
+    return response.type === 'WebSocketResponse' ? 'webSocket' : 'curl';
+  }, [response]);
+
+  if (protocol === 'mcp') {
+    return <RealTimeActiveResponsePaneForMcp {...props} />;
+  }
+  return <RealTimeActiveResponsePaneForOthers {...props} protocol={protocol} />;
+};
+
+const RealTimeActiveResponsePaneForMcp: FC<RealtimeActiveResponsePaneProps> = props => {
+  const { response } = props;
+  const requestId = response.parentId;
+  const readyState = useMcpReadyState({ requestId });
+  return <RealtimeActiveResponsePane {...props} connected={readyState === 'connected'} />;
+};
+
+const RealTimeActiveResponsePaneForOthers: FC<
+  RealtimeActiveResponsePaneProps & { protocol: 'curl' | 'webSocket' | 'socketIO' }
+> = props => {
+  const { response, protocol } = props;
+  const requestId = response.parentId;
+  const readyState = useReadyState({ requestId, protocol });
+  return <RealtimeActiveResponsePane {...props} connected={readyState} />;
+};
+
+const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connected: boolean }> = ({
+  response,
+  responses,
+  requestVersions,
+  autoSelectLatestEvent,
+  connected,
+}) => {
   const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [clearEventsBefore, setClearEventsBefore] = useState<number | null>(null);
@@ -85,8 +129,6 @@ const RealtimeActiveResponsePane: FC<{
   }, [response]);
 
   const allEvents = useRealtimeConnectionEvents({ responseId: response._id, protocol }) as EventType[];
-  const requestId = response.parentId;
-  const readyState = useReadyState({ requestId: requestId, protocol });
   const handleSelection = (event: EventType) => {
     setSelectedEvent((selected: EventType | null) => (selected?._id === event._id ? null : event));
   };
@@ -200,8 +242,8 @@ const RealtimeActiveResponsePane: FC<{
       <PaneHeader className="row-spaced">
         <div className="no-wrap scrollable scrollable--no-bars pad-left">
           {isLongRunning ? (
-            <div data-testid="response-status-tag" className={`${readyState ? 'bg-success' : 'bg-danger'} px-2 py-1`}>
-              {readyState ? 'Connected' : 'Disconnected'}
+            <div data-testid="response-status-tag" className={`${connected ? 'bg-success' : 'bg-danger'} px-2 py-1`}>
+              {connected ? 'Connected' : 'Disconnected'}
             </div>
           ) : (
             <>

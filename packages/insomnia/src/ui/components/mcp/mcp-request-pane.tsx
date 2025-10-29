@@ -7,6 +7,7 @@ import { useLatest } from 'react-use';
 
 import { docsMcpClient } from '~/common/documentation';
 import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
+import type { McpReadyState } from '~/main/network/mcp';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Link } from '~/ui/components/base/link';
 import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
@@ -51,7 +52,7 @@ const PaneReadOnlyBanner = () => {
 
 interface Props {
   environment: Environment | null;
-  readyState: boolean;
+  readyState: McpReadyState;
   selectedPrimitiveItem?: PrimitiveSubItem | null;
   activeTab: RequestPaneTabs;
   onTabChange: (newTab: RequestPaneTabs) => void;
@@ -83,8 +84,12 @@ export const McpRequestPane: FC<Props> = ({
   const mcpPayloadPatcher = useRequestPayloadPatcher();
   const latestPayloadPatcherRef = useLatest(mcpPayloadPatcher);
 
+  const isConnected = readyState === 'connected';
+  const isDisconnected = readyState === 'disconnected';
+
   // Reset the response pane state when we switch requests, the environment gets modified
-  const uniqueKey = `${environment?.modified}::${requestId}::${activeRequestMeta?.activeResponseId}`;
+  // Some of the UI(tokens) depends on the readyState, so we include it here as well
+  const uniqueKey = `${environment?.modified}::${requestId}::${activeRequestMeta?.activeResponseId}::${readyState}`;
   const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
   const isNoneOrInherited = requestAuth?.type === 'none' || requestAuth === null;
   const jsonSchema = useMemo(() => {
@@ -194,14 +199,16 @@ export const McpRequestPane: FC<Props> = ({
   }, [selectedPrimitiveItem]);
 
   useEffect(() => {
-    if (readyState) {
+    if (isConnected) {
       latestPayloadPatcherRef.current(requestId, { params: mcpParams, url: activeRequest.url });
     }
-  }, [activeRequest.url, mcpParams, latestPayloadPatcherRef, requestId, readyState]);
+  }, [activeRequest.url, mcpParams, latestPayloadPatcherRef, requestId, isConnected]);
 
   useEffect(() => {
-    readyState && setMcpParams(latestRequestPayloadRef.current?.params || {});
-  }, [activeRequest.url, latestRequestPayloadRef, readyState]);
+    if (isConnected) {
+      setMcpParams(latestRequestPayloadRef.current?.params || {});
+    }
+  }, [activeRequest.url, latestRequestPayloadRef, isConnected]);
 
   return (
     <Pane type="request">
@@ -282,7 +289,7 @@ export const McpRequestPane: FC<Props> = ({
           </Tab>
         </TabList>
         <TabPanel className="flex h-full w-full flex-1 flex-col overflow-y-auto" id="params">
-          {!readyState ? (
+          {!isConnected ? (
             <div className="flex h-full w-full flex-col items-center p-5 text-center">
               {/*  Hint when mcp server is not connected*/}
               <p className="notice info text-md no-margin-top w-full">
@@ -298,7 +305,6 @@ export const McpRequestPane: FC<Props> = ({
                     {sendButtonText && (
                       <div className="flex items-center gap-2">
                         <Button
-                          isDisabled={!readyState}
                           onClick={handleSend}
                           className="rounded bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise]"
                         >
@@ -363,11 +369,11 @@ export const McpRequestPane: FC<Props> = ({
           )}
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="auth">
-          {readyState && <PaneReadOnlyBanner />}
+          {!isDisconnected && <PaneReadOnlyBanner />}
           <AuthWrapper
             key={uniqueKey}
             authentication={activeRequest.authentication}
-            disabled={readyState}
+            disabled={!isDisconnected}
             authTypes={supportedAuthTypes}
             hideInherit
             showMcpAuthFlow
@@ -375,21 +381,21 @@ export const McpRequestPane: FC<Props> = ({
           />
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="headers">
-          {readyState && <PaneReadOnlyBanner />}
+          {!isDisconnected && <PaneReadOnlyBanner />}
           <RequestHeadersEditor
             key={uniqueKey}
             headers={activeRequest.headers}
             bulk={false}
-            isDisabled={readyState}
+            isDisabled={!isDisconnected}
             requestType="McpRequest"
           />
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="env">
-          {readyState && <PaneReadOnlyBanner />}
+          {!isDisconnected && <PaneReadOnlyBanner />}
           <EnvironmentKVEditor
             key={uniqueKey}
             data={activeRequest.env}
-            disabled={readyState}
+            disabled={!isDisconnected}
             textOnly
             onChange={handleEnvChange}
           />
