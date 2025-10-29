@@ -558,6 +558,3 @@ export const REALTIME_EVENTS_CHANNELS = {
   READY_STATE: 'readyState',
   NEW_EVENT: 'newEventReceived',
 };
-
-export const pricingLearnMoreLink =
-  'https://developer.konghq.com/insomnia/storage/#what-are-the-user-and-git-sync-limits-for-the-essentials-plan';

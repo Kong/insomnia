@@ -13,7 +13,8 @@ import {
 } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 
-import { getAppWebsiteBaseURL, pricingLearnMoreLink } from '~/common/constants';
+import { getAppWebsiteBaseURL } from '~/common/constants';
+import { docsPricingLearnMoreLink } from '~/common/documentation';
 import { debounce } from '~/common/misc';
 import { isOwnerOfOrganization } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
@@ -63,7 +64,7 @@ const upgradeModalWording = {
       <>
         Your Essentials plan contains Git Sync projects, so you can only collaborate with up to 3 members. Upgrade to
         collaborate with unlimited users.{' '}
-        <a href={pricingLearnMoreLink} className="underline">
+        <a href={docsPricingLearnMoreLink} className="underline">
           Learn more ↗
         </a>
       </>
@@ -72,7 +73,7 @@ const upgradeModalWording = {
       <>
         Your Essentials plan contains Git Sync projects, so you can only collaborate with up to 3 members. Contact your
         plan owner to upgrade your team's plan to collaborate with more people.{' '}
-        <a href={pricingLearnMoreLink} className="underline">
+        <a href={docsPricingLearnMoreLink} className="underline">
           Learn more ↗
         </a>
       </>
@@ -87,7 +88,7 @@ const upgradeModalWording = {
       <>
         Your team has reached your plan's total purchased seats. Increase your plan's number of seats to continue
         inviting new people.{' '}
-        <a href={pricingLearnMoreLink} className="underline">
+        <a href={docsPricingLearnMoreLink} className="underline">
           Learn more ↗
         </a>
       </>
@@ -96,7 +97,7 @@ const upgradeModalWording = {
       <>
         Your team has reached your plan's total purchased seats. Tell your plan's owner to increase the number of seats
         to continue inviting new people.{' '}
-        <a href={pricingLearnMoreLink} className="underline">
+        <a href={docsPricingLearnMoreLink} className="underline">
           Learn more ↗
         </a>
       </>

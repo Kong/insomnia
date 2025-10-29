@@ -23,7 +23,8 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { getAppWebsiteBaseURL, pricingLearnMoreLink } from '~/common/constants';
+import { getAppWebsiteBaseURL } from '~/common/constants';
+import { docsPricingLearnMoreLink } from '~/common/documentation';
 import { isGitCredentialsOAuth } from '~/models/git-repository';
 import { isOwnerOfOrganization, type StorageRules } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
@@ -342,7 +343,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                         <p>
                           Git Sync is included on your plan for up to 3 users. Since your team is larger, you’ll need to
                           upgrade your plan to use it.{' '}
-                          <a href={pricingLearnMoreLink} className="underline">
+                          <a href={docsPricingLearnMoreLink} className="underline">
                             Learn more ↗
                           </a>
                         </p>
