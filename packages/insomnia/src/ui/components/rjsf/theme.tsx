@@ -1,3 +1,4 @@
+import { parseDate } from '@internationalized/date';
 import type { ThemeProps } from '@rjsf/core';
 import {
   ADDITIONAL_PROPERTY_FLAG,
@@ -12,9 +13,10 @@ import {
   type WrapIfAdditionalTemplateProps,
 } from '@rjsf/utils';
 import cn from 'classnames';
-import { Input, Label, TextField } from 'react-aria-components';
+import { type DateValue, Input, Label, TextField } from 'react-aria-components';
 
 import { Checkbox, CheckboxGroup } from '~/ui/components/base/checkbox';
+import { DatePicker } from '~/ui/components/base/date-picker';
 import { Select } from '~/ui/components/base/select';
 import { Icon } from '~/ui/components/icon';
 import { Button } from '~/ui/components/themed-button';
@@ -49,8 +51,10 @@ const CustomCheckboxWidget = (props: WidgetProps) => {
 
 // Select widget for enums
 const CustomSelectWidget = (props: WidgetProps) => {
-  const { id, value, onChange, disabled, required, readonly, options, multiple } = props;
+  const { id, value, onChange, disabled, required, readonly, options, multiple, rawErrors } = props;
   const { enumOptions } = options;
+
+  const isInvalid = rawErrors && rawErrors.length > 0;
 
   if (multiple) {
     return (
@@ -70,13 +74,28 @@ const CustomSelectWidget = (props: WidgetProps) => {
     <Select
       aria-label="rjsf-select"
       id={id}
+      isInvalid={isInvalid}
       isDisabled={disabled}
       isRequired={required}
       options={enumOptions || []}
-      value={value}
+      value={value || ''}
       onChange={onChange}
       className="w-full"
     />
+  );
+};
+
+const CustomDatePickerWidget = (props: WidgetProps) => {
+  const { id, value, onChange, rawErrors } = props;
+
+  const isInvalid = rawErrors && rawErrors.length > 0;
+
+  const handleDateChange = (value: DateValue | null) => {
+    onChange(value ? value?.toString() : '');
+  };
+
+  return (
+    <DatePicker id={id} isInvalid={isInvalid} value={value ? parseDate(value) : null} onChange={handleDateChange} />
   );
 };
 
@@ -111,13 +130,13 @@ const BaseInputTemplate = (props: BaseInputTemplateProps) => {
     }
   };
 
-  const hasError = rawErrors && rawErrors.length > 0;
+  const isInvalid = rawErrors && rawErrors.length > 0;
   const inputProps = getInputProps(schema, type, options);
 
   return (
     <TextField
       aria-label="rjsf-input"
-      value={value}
+      value={value || ''}
       isDisabled={disabled}
       isReadOnly={readonly}
       isRequired={required}
@@ -127,7 +146,7 @@ const BaseInputTemplate = (props: BaseInputTemplateProps) => {
     >
       <Input
         className={cn(`${baseInputClasses}`, {
-          'border-red-500': hasError,
+          '!border-[--color-danger]': isInvalid,
           'border-[--hl-xs]': disabled,
         })}
         id={id}
@@ -335,6 +354,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
 const themeWidgets: RegistryWidgetsType = {
   CheckboxWidget: CustomCheckboxWidget,
   SelectWidget: CustomSelectWidget,
+  DateWidget: CustomDatePickerWidget,
 };
 
 const themeTemplates = {

@@ -23,7 +23,7 @@ import {
 import { useRequestPatcher, useRequestPayloadPatcher } from '../../hooks/use-request';
 import { CodeEditor, type CodeEditorHandle } from '../.client/codemirror/code-editor';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
-import { readOnlyWebsocketPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
+import { readOnlyHttpPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane } from '../panes/pane';
 import { McpRootsPanel } from './mcp-roots-panel';
 import { McpUrlActionBar } from './mcp-url-bar';
@@ -78,7 +78,7 @@ export const McpRequestPane: FC<Props> = ({
   const requestId = activeRequest._id;
   const isStdio = activeRequest.transportType === 'stdio';
 
-  const headersCount = activeRequest.headers.filter(h => !h.disabled).length + readOnlyWebsocketPairs.length;
+  const headersCount = activeRequest.headers.filter(h => !h.disabled).length + readOnlyHttpPairs.length;
   const patchRequest = useRequestPatcher();
   const mcpPayloadPatcher = useRequestPayloadPatcher();
   const latestPayloadPatcherRef = useLatest(mcpPayloadPatcher);
