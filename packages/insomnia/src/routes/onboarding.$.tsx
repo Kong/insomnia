@@ -146,7 +146,7 @@ const Component = () => {
                 <FeatureWizardView />
               </div>
               <div className="flex shrink-0 items-center justify-between">
-                {location.pathname !== '/onboarding' ? (
+                {location.pathname !== '/onboarding' && location.pathname !== '/onboarding/' ? (
                   <Link className="flex items-center gap-2 px-4 text-sm hover:no-underline" to="/onboarding">
                     <i className="fa fa-border-all" />
                     See all features
