@@ -654,9 +654,6 @@ class McpOAuthClientProvider implements OAuthClientProvider {
     const redirectedResult = await authorizeUserInDefaultBrowser({
       url: relayUrl,
     });
-    BrowserWindow.getAllWindows().forEach(window => {
-      window.webContents.send('hide-oauth-authorization-modal');
-    });
     const redirectedTo = decryptOAuthResult(redirectedResult);
     const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
     const authorizationCode = redirectParams.code;
@@ -997,6 +994,15 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
   }
   // notify connection ready after capabilities and primitives are fetched
   _notifyMcpClientStateChange(mcpStateChannel, true);
+  const mcpRequest = await models.mcpRequest.getById(requestId);
+  invariant(mcpRequest, 'MCP Request not found');
+  const { authentication } = mcpRequest;
+  if ('grantType' in authentication && authentication.grantType === 'mcp_auth_flow' && !authentication.disabled) {
+    // Close the oauth authorization modal after connection and server capabilities are fetched
+    BrowserWindow.getAllWindows().forEach(window => {
+      window.webContents.send('hide-oauth-authorization-modal');
+    });
+  }
 };
 
 const closeMcpConnection = async (options: CommonMcpOptions) => {
