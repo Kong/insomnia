@@ -120,7 +120,7 @@ export const McpActionsDropdown = ({
         <Menu
           aria-label="Mcp Actions Menu"
           selectionMode="single"
-          onAction={key =>
+          onAction={(key: Selection) =>
             mcpPrimitiveActionList
               .find(i => i.items.find(a => a.id === key))
               ?.items.find(a => a.id === key)

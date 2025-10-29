@@ -697,12 +697,16 @@ const Component = () => {
       icon: ['fac', 'mcp'] as unknown as IconProp,
       action: createNewMcpClient,
     },
-    ...(canCreateMockServer ? [{
-      id: 'new-mock-server',
-      name: 'Mock Server',
-      icon: 'server' as IconName,
-      action: createNewMockServer,
-    }] : []),
+    ...(canCreateMockServer
+      ? [
+          {
+            id: 'new-mock-server',
+            name: 'Mock Server',
+            icon: 'server' as IconName,
+            action: createNewMockServer,
+          },
+        ]
+      : []),
     {
       id: 'new-environment',
       name: 'Environment',
@@ -756,16 +760,20 @@ const Component = () => {
         run: createNewMcpClient,
       },
     },
-    ...(canCreateMockServer ? [{
-      id: 'mock-server',
-      label: `Mock (${mockServersCount})`,
-      icon: 'server' as IconName,
-      action: {
-        icon: 'plus' as IconName,
-        label: 'New Mock Server',
-        run: createNewMockServer,
-      },
-    }] : []),
+    ...(canCreateMockServer
+      ? [
+          {
+            id: 'mock-server',
+            label: `Mock (${mockServersCount})`,
+            icon: 'server' as IconName,
+            action: {
+              icon: 'plus' as IconName,
+              label: 'New Mock Server',
+              run: createNewMockServer,
+            },
+          },
+        ]
+      : []),
     {
       id: 'environment',
       label: `Environments (${environmentsCount})`,
@@ -1142,7 +1150,7 @@ const Component = () => {
                         <Menu
                           aria-label="Create in project actions"
                           selectionMode="single"
-                          onAction={key => {
+                          onAction={(key: Selection) => {
                             const item = createInProjectActionList.find(item => item.id === key);
                             if (item) {
                               item.action();

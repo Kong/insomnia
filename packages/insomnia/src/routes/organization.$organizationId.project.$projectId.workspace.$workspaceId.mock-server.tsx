@@ -1,5 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { Selection } from 'react-aria-components';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -322,7 +323,7 @@ const Component = () => {
                         <Menu
                           aria-label="Mock Route Action Menu"
                           selectionMode="single"
-                          onAction={(key: string) => {
+                          onAction={(key: Selection) => {
                             mockRouteActionList.find(({ id }) => key === id)?.action(item._id, item.name);
                           }}
                           items={mockRouteActionList}

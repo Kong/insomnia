@@ -488,7 +488,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               <Button
                 onPress={() => setNewMockServerModalOpen(true)}
                 isDisabled={!apiSpec.contents}
-                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:bg-[--hl-sm]"
               >
                 <Icon icon="server" className="w-5 flex-shrink-0" />
                 <span className="truncate">Generate Mock</span>
@@ -519,7 +519,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   aria-label="Spec actions menu"
                   selectionMode="single"
                   disabledKeys={disabledKeys}
-                  onAction={key => {
+                  onAction={(key: Selection) => {
                     const item = specActionList.find(item => item.id === key);
                     if (item) {
                       item.action();
@@ -558,7 +558,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                 </Button>
                 {/* Info */}
                 {expandedKeys.includes('info') && (
-                  <ListBox onAction={key => navigateToPath(key.toString())}>
+                  <ListBox onAction={(key: Selection) => navigateToPath(key.toString())}>
                     <ListBoxItem
                       className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
                       id="info.title"
@@ -609,7 +609,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                       path: index,
                       ...server,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={(key: Selection) => navigateToPath(key.toString())}
                   >
                     {item => (
                       <ListBoxItem
@@ -646,7 +646,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                       id: path,
                       path,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={(key: Selection) => navigateToPath(key.toString())}
                   >
                     {item => (
                       <GridListItem className="group select-none outline-none" id={`paths.${item.path}`}>
@@ -692,7 +692,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                       id: path,
                       path,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={(key: Selection) => navigateToPath(key.toString())}
                   >
                     {item => (
                       <ListBoxItem
@@ -729,7 +729,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                       id: path,
                       path,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={(key: Selection) => navigateToPath(key.toString())}
                   >
                     {item => (
                       <ListBoxItem
@@ -766,7 +766,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                       id: path,
                       path,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={(key: Selection) => navigateToPath(key.toString())}
                   >
                     {item => (
                       <ListBoxItem
@@ -803,7 +803,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                       id: path,
                       path,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={(key: Selection) => navigateToPath(key.toString())}
                   >
                     {item => (
                       <ListBoxItem
@@ -840,7 +840,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                       id: path,
                       path,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={(key: Selection) => navigateToPath(key.toString())}
                   >
                     {item => (
                       <ListBoxItem
@@ -877,7 +877,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                       id: path,
                       path,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={(key: Selection) => navigateToPath(key.toString())}
                   >
                     {item => (
                       <ListBoxItem

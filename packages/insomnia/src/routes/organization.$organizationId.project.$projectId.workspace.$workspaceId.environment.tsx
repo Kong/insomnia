@@ -416,7 +416,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                         <Menu
                           aria-label="Environment Actions"
                           selectionMode="single"
-                          onAction={key => {
+                          onAction={(key: Selection) => {
                             environmentActionsList.find(({ id }) => key === id)?.action(item);
                           }}
                           items={environmentActionsList}
@@ -450,7 +450,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                         <Menu
                           aria-label="New Environment"
                           selectionMode="single"
-                          onAction={key => {
+                          onAction={(key: Selection) => {
                             createEnvironmentActionsList.find(({ id }) => key === id)?.action(item);
                           }}
                           items={createEnvironmentActionsList}

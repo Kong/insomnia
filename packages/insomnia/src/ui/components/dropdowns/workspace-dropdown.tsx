@@ -356,7 +356,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
           <Menu
             aria-label="Create in project actions"
             selectionMode="single"
-            onAction={key =>
+            onAction={(key: Selection) =>
               actionlist
                 .find(i => i.items.find(a => a.id === key))
                 ?.items.find(a => a.id === key)

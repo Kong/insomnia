@@ -569,7 +569,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
               aria-label="Git Sync Menu"
               selectionMode="single"
               disabledKeys={allSyncMenuActionList.filter(item => item?.isDisabled).map(item => item.id)}
-              onAction={key => {
+              onAction={(key: Selection) => {
                 const item = allSyncMenuActionList.find(item => item.id === key);
                 item?.action();
               }}

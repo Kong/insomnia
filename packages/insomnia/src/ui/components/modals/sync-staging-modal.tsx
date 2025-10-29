@@ -277,7 +277,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                             textValue: entry.name || entry.document?.type || '',
                           }))}
                           aria-label="Unstaged changes"
-                          onAction={key => {
+                          onAction={(key: Selection) => {
                             setSelectedItemId(key.toString());
                           }}
                           renderEmptyState={() => (
@@ -348,7 +348,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                             textValue: entry.name || entry.document?.type || '',
                           }))}
                           aria-label="Unstaged changes"
-                          onAction={key => {
+                          onAction={(key: Selection) => {
                             setSelectedItemId(key.toString());
                           }}
                         >

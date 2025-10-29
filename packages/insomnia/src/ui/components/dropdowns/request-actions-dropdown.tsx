@@ -302,7 +302,7 @@ export const RequestActionsDropdown = ({
           <Menu
             aria-label="Request Actions Menu"
             selectionMode="single"
-            onAction={key =>
+            onAction={(key: Selection) =>
               requestActionList
                 .find(i => i.items.find(a => a.id === key))
                 ?.items.find(a => a.id === key)

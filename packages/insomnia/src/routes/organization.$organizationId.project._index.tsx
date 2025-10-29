@@ -1,5 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import type { Selection } from 'react-aria-components';
 import {
   Button,
   GridList,
@@ -666,7 +667,6 @@ const Component = () => {
     });
   };
 
-
   const canCreateMockServer = activeProject?._id;
   const isGitSyncEnabled = features.gitSync.enabled;
 
@@ -688,12 +688,16 @@ const Component = () => {
       icon: 'file',
       action: createNewDocument,
     },
-    ...(canCreateMockServer ? [{
-      id: 'new-mock-server',
-      name: 'Mock Server',
-      icon: 'server' as IconName,
-      action: createNewMockServer,
-    }] : []),
+    ...(canCreateMockServer
+      ? [
+          {
+            id: 'new-mock-server',
+            name: 'Mock Server',
+            icon: 'server' as IconName,
+            action: createNewMockServer,
+          },
+        ]
+      : []),
     {
       id: 'new-environment',
       name: 'Environment',
@@ -737,16 +741,20 @@ const Component = () => {
         run: createNewCollection,
       },
     },
-    ...(canCreateMockServer ? [{
-      id: 'mock-server',
-      label: `Mock (${mockServersCount})`,
-      icon: 'server' as IconName,
-      action: {
-        icon: 'plus' as IconName,
-        label: 'New Mock Server',
-        run: createNewMockServer,
-      },
-    }] : []),
+    ...(canCreateMockServer
+      ? [
+          {
+            id: 'mock-server',
+            label: `Mock (${mockServersCount})`,
+            icon: 'server' as IconName,
+            action: {
+              icon: 'plus' as IconName,
+              label: 'New Mock Server',
+              run: createNewMockServer,
+            },
+          },
+        ]
+      : []),
     {
       id: 'environment',
       label: `Environments (${environmentsCount})`,
@@ -787,7 +795,7 @@ const Component = () => {
               <div className="h-[40px] p-[--padding-sm]">
                 <Select
                   aria-label="Organizations"
-                  onSelectionChange={id => {
+                  onSelectionChange={(id: Selection) => {
                     navigate(`/organization/${id}`);
                   }}
                   selectedKey={organizationId}
@@ -863,7 +871,7 @@ const Component = () => {
                   disallowEmptySelection
                   selectedKeys={[activeProject?._id || '']}
                   selectionMode="single"
-                  onSelectionChange={keys => {
+                  onSelectionChange={(keys: Selection) => {
                     if (keys !== 'all') {
                       const [value] = keys.values();
 
@@ -1071,7 +1079,7 @@ const Component = () => {
                       aria-label="Sort order"
                       className="aspect-square h-full"
                       selectedKey={workspaceListSortOrder}
-                      onSelectionChange={order => setWorkspaceListSortOrder(order as DashboardSortOrder)}
+                      onSelectionChange={(order: Selection) => setWorkspaceListSortOrder(order as DashboardSortOrder)}
                     >
                       <Button
                         aria-label="Select sort order"
@@ -1123,7 +1131,7 @@ const Component = () => {
                         <Menu
                           aria-label="Create in project actions"
                           selectionMode="single"
-                          onAction={key => {
+                          onAction={(key: Selection) => {
                             const item = createInProjectActionList.find(item => item.id === key);
                             if (item) {
                               item.action();

@@ -168,7 +168,7 @@ const CommitSection = (props: {
       aria-label="Files to commit"
       items={props.files}
       dragAndDropHooks={dragAndDropHooks}
-      onAction={key => {
+      onAction={(key: Selection) => {
         const id = props.files.find(item => item.key === key)?.value.name;
         if (id) {
           props.diffChanges({ path: id, staged: false });
@@ -602,7 +602,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                 id: entry.path,
                 textValue: entry.path,
               }))}
-              onAction={key => {
+              onAction={(key: Selection) => {
                 diffChanges({
                   path: key.toString(),
                   staged: true,
@@ -715,7 +715,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                 key: entry.path,
                 textValue: entry.path,
               }))}
-              onAction={key => {
+              onAction={(key: Selection) => {
                 diffChanges({
                   path: key.toString(),
                   staged: false,

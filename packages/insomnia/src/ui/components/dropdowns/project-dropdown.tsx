@@ -118,7 +118,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
           <Menu
             aria-label="Project Actions Menu"
             selectionMode="single"
-            onAction={key => {
+            onAction={(key: Selection) => {
               projectActionList.find(({ id }) => key === id)?.action(project._id, project.name);
             }}
             items={projectActionList}

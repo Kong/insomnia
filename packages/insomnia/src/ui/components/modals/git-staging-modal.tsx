@@ -250,7 +250,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
                             textValue: entry.path,
                           }))}
                           aria-label="Unstaged changes"
-                          onAction={key => {
+                          onAction={(key: Selection) => {
                             diffChanges({
                               path: key.toString(),
                               staged: true,
@@ -366,7 +366,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
                             textValue: entry.path,
                           }))}
                           aria-label="Unstaged changes"
-                          onAction={key => {
+                          onAction={(key: Selection) => {
                             diffChanges({
                               path: key.toString(),
                               staged: false,

@@ -399,7 +399,7 @@ export const SyncDropdown: FC<Props> = () => {
             aria-label="Insomnia Sync Menu"
             selectionMode="single"
             disabledKeys={allSyncMenuActionList.filter(item => item.isDisabled).map(item => item.id)}
-            onAction={key => {
+            onAction={(key: Selection) => {
               const item = allSyncMenuActionList.find(item => item.id === key);
               item?.action();
             }}

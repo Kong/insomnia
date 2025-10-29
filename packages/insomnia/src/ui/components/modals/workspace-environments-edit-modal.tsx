@@ -353,7 +353,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                                 <Menu
                                   aria-label="Environment Actions menu"
                                   selectionMode="single"
-                                  onAction={key => {
+                                  onAction={(key: Selection) => {
                                     environmentActionsList.find(({ id }) => key === id)?.action(item);
                                   }}
                                   items={environmentActionsList}
@@ -387,7 +387,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                                 <Menu
                                   aria-label="Create Environment menu"
                                   selectionMode="single"
-                                  onAction={key => {
+                                  onAction={(key: Selection) => {
                                     createEnvironmentActionsList.find(({ id }) => key === id)?.action(item);
                                   }}
                                   items={createEnvironmentActionsList}

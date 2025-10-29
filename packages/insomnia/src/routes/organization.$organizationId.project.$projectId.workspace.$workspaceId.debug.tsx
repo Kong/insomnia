@@ -986,7 +986,7 @@ const Debug = () => {
                   <Menu
                     aria-label="Create a new request"
                     selectionMode="single"
-                    onAction={key =>
+                    onAction={(key: Selection) =>
                       createInCollectionActionList
                         .find(i => i.items.find(a => a.id === key))
                         ?.items.find(a => a.id === key)
@@ -1116,7 +1116,7 @@ const Debug = () => {
                 aria-label="Request Collection"
                 key={sortOrder}
                 dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
-                onAction={key => {
+                onAction={(key: Selection) => {
                   const id = key.toString();
                   if (isRequestGroupId(id)) {
                     const item = collection.find(i => i.doc._id === id);

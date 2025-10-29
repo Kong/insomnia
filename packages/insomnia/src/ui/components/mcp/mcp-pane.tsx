@@ -455,7 +455,7 @@ export const McpPane = () => {
                 items={virtualizer.getVirtualItems()}
                 className="relative"
                 aria-label="Mcp Server Capabilities"
-                onAction={key => {
+                onAction={(key: Selection) => {
                   const id = key.toString();
                   if (id.startsWith('root_')) {
                     // Click on primitive type item

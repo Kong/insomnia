@@ -117,7 +117,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
                     <Menu
                       aria-label="Start from a sample dropdown"
                       selectionMode="single"
-                      onAction={key => {
+                      onAction={(key: Selection) => {
                         exampleSpecs.find(({ id }) => key === id)?.action?.();
                       }}
                       items={exampleSpecs}

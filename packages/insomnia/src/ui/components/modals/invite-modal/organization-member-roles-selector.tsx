@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Key } from 'react-aria-components';
+import type { Selection } from 'react-aria-components';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Text } from 'react-aria-components';
 
 import { showModal } from '..';
@@ -151,7 +151,7 @@ export const OrganizationMemberRolesSelector = (props: Props) => {
             items={availableRoles.filter(r => r.name !== 'owner')}
             disabledKeys={['owner']}
             aria-label="Select a role for the user"
-            onAction={(key: Key) => {
+            onAction={(key: Selection) => {
               handleRoleChange(availableRoles.filter(r => r.name === key)[0]);
             }}
           >

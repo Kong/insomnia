@@ -146,7 +146,7 @@ export const CloudServiceCredentialList = () => {
             <Menu
               aria-label="Create cloud service credential actions"
               selectionMode="single"
-              onAction={key => handleCreateCloudServiceCredential(key as CloudProviderName)}
+              onAction={(key: Selection) => handleCreateCloudServiceCredential(key as CloudProviderName)}
               items={createCredentialItemList}
               className="max-h-[85vh] min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
             >

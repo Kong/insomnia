@@ -434,7 +434,7 @@ const Component = () => {
                           <Menu
                             aria-label="Unit Test Actions Menu"
                             selectionMode="single"
-                            onAction={key => {
+                            onAction={(key: Selection) => {
                               testSuiteActionList.find(({ id }) => key === id)?.action(item._id, item.name);
                             }}
                             items={testSuiteActionList}
