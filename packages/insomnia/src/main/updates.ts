@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 
 import { app, autoUpdater, BrowserWindow, dialog } from 'electron';
@@ -8,7 +9,6 @@ import { autoUpdater as electronUpdater } from 'electron-updater';
 import type { Settings } from '~/models/settings';
 
 import appConfig from '../../config/config.json';
-import { version } from '../../package.json';
 import packageJSON from '../../package.json';
 import { CHECK_FOR_UPDATES_INTERVAL, isDevelopment } from '../common/constants';
 import { delay } from '../common/misc';
@@ -17,26 +17,26 @@ import { invariant } from '../utils/invariant';
 import { ipcMainOn } from './ipc/electron';
 
 const isUpdateSupported = () => {
+  if (process.env['ALLOW_UPDATES_IN_DEV']) {
+    showUpdateStatusToast('Dev mode update restriction disabled');
+    return true;
+  }
   if (process.platform === 'linux') {
-    console.log('[updater] Not supported on this platform', process.platform);
     showUpdateStatusToast('Updates disabled on linux');
+    return false;
+  }
+  if (process.env.INSOMNIA_DISABLE_AUTOMATIC_UPDATES) {
+    showUpdateStatusToast('Updates disabled by administrator');
+    return false;
+  }
+  if (isDevelopment()) {
+    showUpdateStatusToast('Updates disabled in development mode');
     return false;
   }
   // This does not appear to actually be implemented in insomnia.
   // We distribute a regular windows exe which uses appData and an NSIS installer.
   if (process.platform === 'win32' && process.env['PORTABLE_EXECUTABLE_DIR']) {
-    console.log('[updater] Not supported on portable windows binary');
     showUpdateStatusToast('Updates disabled on portable windows binary');
-    return false;
-  }
-  if (process.env.INSOMNIA_DISABLE_AUTOMATIC_UPDATES) {
-    console.log('[updater] Disabled by INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable');
-    showUpdateStatusToast('Updates disabled by administrator');
-    return false;
-  }
-  if (isDevelopment()) {
-    console.log('[updater] Disabled in dev mode');
-    showUpdateStatusToast('Updates disabled in development mode');
     return false;
   }
   return true;
@@ -47,7 +47,7 @@ export const getUpdateUrl = (updateChannel: string): string | null => {
   const fullUrl = new URL(
     process.platform === 'win32' ? getUpdatesBaseURL + '/updates/win' : getUpdatesBaseURL + '/builds/check/mac',
   );
-  fullUrl.searchParams.append('v', version);
+  fullUrl.searchParams.append('v', packageJSON.version);
   fullUrl.searchParams.append('app', appConfig.appId);
   fullUrl.searchParams.append('channel', updateChannel);
   console.log(`[updater] Using url ${fullUrl.toString()}`);
@@ -88,11 +88,14 @@ export const init = async () => {
   }
   // on check now button pushed
   ipcMainOn('manualUpdateCheck', async () => {
+    if (!updateSupported) {
+      return;
+    }
     showUpdateStatusToast('Checking for updates...');
-    console.log('[updater] Manual update check');
 
     await delay(300); // Pacing
-    checkForUpdates(settings);
+
+    checkForUpdates(await models.settings.get());
   });
 };
 
