@@ -44,14 +44,14 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
   };
 
   useEffect(() => {
-    if (!isEssential || !open) {
+    if (!open) {
       return;
     }
     if (usageState === 'idle' && !checked.current) {
       checked.current = true;
       usageLoad();
     }
-  }, [usageLoad, usageState, isEssential, open]);
+  }, [usageLoad, usageState, open]);
 
   useEffect(() => {
     if (typeof usageData?.isEligible === 'boolean') {
@@ -104,7 +104,7 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
         className="max-h-[85vh] min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
         placement="bottom end"
       >
-        <Dialog>
+        <Dialog className="focus:outline-none">
           <div className="mt-[8px] flex w-[250px] flex-col text-[--color-font]">
             <div className="flex items-center justify-between px-[12px]">
               <div className="flex flex-col gap-1">
@@ -146,7 +146,7 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
                       />
                     </Tooltip>
                     <span className="ml-auto">
-                      {used}/{isUserUnlimited ? 'Unlimited' : typeof total === 'number' ? formatNumber(total) : '--'}
+                      {used}/{isUserUnlimited ? 'Unlimited' : formatNumber(total || 0)}
                     </span>
                   </div>
                   <Progress className="mt-2" status={userStatus} percent={isUserUnlimited ? 100 : seatsUsage} />
@@ -180,11 +180,7 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
                   </Tooltip>
                   <span className="ml-auto">
                     {formatNumber(usedMocks)}/{' '}
-                    {isUnlimited
-                      ? 'Unlimited'
-                      : usageData?.resourceUsage?.mocks?.quota == null
-                        ? '--'
-                        : formatNumber(usageData?.resourceUsage?.mocks?.quota)}
+                    {isUnlimited ? 'Unlimited' : formatNumber(usageData?.resourceUsage?.mocks?.quota || 0)}
                   </span>
                 </div>
                 <Progress className="mt-2" status={mockStatus} percent={isUnlimited ? 100 : mockUsage} />

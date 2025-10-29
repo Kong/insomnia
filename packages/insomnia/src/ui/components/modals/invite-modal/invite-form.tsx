@@ -70,7 +70,7 @@ const upgradeModalWording = {
     ),
     memberDescription: (
       <>
-        Your Essentials plan contains Git Sync projects, so you can only collaborate with up to 3 members.Contact your
+        Your Essentials plan contains Git Sync projects, so you can only collaborate with up to 3 members. Contact your
         plan owner to upgrade your team's plan to collaborate with more people.{' '}
         <a href={pricingLearnMoreLink} className="underline">
           Learn more ↗
@@ -94,7 +94,7 @@ const upgradeModalWording = {
     ),
     memberDescription: (
       <>
-        Your team has reached your plan's total purchased seats. Tell your plan's owner to increase the numberof seats
+        Your team has reached your plan's total purchased seats. Tell your plan's owner to increase the number of seats
         to continue inviting new people.{' '}
         <a href={pricingLearnMoreLink} className="underline">
           Learn more ↗
