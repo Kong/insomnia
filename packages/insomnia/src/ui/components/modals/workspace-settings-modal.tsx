@@ -151,7 +151,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                     className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] p-2 text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
                   />
                 </TextField>
-                {project && isGitProject(project) && gitRepoTreeFetcher.data && (
+                {project && isGitProject(project) && gitRepoTreeFetcher.data && !isMcp(workspace) && (
                   <TextField
                     name="fileName"
                     isRequired

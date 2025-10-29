@@ -530,7 +530,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                 >
                   {item => (
                     <MenuItem
-                      className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-[--hl-md] aria-selected:font-bold"
+                      className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-[--hl-md] aria-selected:font-bold"
                       aria-label={item.name}
                     >
                       {item.icon}

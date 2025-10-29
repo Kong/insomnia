@@ -5,7 +5,7 @@ import { Button, Heading, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-ar
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useLatest } from 'react-use';
 
-import { docsBase } from '~/common/documentation';
+import { docsMcpClient } from '~/common/documentation';
 import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Link } from '~/ui/components/base/link';
@@ -23,7 +23,7 @@ import {
 import { useRequestPatcher, useRequestPayloadPatcher } from '../../hooks/use-request';
 import { CodeEditor, type CodeEditorHandle } from '../.client/codemirror/code-editor';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
-import { readOnlyWebsocketPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
+import { readOnlyHttpPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane } from '../panes/pane';
 import { McpRootsPanel } from './mcp-roots-panel';
 import { McpUrlActionBar } from './mcp-url-bar';
@@ -78,7 +78,7 @@ export const McpRequestPane: FC<Props> = ({
   const requestId = activeRequest._id;
   const isStdio = activeRequest.transportType === 'stdio';
 
-  const headersCount = activeRequest.headers.filter(h => !h.disabled).length + readOnlyWebsocketPairs.length;
+  const headersCount = activeRequest.headers.filter(h => !h.disabled).length + readOnlyHttpPairs.length;
   const patchRequest = useRequestPatcher();
   const mcpPayloadPatcher = useRequestPayloadPatcher();
   const latestPayloadPatcherRef = useLatest(mcpPayloadPatcher);
@@ -286,7 +286,7 @@ export const McpRequestPane: FC<Props> = ({
             <div className="flex h-full w-full flex-col items-center p-5 text-center">
               {/*  Hint when mcp server is not connected*/}
               <p className="notice info text-md no-margin-top w-full">
-                Connect to an MCP server URL to reveal capabilities. &nbsp;<Link href={docsBase}>Learn More</Link>
+                Connect to an MCP server URL to reveal capabilities. &nbsp;<Link href={docsMcpClient}>Learn More</Link>
               </p>
             </div>
           ) : (

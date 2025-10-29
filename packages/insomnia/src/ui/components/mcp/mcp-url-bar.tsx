@@ -258,7 +258,7 @@ export const McpUrlActionBar = ({
             id="websocket-url-bar"
             ref={oneLineEditorRef}
             onKeyDown={createKeybindingsHandler({
-              Enter: () => handleSubmit(),
+              Enter: () => handleSubmitRef.current(),
             })}
             readOnly={readyState}
             defaultValue={defaultValue}

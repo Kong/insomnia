@@ -345,7 +345,7 @@ export const EnvironmentKVEditor = ({
                   <MenuItem
                     key={item.id}
                     id={item.id}
-                    className="text-md react-aria-ListBoxItem flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent pl-[--padding-sm] pr-[--padding-xl] text-sm text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none aria-disabled:cursor-not-allowed aria-disabled:bg-transparent aria-disabled:text-[--hl-lg] aria-selected:font-bold"
+                    className="react-aria-ListBoxItem flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent pl-[--padding-sm] pr-[--padding-xl] text-sm text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none aria-disabled:cursor-not-allowed aria-disabled:bg-transparent aria-disabled:text-[--hl-lg] aria-selected:font-bold"
                     aria-label={item.name}
                     onAction={() => handleItemTypeChange(id, item.id)}
                   >

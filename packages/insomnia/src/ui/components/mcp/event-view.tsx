@@ -14,7 +14,11 @@ import {
 } from '../../../common/constants';
 import { METHOD_CALL_TOOL } from '../../../common/mcp-utils';
 import type { McpEvent } from '../../../main/network/mcp';
-import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import * as models from '../../../models';
+import {
+  type McpRequestLoaderData,
+  useRequestLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { CodeEditor, type CodeEditorHandle } from '../../components/.client/codemirror/code-editor';
 import { showError } from '../../components/modals';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
@@ -25,8 +29,11 @@ interface Props {
 }
 
 export const MessageEventView = ({ event }: Props) => {
+  const { activeRequestMeta, activeResponse } = useRequestLoaderData() as McpRequestLoaderData;
   const { requestId } = useParams() as { requestId: string };
   const editorRef = useRef<CodeEditorHandle>(null);
+  const filterHistory = activeRequestMeta.responseFilterHistory || [];
+  const filter = activeRequestMeta.responseFilter || '';
 
   const isErrorEvent = event.type === 'error';
   const isCallToolEvent = event.type === 'message' && event.method === METHOD_CALL_TOOL;
@@ -64,6 +71,25 @@ export const MessageEventView = ({ event }: Props) => {
 
   const patchRequestMeta = useRequestMetaPatcher();
 
+  const handleSetFilter = async (responseFilter: string) => {
+    if (!activeResponse) {
+      return;
+    }
+    const requestId = activeResponse.parentId;
+    await patchRequestMeta(requestId, { responseFilter });
+    const meta = await models.requestMeta.getByParentId(requestId);
+    if (!meta) {
+      return;
+    }
+    const responseFilterHistory = meta.responseFilterHistory.slice(0, 10);
+    // Already in history or empty?
+    if (!responseFilter || responseFilterHistory.includes(responseFilter)) {
+      return;
+    }
+    responseFilterHistory.unshift(responseFilter);
+    patchRequestMeta(requestId, { responseFilterHistory });
+  };
+
   let pretty = raw;
   try {
     const parsed = JSON.parse(raw);
@@ -95,7 +121,6 @@ export const MessageEventView = ({ event }: Props) => {
   } catch {
     // Can't parse as JSON.
   }
-  const { activeRequestMeta } = useRequestLoaderData()!;
   const previewMode = ('previewMode' in activeRequestMeta && activeRequestMeta.previewMode) || PREVIEW_MODE_SOURCE;
   return (
     <div className="flex h-full flex-col">
@@ -141,7 +166,11 @@ export const MessageEventView = ({ event }: Props) => {
           defaultValue={previewMode === PREVIEW_MODE_FRIENDLY ? pretty : raw}
           uniquenessKey={event._id}
           ref={editorRef}
+          filter={filter}
+          updateFilter={handleSetFilter}
+          filterHistory={filterHistory}
           readOnly
+          autoPrettify
         />
       </div>
     </div>

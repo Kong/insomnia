@@ -23,6 +23,7 @@ import { useParams } from 'react-router';
 import type { StorageRules } from '~/models/organization';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
+import { Badge } from '~/ui/components/base/badge';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
 import { type ApiSpec } from '../../../models/api-spec';
@@ -112,13 +113,7 @@ export const NewWorkspaceModal = ({
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
 
   const [progressMessage, setProgressMessage] = useState(0);
-  const progressMessages = [
-    'Creating...',
-    'Working...',
-    'Building...',
-    'Still going...',
-    'Almost there...',
-  ];
+  const progressMessages = ['Creating...', 'Working...', 'Building...', 'Still going...', 'Almost there...'];
 
   const gitRepoTreeFetcher = useGitProjectRepositoryTreeLoaderFetcher();
 
@@ -129,9 +124,9 @@ export const NewWorkspaceModal = ({
         setProgressMessage(prev => (prev + 1) % progressMessages.length);
       }, 5000);
       return () => clearInterval(interval);
-    } 
-      setProgressMessage(0);
-    
+    }
+    setProgressMessage(0);
+
     return undefined;
   }, [createNewWorkspaceFetcher.state, scope, progressMessages.length]);
 
@@ -279,7 +274,7 @@ export const NewWorkspaceModal = ({
                     </Label>
 
                     <Tree
-                      className="grid min-h-24 max-h-52 gap-0 overflow-auto rounded-sm border border-solid border-[--hl-sm]"
+                      className="grid max-h-52 min-h-24 gap-0 overflow-auto rounded-sm border border-solid border-[--hl-sm]"
                       defaultSelectedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
                       disallowEmptySelection
                       defaultExpandedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
@@ -375,8 +370,10 @@ export const NewWorkspaceModal = ({
                           className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
                         >
                           <div className="flex items-center gap-2">
-                            <Icon icon="robot" />
-                            <Heading className="text-lg font-bold">Auto Generate</Heading>
+                            <Heading className="text-lg font-bold">
+                              <Badge color="surprise" icon="sparkles" label="AI" />
+                              <span>Auto Generate</span>
+                            </Heading>
                           </div>
                           <p className="pt-2">
                             {!isGenerateMockServersWithAIEnabled
@@ -563,8 +560,8 @@ export const NewWorkspaceModal = ({
                           <div className="group relative">
                             <Icon icon="info-circle" className="cursor-help text-[--hl]" />
                             <div className="absolute left-1/2 top-full z-10 mt-2 hidden w-72 -translate-x-1/2 rounded-md border border-[--hl-sm] bg-[--color-bg] p-3 text-xs text-[--color-font] shadow-lg group-hover:block">
-                              Add files to include as additional context for the LLM when generating your mock server. These
-                              files can contain example data, schemas, or other relevant information.
+                              Add files to include as additional context for the LLM when generating your mock server.
+                              These files can contain example data, schemas, or other relevant information.
                             </div>
                           </div>
                         </div>

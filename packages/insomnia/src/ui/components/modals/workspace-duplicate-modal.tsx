@@ -62,7 +62,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
         <ModalHeader>Duplicate file</ModalHeader>
         <ModalBody className="wide">
           <p className="mb-6">You can duplicate the following file to a project:</p>
-          <div className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font]">
+          <div className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font]">
             <div
               className={`${scopeToBgColorMap[workspace.scope]} ${scopeToTextColorMap[workspace.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
             >
