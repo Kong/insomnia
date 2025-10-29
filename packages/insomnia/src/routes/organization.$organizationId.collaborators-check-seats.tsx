@@ -21,10 +21,12 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId } = params;
 
   try {
+    // Check whether the user can add a new collaborator
+    // Use a random email to avoid hitting any existing member emails
     const checkResponseData = await insomniaFetch<CheckSeatsResponse>({
       method: 'POST',
       path: `/v1/organizations/${organizationId}/check-seats`,
-      data: { emails: [`insomnia-mock-check-seats-${uuidv4()}@konghq.com`] },
+      data: { emails: [`insomnia-mock-check-seats-${uuidv4()}@example.net`] },
       sessionId,
       onlyResolveOnSuccess: true,
     });
