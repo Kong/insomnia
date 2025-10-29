@@ -170,3 +170,7 @@ export function getByName(name: string, provider: CloudProviderName) {
 export function all() {
   return db.find<CloudProviderCredential>(type);
 }
+
+export function removeAll() {
+  return db.removeWhere<CloudProviderCredential>(type, {});
+}
