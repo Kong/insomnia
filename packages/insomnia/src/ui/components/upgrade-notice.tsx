@@ -19,9 +19,7 @@ export const UpgradeNotice = (props: UpgradeNoticeProps) => {
     : 'Please contact the organization owner to upgrade the plan.';
   const message = `${featureName} is only enabled for ${planDetail}.`;
   const handleUpgradePlan = () => {
-    window.main.openInBrowser(
-      `${getAppWebsiteBaseURL()}/app/subscription/update?plan=team&source=app_feature_cloud_credentials`,
-    );
+    window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team&source=app_${featureName}`);
   };
 
   return (
