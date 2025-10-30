@@ -6,6 +6,7 @@ import { Button } from 'react-aria-components';
 import {
   href,
   Links,
+  matchPath,
   Meta,
   Outlet,
   Scripts,
@@ -33,7 +34,6 @@ import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { Link } from '~/ui/components/base/link';
-import { ErrorBoundary as ErrorView } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
@@ -63,17 +63,32 @@ export const links: Route.LinksFunction = () => {
   ];
 };
 
+const locationHistoryMiddleware: Route.ClientMiddlewareFunction = async ({ request }, next) => {
+  await next();
+
+  try {
+    const url = new URL(request.url);
+    const match = matchPath('/organization/:organizationId/*', url.pathname);
+
+    if (!match || !match.params.organizationId) {
+      return;
+    }
+
+    const organizationId = match.params.organizationId;
+    window.localStorage.setItem(`locationHistoryEntry:${organizationId}`, url.pathname);
+    window.localStorage.setItem('lastVisitedOrganizationId', organizationId);
+  } catch (err) {
+    console.log('[locationHistoryMiddleware] Failed to store location history entry', err);
+  }
+};
+
+export const clientMiddleware: Route.ClientMiddlewareFunction[] = [locationHistoryMiddleware];
+
 export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
-      return err.data;
+      return typeof err.data === 'string' ? err.data : (err.data?.message ?? 'Unknown error');
     }
-
-    if (err?.message) {
-      return err?.message;
-    }
-
-    return 'Unknown error';
   };
 
   const getErrorStack = (err: any) => {
@@ -137,15 +152,18 @@ export const useRootLoaderData = () => {
 };
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const [settings, workspaceCount, userSession, cloudCredentials] = await Promise.all([
+  const [settings, workspaceCount, mcpWorkspaceCount, userSession, cloudCredentials] = await Promise.all([
     models.settings.get(),
     models.workspace.count(),
+    models.workspace.count('mcp'),
     models.userSession.getOrCreate(),
     models.cloudCredential.all(),
   ]);
+
   return {
     settings,
     workspaceCount,
+    mcpWorkspaceCount,
     userSession,
     cloudCredentials,
   };
@@ -436,10 +454,19 @@ const Root = () => {
         return navigate(`/organization/${params.organizationId}`);
       }
       if (urlWithoutParams === 'insomnia://system-browser-oauth/redirect') {
-        const { url: redirectUrl } = params;
-        return redirectToDefaultBrowserSubmit({
-          redirectUrl,
-        });
+        const { url: redirectUrl, encryptedUrl: encryptedRedirectUrl, encryptedKey, iv } = params;
+        if (redirectUrl) {
+          return redirectToDefaultBrowserSubmit({
+            redirectUrl,
+          });
+        } else if (encryptedRedirectUrl && encryptedKey && iv) {
+          return redirectToDefaultBrowserSubmit({
+            encryptedRedirectUrl,
+            encryptedKey,
+            iv,
+          });
+        }
+        return;
       }
       if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
         const { code, ...restParams } = params;
@@ -531,7 +558,7 @@ const Root = () => {
   ]);
 
   return (
-    <ErrorView>
+    <>
       <div className="app">
         <Outlet />
         <Toaster />
@@ -548,7 +575,7 @@ const Root = () => {
           from={{ type: 'uri', defaultValue: importUri }}
         />
       )}
-    </ErrorView>
+    </>
   );
 };
 

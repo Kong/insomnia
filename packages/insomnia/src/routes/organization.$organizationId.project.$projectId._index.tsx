@@ -1,4 +1,4 @@
-import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -85,39 +85,44 @@ import { insomniaFetch } from '~/ui/insomniaFetch';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 
+type ProjectScopeKeys = WorkspaceScope | 'unsynced';
 export const scopeToLabelMap: Record<
-  WorkspaceScope | 'unsynced',
-  'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment'
+  ProjectScopeKeys,
+  'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client'
 > = {
   'design': 'Document',
   'collection': 'Collection',
   'mock-server': 'Mock Server',
   'unsynced': 'Unsynced',
   'environment': 'Environment',
+  'mcp': 'MCP Client',
 };
 
-export const scopeToIconMap: Record<string, IconName> = {
+export const scopeToIconMap: Record<ProjectScopeKeys, IconProp> = {
   'design': 'file',
   'collection': 'bars',
   'mock-server': 'server',
   'unsynced': 'cloud-download',
   'environment': 'code',
+  'mcp': ['fac', 'mcp'] as unknown as IconProp,
 };
 
-export const scopeToBgColorMap: Record<string, string> = {
+export const scopeToBgColorMap: Record<ProjectScopeKeys, string> = {
   'design': 'bg-[--color-info]',
   'collection': 'bg-[--color-surprise]',
   'mock-server': 'bg-[--color-warning]',
   'unsynced': 'bg-[--hl-md]',
   'environment': 'bg-[--color-font]',
+  'mcp': 'bg-[--color-danger]',
 };
 
-export const scopeToTextColorMap: Record<string, string> = {
+export const scopeToTextColorMap: Record<ProjectScopeKeys, string> = {
   'design': 'text-[--color-font-info]',
   'collection': 'text-[--color-font-surprise]',
   'mock-server': 'text-[--color-font-warning]',
   'unsynced': 'text-[--color-font]',
   'environment': 'text-[--color-bg]',
+  'mcp': 'text-[--color-font-danger]',
 };
 
 export interface InsomniaFile {
@@ -125,7 +130,7 @@ export interface InsomniaFile {
   name: string;
   remoteId?: string;
   scope: WorkspaceScope | 'unsynced';
-  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment';
+  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client';
   created: number;
   lastModifiedTimestamp: number;
   branch?: string;
@@ -147,6 +152,7 @@ export interface ProjectLoaderData {
   environmentsCount: number;
   collectionsCount: number;
   mockServersCount: number;
+  mcpClientsCount: number;
   projectsCount: number;
   activeProject?: Project;
   activeProjectGitRepository?: GitRepository;
@@ -410,6 +416,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
       environmentsCount: 0,
       collectionsCount: 0,
       mockServersCount: 0,
+      mcpClientsCount: 0,
       projectsCount: 0,
       activeProject: undefined,
       projects: [],
@@ -453,6 +460,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
     documentsCount: localFiles.filter(file => file.scope === 'design').length,
     collectionsCount: localFiles.filter(file => file.scope === 'collection').length,
     mockServersCount: localFiles.filter(file => file.scope === 'mock-server').length,
+    mcpClientsCount: localFiles.filter(file => file.scope === 'mcp').length,
     projectsSyncStatusPromise,
   };
 }
@@ -471,6 +479,7 @@ const Component = () => {
     environmentsCount,
     collectionsCount,
     mockServersCount,
+    mcpClientsCount,
     documentsCount,
     projectsCount,
     learningFeaturePromise,
@@ -645,6 +654,7 @@ const Component = () => {
   const createNewMockServer = () =>
     canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
   const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
+  const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true });
 
   const createNewCollectionWithRequest = () => {
     if (!activeProject) {
@@ -660,16 +670,13 @@ const Component = () => {
     });
   };
 
-  const isEnterprise = organizationData?.currentPlan?.type.includes('enterprise');
-  const isCloudProjectOrEnterprisePlan = activeProject?.remoteId || isEnterprise;
-  const canCreateMockServer = activeProject?._id && isCloudProjectOrEnterprisePlan;
-
+  const canCreateMockServer = activeProject?._id;
   const isGitSyncEnabled = features.gitSync.enabled;
 
   const createInProjectActionList: {
     id: string;
     name: string;
-    icon: IconName;
+    icon: IconProp;
     action: () => void;
   }[] = [
     {
@@ -685,11 +692,17 @@ const Component = () => {
       action: createNewDocument,
     },
     {
+      id: 'new-mcp-client',
+      name: 'MCP Client',
+      icon: ['fac', 'mcp'] as unknown as IconProp,
+      action: createNewMcpClient,
+    },
+    ...(canCreateMockServer ? [{
       id: 'new-mock-server',
       name: 'Mock Server',
-      icon: 'server',
+      icon: 'server' as IconName,
       action: createNewMockServer,
-    },
+    }] : []),
     {
       id: 'new-environment',
       name: 'Environment',
@@ -701,7 +714,7 @@ const Component = () => {
   const scopeActionList: {
     id: string;
     label: string;
-    icon: IconName;
+    icon: IconProp;
     action?: {
       icon: IconName;
       label: string;
@@ -734,15 +747,25 @@ const Component = () => {
       },
     },
     {
-      id: 'mock-server',
-      label: `Mock (${mockServersCount})`,
-      icon: 'server',
+      id: 'mcp',
+      label: `MCP Clients (${mcpClientsCount})`,
+      icon: ['fac', 'mcp'] as unknown as IconProp,
       action: {
         icon: 'plus',
+        label: 'New mcp client',
+        run: createNewMcpClient,
+      },
+    },
+    ...(canCreateMockServer ? [{
+      id: 'mock-server',
+      label: `Mock (${mockServersCount})`,
+      icon: 'server' as IconName,
+      action: {
+        icon: 'plus' as IconName,
         label: 'New Mock Server',
         run: createNewMockServer,
       },
-    },
+    }] : []),
     {
       id: 'environment',
       label: `Environments (${environmentsCount})`,
@@ -805,7 +828,7 @@ const Component = () => {
                         <ListBoxItem
                           id={item.id}
                           key={item.id}
-                          className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                          className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                           aria-label={item.display_name}
                           textValue={item.display_name}
                           value={item}
@@ -1089,7 +1112,7 @@ const Component = () => {
                             <ListBoxItem
                               id={item.id}
                               key={item.id}
-                              className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
                               textValue={item.name}
                               value={item}
@@ -1132,7 +1155,7 @@ const Component = () => {
                             <MenuItem
                               key={item.id}
                               id={item.id}
-                              className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
                             >
                               <Icon icon={item.icon} />

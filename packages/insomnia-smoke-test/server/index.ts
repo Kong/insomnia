@@ -123,6 +123,19 @@ app.post('/send-event', (request, response) => {
   subscribers.forEach(subscriber => subscriber.response.write(`data: ${JSON.stringify(request.body)}\n\n`));
   response.json({ success: true });
 });
+// auto update endpoints, use INSOMNIA_UPDATES_URL=http://localhost:4010 npm run dev for testing
+app.get('/builds/check/mac', (request, response) => {
+  return response.json({
+    url: 'https://github.com/Kong/insomnia/releases/download/core@11.6.1/Insomnia.Core-11.6.1.dmg',
+    name: '11.6.1',
+  });
+});
+app.get('/updates/win', (request, response) => {
+  return response.json({
+    url: 'https://github.com/Kong/insomnia/releases/download/core@11.6.1/Insomnia.Core-11.6.1.zip',
+    name: '11.6.1',
+  });
+});
 
 startWebSocketServer(
   app.listen(port, () => {

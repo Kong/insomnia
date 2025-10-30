@@ -20,6 +20,7 @@ import { debounce } from '~/common/misc';
 import { type Collaborator, useCollaboratorsFetcher } from '~/routes/organization.$organizationId.collaborators';
 import { useInviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId';
 import { useReinviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId.reinvite';
+import { useCollaboratorsCheckSeatsLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-check-seats';
 import { useOrganizationMemberRolesActionFetcher } from '~/routes/organization.$organizationId.members.$userId.roles';
 import { SegmentEvent } from '~/ui/analytics';
 import { PromptButton } from '~/ui/components/base/prompt-button';
@@ -128,9 +129,16 @@ const InviteModal: FC<{
     setSearchParams(getSearchParamsString(searchParams, { page, filter: queryInputString }));
   };
 
+  const collaboratorsCheckSeatsLoader = useCollaboratorsCheckSeatsLoaderFetcher();
+  const checkSeatsResponseData = collaboratorsCheckSeatsLoader.data;
+  const collaboratorsCheckSeatsLoaderLoad = collaboratorsCheckSeatsLoader.load;
+  useEffect(() => {
+    collaboratorsCheckSeatsLoaderLoad({ organizationId });
+  }, [collaboratorsCheckSeatsLoaderLoad, organizationId]);
+
   return (
     <ModalOverlay
-      isDismissable={true}
+      isDismissable={false}
       isOpen={true}
       onOpenChange={setIsOpen}
       className="theme--transparent-overlay fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-[--color-bg]"
@@ -149,9 +157,12 @@ const InviteModal: FC<{
                     onInviteCompleted={() => {
                       if (organizationId) {
                         resetCollaboratorsList();
+                        collaboratorsCheckSeatsLoaderLoad({ organizationId });
                       }
                     }}
+                    senderRole={currentUserRoleInOrg}
                     allRoles={allRoles}
+                    checkSeatsResponseData={checkSeatsResponseData}
                   />
                   <hr className="my-[24px] border" />
                 </>
@@ -214,6 +225,9 @@ const InviteModal: FC<{
                         revalidateCurrentUserRoleAndPermissionsInOrg={revalidateCurrentUserRoleAndPermissionsInOrg}
                         onResetCurrentPage={resetCurrentPage}
                         onError={setError}
+                        onRemoveMember={() => {
+                          collaboratorsCheckSeatsLoaderLoad({ organizationId });
+                        }}
                       />
                     ))}
                   </ListBox>
@@ -258,6 +272,7 @@ const MemberListItem: FC<{
   revalidateCurrentUserRoleAndPermissionsInOrg: (organizationId: string) => Promise<[void, void]>;
   onResetCurrentPage: () => void;
   onError: (error: string | null) => void;
+  onRemoveMember: () => void;
 }> = ({
   organizationId,
   member,
@@ -270,6 +285,7 @@ const MemberListItem: FC<{
   revalidateCurrentUserRoleAndPermissionsInOrg,
   onResetCurrentPage,
   onError,
+  onRemoveMember,
 }) => {
   const reinviteCollaboratorFetcher = useReinviteFetcher();
   const reinviting = reinviteCollaboratorFetcher.state !== 'idle';
@@ -447,7 +463,15 @@ const MemberListItem: FC<{
           doneMessage={isFailed ? 'Failed' : isAcceptedMember || isGroup ? 'Removed' : 'Revoked'}
           disabled={memberRoleName === 'owner' || isCurrentUser}
           onClick={() => {
-            if (!permissionRef.current['delete:membership']) {
+            if (isPendingMember && member.metadata.invitationId) {
+              if (!permissionRef.current['delete:invitation']) {
+                showModal(AlertModal, {
+                  title: 'Permission required',
+                  message: "You don't have permission to make this action, please contact the organization owner.",
+                });
+                return;
+              }
+            } else if (!permissionRef.current['delete:membership']) {
               showModal(AlertModal, {
                 title: 'Permission required',
                 message: "You don't have permission to make this action, please contact the organization owner.",
@@ -462,6 +486,7 @@ const MemberListItem: FC<{
               deleteMember(organizationId, member.metadata.userId!)
                 .then(() => {
                   onResetCurrentPage();
+                  onRemoveMember();
                 })
                 .catch(error => {
                   onError(error.message);
@@ -473,6 +498,7 @@ const MemberListItem: FC<{
               revokeOrganizationInvite(organizationId, member.metadata.invitationId)
                 .then(() => {
                   onResetCurrentPage();
+                  onRemoveMember();
                   window.main.trackSegmentEvent({ event: SegmentEvent.inviteRevoked });
                 })
                 .catch(error => {
@@ -485,6 +511,7 @@ const MemberListItem: FC<{
               unlinkTeam(organizationId, member.id)
                 .then(() => {
                   onResetCurrentPage();
+                  onRemoveMember();
                 })
                 .catch(error => {
                   onError(error.message);

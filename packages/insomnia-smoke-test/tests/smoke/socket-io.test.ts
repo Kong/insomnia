@@ -32,8 +32,6 @@ test('can make socket.io connection', async ({ app, page }) => {
   const connections = page.getByTestId('SocketIOSpinner__Connected');
   await expect.soft(connections).toHaveCount(1);
 
-  // Can disconnect from all connections
-  await page.locator('button[name="DisconnectDropdown__DropdownButton"]').click();
-  await page.getByRole('menuitem', { name: 'Disconnect all requests' }).click();
+  await page.click('text=Disconnect');
   await expect.soft(connections).toHaveCount(0);
 });

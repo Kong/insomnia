@@ -17,7 +17,7 @@ env:
   PR_NUMBER: ${{ github.event.number }}
 jobs:
   build-and-upload-artifacts:
-    timeout-minutes: 30
+    timeout-minutes: 45
     # Skip jobs for release PRs
     # windows on recurring should be portable
     if: ${{ !startsWith(github.head_ref, 'release/') }}
@@ -51,8 +51,12 @@ jobs:
 
       - name: Install packages
         run: npm ci
-        env: 
+        env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install x64 version of native Mac dependencies
+        run: npm run install-x64-native-dependencies -w insomnia
+        if: ${{ matrix.os == 'macos-latest-large' }}
 
       - name: Bump version
         shell: bash

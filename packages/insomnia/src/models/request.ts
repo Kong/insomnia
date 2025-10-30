@@ -34,11 +34,13 @@ export interface AuthTypeAPIKey {
 export interface AuthTypeOAuth2 {
   type: 'oauth2';
   disabled?: boolean;
-  grantType: 'authorization_code' | 'client_credentials' | 'password' | 'implicit' | 'refresh_token';
+  grantType: 'authorization_code' | 'client_credentials' | 'password' | 'implicit' | 'refresh_token' | 'mcp_auth_flow';
   accessTokenUrl?: string;
   authorizationUrl?: string;
   clientId?: string;
   clientSecret?: string;
+  clientIdIssuedAt?: number;
+  clientSecretExpiresAt?: number;
   audience?: string;
   scope?: string;
   resource?: string;

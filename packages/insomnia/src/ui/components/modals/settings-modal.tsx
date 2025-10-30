@@ -1,7 +1,10 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
+import { AI_PLUGIN_NAME } from '~/common/constants';
+import { getBundlePlugins } from '~/plugins';
 import { useRootLoaderData } from '~/root';
+import { AISettings } from '~/ui/components/settings/ai-settings';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
@@ -35,6 +38,17 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   const { userSession, settings } = useRootLoaderData()!;
   const modalRef = useRef<ModalHandle>(null);
   const [keyboardClosable, setKeyboardClosable] = useState(true);
+
+  const [shouldShowAiSettingsTab, setShouldShowAiSettingsTab] = useState(false);
+
+  useEffect(() => {
+    const checkAiPlugin = async () => {
+      const plugins = await getBundlePlugins();
+      const aiPlugin = plugins.find(p => p.name === AI_PLUGIN_NAME);
+      setShouldShowAiSettingsTab(!!aiPlugin && !!userSession.id);
+    };
+    checkAiPlugin();
+  }, [userSession.id]);
 
   useImperativeHandle(
     ref,
@@ -114,6 +128,14 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             >
               Cloud Credentials
             </Tab>
+            {shouldShowAiSettingsTab && (
+              <Tab
+                className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                id="aiSettings"
+              >
+                AI Settings
+              </Tab>
+            )}
           </TabList>
           <TabPanel className="h-full w-full overflow-y-auto" id="general">
             <General />
@@ -169,6 +191,11 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="cloudCred">
             <CloudServiceCredentialList />
           </TabPanel>
+          {shouldShowAiSettingsTab && (
+            <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="aiSettings">
+              <AISettings />
+            </TabPanel>
+          )}
         </Tabs>
       </ModalBody>
     </Modal>

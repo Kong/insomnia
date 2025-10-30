@@ -12,11 +12,14 @@ export const options = [
   { name: 'Cookie', value: COOKIE },
 ];
 
-export const ApiKeyAuth: FC<{ disabled?: boolean }> = ({ disabled = false }) => (
+export const ApiKeyAuth: FC<{ disabled?: boolean; addToHeaderOnly?: boolean }> = ({
+  disabled = false,
+  addToHeaderOnly = false,
+}) => (
   <AuthTableBody>
     <AuthToggleRow label="Enabled" property="disabled" invert disabled={disabled} />
     <AuthInputRow label="Key" property="key" disabled={disabled} />
     <AuthInputRow label="Value" property="value" mask disabled={disabled} />
-    <AuthSelectRow label="Add to" property="addTo" options={options} disabled={disabled} />
+    {!addToHeaderOnly && <AuthSelectRow label="Add to" property="addTo" options={options} disabled={disabled} />}
   </AuthTableBody>
 );

@@ -5,9 +5,15 @@ import { compressObject, decompressObject } from '../common/misc';
 import * as requestOperations from '../models/helpers/request-operations';
 import type { GrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
+import { isMcpRequest, type McpRequest } from './mcp-request';
 import { isRequest, type Request } from './request';
 import { isSocketIORequest, type SocketIORequest } from './socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from './websocket-request';
+
+/* When viewing a specific request, the user can click the Send button to test-send it.
+Each time the user sends the request, the parameters may differ—they might edit the body, headers, and so on—and Insomnia records every sent request as history.
+When the user browses the send history for a request and selects one of the entries, the current request is restored to the exact state it had when that request was sent, including the body, headers, and other settings.
+A Request Version is essentially a snapshot of the request at the moment it was test-sent. */
 
 export const name = 'Request Version';
 
@@ -56,8 +62,8 @@ export function findByParentId(parentId: string) {
   return db.find<RequestVersion>(type, { parentId });
 }
 
-export async function create(request: Request | WebSocketRequest | GrpcRequest | SocketIORequest) {
-  if (!isRequest(request) && !isWebSocketRequest(request) && !isSocketIORequest(request)) {
+export async function create(request: Request | WebSocketRequest | GrpcRequest | SocketIORequest | McpRequest) {
+  if (!isRequest(request) && !isWebSocketRequest(request) && !isSocketIORequest(request) && !isMcpRequest(request)) {
     throw new Error(`New ${type} was not given a valid ${request.type} instance`);
   }
 
@@ -117,8 +123,8 @@ export async function restore(requestVersionId: string) {
   return requestOperations.update(originalRequest, requestPatch);
 }
 function _diffRequests(
-  rOld: Request | WebSocketRequest | SocketIORequest | null,
-  rNew: Request | WebSocketRequest | SocketIORequest,
+  rOld: Request | WebSocketRequest | SocketIORequest | McpRequest | null,
+  rNew: Request | WebSocketRequest | SocketIORequest | McpRequest,
 ) {
   if (!rOld) {
     return true;

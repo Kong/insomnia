@@ -27,6 +27,12 @@ test('can send gRPC requests using mTLS requests (with reflection)', async ({ ap
   // add root CA and client certificate
   const fixturePath = getFixturePath('certificates');
 
+  // add the path to allowed data folder list
+  await page.getByTestId('settings-button').click();
+  await page.getByTestId('dataFolders').fill(getFixturePath('certificates'));
+  await page.getByTestId('dataFolders-btn').click();
+  await page.locator('.app').press('Escape');
+
   await page.getByRole('button', { name: 'Add Certificates' }).click();
   let fileChooserPromise = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'Add CA Certificate' }).click();
@@ -43,8 +49,8 @@ test('can send gRPC requests using mTLS requests (with reflection)', async ({ ap
   await page.locator('[data-test-id="add-client-certificate-key-file-chooser"]').click();
   await (await fileChooserPromise).setFiles(path.join(fixturePath, 'client.key'));
 
-  await page.getByRole('button', { name: 'Add certificate' }).click();
-  await page.getByRole('button', { name: 'Done' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Add certificate' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Done' }).click();
 
   // initiates an mtls connection with the given certificates
   await page.getByTestId('button-server-reflection').click();

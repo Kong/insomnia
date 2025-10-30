@@ -44,6 +44,14 @@ export const start = async () => {
   await copyFiles('../src/static', path.join(buildFolder, 'static'));
   await copyFiles('../src/icons', buildFolder);
   await copyFiles('../src/main/lint-process.mjs', path.join(buildFolder, 'main/lint-process.mjs'));
+  await copyFiles(
+    '../src/main/mock-generation-process.mjs',
+    path.join(buildFolder, 'main/mock-generation-process.mjs'),
+  );
+  await copyFiles(
+    '../src/main/git-commit-generation-process.mjs',
+    path.join(buildFolder, 'main/git-commit-generation-process.mjs'),
+  );
   await copyFiles('../src/hidden-window.html', path.join(buildFolder, 'hidden-window.html'));
 
   console.log('[build] Complete!');

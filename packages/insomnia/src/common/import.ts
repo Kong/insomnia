@@ -1,14 +1,15 @@
-import { readFile } from 'node:fs/promises';
-
 import { z, type ZodError } from 'zod/v4';
 
-import type { CurrentPlan } from '~/models/organization';
+import { insecureReadFile } from '~/main/secure-read-file';
 
+import { type InsomniaImporter } from '../main/importers/convert';
+import type { ImportEntry } from '../main/importers/entities';
+import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';
 import { type BaseEnvironment, type Environment, isEnvironment } from '../models/environment';
 import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
-import { type AllTypes, type BaseModel, getModel, userSession } from '../models/index';
+import { type AllTypes, type BaseModel, getModel } from '../models/index';
 import * as models from '../models/index';
 import { isMockRoute, type MockRoute } from '../models/mock-route';
 import { isGitProject } from '../models/project';
@@ -19,9 +20,6 @@ import { isUnitTest, type UnitTest } from '../models/unit-test';
 import { isUnitTestSuite, type UnitTestSuite } from '../models/unit-test-suite';
 import { isWebSocketRequest, type WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
-import { convert, type InsomniaImporter } from '../utils/importers/convert';
-import type { ImportEntry } from '../utils/importers/entities';
-import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
 import { database as db } from './database';
 import { tryImportV5Data } from './insomnia-v5';
@@ -80,9 +78,8 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     return content;
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
-    const content = await readFile(path, 'utf8');
-
-    return content;
+    // allow reading the file as it is chosen by user
+    return insecureReadFile(path);
   }
   // Treat everything else as raw text
   const content = decodeURIComponent(uri);
@@ -133,6 +130,7 @@ interface ResourceCacheType {
 
 let resourceCacheList: ResourceCacheType[] = [];
 
+// All models that can be exported should be listed here
 export const MODELS_BY_EXPORT_TYPE: Record<AllExportTypes, AllTypes> = {
   request: 'Request',
   websocket_payload: 'WebSocketPayload',
@@ -179,7 +177,9 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
             },
           };
         } else {
-          result = (await convert(importEntry)) as unknown as ConvertResult;
+          const processFork =
+            process.type === 'renderer' ? window.main.parseImport : (await import('../main/importers/convert')).convert;
+          result = (await processFork(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {
         if (v5Error) {
@@ -404,11 +404,6 @@ function filterResourcesInWorkspace(resources: BaseModel[], workspace: Workspace
   return resources.filter(resource => findRootId(resource._id, new Set()) === workspaceId);
 }
 
-const isTeamOrAbove = async () => {
-  const { accountId } = await userSession.getOrCreate();
-  const currentPlan = (JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan) || {};
-  return ['team', 'enterprise', 'enterprise-member'].includes(currentPlan?.type);
-};
 const updateIdsInString = (str: string, ResourceIdMap: Map<string, string>) => {
   let newString = str;
   for (const [idA, idB] of ResourceIdMap.entries()) {
@@ -416,12 +411,8 @@ const updateIdsInString = (str: string, ResourceIdMap: Map<string, string>) => {
   }
   return newString;
 };
-const importRequestWithNewIds = (request: Request, ResourceIdMap: Map<string, string>, canTransform: boolean) => {
-  let transformedRequest = request;
-  if (canTransform) {
-    // if not logged in, this wont run
-    transformedRequest = JSON.parse(updateIdsInString(JSON.stringify(request), ResourceIdMap));
-  }
+const importRequestWithNewIds = (request: Request, ResourceIdMap: Map<string, string>) => {
+  const transformedRequest = JSON.parse(updateIdsInString(JSON.stringify(request), ResourceIdMap));
   return {
     ...transformedRequest,
     _id: ResourceIdMap.get(request._id),
@@ -475,7 +466,6 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
       model && ResourceIdMap.set(resource._id, generateId(model.prefix));
     }
 
-    const canTransform = await isTeamOrAbove();
     // Preserve optionalResource relationships
     for (const resource of optionalResources) {
       const model = getModel(resource.type);
@@ -498,7 +488,7 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
             parentId: ResourceIdMap.get(resource.parentId),
           });
         } else if (isRequest(resource)) {
-          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap, canTransform));
+          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap));
         } else {
           await db.docCreate(model.type, {
             ...resource,
@@ -594,7 +584,6 @@ export const importResourcesToNewWorkspace = async ({
       model && ResourceIdMap.set(resource._id, generateId(model.prefix));
     }
 
-    const canTransform = await isTeamOrAbove();
     for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
       const model = getModel(resource.type);
 
@@ -619,7 +608,7 @@ export const importResourcesToNewWorkspace = async ({
             parentId: newParentId,
           });
         } else if (isRequest(resource)) {
-          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap, canTransform));
+          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap));
         } else {
           await db.docCreate(model.type, {
             ...resource,

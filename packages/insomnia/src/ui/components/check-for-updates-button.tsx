@@ -2,18 +2,8 @@ import React, { useState } from 'react';
 
 import { Icon } from './icon';
 
-type UpdateStatusIcon = 'refresh' | 'check' | null;
-
 export const CheckForUpdatesButton = () => {
   const [disabled, setDisabled] = useState(false);
-
-  let statusIcon: UpdateStatusIcon = null;
-  if (['Performing backup...', 'Downloading...', 'Checking'].includes(status)) {
-    statusIcon = 'refresh';
-  }
-  if (['Up to Date', 'Updated (Restart Required)'].includes(status)) {
-    statusIcon = 'check';
-  }
 
   return (
     <button
@@ -21,12 +11,11 @@ export const CheckForUpdatesButton = () => {
       disabled={disabled}
       onClick={() => {
         window.main.manualUpdateCheck();
-        // this is to prevent initiating update multiple times
-        // if it errors user can restart the app and try again
         setDisabled(true);
+        setTimeout(() => setDisabled(false), 3000); // re-enable after 3 seconds
       }}
     >
-      {statusIcon && <Icon className={statusIcon === 'refresh' ? 'animate-spin' : ''} icon={statusIcon} />}
+      {<Icon className={disabled ? 'animate-spin' : ''} icon={disabled ? 'refresh' : 'check'} />}
       Check
     </button>
   );

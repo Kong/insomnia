@@ -8,6 +8,8 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
 import { v4 as uuidV4 } from 'uuid';
 
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
@@ -20,6 +22,7 @@ import { filterClientCertificates } from '../../network/certificate';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
+import { insecureReadFile, secureReadFile } from '../secure-read-file';
 
 export interface SocketIOpenEvent {
   _id: string;
@@ -87,7 +90,8 @@ const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
 
 const protocolName = 'socketIO';
-const getEventNotificationChannel = (responseId: string) => `${protocolName}.${responseId}.newEventReceived`;
+const getEventNotificationChannel = (responseId: string) =>
+  `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
 
 const writeEventLogAndNotify = ({
   requestId,
@@ -146,8 +150,9 @@ const getCertificates = async ({
   const caCert = await models.caCertificate.findByParentId(workspaceId);
   const caCertficatePath = !caCert?.disabled ? caCert?.path : '';
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
+  // allow to read the file as it is chosen by user
   const caCertificate =
-    (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
+    (caCertficatePath && (await insecureReadFile(caCertficatePath))) || tls.rootCertificates.join('\n');
 
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const filteredClientCertificates = filterClientCertificates(clientCertificates, url, 'wss:');
@@ -259,7 +264,7 @@ const openSocketIOConnection = async (
     if (!options.url) {
       throw new Error('URL is required');
     }
-    const readyStateChannel = `socketIO.${request._id}.readyState`;
+    const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
     const reduceArrayToLowerCaseKeyedDictionary = (
       acc: Record<string, string>,
@@ -566,10 +571,9 @@ const findMany = async (options: { responseId: string }): Promise<SocketIOEvent[
   if (!response || !response.eventLogPath) {
     return [];
   }
-  const body = await fs.promises.readFile(response.eventLogPath);
+  const body = await secureReadFile(response.eventLogPath);
   return (
     body
-      .toString()
       .split('\n')
       .filter(e => e?.trim())
       // Parse the message

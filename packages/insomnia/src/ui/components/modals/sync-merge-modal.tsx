@@ -1,8 +1,5 @@
-import { DefaultDarkColors, DefaultLightColors } from '@mismerge/core/colors';
-import darkCssHref from '@mismerge/core/dark.css?url';
-import lightCssHref from '@mismerge/core/light.css?url';
 import classNames from 'classnames';
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -18,13 +15,12 @@ import { parse, stringify } from 'yaml';
 
 import { extractErrorMessages } from '~/common/import';
 import { InsomniaFileSchema } from '~/common/import-v5-parser';
-import { getColorScheme } from '~/plugins/misc';
-import { useRootLoaderData } from '~/root';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 
 import { type MergeConflict, RESOLUTION_SOURCE } from '../../../sync/types';
 import { SegmentEvent } from '../../analytics';
+import { MergeEditor } from '../.client/codemirror/merge-editor';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 
@@ -171,45 +167,6 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
     },
     [conflicts, selectedConflictKey],
   );
-
-  const rootLoaderData = useRootLoaderData();
-  const isLightTheme = useMemo(() => {
-    let isLightTheme = false;
-    if (rootLoaderData?.settings) {
-      const colorScheme = getColorScheme(rootLoaderData.settings);
-      if (colorScheme === 'light') {
-        isLightTheme = true;
-      } else if (colorScheme === 'dark') {
-        isLightTheme = false;
-      } else {
-        // check if user has selected a light theme
-        isLightTheme = rootLoaderData.settings.theme.includes('light');
-      }
-    }
-    return isLightTheme;
-  }, [rootLoaderData?.settings]);
-
-  // Switch theme for mismerge
-  useEffect(() => {
-    const id = 'mismerge-theme-style';
-    let link = document.getElementById(id) as HTMLLinkElement | null;
-
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.id = id;
-      document.head.appendChild(link);
-    }
-
-    const nextHref = isLightTheme ? lightCssHref : darkCssHref;
-    if (link.href !== nextHref) link.href = nextHref;
-  }, [isLightTheme]);
-
-  const misMergeRef = useRef<JSX.IntrinsicElements['mis-merge3']>(null);
-  useEffect(() => {
-    // @ts-expect-error No definitions provided for web components
-    import('@mismerge/core/web');
-  }, []);
 
   return (
     <>
@@ -447,19 +404,12 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                               </li>
                             </ol>
                             <div className="flex-1 overflow-y-auto rounded-sm bg-[--hl-xs] p-2 text-[--color-font]">
-                              {/* Use mis-merge3 custom element directly instead of importing @mismerge/react,
-                              because @mismerge/react does not support React 19 */}
-                              <mis-merge3
-                                ref={misMergeRef}
-                                lhs={selectedConflictCurrent}
-                                ctr={selectedConflict?.mergeResult || ''}
-                                rhs={selectedConflictIncoming}
-                                onInput={() => {
-                                  onMergeEditorResultChange(misMergeRef.current.ctr);
-                                }}
-                                colors={JSON.stringify(isLightTheme ? DefaultLightColors : DefaultDarkColors)}
-                                wrapLines
-                                disableWordsCounter
+                              <MergeEditor
+                                key={selectedConflictKey}
+                                leftContent={selectedConflictCurrent}
+                                rightContent={selectedConflictIncoming}
+                                centerContent={selectedConflict?.mergeResult || ''}
+                                onChange={onMergeEditorResultChange}
                               />
                             </div>
                           </div>

@@ -18,7 +18,7 @@ export const ProjectEmptyView: FC<Props> = ({
   return (
     <div className="flex h-full w-full flex-col items-center gap-3 pt-[15%] text-center">
       <span className="text-xl font-semibold">Welcome to your project!</span>
-      <span className="text-md">Start fresh or bring in existing work</span>
+      <span>Start fresh or bring in existing work</span>
       <div className="mt-[var(--padding-lg)] flex w-full flex-wrap justify-center gap-[var(--padding-md)]">
         <Button
           aria-label="Create request collection"

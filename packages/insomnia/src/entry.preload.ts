@@ -1,9 +1,12 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
+import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
+
 import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { CurlBridgeAPI } from './main/network/curl';
+import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 import { invariant } from './utils/invariant';
@@ -49,6 +52,33 @@ const socketIO: SocketIOBridgeAPI = {
   },
 };
 
+const mcp: McpBridgeAPI = {
+  connect: options => ipcRenderer.invoke('mcp.connect', options),
+  close: options => ipcRenderer.invoke('mcp.close', options),
+  closeAll: () => ipcRenderer.send('mcp.closeAll'),
+  authConfirmation: confirmed => ipcRenderer.send('mcp.authConfirmed', confirmed),
+  primitive: {
+    listTools: options => ipcRenderer.invoke('mcp.primitive.listTools', options),
+    callTool: options => ipcRenderer.invoke('mcp.primitive.callTool', options),
+    listResources: options => ipcRenderer.invoke('mcp.primitive.listResources', options),
+    listResourceTemplates: options => ipcRenderer.invoke('mcp.primitive.listResourceTemplates', options),
+    readResource: options => ipcRenderer.invoke('mcp.primitive.readResource', options),
+    subscribeResource: options => ipcRenderer.invoke('mcp.primitive.subscribeResource', options),
+    unsubscribeResource: options => ipcRenderer.invoke('mcp.primitive.unsubscribeResource', options),
+    listPrompts: options => ipcRenderer.invoke('mcp.primitive.listPrompts', options),
+    getPrompt: options => ipcRenderer.invoke('mcp.primitive.getPrompt', options),
+  },
+  notification: {
+    rootListChange: options => ipcRenderer.invoke('mcp.notification.rootListChange', options),
+  },
+  readyState: {
+    getCurrent: options => ipcRenderer.invoke('mcp.readyState', options),
+  },
+  event: {
+    findMany: options => ipcRenderer.invoke('mcp.event.findMany', options),
+  },
+};
+
 const grpc: gRPCBridgeAPI = {
   start: options => ipcRenderer.send('grpc.start', options),
   sendMessage: options => ipcRenderer.send('grpc.sendMessage', options),
@@ -91,6 +121,8 @@ const git: GitServiceAPI = {
   discardChanges: options => ipcRenderer.invoke('git.discardChanges', options),
   abortMerge: () => ipcRenderer.invoke('git.abortMerge'),
   gitStatus: options => ipcRenderer.invoke('git.gitStatus', options),
+  diff: () => ipcRenderer.invoke('git.diff'),
+  multipleCommitToGitRepo: options => ipcRenderer.invoke('git.multipleCommitToGitRepo', options),
   stageChanges: options => ipcRenderer.invoke('git.stageChanges', options),
   unstageChanges: options => ipcRenderer.invoke('git.unstageChanges', options),
   diffFileLoader: options => ipcRenderer.invoke('git.diffFileLoader', options),
@@ -106,6 +138,21 @@ const git: GitServiceAPI = {
   initSignInToGitLab: () => ipcRenderer.invoke('git.initSignInToGitLab'),
   completeSignInToGitLab: options => ipcRenderer.invoke('git.completeSignInToGitLab', options),
   signOutOfGitLab: () => ipcRenderer.invoke('git.signOutOfGitLab'),
+};
+
+const llm: LLMConfigServiceAPI = {
+  getActiveBackend: () => ipcRenderer.invoke('llm.getActiveBackend'),
+  setActiveBackend: (backend: LLMBackend) => ipcRenderer.invoke('llm.setActiveBackend', backend),
+  clearActiveBackend: () => ipcRenderer.invoke('llm.clearActiveBackend'),
+  getBackendConfig: (backend: LLMBackend) => ipcRenderer.invoke('llm.getBackendConfig', backend),
+  updateBackendConfig: (backend: LLMBackend, config: Partial<LLMConfig>) =>
+    ipcRenderer.invoke('llm.updateBackendConfig', backend, config),
+  getAllConfigurations: () => ipcRenderer.invoke('llm.getAllConfigurations'),
+  getCurrentConfig: () => ipcRenderer.invoke('llm.getCurrentConfig'),
+  getAIFeatureEnabled: (feature: 'aiMockServers' | 'aiCommitMessages') =>
+    ipcRenderer.invoke('llm.getAIFeatureEnabled', feature),
+  setAIFeatureEnabled: (feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean) =>
+    ipcRenderer.invoke('llm.setAIFeatureEnabled', feature, enabled),
 };
 
 const main: Window['main'] = {
@@ -132,8 +179,12 @@ const main: Window['main'] = {
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
-  readFile: options => ipcRenderer.invoke('readFile', options),
+  insecureReadFile: options => ipcRenderer.invoke('insecureReadFile', options),
+  insecureReadFileWithEncoding: options => ipcRenderer.invoke('insecureReadFileWithEncoding', options),
+  secureReadFile: options => ipcRenderer.invoke('secureReadFile', options),
+  parseImport: (...args) => ipcRenderer.invoke('parseImport', ...args),
   readDir: options => ipcRenderer.invoke('readDir', options),
+  readOrCreateDataDir: options => ipcRenderer.invoke('readOrCreateDataDir', options),
   lintSpec: options => ipcRenderer.invoke('lintSpec', options),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
@@ -141,7 +192,9 @@ const main: Window['main'] = {
   },
   webSocket,
   socketIO,
+  mcp,
   git,
+  llm,
   grpc,
   curl,
   secretStorage,
@@ -177,6 +230,25 @@ const main: Window['main'] = {
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
   getLocalStorageDataFromFileOrigin: () => ipcRenderer.invoke('getLocalStorageDataFromFileOrigin'),
+  generateMockRouteDataFromSpec: (
+    openApiSpec: string | undefined,
+    specUrl: string | undefined,
+    specText: string | undefined,
+    modelConfig: any,
+    useDynamicMockResponses: boolean,
+    mockServerAdditionalFiles: string[],
+  ) =>
+    ipcRenderer.invoke(
+      'generateMockRouteDataFromSpec',
+      openApiSpec,
+      specUrl,
+      specText,
+      modelConfig,
+      useDynamicMockResponses,
+      mockServerAdditionalFiles,
+    ),
+  generateCommitsFromDiff: (input: { diff: string; recent_commits: string }) =>
+    ipcRenderer.invoke('generateCommitsFromDiff', input),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {
@@ -195,6 +267,7 @@ const app: Window['app'] = {
 };
 const shell: Window['shell'] = {
   showItemInFolder: options => ipcRenderer.send('showItemInFolder', options),
+  openPath: options => ipcRenderer.invoke('openPath', options),
 };
 const clipboard: Window['clipboard'] = {
   readText: () => ipcRenderer.sendSync('readText'),

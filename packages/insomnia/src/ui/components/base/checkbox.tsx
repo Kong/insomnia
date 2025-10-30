@@ -1,6 +1,11 @@
 import classnames from 'classnames';
 import React, { memo, type ReactNode } from 'react';
-import { Checkbox as RaCheckbox, type CheckboxProps } from 'react-aria-components';
+import {
+  Checkbox as RaCheckbox,
+  CheckboxGroup as RaCheckboxGroup,
+  type CheckboxGroupProps,
+  type CheckboxProps,
+} from 'react-aria-components';
 
 import { Icon } from '../icon';
 
@@ -16,7 +21,12 @@ export const Checkbox = memo(
     children: ReactNode;
   }) => {
     return (
-      <RaCheckbox isSelected={isSelected} onChange={onChange} className={classnames('gap-2', className)} {...rest}>
+      <RaCheckbox
+        isSelected={isSelected}
+        onChange={onChange}
+        className={classnames('group flex items-center gap-2 p-0', className)}
+        {...rest}
+      >
         <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
           <Icon
             icon={isIndeterminate ? 'minus' : 'check'}
@@ -28,3 +38,18 @@ export const Checkbox = memo(
     );
   },
 );
+
+interface InsomniaCheckboxGroupProps extends CheckboxGroupProps {
+  options: { label: string; value: string }[];
+}
+export const CheckboxGroup = ({ options, ...rest }: InsomniaCheckboxGroupProps) => {
+  return (
+    <RaCheckboxGroup {...rest}>
+      {options.map(option => (
+        <Checkbox key={option.value} value={option.value} className="text-sm text-[--color-font]">
+          {option.label}
+        </Checkbox>
+      ))}
+    </RaCheckboxGroup>
+  );
+};

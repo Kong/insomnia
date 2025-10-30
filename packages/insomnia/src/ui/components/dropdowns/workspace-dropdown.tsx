@@ -31,7 +31,7 @@ import * as models from '../../../models';
 import { isRemoteProject } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
-import { isScratchpad, type Workspace } from '../../../models/workspace';
+import { isMcp, isScratchpad, type Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -39,6 +39,7 @@ import * as pluginData from '../../../plugins/context/data';
 import * as pluginNetwork from '../../../plugins/context/network';
 import * as pluginStore from '../../../plugins/context/store';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useMockServerGenerateRequestCollectionActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.generate-request-collection';
 import { invariant } from '../../../utils/invariant';
 import { SegmentEvent } from '../../analytics';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -71,6 +72,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
+  const generateCollectionFetcher = useMockServerGenerateRequestCollectionActionFetcher();
 
   // after duplicate workspace, close the modal
   useEffect(() => {
@@ -187,55 +189,63 @@ export const WorkspaceDropdown: FC<{}> = () => {
       action: () => void;
     }[];
   }[] = [
-    {
-      name: 'Import',
-      id: 'import',
-      icon: 'cog',
-      items: [
-        {
-          id: 'from-file',
-          name: 'From File',
-          icon: <Icon icon="file-import" />,
-          action: () => {
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.importStarted,
-              properties: {
-                source: `${activeWorkspace.scope}-menu`,
+    ...(isMcp(activeWorkspace)
+      ? []
+      : [
+          {
+            name: 'Import',
+            id: 'import',
+            icon: 'cog' as IconName,
+            items: [
+              {
+                id: 'from-file',
+                name: 'From File',
+                icon: <Icon icon="file-import" />,
+                action: () => {
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.importStarted,
+                    properties: {
+                      source: `${activeWorkspace.scope}-menu`,
+                    },
+                  });
+                  setIsImportModalOpen(true);
+                },
               },
-            });
-            setIsImportModalOpen(true);
+            ],
           },
-        },
-      ],
-    },
-    {
-      name: 'Runner',
-      id: 'runner',
-      icon: 'circle-play',
-      items: [
-        {
-          id: 'run',
-          name: 'Run Collection',
-          icon: <Icon icon="circle-play" />,
-          action: () => {
-            navigate(
-              `/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner?folder=`,
-            );
+          {
+            name: 'Runner',
+            id: 'runner',
+            icon: 'circle-play' as const,
+            items: [
+              {
+                id: 'run',
+                name: 'Run Collection',
+                icon: <Icon icon="circle-play" />,
+                action: () => {
+                  navigate(
+                    `/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner?folder=`,
+                  );
+                },
+              },
+            ],
           },
-        },
-      ],
-    },
+        ]),
     {
       name: 'Actions',
       id: 'actions',
       icon: 'cog',
       items: [
-        {
-          id: 'duplicate',
-          name: 'Duplicate',
-          icon: <Icon icon="bars" />,
-          action: () => setIsDuplicateModalOpen(true),
-        },
+        ...(isMcp(activeWorkspace)
+          ? []
+          : [
+              {
+                id: 'duplicate',
+                name: 'Duplicate',
+                icon: <Icon icon="bars" />,
+                action: () => setIsDuplicateModalOpen(true),
+              },
+            ]),
         {
           id: 'rename',
           name: 'Rename',
@@ -255,29 +265,49 @@ export const WorkspaceDropdown: FC<{}> = () => {
                 }),
             }),
         },
-        {
-          id: 'export',
-          name: 'Export',
-          icon: <Icon icon="file-export" />,
-          action: () => {
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.exportStarted,
-              properties: {
-                source: `${activeWorkspace.scope}-menu`,
+        ...(isMcp(activeWorkspace)
+          ? []
+          : [
+              {
+                id: 'export',
+                name: 'Export',
+                icon: <Icon icon="file-export" />,
+                action: () => {
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.exportStarted,
+                    properties: {
+                      source: `${activeWorkspace.scope}-menu`,
+                    },
+                  });
+
+                  if (activeWorkspace.scope === 'mock-server') {
+                    return exportMockServerToFile(activeWorkspace);
+                  }
+
+                  if (activeWorkspace.scope === 'environment') {
+                    return exportGlobalEnvironmentToFile(activeWorkspace);
+                  }
+
+                  return setIsExportModalOpen(true);
+                },
               },
-            });
-
-            if (activeWorkspace.scope === 'mock-server') {
-              return exportMockServerToFile(activeWorkspace);
-            }
-
-            if (activeWorkspace.scope === 'environment') {
-              return exportGlobalEnvironmentToFile(activeWorkspace);
-            }
-
-            return setIsExportModalOpen(true);
-          },
-        },
+              ...(activeWorkspace.scope === 'mock-server'
+                ? [
+                    {
+                      id: 'generate-collection',
+                      name: 'Generate Collection',
+                      icon: <Icon icon="code" />,
+                      action: () => {
+                        generateCollectionFetcher.submit({
+                          organizationId,
+                          projectId: activeWorkspace.parentId,
+                          workspaceId: activeWorkspace._id,
+                        });
+                      },
+                    },
+                  ]
+                : []),
+            ]),
         {
           id: 'settings',
           name: 'Settings',
@@ -345,7 +375,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
                     <MenuItem
                       key={item.id}
                       id={item.id}
-                      className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                      className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                       aria-label={item.name}
                     >
                       {item.icon}

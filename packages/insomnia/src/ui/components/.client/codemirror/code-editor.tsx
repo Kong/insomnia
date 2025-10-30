@@ -4,6 +4,7 @@ import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, {
   type CodeMirrorLinkClickCallback,
+  type EditorChange,
   type EditorConfiguration,
   type ShowHintOptions,
 } from 'codemirror';
@@ -13,7 +14,7 @@ import deepEqual from 'deep-equal';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Toolbar } from 'react-aria-components';
-import * as reactUse from 'react-use';
+import { useLatest, useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
 import { DEBOUNCE_MILLIS, isMac } from '~/common/constants';
@@ -105,7 +106,7 @@ export interface CodeEditorProps {
   // used only for saving env editor state, focusEvent doesn't work well
   onBlur?: (e: FocusEvent) => void;
   onFocus?: (e: Event, editor?: CodeMirror.Editor) => void;
-  onChange?: (value: string) => void;
+  onChange?: (value: string, changeObj: EditorChange[]) => void;
   onCursorActivity?: (doc: CodeMirror.Editor) => void;
   onPaste?: (value: string) => string;
   onClickLink?: CodeMirrorLinkClickCallback;
@@ -556,10 +557,10 @@ export const CodeEditor = memo(
         codeMirror.current = null;
       }, []);
 
-      reactUse.useMount(() => {
+      useMount(() => {
         initEditor();
       });
-      reactUse.useUnmount(() => {
+      useUnmount(() => {
         persistState();
         cleanUpEditor();
       });
@@ -571,9 +572,11 @@ export const CodeEditor = memo(
 
       useEditorRefresh(reinitialize);
 
+      const latestOnChangeRef = useLatest(onChange);
+
       useEffect(() => {
-        const fn = misc.debounce((doc: CodeMirror.Editor) => {
-          if (onChange) {
+        const fn = misc.debounce((doc: CodeMirror.Editor, changeObj: EditorChange[]) => {
+          if (latestOnChangeRef.current) {
             const value = doc.getValue()?.trim() || '';
             // Disable linting if the document reaches a maximum size or is empty
             const withinLintingThresholds = value.length > 0 && value.length < MAX_SIZE_FOR_LINTING;
@@ -589,14 +592,14 @@ export const CodeEditor = memo(
               const errorMessage = err instanceof Error ? err.message : String(err);
               console.log('[codemirror] Failed to set CodeMirror option', errorMessage);
             }
-            onChange(doc.getValue() || '');
+            latestOnChangeRef.current(doc.getValue() || '', changeObj);
             setOriginalCode(doc.getValue() || '');
           }
         }, DEBOUNCE_MILLIS);
 
         codeMirror.current?.on('changes', fn);
         return () => codeMirror.current?.off('changes', fn);
-      }, [lintOptions, noLint, onChange]);
+      }, [lintOptions, noLint, latestOnChangeRef]);
 
       useEffect(() => {
         const handleOnBlur = (_: CodeMirror.Editor, e: FocusEvent) => onBlur?.(e);
@@ -838,7 +841,7 @@ export const CodeEditor = memo(
                       >
                         {item => (
                           <MenuItem
-                            className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                            className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                             aria-label={item.name}
                           >
                             <span>{item.name}</span>
@@ -849,15 +852,7 @@ export const CodeEditor = memo(
                   </MenuTrigger>
                 )}
 
-                {showFilter ? (
-                  <Button
-                    key="help"
-                    className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                    onPress={() => showModal(FilterHelpModal, { isJSON: Boolean(mode?.includes('json')) })}
-                  >
-                    <i className="fa fa-question-circle" />
-                  </Button>
-                ) : null}
+                {showFilter ? <FilterHelpModal isJSON={Boolean(mode?.includes('json'))} /> : null}
                 {showPrettify ? (
                   <Button
                     key="prettify"

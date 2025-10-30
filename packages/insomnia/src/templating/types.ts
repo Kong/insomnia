@@ -4,6 +4,7 @@ import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
 import type { GrpcRequest } from '../models/grpc-request';
+import type { McpRequest } from '../models/mcp-request';
 import type { OAuth2Token } from '../models/o-auth-2-token';
 import type { Project } from '../models/project';
 import type { Request } from '../models/request';
@@ -83,10 +84,13 @@ export type RenderContextAncestor =
   | SocketIORequest
   | RequestGroup
   | Workspace
+  | McpRequest
   | Project;
 
 export type RenderContextOptions = BaseRenderContextOptions &
-  Partial<BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest | SocketIORequest }> & {
+  Partial<
+    BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest }
+  > & {
     ancestors?: RenderContextAncestor[];
   };
 
@@ -258,7 +262,7 @@ export interface PluginTemplateTagContext {
       platform: NodeJS.Platform;
       release: string;
     }>;
-    readFile: (path: string, encoding?: string) => Promise<string | Buffer>;
+    readFile: (path: string) => Promise<string>;
     decode: (buffer: Buffer, encoding?: string) => Promise<string>;
     encode: (input: string, encoding: BinaryToTextEncoding) => Promise<string>;
     render: (str: string) => string | Promise<string | null>;

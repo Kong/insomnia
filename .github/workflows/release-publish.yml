@@ -15,8 +15,8 @@ env:
   IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
   ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
   ARTIFACTS_VERIFY_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts_verify
-  INSO_DOCKER_IMAGE: &INSO_DOCKER_IMAGE "kong/inso" # By default, registry is docker.io
-  NOTARY_REPOSITORY: &NOTARY_REPOSITORY "kong/notary" # All signatures will be pushed to public notary repository
+  INSO_DOCKER_IMAGE: &INSO_DOCKER_IMAGE 'kong/inso' # By default, registry is docker.io
+  NOTARY_REPOSITORY: &NOTARY_REPOSITORY 'kong/notary' # All signatures will be pushed to public notary repository
 
 jobs:
   publish:
@@ -45,11 +45,11 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: ".nvmrc"
-          cache: "npm"
+          node-version-file: '.nvmrc'
+          cache: 'npm'
           cache-dependency-path: package-lock.json
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@kong"
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kong'
 
       - name: Install packages
         run: npm ci
@@ -74,7 +74,7 @@ jobs:
           echo "ELECTRON_ARTIFACT_BASE64_FILE=${{env.ELECTRON_ARTIFACT_BASE64_FILE}}" >> $GITHUB_ENV
           ./.github/scripts/generate-binary-digest.sh
         env:
-          ARTIFACT_PATH: "${{ env.ARTIFACTS_DOWNLOAD_PATH }}"
+          ARTIFACT_PATH: '${{ env.ARTIFACTS_DOWNLOAD_PATH }}'
           CLI_ARTIFACT_SHAFILE: ${{runner.temp}}/cli.sha256
           ELECTRON_ARTIFACT_SHAFILE: ${{runner.temp}}/electron.sha256
           CLI_ARTIFACT_BASE64_FILE: ${{runner.temp}}/cli_digests_file.text
@@ -97,7 +97,7 @@ jobs:
         id: core_tag_and_release
         with:
           tag: ${{ env.RELEASE_CORE_TAG }}
-          name: "${{ env.RELEASE_VERSION }} 📦"
+          name: '${{ env.RELEASE_VERSION }} 📦'
           generateReleaseNotes: true
           commit: ${{ env.RELEASE_BRANCH }}
           prerelease: ${{ env.IS_PRERELEASE }}
@@ -112,22 +112,22 @@ jobs:
         with:
           release_id: ${{ steps.core_tag_and_release.outputs.id }}
           tag_name: ${{ env.RELEASE_CORE_TAG }}
-          file: "./artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/{alpha,beta,latest}.yml;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json"
+          file: './artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/{alpha,beta,latest}.yml;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json'
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
           overwrite: true
 
       - name: Upload sourcemaps to Sentry
         env:
-          SENTRY_AUTH_TOKEN: "${{ secrets.SENTRY_AUTH_TOKEN }}"
-          SENTRY_ORG: "${{ secrets.SENTRY_ORG }}"
-          SENTRY_PROJECT: "${{ secrets.SENTRY_PROJECT }}"
+          SENTRY_AUTH_TOKEN: '${{ secrets.SENTRY_AUTH_TOKEN }}'
+          SENTRY_ORG: '${{ secrets.SENTRY_ORG }}'
+          SENTRY_PROJECT: '${{ secrets.SENTRY_PROJECT }}'
         run: |
           curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="2.2.0" bash
 
           sentry-cli releases new ${{ env.RELEASE_VERSION }}
           sentry-cli releases set-commits ${{ env.RELEASE_VERSION }} --commit 'Kong/insomnia@${{ env.RELEASE_BRANCH }}'
-          sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ./artifacts/*-latest-sentry
+          sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ./artifacts/macOS-X64-sentry
 
       # TODO: also take care of aarch64 image
       - name: Load the Inso CLI Docker Archive
@@ -151,7 +151,7 @@ jobs:
             type=raw,value=latest,enable=${{ env.IS_PRERELEASE == 'false' }}
             type=raw,value=alpha,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'alpha') }}
             type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
-          sep-tags: ","
+          sep-tags: ','
 
       - name: Push Inso CLI docker image tags to Docker Hub
         run: |
@@ -243,7 +243,7 @@ jobs:
           PULP_HOST: ${{ secrets.PULP_HOST }}
           VERBOSE: ${{ runner.debug == '1' && '1' || '' }}
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-          CLOUDSMITH_DRY_RUN: ""
+          CLOUDSMITH_DRY_RUN: ''
           IGNORE_CLOUDSMITH_FAILURES: ${{ vars.IGNORE_CLOUDSMITH_FAILURES }}
           USE_CLOUDSMITH: ${{ vars.USE_CLOUDSMITH }}
           USE_PULP: ${{ vars.USE_PULP }}
@@ -291,7 +291,7 @@ jobs:
     # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
-      base64-subjects-as-file: "${{ matrix.binary_artifacts_subject_as_file }}"
+      base64-subjects-as-file: '${{ matrix.binary_artifacts_subject_as_file }}'
       upload-assets: true
       upload-tag-name: ${{ needs.publish.outputs.INSOMNIA_RELEASE_TAG }}
       provenance-name: ${{ matrix.product }}-provenance.intoto.jsonl

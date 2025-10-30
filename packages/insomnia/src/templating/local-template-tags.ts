@@ -101,7 +101,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           ],
         },
         {
-          help: 'moment.js format string',
+          help: 'date-fns format string',
           displayName: 'Custom Format Template',
           type: 'string',
           placeholder: 'MMMM Do YYYY, h:mm:ss a',
@@ -274,7 +274,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           throw new Error('No file selected');
         }
 
-        return await context.util.readFile(path, 'utf8');
+        return await context.util.readFile(path);
       },
     },
   },

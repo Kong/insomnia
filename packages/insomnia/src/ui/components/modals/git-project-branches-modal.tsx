@@ -166,7 +166,13 @@ const LocalBranchItem = ({
                       onCancelUnresolved: () => {
                         // user aborted merge
                         window.main.git.abortMerge();
-                        reject(new Error('You aborted the merge, no changes were made to working tree.'));
+                        // TODO: the abortMerge method provided by isomorphic-git is unreliable
+                        // clean up any partial merges here
+                        reject(
+                          new Error(
+                            'You aborted the merge, some changes may be present in your working tree and staging area, please clean them up manually in the commit panel.',
+                          ),
+                        );
                       },
                     });
                   });

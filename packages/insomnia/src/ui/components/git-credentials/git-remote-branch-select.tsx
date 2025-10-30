@@ -116,7 +116,7 @@ export const GitRemoteBranchSelect = ({
             {item => (
               <ListBoxItem
                 textValue={item.name}
-                className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap rounded bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] aria-selected:font-bold data-[focused]:bg-[--hl-xs]"
+                className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap rounded bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] aria-selected:font-bold data-[focused]:bg-[--hl-xs]"
               >
                 <span className="truncate">{item.name}</span>
               </ListBoxItem>
