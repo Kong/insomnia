@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 
+import classnames from 'classnames';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -65,6 +66,7 @@ export const RealtimeResponsePane: FC<{ requestId?: string }> = () => {
 
 type ResponseType = WebSocketResponse | Response | SocketIOResponse | McpResponse;
 type EventType = CurlEvent | WebSocketEvent | SocketIOEvent | McpEvent;
+type ReadyState = 'disconnected' | 'connecting' | 'connected';
 interface RealtimeActiveResponsePaneProps {
   response: ResponseType;
   responses: ResponseType[];
@@ -94,7 +96,7 @@ const RealTimeActiveResponsePaneForMcp: FC<RealtimeActiveResponsePaneProps> = pr
   const { response } = props;
   const requestId = response.parentId;
   const readyState = useMcpReadyState({ requestId });
-  return <RealtimeActiveResponsePane {...props} connected={readyState === 'connected'} />;
+  return <RealtimeActiveResponsePane {...props} readyState={readyState} />;
 };
 
 const RealTimeActiveResponsePaneForOthers: FC<
@@ -103,21 +105,22 @@ const RealTimeActiveResponsePaneForOthers: FC<
   const { response, protocol } = props;
   const requestId = response.parentId;
   const readyState = useReadyState({ requestId, protocol });
-  return <RealtimeActiveResponsePane {...props} connected={readyState} />;
+  return <RealtimeActiveResponsePane {...props} readyState={readyState ? 'connected' : 'disconnected'} />;
 };
 
-const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connected: boolean }> = ({
+const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readyState: ReadyState }> = ({
   response,
   responses,
   requestVersions,
   autoSelectLatestEvent,
-  connected,
+  readyState,
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [clearEventsBefore, setClearEventsBefore] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [eventType, setEventType] = useState<CurlEvent['type']>();
+  const isConnected = readyState === 'connected';
 
   const protocol = useMemo(() => {
     if (isSocketIOResponse(response)) {
@@ -237,8 +240,15 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
       <PaneHeader className="row-spaced">
         <div className="no-wrap scrollable scrollable--no-bars pad-left">
           {isLongRunning ? (
-            <div data-testid="response-status-tag" className={`${connected ? 'bg-success' : 'bg-danger'} px-2 py-1`}>
-              {connected ? 'Connected' : 'Disconnected'}
+            <div
+              data-testid="response-status-tag"
+              className={classnames('px-2 py-1 [&::first-letter]:capitalize', {
+                'bg-success': readyState === 'connected',
+                'bg-info': readyState === 'connecting',
+                'bg-danger': readyState === 'disconnected',
+              })}
+            >
+              {readyState}
             </div>
           ) : (
             <>
@@ -370,7 +380,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
                       selectionId={selectedEvent?._id}
                       autoSelectLatestEvent
                       protocol={protocol}
-                      readyState={connected}
+                      readyState={isConnected}
                     />
                   )}
                 </Panel>

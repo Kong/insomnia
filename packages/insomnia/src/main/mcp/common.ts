@@ -17,13 +17,26 @@ import type {
   McpEvent,
   McpEventWithoutBase,
   McpNotificationEvent,
+  McpReadyState,
   McpRequestEventWithoutBase,
 } from '~/main/mcp/types';
 import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
 
+interface ConnectingState {
+  status: 'connecting';
+  client: McpClient | null;
+}
+interface ConnectedState {
+  status: 'connected';
+  client: McpClient;
+}
+interface DisconnectedState {
+  status: 'disconnected';
+}
+
 export const protocol = 'mcp';
-export const mcpConnections = new Map<string, McpClient>();
+export const mcpConnections = new Map<string, ConnectingState | ConnectedState>();
 export const eventLogFileStreams = new Map<string, fs.WriteStream>();
 export const timelineFileStreams = new Map<string, fs.WriteStream>();
 export const requestIdToResponseIdMap = new Map<string, string>();
@@ -38,13 +51,25 @@ export const getMcpStateChannel = (requestId: string) =>
   `${protocol}.${requestId}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
 export const getMcpClient = (id: string) => {
-  const mcpClient = mcpConnections.get(id);
+  const mcpConnection = mcpConnections.get(id);
   invariant(
-    mcpClient,
+    mcpConnection,
     `No existing MCP client connection found for requestId: ${id}. It might have been disconnected.`,
   );
-  return mcpClient;
+  return mcpConnection.client;
 };
+
+export function updateMcpConnectionState(
+  requestId: string,
+  state: ConnectingState | ConnectedState | DisconnectedState,
+) {
+  if (state.status === 'disconnected') {
+    mcpConnections.delete(requestId);
+  } else {
+    mcpConnections.set(requestId, state);
+  }
+  notifyMcpClientStateChange(getMcpStateChannel(requestId), state.status);
+}
 
 export const writeEventLogAndNotify = (
   requestId: string,
@@ -83,7 +108,7 @@ export const writeEventLogAndNotify = (
   });
 };
 
-export const notifyMcpClientStateChange = (channel: string, value: any) => {
+export const notifyMcpClientStateChange = (channel: string, value: McpReadyState) => {
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send(channel, value);
   }
@@ -127,7 +152,6 @@ export const clearMcpMaps = (requestId: string, timelineMessage: string, event?:
     ?.write(JSON.stringify({ value: timelineMessage, name: 'Text', timestamp: Date.now() }) + '\n');
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
-  mcpConnections.delete(requestId);
   mcpServerElicitationRequests.delete(requestId);
 };
 
@@ -159,11 +183,10 @@ export const findNotifications = async (options: { responseId: string }): Promis
 
 export const getMcpReadyState = async (options: CommonMcpOptions) => {
   try {
-    const mcpClient = getMcpClient(options.requestId);
-    // if no mcp client, it means it's disconnected
-    return !!mcpClient;
+    const mcpConnection = mcpConnections.get(options.requestId);
+    return mcpConnection ? mcpConnection.status : 'disconnected';
   } catch (error) {
-    return false;
+    return 'disconnected';
   }
 };
 

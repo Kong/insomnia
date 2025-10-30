@@ -42,14 +42,13 @@ import {
   findNotifications,
   getMcpClient,
   getMcpReadyState,
-  getMcpStateChannel,
   hasRequestResponded,
   mcpConnections,
   mcpServerElicitationRequests,
-  notifyMcpClientStateChange,
   parseAndLogMcpRequest,
   requestIdToResponseIdMap,
   timelineFileStreams,
+  updateMcpConnectionState,
   writeEventLogAndNotify,
 } from '~/main/mcp/common';
 import { McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
@@ -83,9 +82,8 @@ const _handleCloseMcpConnection = (requestId: string) => {
   // clear in-memory store
   clearMcpMaps(requestId, 'Closed MCP connection', closeEvent);
 
-  const mcpStateChannel = getMcpStateChannel(requestId);
   // notify renderer process about state change
-  notifyMcpClientStateChange(mcpStateChannel, false);
+  updateMcpConnectionState(requestId, { status: 'disconnected' });
 };
 
 const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
@@ -298,6 +296,20 @@ const createTransportAndConnect = async (
 const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) => {
   const { requestId, workspaceId } = options;
 
+  const currentConnectionState = mcpConnections.get(requestId);
+  if (currentConnectionState) {
+    if (currentConnectionState.status === 'connected') {
+      // close existing connection if any, avoid multiple connections with same requestId
+      await closeMcpConnection({ requestId });
+    } else if (currentConnectionState.status === 'connecting') {
+      // if connecting, should not attempt to create another connection
+      // TODO: should find a way to close the pending connection safely and create a new one instead
+      console.error(`MCP client is already connecting for requestId: ${requestId}`);
+      return;
+    }
+  }
+  updateMcpConnectionState(requestId, { status: 'connecting', client: null });
+
   // create response model and file streams
   const responseId = generateId(mcpResponsePrefix);
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
@@ -336,7 +348,11 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
       },
     },
   );
-  const mcpStateChannel = getMcpStateChannel(requestId);
+  // const mcpStateChannel = getMcpStateChannel(requestId);
+  updateMcpConnectionState(requestId, {
+    status: 'connecting',
+    client: mcpClient as McpClient,
+  });
 
   try {
     await createTransportAndConnect(mcpClient, options, {
@@ -389,11 +405,6 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
     }
   });
 
-  if (mcpConnections.has(requestId)) {
-    // close existing connection if any, avoid multiple connections with same requestId
-    await closeMcpConnection({ requestId });
-  }
-  mcpConnections.set(requestId, mcpClient as McpClient);
   const serverCapabilities = mcpClient.getServerCapabilities();
   const primitivePromises: Promise<any>[] = [];
   // get server primitives if supported
@@ -413,7 +424,7 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
     console.warn('Failed to fetch one or more primitive types from MCP server', error);
   }
   // notify connection ready after capabilities and primitives are fetched
-  notifyMcpClientStateChange(mcpStateChannel, true);
+  updateMcpConnectionState(requestId, { status: 'connected', client: mcpClient as McpClient });
 };
 
 const closeMcpConnection = async (options: CommonMcpOptions) => {

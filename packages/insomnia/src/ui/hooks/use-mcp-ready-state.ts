@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
-import type { McpReadyState } from '~/main/network/mcp';
+import type { McpReadyState } from '~/main/mcp/types';
 
 export function useMcpReadyState({ requestId }: { requestId: string }): McpReadyState {
   const [readyState, setReadyState] = useState<McpReadyState>('disconnected');

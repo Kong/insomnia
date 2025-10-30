@@ -147,9 +147,6 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     const redirectedResult = await authorizeUserInDefaultBrowser({
       url: relayUrl,
     });
-    BrowserWindow.getAllWindows().forEach(window => {
-      window.webContents.send('hide-oauth-authorization-modal');
-    });
     const redirectedTo = decryptOAuthResult(redirectedResult);
     const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
     const authorizationCode = redirectParams.code;

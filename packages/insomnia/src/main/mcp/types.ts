@@ -89,3 +89,5 @@ export interface OpenMcpHTTPClientConnectionOptions extends CommonMcpOptions {
 }
 
 export type OpenMcpClientConnectionOptions = OpenMcpHTTPClientConnectionOptions | OpenMcpStdioClientConnectionOptions;
+
+export type McpReadyState = 'disconnected' | 'connecting' | 'connected';

@@ -6,6 +6,7 @@ import {
 } from '@modelcontextprotocol/sdk/client/auth.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
+import { BrowserWindow } from 'electron';
 
 import { timelineFileStreams, writeEventLogAndNotify } from '~/main/mcp/common';
 import type { McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
@@ -236,6 +237,10 @@ const wrappedFetch = async (
           fetchFn: authFetchFn,
         });
       }
+      // Close the oauth authorization modal after authorization is complete
+      BrowserWindow.getAllWindows().forEach(window => {
+        window.webContents.send('hide-oauth-authorization-modal');
+      });
       if (authResult !== 'AUTHORIZED') {
         throw new UnauthorizedError();
       }
