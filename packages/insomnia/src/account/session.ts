@@ -230,12 +230,13 @@ async function _removeAllCredentials() {
       if ('secretAccessKey' in cred.credentials) {
         removals.push(
           cloudCredential.update(cred, {
-            // is an AWS temporary credential
+            // AWS
             credentials: { ...cred.credentials, secretAccessKey: '', sessionToken: '' },
           }),
         );
         continue;
       }
+      // hashicorp
       if ('access_token' in cred.credentials) {
         removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, access_token: '' } }));
         continue;
@@ -244,6 +245,13 @@ async function _removeAllCredentials() {
         removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, client_secret: '' } }));
         continue;
       }
+      if ('secret_id' in cred.credentials) {
+        removals.push(
+          cloudCredential.update(cred, { credentials: { ...cred.credentials, secret_id: '', role_id: '' } }),
+        );
+        continue;
+      }
+      // azure
       if ('accessToken' in cred.credentials) {
         removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, accessToken: '' } }));
       }
@@ -283,11 +291,19 @@ async function _removeAllCredentials() {
   await Promise.all(removals);
 }
 
+/*
+ * Removes a git repository from the database and unlinks it from a workspace.
+ *
+ * Clearing only the credentials from the git repo would leave the associated project in a broken
+ * state where the user would need to manually reset the git project settings, and that is not
+ * immediately apparent in the UI.
+ *
+ * This way, the user can simply re-connect with their settings.
+ */
 async function _removeGitRepository(repo: GitRepository) {
-  let wsMeta = await workspaceMeta.getByGitRepositoryId(repo._id);
-  while (wsMeta) {
+  const wsMeta = await workspaceMeta.getByGitRepositoryId(repo._id);
+  if (wsMeta) {
     await workspaceMeta.update(wsMeta, { gitRepositoryId: null });
-    wsMeta = await workspaceMeta.getByGitRepositoryId(repo._id);
   }
   await gitRepository.remove(repo);
 }
