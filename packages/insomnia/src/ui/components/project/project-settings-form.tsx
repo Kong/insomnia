@@ -348,10 +348,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                           </a>
                         </p>
                         <a
-                          href={
-                            getAppWebsiteBaseURL() +
-                            '/app/subscription/update?plan=team&pay_schedule=year&source=app_feature_git_sync'
-                          }
+                          href={getAppWebsiteBaseURL() + '/app/pricing'}
                           className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
                         >
                           Upgrade
@@ -364,10 +361,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                           will need to upgrade the plan for you to access it.
                         </p>
                         <a
-                          href={
-                            getAppWebsiteBaseURL() +
-                            '/app/subscription/update?plan=team&pay_schedule=year&source=app_feature_git_sync'
-                          }
+                          href={docsPricingLearnMoreLink}
                           className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
                         >
                           Learn More ↗
