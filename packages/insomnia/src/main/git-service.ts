@@ -1486,11 +1486,39 @@ export const checkoutGitBranchAction = async ({
   workspaceId?: string;
   branch: string;
 }): Promise<CheckoutGitBranchResult> => {
-  const gitRepository = await getGitRepository({ workspaceId, projectId });
-
-  const bufferId = await database.bufferChanges();
   try {
+    const gitRepository = await getGitRepository({ workspaceId, projectId });
+
+    const bufferId = await database.bufferChanges();
     await GitVCS.checkout(branch);
+
+    const log = (await GitVCS.log({ depth: 1 })) || [];
+
+    const author = log[0] ? log[0].commit.author : null;
+    const cachedGitLastCommitTime = author ? author.timestamp * 1000 : Date.now();
+
+    const { hasUncommittedChanges } = await getGitChanges(GitVCS);
+
+    let hasUnpushedChanges = false;
+    try {
+      hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+    } catch (err) {
+      console.error('Error checking for unpushed changes', err);
+      hasUnpushedChanges = false;
+    }
+
+    await models.gitRepository.update(gitRepository, {
+      cachedGitLastCommitTime,
+      cachedGitRepositoryBranch: branch,
+      cachedGitLastAuthor: author?.name || null,
+      hasUncommittedChanges,
+      hasUnpushedChanges,
+    });
+
+    await database.flushChanges(bufferId);
+    return {
+      success: true,
+    };
   } catch (err) {
     if (err instanceof Errors.HttpError) {
       return {
@@ -1507,37 +1535,9 @@ export const checkoutGitBranchAction = async ({
     const errorMessage = err instanceof Error ? err.message : err.toString();
 
     return {
-      errors: [errorMessage],
+      errors: [getErrorMessage(errorMessage)],
     };
   }
-
-  const log = (await GitVCS.log({ depth: 1 })) || [];
-
-  const author = log[0] ? log[0].commit.author : null;
-  const cachedGitLastCommitTime = author ? author.timestamp * 1000 : Date.now();
-
-  const { hasUncommittedChanges } = await getGitChanges(GitVCS);
-
-  let hasUnpushedChanges = false;
-  try {
-    hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
-  } catch (err) {
-    console.error('Error checking for unpushed changes', err);
-    hasUnpushedChanges = false;
-  }
-
-  await models.gitRepository.update(gitRepository, {
-    cachedGitLastCommitTime,
-    cachedGitRepositoryBranch: branch,
-    cachedGitLastAuthor: author?.name || null,
-    hasUncommittedChanges,
-    hasUnpushedChanges,
-  });
-
-  await database.flushChanges(bufferId);
-  return {
-    success: true,
-  };
 };
 
 export const mergeGitBranch = async ({
