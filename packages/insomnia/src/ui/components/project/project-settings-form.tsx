@@ -348,7 +348,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                           </a>
                         </p>
                         <a
-                          href={getAppWebsiteBaseURL() + '/app/pricing'}
+                          href={getAppWebsiteBaseURL() + '/app/pricing&source=app_create_git_project'}
                           className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
                         >
                           Upgrade

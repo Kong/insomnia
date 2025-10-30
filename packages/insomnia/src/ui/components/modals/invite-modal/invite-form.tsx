@@ -56,7 +56,7 @@ interface EmailsInputProps {
   onInviteCompleted?: () => void;
 }
 
-const upgradeModalWording = {
+const upgradeBannerWording = {
   [needsToUpgrade]: {
     ownerTitle: 'Upgrade plan to invite more people',
     memberTitle: 'Ask plan owner to upgrade to invite more people',
@@ -79,7 +79,7 @@ const upgradeModalWording = {
       </>
     ),
     submitText: 'Upgrade',
-    submitLink: getAppWebsiteBaseURL() + '/app/pricing',
+    submitLink: getAppWebsiteBaseURL() + '/app/pricing&source=app_invite_modal',
   },
   [needsToIncreaseSeats]: {
     ownerTitle: 'Increase plan seats to invite more people',
@@ -103,7 +103,7 @@ const upgradeModalWording = {
       </>
     ),
     submitText: 'Increase seats',
-    submitLink: getAppWebsiteBaseURL() + '/app/pricing',
+    submitLink: getAppWebsiteBaseURL() + '/app/pricing&source=app_invite_modal',
   },
 };
 
@@ -268,20 +268,20 @@ export const InviteForm = ({
           <div className="flex flex-col items-start justify-start gap-3.5">
             <Heading className="text-lg font-bold">
               {isUserOwner
-                ? upgradeModalWording[upgradeBannerStatus].ownerTitle
-                : upgradeModalWording[upgradeBannerStatus].memberTitle}
+                ? upgradeBannerWording[upgradeBannerStatus].ownerTitle
+                : upgradeBannerWording[upgradeBannerStatus].memberTitle}
             </Heading>
             <p>
               {isUserOwner
-                ? upgradeModalWording[upgradeBannerStatus].ownerDescription
-                : upgradeModalWording[upgradeBannerStatus].memberDescription}
+                ? upgradeBannerWording[upgradeBannerStatus].ownerDescription
+                : upgradeBannerWording[upgradeBannerStatus].memberDescription}
             </p>
             {isUserOwner && (
               <a
-                href={upgradeModalWording[upgradeBannerStatus].submitLink}
+                href={upgradeBannerWording[upgradeBannerStatus].submitLink}
                 className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
               >
-                {upgradeModalWording[upgradeBannerStatus].submitText}
+                {upgradeBannerWording[upgradeBannerStatus].submitText}
               </a>
             )}
           </div>

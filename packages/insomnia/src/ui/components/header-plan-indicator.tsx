@@ -123,7 +123,7 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
                   className="rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   href={
                     isEssential
-                      ? getAppWebsiteBaseURL() + '/app/pricing'
+                      ? getAppWebsiteBaseURL() + '/app/pricing&source=app_topbar'
                       : getAppWebsiteBaseURL() + '/app/subscription/update?plan=enterprise&source=app_topbar'
                   }
                 >
