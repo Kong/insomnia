@@ -14,6 +14,8 @@ export const docsIntroductionToInsoCLI = insomniaDocs('/inso-cli/introduction');
 export const docsPreRequestScript = insomniaDocs('/insomnia/pre-request-script');
 export const docsAfterResponseScript = insomniaDocs('/insomnia/after-response-script');
 export const docsMcpClient = insomniaDocs('/insomnia/mcp-clients-in-insomnia');
+export const docsPricingLearnMoreLink =
+  'https://developer.konghq.com/insomnia/storage/#what-are-the-user-and-git-sync-limits-for-the-essentials-plan';
 
 export const docsGitAccessToken = {
   github: 'https://docs.github.com/github/authenticating-to-github/creating-a-personal-access-token',

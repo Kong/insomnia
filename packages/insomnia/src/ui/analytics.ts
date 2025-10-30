@@ -43,7 +43,7 @@ export enum SegmentEvent {
   vcsSyncComplete = 'VCS Sync Completed',
   vcsAction = 'VCS Action Executed',
   buttonClick = 'Button Clicked',
-  inviteMember = 'Invite Member',
+  inviteMember = 'Invite Sent',
   inviteResent = 'Invite Resent',
   inviteRevoked = 'Invite Revoked',
   projectCreated = 'Project Created',
@@ -56,6 +56,7 @@ export enum SegmentEvent {
   recommendCommitsClicked = 'Recommend Commits Clicked',
   mcpClientWorkspaceCreate = 'MCP Client Workspace Created',
   mcpClientAdded = 'MCP Client Added',
+  inviteNotPermitted = 'Invite Not Permitted',
 }
 
 type PushPull = 'push' | 'pull';

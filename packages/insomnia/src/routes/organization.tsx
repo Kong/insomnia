@@ -27,6 +27,7 @@ import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CommandPalette } from '~/ui/components/command-palette';
 import { GitHubStarsButton } from '~/ui/components/github-stars-button';
 import { HeaderInviteButton } from '~/ui/components/header-invite-button';
+import { HeaderPlanIndicator } from '~/ui/components/header-plan-indicator';
 import { HeaderUserButton } from '~/ui/components/header-user-button';
 import { Hotkey } from '~/ui/components/hotkey';
 import { Icon } from '~/ui/components/icon';
@@ -58,7 +59,6 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
     const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as UserProfileResponse;
     const currentPlan = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan;
-
     return {
       organizations: sortOrganizations(accountId, organizations),
       user,
@@ -240,12 +240,12 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     'organizationSidebarOpen',
     true,
   );
-  const [isMinimal, setIsMinimal] = reactUse.useLocalStorage('isMinimal', false);
 
   useCloseConnection({
     organizationId,
   });
 
+  const [isMinimal, setIsMinimal] = reactUse.useLocalStorage('isMinimal', false);
   return (
     <InsomniaEventStreamProvider>
       <InsomniaTabProvider>
@@ -262,11 +262,15 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   {!user ? <GitHubStarsButton /> : null}
                 </div>
                 <CommandPalette />
-                <div className="flex items-center justify-end gap-[--padding-sm] p-2">
+                <div className="flex min-w-min items-center justify-end gap-[--padding-sm] space-x-3 p-2">
                   {user ? (
                     <Fragment>
                       <PresentUsers />
-                      <HeaderInviteButton className="border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 font-semibold text-[--color-font-surprise]" />
+                      <HeaderInviteButton
+                        organizationId={organizationId}
+                        className="border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 font-semibold text-[--color-font-surprise]"
+                      />
+                      <HeaderPlanIndicator isMinimal={isMinimal} />
                       <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
                     </Fragment>
                   ) : (
@@ -583,7 +587,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       {user ? (
                         <Fragment>
                           <PresentUsers />
-                          <HeaderInviteButton className="text-[--color-font]" />
+                          <HeaderInviteButton className="text-[--color-font]" organizationId={organizationId} />
+                          <HeaderPlanIndicator isMinimal={isMinimal} />
                           <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
                         </Fragment>
                       ) : (

@@ -1,6 +1,8 @@
+import classNames from 'classnames';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
+  Heading,
   type Key,
   ListBox,
   ListBoxItem,
@@ -11,10 +13,22 @@ import {
 } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 
+import { getAppWebsiteBaseURL } from '~/common/constants';
+import { docsPricingLearnMoreLink } from '~/common/documentation';
 import { debounce } from '~/common/misc';
+import { isOwnerOfOrganization } from '~/models/organization';
+import { useRootLoaderData } from '~/root';
+import { useOrganizationLoaderData } from '~/routes/organization';
+import {
+  type CheckSeatsResponse,
+  needsToIncreaseSeats,
+  needsToUpgrade,
+} from '~/routes/organization.$organizationId.collaborators-check-seats';
 import { useCollaboratorsSearchLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-search';
 import { SegmentEvent } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
+import { useIsLightTheme } from '~/ui/hooks/theme';
+import { insomniaFetch } from '~/ui/insomniaFetch';
 
 import { startInvite } from './encryption';
 import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
@@ -38,8 +52,60 @@ export function getSearchParamsString(
 
 interface EmailsInputProps {
   allRoles: Role[];
+  senderRole: Role;
   onInviteCompleted?: () => void;
 }
+
+const upgradeModalWording = {
+  [needsToUpgrade]: {
+    ownerTitle: 'Upgrade plan to invite more people',
+    memberTitle: 'Ask plan owner to upgrade to invite more people',
+    ownerDescription: (
+      <>
+        Your Essentials plan contains Git Sync projects, so you can only collaborate with up to 3 members. Upgrade to
+        collaborate with unlimited users.{' '}
+        <a href={docsPricingLearnMoreLink} className="underline">
+          Learn more ↗
+        </a>
+      </>
+    ),
+    memberDescription: (
+      <>
+        Your Essentials plan contains Git Sync projects, so you can only collaborate with up to 3 members. Contact your
+        plan owner to upgrade your team's plan to collaborate with more people.{' '}
+        <a href={docsPricingLearnMoreLink} className="underline">
+          Learn more ↗
+        </a>
+      </>
+    ),
+    submitText: 'Upgrade',
+    submitLink: getAppWebsiteBaseURL() + '/app/pricing',
+  },
+  [needsToIncreaseSeats]: {
+    ownerTitle: 'Increase plan seats to invite more people',
+    memberTitle: 'Your team is full',
+    ownerDescription: (
+      <>
+        Your team has reached your plan's total purchased seats. Increase your plan's number of seats to continue
+        inviting new people.{' '}
+        <a href={docsPricingLearnMoreLink} className="underline">
+          Learn more ↗
+        </a>
+      </>
+    ),
+    memberDescription: (
+      <>
+        Your team has reached your plan's total purchased seats. Tell your plan's owner to increase the number of seats
+        to continue inviting new people.{' '}
+        <a href={docsPricingLearnMoreLink} className="underline">
+          Learn more ↗
+        </a>
+      </>
+    ),
+    submitText: 'Increase seats',
+    submitLink: getAppWebsiteBaseURL() + '/app/pricing',
+  },
+};
 
 export interface EmailInput {
   email: string;
@@ -58,10 +124,21 @@ const isValidEmail = (email: string): boolean => {
 
 const defaultRoleName = 'member';
 
-export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) => {
+export const InviteForm = ({
+  allRoles,
+  onInviteCompleted,
+  senderRole,
+  checkSeatsResponseData,
+}: EmailsInputProps & { checkSeatsResponseData: CheckSeatsResponse | undefined }) => {
+  const organizationId = useParams().organizationId as string;
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const organizationId = useParams().organizationId as string;
+  const { userSession } = useRootLoaderData()!;
+  const organizationData = useOrganizationLoaderData();
+  const organization = organizationData?.organizations.find(o => o.id === organizationId);
+  const isUserOwner =
+    organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
+  const sessionId = userSession.id;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -75,16 +152,38 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
   const selectedRoleRef = React.useRef<Role>(allRoles.find(role => role.name === defaultRoleName) as Role);
 
   const collaboratorSearchLoader = useCollaboratorsSearchLoaderFetcher();
+  let upgradeBannerStatus: 'closed' | typeof needsToUpgrade | typeof needsToIncreaseSeats = 'closed';
+  if (checkSeatsResponseData && !checkSeatsResponseData.isAllowed) {
+    if (checkSeatsResponseData.code === needsToUpgrade) {
+      upgradeBannerStatus = needsToUpgrade;
+    } else if (checkSeatsResponseData.code === needsToIncreaseSeats) {
+      upgradeBannerStatus = needsToIncreaseSeats;
+    }
+  }
 
   const searchResult = useMemo(() => collaboratorSearchLoader.data || [], [collaboratorSearchLoader.data]);
 
   useEffect(() => {
-    if (searchResult.length > 0) {
-      setShowResults(true);
-    } else {
-      setShowResults(false);
-    }
+    setShowResults(searchResult.length > 0);
   }, [searchResult]);
+
+  useEffect(() => {
+    const checkSeats = async () => {
+      const validEmails = emails.filter(e => e.isValid);
+      if (validEmails.length === 0) {
+        setError('');
+      } else {
+        const data = await insomniaFetch<CheckSeatsResponse>({
+          method: 'POST',
+          path: `/v1/organizations/${organizationId}/check-seats`,
+          data: { emails: validEmails.map(e => e.email) },
+          sessionId,
+        });
+        setError(data.isAllowed ? '' : 'You cannot invite more people than the seats you have remaining');
+      }
+    };
+    checkSeats();
+  }, [emails, organizationId, sessionId]);
 
   const addEmail = ({
     email,
@@ -154,8 +253,40 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
     }
   };
 
+  const isLightTheme = useIsLightTheme();
+
   return (
     <div className="flex w-full flex-col gap-1">
+      {upgradeBannerStatus !== 'closed' && (
+        <div
+          className={classNames('mb-5 mt-3 flex items-start justify-start gap-5 rounded-md px-6 py-5', {
+            'bg-[#292535]': !isLightTheme,
+            'bg-[#EEEBFF]': isLightTheme,
+          })}
+        >
+          <Icon icon="circle-info" className="pt-1.5" />
+          <div className="flex flex-col items-start justify-start gap-3.5">
+            <Heading className="text-lg font-bold">
+              {isUserOwner
+                ? upgradeModalWording[upgradeBannerStatus].ownerTitle
+                : upgradeModalWording[upgradeBannerStatus].memberTitle}
+            </Heading>
+            <p>
+              {isUserOwner
+                ? upgradeModalWording[upgradeBannerStatus].ownerDescription
+                : upgradeModalWording[upgradeBannerStatus].memberDescription}
+            </p>
+            {isUserOwner && (
+              <a
+                href={upgradeModalWording[upgradeBannerStatus].submitLink}
+                className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+              >
+                {upgradeModalWording[upgradeBannerStatus].submitText}
+              </a>
+            )}
+          </div>
+        </div>
+      )}
       <div className="flex w-full items-center gap-4">
         <div
           className="flex flex-1 justify-between gap-3 rounded-md border border-[#4c4c4c] bg-[--hl-xs] p-2"
@@ -207,12 +338,13 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
             <input
               ref={inputRef}
               type="text"
-              className="min-h-[24px] grow-[inherit] border-none px-2 py-1 leading-6 outline-none"
+              className="min-h-[24px] grow-[inherit] border-none px-2 py-1 leading-6 outline-none disabled:cursor-not-allowed"
               placeholder={emails.length > 0 ? 'Enter more emails...' : 'Enter emails, separated by comma...'}
               onKeyDown={handleInputKeyPress}
               onBlur={handleInputBlur}
               onPaste={handlePaste}
               onChange={e => handleSearch(e.currentTarget.value)}
+              disabled={checkSeatsResponseData && !checkSeatsResponseData.isAllowed}
             />
           </div>
           <div className="flex w-[81px] items-center">
@@ -228,9 +360,9 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
           </div>
         </div>
         <Button
-          className="h-[40px] w-[67px] shrink-0 self-end rounded bg-[#4000bf] text-center text-[--color-font-surprise] disabled:opacity-70"
-          isDisabled={loading}
-          onPress={() => {
+          className="h-[40px] w-[67px] shrink-0 self-end rounded bg-[#4000bf] text-center text-[--color-font-surprise] disabled:cursor-not-allowed disabled:opacity-70"
+          isDisabled={loading || (checkSeatsResponseData && !checkSeatsResponseData.isAllowed)}
+          onPress={async () => {
             if (emails.some(({ isValid }) => !isValid)) {
               setError('Some emails are invalid, please correct them before inviting.');
               return;
@@ -256,7 +388,8 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
                     properties: {
                       numberOfInvites: emailsToInvite.length,
                       numberOfTeams: groupsToInvite.length,
-                      role: selectedRoleRef.current.name,
+                      receiver_role: selectedRoleRef.current.name,
+                      sender_role: senderRole.name,
                     },
                   });
 

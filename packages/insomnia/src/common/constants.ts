@@ -126,12 +126,6 @@ export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) =
   }
 };
 
-// Update
-export enum UpdateURL {
-  mac = 'https://updates.insomnia.rest/builds/check/mac',
-  windows = 'https://updates.insomnia.rest/updates/win',
-}
-
 // Oauth redirect URL
 export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.insomnia.rest/oauth/redirect';
 export const getOauthRelayUrl = () => env.OAUTH_RELAY_URL || 'https://app.insomnia.rest/oauth/relay';
@@ -151,8 +145,6 @@ export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
 };
 
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
-
-export const getUpdatesBaseURL = () => env.INSOMNIA_UPDATES_URL || 'https://updates.insomnia.rest';
 
 // App website
 export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';

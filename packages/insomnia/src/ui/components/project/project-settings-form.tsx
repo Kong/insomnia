@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import type { FC } from 'react';
 import React, { useEffect, useState } from 'react';
 import {
@@ -22,10 +23,20 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { getAppWebsiteBaseURL } from '~/common/constants';
+import { docsPricingLearnMoreLink } from '~/common/documentation';
 import { isGitCredentialsOAuth } from '~/models/git-repository';
-import type { StorageRules } from '~/models/organization';
+import { isOwnerOfOrganization, type StorageRules } from '~/models/organization';
+import { useRootLoaderData } from '~/root';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
+import { useOrganizationLoaderData } from '~/routes/organization';
+import {
+  fallbackFeatures,
+  useOrganizationPermissionsLoaderFetcher,
+} from '~/routes/organization.$organizationId.permissions';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
+import { useIsLightTheme } from '~/ui/hooks/theme';
+import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
@@ -86,6 +97,17 @@ export const ProjectSettingsForm: FC<Props> = ({
   onSuccessUpdate,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
+
+  const permissionsFetcher = useOrganizationPermissionsLoaderFetcher({ key: `permissions:${organizationId}` });
+  const permissionsFetcherLoad = permissionsFetcher.load;
+  useEffect(() => {
+    permissionsFetcherLoad({
+      organizationId,
+    });
+  }, [organizationId, permissionsFetcherLoad]);
+  const { featuresPromise } = permissionsFetcher.data || {};
+  const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise, organizationId);
+  isGitSyncEnabled = features.gitSync.enabled;
 
   const [storageType, setStorageType] = useState<'local' | 'remote' | 'git'>(
     getDefaultProjectStorageType(storageRules, project),
@@ -221,6 +243,14 @@ export const ProjectSettingsForm: FC<Props> = ({
     }
   };
 
+  const organizationData = useOrganizationLoaderData();
+  const { userSession } = useRootLoaderData()!;
+  const organization = organizationData?.organizations.find(o => o.id === organizationId);
+  const isUserOwner =
+    organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
+
+  const isLightTheme = useIsLightTheme();
+
   return (
     <div className="flex w-full max-w-[600px] flex-col gap-4">
       {error && (
@@ -283,7 +313,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                   </p>
                 </Radio>
                 <Radio
-                  isDisabled={!isGitSyncEnabled || !storageRules.enableGitSync}
+                  isDisabled={!storageRules.enableGitSync}
                   value="git"
                   className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
                 >
@@ -296,6 +326,57 @@ export const ProjectSettingsForm: FC<Props> = ({
                   </p>
                 </Radio>
               </div>
+              {storageType === 'git' && !isGitSyncEnabled && (
+                <div
+                  className={classNames('mt-3 flex items-start justify-start gap-5 rounded-md px-6 py-5', {
+                    'bg-[#292535]': !isLightTheme,
+                    'bg-[#EEEBFF]': isLightTheme,
+                  })}
+                >
+                  <Icon icon="circle-info" className="pt-1.5" />
+                  <div className="flex flex-col items-start justify-start gap-3.5">
+                    <Heading className="text-lg font-bold">
+                      Git Sync limited to organizations of 3 or fewer users
+                    </Heading>
+                    {isUserOwner ? (
+                      <>
+                        <p>
+                          Git Sync is included on your plan for up to 3 users. Since your team is larger, you’ll need to
+                          upgrade your plan to use it.{' '}
+                          <a href={docsPricingLearnMoreLink} className="underline">
+                            Learn more ↗
+                          </a>
+                        </p>
+                        <a
+                          href={
+                            getAppWebsiteBaseURL() +
+                            '/app/subscription/update?plan=team&pay_schedule=year&source=app_feature_git_sync'
+                          }
+                          className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+                        >
+                          Upgrade
+                        </a>
+                      </>
+                    ) : (
+                      <>
+                        <p>
+                          Git Sync is included on your plan for up to 3 users. Because your team is larger, your admin
+                          will need to upgrade the plan for you to access it.
+                        </p>
+                        <a
+                          href={
+                            getAppWebsiteBaseURL() +
+                            '/app/subscription/update?plan=team&pay_schedule=year&source=app_feature_git_sync'
+                          }
+                          className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+                        >
+                          Learn More ↗
+                        </a>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </RadioGroup>
             {showStorageRestrictionMessage && (
               <div className="flex items-center gap-2 rounded-sm bg-[rgba(var(--color-warning-rgb),0.5)] px-2 py-1 text-sm text-[--color-font-warning]">
@@ -319,6 +400,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               )}
               {storageType === 'git' && (
                 <Button
+                  isDisabled={!isGitSyncEnabled}
                   onPress={() => setActiveView('git-clone')}
                   className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
                 >
