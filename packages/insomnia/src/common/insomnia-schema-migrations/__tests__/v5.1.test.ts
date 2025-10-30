@@ -169,7 +169,6 @@ describe('Insomnia Schema Migrations - v5.1', () => {
       const obj = {
         cookies: [
           {
-            id: 'cookie1',
             key: 'session',
             value: 'abc123',
             creation: new Date('2024-01-01'),
