@@ -79,7 +79,7 @@ const upgradeBannerWording = {
       </>
     ),
     submitText: 'Upgrade',
-    submitLink: getAppWebsiteBaseURL() + '/app/pricing&source=app_invite_modal',
+    submitLink: getAppWebsiteBaseURL() + '/app/pricing?source=app_invite_modal',
   },
   [needsToIncreaseSeats]: {
     ownerTitle: 'Increase plan seats to invite more people',
@@ -103,7 +103,7 @@ const upgradeBannerWording = {
       </>
     ),
     submitText: 'Increase seats',
-    submitLink: getAppWebsiteBaseURL() + '/app/pricing&source=app_invite_modal',
+    submitLink: getAppWebsiteBaseURL() + '/app/pricing?source=app_invite_modal',
   },
 };
 

@@ -30,7 +30,7 @@ export const UpgradePlanModal = () => {
   const startFetcher = useTrialStartActionFetcher();
 
   const handleUpgrade = () => {
-    window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/pricing&source=app_welcome_modal`);
+    window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/pricing?source=app_welcome_modal`);
   };
 
   const handleClose = () => {
