@@ -1,0 +1,43 @@
+/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+:root {
+  --inso-color-background-default: #ffffff;
+  --inso-color-background-default-hover: #f3f4f6;
+  --inso-color-background-default-active: #f3f4f6;
+  --inso-color-background-default-focus: #84cc16;
+  --inso-color-text-default: #f3f4f6;
+  --inso-color-text-default-hover: #f3f4f6;
+  --inso-color-text-default-active: #f3f4f6;
+  --inso-color-text-default-disabled: #f3f4f6;
+  --inso-color-border-default: #f3f4f6;
+  --inso-color-border-default-hover: #f3f4f6;
+  --inso-color-border-default-active: #f3f4f6;
+  --inso-color-border-default-disabled: #f3f4f6;
+  --inso-radius-none: 0px;
+  --inso-radius-xs: 2px;
+  --inso-radius-sm: 4px;
+  --inso-radius-md: 6px;
+  --inso-radius-lg: 8px;
+  --inso-radius-xl: 12px;
+  --inso-spacing-xs: 4px;
+  --inso-spacing-sm: 8px;
+  --inso-spacing-md: 16px;
+  --inso-spacing-lg: 24px;
+  --inso-spacing-xl: 32px;
+  --inso-line-height-xs: 16px;
+  --inso-line-height-sm: 20px;
+  --inso-line-height-md: 24px;
+  --inso-line-height-lg: 28px;
+  --inso-line-height-xl: 32px;
+  --inso-font-size-xs: 12px;
+  --inso-font-size-sm: 14px;
+  --inso-font-size-md: 16px;
+  --inso-font-size-lg: 20px;
+  --inso-font-size-xl: 24px;
+  --inso-font-weight-light: 300;
+  --inso-font-weight-regular: 400;
+  --inso-font-weight-medium: 500;
+  --inso-font-weight-bold: 700;
+}
