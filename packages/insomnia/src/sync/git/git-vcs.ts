@@ -271,7 +271,7 @@ export class GitVCS {
         prefix: 'refs/heads/',
         url: uri,
       });
-      console.log({ branches });
+
       // Don't care about returning remote HEAD
       return GitVCS.sortBranches(branches.filter(b => b.ref !== 'HEAD').map(b => b.ref.replace('refs/heads/', '')));
     } catch (e) {
