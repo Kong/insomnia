@@ -9,7 +9,7 @@ async function isomorphicEncryptString(raw: string) {
   if (process.type === 'renderer') {
     return await window.main.secretStorage.encryptString(raw);
   }
-  const { decryptString, encryptString } = await import('../main/ipc/secret-storage');
+  const { encryptString } = await import('../main/ipc/secret-storage');
   return encryptString(raw);
 }
 
@@ -17,7 +17,7 @@ async function isomorphicDecryptString(cipherText: string) {
   if (process.type === 'renderer') {
     return await window.main.secretStorage.decryptString(cipherText);
   }
-  const { decryptString, encryptString } = await import('../main/ipc/secret-storage');
+  const { decryptString } = await import('../main/ipc/secret-storage');
   return decryptString(cipherText);
 }
 
@@ -44,7 +44,7 @@ async function decrypt(encrypted: any) {
 
 const encryptFields = ['accountId', 'symmetricKey', 'publicKey', 'encPrivateKey'] as const;
 
-async function decryptSession(session: UserSession) {
+async function decryptSession<T extends Partial<UserSession>>(session: T): Promise<T> {
   for (const field of encryptFields) {
     if (Object.prototype.hasOwnProperty.call(session, field)) {
       session[field] = await decrypt(session[field]);
@@ -53,7 +53,7 @@ async function decryptSession(session: UserSession) {
   return session;
 }
 
-async function encryptSession(session: Partial<UserSession>) {
+async function encryptSession<T extends Partial<UserSession>>(session: T): Promise<T> {
   for (const field of encryptFields) {
     if (Object.prototype.hasOwnProperty.call(session, field)) {
       session[field] = await encrypt(session[field]);
