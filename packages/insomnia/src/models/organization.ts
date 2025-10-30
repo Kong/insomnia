@@ -77,7 +77,7 @@ export const formatCurrentPlanType = (type: PersonalPlanType) => {
       return 'Enterprise';
     }
     case 'enterprise-member': {
-      return 'Enterprise Member';
+      return 'Enterprise';
     }
     default: {
       return 'Free';
