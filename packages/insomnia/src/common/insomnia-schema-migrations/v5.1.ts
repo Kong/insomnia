@@ -80,7 +80,10 @@ export function cleanHeadersAndParameters(obj: any): any {
         continue;
       }
 
-      if ((key === 'headers' || key === 'parameters' || key === 'params') && Array.isArray(value)) {
+      if (
+        (key === 'headers' || key === 'parameters' || key === 'params' || key === 'metadata') &&
+        Array.isArray(value)
+      ) {
         const filteredAndCleaned = value
           .filter(entry => {
             if (!entry || typeof entry !== 'object') return false;
@@ -126,7 +129,7 @@ export function cleanHeadersAndParameters(obj: any): any {
         const filteredAndCleaned = value
           .filter(entry => entry && typeof entry === 'object' && (entry.key || entry.value))
           .map(entry => {
-            const { id, creation, lastAccessed, ...rest } = entry; // remove `id` and timestamp fields
+            const { creation, lastAccessed, ...rest } = entry;
             return cleanHeadersAndParameters(rest);
           });
 
