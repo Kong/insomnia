@@ -111,7 +111,7 @@ export async function isLoggedIn() {
 }
 
 /** Log out and delete session data */
-export async function logout() {
+export async function logout(clearCredentials = false) {
   const sessionId = await getCurrentSessionId();
   if (sessionId) {
     try {
@@ -128,7 +128,9 @@ export async function logout() {
   }
 
   await _unsetSessionData();
-  await _removeAllCredentials();
+  if (clearCredentials) {
+    await _removeAllCredentials();
+  }
   window.main.loginStateChange();
 }
 
@@ -294,8 +296,8 @@ async function _removeAllCredentials() {
 /*
  * Removes a git repository from the database and unlinks it from a workspace.
  *
- * Clearing only the credentials from the git repo would leave the associated project in a broken
- * state where the user would need to manually reset the git project settings, and that is not
+ * Clearing only the credentials from the git repo would leave the associated workspace in a broken
+ * state where the user would need to manually reset the git repo settings, and that is not
  * immediately apparent in the UI.
  *
  * This way, the user can simply re-connect with their settings.
