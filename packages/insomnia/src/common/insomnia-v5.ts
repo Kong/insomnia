@@ -560,7 +560,7 @@ function getCollection(
             parentId,
             url: item.url,
             protoMethodName: item.protoMethodName,
-            metadata: item.metadata || [],
+            metadata: mapHeaders(item.metadata),
             body: item.body || {},
             metaSortKey: item.meta?.sortKey ?? 0,
             reflectionApi: item.reflectionApi || {
@@ -850,7 +850,7 @@ export async function getInsomniaV5DataExport({
               name: resource.name,
               meta: mapMeta(resource),
               body: resource.body,
-              metadata: resource.metadata,
+              metadata: mapHeaders(resource.metadata),
               protoFileId: resource.protoFileId || '',
               protoMethodName: resource.protoMethodName,
               reflectionApi: resource.reflectionApi,
