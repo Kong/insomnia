@@ -36,6 +36,7 @@ const DEFAULT_CONFIG: IntelligentDiffConfig = {
     headers: ['id'],
     body: ['mimeType'],
     meta: ['modified', 'created'],
+    metadata: ['id'],
     params: ['id'],
     cookies: ['creation', 'lastAccessed'],
   },
