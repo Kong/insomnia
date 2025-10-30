@@ -38,6 +38,7 @@
     "test:smoke:build": "npm run test:build -w insomnia-smoke-test -- --project=Smoke",
     "test:smoke:package": "npm run test:package -w insomnia-smoke-test -- --project=Smoke",
     "test:crit:package": "npm run test:package -w insomnia-smoke-test -- --project=Critical",
+    "test:crit:dev": "npm run test:dev -w insomnia-smoke-test -- --project=Critical",
     "postinstall": "patch-package && npm run verify-bundle-plugins -w insomnia"
   },
   "devDependencies": {
