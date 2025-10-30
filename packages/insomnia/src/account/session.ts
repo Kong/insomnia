@@ -1,11 +1,13 @@
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '~/common/constants';
 import { type GitRepository, isGitCredentialsOAuth } from '~/models/git-repository';
+import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
 
 import {
   cloudCredential,
   gitCredentials,
   gitRepository,
   pluginData,
+  project,
   settings,
   userSession,
   workspaceMeta,
@@ -294,18 +296,30 @@ async function _removeAllCredentials() {
 }
 
 /*
- * Removes a git repository from the database and unlinks it from a workspace.
+ * Removes a git repo from the database and unlinks it from associated projects and workspaces.
  *
  * Clearing only the credentials from the git repo would leave the associated workspace in a broken
  * state where the user would need to manually reset the git repo settings, and that is not
  * immediately apparent in the UI.
  *
  * This way, the user can simply re-connect with their settings.
+ *
+ * Almost identical to resetGitRepoAction in main/git-service.ts, but walks through
+ * each model instance individually to clear them all out.
+ *
  */
 async function _removeGitRepository(repo: GitRepository) {
-  const wsMeta = await workspaceMeta.getByGitRepositoryId(repo._id);
-  if (wsMeta) {
-    await workspaceMeta.update(wsMeta, { gitRepositoryId: null });
+  const projects = await project.all();
+  for (const p of projects) {
+    if (project.isGitProject(p) && p.gitRepositoryId === repo._id) {
+      await project.update(p, { gitRepositoryId: EMPTY_GIT_PROJECT_ID });
+    }
+  }
+  const workspaceMetas = await workspaceMeta.all();
+  for (const wsMeta of workspaceMetas) {
+    if (wsMeta.gitRepositoryId === repo._id) {
+      await workspaceMeta.update(wsMeta, { gitRepositoryId: null });
+    }
   }
   await gitRepository.remove(repo);
 }
