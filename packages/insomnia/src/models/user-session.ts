@@ -9,16 +9,28 @@ async function isomorphicEncryptString(raw: string) {
   if (process.type === 'renderer') {
     return await window.main.secretStorage.encryptString(raw);
   }
-  const { encryptString } = await import('../main/ipc/secret-storage');
-  return encryptString(raw);
+  const { safeStorage } = await import('electron');
+  if (safeStorage.isEncryptionAvailable()) {
+    return safeStorage.encryptString(raw).toString('hex');
+  }
+  return raw;
 }
 
 async function isomorphicDecryptString(cipherText: string) {
   if (process.type === 'renderer') {
     return await window.main.secretStorage.decryptString(cipherText);
   }
-  const { decryptString } = await import('../main/ipc/secret-storage');
-  return decryptString(cipherText);
+  const { safeStorage } = await import('electron');
+  const buffer = Buffer.from(cipherText, 'hex');
+  if (safeStorage.isEncryptionAvailable()) {
+    try {
+      return safeStorage.decryptString(buffer);
+    } catch (error) {
+      console.error(`Can not decrypt secret ${error.toString()}`);
+      return cipherText;
+    }
+  }
+  return cipherText;
 }
 
 async function encrypt(raw: any) {
