@@ -1,7 +1,5 @@
-import { AI_PLUGIN_NAME, LLM_BACKENDS } from '~/common/constants';
-import { type GitRepository, isGitCredentialsOAuth } from '~/models/git-repository';
-import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
-
+import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
+import { database } from '../common/database';
 import {
   cloudCredential,
   gitCredentials,
@@ -12,6 +10,9 @@ import {
   userSession,
   workspaceMeta,
 } from '../models';
+import { type GitRepository, isGitCredentialsOAuth } from '../models/git-repository';
+import { EMPTY_GIT_PROJECT_ID, type Project } from '../models/project';
+import type { WorkspaceMeta } from '../models/workspace-meta';
 import { insomniaFetch } from '../ui/insomniaFetch';
 import * as crypt from './crypt';
 
@@ -309,17 +310,14 @@ async function _removeAllCredentials() {
  *
  */
 async function _removeGitRepository(repo: GitRepository) {
-  const projects = await project.all();
+  const projects = await database.find<Project>(project.type, { gitRepositoryId: repo._id });
   for (const p of projects) {
-    if (project.isGitProject(p) && p.gitRepositoryId === repo._id) {
-      await project.update(p, { gitRepositoryId: EMPTY_GIT_PROJECT_ID });
-    }
+    await project.update(p, { gitRepositoryId: EMPTY_GIT_PROJECT_ID });
   }
-  const workspaceMetas = await workspaceMeta.all();
+
+  const workspaceMetas = await database.find<WorkspaceMeta>(workspaceMeta.type, { gitRepositoryId: repo._id });
   for (const wsMeta of workspaceMetas) {
-    if (wsMeta.gitRepositoryId === repo._id) {
-      await workspaceMeta.update(wsMeta, { gitRepositoryId: null });
-    }
+    await workspaceMeta.update(wsMeta, { gitRepositoryId: null });
   }
   await gitRepository.remove(repo);
 }
