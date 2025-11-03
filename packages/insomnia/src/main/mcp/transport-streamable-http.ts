@@ -9,12 +9,13 @@ import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { BrowserWindow } from 'electron';
 
 import { timelineFileStreams, writeEventLogAndNotify } from '~/main/mcp/common';
-import type { McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
+import { type McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
 import type { McpAuthEventWithoutBase, OpenMcpHTTPClientConnectionOptions } from '~/main/mcp/types';
 import * as models from '~/models';
 import { TRANSPORT_TYPES } from '~/models/mcp-request';
 import type { McpResponse } from '~/models/mcp-response';
 import type { RequestHeader } from '~/models/request';
+import { invariant } from '~/utils/invariant';
 
 interface ResponseEventOptions {
   responseId: string;
@@ -163,6 +164,18 @@ const wrappedFetch = async (
   // DELETE method is used to terminate the MCP request, it should not trigger auth flow to keep consistent with the SDK behavior.
   // See: https://github.com/modelcontextprotocol/typescript-sdk/blob/058b87c163996b31d5cda744085ecf3c13c5c56a/src/client/streamableHttp.ts#L529-L537
   if (!calledByAuth && statusCode === 401 && method !== 'DELETE') {
+    const mcpRequest = await models.mcpRequest.getById(requestId);
+    invariant(mcpRequest, 'MCP Request not found');
+    const { authentication } = mcpRequest;
+    if (
+      'type' in authentication &&
+      authentication.type !== 'oauth2' &&
+      authentication.type !== 'none' &&
+      !authentication.disabled
+    ) {
+      // skip oauth flow if user has selected auth type other than oauth2 and enable it
+      return response;
+    }
     const resourceMetadataUrl = extractResourceMetadataUrl(response);
     if (resourceMetadataUrl) {
       authProvider.saveResourceMetadataUrl(resourceMetadataUrl);
@@ -180,7 +193,7 @@ const wrappedFetch = async (
     };
     writeEventLogAndNotify(requestId, authEvent);
 
-    let authResult: AuthResult;
+    let authResult: AuthResult | null = null;
 
     let authPromiseResolve: (authorizationCode: string) => void = () => {};
     const redirectPromise = new Promise<string>(res => (authPromiseResolve = res));
@@ -221,11 +234,14 @@ const wrappedFetch = async (
 
     try {
       // Start auth flow
+      // Discovery authorization server and dynamic register client if supported
+      // Refer https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization#authorization-server-discovery
       authResult = await auth(authProvider, {
         serverUrl: url,
         resourceMetadataUrl,
         fetchFn: authFetchFn,
       });
+      // Wait for user to complete authorization in default browser and get authorization code
       if (authResult === 'REDIRECT') {
         // Wait for oauth authorization flow to complete in default browser
         const authorizationCode = await redirectPromise;
@@ -245,6 +261,16 @@ const wrappedFetch = async (
         throw new UnauthorizedError();
       }
       return await wrappedFetch(url, init, options, calledByAuth);
+    } catch (error) {
+      if (!authResult) {
+        // If authResult is null, it means the first auth try failed
+        console.error('Failed to discovery authorization server or dynamic register client:', error);
+      } else if (authResult === 'REDIRECT') {
+        // If authResult is REDIRECT, it means failure between exchange authorization code for tokens
+        console.error('Failed to exchange authorization code for tokens:', error);
+      }
+      // return the origin 401 response if auth flow fails
+      return response;
     } finally {
       unsubscribe();
     }
