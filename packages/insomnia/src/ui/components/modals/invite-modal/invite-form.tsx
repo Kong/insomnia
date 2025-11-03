@@ -87,19 +87,13 @@ const upgradeBannerWording = {
     ownerDescription: (
       <>
         Your team has reached your plan's total purchased seats. Increase your plan's number of seats to continue
-        inviting new people.{' '}
-        <a href={docsPricingLearnMoreLink} className="underline">
-          Learn more ↗
-        </a>
+        inviting new people.
       </>
     ),
     memberDescription: (
       <>
         Your team has reached your plan's total purchased seats. Tell your plan's owner to increase the number of seats
-        to continue inviting new people.{' '}
-        <a href={docsPricingLearnMoreLink} className="underline">
-          Learn more ↗
-        </a>
+        to continue inviting new people.
       </>
     ),
     submitText: 'Increase seats',
