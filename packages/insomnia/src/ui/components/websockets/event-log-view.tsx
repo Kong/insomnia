@@ -2,7 +2,7 @@ import type { CancelledNotification } from '@modelcontextprotocol/sdk/types.js';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import React, { type FC, useEffect, useRef } from 'react';
-import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
+import { Button, Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
 
 import { HelpTooltip } from '~/ui/components/help-tooltip';
 import { Icon } from '~/ui/components/icon';
@@ -95,10 +95,24 @@ const getMessage = (event: EventTypes, isLoading: boolean): string | JSX.Element
         const eventMethod = event.method || METHOD_UNKNOWN;
         const isUnsupportedMethod = eventMethod.startsWith(unsupportedMethodPrefix);
         return (
-          <div className="flex items-center">
-            {isLoading && <Icon className="mr-2 animate-spin" icon="spinner" />}
+          <div className="flex items-center gap-3">
             {isUnsupportedMethod && <span className="bg-warning mr-2 rounded-sm px-2 py-1">Unsupported</span>}
             <span className="flex-shrink">{eventMethod.replace(`${unsupportedMethodPrefix}`, '')}</span>
+            {isLoading && <Icon className="animate-spin" icon="spinner" />}
+            {isLoading && event.direction === 'OUTGOING' && event.data?.id && (
+              <Button
+                aria-label="Create in collection"
+                className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                onPress={() => {
+                  window.main.mcp.client.cancelRequest({
+                    requestId: event.requestId,
+                    messageId: event.data.id.toString(),
+                  });
+                }}
+              >
+                <SvgIcon icon="prohibited" />
+              </Button>
+            )}
           </div>
         );
       }

@@ -45,6 +45,8 @@ export const mcpServerElicitationRequests = new Map<
   string,
   Map<string | number, { resolve: (value: ElicitResult) => void; reject: (reason?: any) => void }>
 >();
+// map to save abort controllers for each MCP request
+export const mcpRequestAbortControllers = new Map<string, Map<string, AbortController>>();
 
 const mcpEventIdGenerator = () => `mcp-${uuidV4()}`;
 export const getMcpStateChannel = (requestId: string) =>
@@ -198,4 +200,35 @@ export const hasRequestResponded = async ({
     return !pendingServerRequestResolvers.has(serverRequestId);
   }
   return hasResponded;
+};
+
+export const setAbortControllerForMcpRequest = (options: { messageId: string } & CommonMcpOptions) => {
+  const { requestId, messageId } = options;
+  const abortControllersForRequest = mcpRequestAbortControllers.get(requestId) || new Map();
+  if (!mcpRequestAbortControllers.has(requestId)) {
+    mcpRequestAbortControllers.set(requestId, abortControllersForRequest);
+  }
+  const abortController = new AbortController();
+  abortControllersForRequest.set(messageId, abortController);
+  return abortController;
+};
+
+export const clearAbortControllerForMcpRequest = (options: { messageId: string } & CommonMcpOptions) => {
+  const { requestId, messageId } = options;
+  const abortControllersForRequest = mcpRequestAbortControllers.get(requestId);
+  if (abortControllersForRequest) {
+    abortControllersForRequest.delete(messageId);
+  }
+};
+
+export const cancelRequest = async (options: { messageId: string } & CommonMcpOptions) => {
+  const { requestId, messageId } = options;
+  const abortControllersForRequest = mcpRequestAbortControllers.get(requestId);
+  if (abortControllersForRequest) {
+    const abortController = abortControllersForRequest.get(messageId);
+    if (abortController) {
+      abortController.abort();
+      abortControllersForRequest.delete(messageId);
+    }
+  }
 };

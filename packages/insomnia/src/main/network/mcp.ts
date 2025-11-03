@@ -4,6 +4,7 @@ import path from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import type { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import type { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import type { RequestOptions } from '@modelcontextprotocol/sdk/shared/protocol.js';
 import {
   CancelledNotificationSchema,
   ElicitRequestSchema,
@@ -13,10 +14,12 @@ import {
   type JSONRPCRequest,
   type JSONRPCResponse,
   ListRootsRequestSchema,
+  type Request,
   ServerNotificationSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import electron from 'electron';
 import { v4 as uuidV4 } from 'uuid';
+import type { ZodType } from 'zod';
 
 import { getAppVersion, getProductName, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { getMcpMethodFromMessage, METHOD_NOTIFICATION_CANCELLED } from '~/common/mcp-utils';
@@ -36,6 +39,8 @@ import {
   unsubscribeResource,
 } from '~/main/mcp/client-requests';
 import {
+  cancelRequest,
+  clearAbortControllerForMcpRequest,
   clearMcpMaps,
   eventLogFileStreams,
   findMany,
@@ -47,11 +52,12 @@ import {
   mcpServerElicitationRequests,
   parseAndLogMcpRequest,
   requestIdToResponseIdMap,
+  setAbortControllerForMcpRequest,
   timelineFileStreams,
   updateMcpConnectionState,
   writeEventLogAndNotify,
 } from '~/main/mcp/common';
-import { McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
+import { McpOAuthClientProvider } from '~/main/mcp/oauth';
 import { createStdioTransport } from '~/main/mcp/transport-stdio';
 import { createStreamableHTTPTransport } from '~/main/mcp/transport-streamable-http';
 import type {
@@ -396,6 +402,21 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
       pendingServerRequestResolvers.delete(serverRequestId);
     }
   });
+  const originClientRequest = mcpClient.request.bind(mcpClient);
+  mcpClient.request = <T extends ZodType<object>>(request: Request, resultSchema: T, options?: RequestOptions) => {
+    // @ts-expect-error - need to access private property _requestMessageId to get message id
+    const messageId = mcpClient._requestMessageId.toString();
+    // add abort controller for each MCP client request
+    const abortController = setAbortControllerForMcpRequest({ requestId, messageId: messageId });
+    const optionsWithSignal = {
+      ...options,
+      signal: abortController.signal,
+    };
+    return originClientRequest(request, resultSchema, optionsWithSignal).finally(() => {
+      // clear abort controller after request is completed
+      clearAbortControllerForMcpRequest({ requestId, messageId: messageId });
+    });
+  };
 
   const serverCapabilities = mcpClient.getServerCapabilities();
   const primitivePromises: Promise<any>[] = [];
@@ -466,6 +487,7 @@ export interface McpBridgeAPI {
   client: {
     responseElicitationRequest: typeof responseElicitationRequest;
     hasRequestResponded: typeof hasRequestResponded;
+    cancelRequest: typeof cancelRequest;
   };
   readyState: {
     getCurrent: typeof getMcpReadyState;
@@ -517,6 +539,9 @@ export const registerMcpHandlers = () => {
   );
   ipcMainHandle('mcp.client.hasRequestResponded', (_, options: Parameters<typeof hasRequestResponded>[0]) =>
     hasRequestResponded(options),
+  );
+  ipcMainHandle('mcp.client.cancelRequest', (_, options: Parameters<typeof cancelRequest>[0]) =>
+    cancelRequest(options),
   );
 };
 

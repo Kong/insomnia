@@ -128,6 +128,7 @@ export type HandleChannels =
   | 'mcp.event.findNotifications'
   | 'mcp.notification.rootListChange'
   | 'mcp.client.hasRequestResponded'
+  | 'mcp.client.cancelRequest'
   | 'mcp.close';
 
 export const ipcMainHandle = (
