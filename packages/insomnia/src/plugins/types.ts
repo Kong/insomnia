@@ -24,6 +24,11 @@ export interface ModelConfig {
   repeatPenalty?: number;
 }
 
+export interface MultiTurnMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export interface MockRouteData {
   path: string;
   method: string;
@@ -45,3 +50,9 @@ export type GenerateCommitsFromDiffFunction = (
     files: string[];
   }[]
 >;
+
+export type GenerateMcpSamplingResponseFunction = (parameters: {
+  systemPrompt?: string;
+  messages: MultiTurnMessage[];
+  modelConfig: Pick<ModelConfig, 'maxTokens' | 'temperature'>;
+}) => Promise<{ content: string; modelConfig: ModelConfig }>;

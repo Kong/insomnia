@@ -5,6 +5,7 @@ import type { AnySchema } from '@modelcontextprotocol/sdk/server/zod-compat.js';
 import type { RequestOptions } from '@modelcontextprotocol/sdk/shared/protocol.js';
 import {
   CancelledNotificationSchema,
+  CreateMessageRequestSchema,
   ElicitRequestSchema,
   EmptyResultSchema,
   JSONRPCErrorSchema,
@@ -29,6 +30,7 @@ import {
   listTools,
   readResource,
   responseElicitationRequest,
+  responseSamplingRequest,
   sendRootListChangeNotification,
   subscribeResource,
   unsubscribeResource,
@@ -296,7 +298,7 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
 };
 
 const performConnection = async (context: ConnectionContext) => {
-  const { abortController, options, requestId, mcpServerElicitationRequests } = context;
+  const { abortController, options, requestId, mcpServerElicitationRequests, mcpServerSamplingRequests } = context;
   // Check if the connection has been aborted before proceeding
   if (abortController.signal.aborted) {
     clearConnectionContext(context);
@@ -318,6 +320,8 @@ const performConnection = async (context: ConnectionContext) => {
 
         // declare the client to support elicitation
         elicitation: {},
+        // declare the client to support sampling
+        sampling: {},
       },
     },
   ) as McpClient;
@@ -361,12 +365,24 @@ const performConnection = async (context: ConnectionContext) => {
     });
   });
 
+  // add sampling request handler to indicate the client supports it
+  mcpClient.setRequestHandler(CreateMessageRequestSchema, async (_request, extra) => {
+    return new Promise((resolve, reject) => {
+      const serverRequestId = extra.requestId;
+      mcpServerSamplingRequests.set(serverRequestId, { resolve, reject });
+    });
+  });
+
   mcpClient.setNotificationHandler(CancelledNotificationSchema, notification => {
     const serverRequestId = notification.params.requestId;
     // handle server request cancellation
     if (mcpServerElicitationRequests.has(serverRequestId)) {
-      console.log('Received server request cancellation notification', serverRequestId);
+      console.log('Received server request cancellation notification for elicitation request', serverRequestId);
       mcpServerElicitationRequests.delete(serverRequestId);
+    }
+    if (mcpServerSamplingRequests.has(serverRequestId)) {
+      console.log('Received server request cancellation notification for sampling request', serverRequestId);
+      mcpServerSamplingRequests.delete(serverRequestId);
     }
   });
   const originClientRequest = mcpClient.request.bind(mcpClient);
@@ -468,6 +484,7 @@ export interface McpBridgeAPI {
   };
   client: {
     responseElicitationRequest: typeof responseElicitationRequest;
+    responseSamplingRequest: typeof responseSamplingRequest;
     hasRequestResponded: typeof hasRequestResponded;
     cancelRequest: typeof cancelRequest;
   };
@@ -522,6 +539,9 @@ export const registerMcpHandlers = () => {
   );
   ipcMainOn('mcp.client.responseElicitationRequest', (_, options: Parameters<typeof responseElicitationRequest>[0]) =>
     responseElicitationRequest(options),
+  );
+  ipcMainOn('mcp.client.responseSamplingRequest', (_, options: Parameters<typeof responseSamplingRequest>[0]) =>
+    responseSamplingRequest(options),
   );
   ipcMainHandle('mcp.client.hasRequestResponded', (_, options: Parameters<typeof hasRequestResponded>[0]) =>
     hasRequestResponded(options),

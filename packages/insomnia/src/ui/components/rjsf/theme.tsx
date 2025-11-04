@@ -98,6 +98,20 @@ const CustomDatePickerWidget = (props: WidgetProps) => {
     <DatePicker id={id} isInvalid={isInvalid} value={value ? parseDate(value) : null} onChange={handleDateChange} />
   );
 };
+// Textarea widget for string values
+const CustomTextAreaWidget = (props: WidgetProps) => {
+  const { value, onChange, disabled, readonly } = props;
+
+  return (
+    <textarea
+      disabled={disabled}
+      className={cn(`${baseInputClasses}`)}
+      readOnly={readonly}
+      value={value || ''}
+      onChange={e => onChange(e.target.value)}
+    />
+  );
+};
 
 // ===== TEMPLATES =====
 
@@ -355,6 +369,7 @@ const themeWidgets: RegistryWidgetsType = {
   CheckboxWidget: CustomCheckboxWidget,
   SelectWidget: CustomSelectWidget,
   DateWidget: CustomDatePickerWidget,
+  TextareaWidget: CustomTextAreaWidget,
 };
 
 const themeTemplates = {

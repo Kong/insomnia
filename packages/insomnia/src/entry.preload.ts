@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
+import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
 
 import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
@@ -76,6 +77,7 @@ const mcp: McpBridgeAPI = {
   },
   client: {
     responseElicitationRequest: options => ipcRenderer.send('mcp.client.responseElicitationRequest', options),
+    responseSamplingRequest: options => ipcRenderer.send('mcp.client.responseSamplingRequest', options),
     hasRequestResponded: options => ipcRenderer.invoke('mcp.client.hasRequestResponded', options),
     cancelRequest: options => ipcRenderer.invoke('mcp.client.cancelRequest', options),
   },
@@ -257,6 +259,8 @@ const main: Window['main'] = {
     ),
   generateCommitsFromDiff: (input: { diff: string; recent_commits: string }) =>
     ipcRenderer.invoke('generateCommitsFromDiff', input),
+  generateMcpSamplingResponse: (parameters: Parameters<GenerateMcpSamplingResponseFunction>[0]) =>
+    ipcRenderer.invoke('generateMcpSamplingResponse', parameters),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {
