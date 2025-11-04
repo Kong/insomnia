@@ -242,7 +242,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
           {isLongRunning ? (
             <div
               data-testid="response-status-tag"
-              className={classnames('px-2 py-1 [&::first-letter]:capitalize', {
+              className={classnames('px-2 py-1 capitalize', {
                 'bg-success': readyState === 'connected',
                 'bg-info': readyState === 'connecting',
                 'bg-danger': readyState === 'disconnected',

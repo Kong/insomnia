@@ -94,21 +94,19 @@ export const writeEventLogAndNotify = (
   const dataToWrite = newLine ? stringifiedData + '\n' : stringifiedData;
   eventLogFileStreams.get(requestId)?.write(dataToWrite, () => {
     // notify all renderers of new event has been received
-    for (const window of BrowserWindow.getAllWindows()) {
-      const resId = requestIdToResponseIdMap.get(requestId);
-      if (resId) {
-        const notifyChannel = `${protocol}.${resId}.${channel}`;
-        notifyChannel && window.webContents.send(notifyChannel);
-        if (clearRequestIdMap) {
-          // clean up maps after last event has been written to file
-          requestIdToResponseIdMap.delete(requestId);
-        }
+    const resId = requestIdToResponseIdMap.get(requestId);
+    if (resId) {
+      const notifyChannel = `${protocol}.${resId}.${channel}`;
+      notifyMcpClientStateChange(notifyChannel);
+      if (clearRequestIdMap) {
+        // clean up maps after last event has been written to file
+        requestIdToResponseIdMap.delete(requestId);
       }
     }
   });
 };
 
-export const notifyMcpClientStateChange = (channel: string, value: McpReadyState) => {
+export const notifyMcpClientStateChange = (channel: string, value?: McpReadyState) => {
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send(channel, value);
   }
