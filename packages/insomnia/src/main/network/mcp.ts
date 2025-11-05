@@ -51,7 +51,7 @@ import {
   updateMcpConnectionState,
   writeEventLogAndNotify,
 } from '~/main/mcp/common';
-import { McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
+import { isMCPAuthError, McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
 import { createStdioTransport } from '~/main/mcp/transport-stdio';
 import { createStreamableHTTPTransport } from '~/main/mcp/transport-streamable-http';
 import type {
@@ -152,7 +152,7 @@ const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
 const _handleTransportError = (message: JSONRPCRequest, requestId: string, error: Error) => {
   const messageEvent: McpErrorEventWithoutBase = {
     type: 'error',
-    message: error.message || 'Transport Error',
+    message: error.name || 'Transport Error',
     error: {
       requestId: message.id,
       message: error.message || 'Transport Error',
@@ -180,6 +180,7 @@ const createErrorResponse = async ({
   timelinePath,
   message,
   transportType,
+  errorType,
 }: {
   responseId: string;
   requestId: string;
@@ -187,6 +188,7 @@ const createErrorResponse = async ({
   timelinePath: string;
   message: string;
   transportType: TransportType;
+  errorType?: string;
 }) => {
   const settings = await models.settings.get();
   const responsePatch = {
@@ -197,6 +199,7 @@ const createErrorResponse = async ({
     status: 'danger',
     statusMessage: 'Error',
     error: message,
+    errorType,
     transportType,
   };
 
@@ -362,6 +365,7 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
       environmentId: responseEnvironmentId,
       timelinePath,
       message: error.message || 'Something went wrong',
+      errorType: isMCPAuthError(error) ? 'auth' : '',
       transportType: options.transportType,
     });
     console.error(`Failed to create ${options.transportType} transport: ${error}`);

@@ -15,6 +15,17 @@ import type { RequestAuthentication } from '~/models/request';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 import { invariant } from '~/utils/invariant';
 
+export class MCPAuthError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = 'MCPAuthError';
+  }
+}
+
+export const isMCPAuthError = (error: unknown): error is MCPAuthError => {
+  return error instanceof Error && error.name === 'MCPAuthError';
+};
+
 export class McpOAuthClientProvider implements OAuthClientProvider {
   private _codeVerifier?: string;
   private _resourceMetadataUrl?: URL;
