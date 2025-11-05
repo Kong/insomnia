@@ -223,16 +223,8 @@ const createTransportAndConnect = async (
   let transport: StdioClientTransport | StreamableHTTPClientTransport;
   // Wrap the transport to log messages and errors, must be called before connecting the transport
   const wrapTransport = () => {
-    const isStdioTransport = connectionOptions.transportType === TRANSPORT_TYPES.STDIO;
     // Add message handler
     transport.onmessage = message => _handleMcpMessage(message, connectionOptions.requestId);
-    // Add error handler
-    transport.onerror = _error =>
-      _handleMcpClientError(
-        connectionOptions.requestId,
-        _error,
-        `${isStdioTransport ? 'STDIO' : 'StreamableHTTP '} Transport Error`,
-      );
     const originalSend = transport.send.bind(transport);
     transport.send = (message: JSONRPCRequest) => {
       // Log outgoing request
