@@ -71,8 +71,8 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
     undef: true,
     // Prevent undefined usages
     node: true,
-    // Enable NodeJS globals
-    esversion: 8, // ES8 syntax (async/await, etc)
+    // https://jshint.com/docs/options/#esversion
+    esversion: 11,
   };
 
   const [isOpen, setIsOpen] = useState(false);
