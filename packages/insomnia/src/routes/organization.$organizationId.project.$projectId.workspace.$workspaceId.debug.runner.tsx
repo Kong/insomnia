@@ -494,7 +494,7 @@ export const Runner: FC = () => {
                         type="number"
                         className={iterationInputStyle}
                       />
-                      <span className="border">Iterations</span>
+                      <span>Iterations</span>
                     </span>
                     <span className="mr-6 text-sm">
                       <input
@@ -512,7 +512,7 @@ export const Runner: FC = () => {
                         type="number"
                         className={inputStyle}
                       />
-                      <span className="mr-1 border">Delay (ms)</span>
+                      <span className="mr-1">Delay (ms)</span>
                     </span>
                     <Button
                       onPress={() => setShowUploadModal(true)}
@@ -619,7 +619,7 @@ export const Runner: FC = () => {
                         return (
                           <TooltipTrigger key={`parent-folder-${id}=${name}`}>
                             <Tooltip message={name}>
-                              <i className="fa fa-folder fa-1x mr-0.3 h-4 text-(--color-font)" />
+                              <i className="fa fa-folder fa-1x mr-0.3 h-4" />
                               <i className="fa fa-caret-right fa-1x mr-0.3 h-4 opacity-50" />
                             </Tooltip>
                           </TooltipTrigger>

@@ -1,22 +1,21 @@
-@layer lib, main;
 /* Do not change the position of tailwindcss import to ensure css cascade layer order  */
 @import 'tailwindcss' source('../../../src');
-@import '@fortawesome/fontawesome-svg-core/styles.css' layer(lib);
-@import 'codemirror/addon/dialog/dialog.css' layer(lib);
-@import 'codemirror/addon/fold/foldgutter.css' layer(lib);
-@import 'codemirror/addon/hint/show-hint.css' layer(lib);
-@import 'codemirror/addon/search/matchesonscrollbar.css' layer(lib);
-@import 'codemirror/addon/lint/lint.css' layer(lib);
-@import 'codemirror/lib/codemirror.css' layer(lib);
+@import '@fortawesome/fontawesome-svg-core/styles.css' layer(base);
+@import 'codemirror/addon/dialog/dialog.css' layer(base);
+@import 'codemirror/addon/fold/foldgutter.css' layer(base);
+@import 'codemirror/addon/hint/show-hint.css' layer(base);
+@import 'codemirror/addon/search/matchesonscrollbar.css' layer(base);
+@import 'codemirror/addon/lint/lint.css' layer(base);
+@import 'codemirror/lib/codemirror.css' layer(base);
 /* used by merge-editor */
-@import 'codemirror/addon/merge/merge.css' layer(lib);
-@import 'codemirror/theme/base16-dark.css' layer(lib);
-@import './lib/codemirror/merge-dark.css' layer(lib);
+@import 'codemirror/addon/merge/merge.css' layer(base);
+@import 'codemirror/theme/base16-dark.css' layer(base);
+@import './lib/codemirror/merge-dark.css' layer(base);
 
-@import './lib/codemirror/codemirror.css' layer(lib);
-@import './lib/codemirror/material.css' layer(lib);
-@import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css' layer(lib);
-@import './main.css' layer(main);
+@import './lib/codemirror/codemirror.css' layer(base);
+@import './lib/codemirror/material.css' layer(base);
+@import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css' layer(base);
+@import './main.css' layer(base);
 
 @plugin '@tailwindcss/typography';
 

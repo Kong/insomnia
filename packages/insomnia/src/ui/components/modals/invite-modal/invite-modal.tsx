@@ -164,7 +164,7 @@ const InviteModal: FC<{
                     allRoles={allRoles}
                     checkSeatsResponseData={checkSeatsResponseData}
                   />
-                  <hr className="my-[24px] border" />
+                  <hr className="my-[24px]" />
                 </>
               )}
 
