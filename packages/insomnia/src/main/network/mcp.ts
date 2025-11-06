@@ -318,7 +318,7 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(requestId, fs.createWriteStream(timelinePath));
   requestIdToResponseIdMap.set(options.requestId, responseId);
-  pendingMcpRequestEventIds.set(responseId, []);
+  pendingMcpRequestEventIds.set(requestId, []);
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
   // fallback to base environment

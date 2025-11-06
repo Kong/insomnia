@@ -119,8 +119,7 @@ export const writeEventLogAndNotify = (
       }
     }
   });
-  const responseId = requestIdToResponseIdMap.get(requestId) || '';
-  const pendingEventIds = pendingMcpRequestEventIds.get(responseId);
+  const pendingEventIds = pendingMcpRequestEventIds.get(requestId);
   if (pendingEventIds) {
     const removePendingEvent = (condition: (value: { jsonRPCId: string; direction: McpEventDirection }) => unknown) => {
       if (pendingEventIds.length > 0) {
@@ -133,7 +132,7 @@ export const writeEventLogAndNotify = (
 
     if (eventData.type === 'message') {
       const { direction, data } = eventData;
-      const jsonRPCId = 'id' in data && data.id;
+      const jsonRPCId = 'id' in data ? data.id : null;
       const eventMethod = eventData.method;
       const isUnsupportedMethod = eventMethod.startsWith(unsupportedMethodPrefix);
       const isErrorRequest = 'error' in data && data.error;
@@ -142,7 +141,7 @@ export const writeEventLogAndNotify = (
       if (eventMethod === METHOD_NOTIFICATION_CANCELLED) {
         // find the cancelled notification message indicates cancellation of the request
         removePendingEvent(e => e.jsonRPCId === (data as CancelledNotification).params.requestId);
-      } else if (jsonRPCId && !isUnsupportedMethod && !isErrorRequest) {
+      } else if (jsonRPCId !== null && !isUnsupportedMethod && !isErrorRequest) {
         if (direction === 'OUTGOING') {
           if (isServerRequest) {
             removePendingEvent(e => e.jsonRPCId === jsonRPCId && e.direction === 'INCOMING');
@@ -212,6 +211,7 @@ export const clearMcpMaps = (requestId: string, timelineMessage: string, event?:
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
   pendingMcpRequestEventIds.delete(requestId);
+  mcpRequestAbortControllers.delete(requestId);
   mcpServerElicitationRequests.delete(requestId);
 };
 
@@ -241,8 +241,8 @@ export const findNotifications = async (options: { responseId: string }): Promis
   return (await getAllEvents(options)).filter(e => e.type === 'notification') as McpNotificationEvent[];
 };
 
-export const findPendingEvents = async (options: { responseId: string }): Promise<string[]> => {
-  const pendingEventIds = pendingMcpRequestEventIds.get(options.responseId);
+export const findPendingEvents = async (options: CommonMcpOptions): Promise<string[]> => {
+  const pendingEventIds = pendingMcpRequestEventIds.get(options.requestId);
   if (pendingEventIds) {
     return pendingEventIds.map(e => e.eventId);
   }

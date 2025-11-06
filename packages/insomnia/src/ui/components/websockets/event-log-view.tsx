@@ -96,7 +96,7 @@ const getMessage = (event: EventTypes, isLoading: boolean): string | JSX.Element
             {isLoading && <Icon className="animate-spin" icon="spinner" />}
             {isLoading && event.direction === 'OUTGOING' && event.data?.id && (
               <Button
-                aria-label="Create in collection"
+                aria-label="Cancel Request"
                 className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                 onPress={() => {
                   window.main.mcp.client.cancelRequest({
@@ -141,7 +141,7 @@ const getMessage = (event: EventTypes, isLoading: boolean): string | JSX.Element
     }
     case 'error': {
       const maxMcpErrorLength = 20;
-      return isMcpEvent(event) && event.message.length >= maxMcpErrorLength
+      return isMcpEvent(event) && event.message.length > maxMcpErrorLength
         ? `${event.message.slice(0, maxMcpErrorLength)}...`
         : event.message;
     }
@@ -187,14 +187,14 @@ export const EventLogView: FC<Props> = ({
 
   useEffect(() => {
     const updatePendingEvents = async (resId: string) => {
-      const pendingEvents = await window.main.mcp.event.findPendingEvents({ responseId: resId });
+      const pendingEvents = await window.main.mcp.event.findPendingEvents({ requestId: resId });
       setPendingEvents(pendingEvents);
     };
     // For mcp protocol, fetch pending event ids from main process to show loading state
     if (protocol === 'mcp' && responseId && events.length > 0) {
-      updatePendingEvents(responseId);
+      updatePendingEvents(events[0].requestId);
     }
-  }, [events.length, protocol, responseId]);
+  }, [events, protocol, responseId]);
 
   return (
     <>
