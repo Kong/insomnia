@@ -15,6 +15,7 @@ import * as models from '~/models';
 import { TRANSPORT_TYPES } from '~/models/mcp-request';
 import type { McpResponse } from '~/models/mcp-response';
 import type { RequestHeader } from '~/models/request';
+import { invariant } from '~/utils/invariant';
 
 interface ResponseEventOptions {
   responseId: string;
@@ -163,6 +164,20 @@ const wrappedFetch = async (
   // DELETE method is used to terminate the MCP request, it should not trigger auth flow to keep consistent with the SDK behavior.
   // See: https://github.com/modelcontextprotocol/typescript-sdk/blob/058b87c163996b31d5cda744085ecf3c13c5c56a/src/client/streamableHttp.ts#L529-L537
   if (!calledByAuth && statusCode === 401 && method !== 'DELETE') {
+    const mcpRequest = await models.mcpRequest.getById(requestId);
+    invariant(mcpRequest, 'MCP Request not found');
+    const { authentication } = mcpRequest;
+    // By default no authentication is set, authentication is an empty object. Proceed to oauth workflow.
+    const isDefaultAuth = !('type' in authentication);
+    // Continue to oauth workflow only when the auth type is mcp oauth and enable it.
+    if (!isDefaultAuth) {
+      const isMcpOauth2AuthType = authentication.type === 'oauth2' && authentication.grantType === 'mcp_auth_flow';
+      const isAuthTypeEnabled = !authentication.disabled;
+      if (!(isMcpOauth2AuthType && isAuthTypeEnabled)) {
+        return response;
+      }
+    }
+
     const resourceMetadataUrl = extractResourceMetadataUrl(response);
     if (resourceMetadataUrl) {
       authProvider.saveResourceMetadataUrl(resourceMetadataUrl);
@@ -221,11 +236,14 @@ const wrappedFetch = async (
 
     try {
       // Start auth flow
+      // Discovery authorization server and dynamic register client if supported
+      // Refer https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization#authorization-server-discovery
       authResult = await auth(authProvider, {
         serverUrl: url,
         resourceMetadataUrl,
         fetchFn: authFetchFn,
       });
+      // Wait for user to complete authorization in default browser and get authorization code
       if (authResult === 'REDIRECT') {
         // Wait for oauth authorization flow to complete in default browser
         const authorizationCode = await redirectPromise;
