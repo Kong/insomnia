@@ -381,6 +381,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
                       autoSelectLatestEvent
                       protocol={protocol}
                       readyState={isConnected}
+                      responseId={response._id}
                     />
                   )}
                 </Panel>

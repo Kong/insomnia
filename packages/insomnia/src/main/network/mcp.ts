@@ -38,6 +38,7 @@ import {
   subscribeResource,
   unsubscribeResource,
 } from '~/main/mcp/client-requests';
+import { findPendingEvents } from '~/main/mcp/common';
 import {
   cancelRequest,
   clearAbortControllerForMcpRequest,
@@ -51,13 +52,14 @@ import {
   mcpConnections,
   mcpServerElicitationRequests,
   parseAndLogMcpRequest,
+  pendingMcpRequestEventIds,
   requestIdToResponseIdMap,
   setAbortControllerForMcpRequest,
   timelineFileStreams,
   updateMcpConnectionState,
   writeEventLogAndNotify,
 } from '~/main/mcp/common';
-import { McpOAuthClientProvider } from '~/main/mcp/oauth';
+import { McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
 import { createStdioTransport } from '~/main/mcp/transport-stdio';
 import { createStreamableHTTPTransport } from '~/main/mcp/transport-streamable-http';
 import type {
@@ -316,6 +318,7 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(requestId, fs.createWriteStream(timelinePath));
   requestIdToResponseIdMap.set(options.requestId, responseId);
+  pendingMcpRequestEventIds.set(responseId, []);
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
   // fallback to base environment
@@ -498,6 +501,7 @@ export interface McpBridgeAPI {
   event: {
     findMany: typeof findMany;
     findNotifications: typeof findNotifications;
+    findPendingEvents: typeof findPendingEvents;
   };
 }
 
@@ -530,6 +534,9 @@ export const registerMcpHandlers = () => {
   ipcMainHandle('mcp.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
   ipcMainHandle('mcp.event.findNotifications', (_, options: Parameters<typeof findNotifications>[0]) =>
     findNotifications(options),
+  );
+  ipcMainHandle('mcp.event.findPendingEvents', (_, options: Parameters<typeof findPendingEvents>[0]) =>
+    findPendingEvents(options),
   );
   ipcMainHandle('mcp.notification.rootListChange', (_, options: Parameters<typeof sendRootListChangeNotification>[0]) =>
     sendRootListChangeNotification(options),

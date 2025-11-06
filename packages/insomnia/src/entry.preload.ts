@@ -82,6 +82,7 @@ const mcp: McpBridgeAPI = {
   event: {
     findMany: options => ipcRenderer.invoke('mcp.event.findMany', options),
     findNotifications: options => ipcRenderer.invoke('mcp.event.findNotifications', options),
+    findPendingEvents: options => ipcRenderer.invoke('mcp.event.findPendingEvents', options),
   },
 };
 

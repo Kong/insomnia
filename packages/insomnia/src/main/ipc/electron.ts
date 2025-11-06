@@ -126,6 +126,7 @@ export type HandleChannels =
   | 'mcp.readyState'
   | 'mcp.event.findMany'
   | 'mcp.event.findNotifications'
+  | 'mcp.event.findPendingEvents'
   | 'mcp.notification.rootListChange'
   | 'mcp.client.hasRequestResponded'
   | 'mcp.client.cancelRequest'
