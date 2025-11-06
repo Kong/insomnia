@@ -11,6 +11,7 @@ import { getOauthRedirectUrl } from '~/common/constants';
 import { authorizeUserInDefaultBrowser } from '~/main/authorizeUserInDefaultBrowser';
 import * as models from '~/models';
 import type { McpRequest } from '~/models/mcp-request';
+import type { RequestAuthentication } from '~/models/request';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 import { invariant } from '~/utils/invariant';
 
@@ -42,9 +43,39 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     const { authentication } = this.mcpRequest;
     return 'grantType' in authentication && authentication.grantType === 'mcp_auth_flow' && !authentication.disabled;
   }
+  private async updateAuthentication(auth: Partial<RequestAuthentication>) {
+    await models.mcpRequest.update(this.mcpRequest, {
+      authentication: {
+        ...this.mcpRequest.authentication,
+        ...auth,
+      },
+    });
+    await this.refreshMcpRequest();
+  }
   // It's called when auth tries to get client information for authorization, use as a starting point for MCP Auth Flow
   // See: https://github.com/modelcontextprotocol/typescript-sdk/blob/1d475bb3f75674a46d81dba881ea743a763cbc12/src/client/auth.ts#L349
   async clientInformation() {
+    // If not using MCP Auth Flow, wait for user to confirm in the app UI
+    if (!this.isUsingMcpAuthFlow()) {
+      BrowserWindow.getAllWindows().forEach(window => {
+        window.webContents.send('mcp-auth-confirmation');
+      });
+      await new Promise<void>((resolve, reject) => {
+        ipcMain.once('mcp.authConfirmed', async (_, confirmed: boolean) => {
+          if (!confirmed) {
+            reject(new Error('MCP authorization cancelled by user'));
+          } else {
+            await this.updateAuthentication({
+              type: 'oauth2',
+              grantType: 'mcp_auth_flow',
+              disabled: false,
+            });
+            resolve();
+          }
+        });
+      });
+    }
+
     if ('clientId' in this.mcpRequest.authentication && this.mcpRequest.authentication.clientId) {
       return {
         client_id: this.mcpRequest.authentication.clientId,
@@ -56,21 +87,6 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     return undefined;
   }
   async saveClientInformation(clientInformation: OAuthClientInformationFull) {
-    // If not using MCP Auth Flow, wait for user to confirm in the app UI
-    if (!this.isUsingMcpAuthFlow()) {
-      BrowserWindow.getAllWindows().forEach(window => {
-        window.webContents.send('mcp-auth-confirmation');
-      });
-      await new Promise<void>((resolve, reject) => {
-        ipcMain.once('mcp.authConfirmed', async (_, confirmed: boolean) => {
-          if (!confirmed) {
-            reject(new Error('MCP authorization cancelled by user'));
-          } else {
-            resolve();
-          }
-        });
-      });
-    }
     const parsedClientInformation = OAuthClientInformationSchema.parse(clientInformation);
     await models.mcpRequest.update(this.mcpRequest, {
       authentication: {
@@ -79,18 +95,14 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
         clientSecret: parsedClientInformation.client_secret,
         clientIdIssuedAt: parsedClientInformation.client_id_issued_at,
         clientSecretExpiresAt: parsedClientInformation.client_secret_expires_at,
-        type: 'oauth2',
-        grantType: 'mcp_auth_flow',
-        disabled: false,
       },
     });
     await this.refreshMcpRequest();
   }
   async tokens(): Promise<OAuthTokens | undefined> {
     const { authentication } = this.mcpRequest;
-    const isUsingMcpAuthFlow = await this.isUsingMcpAuthFlow();
     // Don't return tokens if not using MCP Auth Flow or if disabled
-    if (isUsingMcpAuthFlow) {
+    if (this.isUsingMcpAuthFlow()) {
       const token = await models.oAuth2Token.getOrCreateByParentId(this.mcpRequest._id);
       if (token.accessToken) {
         return {

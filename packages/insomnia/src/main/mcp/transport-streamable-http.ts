@@ -167,15 +167,17 @@ const wrappedFetch = async (
     const mcpRequest = await models.mcpRequest.getById(requestId);
     invariant(mcpRequest, 'MCP Request not found');
     const { authentication } = mcpRequest;
-    if (
-      'type' in authentication &&
-      authentication.type !== 'oauth2' &&
-      authentication.type !== 'none' &&
-      !authentication.disabled
-    ) {
-      // skip oauth flow if user has selected auth type other than oauth2 and enable it
-      return response;
+    // By default no authentication is set, authentication is an empty object
+    const isDefaultAuth = !('type' in authentication);
+    // Continue to oauth workflow only when the auth type is oauth and enable it
+    if (!isDefaultAuth) {
+      const isOauth2AuthType = authentication.type === 'oauth2';
+      const isAuthTypeEnabled = !authentication.disabled;
+      if (!(isOauth2AuthType && isAuthTypeEnabled)) {
+        return response;
+      }
     }
+
     const resourceMetadataUrl = extractResourceMetadataUrl(response);
     if (resourceMetadataUrl) {
       authProvider.saveResourceMetadataUrl(resourceMetadataUrl);
@@ -193,7 +195,7 @@ const wrappedFetch = async (
     };
     writeEventLogAndNotify(requestId, authEvent);
 
-    let authResult: AuthResult | null = null;
+    let authResult: AuthResult;
 
     let authPromiseResolve: (authorizationCode: string) => void = () => {};
     const redirectPromise = new Promise<string>(res => (authPromiseResolve = res));
@@ -261,16 +263,6 @@ const wrappedFetch = async (
         throw new UnauthorizedError();
       }
       return await wrappedFetch(url, init, options, calledByAuth);
-    } catch (error) {
-      if (!authResult) {
-        // If authResult is null, it means the first auth try failed
-        console.error('Failed to discovery authorization server or dynamic register client:', error);
-      } else if (authResult === 'REDIRECT') {
-        // If authResult is REDIRECT, it means failure between exchange authorization code for tokens
-        console.error('Failed to exchange authorization code for tokens:', error);
-      }
-      // return the origin 401 response if auth flow fails
-      return response;
     } finally {
       unsubscribe();
     }
