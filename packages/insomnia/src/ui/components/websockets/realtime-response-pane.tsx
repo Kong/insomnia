@@ -270,14 +270,14 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
           aria-label="Request pane tabs"
         >
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-[--hl] transition-colors duration-300 outline-none select-none hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) transition-colors duration-300 outline-none select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="events"
           >
             Events
           </Tab>
           {isMcpResponse(response) && (
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-[--hl] transition-colors duration-300 outline-none select-none hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) transition-colors duration-300 outline-none select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="notifications"
             >
               Notifications
@@ -290,7 +290,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
           )}
           {!hideHeaders && (
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-[--hl] transition-colors duration-300 outline-none select-none hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) transition-colors duration-300 outline-none select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="headers"
             >
               Headers
@@ -303,7 +303,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
           )}
           {!hideCookies && (
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-[--hl] transition-colors duration-300 outline-none select-none hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) transition-colors duration-300 outline-none select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="cookies"
             >
               Cookies
@@ -315,7 +315,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
             </Tab>
           )}
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-[--hl] transition-colors duration-300 outline-none select-none hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) transition-colors duration-300 outline-none select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="timeline"
           >
             Console
@@ -357,17 +357,17 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
                     >
                       <Input
                         placeholder="Search"
-                        className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pr-7 pl-2 text-[--color-font] transition-colors focus:ring-1 focus:ring-[--hl-md] focus:outline-none"
+                        className="w-full rounded-sm border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-none"
                       />
                       <div className="absolute top-0 right-0 flex h-full items-center px-2">
-                        <Button className="flex aspect-square w-5 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all group-data-[empty]:hidden hover:bg-[--hl-xs] focus:ring-[--hl-md] focus:ring-inset aria-pressed:bg-[--hl-sm]">
+                        <Button className="flex aspect-square w-5 items-center justify-center rounded-sm text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
                           <Icon icon="close" />
                         </Button>
                       </div>
                     </SearchField>
                     <Button
                       aria-label="Create in collection"
-                      className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-[--hl-md] focus:ring-inset aria-pressed:bg-[--hl-sm]"
+                      className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                       onPress={() => {
                         const lastEvent = events[0];
                         setClearEventsBefore(lastEvent.timestamp);
