@@ -253,7 +253,7 @@ export const McpUrlActionBar = ({
           handleSubmit();
         }}
       >
-        <div className="box-border h-full w-full px-[--padding-md]">
+        <div className="box-border h-full w-full px-(--padding-md)">
           <OneLineEditor
             id="websocket-url-bar"
             ref={oneLineEditorRef}
@@ -269,7 +269,7 @@ export const McpUrlActionBar = ({
         <div className="flex p-1">
           {!isConnected ? (
             <button
-              className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
+              className="rounded-xs bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise) hover:brightness-75"
               disabled={isConnecting}
               type="submit"
             >
@@ -382,7 +382,7 @@ export const MCPStdioAccessModal = forwardRef<
         <ModalHeader hideCloseButton={isSubmitting}>Grant STDIO access for this MCP Client?</ModalHeader>
         <p>You should be sure you understand and trust this STDIO server before using it.</p>
         <p>Trust and give access to:</p>
-        <div className="flex flex-col gap-[var(--padding-lg)]">
+        <div className="flex flex-col gap-(--padding-lg)">
           <RadioGroup
             aria-label="Grant access level"
             name="accessLevel"
@@ -392,7 +392,7 @@ export const MCPStdioAccessModal = forwardRef<
           >
             <Radio
               value="request"
-              className="flex-1 cursor-pointer rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+              className="flex-1 cursor-pointer rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
             >
               <div className="flex items-center gap-2">
                 <Heading className="text-lg">This MCP client only</Heading>
@@ -400,7 +400,7 @@ export const MCPStdioAccessModal = forwardRef<
             </Radio>
             <Radio
               value="project"
-              className="flex-1 cursor-pointer rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+              className="flex-1 cursor-pointer rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
             >
               <div className="flex items-center gap-2">
                 <Heading className="text-lg">All MCP clients in this project</Heading>
@@ -408,9 +408,9 @@ export const MCPStdioAccessModal = forwardRef<
             </Radio>
           </RadioGroup>
 
-          <div className="flex justify-end gap-[var(--padding-sm)] p-[var(--padding-sm)]">
+          <div className="flex justify-end gap-(--padding-sm) p-(--padding-sm)">
             <Button
-              className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+              className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
               isDisabled={isSubmitting}
               data-close-modal="true"
             >
@@ -419,7 +419,7 @@ export const MCPStdioAccessModal = forwardRef<
             <Button
               variant="contained"
               bg="surprise"
-              className="gap-[var(--padding-sm)]"
+              className="gap-(--padding-sm)"
               isDisabled={isSubmitting}
               onClick={handleGrant}
             >

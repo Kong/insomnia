@@ -109,7 +109,7 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
             />
           </div>
         ) : (
-          <div className="tall rounded bg-[--hl-xs]">
+          <div className="tall rounded-sm bg-(--hl-xs)">
             <CodeEditor
               id="code-prompt-modal"
               hideLineNumbers
@@ -128,7 +128,7 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
           <Dropdown
             aria-label="Select a mode"
             triggerButton={
-              <Button className="!hover:no-underline !hover:bg-opacity-90 !rounded-sm !border !border-solid !border-[--hl-md] !bg-transparent !px-3 !py-2 !text-[--color-font] !transition-colors">
+              <Button className="rounded-xs! border! border-solid! border-(--hl-md)! bg-transparent! px-3! py-2! text-(--color-font)! transition-colors! hover:no-underline!">
                 {MODES[mode]}
                 <i className="fa fa-caret-down space-left" />
               </Button>

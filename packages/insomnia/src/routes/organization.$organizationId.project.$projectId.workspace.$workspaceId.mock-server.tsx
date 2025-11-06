@@ -217,7 +217,7 @@ const Component = () => {
       ref={sidebarPanelRef}
       autoSaveId="insomnia-sidebar"
       id="wrapper"
-      className="new-sidebar h-full w-full text-[--color-font]"
+      className="new-sidebar h-full w-full text-(--color-font)"
       direction="horizontal"
     >
       <Panel
@@ -228,27 +228,27 @@ const Component = () => {
         minSize={10}
         collapsible
       >
-        <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
-          <div className={`flex items-center gap-2 h-[${INSOMNIA_TAB_HEIGHT}px] px-[--padding-sm]`}>
+        <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
+          <div className={`flex items-center gap-2 h-[${INSOMNIA_TAB_HEIGHT}px] px-(--padding-sm)`}>
             <Breadcrumbs className="m-0 flex w-full list-none items-center gap-2 p-0 font-bold">
-              <Breadcrumb className="flex h-full select-none items-center gap-2 text-[--color-font] outline-none data-[focused]:outline-none">
+              <Breadcrumb className="flex h-full select-none items-center gap-2 text-(--color-font) outline-hidden data-focused:outline-hidden">
                 <NavLink
                   data-testid="project"
-                  className="flex aspect-square h-7 flex-shrink-0 items-center justify-center gap-2 rounded-sm px-1 py-1 text-sm text-[--color-font] outline-none ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] data-[focused]:outline-none"
+                  className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) outline-hidden ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
                   to={`/organization/${organizationId}/project/${projectId}`}
                 >
                   <Icon className="text-xs" icon="chevron-left" />
                 </NavLink>
-                <span aria-hidden role="separator" className="h-4 text-[--hl-lg] outline outline-1" />
+                <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-solid outline-1" />
               </Breadcrumb>
-              <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-[--color-font] outline-none data-[focused]:outline-none">
+              <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-(--color-font) outline-hidden data-focused:outline-hidden">
                 <WorkspaceDropdown />
               </Breadcrumb>
             </Breadcrumbs>
           </div>
-          <div className="p-[--padding-sm]">
+          <div className="p-(--padding-sm)">
             <Button
-              className="flex items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+              className="flex items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
               onPress={() => {
                 setMockRouteModalState({
                   isOpen: true,
@@ -271,7 +271,7 @@ const Component = () => {
               key: route._id,
               ...route,
             }))}
-            className="flex-1 overflow-y-auto py-[--padding-sm] data-[empty]:py-0"
+            className="flex-1 overflow-y-auto py-(--padding-sm) data-empty:py-0"
             disallowEmptySelection
             selectedKeys={[mockRouteId]}
             selectionMode="single"
@@ -290,21 +290,21 @@ const Component = () => {
                   key={item._id}
                   id={item._id}
                   textValue={item.name}
-                  className="group w-full select-none outline-none"
+                  className="group w-full select-none outline-hidden"
                 >
-                  <div className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:text-[--color-font]">
-                    <span className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-[--color-surprise]" />
+                  <div className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
+                    <span className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
                     <span
-                      className={`flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] text-[0.65rem] ${
+                      className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${
                         {
-                          GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-[--color-font-surprise]',
-                          POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-[--color-font-success]',
-                          HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
-                          OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
-                          DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-[--color-font-danger]',
-                          PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-[--color-font-warning]',
-                          PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-[--color-font-notice]',
-                        }[item.method] || 'bg-[--hl-md] text-[--color-font]'
+                          GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
+                          POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
+                          HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                          OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                          DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
+                          PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
+                          PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
+                        }[item.method] || 'bg-(--hl-md) text-(--color-font)'
                       }`}
                     >
                       {formatMethodName(item.method)}
@@ -314,7 +314,7 @@ const Component = () => {
                     <MenuTrigger>
                       <Button
                         aria-label="Mock Route Actions"
-                        className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-hover:opacity-100 group-focus:opacity-100 data-[pressed]:bg-[--hl-sm] data-[pressed]:opacity-100"
+                        className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-(--hl-md) group-hover:opacity-100 group-focus:opacity-100 data-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                       >
                         <Icon icon="caret-down" />
                       </Button>
@@ -326,13 +326,13 @@ const Component = () => {
                             mockRouteActionList.find(({ id }) => key === id)?.action(item._id, item.name);
                           }}
                           items={mockRouteActionList}
-                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
                         >
                           {item => (
                             <MenuItem
                               key={item.id}
                               id={item.id}
-                              className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
                             >
                               <Icon icon={item.icon} />
@@ -351,7 +351,7 @@ const Component = () => {
           <WorkspaceSyncDropdown />
         </div>
       </Panel>
-      <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
+      <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
       <Panel className="flex flex-col">
         <OrganizationTabList />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
@@ -378,7 +378,7 @@ const Component = () => {
             </Routes>
           </Panel>
           <PanelResizeHandle
-            className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'h-[1px] w-full bg-[--hl-md]'}
+            className={direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'}
           />
           <Panel id="pane-two" minSize={10} className="pane-two theme--pane">
             <Routes>

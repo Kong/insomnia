@@ -36,10 +36,10 @@ export const TestRunStatus = () => {
   const { stats, tests } = testResult.results;
 
   return (
-    <div key={testResult._id} className="flex h-full w-full flex-1 flex-col divide-y divide-solid divide-[--hl-md]">
+    <div key={testResult._id} className="flex h-full w-full flex-1 flex-col divide-y divide-solid divide-(--hl-md)">
       <Heading
-        className={`flex h-[--line-height-sm] w-full flex-shrink-0 items-center gap-2 p-[--padding-md] text-lg ${
-          stats.failures > 0 ? 'text-[--color-danger]' : 'text-[--color-success]'
+        className={`flex h-(--line-height-sm) w-full shrink-0 items-center gap-2 p-(--padding-md) text-lg ${
+          stats.failures > 0 ? 'text-(--color-danger)' : 'text-(--color-success)'
         }`}
       >
         <Icon icon={stats.failures > 0 ? 'exclamation-triangle' : 'check-square'} />
@@ -47,18 +47,18 @@ export const TestRunStatus = () => {
         {stats.failures > 0 ? stats.failures : stats.passes}/{stats.tests}
       </Heading>
       <div
-        className="flex w-full flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto"
+        className="flex w-full flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-y-auto"
         aria-label="Test results"
       >
         {tests.map((test, i) => {
           const errorMessage = 'message' in test.err ? test.err.message : '';
           return (
             <div key={test.id || i} className="flex flex-col">
-              <div className="flex items-center gap-2 p-[--padding-sm]">
-                <div className="flex flex-shrink-0">
+              <div className="flex items-center gap-2 p-(--padding-sm)">
+                <div className="flex shrink-0">
                   <span
-                    className={`flex w-20 flex-shrink-0 rounded-sm border border-solid border-current ${
-                      errorMessage ? 'text-[--color-danger]' : 'text-[--color-success]'
+                    className={`flex w-20 shrink-0 rounded-xs border border-solid border-current ${
+                      errorMessage ? 'text-(--color-danger)' : 'text-(--color-success)'
                     } items-center justify-center`}
                   >
                     {errorMessage ? 'Failed' : 'Passed'}
@@ -67,10 +67,10 @@ export const TestRunStatus = () => {
                 <div className="flex-1 truncate" title={test.title}>
                   {test.title}
                 </div>
-                <div className="flex flex-shrink-0">{test.duration} ms</div>
+                <div className="flex shrink-0">{test.duration} ms</div>
               </div>
               {errorMessage && (
-                <div className="w-full px-[--padding-sm] pb-[--padding-sm]">
+                <div className="w-full px-(--padding-sm) pb-(--padding-sm)">
                   <code className="w-full">{errorMessage}</code>
                 </div>
               )}

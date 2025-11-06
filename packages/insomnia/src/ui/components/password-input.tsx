@@ -28,12 +28,12 @@ export const PasswordInput = (props: PasswordInputProps) => {
       <div className="relative">
         <input
           value={value}
-          className="placeholder-[--hl-lg]"
+          className="placeholder-(--hl-lg)"
           onChange={event => onChange(event.target.value)}
           placeholder={placeholder}
           type={isHidden ? 'password' : 'text'}
         />
-        <button className="h-f absolute right-0 top-1 m-0 flex px-[--padding-sm]" onClick={handleShowHidePassword}>
+        <button className="h-f absolute right-0 top-1 m-0 flex px-(--padding-sm)" onClick={handleShowHidePassword}>
           {isHidden ? <i className="fa fa-eye-slash" /> : <i className="fa fa-eye" />}
         </button>
       </div>

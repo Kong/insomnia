@@ -62,14 +62,14 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
         <ModalHeader>Duplicate file</ModalHeader>
         <ModalBody className="wide">
           <p className="mb-6">You can duplicate the following file to a project:</p>
-          <div className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font]">
+          <div className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font)">
             <div
               className={`${scopeToBgColorMap[workspace.scope]} ${scopeToTextColorMap[workspace.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
             >
               <Icon icon={scopeToIconMap[workspace.scope]} />
             </div>
             <span>{workspace.name}</span>
-            <span className="text-[--hl]">{getWorkspaceLabel(workspace).singular}</span>
+            <span className="text-(--hl)">{getWorkspaceLabel(workspace).singular}</span>
           </div>
           <fetcher.Form
             action={href('/organization/:organizationId/project/:projectId/workspace/move', {

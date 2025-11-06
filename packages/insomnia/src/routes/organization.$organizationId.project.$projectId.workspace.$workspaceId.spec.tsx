@@ -412,7 +412,7 @@ const Component = ({ params }: Route.ComponentProps) => {
       ref={sidebarPanelRef}
       autoSaveId="insomnia-sidebar"
       id="wrapper"
-      className="new-sidebar h-full w-full text-[--color-font]"
+      className="new-sidebar h-full w-full text-(--color-font)"
       direction="horizontal"
     >
       <Panel
@@ -423,22 +423,22 @@ const Component = ({ params }: Route.ComponentProps) => {
         minSize={10}
         collapsible
       >
-        <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
+        <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
           <div className="flex w-full flex-col items-start">
             <Breadcrumbs
-              className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-[--padding-sm] font-bold`}
+              className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-(--padding-sm) font-bold`}
             >
-              <Breadcrumb className="flex h-full select-none items-center gap-2 text-[--color-font] outline-none data-[focused]:outline-none">
+              <Breadcrumb className="flex h-full select-none items-center gap-2 text-(--color-font) outline-hidden data-focused:outline-hidden">
                 <NavLink
                   data-testid="project"
-                  className="flex aspect-square h-7 flex-shrink-0 items-center justify-center gap-2 rounded-sm px-1 py-1 text-sm text-[--color-font] outline-none ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] data-[focused]:outline-none"
+                  className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) outline-hidden ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
                   to={`/organization/${organizationId}/project/${activeProject._id}`}
                 >
                   <Icon className="text-xs" icon="chevron-left" />
                 </NavLink>
-                <span aria-hidden role="separator" className="h-4 text-[--hl-lg] outline outline-1" />
+                <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-solid outline-1" />
               </Breadcrumb>
-              <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-[--color-font] outline-none data-[focused]:outline-none">
+              <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-(--color-font) outline-hidden data-focused:outline-hidden">
                 <WorkspaceDropdown />
               </Breadcrumb>
             </Breadcrumbs>
@@ -447,9 +447,9 @@ const Component = ({ params }: Route.ComponentProps) => {
             organizationId={organizationId}
             projectId={projectId}
             workspaceId={workspaceId}
-            className="border-b border-solid border-[--hl-sm]"
+            className="border-b border-solid border-(--hl-sm)"
           />
-          <div className="flex w-full flex-col items-start gap-2 p-[--padding-sm]">
+          <div className="flex w-full flex-col items-start gap-2 p-(--padding-sm)">
             <div className="flex w-full items-center justify-between gap-2">
               <EnvironmentPicker
                 isOpen={isEnvironmentPickerOpen}
@@ -459,9 +459,9 @@ const Component = ({ params }: Route.ComponentProps) => {
             </div>
             <Button
               onPress={() => setIsCookieModalOpen(true)}
-              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
             >
-              <Icon icon="cookie-bite" className="w-5 flex-shrink-0" />
+              <Icon icon="cookie-bite" className="w-5 shrink-0" />
               <span className="truncate">
                 {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies{' '}
                 {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}
@@ -469,9 +469,9 @@ const Component = ({ params }: Route.ComponentProps) => {
             </Button>
             <Button
               onPress={() => setCertificatesModalOpen(true)}
-              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
             >
-              <Icon icon="file-contract" className="w-5 flex-shrink-0" />
+              <Icon icon="file-contract" className="w-5 shrink-0" />
               <span className="truncate">
                 {clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates{' '}
                 {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
@@ -481,23 +481,23 @@ const Component = ({ params }: Route.ComponentProps) => {
               </span>
             </Button>
           </div>
-          <div className="flex flex-shrink-0 items-center gap-2 p-[--padding-sm]">
-            <Heading className="uppercase text-[--hl]">Spec</Heading>
+          <div className="flex shrink-0 items-center gap-2 p-(--padding-sm)">
+            <Heading className="uppercase text-(--hl)">Spec</Heading>
             <span className="flex-1" />
             {isGenerateMockServersWithAIEnabled && (
               <Button
                 onPress={() => setNewMockServerModalOpen(true)}
                 isDisabled={!apiSpec.contents}
-                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Icon icon="server" className="w-5 flex-shrink-0" />
+                <Icon icon="server" className="w-5 shrink-0" />
                 <span className="truncate">Generate Mock</span>
               </Button>
             )}
             <ToggleButton
               aria-label="Toggle preview"
               isSelected={isSpecPaneOpen}
-              className="flex h-full items-center justify-center gap-2 rounded-sm px-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+              className="flex h-full items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
               onChange={setIsSpecPaneOpen}
             >
               {({ isSelected }) => (
@@ -510,7 +510,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             <MenuTrigger>
               <Button
                 aria-label="Spec actions"
-                className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
               >
                 <Icon icon="gear" />
               </Button>
@@ -526,11 +526,11 @@ const Component = ({ params }: Route.ComponentProps) => {
                     }
                   }}
                   items={specActionList}
-                  className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                  className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
                 >
                   {item => (
                     <MenuItem
-                      className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-[--hl-md] aria-selected:font-bold"
+                      className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-(--hl-md) aria-selected:font-bold"
                       aria-label={item.name}
                     >
                       {item.icon}
@@ -541,12 +541,12 @@ const Component = ({ params }: Route.ComponentProps) => {
               </Popover>
             </MenuTrigger>
           </div>
-          <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto">
+          <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-y-auto">
             {/* Info */}
             {info && (
-              <div className="divide-y divide-solid divide-[--hl-md]">
+              <div className="divide-y divide-solid divide-(--hl-md)">
                 <Button
-                  className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
+                  className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                   onPress={() => {
                     expandedKeys.includes('info')
                       ? setExpandedKeys(expandedKeys.filter(key => key !== 'info'))
@@ -560,25 +560,25 @@ const Component = ({ params }: Route.ComponentProps) => {
                 {expandedKeys.includes('info') && (
                   <ListBox onAction={key => navigateToPath(key.toString())}>
                     <ListBoxItem
-                      className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
+                      className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                       id="info.title"
                     >
                       <span className="truncate">Title: {info.title}</span>
                     </ListBoxItem>
                     <ListBoxItem
-                      className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
+                      className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                       id="info.description"
                     >
                       <span className="truncate">Description: {info.description}</span>
                     </ListBoxItem>
                     <ListBoxItem
-                      className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
+                      className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                       id="info.version"
                     >
                       <span className="truncate">Version: {info.version}</span>
                     </ListBoxItem>
                     <ListBoxItem
-                      className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
+                      className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                       id="info.license"
                     >
                       <span className="truncate">License: {info.license?.name}</span>
@@ -589,10 +589,10 @@ const Component = ({ params }: Route.ComponentProps) => {
             )}
             {/* Servers */}
             {servers && (
-              <div className="divide-y divide-solid divide-[--hl-md]">
+              <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
+                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('servers')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'servers'))
@@ -613,7 +613,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
+                        className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                         id={`servers.${item.path}`}
                       >
                         {item.url}
@@ -625,10 +625,10 @@ const Component = ({ params }: Route.ComponentProps) => {
             )}
             {/* Paths */}
             {paths && (
-              <div className="divide-y divide-solid divide-[--hl-md]">
+              <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
+                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('paths')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'paths'))
@@ -649,15 +649,15 @@ const Component = ({ params }: Route.ComponentProps) => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <GridListItem className="group select-none outline-none" id={`paths.${item.path}`}>
-                        <div className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:text-[--color-font]">
+                      <GridListItem className="group select-none outline-hidden" id={`paths.${item.path}`}>
+                        <div className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
                           <span className="truncate">{item.path}</span>
                           <span className="flex-1" />
                           {getMethodsFromOpenApiPathItem(item).map(method => (
                             <Button
                               key={method}
                               onPress={() => navigateToPath(`paths.${item.path}.${method}`)}
-                              className={`flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] text-[0.65rem] http-method-${method.toUpperCase()}`}
+                              className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] http-method-${method.toUpperCase()}`}
                             >
                               {formatMethodName(method.toUpperCase())}
                             </Button>
@@ -671,10 +671,10 @@ const Component = ({ params }: Route.ComponentProps) => {
             )}
             {/* RequestBodies */}
             {requestBodies && (
-              <div className="divide-y divide-solid divide-[--hl-md]">
+              <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
+                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('requestBodies')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'requestBodies'))
@@ -696,7 +696,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
+                        className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                         id={`components.requestBodies.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -708,10 +708,10 @@ const Component = ({ params }: Route.ComponentProps) => {
             )}
             {/* Responses */}
             {responses && (
-              <div className="divide-y divide-solid divide-[--hl-md]">
+              <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
+                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('responses')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'responses'))
@@ -733,7 +733,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
+                        className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                         id={`components.responses.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -745,10 +745,10 @@ const Component = ({ params }: Route.ComponentProps) => {
             )}
             {/* Parameters */}
             {parameters && (
-              <div className="divide-y divide-solid divide-[--hl-md]">
+              <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
+                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('parameters')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'parameters'))
@@ -770,7 +770,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
+                        className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                         id={`components.parameters.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -782,10 +782,10 @@ const Component = ({ params }: Route.ComponentProps) => {
             )}
             {/* Headers */}
             {headers && (
-              <div className="divide-y divide-solid divide-[--hl-md]">
+              <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
+                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('headers')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'headers'))
@@ -807,7 +807,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
+                        className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                         id={`components.headers.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -819,10 +819,10 @@ const Component = ({ params }: Route.ComponentProps) => {
             )}
             {/* Schemas */}
             {schemas && (
-              <div className="divide-y divide-solid divide-[--hl-md]">
+              <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
+                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('schemas')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'schemas'))
@@ -844,7 +844,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
+                        className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                         id={`components.schemas.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -856,10 +856,10 @@ const Component = ({ params }: Route.ComponentProps) => {
             )}
             {/* Security */}
             {securitySchemes && (
-              <div className="divide-y divide-solid divide-[--hl-md]">
+              <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
+                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('security')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'security'))
@@ -881,7 +881,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
+                        className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                         id={`components.securitySchemes.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -909,13 +909,13 @@ const Component = ({ params }: Route.ComponentProps) => {
           )}
         </div>
       </Panel>
-      <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
+      <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
       <Panel className="flex flex-col">
         <OrganizationTabList />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
-            <div className="flex h-full w-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
-              <div className="relative flex flex-1 flex-shrink-0 basis-1/2 overflow-hidden">
+            <div className="flex h-full w-full flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
+              <div className="relative flex flex-1 shrink-0 basis-1/2 overflow-hidden">
                 <CodeEditor
                   id="spec-editor"
                   key={uniquenessKey}
@@ -944,9 +944,9 @@ const Component = ({ params }: Route.ComponentProps) => {
               </div>
               {apiSpec.contents ? (
                 <div
-                  className={`flex ${isLintPaneOpen ? '' : 'h-[--line-height-sm]'} box-border flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden`}
+                  className={`flex ${isLintPaneOpen ? '' : 'h-(--line-height-sm)'} box-border flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden`}
                 >
-                  <div className="flex items-center gap-2 p-[--padding-sm]">
+                  <div className="flex items-center gap-2 p-(--padding-sm)">
                     <TooltipTrigger>
                       <Button className="flex cursor-pointer select-none items-center gap-2">
                         <Icon icon={rulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
@@ -955,13 +955,13 @@ const Component = ({ params }: Route.ComponentProps) => {
                       <Tooltip
                         placement="top end"
                         offset={8}
-                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
                       >
                         <div>
                           {rulesetPath ? (
                             <Fragment>
                               <p>Using ruleset from</p>
-                              <code className="break-words p-0">{rulesetPath}</code>
+                              <code className="wrap-break-word p-0">{rulesetPath}</code>
                             </Fragment>
                           ) : (
                             <Fragment>
@@ -977,19 +977,19 @@ const Component = ({ params }: Route.ComponentProps) => {
                     </TooltipTrigger>
                     {lintErrors.length > 0 && (
                       <div className="flex select-none items-center gap-2">
-                        <Icon icon="circle-xmark" className="text-[--color-danger]" />
+                        <Icon icon="circle-xmark" className="text-(--color-danger)" />
                         {lintErrors.length}
                       </div>
                     )}
                     {lintWarnings.length > 0 && (
                       <div className="flex select-none items-center gap-2">
-                        <Icon icon="triangle-exclamation" className="text-[--color-warning]" />
+                        <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
                         {lintWarnings.length}
                       </div>
                     )}
                     {apiSpec.contents && (
                       <div className="flex select-none items-center gap-2">
-                        {lintMessages.length === 0 && <Icon icon="check-square" className="text-[--color-success]" />}
+                        {lintMessages.length === 0 && <Icon icon="check-square" className="text-(--color-success)" />}
                         {lintMessages.length === 0 ? 'No lint problems' : 'Lint problems detected'}
                       </div>
                     )}
@@ -1015,13 +1015,13 @@ const Component = ({ params }: Route.ComponentProps) => {
                       }))}
                     >
                       {item => (
-                        <ListBoxItem className="flex items-center gap-2 p-[--padding-sm] text-xs outline-none transition-colors even:bg-[--hl-xs] focus-within:bg-[--hl-md] data-[focused]:bg-[--hl-md]">
+                        <ListBoxItem className="flex items-center gap-2 p-(--padding-sm) text-xs outline-hidden transition-colors even:bg-(--hl-xs) focus-within:bg-(--hl-md) data-focused:bg-(--hl-md)">
                           <Icon
-                            className={item.type === 'error' ? 'text-[--color-danger]' : 'text-[--color-warning]'}
+                            className={item.type === 'error' ? 'text-(--color-danger)' : 'text-(--color-warning)'}
                             icon={item.type === 'error' ? 'circle-xmark' : 'triangle-exclamation'}
                           />
                           <span className="truncate">{item.message}</span>
-                          <span className="flex-shrink-0 text-[--hl-lg]">[Ln {item.line}]</span>
+                          <span className="shrink-0 text-(--hl-lg)">[Ln {item.line}]</span>
                         </ListBoxItem>
                       )}
                     </ListBox>
@@ -1033,7 +1033,7 @@ const Component = ({ params }: Route.ComponentProps) => {
           {isSpecPaneOpen && (
             <>
               <PanelResizeHandle
-                className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'h-[1px] w-full bg-[--hl-md]'}
+                className={direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'}
               />
               <Panel id="pane-two" minSize={10} className="pane-two theme--pane">
                 <SwaggerUIDiv text={apiSpec.contents} />

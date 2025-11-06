@@ -50,7 +50,7 @@ export const RealtimeResponsePane: FC<{ requestId?: string }> = () => {
   if (!activeResponse) {
     return (
       <Pane type="response">
-        <PaneHeader className="!justify-normal" />
+        <PaneHeader className="justify-normal!" />
         <PlaceholderResponsePane />
       </Pane>
     );
@@ -266,7 +266,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
       </PaneHeader>
       <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
         <TabList
-          className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+          className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
           aria-label="Request pane tabs"
         >
           <Tab
@@ -282,7 +282,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
             >
               Notifications
               {allNotifications.length > 0 && (
-                <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
                   {allNotifications.length}
                 </span>
               )}
@@ -295,7 +295,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
             >
               Headers
               {response.headers.length > 0 && (
-                <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
                   {response.headers.length}
                 </span>
               )}
@@ -308,7 +308,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
             >
               Cookies
               {cookieHeaders.length > 0 && (
-                <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
                   {cookieHeaders.length}
                 </span>
               )}
@@ -393,9 +393,9 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
                 ) : null}
                 {selectedEvent && (
                   <>
-                    <PanelResizeHandle className={'h-[1px] w-full bg-[--hl-md]'} />
+                    <PanelResizeHandle className={'h-px w-full bg-(--hl-md)'} />
                     <Panel minSize={10} defaultSize={isMcpResponse(response) ? 85 : 60}>
-                      <div className="h-full flex-1 border-t border-[var(--hl-md)]">{getEventView(selectedEvent)}</div>
+                      <div className="h-full flex-1 border-t border-(--hl-md)">{getEventView(selectedEvent)}</div>
                     </Panel>
                   </>
                 )}

@@ -48,15 +48,15 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
   const isCancellable = currentInterval || currentTimeout;
   return (
     <div className="flex w-full items-center gap-2 self-stretch p-2">
-      <div className="flex-shrink-0 rounded-sm bg-[--hl-xs] px-3 py-1">
+      <div className="rounded-xs bg-(--hl-xs) shrink-0 px-3 py-1">
         <span className={`http-method-${mockRoute.method} text-sm font-medium`}>{mockRoute.method}</span>
       </div>
-      <div className="flex flex-1 items-center rounded-sm border border-[--hl-sm] bg-[--color-bg] px-3 py-1">
-        <span className="flex-1 font-mono text-sm text-[--color-font]">{pathInput}</span>
+      <div className="border-(--hl-sm) bg-(--color-bg) flex flex-1 items-center rounded-sm border px-3 py-1">
+        <span className="text-(--color-font) flex-1 font-mono text-sm">{pathInput}</span>
       </div>
 
       <Button
-        className="flex-shrink-0 rounded-sm bg-[--hl-sm] px-3 py-1 text-sm text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-xs]"
+        className="rounded-xs bg-(--hl-sm) text-(--color-font) hover:bg-(--hl-xs) focus:bg-(--hl-xs) shrink-0 px-3 py-1 text-sm"
         onPress={() => {
           showModal(AlertModal, {
             title: 'Full URL',
@@ -71,7 +71,7 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
       </Button>
 
       <Button
-        className="flex-shrink-0 rounded-sm bg-[--hl-sm] px-3 py-1 text-sm text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-xs]"
+        className="rounded-xs bg-(--hl-sm) text-(--color-font) hover:bg-(--hl-xs) focus:bg-(--hl-xs) shrink-0 px-3 py-1 text-sm"
         onPress={() => {
           window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput));
         }}
@@ -79,9 +79,9 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
         <Icon icon="copy" /> Copy
       </Button>
 
-      <div className="flex flex-shrink-0">
+      <div className="flex shrink-0">
         <Button
-          className="ml-1 rounded-l-sm bg-[--color-surprise] px-5 text-[--color-font-surprise] hover:bg-opacity-90 focus:bg-opacity-90"
+          className="bg-(--color-surprise) text-(--color-font-surprise) hover:bg-(--color-surprise)/90 focus:bg-(--color-surprise)/90 ml-1 rounded-l-sm px-5"
           onPress={() => {
             if (isCancellable) {
               setCurrentInterval(null);
@@ -101,7 +101,7 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
           closeOnSelect={false}
           triggerButton={
             <Button
-              className="rounded-r-sm bg-[--color-surprise] px-1 text-[--color-font-surprise]"
+              className="bg-(--color-surprise) text-(--color-font-surprise) rounded-r-sm px-1"
               style={{
                 borderTopRightRadius: '0.125rem',
                 borderBottomRightRadius: '0.125rem',

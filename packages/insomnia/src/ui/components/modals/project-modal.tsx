@@ -40,12 +40,12 @@ export const ProjectModal = ({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       isDismissable
-      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+      className="fixed left-0 top-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
-      <Modal className="flex max-h-[90dvh] min-h-[420px] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font]">
+      <Modal className="flex max-h-[90dvh] min-h-[420px] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)">
         <Dialog
           aria-label="Create or update dialog"
-          className="grid flex-1 gap-4 px-10 pt-10 outline-none [grid-template-rows:min-content_1fr_min-content]"
+          className="grid flex-1 gap-4 px-10 pt-10 outline-hidden grid-rows-[min-content_1fr_min-content]"
         >
           {({ close }) => (
             <>
@@ -54,7 +54,7 @@ export const ProjectModal = ({
                   {title}
                 </Heading>
                 <Button
-                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                   onPress={close}
                 >
                   <Icon icon="x" />

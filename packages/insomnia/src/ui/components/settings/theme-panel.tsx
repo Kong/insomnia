@@ -84,10 +84,10 @@ export const ThemePanel: FC = () => {
           onChange={isSelected => changeAutoDetect(isSelected)}
           className="group flex h-full items-center p-0"
         >
-          <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+          <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
             <Icon
               icon={'check'}
-              className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+              className="h-3 w-3 opacity-0 group-data-selected:text-(--color-success) group-data-indeterminate:opacity-100 group-data-selected:opacity-100"
             />
           </div>
         </Checkbox>
@@ -106,10 +106,10 @@ export const ThemePanel: FC = () => {
               data-active-dark-theme={isActiveDark(theme) || undefined}
               data-active-light-theme={isActiveLight(theme) || undefined}
               data-active-theme={isActive(theme) || undefined}
-              className="group relative flex overflow-hidden rounded shadow-md transition-colors data-[active-theme]:ring-2 data-[active-theme]:ring-[--color-surprise]"
+              className="group relative flex overflow-hidden rounded-sm shadow-md transition-colors data-active-theme:ring-2 data-active-theme:ring-(--color-surprise)"
             >
               {autoDetectColorScheme && (
-                <div className="absolute left-0 top-0 hidden h-full w-full grid-cols-2 group-hover:grid group-focus:grid group-data-[active-theme]:grid">
+                <div className="absolute left-0 top-0 hidden h-full w-full grid-cols-2 group-hover:grid group-focus:grid group-data-active-theme:grid">
                   <Button
                     onPress={() => {
                       activate(theme.name, 'light');
@@ -119,7 +119,7 @@ export const ThemePanel: FC = () => {
                         '--color-surprise': theme.theme.background?.surprise,
                       } as React.CSSProperties
                     }
-                    className="flex items-center justify-center hover:bg-[--hl-md] focus:bg-[--hl-md] group-data-[active-light-theme]:bg-[--hl-lg] group-data-[active-light-theme]:text-[--color-surprise]"
+                    className="flex items-center justify-center hover:bg-(--hl-md) focus:bg-(--hl-md) group-data-active-light-theme:bg-(--hl-lg) group-data-active-light-theme:text-(--color-surprise)"
                   >
                     <Icon icon="sun" />
                   </Button>
@@ -132,7 +132,7 @@ export const ThemePanel: FC = () => {
                         '--color-surprise': theme.theme.background?.surprise,
                       } as React.CSSProperties
                     }
-                    className="flex items-center justify-center hover:bg-[--hl-md] focus:bg-[--hl-md] group-data-[active-dark-theme]:bg-[--hl-md] group-data-[active-dark-theme]:text-[--color-surprise]"
+                    className="flex items-center justify-center hover:bg-(--hl-md) focus:bg-(--hl-md) group-data-active-dark-theme:bg-(--hl-md) group-data-active-dark-theme:text-(--color-surprise)"
                   >
                     <Icon icon="moon" />
                   </Button>

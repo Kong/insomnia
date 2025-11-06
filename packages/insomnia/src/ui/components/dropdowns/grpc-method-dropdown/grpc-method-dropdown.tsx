@@ -85,7 +85,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({ disabled, methods
       selectedKey={selectedPath}
       isDisabled={methods.length === 0}
     >
-      <Button className="flex h-full items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:cursor-not-allowed disabled:bg-[--hl-xs] aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-xs]">
+      <Button className="flex h-full items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) disabled:cursor-not-allowed disabled:bg-(--hl-xs) aria-pressed:bg-(--hl-sm) data-pressed:bg-(--hl-xs)">
         <SelectValue<{
           id: string;
           fullPath: string;
@@ -110,19 +110,19 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({ disabled, methods
       <Popover className="flex min-w-max max-w-xs flex-col overflow-y-hidden">
         <ListBox
           items={sections}
-          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
         >
           {section => (
             <ListBoxSection key={section.id}>
-              <Header className="flex items-center gap-2 px-[--padding-md] text-[--hl-md]">
+              <Header className="flex items-center gap-2 px-(--padding-md) text-(--hl-md)">
                 <span>{section.display_name}</span>
-                <span className="h-[1px] flex-1 bg-[--hl-md]" />
+                <span className="h-px flex-1 bg-(--hl-md)" />
               </Header>
               {section.items.map(grpcMethod => (
                 <ListBoxItem
                   id={grpcMethod.id}
                   key={grpcMethod.id}
-                  className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                  className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                   aria-label={grpcMethod.display_name}
                   textValue={grpcMethod.display_name}
                   value={grpcMethod}
@@ -131,7 +131,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({ disabled, methods
                     <Fragment>
                       <em>{GrpcMethodTypeAcronym[grpcMethod.type]}</em>
                       {grpcMethod.display_name}
-                      {isSelected && <Icon icon="check" className="justify-self-end text-[--color-success]" />}
+                      {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                     </Fragment>
                   )}
                 </ListBoxItem>

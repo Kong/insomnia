@@ -91,7 +91,7 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
     <Dropdown
       aria-label="Preview Mode Dropdown"
       triggerButton={
-        <Button className="text-[--hl]">
+        <Button className="text-(--hl)">
           {getPreviewModeName(previewMode)}
           <i className="fa fa-caret-down space-left" />
         </Button>

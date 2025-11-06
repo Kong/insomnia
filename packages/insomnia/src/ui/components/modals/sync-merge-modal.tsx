@@ -179,22 +179,22 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
           !isOpen && onCancelUnresolvedRef.current?.();
           !isOpen && reset();
         }}
-        className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+        className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
       >
-        <Modal className="flex h-[calc(100%-var(--padding-xl))] max-h-full w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]">
-          <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
+        <Modal className="flex h-[calc(100%-var(--padding-xl))] max-h-full w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
+          <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">
             {({ close }) => (
               <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-                <div className="flex flex-shrink-0 items-center justify-between gap-2">
+                <div className="flex shrink-0 items-center justify-between gap-2">
                   <Heading slot="title" className="text-2xl">
                     Resolve conflicts
                   </Heading>
                 </div>
                 <div className="flex flex-1 flex-col gap-4 overflow-hidden">
                   <div
-                    className={classNames('grid h-full gap-2 divide-x divide-solid divide-[--hl-md] overflow-hidden', {
-                      '[grid-template-columns:300px_1fr]': editorType === 'diff',
-                      '[grid-template-columns:170px_1fr]': editorType === 'merge',
+                    className={classNames('grid h-full gap-2 divide-x divide-solid divide-(--hl-md) overflow-hidden', {
+                      'grid-cols-[300px_1fr]': editorType === 'diff',
+                      'grid-cols-[170px_1fr]': editorType === 'merge',
                     })}
                   >
                     {conflicts && conflicts.length > 0 && (
@@ -203,7 +203,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                           <Icon icon="code-compare" />
                           Merge changes
                         </Heading>
-                        <div className="w-full flex-1 select-none overflow-y-auto">
+                        <div className="w-full flex-1 overflow-y-auto select-none">
                           <GridList
                             aria-label="Conflicted changes"
                             selectedKeys={[selectedConflictKey || '']}
@@ -222,7 +222,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                             {item => {
                               if (editorType === 'diff') {
                                 return (
-                                  <GridListItem className="group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
+                                  <GridListItem className="group flex w-full items-center justify-between overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
                                     <span className="truncate">{item.name}</span>
                                     <RadioGroup
                                       onChange={value => {
@@ -240,14 +240,14 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                       <div className="flex gap-2">
                                         <Radio
                                           value={item.mineBlob || ''}
-                                          className="flex flex-1 items-center gap-2 rounded border border-solid border-[--hl-md] px-2 py-1 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:bg-[rgba(var(--color-surprise-rgb),0.3)] data-[selected]:text-[--color-font] data-[selected]:ring-[--color-surprise]"
+                                          className="flex flex-1 items-center gap-2 rounded-sm border border-solid border-(--hl-md) px-2 py-1 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-selected:border-(--color-surprise) data-selected:bg-[rgba(var(--color-surprise-rgb),0.3)] data-selected:text-(--color-font) data-selected:ring-(--color-surprise)"
                                         >
                                           <Icon icon="laptop" />
                                           <span>Current</span>
                                         </Radio>
                                         <Radio
                                           value={item.theirsBlob || ''}
-                                          className="flex flex-1 items-center gap-2 rounded border border-solid border-[--hl-md] px-2 py-1 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:bg-[rgba(var(--color-surprise-rgb),0.3)] data-[selected]:text-[--color-font-surprise] data-[selected]:ring-[--color-surprise]"
+                                          className="flex flex-1 items-center gap-2 rounded-sm border border-solid border-(--hl-md) px-2 py-1 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-selected:border-(--color-surprise) data-selected:bg-[rgba(var(--color-surprise-rgb),0.3)] data-selected:text-(--color-font-surprise) data-selected:ring-(--color-surprise)"
                                         >
                                           <Icon icon="globe" />
                                           <span>Incoming</span>
@@ -258,15 +258,15 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                 );
                               } else if (editorType === 'merge') {
                                 return (
-                                  <GridListItem className="relative flex w-full cursor-pointer select-none items-start justify-start gap-2 overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
+                                  <GridListItem className="relative flex w-full cursor-pointer items-start justify-start gap-2 overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
                                     {errMsgMapForConflictMergeResult[item.key] && (
-                                      <Icon icon="exclamation-triangle" className="mt-1 text-[--color-danger]" />
+                                      <Icon icon="exclamation-triangle" className="mt-1 text-(--color-danger)" />
                                     )}
                                     <div>
                                       <div className="truncate">{item.name}</div>
                                       {errMsgMapForConflictMergeResult[item.key] &&
                                         selectedConflictKey === item.key && (
-                                          <div className="mt-2 whitespace-pre-wrap break-all text-sm text-[--color-warning]">
+                                          <div className="mt-2 text-sm break-all whitespace-pre-wrap text-(--color-warning)">
                                             This file has syntax errors:
                                             <br />
                                             {errMsgMapForConflictMergeResult[item.key]}
@@ -282,7 +282,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                         </div>
                         <Button
                           aria-label="Resolve conflicts"
-                          className="mb-1 flex h-10 items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                          className="mb-1 flex h-10 items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                           onClick={event => {
                             event.preventDefault();
 
@@ -328,7 +328,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                         </Button>
                         <Button
                           type="button"
-                          className="flex h-10 items-center justify-center gap-2 rounded-md bg-[--hl-xxs] px-4 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                          className="flex h-10 items-center justify-center gap-2 rounded-md bg-(--hl-xxs) px-4 text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                           // will trigger onOpenChange on ModalOverlay
                           onClick={close}
                         >
@@ -346,14 +346,14 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                               {selectedConflict.name}
                             </Heading>
                             <div className="flex w-full items-center gap-2">
-                              <span className="flex flex-1 items-center gap-2 bg-[--hl-xs] p-2 text-xs font-semibold uppercase text-[--hl]">
+                              <span className="flex flex-1 items-center gap-2 bg-(--hl-xs) p-2 text-xs font-semibold text-(--hl) uppercase">
                                 <Icon icon="laptop" /> {labels.ours}
                               </span>
-                              <span className="flex flex-1 items-center gap-2 bg-[--hl-xs] p-2 text-xs font-semibold uppercase text-[--hl]">
+                              <span className="flex flex-1 items-center gap-2 bg-(--hl-xs) p-2 text-xs font-semibold text-(--hl) uppercase">
                                 <Icon icon="globe" /> {labels.theirs}
                               </span>
                             </div>
-                            <div className="flex-1 overflow-y-auto rounded-sm bg-[--hl-xs] p-2 text-[--color-font]">
+                            <div className="flex-1 overflow-y-auto rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
                               <DiffEditor original={selectedConflictCurrent} modified={selectedConflictIncoming} />
                             </div>
                           </div>
@@ -361,10 +361,10 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                         {editorType === 'merge' && (
                           <div className="flex h-full flex-col gap-2 overflow-y-auto p-2 pb-0">
                             <ol className="flex items-stretch gap-2">
-                              <li className="flex flex-1 flex-col items-center gap-2 bg-[--hl-xs] p-2 text-center text-lg font-semibold text-[--hl]">
+                              <li className="flex flex-1 flex-col items-center gap-2 bg-(--hl-xs) p-2 text-center text-lg font-semibold text-(--hl)">
                                 <span className="text-base leading-6">Current Changes</span>
                                 <Button
-                                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-bold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
+                                  className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-bold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) aria-pressed:bg-(--hl-sm)"
                                   onClick={() => {
                                     showModal(AlertModal, {
                                       title: 'Confirm',
@@ -380,16 +380,16 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                   Take all current changes
                                 </Button>
                               </li>
-                              <li className="flex flex-1 flex-col items-center justify-between gap-2 bg-[--hl-xs] p-2 pb-3 text-center text-lg font-semibold text-[--hl]">
+                              <li className="flex flex-1 flex-col items-center justify-between gap-2 bg-(--hl-xs) p-2 pb-3 text-center text-lg font-semibold text-(--hl)">
                                 <span className="text-base leading-6">Merge Result</span>
-                                <span className="inline-block font-bold leading-6 text-[--color-font]">
+                                <span className="inline-block leading-6 font-bold text-(--color-font)">
                                   {selectedConflict.name}
                                 </span>
                               </li>
-                              <li className="flex flex-1 flex-col items-center gap-2 bg-[--hl-xs] p-2 text-center text-lg font-semibold text-[--hl]">
+                              <li className="flex flex-1 flex-col items-center gap-2 bg-(--hl-xs) p-2 text-center text-lg font-semibold text-(--hl)">
                                 <span className="text-base leading-6">Incoming Changes</span>
                                 <Button
-                                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-bold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
+                                  className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-bold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) aria-pressed:bg-(--hl-sm)"
                                   onClick={() => {
                                     showModal(AlertModal, {
                                       title: 'Confirm',
@@ -406,7 +406,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                 </Button>
                               </li>
                             </ol>
-                            <div className="flex-1 overflow-y-auto rounded-sm bg-[--hl-xs] p-2 text-[--color-font]">
+                            <div className="flex-1 overflow-y-auto rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
                               <MergeEditor
                                 key={selectedConflictKey}
                                 leftContent={selectedConflictCurrent}
@@ -420,11 +420,11 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                       </>
                     ) : (
                       <div className="flex h-full flex-col items-center justify-center gap-4 p-2">
-                        <Heading className="flex items-center justify-center gap-2 text-4xl font-semibold text-[--hl-md]">
+                        <Heading className="flex items-center justify-center gap-2 text-4xl font-semibold text-(--hl-md)">
                           <Icon icon="code-compare" />
                           Diff view
                         </Heading>
-                        <p className="text-[--hl]">Select an item to compare</p>
+                        <p className="text-(--hl)">Select an item to compare</p>
                       </div>
                     )}
                   </div>

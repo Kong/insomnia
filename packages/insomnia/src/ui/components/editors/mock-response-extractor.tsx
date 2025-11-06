@@ -74,10 +74,10 @@ If you want to create a self-hosted mock server route from a request response in
   if (tipPreventingUserFromCreatingMockRoute) {
     return (
       <div className="flex h-full flex-col justify-center px-32">
-        <div className="flex place-content-center pb-8 text-9xl text-[--hl-md]">
+        <div className="flex place-content-center pb-8 text-9xl text-(--hl-md)">
           <Icon icon="cube" />
         </div>
-        <div className="flex place-content-center whitespace-pre-line pb-2">
+        <div className="flex place-content-center pb-2 whitespace-pre-line">
           {tipPreventingUserFromCreatingMockRoute}
         </div>
       </div>
@@ -86,10 +86,10 @@ If you want to create a self-hosted mock server route from a request response in
   if (activeResponse && isSocketIOResponse(activeResponse) && !('contentType' in activeResponse)) {
     return (
       <div className="flex h-full flex-col justify-center px-32">
-        <div className="flex place-content-center pb-8 text-9xl text-[--hl-md]">
+        <div className="flex place-content-center pb-8 text-9xl text-(--hl-md)">
           <Icon icon="cube" />
         </div>
-        <div className="flex place-content-center whitespace-pre-line pb-2">
+        <div className="flex place-content-center pb-2 whitespace-pre-line">
           You can't create a mock server route from a Socket.IO response
         </div>
       </div>
@@ -101,7 +101,7 @@ If you want to create a self-hosted mock server route from a request response in
 
   return (
     <div className="flex h-full flex-col justify-center px-32">
-      <div className="flex place-content-center pb-8 text-9xl text-[--hl-md]">
+      <div className="flex place-content-center pb-8 text-9xl text-(--hl-md)">
         <Icon icon="cube" />
       </div>
       <div className="flex place-content-center pb-2">
@@ -217,7 +217,7 @@ If you want to create a self-hosted mock server route from a request response in
         <div className="mt-2 flex">
           <Button
             type="submit"
-            className="mr-2 rounded-sm border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-3 py-2 text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline focus:ring-[--hl-md] aria-pressed:bg-opacity-80"
+            className="mr-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline focus:ring-(--hl-md) aria-pressed:bg-(--color-surprise)/80"
           >
             {selectedMockRoute ? 'Overwrite' : 'Create'}
           </Button>
@@ -229,7 +229,7 @@ If you want to create a self-hosted mock server route from a request response in
                 `/organization/${organizationId}/project/${projectId}/workspace/${mockWorkspaceId}/mock-server/mock-route/${selectedMockRoute}`,
               );
             }}
-            className="flex items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-3 py-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+            className="flex items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-3 py-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             Go to mock
           </Button>

@@ -88,7 +88,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                   {modifiedString}
                   {hasLink && (
                     <Link
-                      className="cursor-pointer text-[--color-surprise]"
+                      className="cursor-pointer text-(--color-surprise)"
                       onPress={() => {
                         close();
                         showSettingsModal({ tab: 'general' });
@@ -303,7 +303,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     });
 
     const buttonText = isRealtimeRequest ? 'Connect' : downloadPath ? 'Download' : 'Send';
-    const borderRadius = isRealtimeRequest ? 'rounded-sm' : 'rounded-l-sm';
+    const borderRadius = isRealtimeRequest ? 'rounded-xs' : 'rounded-l-sm';
     const { url, method } = activeRequest;
     const isEventStreamOpen = useReadyState({ requestId: activeRequest._id, protocol: 'curl' });
     const isGraphQLSubscriptionOpen = useReadyState({ requestId: activeRequest._id, protocol: 'webSocket' });
@@ -336,7 +336,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             {isCancellable ? (
               <button
                 type="button"
-                className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-[--color-font-surprise]"
+                className="rounded-xs bg-(--color-surprise) px-(--padding-md) text-(--color-font-surprise)"
                 onClick={() => {
                   if (isEventStreamRequest(activeRequest)) {
                     window.main.curl.close({ requestId: activeRequest._id });
@@ -355,7 +355,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
               <>
                 <button
                   onClick={() => sendOrConnect()}
-                  className={`bg-[--color-surprise] px-[--padding-md] text-[--color-font-surprise] ${borderRadius}`}
+                  className={`bg-(--color-surprise) px-(--padding-md) text-(--color-font-surprise) ${borderRadius}`}
                   type="button"
                 >
                   {buttonText}
@@ -369,7 +369,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                     closeOnSelect={false}
                     triggerButton={
                       <Button
-                        className="rounded-r-sm bg-[--color-surprise] px-1 text-[--color-font-surprise]"
+                        className="rounded-r-sm bg-(--color-surprise) px-1 text-(--color-font-surprise)"
                         style={{
                           borderTopRightRadius: '0.125rem',
                           borderBottomRightRadius: '0.125rem',
@@ -493,7 +493,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                 return (
                   <div
                     key={item}
-                    className="mr-3 mt-3 rounded-sm bg-[--color-surprise] px-3 py-1 text-[--color-font-surprise]"
+                    className="mt-3 mr-3 rounded-xs bg-(--color-surprise) px-3 py-1 text-(--color-font-surprise)"
                   >
                     {item}
                   </div>
@@ -510,7 +510,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                   These are secret environment variables. However, the required vault key has not been provided yet.
                 </p>
                 <Button
-                  className="cursor- py-1 text-[--color-info] underline ring-1 ring-transparent focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="cursor- py-1 text-(--color-info) underline ring-1 ring-transparent focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={() => {
                     setShowInputVaultKeyModal(true);
                     setShowEnvVariableMissingModal(false);
@@ -525,7 +525,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                       return (
                         <div
                           key={item}
-                          className="mr-3 mt-3 rounded-sm bg-[--color-surprise] px-3 py-1 text-[--color-font-surprise]"
+                          className="mt-3 mr-3 rounded-xs bg-(--color-surprise) px-3 py-1 text-(--color-font-surprise)"
                         >
                           {item}
                         </div>

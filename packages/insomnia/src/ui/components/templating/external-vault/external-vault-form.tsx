@@ -89,7 +89,7 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
     <>
       {selectedCredentialDoc && provider !== 'azure' && (
         <Button
-          className="mb-[--padding-sm] flex h-full items-center justify-center gap-2 px-2 py-1 text-xs text-[--color-info] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="mb-(--padding-sm) flex h-full items-center justify-center gap-2 px-2 py-1 text-xs text-(--color-info) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
           style={{ marginTop: 'calc(var(--padding-sm) * -1)' }}
           onPress={() => setShowModal(true)}
         >

@@ -377,32 +377,32 @@ export const McpPane = () => {
       ref={sidebarPanelRef}
       autoSaveId="insomnia-sidebar"
       id="wrapper"
-      className="new-sidebar h-full w-full text-[--color-font]"
+      className="new-sidebar text-(--color-font) h-full w-full"
       direction="horizontal"
     >
       <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
-        <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
-          <div className="flex flex-col items-start divide-y divide-solid divide-[--hl-md]">
+        <div className="divide-(--hl-md) flex flex-1 flex-col divide-y divide-solid overflow-hidden">
+          <div className="divide-(--hl-md) flex flex-col items-start divide-y divide-solid">
             <div className={`flex w-full h-[${INSOMNIA_TAB_HEIGHT}px]`}>
-              <Breadcrumbs className="m-0 flex h-[--line-height-sm] w-full list-none items-center gap-2 px-[--padding-sm] font-bold">
-                <Breadcrumb className="flex h-full select-none items-center gap-2 text-[--color-font] outline-none data-[focused]:outline-none">
+              <Breadcrumbs className="h-(--line-height-sm) px-(--padding-sm) m-0 flex w-full list-none items-center gap-2 font-bold">
+                <Breadcrumb className="text-(--color-font) outline-hidden data-focused:outline-hidden flex h-full select-none items-center gap-2">
                   <NavLink
                     data-testid="project"
-                    className="flex aspect-square h-7 flex-shrink-0 items-center justify-center gap-2 rounded-sm px-1 py-1 text-sm text-[--color-font] outline-none ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] data-[focused]:outline-none"
+                    className="rounded-xs text-(--color-font) outline-hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-focused:outline-hidden flex aspect-square h-7 shrink-0 items-center justify-center gap-2 px-1 py-1 text-sm ring-1 ring-transparent transition-all focus:ring-inset"
                     to={`/organization/${organizationId}/project/${projectId}`}
                   >
                     <Icon className="text-xs" icon="chevron-left" />
                   </NavLink>
-                  <span aria-hidden role="separator" className="h-4 text-[--hl-lg] outline outline-1" />
+                  <span aria-hidden role="separator" className="text-(--hl-lg) outline-solid h-4 outline-1" />
                 </Breadcrumb>
-                <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-[--color-font] outline-none data-[focused]:outline-none">
+                <Breadcrumb className="text-(--color-font) outline-hidden data-focused:outline-hidden flex h-full select-none items-center gap-2 truncate">
                   <WorkspaceDropdown />
                 </Breadcrumb>
               </Breadcrumbs>
             </div>
           </div>
 
-          <div className="flex flex-col items-start gap-2 p-[--padding-sm]">
+          <div className="p-(--padding-sm) flex flex-col items-start gap-2">
             <div className="flex items-center justify-between gap-2">
               <EnvironmentPicker
                 isOpen={isEnvironmentPickerOpen}
@@ -433,7 +433,7 @@ export const McpPane = () => {
           </div>
 
           <div className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex justify-between gap-1 p-[--padding-sm]">
+            <div className="p-(--padding-sm) flex justify-between gap-1">
               <SearchField
                 aria-label="Server Capability filter"
                 className="group relative flex-1"
@@ -442,10 +442,10 @@ export const McpPane = () => {
               >
                 <Input
                   placeholder="Filter"
-                  className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                  className="rounded-xs border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden focus:ring-(--hl-md) w-full border border-solid py-1 pl-2 pr-7 transition-colors focus:ring-1"
                 />
                 <div className="absolute right-0 top-0 flex h-full items-center px-2">
-                  <Button className="flex aspect-square w-5 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] group-data-[empty]:hidden">
+                  <Button className="rounded-xs text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) group-data-empty:hidden flex aspect-square w-5 items-center justify-center text-sm ring-1 ring-transparent transition-all focus:ring-inset">
                     <Icon icon="close" />
                   </Button>
                 </div>
@@ -463,7 +463,7 @@ export const McpPane = () => {
                     }
                     setAllExpanded(newState);
                   }}
-                  className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
+                  className="rounded-xs text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) flex aspect-square h-full items-center justify-center text-sm ring-1 ring-transparent transition-all focus:ring-inset"
                 >
                   {({ isSelected }) => (
                     <Icon
@@ -473,7 +473,7 @@ export const McpPane = () => {
                 </ToggleButton>
                 <Tooltip
                   offset={8}
-                  className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                  className="border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid px-4 py-2 text-sm shadow-lg"
                 >
                   <span>{allExpanded ? 'Collapse all' : 'Expand all'}</span>
                 </Tooltip>
@@ -538,7 +538,7 @@ export const McpPane = () => {
           {isCertificatesModalOpen && <MCPCertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
         </div>
       </Panel>
-      <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
+      <PanelResizeHandle className="bg-(--hl-md) h-full w-px" />
       <Panel className="flex flex-col">
         <OrganizationTabList currentPage="mcp" />
         <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
@@ -554,7 +554,7 @@ export const McpPane = () => {
             />
           </Panel>
           <PanelResizeHandle
-            className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'h-[1px] w-full bg-[--hl-md]'}
+            className={direction === 'horizontal' ? 'bg-(--hl-md) h-full w-px' : 'h-[1px] w-full bg-[--hl-md]'}
           />
           <Panel id="mcp-response-pane" order={2} minSize={10} className="pane-two theme--pane">
             <ErrorBoundary showAlert>
@@ -608,9 +608,9 @@ const CollectionGridListItem = (props: {
     <GridListItem
       id={uniqueId}
       className={cn(
-        `group absolute left-0 top-0 w-full select-none outline-none ${item.itemLevel === 0 ? 'data-[drop-target]:bg-[--hl-md]' : 'border-solid data-[drop-target]:border-b data-[drop-target]:border-[--color-surprise]'}`,
+        `outline-hidden group absolute left-0 top-0 w-full select-none ${item.itemLevel === 0 ? 'data-drop-target:bg-(--hl-md)' : 'data-drop-target:border-b data-drop-target:border-(--color-surprise) border-solid'}`,
         {
-          'bg-[--hl-sm] text-[--color-font]': isSelected,
+          'bg-(--hl-sm) text-(--color-font)': isSelected,
         },
       )}
       textValue={label}
@@ -623,30 +623,30 @@ const CollectionGridListItem = (props: {
           e.preventDefault();
           setIsContextMenuOpen(true);
         }}
-        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden pl-4 pr-2 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] data-[selected=true]:text-[--color-font]"
+        className="h-(--line-height-xs) text-(--hl) outline-hidden group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) data-[selected=true]:text-(--color-font) relative flex w-full select-none items-center gap-2 overflow-hidden pl-4 pr-2 transition-colors"
         style={{
           paddingLeft: `${itemLevel}em`,
         }}
       >
-        <div className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors">
+        <div className="h-(--line-height-xs) text-(--hl) outline-hidden relative flex w-full select-none items-center gap-2 overflow-hidden px-4 transition-colors">
           {isRootTypeItem && (
             <Icon
-              className="w-4 flex-shrink-0"
+              className="w-4 shrink-0"
               icon={collapsedPrimitives.includes(item.type) ? 'caret-right' : 'caret-down'}
             />
           )}
           {item.type === 'tools' && item.itemLevel === 1 && (
-            <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-success-rgb),0.5)] text-[0.65rem] text-[--color-font-success]">
+            <span className="rounded-xs border-(--hl-sm) text-(--color-font-success) flex w-10 shrink-0 items-center justify-center border border-solid bg-[rgba(var(--color-success-rgb),0.5)] text-[0.65rem]">
               Tool
             </span>
           )}
           {(item.type === 'resources' || item.type === 'resourceTemplates') && item.itemLevel === 1 && (
-            <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-surprise-rgb),0.5)] text-[0.65rem] text-[--color-font-surprise]">
+            <span className="rounded-xs border-(--hl-sm) text-(--color-font-surprise) flex w-10 shrink-0 items-center justify-center border border-solid bg-[rgba(var(--color-surprise-rgb),0.5)] text-[0.65rem]">
               Res
             </span>
           )}
           {item.type === 'prompts' && item.itemLevel === 1 && (
-            <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-[--color-font-info]">
+            <span className="rounded-xs border-(--hl-sm) text-(--color-font-info) flex w-10 shrink-0 items-center justify-center border border-solid bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem]">
               Prompt
             </span>
           )}
@@ -665,7 +665,7 @@ const CollectionGridListItem = (props: {
           <Button
             data-testid={`Dropdown-${item.type}`}
             aria-label="Mcp Actions"
-            className="h-6 items-center justify-center rounded-sm pr-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all"
+            className="rounded-xs text-(--color-font) h-6 items-center justify-center pr-1 text-sm ring-1 ring-transparent transition-all"
             onPress={() => handleSubscribe(item as ResourceItem)}
           >
             {subscribeResources.includes(item.name) ? 'Unsubscribe' : 'Subscribe'}

@@ -52,10 +52,10 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
           <span className="flex-1 text-sm font-semibold">Repository</span>
           {!uri && isGitHubAppUserToken(token) && (
             <div className={`flex items-center gap-1 text-sm ${loading ? 'opacity-40' : ''}`}>
-              <Icon icon="info-circle" className="text-[--hl]" />
+              <Icon icon="info-circle" className="text-(--hl)" />
               <span>Can't find a repository?</span>
               <a
-                className="flex items-center gap-1 text-[--color-surprise]"
+                className="flex items-center gap-1 text-(--color-surprise)"
                 href={`${getAppWebsiteBaseURL()}/oauth/github-app`}
               >
                 Configure the App <i className="fa-solid fa-up-right-from-square" />
@@ -82,7 +82,7 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
             onSelectionChange={key => setSelectedRepository(repositories.find(r => r.clone_url === key) || null)}
           >
             <div className="flex w-full items-center gap-2">
-              <div className="group flex h-[--line-height-xs] flex-1 items-center gap-2 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]">
+              <div className="group flex h-(--line-height-xs) flex-1 items-center gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) transition-colors focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)">
                 <Input
                   aria-label="Repository Search"
                   placeholder={loading ? 'Fetching...' : 'Find a repository...'}
@@ -91,15 +91,15 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
                 <Button
                   id="github_repo_select_dropdown_button"
                   type="button"
-                  className="m-2 flex aspect-square items-center justify-center gap-2 truncate rounded-sm !border-none text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="m-2 flex aspect-square items-center justify-center gap-2 truncate rounded-xs border-none! text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                 >
-                  <Icon icon="caret-down" className="w-5 flex-shrink-0" />
+                  <Icon icon="caret-down" className="w-5 shrink-0" />
                 </Button>
               </div>
               <Button
                 type="button"
                 isDisabled={loading}
-                className="m-2 flex aspect-square size-[--line-height-xs] items-center justify-center gap-2 truncate rounded-sm border border-solid border-[--hl-sm] p-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                className="m-2 flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                 aria-label="Refresh repositories"
                 onPress={() => {
                   setLoading(true);
@@ -110,25 +110,25 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
               </Button>
             </div>
             <Popover
-              className="grid w-[--trigger-width] min-w-max select-none grid-flow-col divide-x divide-solid divide-[--hl-md] overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-sm shadow-lg focus:outline-none"
+              className="grid w-(--trigger-width) min-w-max select-none grid-flow-col divide-x divide-solid divide-(--hl-md) overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg focus:outline-hidden"
               placement="bottom start"
               offset={8}
             >
               <ListBox<{
                 id: string;
                 name: string;
-              }> className="flex min-w-max select-none flex-col p-2 text-sm focus:outline-none">
+              }> className="flex min-w-max select-none flex-col p-2 text-sm focus:outline-hidden">
                 {item => (
                   <ListBoxItem
                     textValue={item.name}
-                    className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap rounded bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] aria-selected:font-bold data-[focused]:bg-[--hl-xs]"
+                    className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap rounded-sm bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:bg-(--hl-sm) aria-selected:font-bold data-focused:bg-(--hl-xs)"
                   >
                     <span className="truncate">{item.name}</span>
                   </ListBoxItem>
                 )}
               </ListBox>
             </Popover>
-            <FieldError className="text-xs text-[--color-danger]" />
+            <FieldError className="text-xs text-(--color-danger)" />
             <input type="hidden" name="uri" value={selectedRepository?.clone_url || uri || ''} />
           </ComboBox>
         )}

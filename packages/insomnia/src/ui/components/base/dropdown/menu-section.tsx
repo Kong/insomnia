@@ -24,7 +24,7 @@ export const MenuSection = <T extends object>({ section, state, closeOnSelect = 
     <li {...itemProps}>
       <div className="mx-10 flex items-center">
         {section.rendered && (
-          <span className="my-2 whitespace-nowrap bg-[--color-bg] pr-4 text-xs uppercase text-[--hl]" {...headingProps}>
+          <span className="my-2 whitespace-nowrap bg-(--color-bg) pr-4 text-xs uppercase text-(--hl)" {...headingProps}>
             {section.rendered}
           </span>
         )}
