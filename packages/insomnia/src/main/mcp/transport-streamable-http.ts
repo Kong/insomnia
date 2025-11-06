@@ -167,9 +167,9 @@ const wrappedFetch = async (
     const mcpRequest = await models.mcpRequest.getById(requestId);
     invariant(mcpRequest, 'MCP Request not found');
     const { authentication } = mcpRequest;
-    // By default no authentication is set, authentication is an empty object
+    // By default no authentication is set, authentication is an empty object. Proceed to oauth workflow.
     const isDefaultAuth = !('type' in authentication);
-    // Continue to oauth workflow only when the auth type is oauth and enable it
+    // Continue to oauth workflow only when the auth type is mcp oauth and enable it.
     if (!isDefaultAuth) {
       const isMcpOauth2AuthType = authentication.type === 'oauth2' && authentication.grantType === 'mcp_auth_flow';
       const isAuthTypeEnabled = !authentication.disabled;
