@@ -171,9 +171,9 @@ const wrappedFetch = async (
     const isDefaultAuth = !('type' in authentication);
     // Continue to oauth workflow only when the auth type is oauth and enable it
     if (!isDefaultAuth) {
-      const isOauth2AuthType = authentication.type === 'oauth2';
+      const isMcpOauth2AuthType = authentication.type === 'oauth2' && authentication.grantType === 'mcp_auth_flow';
       const isAuthTypeEnabled = !authentication.disabled;
-      if (!(isOauth2AuthType && isAuthTypeEnabled)) {
+      if (!(isMcpOauth2AuthType && isAuthTypeEnabled)) {
         return response;
       }
     }
