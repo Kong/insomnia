@@ -227,7 +227,7 @@ export const EventLogView: FC<Props> = ({
           >
             {item => {
               const event = events[item.index];
-              const isLoading = event.type === 'message' && readyState && pendingEvents.includes(event._id);
+              const isLoading = event.type === 'message' && !!readyState && pendingEvents.includes(event._id);
               const isSelectedRow = event._id === selectionId;
               // add focus style when autoSelectLatestEvent is true for the first row
               const rowExtraClasses =
@@ -240,7 +240,7 @@ export const EventLogView: FC<Props> = ({
                     <SvgIcon icon={getIcon(event)} />
                   </Cell>
                   <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
-                    {getMessage(event, !!isLoading)}
+                    {getMessage(event, isLoading)}
                   </Cell>
                   <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
                     <Timestamp time={event.timestamp} />
