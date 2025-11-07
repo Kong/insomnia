@@ -25,7 +25,6 @@ interface Props {
   onSelect: (event: EventTypes) => void;
   autoSelectLatestEvent?: boolean;
   readyState?: boolean;
-  responseId?: string;
   protocol?: 'curl' | 'webSocket' | 'socketIO' | 'mcp';
 }
 
@@ -164,7 +163,6 @@ export const EventLogView: FC<Props> = ({
   autoSelectLatestEvent = false,
   protocol,
   readyState,
-  responseId,
 }) => {
   const parentRef = useRef<HTMLTableSectionElement>(null);
   const [pendingEvents, setPendingEvents] = useState<string[]>([]);
@@ -188,10 +186,10 @@ export const EventLogView: FC<Props> = ({
       setPendingEvents(pendingEvents);
     };
     // For mcp protocol, fetch pending event ids from main process to show loading state
-    if (protocol === 'mcp' && responseId && events.length > 0) {
+    if (protocol === 'mcp' && events.length > 0) {
       updatePendingEvents(events[0].requestId);
     }
-  }, [events, protocol, responseId]);
+  }, [events, protocol]);
 
   return (
     <>
