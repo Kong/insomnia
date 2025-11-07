@@ -140,10 +140,7 @@ const getMessage = (event: EventTypes, isLoading: boolean): string | JSX.Element
       return 'Disconnected';
     }
     case 'error': {
-      const maxMcpErrorLength = 20;
-      return isMcpEvent(event) && event.message.length > maxMcpErrorLength
-        ? `${event.message.slice(0, maxMcpErrorLength)}...`
-        : event.message;
+      return event.message;
     }
     case 'addEvent': {
       return `Listening to event: ${event.eventName}`;
@@ -198,7 +195,7 @@ export const EventLogView: FC<Props> = ({
 
   return (
     <>
-      <div className="max-h-96 w-full flex-1 select-none overflow-hidden overflow-y-auto border border-solid border-[--hl-sm]">
+      <div className="max-h-96 w-full flex-1 select-none overflow-hidden overflow-x-auto overflow-y-auto border border-solid border-[--hl-sm]">
         <Table
           selectionMode="single"
           selectedKeys={selectionId ? [selectionId] : []}
