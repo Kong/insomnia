@@ -171,7 +171,7 @@ jobs:
           $nupkg = "Insomnia.Core-${version}-full.nupkg"
           7z x "packages/insomnia/dist/squirrel-windows/${nupkg}" -o"${version}-extract"
 
-          $exeFiles = Get-ChildItem -Path "$extractDir" -Filter *.exe -Recurse
+          $exeFiles = Get-ChildItem -Path "${version}-extract" -Filter *.exe -Recurse
 
           if ($exeFiles.Count -eq 0) {
             Write-Warning "No .exe files found in the package"
