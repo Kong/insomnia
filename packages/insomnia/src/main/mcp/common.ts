@@ -17,6 +17,7 @@ import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import {
+  MCP_SERVER_REQUEST_METHODS,
   METHOD_ELICITATION_CREATE_MESSAGE,
   METHOD_JSONRPC_ERROR,
   METHOD_LIST_ROOTS,

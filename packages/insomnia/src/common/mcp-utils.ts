@@ -52,6 +52,7 @@ export const METHOD_READ_RESOURCE = ReadResourceRequestSchema.shape.method.value
 export const METHOD_GET_PROMPT = GetPromptRequestSchema.shape.method.value;
 export const METHOD_SUBSCRIBE_RESOURCE = SubscribeRequestSchema.shape.method.value;
 export const METHOD_UNSUBSCRIBE_RESOURCE = UnsubscribeRequestSchema.shape.method.value;
+export const METHOD_JSONRPC_ERROR = 'JSON-RPC Error';
 // methods for client features
 export const METHOD_SAMPLING_CREATE_MESSAGE = CreateMessageRequestSchema.shape.method.value;
 export const METHOD_LIST_ROOTS = ListRootsRequestSchema.shape.method.value;
@@ -101,6 +102,12 @@ export const NOTIFICATIONS_LIST_CHANGED: string[] = [
   METHOD_NOTIFICATION_RESOURCE_LIST_CHANGED,
   METHOD_NOTIFICATION_TOOL_LIST_CHANGED,
   METHOD_NOTIFICATION_PROMPT_LIST_CHANGED,
+];
+export const MCP_SERVER_REQUEST_METHODS: string[] = [
+  METHOD_SAMPLING_CREATE_MESSAGE,
+  METHOD_ELICITATION_CREATE_MESSAGE,
+  METHOD_LIST_ROOTS,
+  METHOD_JSONRPC_ERROR,
 ];
 
 export type McpServerMethods = (typeof SERVER_METHODS)[number];
