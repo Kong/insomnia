@@ -163,6 +163,44 @@ jobs:
           CREDENTIAL_ID: ${{secrets.ES_CREDENTIAL_ID}}
           TOTP_SECRET: ${{secrets.ES_TOTP_SECRET}}
 
+      - name: Check exe signature (Windows only)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = $env:INSO_VERSION
+          $nupkg = "Insomnia.Core-${version}-full.nupkg"
+          7z x "packages/insomnia/dist/squirrel-windows/${nupkg}" -o"${version}-extract"
+
+          $exeFiles = Get-ChildItem -Path "$extractDir" -Filter *.exe -Recurse
+
+          if ($exeFiles.Count -eq 0) {
+            Write-Warning "No .exe files found in the package"
+            exit 1
+          }
+
+          Write-Host "Found $($exeFiles.Count) .exe file(s):"
+          Write-Host ""
+
+          foreach ($exe in $exeFiles) {
+            Write-Host "Checking: $($exe.Name)"
+            Write-Host "  Path: $($exe.FullName)"
+            
+            $signature = Get-AuthenticodeSignature -FilePath $exe.FullName
+            
+            Write-Host "  Status: $($signature.Status)"
+            Write-Host "  Signer: $($signature.SignerCertificate.Subject)"
+            Write-Host "  Timestamp: $($signature.TimeStamperCertificate.NotAfter)"
+            
+            if ($signature.Status -ne 'Valid') {
+              Write-Error "  ❌ Invalid signature for $($exe.Name)"
+              exit 1
+            } else {
+              Write-Host "  ✓ Valid signature" -ForegroundColor Green
+            }
+            Write-Host ""
+          }
+          Write-Host "✓ All executables are properly signed" -ForegroundColor Green
+
       - name: Package inso
         run: |
           echo "Replacing electron binary with node binary"
