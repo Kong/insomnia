@@ -151,10 +151,10 @@ export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string;
   }
 
   if (workingDir) {
-    if (fs.statSync(workingDir).isDirectory()) {
-      return path.resolve(workingDir, file);
+    if (fs.existsSync(workingDir) && !fs.statSync(workingDir).isDirectory()) {
+      return path.resolve(dirname(workingDir), file);
     }
-    return path.resolve(dirname(workingDir), file);
+    return path.resolve(workingDir, file);
   }
 
   return path.resolve(process.cwd(), file);
@@ -899,7 +899,7 @@ export const go = (args?: string[]) => {
           await report.saveReport();
           return process.exit(success ? 0 : 1);
         } catch (error) {
-          report.update({ error: error.toString() || 'Unknown error' });
+          report.update({ error: (error instanceof Error ? error.message : String(error)) || 'Unknown error' });
           await report.saveReport();
 
           logErrorAndExit(error);

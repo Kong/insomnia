@@ -13,12 +13,15 @@
   },
   "environment": {
     "_id": "env_1072af0c15764cd8875f645b0f2e5ad4",
-    "type": "Environment",
-    "parentId": "env_6aec164bc7c64ffc96c62e06517c5ba6",
     "created": 1754293170062,
     "modified": 1762509361180,
-    "name": "New Environment",
     "isPrivate": true,
+    "description": "",
+    "metaSortKey": 1754293170062,
+    "type": "Environment",
+    "color": null,
+    "name": "New Environment",
+    "parentId": "env_6aec164bc7c64ffc96c62e06517c5ba6",
     "data": {
       "pri-env-name": "<Redacted by Insomnia>",
       "track": "<Redacted by Insomnia>",

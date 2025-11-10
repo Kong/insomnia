@@ -128,6 +128,7 @@ export class RunCollectionResultReport {
       collection: this.collection,
       environment: this.environment,
       proxy: this.proxy,
+      // Don't expose the success field
       executions: this.executions.map(exec => pick(exec, ['request', 'response', 'tests', 'iteration'])),
       timing: this.getTiming(),
       stats: this.getStats(),
@@ -223,8 +224,16 @@ export class RunCollectionResultReport {
         return env;
       }
       return {
-        ...pick(env, [...insensitiveBaseModelKeys, 'isPrivate']),
+        ...env,
         data: redactObject(env.data),
+        ...(env.kvPairData
+          ? {
+              kvPairData: env.kvPairData.map(pair => ({
+                ...pair,
+                value: REDACTED_VALUE,
+              })),
+            }
+          : {}),
       };
     };
 
