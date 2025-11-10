@@ -80,7 +80,7 @@ export class RunCollectionResultReport {
     return {
       started: this.startedAt,
       completed: Date.now(),
-      responseAverage: responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length,
+      responseAverage: responseTimes.length ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length : 0,
       responseMin: Math.min(...responseTimes),
       responseMax: Math.max(...responseTimes),
     };

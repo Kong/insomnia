@@ -146,7 +146,18 @@ export const getDefaultProductName = (): string => {
 const localAppDir = getAppDataDir(getDefaultProductName());
 
 export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string; file: string }) => {
-  return file && path.resolve(workingDir ? dirname(workingDir) : process.cwd(), file);
+  if (!file) {
+    return '';
+  }
+
+  if (workingDir) {
+    if (fs.statSync(workingDir).isDirectory()) {
+      return path.resolve(workingDir, file);
+    }
+    return path.resolve(dirname(workingDir), file);
+  }
+
+  return path.resolve(process.cwd(), file);
 };
 export const logErrorAndExit = (err?: Error) => {
   if (err instanceof InsoError) {
@@ -576,7 +587,6 @@ export const go = (args?: string[]) => {
         },
       ) => {
         const options = await mergeOptionsAndInit(cmd);
-        console.log(options);
 
         let outputFilePath = '';
         // Check if the output file is a writable file if it exists
@@ -600,7 +610,7 @@ export const go = (args?: string[]) => {
           if (options.includeFullData && !options.acceptRisk) {
             const disclaimerMessage = [
               'SECURITY WARNING',
-              'Outputting to a file could contain sensitive data like API tokens or secrets.  Make sure you understand this, and the contents of your collection, before proceeding.',
+              'Outputting to a file could contain sensitive data like API tokens or secrets. Make sure you understand this, and the contents of your collection, before proceeding.',
               'Are you sure you want to continue?',
             ].join('\n');
 
@@ -887,6 +897,7 @@ export const go = (args?: string[]) => {
           logTestResultSummary(testResultsQueue);
 
           await report.saveReport();
+          return process.exit(success ? 0 : 1);
         } catch (error) {
           report.update({ error: error.toString() || 'Unknown error' });
           await report.saveReport();

@@ -187,65 +187,67 @@ describe('inso dev bundle', () => {
       expect(result.stdout).toContain('updated value from folder: 666');
     });
   });
-});
 
-describe('run collection report generation', () => {
-  it.each([
-    {
-      name: 'default report',
-      input:
-        '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/run-collection-result-report.yml wrk_c5d5b5 -e env_1072af',
-      expectedReportFile: './fixtures/run-collection-report/default-report.json',
-    },
-    {
-      name: 'redact report',
-      input:
-        '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/run-collection-result-report.yml wrk_c5d5b5 -e env_1072af --includeFullData=redact --acceptRisk',
-      expectedReportFile: './fixtures/run-collection-report/redact-report.json',
-    },
-    {
-      name: 'plaintext report',
-      input:
-        '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/run-collection-result-report.yml wrk_c5d5b5 -e env_1072af --includeFullData=plaintext --acceptRisk',
-      expectedReportFile: './fixtures/run-collection-report/plaintext-report.json',
-    },
-  ])('generate report: %s', async ({ input, expectedReportFile }) => {
-    const root = path.join(tmpdir(), 'insomnia-cli-test-output');
-    const outputFilePath = path.resolve(root, 'run-collection-report-output.json');
-
-    await runCliFromRoot(`${input} --output ${outputFilePath}`);
-    const expectedReport = JSON.parse(fs.readFileSync(path.resolve(__dirname, expectedReportFile), 'utf8'));
-    expect(fs.existsSync(outputFilePath)).toBe(true);
-    const report = JSON.parse(fs.readFileSync(outputFilePath, 'utf8'));
-
-    // Some fields are dynamic so we use expect.any to validate their types/ existence
-    expect(report).toEqual({
-      ...expectedReport,
-      executions: expectedReport.executions.map((exec: any) => ({
-        ...exec,
-        response: {
-          ...exec.response,
-          // executionTime can vary so just check it's a number
-          responseTime: expect.any(Number),
-          headers: exec.response.headers
-            ? {
-                ...exec.response.headers,
-                date: expect.any(String),
-              }
-            : undefined,
-        },
-        tests: exec.tests.map((test: any) => ({
-          ...test,
-          executionTime: expect.any(Number),
-        })),
-      })),
-      timing: {
-        started: expect.any(Number),
-        completed: expect.any(Number),
-        responseAverage: expect.any(Number),
-        responseMin: expect.any(Number),
-        responseMax: expect.any(Number),
+  describe('run collection report generation', () => {
+    it.each([
+      {
+        name: 'default report',
+        input:
+          '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/run-collection-result-report.yml wrk_c5d5b5 -e env_1072af',
+        expectedReportFile: './fixtures/run-collection-report/default-report.json',
       },
+      {
+        name: 'redact report',
+        input:
+          '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/run-collection-result-report.yml wrk_c5d5b5 -e env_1072af --includeFullData=redact --acceptRisk',
+        expectedReportFile: './fixtures/run-collection-report/redact-report.json',
+      },
+      {
+        name: 'plaintext report',
+        input:
+          '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/run-collection-result-report.yml wrk_c5d5b5 -e env_1072af --includeFullData=plaintext --acceptRisk',
+        expectedReportFile: './fixtures/run-collection-report/plaintext-report.json',
+      },
+    ])('generate report: %s', async ({ input, expectedReportFile }) => {
+      const root = path.join(tmpdir(), 'insomnia-cli-test-output');
+      const outputFilePath = path.resolve(root, 'run-collection-report-output.json');
+
+      const result = await runCliFromRoot(`${input} --output ${outputFilePath}`);
+      expect(result.code).toBe(0);
+
+      const expectedReport = JSON.parse(fs.readFileSync(path.resolve(__dirname, expectedReportFile), 'utf8'));
+      expect(fs.existsSync(outputFilePath)).toBe(true);
+      const report = JSON.parse(fs.readFileSync(outputFilePath, 'utf8'));
+
+      // Some fields are dynamic so we use expect.any to validate their types/ existence
+      expect(report).toEqual({
+        ...expectedReport,
+        executions: expectedReport.executions.map((exec: any) => ({
+          ...exec,
+          response: {
+            ...exec.response,
+            // executionTime can vary so just check it's a number
+            responseTime: expect.any(Number),
+            headers: exec.response.headers
+              ? {
+                  ...exec.response.headers,
+                  date: expect.any(String),
+                }
+              : undefined,
+          },
+          tests: exec.tests.map((test: any) => ({
+            ...test,
+            executionTime: expect.any(Number),
+          })),
+        })),
+        timing: {
+          started: expect.any(Number),
+          completed: expect.any(Number),
+          responseAverage: expect.any(Number),
+          responseMin: expect.any(Number),
+          responseMax: expect.any(Number),
+        },
+      });
     });
   });
 });
