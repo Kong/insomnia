@@ -208,7 +208,7 @@ describe('inso dev bundle', () => {
           '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/run-collection-result-report.yml wrk_c5d5b5 -e env_1072af --includeFullData=plaintext --acceptRisk',
         expectedReportFile: './fixtures/run-collection-report/plaintext-report.json',
       },
-    ])('generate report: %s', async ({ input, expectedReportFile }) => {
+    ])('generate report: $name', async ({ input, expectedReportFile }) => {
       const root = path.join(tmpdir(), 'insomnia-cli-test-output');
       const outputFilePath = path.resolve(root, 'run-collection-report-output.json');
 
