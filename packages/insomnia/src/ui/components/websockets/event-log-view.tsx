@@ -1,3 +1,4 @@
+import type { CancelledNotification } from '@modelcontextprotocol/sdk/types.js';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import React, { type FC, useEffect, useRef, useState } from 'react';
@@ -6,8 +7,13 @@ import { Button, Cell, Column, Row, Table, TableBody, TableHeader } from 'react-
 import { HelpTooltip } from '~/ui/components/help-tooltip';
 import { Icon } from '~/ui/components/icon';
 
-import { METHOD_UNKNOWN, NOTIFICATIONS_LIST_CHANGED, unsupportedMethodPrefix } from '../../../common/mcp-utils';
-import type { McpEvent } from '../../../main/mcp/types';
+import {
+  METHOD_NOTIFICATION_CANCELLED,
+  METHOD_UNKNOWN,
+  NOTIFICATIONS_LIST_CHANGED,
+  unsupportedMethodPrefix,
+} from '../../../common/mcp-utils';
+import type { McpEvent, McpMessageEvent } from '../../../main/mcp/types';
 import type { CurlEvent } from '../../../main/network/curl';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
@@ -174,6 +180,7 @@ export const EventLogView: FC<Props> = ({
     overscan: 30,
     getItemKey: index => events[index]._id,
   });
+  const isMcpEvents = protocol === 'mcp';
 
   useEffect(() => {
     // re-measure the virtualizer when EventLogView mounted, especially when switched in a tab
