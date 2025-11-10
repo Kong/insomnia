@@ -9,7 +9,7 @@ import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { BrowserWindow } from 'electron';
 
 import { timelineFileStreams, writeEventLogAndNotify } from '~/main/mcp/common';
-import { type McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
+import { MCPAuthError, type McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
 import type { McpAuthEventWithoutBase, OpenMcpHTTPClientConnectionOptions } from '~/main/mcp/types';
 import * as models from '~/models';
 import { TRANSPORT_TYPES } from '~/models/mcp-request';
@@ -262,10 +262,14 @@ const wrappedFetch = async (
       if (authResult !== 'AUTHORIZED') {
         throw new UnauthorizedError();
       }
-      return await wrappedFetch(url, init, options, calledByAuth);
+    } catch (e) {
+      console.error('Authentication failed', e);
+      // Wrap and throw MCPAuthError for better identification, some of the errors thrown by sdk are generic Error which is hard to identify
+      throw new MCPAuthError(e.message || 'Authentication failed', { cause: e });
     } finally {
       unsubscribe();
     }
+    return await wrappedFetch(url, init, options, calledByAuth);
   }
   return response;
 };

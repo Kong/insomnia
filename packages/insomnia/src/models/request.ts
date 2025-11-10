@@ -1,3 +1,18 @@
+/**
+ * Request Model Definition
+ *
+ * This module defines the Request model for Insomnia, including all authentication types,
+ * request body types, and validation logic. It handles HTTP requests, WebSocket requests,
+ * and other request types with comprehensive authentication support.
+ *
+ * Key responsibilities:
+ * - Define request data structure and validation
+ * - Support multiple authentication methods (OAuth, Basic, API Key, etc.)
+ * - Handle different request body types (JSON, form data, raw text)
+ * - Provide GraphQL operation type detection
+ *
+ */
+
 import { OperationTypeNode } from 'graphql';
 
 import { CONTENT_TYPE_FORM_URLENCODED, getContentTypeFromHeaders, METHOD_GET } from '../common/constants';
@@ -17,6 +32,10 @@ export const canDuplicate = true;
 
 export const canSync = true;
 
+/**
+ * Basic Authentication configuration
+ * Uses username and password with optional ISO-8859-1 encoding
+ */
 export interface AuthTypeBasic {
   type: 'basic';
   useISO88591?: boolean;
@@ -24,6 +43,10 @@ export interface AuthTypeBasic {
   username?: string;
   password?: string;
 }
+/**
+ * API Key Authentication configuration
+ * Adds API key to headers or query parameters
+ */
 export interface AuthTypeAPIKey {
   type: 'apikey';
   disabled?: boolean;
@@ -31,6 +54,11 @@ export interface AuthTypeAPIKey {
   value?: string;
   addTo?: string;
 }
+
+/**
+ * OAuth 2.0 Authentication configuration
+ * Supports all OAuth 2.0 grant types and flows
+ */
 export interface AuthTypeOAuth2 {
   type: 'oauth2';
   disabled?: boolean;
@@ -156,6 +184,7 @@ export type OAuth2ResponseType = 'code' | 'id_token' | 'id_token token' | 'none'
 
 export interface RequestHeader {
   name: string;
+  id?: string;
   value: string;
   description?: string;
   disabled?: boolean;
@@ -164,14 +193,16 @@ export interface RequestHeader {
 export interface RequestParameter {
   name: string;
   value: string;
+  description?: string;
   disabled?: boolean;
   id?: string;
-  fileName?: string;
+  type?: string;
+  multiline?: boolean;
 }
 
 export interface RequestBodyParameter {
   name: string;
-  value: string;
+  value?: string;
   description?: string;
   disabled?: boolean;
   multiline?: boolean;

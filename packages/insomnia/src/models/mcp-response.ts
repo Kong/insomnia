@@ -28,6 +28,7 @@ export interface BaseMcpResponse {
   // Actual timelines are stored on the filesystem
   timelinePath: string;
   error: string;
+  errorType?: string;
   requestVersionId: string | null;
   transportType: TransportType;
 }
@@ -44,6 +45,7 @@ export function init(): BaseMcpResponse {
     timelinePath: '',
     eventLogPath: '',
     error: '',
+    errorType: '',
     status: '',
     statusCode: 0,
     statusMessage: '',

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
 import {
+  type CancelledNotification,
   type ElicitResult,
   ElicitResultSchema,
   JSONRPCErrorSchema,
@@ -10,11 +11,19 @@ import { BrowserWindow } from 'electron';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
-import { METHOD_ELICITATION_CREATE_MESSAGE, METHOD_LIST_ROOTS, METHOD_UNKNOWN } from '~/common/mcp-utils';
+import {
+  METHOD_ELICITATION_CREATE_MESSAGE,
+  METHOD_LIST_ROOTS,
+  METHOD_NOTIFICATION_CANCELLED,
+  METHOD_SAMPLING_CREATE_MESSAGE,
+  METHOD_UNKNOWN,
+  unsupportedMethodPrefix,
+} from '~/common/mcp-utils';
 import type {
   CommonMcpOptions,
   McpClient,
   McpEvent,
+  McpEventDirection,
   McpEventWithoutBase,
   McpNotificationEvent,
   McpReadyState,
@@ -40,11 +49,17 @@ export const mcpConnections = new Map<string, ConnectingState | ConnectedState>(
 export const eventLogFileStreams = new Map<string, fs.WriteStream>();
 export const timelineFileStreams = new Map<string, fs.WriteStream>();
 export const requestIdToResponseIdMap = new Map<string, string>();
+export const pendingMcpRequestEventIds = new Map<
+  string,
+  { jsonRPCId: string; eventId: string; direction: McpEventDirection }[]
+>();
 // map to save server elicitation requests
 export const mcpServerElicitationRequests = new Map<
   string,
   Map<string | number, { resolve: (value: ElicitResult) => void; reject: (reason?: any) => void }>
 >();
+// map to save abort controllers for each MCP request
+export const mcpRequestAbortControllers = new Map<string, Map<string, AbortController>>();
 
 const mcpEventIdGenerator = () => `mcp-${uuidV4()}`;
 export const getMcpStateChannel = (requestId: string) =>
@@ -104,6 +119,51 @@ export const writeEventLogAndNotify = (
       }
     }
   });
+  const pendingEventIds = pendingMcpRequestEventIds.get(requestId);
+  if (pendingEventIds) {
+    const removePendingEvent = (condition: (value: { jsonRPCId: string; direction: McpEventDirection }) => unknown) => {
+      if (pendingEventIds.length > 0) {
+        const index = pendingEventIds.findIndex(condition);
+        if (index !== -1) {
+          pendingEventIds.splice(index, 1);
+        }
+      }
+    };
+
+    if (eventData.type === 'message') {
+      const { direction, data } = eventData;
+      const jsonRPCId = 'id' in data ? data.id : null;
+      const eventMethod = eventData.method;
+      const isUnsupportedMethod = eventMethod.startsWith(unsupportedMethodPrefix);
+      const isErrorRequest = 'error' in data && data.error;
+      const isServerRequest =
+        eventMethod === METHOD_ELICITATION_CREATE_MESSAGE || eventMethod === METHOD_SAMPLING_CREATE_MESSAGE;
+      if (eventMethod === METHOD_NOTIFICATION_CANCELLED) {
+        // find the cancelled notification message indicates cancellation of the request
+        removePendingEvent(e => e.jsonRPCId === (data as CancelledNotification).params.requestId);
+      } else if (jsonRPCId !== null && !isUnsupportedMethod && !isErrorRequest) {
+        if (direction === 'OUTGOING') {
+          if (isServerRequest) {
+            removePendingEvent(e => e.jsonRPCId === jsonRPCId && e.direction === 'INCOMING');
+          } else {
+            // Track mcp client outgoing requests
+            pendingEventIds.push({ jsonRPCId, eventId: eventData._id, direction });
+          }
+        } else if (direction === 'INCOMING') {
+          if (isServerRequest) {
+            // Track mcp server incoming requests
+            pendingEventIds.push({ jsonRPCId, eventId: eventData._id, direction });
+          } else {
+            removePendingEvent(e => e.jsonRPCId === jsonRPCId && e.direction === 'OUTGOING');
+          }
+        }
+      }
+    } else if (eventData.type === 'error' && eventData.error?.requestId) {
+      const errorRequestId = eventData.error.requestId;
+      // Remove pending event from map on error response from server
+      removePendingEvent(e => e.jsonRPCId === errorRequestId);
+    }
+  }
 };
 
 export const notifyMcpClientStateChange = (channel: string, value?: McpReadyState) => {
@@ -150,6 +210,8 @@ export const clearMcpMaps = (requestId: string, timelineMessage: string, event?:
     ?.write(JSON.stringify({ value: timelineMessage, name: 'Text', timestamp: Date.now() }) + '\n');
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
+  pendingMcpRequestEventIds.delete(requestId);
+  mcpRequestAbortControllers.delete(requestId);
   mcpServerElicitationRequests.delete(requestId);
 };
 
@@ -179,6 +241,14 @@ export const findNotifications = async (options: { responseId: string }): Promis
   return (await getAllEvents(options)).filter(e => e.type === 'notification') as McpNotificationEvent[];
 };
 
+export const findPendingEvents = async (options: CommonMcpOptions): Promise<string[]> => {
+  const pendingEventIds = pendingMcpRequestEventIds.get(options.requestId);
+  if (pendingEventIds) {
+    return pendingEventIds.map(e => e.eventId);
+  }
+  return [];
+};
+
 export const getMcpReadyState = async (options: CommonMcpOptions) => {
   try {
     const mcpConnection = mcpConnections.get(options.requestId);
@@ -198,4 +268,35 @@ export const hasRequestResponded = async ({
     return !pendingServerRequestResolvers.has(serverRequestId);
   }
   return hasResponded;
+};
+
+export const setAbortControllerForMcpRequest = (options: { messageId: string } & CommonMcpOptions) => {
+  const { requestId, messageId } = options;
+  const abortControllersForRequest = mcpRequestAbortControllers.get(requestId) || new Map();
+  if (!mcpRequestAbortControllers.has(requestId)) {
+    mcpRequestAbortControllers.set(requestId, abortControllersForRequest);
+  }
+  const abortController = new AbortController();
+  abortControllersForRequest.set(messageId, abortController);
+  return abortController;
+};
+
+export const clearAbortControllerForMcpRequest = (options: { messageId: string } & CommonMcpOptions) => {
+  const { requestId, messageId } = options;
+  const abortControllersForRequest = mcpRequestAbortControllers.get(requestId);
+  if (abortControllersForRequest) {
+    abortControllersForRequest.delete(messageId);
+  }
+};
+
+export const cancelRequest = async (options: { messageId: string } & CommonMcpOptions) => {
+  const { requestId, messageId } = options;
+  const abortControllersForRequest = mcpRequestAbortControllers.get(requestId);
+  if (abortControllersForRequest) {
+    const abortController = abortControllersForRequest.get(messageId);
+    if (abortController) {
+      abortController.abort();
+      abortControllersForRequest.delete(messageId);
+    }
+  }
 };

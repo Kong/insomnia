@@ -238,24 +238,33 @@ export class GitProjectNeDBClient {
     });
   }
 
+  /**
+   * Given a file path, find the workspace ID associated with it.
+   * This is used to map a git file path to the corresponding workspace in the database.
+   */
   async getWorkspaceIdFromFilePath(filePath: string) {
+    // Normalize the file path to ensure consistency (handles OS differences, etc.)
     filePath = path.normalize(filePath);
 
+    // Find all workspaces that belong to the current project
     const workspaces = await db.find<Workspace>(models.workspace.type, {
       parentId: this._projectId,
     });
 
+    // Find workspaceMeta entries that match the file path and belong to one of the found workspaces
     const workspaceMeta = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
       gitFilePath: filePath,
       parentId: {
-        $in: workspaces.map(w => w._id),
+        $in: workspaces.map(w => w._id), // Only consider metas for workspaces in this project
       },
     });
 
+    // If no matching workspaceMeta is found, return null (file is not tracked)
     if (workspaceMeta.length === 0) {
       return null;
     }
 
+    // Return the parentId (workspace ID) of the first matching workspaceMeta
     return workspaceMeta[0].parentId;
   }
 }

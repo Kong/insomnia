@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: Smoke tests
 meta:
   id: wrk_92410798721649cc8cd6f7c312a8764d
@@ -41,8 +42,7 @@ collection:
       isPrivate: false
     method: GET
     headers:
-      - id: pair_4c3fe3092f1245eab6d960c633d8be9c
-        name: test
+      - name: test
         value: test
     settings:
       renderRequestBody: true
@@ -125,8 +125,7 @@ collection:
       isPrivate: false
     method: GET
     headers:
-      - id: pair_4c3fe3092f1245eab6d960c633d8be8c
-        name: Accept
+      - name: Accept
         value: text/event-stream
     settings:
       renderRequestBody: true
@@ -145,8 +144,7 @@ collection:
       isPrivate: false
     method: GET
     headers:
-      - id: pair_cbcd8bc34d494a3c83b29989d06cf005
-        name: Authorization
+      - name: Authorization
         value: Basic dXNlcjpwYXNz
         disabled: true
     authentication:

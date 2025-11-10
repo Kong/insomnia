@@ -77,10 +77,12 @@ const mcp: McpBridgeAPI = {
   client: {
     responseElicitationRequest: options => ipcRenderer.send('mcp.client.responseElicitationRequest', options),
     hasRequestResponded: options => ipcRenderer.invoke('mcp.client.hasRequestResponded', options),
+    cancelRequest: options => ipcRenderer.invoke('mcp.client.cancelRequest', options),
   },
   event: {
     findMany: options => ipcRenderer.invoke('mcp.event.findMany', options),
     findNotifications: options => ipcRenderer.invoke('mcp.event.findNotifications', options),
+    findPendingEvents: options => ipcRenderer.invoke('mcp.event.findPendingEvents', options),
   },
 };
 
