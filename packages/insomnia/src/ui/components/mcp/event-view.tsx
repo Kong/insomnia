@@ -218,8 +218,7 @@ export const MessageEventView = ({ event }: Props) => {
       {viewMode === 'form' && isElicitationRequest && (
         <ElicitationForm schema={getElicitationFormSchema()} requestId={requestId} serverRequestId={eventData?.id} />
       )}
-      {/* {viewMode === 'form' && isSamplingRequest && ( */}
-      {isSamplingRequest && (
+      {viewMode === 'form' && isSamplingRequest && (
         <SamplingForm
           requestId={requestId}
           serverRequestId={eventData?.id}
