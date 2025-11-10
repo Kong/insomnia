@@ -1,19 +1,13 @@
-import type { CancelledNotification } from '@modelcontextprotocol/sdk/types.js';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
-import React, { type FC, useEffect, useRef } from 'react';
-import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
+import React, { type FC, useEffect, useRef, useState } from 'react';
+import { Button, Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
 
 import { HelpTooltip } from '~/ui/components/help-tooltip';
 import { Icon } from '~/ui/components/icon';
 
-import {
-  METHOD_NOTIFICATION_CANCELLED,
-  METHOD_UNKNOWN,
-  NOTIFICATIONS_LIST_CHANGED,
-  unsupportedMethodPrefix,
-} from '../../../common/mcp-utils';
-import type { McpEvent, McpMessageEvent } from '../../../main/mcp/types';
+import { METHOD_UNKNOWN, NOTIFICATIONS_LIST_CHANGED, unsupportedMethodPrefix } from '../../../common/mcp-utils';
+import type { McpEvent } from '../../../main/mcp/types';
 import type { CurlEvent } from '../../../main/network/curl';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
@@ -95,10 +89,24 @@ const getMessage = (event: EventTypes, isLoading: boolean): string | JSX.Element
         const eventMethod = event.method || METHOD_UNKNOWN;
         const isUnsupportedMethod = eventMethod.startsWith(unsupportedMethodPrefix);
         return (
-          <div className="flex items-center">
-            {isLoading && <Icon className="mr-2 animate-spin" icon="spinner" />}
+          <div className="flex items-center gap-3">
             {isUnsupportedMethod && <span className="bg-warning mr-2 rounded-sm px-2 py-1">Unsupported</span>}
             <span className="flex-shrink">{eventMethod.replace(`${unsupportedMethodPrefix}`, '')}</span>
+            {isLoading && <Icon className="animate-spin" icon="spinner" />}
+            {isLoading && event.direction === 'OUTGOING' && event.data?.id && (
+              <Button
+                aria-label="Cancel Request"
+                className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                onPress={() => {
+                  window.main.mcp.client.cancelRequest({
+                    requestId: event.requestId,
+                    messageId: event.data.id.toString(),
+                  });
+                }}
+              >
+                <SvgIcon icon="prohibited" />
+              </Button>
+            )}
           </div>
         );
       }
@@ -157,6 +165,7 @@ export const EventLogView: FC<Props> = ({
   readyState,
 }) => {
   const parentRef = useRef<HTMLTableSectionElement>(null);
+  const [pendingEvents, setPendingEvents] = useState<string[]>([]);
 
   const virtualizer = useVirtualizer({
     getScrollElement: () => parentRef.current,
@@ -165,16 +174,26 @@ export const EventLogView: FC<Props> = ({
     overscan: 30,
     getItemKey: index => events[index]._id,
   });
-  const isMcpEvents = protocol === 'mcp';
 
   useEffect(() => {
     // re-measure the virtualizer when EventLogView mounted, especially when switched in a tab
     virtualizer.measure();
   }, [virtualizer]);
 
+  useEffect(() => {
+    const updatePendingEvents = async (resId: string) => {
+      const pendingEvents = await window.main.mcp.event.findPendingEvents({ requestId: resId });
+      setPendingEvents(pendingEvents);
+    };
+    // For mcp protocol, fetch pending event ids from main process to show loading state
+    if (protocol === 'mcp' && events.length > 0) {
+      updatePendingEvents(events[0].requestId);
+    }
+  }, [events, protocol]);
+
   return (
     <>
-      <div className="max-h-96 w-full flex-1 select-none overflow-hidden overflow-y-auto border border-solid border-[--hl-sm]">
+      <div className="max-h-96 w-full flex-1 select-none overflow-hidden overflow-x-auto overflow-y-auto border border-solid border-[--hl-sm]">
         <Table
           selectionMode="single"
           selectedKeys={selectionId ? [selectionId] : []}
@@ -207,42 +226,14 @@ export const EventLogView: FC<Props> = ({
             items={virtualizer.getVirtualItems()}
           >
             {item => {
-              let isLoading = false;
               const event = events[item.index];
+              const isLoading = event.type === 'message' && !!readyState && pendingEvents.includes(event._id);
               const isSelectedRow = event._id === selectionId;
               // add focus style when autoSelectLatestEvent is true for the first row
               const rowExtraClasses =
                 isSelectedRow && autoSelectLatestEvent
                   ? 'bg-[--hl-sm] outline-none'
                   : 'focus-within:bg-[--hl-sm] focus:outline-none';
-              if (isMcpEvents && event.type === 'message' && readyState) {
-                // Adding loading indicator if the message has not been responded by the server from json-rpc id
-                const { direction, data } = event;
-                const jsonRPCId = 'id' in data && data.id;
-                const method = (event as McpMessageEvent).method;
-                const isUnsupportedMethod = method.startsWith(unsupportedMethodPrefix);
-                const isErrorRequest = event.data.error;
-                if (jsonRPCId && !isUnsupportedMethod && !isErrorRequest) {
-                  isLoading = !events.find(e => {
-                    if (e.type === 'message') {
-                      const eventMethod = (e as McpMessageEvent).method;
-                      if (eventMethod === METHOD_NOTIFICATION_CANCELLED) {
-                        const eventData = e.data as CancelledNotification;
-                        // find the cancelled notification message indicates cancellation of the request
-                        return e.direction === direction && eventData.params.requestId === jsonRPCId;
-                      }
-                      // find the response message from server with the same json-rpc id but different direction
-                      return (
-                        eventMethod === method && e.direction !== direction && 'id' in e.data && e.data.id === jsonRPCId
-                      );
-                    } else if (e.type === 'error' && e.error && direction === 'OUTGOING') {
-                      // find the error message with the same json-rpc id for all outgoing requests
-                      return e.error?.requestId === jsonRPCId;
-                    }
-                    return false;
-                  });
-                }
-              }
               return (
                 <Row className={`group transition-colors ${rowExtraClasses}`}>
                   <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] p-2 text-sm font-medium focus:outline-none group-last-of-type:border-none">
