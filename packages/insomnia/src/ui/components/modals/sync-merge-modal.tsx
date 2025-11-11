@@ -15,6 +15,7 @@ import { parse, stringify } from 'yaml';
 
 import { extractErrorMessages } from '~/common/import';
 import { InsomniaFileSchema } from '~/common/import-v5-parser';
+import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 
@@ -25,22 +26,20 @@ import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 
 function validateMergeResult(mergeResult: string) {
-  // empty string means the file is deleted
+  // Empty string means the file is deleted
   if (mergeResult === '') {
     return undefined;
   }
-  let parsed = null;
-  try {
-    parsed = parse(mergeResult);
-  } catch (error) {
-    return error.message;
+
+  // Apply schema migration and validate in one step
+  const migratedResult = migrateToLatestYaml(mergeResult);
+  const result = InsomniaFileSchema.safeParse(parse(migratedResult));
+
+  if (!result.success) {
+    return extractErrorMessages(result.error).join('\n');
   }
-  try {
-    InsomniaFileSchema.parse(parsed);
-  } catch (error) {
-    return extractErrorMessages(error).join('\n');
-  }
-  return undefined;
+
+  return undefined; // No errors
 }
 
 type EditorType = 'diff' | 'merge';
@@ -123,7 +122,10 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
           const errMsgMap: Record<string, string> = {};
           conflicts.forEach(conflict => {
             if (conflict.mergeResult) {
-              errMsgMap[conflict.key] = validateMergeResult(conflict.mergeResult);
+              const errorMsg = validateMergeResult(conflict.mergeResult);
+              if (errorMsg) {
+                errMsgMap[conflict.key] = errorMsg;
+              }
             }
           });
           setErrMsgMapForConflictMergeResult(errMsgMap);
@@ -159,11 +161,15 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
         });
         return updatedConflicts;
       });
-      const errMsg = validateMergeResult(result);
-      setErrMsgMapForConflictMergeResult(prev => ({
-        ...prev,
-        [selectedConflictKey]: errMsg,
-      }));
+
+      const errorMsg = validateMergeResult(result);
+
+      if (errorMsg) {
+        setErrMsgMapForConflictMergeResult(prev => ({
+          ...prev,
+          [selectedConflictKey]: errorMsg,
+        }));
+      }
     },
     [conflicts, selectedConflictKey],
   );

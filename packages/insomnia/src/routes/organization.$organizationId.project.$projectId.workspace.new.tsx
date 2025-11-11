@@ -172,7 +172,14 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       const settings = await models.settings.getOrCreate();
       const defaultHeaders = settings.disableAppVersionUserAgent
         ? []
-        : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
+        : [
+            {
+              name: 'User-Agent',
+              value: `insomnia/${getAppVersion()}`,
+              description: '',
+              disabled: false,
+            },
+          ];
 
       const activeRequestId = (
         await models.request.create({
@@ -291,6 +298,8 @@ async function createMockServer(
       workspaceId: workspace._id,
     })}/mock-server`;
 
+    const modelConfig = await window.main.llm.getCurrentConfig();
+
     const generationStartTime = Date.now();
 
     if (workspaceData.mockServerCreationType === 'ai') {
@@ -308,7 +317,6 @@ async function createMockServer(
         specText = workspaceData.mockServerSpecText!;
       }
 
-      const modelConfig = await window.main.llm.getCurrentConfig();
       const result = await window.main.generateMockRouteDataFromSpec(
         openapiSpec,
         specUrl,
@@ -347,6 +355,8 @@ async function createMockServer(
     window.main.trackSegmentEvent({
       event: SegmentEvent.mockCreate,
       properties: {
+        provider: modelConfig && modelConfig.backend || '',
+        model: modelConfig && modelConfig.model || '',
         hosting: workspaceData.mockServerType || '',
         generation: workspaceData.mockServerCreationType || '',
         generation_from: workspaceData.apiSpecContents ? 'design_doc' : workspaceData.mockServerSpecSource || '',

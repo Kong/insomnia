@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: Pre-request Scripts
 meta:
   id: wrk_528f9a4257864335afd9e02b584b6bd7
@@ -54,27 +55,17 @@ collection:
               - name: Content-Type
                 value: application/json
             scripts:
-              preRequest: >-
-                const folder1ValByReq =
-                insomnia.parentFolders.get('folder1').environment.get('val');
-
+              preRequest: |-
+                const folder1ValByReq = insomnia.parentFolders.get('folder1').environment.get('val');
                 const folder1ValByReqByName = insomnia.parentFolders.getByName('folder1').environment.get('val');
-
                 const folder2ValByReq = insomnia.parentFolders.get('folder2').environment.get('val');
-
                 const folder2ValByReqByName = insomnia.parentFolders.getByName('folder2').environment.get('val');
-
                 const valFound = insomnia.parentFolders.findValue('val');
 
-
                 insomnia.environment.set('folder1ValByReq', folder1ValByReq);
-
                 insomnia.environment.set('folder1ValByReqByName', folder1ValByReqByName);
-
                 insomnia.environment.set('folder2ValByReq', folder2ValByReq);
-
                 insomnia.environment.set('folder2ValByReqByName', folder2ValByReqByName);
-
                 insomnia.environment.set('valFound', valFound);
             settings:
               renderRequestBody: true
@@ -85,52 +76,32 @@ collection:
                 store: true
               rebuildPath: true
         scripts:
-          preRequest: >-
-            const folder1ValByFolder2 =
-            insomnia.parentFolders.get('folder1').environment.get('val');
-
+          preRequest: |-
+            const folder1ValByFolder2 = insomnia.parentFolders.get('folder1').environment.get('val');
             const folder1ValByFolder2ByName = insomnia.parentFolders.getByName('folder1').environment.get('val');
-
             const folder2ValByFolder2 = insomnia.parentFolders.get('folder2').environment.get('val');
-
             const folder2ValByFolder2ByName = insomnia.parentFolders.getByName('folder2').environment.get('val');
-
             const valFoundByFolder2 = insomnia.parentFolders.findValue('val');
 
-
             insomnia.environment.set('folder1ValByFolder2', folder1ValByFolder2);
-
             insomnia.environment.set('folder1ValByFolder2ByName', folder1ValByFolder2ByName);
-
             insomnia.environment.set('folder2ValByFolder2', folder2ValByFolder2);
-
             insomnia.environment.set('folder2ValByFolder2ByName', folder2ValByFolder2ByName);
-
             insomnia.environment.set('valFoundByFolder2', valFoundByFolder2);
         environment:
           val: "2"
     scripts:
-      preRequest: >-
-        const folder1ValByFolder1 =
-        insomnia.parentFolders.get('folder1').environment.get('val');
-
+      preRequest: |-
+        const folder1ValByFolder1 = insomnia.parentFolders.get('folder1').environment.get('val');
         const folder1ValByFolder1ByName = insomnia.parentFolders.getByName('folder1').environment.get('val');
-
         const folder2ValByFolder1 = insomnia.parentFolders.get('folder2').environment.get('val');
-
         const folder2ValByFolder1ByName = insomnia.parentFolders.getByName('folder2').environment.get('val');
-
         const valFoundByFolder1 = insomnia.parentFolders.findValue('val');
 
-
         insomnia.environment.set('folder1ValByFolder1', folder1ValByFolder1);
-
         insomnia.environment.set('folder1ValByFolder1ByName', folder1ValByFolder1ByName);
-
         insomnia.environment.set('folder2ValByFolder1', folder2ValByFolder1);
-
         insomnia.environment.set('folder2ValByFolder1ByName', folder2ValByFolder1ByName);
-
         insomnia.environment.set('valFoundByFolder1', valFoundByFolder1);
     environment:
       val: "1"
@@ -261,7 +232,7 @@ collection:
           cookies:
             send: true
             store: true
-          rebuildPath: true          
+          rebuildPath: true
       - url: http://127.0.0.1:4010/echo
         name: run parent scripts only
         meta:
@@ -309,21 +280,14 @@ collection:
           - name: Content-Type
             value: application/json
         scripts:
-          preRequest: >-
+          preRequest: |-
             // set local
-
             insomnia.variables.set('varStr', 'varStr');
-
             insomnia.variables.set('varNum', 777);
-
             insomnia.variables.set('varBool', true);
-
             // has
-
             insomnia.environment.set('varStr', insomnia.variables.get('varStr'));
-
             insomnia.environment.set('varNum', insomnia.variables.get('varNum'));
-
             insomnia.environment.set('varBool', insomnia.variables.get('varBool'));
         settings:
           renderRequestBody: true
@@ -532,25 +496,16 @@ collection:
           - name: Content-Type
             value: application/json
         scripts:
-          preRequest: >-
+          preRequest: |-
             // insomnia.globals.set('fallbackToGlobal', 'fallbackToGlobal');
-
             insomnia.baseEnvironment.set('fallbackToBase', 'fallbackToBase');
-
             insomnia.baseEnvironment.set('scriptValue', 'fromBase');
-
             insomnia.environment.set('scriptValue', 'fromEnv');
-
             // "preDefinedValue" is already defined in the base environment modal.
-
             // but it is rewritten here
-
             insomnia.baseEnvironment.set('preDefinedValue', 'fromScript');
-
             // "folderEnv" is already defined in the folder environment.
-
             // folder version will override the following one
-
             insomnia.baseEnvironment.set('folderEnv', 'fromScript');
         settings:
           renderRequestBody: true
@@ -689,33 +644,20 @@ collection:
           - name: Content-Type
             value: application/json
         scripts:
-          preRequest: >-
+          preRequest: |-
             const { URL } = require('url');
-
             const url = new URL('https://user:pwd@insomnia.com:6666/p1?q1=a&q2=b#hashcontent');
-
             insomnia.environment.set('hash', "#hashcontent");
-
             insomnia.environment.set('host', "insomnia.com:6666");
-
             insomnia.environment.set('hostname', "insomnia.com");
-
             insomnia.environment.set('href', "https://user:pwd@insomnia.com:6666/p1?q1=a&q2=b#hashcontent");
-
             insomnia.environment.set('origin', "https://insomnia.com:6666");
-
             insomnia.environment.set('password', "pwd");
-
             insomnia.environment.set('pathname', "/p1");
-
             insomnia.environment.set('port', "6666");
-
             insomnia.environment.set('protocol', "https:");
-
             insomnia.environment.set('search', "?q1=a&q2=b");
-
             insomnia.environment.set('username', "user");
-
             insomnia.environment.set('seachParam', url.searchParams.toString());
         settings:
           renderRequestBody: true
@@ -805,25 +747,17 @@ collection:
           - name: Content-Type
             value: application/json
         scripts:
-          preRequest: >-
-            const { Property, Header, Variable, QueryParam, Url, RequestAuth,
-            ProxyConfig, Cookie, Certificate, RequestBody, Request, Response } =
-            require('insomnia-collection');
-
+          preRequest: |-
+            const { Property, Header, Variable, QueryParam, Url, RequestAuth, ProxyConfig, Cookie, Certificate, RequestBody, Request, Response } = require('insomnia-collection');
             const prop = new Property('pid', 'pname');
-
             const header = new Header({ key: 'headerKey', value: 'headerValue' });
-
             const variable = new Variable({ key: 'headerKey', value: 'headerValue' });
-
             const qParam = new QueryParam({ key: 'queryKey', value: 'queryValue' });
-
             const url = new Url({
                 host: ['insomnia', 'rest'],
                 path: ['path1', 'path2'],
                 protocol: 'https',
             });
-
             const proxyConfig = new ProxyConfig({
                 match: 'http+https://*.example.com:80/*',
                 host: 'proxy.com',
@@ -834,7 +768,6 @@ collection:
                 username: 'proxy_username',
                 password: 'proxy_password',
             });
-
             const reqAuth = new RequestAuth({
                 type: 'basic',
                 basic: [
@@ -842,9 +775,7 @@ collection:
                     { key: 'password', value: 'pwd1' },
                 ],
             });
-
             const cookie = new Cookie({ key: 'queryKey', value: 'queryValue' });
-
             const cert = new Certificate({
                 name: 'Certificate for example.com',
                 matches: ['https://example.com'],
@@ -852,7 +783,6 @@ collection:
                 cert: { src: '/User/path/to/certificate' },
                 passphrase: 'iampassphrase',
             });
-
             const reqBody = new RequestBody({
                 mode: 'urlencoded',
                 urlencoded: [
@@ -860,7 +790,6 @@ collection:
                 ],
                 options: {},
             });
-
             const req = new Request({
                 url: 'https://hostname.com/path',
                 method: 'GET',
@@ -882,7 +811,6 @@ collection:
                 proxy: undefined,
                 certificate: undefined,
             });
-
             const resp = new Response({
                 code: 200,
                 reason: 'OK',
@@ -903,11 +831,8 @@ collection:
                 status: 'OK',
                 originalRequest: req,
             });
-
             // set part of values
-
             insomnia.environment.set('propJson', JSON.stringify(prop.toJSON()));
-
             insomnia.environment.set('headerJson', JSON.stringify(header.toJSON()));
         settings:
           renderRequestBody: true
@@ -1022,13 +947,10 @@ collection:
           sortKey: -1636141014553
         method: POST
         scripts:
-          preRequest: >-
+          preRequest: |-
             insomnia.environment.set('serverURL', 'http://127.0.0.1:4010');
-
             insomnia.clientCertificates = []; // remove all existing ones or it will still be selected
-
             // update
-
             insomnia.request.certificate.update({
                 disabled: true,
                 key: {src: 'invalid.key'},
@@ -1240,10 +1162,8 @@ collection:
           - name: Content-Type
             value: application/json
         scripts:
-          preRequest: >-
-            insomnia.environment.set('__environment_type',
-            '__environment_value_kv');
-
+          preRequest: |-
+            insomnia.environment.set('__environment_type', '__environment_value_kv');
             insomnia.environment.set('examplehost', 'http://url-from-script');
         settings:
           renderRequestBody: true
@@ -1492,13 +1412,11 @@ collection:
       sortKey: -1738810244689.5
     method: GET
     parameters:
-      - id: pair_9f61f0a4a75649468ea41af496ba3ea4
-        name: key
+      - name: key
         value: "{{fromEditorValue}}"
         disabled: false
-      - id: pair_96fce40da1a3472394e373c220ebb9ad
-        name: key
-        value: "/"
+      - name: key
+        value: /
         disabled: false
     headers:
       - name: User-Agent
@@ -1527,8 +1445,8 @@ environments:
     modified: 1707808692805
     isPrivate: false
   data:
-    fromUrlValue: 'fromUrlValue'
-    fromEditorValue: 'fromEditorValue'
+    fromUrlValue: fromUrlValue
+    fromEditorValue: fromEditorValue
     examplehost: http://127.0.0.1:4010/echo
     a:
       b:

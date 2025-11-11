@@ -1,4 +1,4 @@
-import React, { type FC, Fragment, useCallback, useMemo } from 'react';
+import React, { type FC, Fragment, useCallback, useMemo, useState } from 'react';
 import {
   Button,
   DropIndicator,
@@ -73,7 +73,9 @@ export const KeyValueEditor: FC<Props> = ({
   valuePlaceholder,
   readOnlyPairs,
 }) => {
-  const [showDescription, setShowDescription] = React.useState(false);
+  const [showDescription, setShowDescription] = useState(
+    pairs.some(p => p.description && p.description.trim() !== '') || false,
+  );
   let pairsListItems = useMemo(
     () =>
       pairs.length > 0 ? pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) : [createEmptyPair()],
@@ -102,6 +104,7 @@ export const KeyValueEditor: FC<Props> = ({
     }
     return allItems;
   };
+
   const { dragAndDropHooks } = useDragAndDrop({
     getItems: keys =>
       [...keys].map(key => ({ 'text/plain': `${pairsListItems.find(item => item.id === key.toString())?.id}` })),
@@ -369,6 +372,7 @@ export const KeyValueEditor: FC<Props> = ({
             const isFile = pair.type === 'file';
             const isMultiline = pair.type === 'text' && pair.multiline;
             const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+            const isOnlyTextAllowed = !allowFile && !allowMultiline;
 
             let valueEditor = (
               <OneLineEditor
@@ -466,63 +470,65 @@ export const KeyValueEditor: FC<Props> = ({
                   </div>
                 )}
                 <Toolbar className="flex items-center gap-1">
-                  <MenuTrigger>
-                    <Button
-                      aria-label="Text mode"
-                      className="flex aspect-square h-7 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                    >
-                      <Icon icon="caret-down" />
-                    </Button>
-                    <Popover className="flex min-w-max flex-col overflow-y-hidden">
-                      <Menu
-                        className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
-                        aria-label="Create a new request"
-                        selectionMode="single"
-                        selectedKeys={[selectedValueType]}
-                        items={[
-                          {
-                            id: 'text',
-                            name: 'Text',
-                            textValue: 'Text',
-                            onAction: () => upsertPair(pairsListItems, { ...pair, type: 'text', multiline: false }),
-                          },
-                          ...(allowMultiline
-                            ? [
-                                {
-                                  id: 'multiline-text',
-                                  name: 'Multiline text',
-                                  textValue: 'Multiline text',
-                                  onAction: () =>
-                                    upsertPair(pairsListItems, { ...pair, type: 'text', multiline: true }),
-                                },
-                              ]
-                            : []),
-                          ...(allowFile
-                            ? [
-                                {
-                                  id: 'file',
-                                  name: 'File',
-                                  textValue: 'File',
-                                  onAction: () => upsertPair(pairsListItems, { ...pair, type: 'file' }),
-                                },
-                              ]
-                            : []),
-                        ]}
+                  {!isOnlyTextAllowed && (
+                    <MenuTrigger>
+                      <Button
+                        aria-label="Text mode"
+                        className="flex aspect-square h-7 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                       >
-                        {item => (
-                          <MenuItem
-                            key={item.id}
-                            id={item.id}
-                            onAction={item.onAction}
-                            className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
-                            aria-label={item.name}
-                          >
-                            <span>{item.name}</span>
-                          </MenuItem>
-                        )}
-                      </Menu>
-                    </Popover>
-                  </MenuTrigger>
+                        <Icon icon="caret-down" />
+                      </Button>
+                      <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                        <Menu
+                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                          aria-label="Select value type"
+                          selectionMode="single"
+                          selectedKeys={[selectedValueType]}
+                          items={[
+                            {
+                              id: 'text',
+                              name: 'Text',
+                              textValue: 'Text',
+                              onAction: () => upsertPair(pairsListItems, { ...pair, type: 'text', multiline: false }),
+                            },
+                            ...(allowMultiline
+                              ? [
+                                  {
+                                    id: 'multiline-text',
+                                    name: 'Multiline text',
+                                    textValue: 'Multiline text',
+                                    onAction: () =>
+                                      upsertPair(pairsListItems, { ...pair, type: 'text', multiline: true }),
+                                  },
+                                ]
+                              : []),
+                            ...(allowFile
+                              ? [
+                                  {
+                                    id: 'file',
+                                    name: 'File',
+                                    textValue: 'File',
+                                    onAction: () => upsertPair(pairsListItems, { ...pair, type: 'file' }),
+                                  },
+                                ]
+                              : []),
+                          ]}
+                        >
+                          {item => (
+                            <MenuItem
+                              key={item.id}
+                              id={item.id}
+                              onAction={item.onAction}
+                              className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              aria-label={item.name}
+                            >
+                              <span>{item.name}</span>
+                            </MenuItem>
+                          )}
+                        </Menu>
+                      </Popover>
+                    </MenuTrigger>
+                  )}
                   <ToggleButton
                     className="flex aspect-square h-7 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
                     onChange={isSelected => upsertPair(pairsListItems, { ...pair, disabled: !isSelected })}
