@@ -123,8 +123,7 @@
               "name": "key",
               "value": "value",
               "description": "",
-              "disabled": false,
-              "id": "pair_e6f1d8dad6f1413497c3b2fc4a1c7fc5"
+              "disabled": false
             }
           ]
         },
@@ -132,8 +131,7 @@
           {
             "name": "from-r1",
             "value": "{% response 'body', 'req_a7eea21417aa4af2a1c906d5e562a325', 'b64::JC5kYXRh::46b', 'no-history', 60 %}",
-            "disabled": false,
-            "id": "pair_c5d5d7ca8e89414ab14cff81370b45d7"
+            "disabled": false
           }
         ],
         "headers": [
@@ -208,8 +206,7 @@
           {
             "name": "queryname",
             "value": "queryvalue",
-            "disabled": false,
-            "id": "pair_927facef133b4df59bb4661c9473111a"
+            "disabled": false
           }
         ],
         "headers": [

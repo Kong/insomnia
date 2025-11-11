@@ -4,7 +4,7 @@ meta:
   id: wrk_c5d5b5167b9049af8b53c5b6f076349b
   created: 1762508027498
   modified: 1762508027498
-  description: ""
+  description: ''
 collection:
   - url: http://localhost:4010/echo
     name: Request With Sensitive Headers
@@ -13,7 +13,7 @@ collection:
       created: 1754293004564
       modified: 1762509152390
       isPrivate: false
-      description: ""
+      description: ''
       sortKey: -1754293004564
     method: POST
     body:
@@ -40,33 +40,23 @@ collection:
       - id: pair_aa7cdfd5c82d4f4cb7737ad41e357220
         name: Authorization
         value: <sensitive>
-        description: ""
-        disabled: false
       - id: pair_32ad47361f6c40bcb3f84273b1b4ce50
         name: Auth
         value: <sensitive>
-        description: ""
-        disabled: false
       - id: pair_5dd2022670e04b6ea959ac75ba5ead74
         name: Cookie
         value: <sensitive>
-        description: ""
-        disabled: false
       - id: pair_245205652e154b30a0ab241c13e61b99
         name: x-auth-token
         value: <sensitive>
-        description: ""
-        disabled: false
       - id: pair_3e019947ced7433f90dde5c4f69af8d5
         name: x-api-key
         value: <sensitive>
-        description: ""
-        disabled: false
     authentication:
       type: digest
       disabled: false
-      username: ""
-      password: ""
+      username: ''
+      password: ''
     scripts:
       preRequest: |
         const track = +(new Date());
@@ -77,7 +67,7 @@ collection:
             insomnia.expect(insomnia.environment.get("track")).to.eql(track);
         });
       afterResponse: |
-        
+
         insomnia.test('Check if status is 200', () => {
             insomnia.expect(insomnia.response.code).to.eql(200);
         });
@@ -100,7 +90,7 @@ collection:
       created: 1754297299654
       modified: 1762509360358
       isPrivate: false
-      description: ""
+      description: ''
       sortKey: -1754297299654
     method: POST
     body:
@@ -109,7 +99,7 @@ collection:
         - id: pair_e6f1d8dad6f1413497c3b2fc4a1c7fc5
           name: key
           value: value
-          description: ""
+          description: ''
           disabled: false
     parameters:
       - name: from-r1
@@ -148,16 +138,16 @@ collection:
       created: 1754468596942
       modified: 1762509338246
       isPrivate: false
-      description: ""
+      description: ''
       sortKey: -1754468596942
     method: GET
     body:
       mimeType: multipart/form-data
     parameters:
       - id: pair_cd383e4bd88a42389b0f8531a1b699ae
-        name: ""
-        value: ""
-        description: ""
+        name: ''
+        value: ''
+        description: ''
         disabled: false
     headers:
       - name: Content-Type
@@ -172,10 +162,10 @@ collection:
       addTo: header
     scripts:
       preRequest: |
-        
+
         insomnia.expect(200).to.eql(200);
       afterResponse: |+
-        
+
         insomnia.test('Check if status is 200', () => {
             insomnia.expect(insomnia.response.code).to.eql(200);
         });
