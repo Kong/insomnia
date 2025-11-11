@@ -51,14 +51,7 @@
         "body": {
           "mimeType": "multipart/form-data"
         },
-        "parameters": [
-          {
-            "name": "",
-            "value": "",
-            "disabled": false,
-            "id": "pair_cd383e4bd88a42389b0f8531a1b699ae"
-          }
-        ],
+        "parameters": [],
         "headers": [
           {
             "name": "Content-Type",
