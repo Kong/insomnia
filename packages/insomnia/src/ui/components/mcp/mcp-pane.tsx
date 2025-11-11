@@ -525,7 +525,7 @@ export const McpPane = () => {
           </Panel>
           <PanelResizeHandle
             className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'h-[1px] w-full bg-[--hl-md]'}
-          />{' '}
+          />
           <Panel id="mcp-response-pane" order={2} minSize={10} className="pane-two theme--pane">
             <ErrorBoundary showAlert>
               <RealtimeResponsePane />
