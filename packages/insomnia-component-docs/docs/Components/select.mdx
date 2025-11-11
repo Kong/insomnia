@@ -1,0 +1,99 @@
+---
+id: button
+sidebar_label: 'Select'
+sidebar_position: 3
+---
+
+import { Select } from 'insomnia/src/ui/components/base/select';
+
+# Select
+
+A customizable dropdown select component built on top of React Aria Components, providing accessible single-selection functionality with keyboard navigation and visual states.
+
+## Features
+
+- **Single Selection**: Currently supports single-item selection (based on react-aria limitations)
+- **Accessible**: Built with React Aria Components for full ARIA compliance and keyboard navigation
+- **Visual States**: Automatic styling for disabled, invalid, hover, pressed, and focused states
+- **Custom Styling**: Integrates with Tailwind CSS and CSS variables for theming
+- **Icon Support**: Includes chevron indicator and checkmark for selected items
+- **Responsive**: Popover width automatically matches trigger width
+
+## Props
+
+| Prop        | Type                                      | Required | Description                                               |
+| ----------- | ----------------------------------------- | -------- | --------------------------------------------------------- |
+| `options`   | `{ label: string; value: string }[]`      | Yes      | Array of selectable options                               |
+| `value`     | `string \| number \| null`                | No       | Currently selected value (controlled)                     |
+| `onChange`  | `(key: string \| number \| null) => void` | No       | Callback fired when selection changes                     |
+| `label`     | `string`                                  | No       | Label for the select (currently unused in implementation) |
+| `className` | `string`                                  | No       | Additional CSS classes for the select                     |
+
+### Basic Usage
+
+<Select
+  options={[
+    { label: 'Option 1', value: 'opt1' },
+    { label: 'Option 2', value: 'opt2' },
+    { label: 'Option 3', value: 'opt3' },
+  ]}
+/>
+
+```tsx
+const options = [
+  { label: 'Option 1', value: 'opt1' },
+  { label: 'Option 2', value: 'opt2' },
+  { label: 'Option 3', value: 'opt3' },
+];
+<Select onChange={v => console.log(v)} options={options} />;
+```
+
+### Disabled
+
+<Select isDisabled />
+
+```tsx
+<Select isDisabled />
+```
+
+### Disabled Options
+
+<Select
+  onChange={v => console.log(v)}
+  value="opt1"
+  disabledKeys={['opt2']}
+  options={[
+    { label: 'Option 1', value: 'opt1' },
+    { label: 'Option 2', value: 'opt2' },
+    { label: 'Option 3', value: 'opt3' },
+  ]}
+/>
+
+```tsx
+<Select
+  onChange={v => console.log(v)}
+  value="A"
+  disabledKeys={['B']}
+  options={[
+    { label: 'A', value: 'A' },
+    { label: 'BBBBBB', value: 'B' },
+    { label: 'CCCCCC', value: 'C' },
+  ]}
+/>
+```
+
+## Styling
+
+### CSS Variables
+
+The component uses the following CSS variables for theming:
+
+- `--color-font`: Text color
+- `--color-bg`: Background color
+- `--hl-xs`: Subtle highlight (disabled borders, item hover)
+- `--hl-sm`: Standard highlight (default borders)
+- `--color-danger`: Error/invalid state color
+
+```
+
+```
