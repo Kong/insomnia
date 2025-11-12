@@ -168,10 +168,11 @@ jobs:
         shell: pwsh
         run: |
           $version = $env:INSO_VERSION
-          $nupkg = "Insomnia.Core-${version}-full.nupkg"
+          $nupkg = "insomnia-${version}-full.nupkg"
+          Write-Host "scan insomnia-${version}-full.nupkg"
           7z x "packages/insomnia/dist/squirrel-windows/${nupkg}" -o"${version}-extract"
 
-          $exeFiles = Get-ChildItem -Path "${version}-extract" -Filter *.exe -Recurse
+          $exeFiles = Get-ChildItem -Path "${version}-extract/lib/net45" -Depth 0 -Filter *.exe
 
           if ($exeFiles.Count -eq 0) {
             Write-Warning "No .exe files found in the package"
