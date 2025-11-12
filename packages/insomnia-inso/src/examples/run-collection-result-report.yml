@@ -1,0 +1,207 @@
+type: collection.insomnia.rest/5.0
+name: CLI Run Collection Report Generation
+meta:
+  id: wrk_c5d5b5167b9049af8b53c5b6f076349b
+  created: 1762508027498
+  modified: 1762508027498
+  description: ''
+collection:
+  - url: http://localhost:4010/echo
+    name: Request With Sensitive Headers
+    meta:
+      id: req_a7eea21417aa4af2a1c906d5e562a325
+      created: 1754293004564
+      modified: 1762509152390
+      isPrivate: false
+      description: ''
+      sortKey: -1754293004564
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"foo": "bar"
+        }
+    parameters:
+      - name: queryname
+        value: queryvalue
+        disabled: false
+        id: pair_927facef133b4df59bb4661c9473111a
+    headers:
+      - name: Content-Type
+        value: application/json
+        id: pair_152fb2b378bc46559796642f3dd5c0d0
+      - name: User-Agent
+        value: insomnia/11.4.0
+        id: pair_8e55f5504c924f798bf31f1db38412e3
+      - name: X-Header
+        value: foo
+        id: pair_714ac3cf4ca645b38755a8b318c28b91
+      - id: pair_aa7cdfd5c82d4f4cb7737ad41e357220
+        name: Authorization
+        value: <sensitive>
+      - id: pair_32ad47361f6c40bcb3f84273b1b4ce50
+        name: Auth
+        value: <sensitive>
+      - id: pair_5dd2022670e04b6ea959ac75ba5ead74
+        name: Cookie
+        value: <sensitive>
+      - id: pair_245205652e154b30a0ab241c13e61b99
+        name: x-auth-token
+        value: <sensitive>
+      - id: pair_3e019947ced7433f90dde5c4f69af8d5
+        name: x-api-key
+        value: <sensitive>
+    authentication:
+      type: digest
+      disabled: false
+      username: ''
+      password: ''
+    scripts:
+      preRequest: |
+        const track = +(new Date());
+
+        insomnia.environment.set("track", track);
+
+        insomnia.test('Check if track exists', () => {
+            insomnia.expect(insomnia.environment.get("track")).to.eql(track);
+        });
+      afterResponse: |
+
+        insomnia.test('Check if status is 200', () => {
+            insomnia.expect(insomnia.response.code).to.eql(200);
+        });
+
+        insomnia.test('Check if track exists', () => {
+            insomnia.expect(insomnia.environment.get("track")).to.not.null;
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:4010/echo
+    name: Request With Auth - Basic
+    meta:
+      id: req_bb9e621055204a13bc9e301fe376748f
+      created: 1754297299654
+      modified: 1762509360358
+      isPrivate: false
+      description: ''
+      sortKey: -1754297299654
+    method: POST
+    body:
+      mimeType: multipart/form-data
+      params:
+        - id: pair_e6f1d8dad6f1413497c3b2fc4a1c7fc5
+          name: key
+          value: value
+          description: ''
+          disabled: false
+    parameters:
+      - name: from-r1
+        value: "{% response 'body', 'req_a7eea21417aa4af2a1c906d5e562a325',
+          'b64::JC5kYXRh::46b', 'no-history', 60 %}"
+        disabled: false
+        id: pair_c5d5d7ca8e89414ab14cff81370b45d7
+    headers:
+      - name: Content-Type
+        value: multipart/form-data
+      - name: User-Agent
+        value: insomnia/11.4.0
+    authentication:
+      type: basic
+      useISO88591: false
+      disabled: false
+      username: username
+      password: password
+    scripts:
+      preRequest: |
+        insomnia.test('Check if track exists', () => {
+            insomnia.expect(insomnia.environment.get("track")).to.not.null;
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:4010/echo
+    name: Request With Auth - API Key
+    meta:
+      id: req_ef809d54e6aa4d72a54593fdeaa14b93
+      created: 1754468596942
+      modified: 1762509338246
+      isPrivate: false
+      description: ''
+      sortKey: -1754468596942
+    method: GET
+    body:
+      mimeType: multipart/form-data
+    parameters:
+      - id: pair_cd383e4bd88a42389b0f8531a1b699ae
+        name: ''
+        value: ''
+        description: ''
+        disabled: false
+    headers:
+      - name: Content-Type
+        value: multipart/form-data
+      - name: User-Agent
+        value: insomnia/11.4.0
+    authentication:
+      type: apikey
+      disabled: false
+      key: api-key
+      value: api-key-value
+      addTo: header
+    scripts:
+      preRequest: |
+
+        insomnia.expect(200).to.eql(200);
+      afterResponse: |+
+
+        insomnia.test('Check if status is 200', () => {
+            insomnia.expect(insomnia.response.code).to.eql(200);
+        });
+
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_64efeac28c0b43c79fa15bf19a98e7a6
+    created: 1754292952909
+    modified: 1762509361179
+environments:
+  name: Base Environment
+  meta:
+    id: env_6aec164bc7c64ffc96c62e06517c5ba6
+    created: 1754292952907
+    modified: 1762509361181
+    isPrivate: false
+  data:
+    env-name: env-value
+  subEnvironments:
+    - name: New Environment
+      meta:
+        id: env_1072af0c15764cd8875f645b0f2e5ad4
+        created: 1754293170062
+        modified: 1762509361180
+        isPrivate: true
+        sortKey: 1754293170062
+      data:
+        pri-env-name: env-value
+        track: 1762509003311
+        track-3: 1762508357019

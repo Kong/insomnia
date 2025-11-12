@@ -523,7 +523,9 @@ export const McpPane = () => {
               onTabChange={setRequestPaneActiveTab}
             />
           </Panel>
-          <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
+          <PanelResizeHandle
+            className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'h-[1px] w-full bg-[--hl-md]'}
+          />
           <Panel id="mcp-response-pane" order={2} minSize={10} className="pane-two theme--pane">
             <ErrorBoundary showAlert>
               <RealtimeResponsePane />
