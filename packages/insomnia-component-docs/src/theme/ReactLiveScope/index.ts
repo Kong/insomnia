@@ -1,4 +1,3 @@
-// packages/insomnia-component-docs/src/theme/ReactLiveScope/index.ts
 import { Checkbox, CheckboxGroup } from 'insomnia/src/ui/components/base/checkbox';
 import { Input } from 'insomnia/src/ui/components/base/input';
 import { InputNumber } from 'insomnia/src/ui/components/base/input-number';
@@ -11,7 +10,7 @@ const ReactLiveScope = {
   useState,
   // Spread all React exports if needed
   ...React,
-  // Components
+  // Export Insomnia components used in the docs
   Input,
   InputNumber,
   Select,
