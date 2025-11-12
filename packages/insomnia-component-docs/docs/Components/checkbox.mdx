@@ -4,9 +4,6 @@ sidebar_label: 'Checkbox'
 sidebar_position: 4
 ---
 
-import { Checkbox, CheckboxGroup } from 'insomnia/src/ui/components/base/checkbox';
-import { ControlledCheckboxDemo, SelectAllDemo } from './CheckboxDemo';
-
 # Checkbox
 
 A flexible checkbox component built on React Aria's `Checkbox` component with support for individual checkboxes and checkbox groups. Features indeterminate state, custom styling, and full accessibility support.
@@ -46,56 +43,25 @@ Extends all [React Aria CheckboxGroupProps](https://react-spectrum.adobe.com/rea
 
 ### Basic Checkbox
 
+```tsx live
 <Checkbox>Accept terms and conditions</Checkbox>
-
-```tsx
-<Checkbox>Accept terms and conditions</Checkbox>
-```
-
-### Controlled Checkbox
-
-<ControlledCheckboxDemo />
-
-```tsx
-const [accepted, setAccepted] = useState(false);
-
-return (
-  <div>
-    <Checkbox isSelected={accepted} onChange={setAccepted}>
-      I agree to the terms
-    </Checkbox>
-    <p>Status: {accepted ? 'Accepted' : 'Not accepted'}</p>
-  </div>
-);
 ```
 
 ### Default Selected
 
-<Checkbox defaultSelected={true}>Remember me</Checkbox>
-
-```tsx
+```tsx live
 <Checkbox defaultSelected={true}>Remember me</Checkbox>
 ```
 
 ### Disabled State
 
-<Checkbox isDisabled>This option is not available</Checkbox>
-
-```tsx
+```tsx live
 <Checkbox isDisabled>This option is not available</Checkbox>
 ```
 
 ### CheckboxGroup
 
-<CheckboxGroup
-  options={[
-    { label: 'Apple', value: 'apple' },
-    { label: 'Banana', value: 'banana' },
-    { label: 'Orange', value: 'orange' },
-  ]}
-/>
-
-```tsx
+```tsx live
 <CheckboxGroup
   options={[
     { label: 'Apple', value: 'apple' },
@@ -107,39 +73,39 @@ return (
 
 ### Select All Pattern
 
-<SelectAllDemo />
+```tsx live
+function SelectAll() {
+  const allOptions = [
+    { label: 'Feature A', value: 'a' },
+    { label: 'Feature B', value: 'b' },
+    { label: 'Feature C', value: 'c' },
+  ];
 
-```tsx
-const allOptions = [
-  { label: 'Feature A', value: 'a' },
-  { label: 'Feature B', value: 'b' },
-  { label: 'Feature C', value: 'c' },
-];
+  const [selectedFeatures, setSelectedFeatures] = useState(['a']);
 
-const [selectedFeatures, setSelectedFeatures] = useState(['a']);
+  const allSelected = selectedFeatures.length === allOptions.length;
+  const someSelected = selectedFeatures.length > 0 && !allSelected;
 
-const allSelected = selectedFeatures.length === allOptions.length;
-const someSelected = selectedFeatures.length > 0 && !allSelected;
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedFeatures(allOptions.map(opt => opt.value));
+    } else {
+      setSelectedFeatures([]);
+    }
+  };
 
-const handleSelectAll = (checked: boolean) => {
-  if (checked) {
-    setSelectedFeatures(allOptions.map(opt => opt.value));
-  } else {
-    setSelectedFeatures([]);
-  }
-};
+  return (
+    <div>
+      <Checkbox isSelected={allSelected} isIndeterminate={someSelected} onChange={handleSelectAll}>
+        Select All Features
+      </Checkbox>
 
-return (
-  <div>
-    <Checkbox isSelected={allSelected} isIndeterminate={someSelected} onChange={handleSelectAll}>
-      Select All Features
-    </Checkbox>
+      <hr className="my-2" />
 
-    <hr className="my-2" />
-
-    <CheckboxGroup value={selectedFeatures} onChange={setSelectedFeatures} options={allOptions} />
-  </div>
-);
+      <CheckboxGroup value={selectedFeatures} onChange={setSelectedFeatures} options={allOptions} />
+    </div>
+  );
+}
 ```
 
 ## Styling

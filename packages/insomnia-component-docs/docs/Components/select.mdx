@@ -4,8 +4,6 @@ sidebar_label: 'Select'
 sidebar_position: 3
 ---
 
-import { Select } from 'insomnia/src/ui/components/base/select';
-
 # Select
 
 A customizable dropdown select component built on top of React Aria Components, providing accessible single-selection functionality with keyboard navigation and visual states.
@@ -31,6 +29,7 @@ A customizable dropdown select component built on top of React Aria Components, 
 
 ### Basic Usage
 
+```tsx live
 <Select
   options={[
     { label: 'Option 1', value: 'opt1' },
@@ -38,48 +37,33 @@ A customizable dropdown select component built on top of React Aria Components, 
     { label: 'Option 3', value: 'opt3' },
   ]}
 />
-
-```tsx
-const options = [
-  { label: 'Option 1', value: 'opt1' },
-  { label: 'Option 2', value: 'opt2' },
-  { label: 'Option 3', value: 'opt3' },
-];
-<Select onChange={v => console.log(v)} options={options} />;
 ```
 
 ### Disabled
 
-<Select isDisabled />
-
-```tsx
+```tsx live
 <Select isDisabled />
 ```
 
 ### Disabled Options
 
-<Select
-  onChange={v => console.log(v)}
-  value="opt1"
-  disabledKeys={['opt2']}
-  options={[
-    { label: 'Option 1', value: 'opt1' },
-    { label: 'Option 2', value: 'opt2' },
-    { label: 'Option 3', value: 'opt3' },
-  ]}
-/>
+```tsx live
+function DisabledOption() {
+  const [selected, setSelected] = useState<string | null>(null);
 
-```tsx
-<Select
-  onChange={v => console.log(v)}
-  value="A"
-  disabledKeys={['B']}
-  options={[
-    { label: 'A', value: 'A' },
-    { label: 'BBBBBB', value: 'B' },
-    { label: 'CCCCCC', value: 'C' },
-  ]}
-/>
+  return (
+    <Select
+      onChange={setSelected}
+      value={selected}
+      disabledKeys={['B']}
+      options={[
+        { label: 'A', value: 'A' },
+        { label: 'BBBBBB', value: 'B' },
+        { label: 'CCCCCC', value: 'C' },
+      ]}
+    />
+  );
+}
 ```
 
 ## Styling

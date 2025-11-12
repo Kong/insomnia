@@ -4,8 +4,6 @@ sidebar_label: 'Input Number'
 sidebar_position: 2
 ---
 
-import { InputNumber } from 'insomnia/src/ui/components/base/input-number';
-
 # Input Number
 
 A numeric input component with optional increment/decrement buttons (steppers) built on React Aria's `NumberField` & `Input` component.
@@ -33,25 +31,19 @@ Extends all [React Aria NumberFieldProps](https://react-spectrum.adobe.com/react
 
 ### Basic Number Input
 
-<InputNumber placeholder="Enter a number" />
-
-```tsx
+```tsx live
 <InputNumber placeholder="Enter a number" />
 ```
 
 ### With Label
 
-<InputNumber label="Quantity" placeholder="0" />
-
-```tsx
+```tsx live
 <InputNumber label="Quantity" placeholder="0" />
 ```
 
 ### Increase/Decrease Stepper
 
-<InputNumber step={5} placeholder="Increment by 5" />
-
-```tsx
+```tsx live
 <InputNumber step={5} placeholder="Increment by 5" />
 ```
 
@@ -59,9 +51,7 @@ The `step` prop defines how much the value changes per click.
 
 ### With Min and Max Constraints
 
-<InputNumber min={0} max={20} placeholder="0-20 only" />
-
-```tsx
+```tsx live
 <InputNumber min={0} max={20} placeholder="0-20 only" />
 ```
 
@@ -69,17 +59,7 @@ Values outside this range will trigger the invalid state.
 
 ### Decimal Numbers
 
-<InputNumber
-  label="Price"
-  step={0.01}
-  min={0}
-  formatOptions={{
-    style: 'currency',
-    currency: 'USD',
-  }}
-/>
-
-```tsx
+```tsx live
 <InputNumber
   label="Price"
   step={0.01}
@@ -93,19 +73,7 @@ Values outside this range will trigger the invalid state.
 
 ### Percentage Input
 
-<InputNumber
-  label="Discount"
-  step={5}
-  min={0}
-  max={100}
-  formatOptions={{
-    style: 'percent',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }}
-/>
-
-```tsx
+```tsx live
 <InputNumber
   label="Discount"
   step={5}

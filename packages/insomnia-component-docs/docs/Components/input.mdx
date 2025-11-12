@@ -4,9 +4,6 @@ sidebar_label: 'Input'
 sidebar_position: 1
 ---
 
-import { Input } from 'insomnia/src/ui/components/base/input';
-import { SearchInputDemo, ControlledInputDemo } from './InputDemo';
-
 # Input
 
 A flexible text input component built on React Aria's `Input` component with consistent styling and accessibility features.
@@ -31,75 +28,48 @@ Extends all [React Aria TextFieldProps](https://react-spectrum.adobe.com/react-a
 
 ### Default Input
 
-<Input placeholder="Enter text..." />
-
-```tsx
+```tsx live
 <Input placeholder="Enter text..." />
 ```
 
 ### With Label
 
+```tsx live
 <Input label="Username" placeholder="Enter your username" />
-
-```tsx
-<Input label="Username" placeholder="Enter your username" />
-```
-
-### Controlled Input
-
-<ControlledInputDemo />
-
-```tsx
-const [value, setValue] = useState('');
-
-return (
-  <div>
-    <p>Current value: {value}</p>
-    <Input label="Controlled Input" placeholder="Type something..." value={value} onChange={setValue} />
-  </div>
-);
 ```
 
 ### With Default Value
 
-<Input label="Name" placeholder="Enter your name" defaultValue="John Doe" />
-
-```tsx
+```tsx live
 <Input label="Name" placeholder="Enter your name" defaultValue="John Doe" />
 ```
 
 ### Disabled State
 
-<Input label="Disabled Input" placeholder="Cannot edit" defaultValue="Disabled value" isDisabled />
-
-```tsx
+```tsx live
 <Input label="Disabled Input" placeholder="Cannot edit" defaultValue="Disabled value" isDisabled />
 ```
 
 ### Read-Only State
 
-<Input label="Read-Only Input" placeholder="Cannot edit" defaultValue="Read-only value" isReadOnly />
-
-```tsx
+```tsx live
 <Input label="Read-Only Input" placeholder="Cannot edit" defaultValue="Read-only value" isReadOnly />
 ```
 
 ### Password Input
 
-<Input label="Password" type="password" placeholder="Enter your password" isRequired />
-
-```tsx
+```tsx live
 <Input label="Password" type="password" placeholder="Enter your password" isRequired />
 ```
 
 ### Search Input
 
-<SearchInputDemo />
+```tsx live
+function SearchInputDemo() {
+  const [searchQuery, setSearchQuery] = useState('');
 
-```tsx
-const [searchQuery, setSearchQuery] = useState('');
-
-<Input placeholder="Search..." value={searchQuery} onChange={setSearchQuery} type="search" />;
+  return <Input placeholder="Search..." type="search" value={searchQuery} onChange={setSearchQuery} />;
+}
 ```
 
 ## Styling

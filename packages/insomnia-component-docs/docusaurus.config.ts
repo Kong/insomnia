@@ -52,9 +52,15 @@ const config: Config = {
       };
     },
   ],
+  themes: ['@docusaurus/theme-live-codeblock'],
   themeConfig: {
     colorMode: {
       defaultMode: 'dark',
+    },
+    themeConfig: {
+      liveCodeBlock: {
+        playgroundPosition: 'bottom',
+      },
     },
     // Replace with your project's social card
     navbar: {
