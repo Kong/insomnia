@@ -140,20 +140,19 @@ export const sendActionImplementation = async (options: {
     runtime,
   );
   if ('error' in mutatedContext) {
-    window.main.completeExecutionStep({ requestId });
-    throw {
-      // create response with error info, so that we can store response in db and show it in response viewer
-      response: {
-        _id: requestData.responseId,
-        parentId: requestId,
-        environemntId: requestData.environment,
-        statusMessage: 'Error',
-        error: mutatedContext.error,
-      },
-      maxHistoryResponses: requestData.settings.maxHistoryResponses,
-      requestMeta,
+    const responseId = requestData.responseId;
+    const responsePatch = {
+      _id: responseId,
+      parentId: requestId,
+      environmentId: requestData.environment._id,
+      statusMessage: 'Error',
       error: mutatedContext.error,
     };
+    // create and update response to activeResponse
+    await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
+    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: responseId });
+    window.main.completeExecutionStep({ requestId });
+    return mutatedContext;
   }
   if (mutatedContext.execution?.skipRequest) {
     // cancel request running if skipRequest in pre-request script
@@ -161,7 +160,7 @@ export const sendActionImplementation = async (options: {
     const responsePatch = {
       _id: responseId,
       parentId: requestId,
-      environemntId: requestData.environment,
+      environmentId: requestData.environment._id,
       statusMessage: 'Cancelled',
       error: 'Request was cancelled by pre-request script',
     };
@@ -211,18 +210,21 @@ export const sendActionImplementation = async (options: {
     runtime,
   );
   window.main.completeExecutionStep({ requestId });
+
   if ('error' in response) {
-    throw {
-      response: await responseTransform(
-        response,
-        requestData.activeEnvironmentId,
-        renderedRequest,
-        renderedResult.context,
-      ),
-      maxHistoryResponses: requestData.settings.maxHistoryResponses,
-      requestMeta,
+    const responseId = requestData.responseId;
+    const responsePatch = {
+      _id: responseId,
+      parentId: requestId,
+      environmentId: requestData.environment._id,
+      statusMessage: 'Error',
       error: response.error,
     };
+    // create and update response to activeResponse
+    await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
+    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: responseId });
+    window.main.completeExecutionStep({ requestId });
+    return mutatedContext;
   }
 
   const baseResponsePatch = await responseTransform(
@@ -250,17 +252,19 @@ export const sendActionImplementation = async (options: {
     runtime,
   });
   if ('error' in postMutatedContext) {
-    throw {
-      response: await responseTransform(
-        response,
-        requestData.activeEnvironmentId,
-        renderedRequest,
-        renderedResult.context,
-      ),
-      maxHistoryResponses: requestData.settings.maxHistoryResponses,
-      requestMeta,
+    const responseId = requestData.responseId;
+    const responsePatch = {
+      _id: responseId,
+      parentId: requestId,
+      environmentId: requestData.environment._id,
+      statusMessage: 'Error',
       error: postMutatedContext.error,
     };
+    // create and update response to activeResponse
+    await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
+    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: responseId });
+    window.main.completeExecutionStep({ requestId });
+    return mutatedContext;
   }
 
   window.main.completeExecutionStep({ requestId });

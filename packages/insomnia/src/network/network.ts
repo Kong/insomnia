@@ -670,7 +670,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     const responsePatch = {
       _id: responseId,
       parentId: requestId,
-      environemntId: environment._id,
+      environmentId: environment._id,
       globalEnvironmentId: globals?._id,
       timelinePath,
       statusMessage: 'Error',
