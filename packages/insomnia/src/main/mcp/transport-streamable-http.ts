@@ -217,21 +217,35 @@ const wrappedFetch = async (
         },
       };
       writeEventLogAndNotify(requestId, authRequestEvent);
-      const response = await fetch(url, init);
+      try {
+        const response = await fetch(url, init);
 
-      const authResponseEvent: McpAuthEventWithoutBase = {
-        type: 'message',
-        method: 'MCP Auth',
-        direction: 'INCOMING',
-        data: {
-          statusCode: response.status,
-          statusMessage: response.statusText,
-          body: await response.clone().text(),
-        },
-      };
-      writeEventLogAndNotify(requestId, authResponseEvent);
+        const authResponseEvent: McpAuthEventWithoutBase = {
+          type: 'message',
+          method: 'MCP Auth',
+          direction: 'INCOMING',
+          data: {
+            statusCode: response.status,
+            statusMessage: response.statusText,
+            body: await response.clone().text(),
+          },
+        };
+        writeEventLogAndNotify(requestId, authResponseEvent);
 
-      return response;
+        return response;
+      } catch (error) {
+        const authErrorEvent: McpAuthEventWithoutBase = {
+          type: 'message',
+          method: 'MCP Auth',
+          direction: 'INCOMING',
+          data: {
+            message: error.message,
+            ...(error.cause ? { cause: error.cause instanceof Error ? error.cause.message : String(error.cause) } : {}),
+          },
+        };
+        writeEventLogAndNotify(requestId, authErrorEvent);
+        throw error;
+      }
     };
 
     try {
