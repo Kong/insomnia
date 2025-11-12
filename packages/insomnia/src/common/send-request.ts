@@ -112,21 +112,12 @@ export async function getSendRequestCallbackMemDb(
       transientVariables: mutatedContext.transientVariables || transientVariables,
       response,
     });
-    // TODO: figure out how to handle this error
     if ('error' in postMutatedContext) {
       console.error(
         '[network] An error occurred while running after-response script for request named:',
         renderedRequest.name,
       );
-      throw {
-        error: postMutatedContext.error,
-        response: await responseTransform(
-          response,
-          requestData.activeEnvironmentId,
-          renderedRequest,
-          renderedResult.context,
-        ),
-      };
+      throw new Error(postMutatedContext.error);
     }
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
 

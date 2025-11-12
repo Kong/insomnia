@@ -98,6 +98,7 @@ export default tseslint.config(
       'no-else-return': 'error',
       'no-empty': ['error', { allowEmptyCatch: true }],
       'no-var': 'error',
+      'no-throw-literal': 'error',
       'no-trailing-spaces': 'error',
       'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0 }],
       'no-inner-declarations': 'off',
