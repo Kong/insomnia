@@ -163,7 +163,7 @@ jobs:
           CREDENTIAL_ID: ${{secrets.ES_CREDENTIAL_ID}}
           TOTP_SECRET: ${{secrets.ES_TOTP_SECRET}}
 
-      - name: Check exe signature (Windows only)
+      - name: Check squirrel exe signature (Windows only)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
