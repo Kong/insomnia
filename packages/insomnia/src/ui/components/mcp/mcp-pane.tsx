@@ -81,7 +81,7 @@ export const McpPane = () => {
   const [primitiveNextCursor, setPrimitiveNextCursor] = useState<Partial<Record<McpServerPrimitiveTypes, string>>>({});
   const requestMetaPatcher = useRequestMetaPatcher();
   const [requestPaneActiveTab, setRequestPaneActiveTab] = useState<RequestPaneTabs>('params');
-  const patchRootsRequest = useRequestPatcher();
+  const patchRequest = useRequestPatcher();
   const requestId = activeRequest._id;
   const { activeEnvironment } = useWorkspaceLoaderData()!;
   const readyState = useMcpReadyState({ requestId });
@@ -228,14 +228,14 @@ export const McpPane = () => {
     if (isSubscribed) {
       try {
         await window.main.mcp.primitive.unsubscribeResource({ uri: item.uri, requestId: requestId });
-        patchRootsRequest(requestId, { subscribeResources: subscribeResources.filter(r => r !== item.name) });
+        patchRequest(requestId, { subscribeResources: subscribeResources.filter(r => r !== item.name) });
       } catch (error) {
         console.error(`Failed to unsubscribe resource ${item.name}: ${error}`);
       }
     } else {
       try {
         await window.main.mcp.primitive.subscribeResource({ uri: item.uri, requestId: requestId });
-        patchRootsRequest(requestId, { subscribeResources: [...subscribeResources, item.name] });
+        patchRequest(requestId, { subscribeResources: [...subscribeResources, item.name] });
       } catch (error) {
         console.error(`Failed to subscribe resource ${item.name}: ${error}`);
       }
@@ -245,7 +245,7 @@ export const McpPane = () => {
   useEffect(() => {
     const [, type, name] = activeRequestMeta?.activeMcpPrimitive?.match(/^([^_]+)_(.+)$/) || [];
     const primitiveItem = visibleCollection.find(i => i.itemLevel === 1 && i.type === type && i.name === name);
-    primitiveItem && setSelectedPrimitiveItem(primitiveItem as PrimitiveSubItem);
+    setSelectedPrimitiveItem(primitiveItem ? (primitiveItem as PrimitiveSubItem) : null);
   }, [activeRequest._id, activeRequestMeta?.activeMcpPrimitive, visibleCollection]);
 
   const virtualizer = useVirtualizer<HTMLDivElement, Element>({
