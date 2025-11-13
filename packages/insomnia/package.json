@@ -140,6 +140,7 @@
     "tailwindcss": "^3.4.17",
     "tinykeys": "^3.0.0",
     "tough-cookie": "^4.1.4",
+    "undici": "^7.16.0",
     "uuid": "^9.0.1",
     "vkbeautify": "^0.99.3",
     "ws": "^8.18.1",
