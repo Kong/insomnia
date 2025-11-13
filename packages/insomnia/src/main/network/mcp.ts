@@ -164,6 +164,7 @@ const _handleTransportError = (message: JSONRPCRequest, requestId: string, error
     error: {
       requestId: message.id,
       message: error.message || 'Transport Error',
+      ...(error.cause ? { cause: (error.cause as Error).message || String(error.cause) } : {}),
     },
   };
   writeEventLogAndNotify(requestId, messageEvent);
@@ -373,7 +374,10 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
       responseId,
       environmentId: responseEnvironmentId,
       timelinePath,
-      message: error.message || 'Something went wrong',
+      message:
+        error instanceof Error
+          ? error.message + (error.cause ? `\ncause: ${(error.cause as Error).message || String(error.cause)}` : '')
+          : 'Something went wrong',
       errorType: isMCPAuthError(error) ? 'auth' : '',
       transportType: options.transportType,
     });
