@@ -199,7 +199,7 @@
     "vite": "^7.1.3"
   },
   "optionalDependencies": {
-    "@kong/insomnia-plugin-ai": "^1.0.5",
+    "@kong/insomnia-plugin-ai": "^1.0.6",
     "@kong/insomnia-plugin-external-vault": "0.1.3"
   },
   "dev": {
