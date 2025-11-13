@@ -50,6 +50,7 @@ import {
   type ResourceTemplateItem,
   type ToolItem,
 } from '~/ui/components/mcp/types';
+import { MCPCertificatesModal } from '~/ui/components/modals/mcp-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
@@ -72,6 +73,7 @@ export const McpPane = () => {
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
   const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
+  const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
   const [allExpanded, setAllExpanded] = useState(true);
   const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:mcp-list-filter`);
   const { settings } = useRootLoaderData()!;
@@ -401,6 +403,13 @@ export const McpPane = () => {
                 onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
               />
             </div>
+            <Button
+              onPress={() => setCertificatesModalOpen(true)}
+              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+            >
+              <Icon icon="file-contract" className="w-5 flex-shrink-0" />
+              <span className="truncate">Manage Certificates</span>
+            </Button>
           </div>
 
           <div className="flex flex-1 flex-col overflow-hidden">
@@ -506,6 +515,7 @@ export const McpPane = () => {
             </div>
           </div>
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
+          {isCertificatesModalOpen && <MCPCertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
         </div>
       </Panel>
       <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />

@@ -7,8 +7,9 @@ import {
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { BrowserWindow } from 'electron';
+import type { Dispatcher } from 'undici';
 
-import { timelineFileStreams, writeEventLogAndNotify } from '~/main/mcp/common';
+import { getFetchDispatcher, timelineFileStreams, writeEventLogAndNotify } from '~/main/mcp/common';
 import { MCPAuthError, type McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
 import type { McpAuthEventWithoutBase, OpenMcpHTTPClientConnectionOptions } from '~/main/mcp/types';
 import * as models from '~/models';
@@ -16,6 +17,11 @@ import { TRANSPORT_TYPES } from '~/models/mcp-request';
 import type { McpResponse } from '~/models/mcp-response';
 import type { RequestHeader } from '~/models/request';
 import { invariant } from '~/utils/invariant';
+
+// Extend undici RequestInit to include dispatcher, it's in node.js fetch but not in dom fetch.
+interface NodeRequestInit extends RequestInit {
+  dispatcher?: Dispatcher;
+}
 
 interface ResponseEventOptions {
   responseId: string;
@@ -133,7 +139,10 @@ const wrappedFetch = async (
   const requestMethodLine = `${method.toUpperCase()} ${url} ${isJsonRequest && requestBody?.method ? `\nJSON-RPC Method: ${requestBody.method}` : ''}`;
   const headersOut = requestHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
   const start = performance.now();
-  const response = await fetch(url, init);
+  const response = await fetch(url, {
+    ...init,
+    dispatcher: await getFetchDispatcher(requestId),
+  } as NodeRequestInit);
   const { timeline, responseHeaders, statusCode, statusMessage } = parseResponseAndBuildTimeline(
     `${requestMethodLine}\n${headersOut}`,
     response,
@@ -218,7 +227,10 @@ const wrappedFetch = async (
       };
       writeEventLogAndNotify(requestId, authRequestEvent);
       try {
-        const response = await fetch(url, init);
+        const response = await fetch(url, {
+          ...init,
+          dispatcher: await getFetchDispatcher(requestId),
+        } as NodeRequestInit);
 
         const authResponseEvent: McpAuthEventWithoutBase = {
           type: 'message',
