@@ -260,11 +260,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     <InsomniaLogo />
                   </div>
                   {!user ? <GitHubStarsButton /> : null}
-                  {isDevelopment() && (
-                    <NavLink className="text-[--color-font]" to={'/components-preview'}>
-                      components preview
-                    </NavLink>
-                  )}
                 </div>
                 <CommandPalette />
                 <div className="flex min-w-min items-center justify-end gap-[--padding-sm] space-x-3 p-2">
