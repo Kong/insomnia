@@ -402,7 +402,7 @@ export const CACertificate = ({ caCertificate, tip }: { caCertificate?: CaCertif
         <p className="max-w-[80ch] text-sm italic text-[--hl]">
           <Icon icon="info-circle" className="pr-2" />
           {tip ||
-            'One or more PEM format certificates in a single file to pass to curl. Overrides the root CA certificate. On MacOS please upload your local Keychain certificates here. MacOS please upload your local Keychain certificates here.'}
+            'One or more PEM format certificates in a single file to pass to curl. Overrides the root CA certificate. On MacOS please upload your local Keychain certificates here.'}
         </p>
       </div>
     </>
