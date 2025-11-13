@@ -239,6 +239,8 @@ const wrappedFetch = async (
           method: 'MCP Auth',
           direction: 'INCOMING',
           data: {
+            statusCode: null,
+            statusMessage: 'Fetch failed',
             message: error.message,
             ...(error.cause ? { cause: error.cause instanceof Error ? error.cause.message : String(error.cause) } : {}),
           },
