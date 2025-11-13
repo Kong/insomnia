@@ -30,6 +30,7 @@ import type {
   McpReadyState,
   McpRequestEventWithoutBase,
 } from '~/main/mcp/types';
+import { insecureReadFile } from '~/main/secure-read-file';
 import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
 
@@ -312,8 +313,9 @@ export const getFetchDispatcher = async (requestId: string) => {
   return new Agent({
     connect: {
       ...(workspaceCaCert?.path && !workspaceCaCert?.disabled
-        ? { ca: await fs.promises.readFile(workspaceCaCert.path) }
+        ? { ca: await insecureReadFile(workspaceCaCert.path) }
         : {}),
+      ...(mcpRequest.rejectUnauthorized === false ? { rejectUnauthorized: false } : {}),
     },
   });
 };
