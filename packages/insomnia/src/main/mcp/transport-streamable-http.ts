@@ -241,8 +241,8 @@ const wrappedFetch = async (
           data: {
             statusCode: null,
             statusMessage: 'Fetch failed',
-            message: error.message,
-            ...(error.cause ? { cause: error.cause instanceof Error ? error.cause.message : String(error.cause) } : {}),
+            message: error?.message || String(error),
+            ...(error.cause ? { cause: error.cause.message || String(error.cause) } : {}),
           },
         };
         writeEventLogAndNotify(requestId, authErrorEvent);
