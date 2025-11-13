@@ -5,9 +5,11 @@ import { diffLines } from 'diff';
 import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
+import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import type { GitAuthor, GitCredentials, GitRemoteConfig } from '~/models/git-repository';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 
+import { hasSignificantChanges } from '../../common/significant-diff-detection';
 import { type MergeConflict, RESOLUTION_SOURCE } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
@@ -21,6 +23,10 @@ export type GitHash = string;
 
 export type GitRef = GitHash | string;
 
+export type HeadStatus = git.HeadStatus;
+export type WorkdirStatus = git.WorkdirStatus;
+export type StageStatus = git.StageStatus;
+export type Status = [HeadStatus, WorkdirStatus, StageStatus];
 export interface GitTimestamp {
   timezoneOffset: number;
   timestamp: number;
@@ -36,6 +42,14 @@ export interface GitLogEntry {
     parent: GitRef[];
   };
   payload: string;
+}
+
+export interface GitStatusWithIntelligentDiff {
+  filepath: string;
+  head: { name: string; status: HeadStatus };
+  workdir: { name: string; status: WorkdirStatus };
+  stage: { name: string; status: StageStatus };
+  includesSignificantChanges: boolean;
 }
 
 interface InitOptions {
@@ -280,38 +294,47 @@ export class GitVCS {
     }
   }
 
+  /**
+   * Returns the content of a file as it exists in three places:
+   * - HEAD (last commit)
+   * - Workdir (current working directory)
+   * - Stage (index/staging area)
+   *
+   * This is useful for showing diffs between committed, staged, and unstaged changes.
+   */
   async fileStatus(file: string) {
     const baseOpts = this._baseOpts;
-    // Adopted from statusMatrix of isomorphic-git https://github.com/isomorphic-git/isomorphic-git/blob/main/src/api/statusMatrix.js#L157
+
+    // Use isomorphic-git's walk API to traverse the HEAD, WORKDIR, and STAGE trees for the given file.
+    // This is adapted from isomorphic-git's statusMatrix logic.
     const [blobs]: [[string, string, string, string]] = await git.walk({
       ...baseOpts,
+      // trees: HEAD (last commit), WORKDIR (current files), STAGE (index)
       trees: [git.TREE({ ref: 'HEAD' }), git.WORKDIR(), git.STAGE()],
       map: async function map(filepath, [head, workdir, stage]) {
-        // Late filter against file names
+        // Only process the file we're interested in
         if (filepath !== file) {
           return;
         }
 
+        // Get the type of each tree entry (blob, tree, commit, special, etc.)
         const [headType, workdirType, stageType] = await Promise.all([
           head && head.type(),
           workdir && workdir.type(),
           stage && stage.type(),
         ]);
 
+        // If none of the entries are blobs, skip (we only care about file blobs)
         const isBlob = [headType, workdirType, stageType].includes('blob');
-
-        // For now, bail on directories unless the file is also a blob in another tree
         if ((headType === 'tree' || headType === 'special') && !isBlob) {
           return;
         }
         if (headType === 'commit') {
           return null;
         }
-
         if ((workdirType === 'tree' || workdirType === 'special') && !isBlob) {
           return;
         }
-
         if (stageType === 'commit') {
           return null;
         }
@@ -319,67 +342,66 @@ export class GitVCS {
           return;
         }
 
-        // Figure out the oids for files, using the staged oid for the working dir oid if the stats match.
+        // Get the object IDs (OIDs) for each tree entry if it's a blob
         const headOid = headType === 'blob' ? await head?.oid() : undefined;
         const stageOid = stageType === 'blob' ? await stage?.oid() : undefined;
         let workdirOid;
+        // Special case: if HEAD is not a blob, WORKDIR is a blob, and STAGE is not a blob, use a dummy OID
         if (headType !== 'blob' && workdirType === 'blob' && stageType !== 'blob') {
           workdirOid = '42';
         } else if (workdirType === 'blob') {
           workdirOid = await workdir?.oid();
         }
 
+        // Get the file content for each tree entry (may be undefined)
         let headBlob = await head?.content();
         let workdirBlob = await workdir?.content();
         let stageBlob = await stage?.content();
 
+        // If stageBlob is missing but we have a stageOid, read the blob directly
         if (!stageBlob && stageOid) {
           try {
             const { blob } = await git.readBlob({
               ...baseOpts,
-
               oid: stageOid,
             });
-
             stageBlob = blob;
           } catch (e) {
             console.log('[git] Failed to read blob', e);
           }
         }
 
+        // If headBlob is missing but we have a headOid, read the blob directly
         if (!headBlob && headOid) {
           try {
             const { blob } = await git.readBlob({
               ...baseOpts,
-
               oid: headOid,
             });
-
             headBlob = blob;
           } catch (e) {
             console.log('[git] Failed to read blob', e);
           }
         }
 
+        // If workdirBlob is missing but we have a workdirOid, read the blob directly
         if (!workdirBlob && workdirOid) {
           try {
             const { blob } = await git.readBlob({
               ...baseOpts,
-
               oid: workdirOid,
             });
-
             workdirBlob = blob;
           } catch (e) {
             console.log('[git] Failed to read blob', e);
           }
         }
 
+        // Convert blobs from Uint8Array to UTF-8 strings, or null if not present
         const blobsAsStrings = [headBlob, workdirBlob, stageBlob].map(blob => {
           if (!blob) {
             return null;
           }
-
           try {
             return Buffer.from(blob).toString('utf-8');
           } catch {
@@ -387,14 +409,23 @@ export class GitVCS {
           }
         });
 
+        // Return an array: [filepath, headContent, workdirContent, stageContent]
         return [filepath, ...blobsAsStrings];
       },
     });
 
+    // Perform data migrations for existing projects (if applicable)
+    // to ensure users who haven't pulled the latest changes can still
+    // view the migrated data correctly in the diff view.
+    // Also normalize property order to prevent false positives from property reordering
+    const cleanedHead = migrateToLatestYaml(blobs[1], blobs[2]);
+    const cleanedStage = migrateToLatestYaml(blobs[3], blobs[2]);
+
+    // Build a diff object for easier access
     const diff = {
-      head: blobs[1],
-      workdir: blobs[2],
-      stage: blobs[3],
+      head: cleanedHead, // Content from HEAD (last commit)
+      workdir: blobs[2], // Content from working directory
+      stage: cleanedStage, // Content from staging area (index)
     };
 
     return diff;
@@ -406,9 +437,9 @@ export class GitVCS {
     // Adopted from statusMatrix of isomorphic-git https://github.com/isomorphic-git/isomorphic-git/blob/main/src/api/statusMatrix.js#L157
     const status: {
       filepath: string;
-      head: { name: string; status: git.HeadStatus };
-      workdir: { name: string; status: git.WorkdirStatus };
-      stage: { name: string; status: git.StageStatus };
+      head: { name: string; status: HeadStatus };
+      workdir: { name: string; status: WorkdirStatus };
+      stage: { name: string; status: StageStatus };
     }[] = await git.walk({
       ...baseOpts,
       trees: [
@@ -828,9 +859,69 @@ export class GitVCS {
 
     const diff = `${formatDiffChanges(status, 'Staged Changes')}
 
-${formatDiffChanges(status, 'Unstaged Changes')}`;
+    ${formatDiffChanges(status, 'Unstaged Changes')}`;
 
     return diff;
+  }
+
+  /**
+   * Enhanced status method that includes intelligent diff analysis
+   *
+   * This method extends the regular statusWithContent() to include intelligent
+   * change detection that can distinguish between meaningful changes and
+   * cosmetic changes like property reordering or timestamp updates.
+   *
+   * @returns Promise<GitStatusWithIntelligentDiff[]> Array of status objects with intelligent diff analysis
+   */
+  async statusWithIntelligentDiff(): Promise<GitStatusWithIntelligentDiff[]> {
+    // Get the regular status first
+    const status = await this.filesStatus();
+
+    // Enhance each status entry with intelligent diff analysis
+    const enhancedStatus = await Promise.all(
+      status.map(async entry => {
+        const { filepath, head, workdir, stage } = entry;
+
+        // Only analyze files that have changes and are YAML files
+        const hasChanges = head.status !== workdir.status || workdir.status !== stage.status;
+
+        const isYamlFile = path.extname(filepath) === '.yaml';
+
+        if (!hasChanges || !isYamlFile) {
+          return {
+            ...entry,
+            includesSignificantChanges: hasChanges,
+          };
+        }
+
+        try {
+          // Get the actual file content for comparison
+          const fileStatus = await this.fileStatus(filepath);
+
+          if (!fileStatus.head || !fileStatus.workdir) {
+            return {
+              ...entry,
+              includesSignificantChanges: hasChanges,
+            };
+          }
+
+          // Analyze the changes using intelligent diff detection
+          const includesSignificantChanges = hasSignificantChanges(fileStatus.head, fileStatus.workdir, filepath);
+
+          return {
+            ...entry,
+            includesSignificantChanges,
+          };
+        } catch (error) {
+          return {
+            ...entry,
+            includesSignificantChanges: hasChanges,
+          };
+        }
+      }),
+    );
+
+    return enhancedStatus;
   }
 
   classifyStatus(head: git.StageStatus, workdir: git.WorkdirStatus, stage: git.StageStatus): FileStatus {
@@ -876,23 +967,32 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
   async status(): Promise<{
     staged: {
       path: string;
-      status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus];
+      status: Status;
       name: string;
       type: GitFileStatus;
       symbol: GitFileStatusSymbol;
     }[];
     unstaged: {
       path: string;
-      status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus];
+      status: Status;
       name: string;
       type: GitFileStatus;
       symbol: GitFileStatusSymbol;
     }[];
   }> {
-    const status = await this.filesStatus();
+    const status = await this.statusWithIntelligentDiff();
 
-    const unstagedChanges = status.filter(({ workdir, stage }) => stage.status !== workdir.status);
-    const stagedChanges = status.filter(({ head, stage }) => stage.status !== head.status);
+    // Filter unstaged changes: files that have differences between working directory and staging area
+    // AND have significant changes (not just cosmetic changes like timestamps or ID updates)
+    const unstagedChanges = status.filter(
+      ({ workdir, stage, includesSignificantChanges }) => stage.status !== workdir.status && includesSignificantChanges,
+    );
+
+    // Filter staged changes: files that have differences between HEAD and staging area
+    // AND have significant changes (not just cosmetic changes like timestamps or ID updates)
+    const stagedChanges = status.filter(
+      ({ head, stage, includesSignificantChanges }) => stage.status !== head.status && includesSignificantChanges,
+    );
 
     return {
       staged: stagedChanges.map(({ filepath, head, workdir, stage }) => {
@@ -1083,85 +1183,48 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
 
       return { success: true };
     } catch (err) {
-      const { oursBranch, theirsBranch } = await this.getBranchPair();
+      if (err instanceof git.Errors.CheckoutConflictError) {
+        console.log('[git] CheckoutConflictError detected, resetting working directory and retrying pull');
 
-      // merge conflict from pull
-      if (err instanceof git.Errors.MergeConflictError) {
-        return await this.collectMergeConflicts(err, oursBranch, theirsBranch, writeFileMap);
+        try {
+          const currentBranch = await this.getCurrentBranch();
+
+          // Reset working directory to HEAD to resolve checkout conflicts
+          await git.checkout({
+            ...this._baseOpts,
+            ref: currentBranch,
+            force: true,
+          });
+
+          // Retry the pull operation
+          await git.pull({
+            ...this._baseOpts,
+            ...gitCallbacks(gitCredentials),
+            remote: 'origin',
+            singleBranch: true,
+            ref: currentBranch,
+          });
+
+          console.log('[git] Pull successful after resolving checkout conflicts');
+          return { success: true };
+        } catch (retryError) {
+          console.error('[git] Retry pull failed after resolving checkout conflicts:', retryError);
+
+          const handledError = await this.handleGitPullErrors(err, gitCredentials, writeFileMap);
+
+          if (handledError) {
+            return handledError;
+          }
+
+          throw retryError;
+        }
       }
 
-      // merge not supported by native pull: fallback
-      if (err instanceof git.Errors.MergeNotSupportedError) {
-        console.log('[git] Falling back to manual diff UI (merge driver not supported)');
-        try {
-          await this.fetch({
-            singleBranch: true,
-            depth: 1,
-            credentials: gitCredentials,
-          });
+      // Handle other specific git errors (e.g., merge conflicts, merge not supported)
+      const handledError = await this.handleGitPullErrors(err, gitCredentials, writeFileMap);
 
-          await git.merge({
-            ...this._baseOpts,
-            ours: oursBranch,
-            theirs: theirsBranch,
-            abortOnConflict: false,
-          });
-
-          return { success: true };
-        } catch (mergeErr) {
-          // If the merge operation reported conflicts, collect them
-          if (mergeErr instanceof git.Errors.MergeConflictError) {
-            return await this.collectMergeConflicts(mergeErr, oursBranch, theirsBranch, writeFileMap);
-          }
-
-          // If still MergeNotSupportedError or unexpected, fall back to manual detection and UI
-          if (mergeErr instanceof git.Errors.MergeNotSupportedError) {
-            console.log('[git] Falling back to manual diff UI (merge driver not supported)');
-            return await this.buildManualResolutionFromTrees();
-          }
-        }
-
-        const statusMatrix = await git.statusMatrix({ fs: this._baseOpts.fs, dir: this._baseOpts.dir });
-        const conflicted = statusMatrix.filter(row => row[3] === 3).map(row => row[0]);
-
-        const conflictData = [];
-
-        for (const filepath of conflicted) {
-          const fullPath = path.join(this._baseOpts.dir, filepath);
-          // @ts-expect-error -- TSCONVERSION
-          const content = await this._baseOpts.fs.promises.readFile(fullPath, 'utf8');
-          const conflict = this.extractConflictParts(content);
-
-          if (conflict) {
-            conflictData.push({
-              filepath,
-              fullContent: content,
-              ...conflict,
-            });
-          }
-        }
-
-        const oursHeadCommitOid = await git.resolveRef({
-          ...this._baseOpts,
-          ref: oursBranch,
-        });
-
-        const theirsHeadCommitOid = await git.resolveRef({
-          ...this._baseOpts,
-          ref: theirsBranch,
-        });
-
-        // The return value is never used?
-        return {
-          success: false,
-          conflicts: conflictData,
-          labels: {
-            ours: oursBranch,
-            theirs: theirsBranch,
-          },
-          commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
-          commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
-        };
+      if (handledError) {
+        return handledError;
       }
 
       console.error('[git] Pull failed with unexpected error', err);
@@ -1173,6 +1236,89 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
       ) {
         this._baseOpts.fs.stopCollectWriteAction();
       }
+    }
+  }
+
+  async handleGitPullErrors(err: unknown, gitCredentials?: GitCredentials | null, writeFileMap: WriteFileMap = {}) {
+    const { oursBranch, theirsBranch } = await this.getBranchPair();
+
+    // merge conflict from pull
+    if (err instanceof git.Errors.MergeConflictError) {
+      return await this.collectMergeConflicts(err, oursBranch, theirsBranch, writeFileMap);
+    }
+
+    // merge not supported by native pull: fallback
+    if (err instanceof git.Errors.MergeNotSupportedError) {
+      console.log('[git] Falling back to manual diff UI (merge driver not supported)');
+      try {
+        await this.fetch({
+          singleBranch: true,
+          depth: 1,
+          credentials: gitCredentials,
+        });
+
+        await git.merge({
+          ...this._baseOpts,
+          ours: oursBranch,
+          theirs: theirsBranch,
+          abortOnConflict: false,
+        });
+
+        return { success: true };
+      } catch (mergeErr) {
+        // If the merge operation reported conflicts, collect them
+        if (mergeErr instanceof git.Errors.MergeConflictError) {
+          return await this.collectMergeConflicts(mergeErr, oursBranch, theirsBranch, writeFileMap);
+        }
+
+        // If still MergeNotSupportedError or unexpected, fall back to manual detection and UI
+        if (mergeErr instanceof git.Errors.MergeNotSupportedError) {
+          console.log('[git] Falling back to manual diff UI (merge driver not supported)');
+          return await this.buildManualResolutionFromTrees();
+        }
+      }
+
+      const statusMatrix = await git.statusMatrix({ fs: this._baseOpts.fs, dir: this._baseOpts.dir });
+      const conflicted = statusMatrix.filter(row => row[3] === 3).map(row => row[0]);
+
+      const conflictData = [];
+
+      for (const filepath of conflicted) {
+        const fullPath = path.join(this._baseOpts.dir, filepath);
+        // @ts-expect-error -- TSCONVERSION
+        const content = await this._baseOpts.fs.promises.readFile(fullPath, 'utf8');
+        const conflict = this.extractConflictParts(content);
+
+        if (conflict) {
+          conflictData.push({
+            filepath,
+            fullContent: content,
+            ...conflict,
+          });
+        }
+      }
+
+      const oursHeadCommitOid = await git.resolveRef({
+        ...this._baseOpts,
+        ref: oursBranch,
+      });
+
+      const theirsHeadCommitOid = await git.resolveRef({
+        ...this._baseOpts,
+        ref: theirsBranch,
+      });
+
+      // The return value is never used?
+      return {
+        success: false,
+        conflicts: conflictData,
+        labels: {
+          ours: oursBranch,
+          theirs: theirsBranch,
+        },
+        commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
+        commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
+      };
     }
   }
 
@@ -1679,9 +1825,10 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
     await git.deleteBranch({ ...this._baseOpts, ref: branch });
   }
 
-  async checkout(branch: string) {
+  async checkout(branch: string, { force = false }: { force?: boolean } = { force: false }) {
     console.log('[git] Checkout', {
       branch,
+      force,
     });
     const localBranches = await this.listBranches();
     const syncedBranches = await this.listRemoteBranches();
@@ -1710,8 +1857,8 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
       await git.checkout({
         ...this._baseOpts,
         ref: branch,
-
         remote: 'origin',
+        force,
       });
       const branches = await this.listBranches();
       console.log('[git] Checkout branches', { branches });
@@ -1730,9 +1877,8 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
     return true;
   }
 
-  async stageChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+  async stageChanges(changes: { path: string; status: Status }[]) {
     for (const change of changes) {
-      console.log(`[git] Stage ${change.path} | ${change.status}`);
       if (change.status[1] === 0) {
         await git.remove({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) });
       } else {
@@ -1741,26 +1887,59 @@ ${formatDiffChanges(status, 'Unstaged Changes')}`;
     }
   }
 
-  async unstageChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+  async unstageChanges(changes: { path: string; status: Status }[]) {
     for (const change of changes) {
       await git.resetIndex({ ...this._baseOpts, filepath: change.path });
     }
   }
 
-  async discardChanges(changes: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus] }[]) {
+  async discardChanges(changes: { path: string; status: Status }[]) {
     for (const change of changes) {
-      // If the file didn't exist in HEAD, we need to remove it
+      // If the file didn't exist in HEAD, handle based on staging status
       if (change.status[0] === 0) {
-        await git.remove({ ...this._baseOpts, filepath: change.path });
-        // @ts-expect-error -- TSCONVERSION
-        await this._baseOpts.fs.promises.unlink(change.path);
+        // Check if the file is staged (stage status = 2 or 3)
+        const isStaged = change.status[2] === 2 || change.status[2] === 3;
+
+        if (isStaged) {
+          // File is staged, restore staged content to workdir
+          const { stage } = await this.fileStatus(change.path);
+          if (stage !== null) {
+            // @ts-expect-error -- TSCONVERSION
+            await this._baseOpts.fs.promises.writeFile(change.path, stage, 'utf8');
+          }
+        } else {
+          // File is not staged, remove it
+          await git.remove({ ...this._baseOpts, filepath: change.path });
+          // @ts-expect-error -- TSCONVERSION
+          await this._baseOpts.fs.promises.unlink(change.path);
+        }
+        // If we're only discarding unstaged changes and the file is staged, do nothing
+        // This preserves staged files/folders
       } else {
-        await git.checkout({
-          ...this._baseOpts,
-          force: true,
-          ref: await this.getCurrentBranch(),
-          filepaths: [convertToPosixSep(change.path)],
-        });
+        // Discard unstaged changes only.
+
+        // Restore workdir from index (staged version)
+        // 1. Get staged blob OID
+        const statusMatrix = await git.statusMatrix({ ...this._baseOpts });
+        const row = statusMatrix.find(([filepath]) => filepath === change.path);
+        if (row) {
+          const [, , , stageStatusCode] = row;
+          if (stageStatusCode !== 0) {
+            // 2. Get staged blob content
+            const index = await git.listFiles({ ...this._baseOpts });
+            if (index.includes(change.path)) {
+              // Use fileStatus logic to get staged content:
+              const { stage } = await this.fileStatus(change.path);
+              if (stage !== null) {
+                // 3. Write staged content to workdir
+                // @ts-expect-error -- TSCONVERSION
+                await this._baseOpts.fs.promises.writeFile(change.path, stage, 'utf8');
+              }
+            }
+          }
+        }
+        // Do NOT touch the index (staged changes are preserved)
+        continue;
       }
     }
   }

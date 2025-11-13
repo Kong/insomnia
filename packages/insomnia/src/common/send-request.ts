@@ -130,9 +130,9 @@ export async function getSendRequestCallbackMemDb(
     }
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
 
-    const headers = headerArray?.reduce(
+    const headers = headerArray?.reduce<Record<string, string>>(
       (acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }),
-      [],
+      {},
     );
     const bodyBuffer = (await getBodyBuffer(res)) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
