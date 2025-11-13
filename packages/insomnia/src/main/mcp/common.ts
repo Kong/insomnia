@@ -311,7 +311,9 @@ export const getFetchDispatcher = async (requestId: string) => {
 
   return new Agent({
     connect: {
-      ...(workspaceCaCert?.path && !workspaceCaCert?.disabled ? { ca: fs.readFileSync(workspaceCaCert.path) } : {}),
+      ...(workspaceCaCert?.path && !workspaceCaCert?.disabled
+        ? { ca: await fs.promises.readFile(workspaceCaCert.path) }
+        : {}),
     },
   });
 };
