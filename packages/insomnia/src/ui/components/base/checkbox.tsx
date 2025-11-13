@@ -1,4 +1,3 @@
-import cn from 'classnames';
 import React, { memo, type ReactNode } from 'react';
 import {
   Checkbox as RaCheckbox,
@@ -6,6 +5,7 @@ import {
   type CheckboxGroupProps,
   type CheckboxProps,
 } from 'react-aria-components';
+import { twMerge } from 'tailwind-merge';
 
 import { Icon } from '../icon';
 
@@ -17,14 +17,15 @@ export const Checkbox = memo(
     className,
     children,
     ...rest
-  }: Omit<CheckboxProps, 'children'> & {
+  }: Omit<CheckboxProps, 'children' | 'className'> & {
     children: ReactNode;
+    className?: string;
   }) => {
     return (
       <RaCheckbox
         isSelected={isSelected}
         onChange={onChange}
-        className={cn('group flex items-center gap-2 p-0', className)}
+        className={twMerge('group flex items-center gap-2 p-0', className)}
         {...rest}
       >
         <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
