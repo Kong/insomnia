@@ -147,6 +147,7 @@
     "zod": "^3.25.75"
   },
   "devDependencies": {
+    "tailwind-merge": "^2.6.0",
     "@develohpanda/fluent-builder": "^2.1.2",
     "@modelcontextprotocol/sdk": "^1.17.5",
     "@react-router/dev": "^7.9.4",
