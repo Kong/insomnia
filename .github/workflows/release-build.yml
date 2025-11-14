@@ -168,8 +168,10 @@ jobs:
         shell: pwsh
         run: |
           $version = $env:INSO_VERSION
-          $nupkg = "insomnia-${version}-full.nupkg"
-          Write-Host "scan insomnia-${version}-full.nupkg"
+          # https://github.com/electron/windows-installer/blob/main/src/index.ts#L25 (convert version to NuGet-compatible)
+          $nupkgVersion = $version -replace "-([a-zA-Z]+)\.", '-$1'
+          $nupkg = "insomnia-${nupkgVersion}-full.nupkg"
+          Write-Host "scan insomnia-${nupkgVersion}-full.nupkg"
           7z x "packages/insomnia/dist/squirrel-windows/${nupkg}" -o"${version}-extract"
 
           $exeFiles = Get-ChildItem -Path "${version}-extract/lib/net45" -Filter *.exe
