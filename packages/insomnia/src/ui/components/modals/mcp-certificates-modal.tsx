@@ -1,8 +1,13 @@
 import React from 'react';
-import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
+import { Button, Dialog, Heading, Modal, ModalOverlay, ToggleButton } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import {
+  type McpRequestLoaderData,
+  useRequestLoaderData,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { CACertificate } from '~/ui/components/modals/workspace-certificates-modal';
+import { useRequestPatcher } from '~/ui/hooks/use-request';
 
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Icon } from '../icon';
@@ -12,11 +17,12 @@ export const MCPCertificatesModal = ({ onClose }: { onClose: () => void }) => {
     workspaceId: string;
   };
 
+  const { activeRequest } = useRequestLoaderData()! as McpRequestLoaderData;
   const routeData = useWorkspaceLoaderData()!;
-
+  const patchRequest = useRequestPatcher();
   const { caCertificate } = routeData;
 
-  if (!workspaceId) {
+  if (!workspaceId || !activeRequest) {
     return null;
   }
 
@@ -46,6 +52,40 @@ export const MCPCertificatesModal = ({ onClose }: { onClose: () => void }) => {
               </div>
               <div className="flex w-full flex-1 basis-96 select-none flex-col gap-6 overflow-hidden overflow-y-auto rounded">
                 <CACertificate caCertificate={caCertificate} />
+
+                <div className="flex flex-col gap-4 px-2 pb-4">
+                  <Heading className="text-xl">Extra Options</Heading>
+                  <div className="flex items-center justify-between gap-2">
+                    <span>Disable SSL Certificate Validation</span>
+                    <ToggleButton
+                      data-test-id="mcp-reject-unauthorized-toggle"
+                      onChange={isSelected => {
+                        patchRequest(activeRequest._id, {
+                          disableSslValidation: isSelected,
+                        });
+                      }}
+                      isSelected={activeRequest.disableSslValidation}
+                      className="flex h-full w-[12ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
+                    >
+                      {({ isSelected }) => (
+                        <>
+                          <Icon
+                            icon={isSelected ? 'toggle-on' : 'toggle-off'}
+                            className={`${isSelected ? 'text-[--color-success]' : ''}`}
+                          />
+                          <span>{isSelected ? 'Enabled' : 'Disabled'}</span>
+                        </>
+                      )}
+                    </ToggleButton>
+                  </div>
+
+                  <p className="max-w-[80ch] text-sm italic text-[--hl]">
+                    <Icon icon="info-circle" className="pr-2" />
+                    When enabled, we will not validate SSL/TLS certificates. This allows connecting to servers with
+                    self-signed, expired, or otherwise invalid certificates. Please use only for isolated, trusted local
+                    development environments.
+                  </p>
+                </div>
               </div>
               <div className="flex items-center justify-end gap-2">
                 <Button

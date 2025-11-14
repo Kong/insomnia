@@ -85,7 +85,7 @@ export const McpPane = () => {
   const [requestPaneActiveTab, setRequestPaneActiveTab] = useState<RequestPaneTabs>('params');
   const patchRequest = useRequestPatcher();
   const requestId = activeRequest._id;
-  const { activeEnvironment } = useWorkspaceLoaderData()!;
+  const { activeEnvironment, caCertificate } = useWorkspaceLoaderData()!;
   const readyState = useMcpReadyState({ requestId });
   const parentRef = useRef<HTMLDivElement>(null);
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
@@ -365,6 +365,13 @@ export const McpPane = () => {
     }
   }, [activeResponse?._id, readyState]);
 
+  const caStatus =
+    activeRequest.disableSslValidation === true
+      ? 'warning'
+      : caCertificate?.path && !caCertificate.disabled
+        ? 'success'
+        : 'default';
+
   return (
     <PanelGroup
       ref={sidebarPanelRef}
@@ -408,7 +415,20 @@ export const McpPane = () => {
               className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
             >
               <Icon icon="file-contract" className="w-5 flex-shrink-0" />
-              <span className="truncate">Manage Certificates</span>
+              <span className="inline-flex items-center gap-2 truncate">
+                Manage Certificates
+                {caStatus !== 'default' && (
+                  <Icon
+                    icon="circle"
+                    className={`${
+                      {
+                        success: 'text-[--color-success]',
+                        warning: 'text-[--color-warning]',
+                      }[caStatus]
+                    } h-2 w-2`}
+                  />
+                )}
+              </span>
             </Button>
           </div>
 
