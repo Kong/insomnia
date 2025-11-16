@@ -194,6 +194,7 @@ export const fetchRequestData = async (
   const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
 
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  invariant(baseEnvironment, 'failed to create base environment for workspace ' + workspaceId);
   // no active environment in workspaceMeta, fallback to workspace root environment as active environment
   const environment = activeEnvironment || baseEnvironment;
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
@@ -917,7 +918,7 @@ export async function sendCurlAndWriteTimeline(
     timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
   }
   const lastRedirect = headerResults.at(-1);
-
+  invariant(lastRedirect, 'expected at least one response in headerResults');
   if (runtime) {
     await runtime.appendTimeline(timelinePath, serializeNDJSON(timeline).split('\n'));
   }

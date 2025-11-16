@@ -84,8 +84,7 @@ export function init(renderedRequest: RenderedRequest | null, renderedContext: R
 
       if (headers.length) {
         // Use the last header if there are multiple of the same
-        const header = headers.at(-1);
-        return header.value || '';
+        return headers.at(-1)?.value || '';
       }
       return null;
     },
@@ -133,7 +132,7 @@ export function init(renderedRequest: RenderedRequest | null, renderedContext: R
       if (parameters.length) {
         // Use the last parameter if there are multiple of the same
         const parameter = parameters.at(-1);
-        return parameter.value || '';
+        return parameter?.value || '';
       }
       return null;
     },

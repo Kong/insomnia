@@ -410,61 +410,61 @@ export const start = (event: IpcMainEvent, ipcParams: GrpcIpcRequestParams) => {
         const messageBody = JSON.parse(request.body.text || '');
         const requestPath = path + method.path;
         switch (methodType) {
-        case 'unary': {
-          const unaryCall = client.makeUnaryRequest(
-            requestPath,
-            method.requestSerialize,
-            method.responseDeserialize,
-            messageBody,
-            filterDisabledOrInvalidMetaData(request.metadata),
-            onUnaryResponse(event, request._id),
-          );
-          unaryCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
-          grpcCalls.set(request._id, unaryCall);
-        
-        break;
-        }
-        case 'client': {
-          const clientCall = client.makeClientStreamRequest(
-            requestPath,
-            method.requestSerialize,
-            method.responseDeserialize,
-            filterDisabledOrInvalidMetaData(request.metadata),
-            onUnaryResponse(event, request._id),
-          );
-          clientCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
-          grpcCalls.set(request._id, clientCall);
-        
-        break;
-        }
-        case 'server': {
-          const serverCall = client.makeServerStreamRequest(
-            requestPath,
-            method.requestSerialize,
-            method.responseDeserialize,
-            messageBody,
-            filterDisabledOrInvalidMetaData(request.metadata),
-          );
-          onStreamingResponse(event, serverCall, request._id);
-          grpcCalls.set(request._id, serverCall);
-        
-        break;
-        }
-        case 'bidi': {
-          const bidiCall = client.makeBidiStreamRequest(
-            requestPath,
-            method.requestSerialize,
-            method.responseDeserialize,
-            filterDisabledOrInvalidMetaData(request.metadata),
-          );
-          onStreamingResponse(event, bidiCall, request._id);
-          grpcCalls.set(request._id, bidiCall);
-        
-        break;
-        }
-        default: {
-          throw new Error(`Unsupported method type: ${methodType}`);
-        }
+          case 'unary': {
+            const unaryCall = client.makeUnaryRequest(
+              requestPath,
+              method.requestSerialize,
+              method.responseDeserialize,
+              messageBody,
+              filterDisabledOrInvalidMetaData(request.metadata),
+              onUnaryResponse(event, request._id),
+            );
+            unaryCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
+            grpcCalls.set(request._id, unaryCall);
+
+            break;
+          }
+          case 'client': {
+            const clientCall = client.makeClientStreamRequest(
+              requestPath,
+              method.requestSerialize,
+              method.responseDeserialize,
+              filterDisabledOrInvalidMetaData(request.metadata),
+              onUnaryResponse(event, request._id),
+            );
+            clientCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
+            grpcCalls.set(request._id, clientCall);
+
+            break;
+          }
+          case 'server': {
+            const serverCall = client.makeServerStreamRequest(
+              requestPath,
+              method.requestSerialize,
+              method.responseDeserialize,
+              messageBody,
+              filterDisabledOrInvalidMetaData(request.metadata),
+            );
+            onStreamingResponse(event, serverCall, request._id);
+            grpcCalls.set(request._id, serverCall);
+
+            break;
+          }
+          case 'bidi': {
+            const bidiCall = client.makeBidiStreamRequest(
+              requestPath,
+              method.requestSerialize,
+              method.responseDeserialize,
+              filterDisabledOrInvalidMetaData(request.metadata),
+            );
+            onStreamingResponse(event, bidiCall, request._id);
+            grpcCalls.set(request._id, bidiCall);
+
+            break;
+          }
+          default: {
+            throw new Error(`Unsupported method type: ${methodType}`);
+          }
         }
         // Update request stats
         models.stats.incrementExecutedRequests();
@@ -564,7 +564,11 @@ const filterDisabledOrInvalidMetaData = (metadata: GrpcRequestHeader[]): Metadat
 };
 
 export type GrpcMethodType = 'unary' | 'server' | 'client' | 'bidi';
-const closeAll = (): void => { for (const x of grpcCalls) x.cancel() };
+const closeAll = (): void => {
+  for (const x of grpcCalls.keys()) {
+    grpcCalls.get(x)?.cancel();
+  }
+};
 
 if (typeof electron.app.on === 'function') {
   electron.app.on('window-all-closed', closeAll);

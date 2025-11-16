@@ -512,7 +512,9 @@ const closeSocketIOConnection = (options: { requestId: string }): void => {
   socket.close();
 };
 
-const closeAllSocketIOConnections = (): void => { for (const socket of SocketIOConnections) socket.close() };
+const closeAllSocketIOConnections = (): void => {
+  for (const [_, socket] of SocketIOConnections) socket.close();
+};
 
 const addSocketIOListener = (options: { eventName: string; requestId: string }) => {
   console.log('start listen event:', options.eventName);

@@ -200,27 +200,27 @@ const openWebSocketConnection = async (
       if (options.authentication.type === 'apikey') {
         const { key = '', value = '', addTo } = options.authentication; // Ensure key is not undefined
         switch (addTo) {
-        case HEADER: {
-          headers.push({ name: key, value: value });
-        
-        break;
-        }
-        case COOKIE: {
-          authCookie = `${key}=${value}`;
-        
-        break;
-        }
-        case QUERY_PARAMS: {
-          const authQueryParam = {
-            name: key,
-            value: value,
-          };
-          const qs = authQueryParam ? buildQueryStringFromParams([authQueryParam]) : '';
-          url = joinUrlAndQueryString(options.url, qs);
-        
-        break;
-        }
-        // No default
+          case HEADER: {
+            headers.push({ name: key, value: value });
+
+            break;
+          }
+          case COOKIE: {
+            authCookie = `${key}=${value}`;
+
+            break;
+          }
+          case QUERY_PARAMS: {
+            const authQueryParam = {
+              name: key,
+              value: value,
+            };
+            const qs = authQueryParam ? buildQueryStringFromParams([authQueryParam]) : '';
+            url = joinUrlAndQueryString(options.url, qs);
+
+            break;
+          }
+          // No default
         }
       }
       if (options.authentication.type === 'bearer' && options.authentication.token) {
@@ -344,8 +344,8 @@ const openWebSocketConnection = async (
             currentUrl,
             cookieJar: options.cookieJar,
           });
-          for (const errorMessage of rejectedCookies) timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() })
-          ;
+          for (const errorMessage of rejectedCookies)
+            timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() });
           const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
           if (hasCookiesToPersist) {
             await models.cookieJar.update(options.cookieJar, { cookies });
@@ -613,7 +613,9 @@ const closeWebSocketConnection = (options: { requestId: string }): void => {
   ws.close();
 };
 
-const closeAllWebSocketConnections = (): void => { for (const ws of WebSocketConnections) ws.close() };
+const closeAllWebSocketConnections = (): void => {
+  for (const [_, ws] of WebSocketConnections) ws.close();
+};
 
 const findMany = async (options: { responseId: string }): Promise<WebSocketEvent[]> => {
   const response = await models.webSocketResponse.getById(options.responseId);

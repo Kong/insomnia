@@ -38,6 +38,7 @@ export function updateLatestStepName(executionId: string, stepName: string) {
   const steps = executions.get(executionId) || [];
   if (steps.length > 0) {
     const latestStep = steps.at(-1);
+    if (!latestStep) return;
     latestStep.stepName = stepName;
     executions.set(executionId, steps);
   }

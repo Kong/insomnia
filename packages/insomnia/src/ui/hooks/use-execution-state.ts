@@ -26,10 +26,13 @@ export function useExecutionState({ requestId }: { requestId?: string }) {
 
   useEffect(() => {
     let isMounted = true;
-    // @ts-expect-error -- we use a dynamic channel here
-    const unsubscribe = globalThis.main.on(`syncTimers.${requestId}`, (_, { executions }: { executions: TimingStep[] }) => {
-      isMounted && setSteps(executions);
-    });
+    const unsubscribe = globalThis.main.on(
+      // @ts-expect-error -- we use a dynamic channel here
+      `syncTimers.${requestId}`,
+      (_, { executions }: { executions: TimingStep[] }) => {
+        isMounted && setSteps(executions);
+      },
+    );
     return () => {
       isMounted = false;
       unsubscribe();
@@ -42,6 +45,9 @@ export function useExecutionState({ requestId }: { requestId?: string }) {
       return false;
     }
     const latest = steps.at(-1);
+    if (!latest) {
+      return false;
+    }
     return latest.duration === undefined;
   };
 

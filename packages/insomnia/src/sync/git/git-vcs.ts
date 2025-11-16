@@ -1827,7 +1827,7 @@ export class GitVCS {
     await git.deleteBranch({ ...this._baseOpts, ref: branch });
   }
 
-  async checkout(branch: string, { force = false }: { force?: boolean }) {
+  async checkout(branch: string, { force = false }: { force?: boolean } = { force: false }) {
     console.log('[git] Checkout', {
       branch,
       force,

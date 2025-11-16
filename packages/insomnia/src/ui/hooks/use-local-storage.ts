@@ -121,8 +121,8 @@ function useLocalStorage<T>(
   );
   const setState = useCallback(
     (newValue: SetStateAction<T | undefined>): void => {
+      // @ts-expect-error TS2345 setState function type is not inferred correctly
       const value = typeof newValue === 'function' ? newValue(storageItem.current.parsed) : newValue;
-
       // reasons for `localStorage` to throw an error:
       // - maximum quota is exceeded
       // - under Mobile Safari (since iOS 5) when the user enters private mode

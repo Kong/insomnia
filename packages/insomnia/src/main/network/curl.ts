@@ -277,8 +277,8 @@ const openCurlConnection = async (
               currentUrl,
               cookieJar: options.cookieJar,
             });
-            for (const errorMessage of rejectedCookies) timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() })
-            ;
+            for (const errorMessage of rejectedCookies)
+              timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() });
             const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
             if (hasCookiesToPersist) {
               await models.cookieJar.update(options.cookieJar, { cookies });
@@ -399,7 +399,11 @@ const closeCurlConnection = (_event: Electron.IpcMainInvokeEvent, options: { req
   }
 };
 
-const closeAllCurlConnections = (): void => { for (const curl of CurlConnections) curl.isOpen && curl.close() };
+const closeAllCurlConnections = (): void => {
+  for (const [_, curl] of CurlConnections) {
+    curl.isOpen && curl.close();
+  }
+};
 
 const findMany = async (options: { responseId: string }): Promise<CurlEvent[]> => {
   const response = await models.response.getById(options.responseId);

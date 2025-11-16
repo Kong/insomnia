@@ -1,5 +1,4 @@
 import clone from 'clone';
-import { sub } from 'date-fns';
 import orderedJSON from 'json-order';
 
 import * as models from '../models';
@@ -452,7 +451,7 @@ export async function getRenderContext({
   }
 
   // Get Keys from root environment
-  getKeySource((rootEnvironment || {}).data, inKey, 'root');
+  getKeySource((rootEnvironment || { data: {} }).data, inKey, 'root');
 
   // Get Keys from sub environment
   if (subEnvironment) {

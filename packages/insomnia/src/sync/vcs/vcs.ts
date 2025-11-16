@@ -6,6 +6,8 @@ import path from 'node:path';
 
 import clone from 'clone';
 
+import { invariant } from '~/utils/invariant';
+
 import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
 import type { Operation } from '../../common/database';
@@ -644,11 +646,12 @@ export class VCS {
     console.log(`[sync] Pulled branch ${localBranch.name}`);
 
     // vcs.pull sometimes results in a delta with parentId: null, causing workspaces to be orphaned, this is a hack to restore those parentIds until we have a chance to redesign vcs
-    if (delta.upsert) for (const doc of delta.upsert) {
-      if (!doc.parentId && doc.type === 'Workspace') {
-        doc.parentId = projectId;
+    if (delta.upsert)
+      for (const doc of delta.upsert) {
+        if (!doc.parentId && doc.type === 'Workspace') {
+          doc.parentId = projectId;
+        }
       }
-    }
 
     return delta;
   }
@@ -862,7 +865,7 @@ export class VCS {
 
   async _createSnapshotFromState(branch: Branch, state: SnapshotState, name: string) {
     const parentId = branch.snapshots.length ? branch.snapshots.at(-1) : EMPTY_HASH;
-
+    invariant(parentId, 'Parent ID should be defined for branch snapshot');
     // Create the snapshot
     const id = _generateSnapshotID(parentId, this._backendProjectId(), state);
 
@@ -1514,6 +1517,7 @@ export class VCS {
     const branch = await this._getOrCreateBranch(branchName);
     const snapshots = branch ? branch.snapshots : [];
     const parentId = snapshots.length ? snapshots.at(-1) : EMPTY_HASH;
+    invariant(parentId, 'Parent ID should be defined for latest snapshot retrieval');
     return this._getSnapshot(parentId);
   }
 

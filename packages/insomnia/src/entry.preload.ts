@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
+import type { RendererToMainBridgeAPI } from '~/main/ipc/main';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 
 import type { GitServiceAPI } from './main/git-service';
@@ -162,7 +163,7 @@ const llm: LLMConfigServiceAPI = {
     ipcRenderer.invoke('llm.setAIFeatureEnabled', feature, enabled),
 };
 
-const main: Window['main'] = {
+const main: RendererToMainBridgeAPI = {
   startExecution: options => ipcRenderer.send('startExecution', options),
   addExecutionStep: options => ipcRenderer.send('addExecutionStep', options),
   completeExecutionStep: options => ipcRenderer.send('completeExecutionStep', options),
@@ -264,24 +265,24 @@ ipcRenderer.on('hidden-browser-window-response-listener', event => {
   ipcRenderer.invoke('main-window-script-port-ready');
 });
 
-const dialog: Window['dialog'] = {
+const dialog: Pick<Electron.Dialog, 'showOpenDialog' | 'showSaveDialog'> = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),
   showSaveDialog: options => ipcRenderer.invoke('showSaveDialog', options),
 };
-const app: Window['app'] = {
+const app: Pick<Electron.App, 'getPath' | 'getAppPath'> = {
   getPath: options => ipcRenderer.sendSync('getPath', options),
   getAppPath: () => ipcRenderer.sendSync('getAppPath'),
 };
-const shell: Window['shell'] = {
+const shell: Pick<Electron.Shell, 'showItemInFolder' | 'openPath'> = {
   showItemInFolder: options => ipcRenderer.send('showItemInFolder', options),
   openPath: options => ipcRenderer.invoke('openPath', options),
 };
-const clipboard: Window['clipboard'] = {
+const clipboard: Pick<Electron.Clipboard, 'readText' | 'writeText' | 'clear'> = {
   readText: () => ipcRenderer.sendSync('readText'),
   writeText: options => ipcRenderer.send('writeText', options),
   clear: () => ipcRenderer.send('clear'),
 };
-const webUtils: Window['webUtils'] = {
+const webUtils: Pick<Electron.WebUtils, 'getPathForFile'> = {
   getPathForFile: (file: File) => webUtilities.getPathForFile(file),
 };
 if (process.contextIsolated) {

@@ -20,7 +20,7 @@ export function decodeEncoding<T>(value: T) {
     const base64 = results[1];
     try {
       const binary = atob(base64);
-      const bytes = new Uint8Array([...binary].map(char => char.codePointAt(0)));
+      const bytes = new Uint8Array([...binary].map(char => char.charCodeAt(0)));
       return new TextDecoder().decode(bytes);
     } catch (e) {
       console.error('Invalid base64 string:', e);

@@ -61,6 +61,8 @@ export const environmentModelSchema: Schema<Environment> = {
   ...baseModelSchema,
   ...toSchema(environment.init()),
   type: () => environment.type,
+  // @ts-expect-error -- mapping unsoundness
   environmentType: () => {},
+  // @ts-expect-error -- mapping unsoundness
   kvPairData: () => {},
 };

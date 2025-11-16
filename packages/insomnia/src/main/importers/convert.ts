@@ -32,7 +32,11 @@ export const convert = async (
     importers = importers.filter(i => i.id === importerId);
   }
   for (const importer of importers) {
-    const resources = await importer.convert(importer.acceptFilePath === true ? importEntry : importEntry.contentStr);
+    // Only wsdl importer support acceptFilePath, so we need to cast here, this import process is messy...
+    const resources =
+      importer.acceptFilePath === true
+        ? await importer.convert(importEntry as any)
+        : await importer.convert(importEntry.contentStr as any);
 
     if (!resources) {
       continue;

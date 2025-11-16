@@ -374,12 +374,13 @@ export const Runner: FC = () => {
     let isRunning = false;
     if (latestTimingSteps) {
       // there is a timingStep item and it is not ended (duration is not assigned)
-      isRunning = latestTimingSteps.length > 0 && latestTimingSteps.at(-1).stepName !== 'Done';
+      isRunning = latestTimingSteps.length > 0 && latestTimingSteps.at(-1)?.stepName !== 'Done';
     }
     setIsRunning(isRunning);
 
     if (isRunning) {
-      const duration = Date.now() - latestTimingSteps.at(-1).startedAt;
+      const startedAt = latestTimingSteps.at(-1)?.startedAt || Date.now();
+      const duration = Date.now() - startedAt;
       const { number: durationNumber, unit: durationUnit } = getTimeAndUnit(duration);
       setTimingSteps(latestTimingSteps);
       setTotalTime({
@@ -423,17 +424,17 @@ export const Runner: FC = () => {
     let totalTestCount = 0;
 
     if (!isRunning && executionResult?.iterationResults) {
-        for (const iteration of executionResult.iterationResults) {
-          for (const requests of iteration) {
-            for (const testCase of requests.results) {
-              if (testCase.status === 'passed') {
-                passedTestCount++;
-              }
-              totalTestCount++;
+      for (const iteration of executionResult.iterationResults) {
+        for (const requests of iteration) {
+          for (const testCase of requests.results) {
+            if (testCase.status === 'passed') {
+              passedTestCount++;
             }
+            totalTestCount++;
           }
         }
       }
+    }
 
     const testResultCountTagColor =
       totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-[var(--hl-sm)]';

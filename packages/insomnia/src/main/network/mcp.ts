@@ -365,6 +365,7 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
       timelinePath,
       eventLogPath,
     });
+    // @ts-expect-error -- client is apparently not an event listener, @Curry
     mcpClient.addEventListener('close', () => _handleCloseMcpConnection(requestId));
   } catch (error) {
     // Log error when connection fails with exception

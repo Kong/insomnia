@@ -14,13 +14,11 @@ declare global {
   var showAlert: (options?: Record<string, any>) => void;
   var showWrapper: (options?: Record<string, any>) => void;
   var showPrompt: (options?: Record<string, any>) => void;
-  interface Window {
-    // Required by codemirror merge addon
-    diff_match_patch: typeof DiffMatchPatch;
-    DIFF_DELETE: DiffOp;
-    DIFF_INSERT: DiffOp;
-    DIFF_EQUAL: DiffOp;
-  }
+  // Required by codemirror merge addon
+  var diff_match_patch: typeof DiffMatchPatch;
+  var DIFF_DELETE: DiffOp;
+  var DIFF_INSERT: DiffOp;
+  var DIFF_EQUAL: DiffOp;
 }
 
 declare const __DEV__: boolean;

@@ -583,7 +583,7 @@ export const database = {
 
         for (const d of docs) {
           if (d.type && queryTypesDescendantMap[d.type])
-            for (const t of queryTypesDescendantMap[d.type]) {
+            for (const t of queryTypesDescendantMap[d.type] || []) {
               uniqueDescendantTypes.add(t);
               parentIdsMap.set(t, [...(parentIdsMap.get(t) || []), d._id]);
             }

@@ -121,15 +121,13 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           [isMac() ? 'Cmd-F' : 'Ctrl-F']: () => {},
         }),
         gutters: [],
-        mode: handleRender
-          ? {
-              name: 'nunjucks',
-              baseMode: 'text/plain',
-            }
-          : 'text/plain',
+        mode: {
+          name: 'nunjucks',
+          baseMode: 'text/plain',
+        },
         environmentAutocomplete: canAutocomplete && {
           getVariables: async () => (handleGetRenderContext ? (await handleGetRenderContext())?.keys || [] : []),
-          getTags: async () => (handleGetRenderContext ? (await getTagDefinitions()).flatMap(transformEnums) : []),
+          getTags: async () => (await getTagDefinitions()).flatMap(transformEnums),
           getConstants: getAutocompleteConstants,
           hotKeyRegistry: settings.hotKeyRegistry,
           autocompleteDelay: settings.autocompleteDelay,

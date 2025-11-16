@@ -95,23 +95,13 @@ export type Converter = (rawData: string) => ConvertResult | Promise<ConvertResu
 
 export type FilePathConverter = (importEntry: ImportEntry) => ConvertResult | Promise<ConvertResult>;
 
-interface BaseImporter {
+export interface Importer {
   id: string;
   name: string;
   description: string;
+  acceptFilePath?: boolean;
+  convert: FilePathConverter | Converter;
 }
-
-interface ContentStrImporter extends BaseImporter {
-  acceptFilePath?: false;
-  convert: Converter;
-}
-
-interface FilePathImporter extends BaseImporter {
-  acceptFilePath: true;
-  convert: FilePathConverter;
-}
-
-export type Importer = ContentStrImporter | FilePathImporter;
 
 export interface ImportEntry {
   contentStr: string;
