@@ -12,13 +12,8 @@ export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.strict,
   tseslint.configs.stylistic,
+  eslintPluginUnicorn.configs.unopinionated,
   {
-    languageOptions: {
-      globals: globals.builtin,
-    },
-    plugins: {
-      unicorn: eslintPluginUnicorn,
-    },
     rules: {
       'unicorn/filename-case': [
         'error',
