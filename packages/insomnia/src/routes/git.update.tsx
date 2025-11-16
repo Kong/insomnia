@@ -19,7 +19,7 @@ interface UpdateGitRepoData {
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = (await request.json()) as UpdateGitRepoData;
 
-  return window.main.git.updateGitRepo(data);
+  return globalThis.main.git.updateGitRepo(data);
 }
 
 export const useGitProjectUpdateActionFetcher = createFetcherSubmitHook(

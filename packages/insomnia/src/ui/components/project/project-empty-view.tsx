@@ -40,7 +40,7 @@ export const ProjectEmptyView: FC<Props> = ({
           aria-label="Import"
           className="flex w-full max-w-[180px] flex-col items-center justify-center gap-[var(--padding-xs)] rounded-md border border-solid border-[--hl-sm] px-12 py-8 text-[var(--font-size-sm)] shadow-sm transition-all duration-100 hover:bg-[--color-bg] sm:gap-[var(--padding-sm)]"
           onPress={() => {
-            window.main.trackSegmentEvent({
+            globalThis.main.trackSegmentEvent({
               event: SegmentEvent.importStarted,
               properties: {
                 source: 'home-page',

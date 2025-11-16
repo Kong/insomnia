@@ -150,7 +150,7 @@ export const McpUrlActionBar = ({
 
     updateTabById?.(request._id, { temporary: false });
     if (isConnected) {
-      window.main.mcp.close({ requestId: request._id });
+      globalThis.main.mcp.close({ requestId: request._id });
       return;
     }
 
@@ -193,7 +193,7 @@ export const McpUrlActionBar = ({
   });
 
   useEffect(() => {
-    const unsubscribe = window.main.on('mcp-auth-confirmation', async _ => {
+    const unsubscribe = globalThis.main.on('mcp-auth-confirmation', async _ => {
       let answered = false;
       showModal(AskModal, {
         title: 'MCP Authentication Confirmation',
@@ -204,14 +204,14 @@ export const McpUrlActionBar = ({
             return;
           }
           answered = true;
-          window.main.mcp.authConfirmation(yes);
+          globalThis.main.mcp.authConfirmation(yes);
         },
         onHide: () => {
           if (answered) {
             return;
           }
           answered = true;
-          window.main.mcp.authConfirmation(false);
+          globalThis.main.mcp.authConfirmation(false);
         },
       });
     });
@@ -224,7 +224,7 @@ export const McpUrlActionBar = ({
         <Dropdown
           triggerButton={
             <RaButton
-              className={`pl-2 ${!isDisconnected ? 'cursor-not-allowed opacity-30' : ''}`}
+              className={`pl-2 ${isDisconnected ? '' : 'cursor-not-allowed opacity-30'}`}
               aria-label="Request Method"
             >
               <span>{requestTransportTypeLabel}</span> <i className="fa fa-caret-down space-left" />
@@ -267,7 +267,9 @@ export const McpUrlActionBar = ({
           />
         </div>
         <div className="flex p-1">
-          {!isConnected ? (
+          {isConnected ? (
+            <DisconnectButton requestId={request._id} />
+          ) : (
             <button
               className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
               disabled={isConnecting}
@@ -275,8 +277,6 @@ export const McpUrlActionBar = ({
             >
               Connect
             </button>
-          ) : (
-            <DisconnectButton requestId={request._id} />
           )}
         </div>
       </form>

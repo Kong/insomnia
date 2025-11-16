@@ -10,10 +10,10 @@ import { debounce } from '~/common/misc';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 
 // these global variables are required by codemirror merge addon
-window.diff_match_patch = DiffMatchPatch;
-window.DIFF_DELETE = DiffOp.Delete;
-window.DIFF_INSERT = DiffOp.Insert;
-window.DIFF_EQUAL = DiffOp.Equal;
+globalThis.diff_match_patch = DiffMatchPatch;
+globalThis.DIFF_DELETE = DiffOp.Delete;
+globalThis.DIFF_INSERT = DiffOp.Insert;
+globalThis.DIFF_EQUAL = DiffOp.Equal;
 
 interface Props {
   leftContent: string;

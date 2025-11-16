@@ -24,9 +24,9 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     const personalOrganizationId = personalOrganization.id;
     await migrateProjectsUnderOrganization(personalOrganizationId, sessionId);
 
-    const specificOrgRedirectAfterAuthorize = window.localStorage.getItem('specificOrgRedirectAfterAuthorize');
+    const specificOrgRedirectAfterAuthorize = globalThis.localStorage.getItem('specificOrgRedirectAfterAuthorize');
     if (specificOrgRedirectAfterAuthorize && specificOrgRedirectAfterAuthorize !== '') {
-      window.localStorage.removeItem('specificOrgRedirectAfterAuthorize');
+      globalThis.localStorage.removeItem('specificOrgRedirectAfterAuthorize');
       return redirect(`/organization/${specificOrgRedirectAfterAuthorize}`);
     }
 

@@ -173,7 +173,7 @@ const openCurlConnection = async (
     curl.setOpt(Curl.option.CUSTOMREQUEST, request.method);
     // TODO: support all post data content types
     curl.setOpt(Curl.option.POSTFIELDS, request.body?.text || '');
-    debugTimeline.forEach(entry => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(entry) + '\n'));
+    for (const entry of debugTimeline) timelineFileStreams.get(options.requestId)?.write(JSON.stringify(entry) + '\n');
     CurlConnections.set(options.requestId, curl);
     CurlConnections.get(options.requestId)?.enable(CurlFeature.StreamResponse);
     const headerStrings = parseHeaderStrings({ req: request, finalUrl: options.url, authHeader: options.authHeader });
@@ -188,7 +188,7 @@ const openCurlConnection = async (
         error,
         timestamp: Date.now(),
       };
-      console.error('curl - error: ', error, errorCode);
+      console.error('curl - error:', error, errorCode);
       CurlConnections.get(options.requestId)?.close();
       deleteRequestMaps(request._id, error.message, errorEvent);
       for (const window of BrowserWindow.getAllWindows()) {
@@ -277,9 +277,8 @@ const openCurlConnection = async (
               currentUrl,
               cookieJar: options.cookieJar,
             });
-            rejectedCookies.forEach(errorMessage =>
-              timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }),
-            );
+            for (const errorMessage of rejectedCookies) timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() })
+            ;
             const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
             if (hasCookiesToPersist) {
               await models.cookieJar.update(options.cookieJar, { cookies });
@@ -400,7 +399,7 @@ const closeCurlConnection = (_event: Electron.IpcMainInvokeEvent, options: { req
   }
 };
 
-const closeAllCurlConnections = (): void => CurlConnections.forEach(curl => curl.isOpen && curl.close());
+const closeAllCurlConnections = (): void => { for (const curl of CurlConnections) curl.isOpen && curl.close() };
 
 const findMany = async (options: { responseId: string }): Promise<CurlEvent[]> => {
   const response = await models.response.getById(options.responseId);

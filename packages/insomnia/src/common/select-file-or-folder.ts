@@ -25,7 +25,7 @@ export const selectFileOrFolder = async ({ itemTypes, extensions }: Options) => 
     title += ' Directory';
   }
 
-  const { canceled, filePaths } = await window.dialog.showOpenDialog({
+  const { canceled, filePaths } = await globalThis.dialog.showOpenDialog({
     title,
     buttonLabel: 'Select',
     properties: types.map(type => {

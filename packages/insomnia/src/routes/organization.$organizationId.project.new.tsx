@@ -49,7 +49,7 @@ export const reportGitProjectCount = async (organizationId: string, sessionId: s
         },
       });
       return;
-    } catch (err) {
+    } catch {
       if (attempt < maxRetries) {
         await new Promise(resolve => setTimeout(resolve, attempt * 1000));
       }
@@ -86,7 +86,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
         return project._id;
       }
 
-      let credentials: GitCredentials | undefined = undefined;
+      let credentials: GitCredentials | undefined;
       if (newProjectData.oauth2format === 'custom') {
         credentials = {
           username: newProjectData.username || '',
@@ -105,7 +105,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
         };
       }
 
-      const { projectId, errors } = await window.main.git.cloneGitRepo({
+      const { projectId, errors } = await globalThis.main.git.cloneGitRepo({
         organizationId,
         uri: newProjectData.uri || '',
         author: {
@@ -173,7 +173,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
   };
 
   const newProjectId = await projectLock.wrapWithLock(createProjectImpl)(organizationId, newProjectData);
-  window.main.trackSegmentEvent({
+  globalThis.main.trackSegmentEvent({
     event: SegmentEvent.projectCreated,
     properties: {
       storage: newProjectData.storageType,

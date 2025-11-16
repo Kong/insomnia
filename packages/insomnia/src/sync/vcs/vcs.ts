@@ -41,7 +41,7 @@ import {
   updateStateWithConflictResolutions,
 } from './util';
 
-const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
+const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replaceAll(/./g, '0');
 
 type ConflictHandler = (
   conflicts: MergeConflict[],
@@ -142,10 +142,10 @@ export class VCS {
   async switchProject(rootDocumentId: string) {
     const backendProject = await this._getBackendProjectByRootDocument(rootDocumentId);
 
-    if (backendProject !== null) {
-      await this.setBackendProject(backendProject);
-    } else {
+    if (backendProject === null) {
       this._backendProject = null;
+    } else {
+      await this.setBackendProject(backendProject);
     }
   }
 
@@ -229,7 +229,7 @@ export class VCS {
           let previousBlobContent: BaseModel | null = null;
           try {
             previousBlobContent = await this.blobFromLastSnapshot(key);
-          } catch (e) {
+          } catch {
             // No previous blob found
           } finally {
             unstaged[key] = {
@@ -242,7 +242,7 @@ export class VCS {
           let previousBlobContent: BaseModel | null = null;
           try {
             previousBlobContent = (await this._getBlob(blobId)) || null;
-          } catch (e) {
+          } catch {
             // No previous blob found
           } finally {
             unstaged[key] = {
@@ -256,7 +256,7 @@ export class VCS {
           let previousBlobContent: BaseModel | null = null;
           try {
             previousBlobContent = 'blobContent' in stageEntry ? JSON.parse(stageEntry.blobContent) : {};
-          } catch (e) {
+          } catch {
             // No previous blob found
           } finally {
             unstaged[key] = {
@@ -312,10 +312,10 @@ export class VCS {
   }
 
   static validateBranchName(branchName: string) {
-    if (!branchName.match(/^[a-zA-Z0-9._/-]{3,}$/)) {
+    if (!/^[a-zA-Z0-9._/-]{3,}$/.test(branchName)) {
       return 'Branch names must be at least 3 characters long and can only contain English letters, numbers, period (.), hyphen (-), underscore (_) and forward slash (/)';
     }
-    if (!branchName.match(/^[a-zA-Z0-9].*$/)) {
+    if (!/^[a-zA-Z0-9].*$/.test(branchName)) {
       return 'Branch names must start with a letter or number';
     }
     if (branchName.endsWith('/')) {
@@ -644,11 +644,11 @@ export class VCS {
     console.log(`[sync] Pulled branch ${localBranch.name}`);
 
     // vcs.pull sometimes results in a delta with parentId: null, causing workspaces to be orphaned, this is a hack to restore those parentIds until we have a chance to redesign vcs
-    delta.upsert?.forEach(doc => {
+    if (delta.upsert) for (const doc of delta.upsert) {
       if (!doc.parentId && doc.type === 'Workspace') {
         doc.parentId = projectId;
       }
-    });
+    }
 
     return delta;
   }
@@ -818,7 +818,7 @@ export class VCS {
           try {
             mineBlobContent = conflict.mineBlob ? await this._getBlob(conflict.mineBlob) : null;
             theirsBlobContent = conflict.theirsBlob ? await this._getBlob(conflict.theirsBlob) : null;
-          } catch (e) {
+          } catch {
             // No previous blob found
           }
           return {
@@ -861,7 +861,7 @@ export class VCS {
   }
 
   async _createSnapshotFromState(branch: Branch, state: SnapshotState, name: string) {
-    const parentId = branch.snapshots.length ? branch.snapshots[branch.snapshots.length - 1] : EMPTY_HASH;
+    const parentId = branch.snapshots.length ? branch.snapshots.at(-1) : EMPTY_HASH;
 
     // Create the snapshot
     const id = _generateSnapshotID(parentId, this._backendProjectId(), state);
@@ -1513,7 +1513,7 @@ export class VCS {
   async _getLatestSnapshot(branchName: string) {
     const branch = await this._getOrCreateBranch(branchName);
     const snapshots = branch ? branch.snapshots : [];
-    const parentId = snapshots.length ? snapshots[snapshots.length - 1] : EMPTY_HASH;
+    const parentId = snapshots.length ? snapshots.at(-1) : EMPTY_HASH;
     return this._getSnapshot(parentId);
   }
 

@@ -88,11 +88,11 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
       // socket.io use a separate field (query) for query parameters
       if (request.type === 'SocketIORequest' && rendered) {
         const query: Record<string, string> = {};
-        rendered.parameters.forEach(({ name, value }: { name: string; value: string }) => {
+        for (const { name, value } of rendered.parameters) {
           if (name) {
             query[name] = value;
           }
-        });
+        }
         return {
           url: rendered.url,
           query,
@@ -111,9 +111,9 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
       if (isOpen) {
         if (request.type === 'WebSocketRequest') {
           // If the request is already open, close it
-          window.main.webSocket.close({ requestId: request._id });
+          globalThis.main.webSocket.close({ requestId: request._id });
         } else if (request.type === 'SocketIORequest') {
-          window.main.socketIO.close({ requestId: request._id });
+          globalThis.main.socketIO.close({ requestId: request._id });
         }
         return;
       }

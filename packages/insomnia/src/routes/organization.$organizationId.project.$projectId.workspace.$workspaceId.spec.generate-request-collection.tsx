@@ -31,10 +31,10 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
 
   const rulesetPath = gitRepositoryId
-    ? path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
+    ? path.join(globalThis.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
     : '';
 
-  const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
+  const { diagnostics, error } = await globalThis.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
   if (error) {
     throw error;
   }

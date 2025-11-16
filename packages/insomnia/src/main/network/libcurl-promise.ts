@@ -327,7 +327,7 @@ export const createConfiguredCurlInstance = ({
   }
   // Use the system's native CA store for SSL certificate verification
   curl.setOpt(Curl.option.SSL_OPTIONS, CurlSslOpt.NativeCa);
-  certificates.forEach(validCert => {
+  for (const validCert of certificates) {
     const { passphrase, cert, key, pfx } = validCert;
     if (cert) {
       const { isAllowed, securedPath } = isPathAllowed(cert, settings.dataFolders);
@@ -355,7 +355,7 @@ export const createConfiguredCurlInstance = ({
     if (passphrase) {
       curl.setOpt(Curl.option.KEYPASSWD, passphrase);
     }
-  });
+  }
   const httpVersion = getHttpVersion(settings.preferredHttpVersion);
   debugTimeline.push({ value: httpVersion.log, name: 'Text', timestamp: Date.now() });
 
@@ -369,9 +369,7 @@ export const createConfiguredCurlInstance = ({
     curl.setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
   }
 
-  if (!settings.proxyEnabled) {
-    curl.setOpt(Curl.option.PROXY, '');
-  } else {
+  if (settings.proxyEnabled) {
     const { protocol } = urlParse(req.url);
     const { httpProxy, httpsProxy, noProxy } = settings;
     const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
@@ -384,6 +382,8 @@ export const createConfiguredCurlInstance = ({
     if (noProxy) {
       curl.setOpt(Curl.option.NOPROXY, noProxy);
     }
+  } else {
+    curl.setOpt(Curl.option.PROXY, '');
   }
   const { timeout } = settings;
   if (timeout <= 0) {
@@ -429,7 +429,7 @@ export const createConfiguredCurlInstance = ({
     // set-cookies from previous redirects
     if (cookieJar.cookies.length) {
       debugTimeline.push({
-        value: `Enable cookie sending with jar of ${cookieJar.cookies.length} cookie${cookieJar.cookies.length !== 1 ? 's' : ''}`,
+        value: `Enable cookie sending with jar of ${cookieJar.cookies.length} cookie${cookieJar.cookies.length === 1 ? '' : 's'}`,
         name: 'Text',
         timestamp: Date.now(),
       });
@@ -508,7 +508,7 @@ export function _parseHeaders(buffer: Buffer): HeaderResult[] {
       const [version, code, ...other] = first.split(/ +/g);
       return {
         version,
-        code: parseInt(code, 10),
+        code: Number.parseInt(code, 10),
         reason: other.join(' '),
         headers,
       };
@@ -550,7 +550,7 @@ const parseRequestBody = ({ body, method }: { body: any; method: string }) => {
     return body.text || '';
   }
 
-  return undefined;
+  return;
 };
 const parseRequestBodyPath = async (body: any) => {
   const isMultipartForm = body.mimeType === CONTENT_TYPE_FORM_DATA;

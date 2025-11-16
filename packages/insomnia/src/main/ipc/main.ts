@@ -184,9 +184,9 @@ export function registerMainHandlers() {
     return models.caCertificate.create(options);
   });
   ipcMainOn('loginStateChange', async () => {
-    BrowserWindow.getAllWindows().forEach(w => {
+    for (const w of BrowserWindow.getAllWindows()) {
       w.webContents.send('loggedIn');
-    });
+    }
   });
   ipcMainHandle('backup', async () => {
     return backup();
@@ -264,7 +264,7 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('insecureReadFileWithEncoding', async (_, options: { path: string; encoding: string }) => {
     try {
-      const contentBuffer = await insecureReadFileWithEncoding(options.path, undefined);
+      const contentBuffer = await insecureReadFileWithEncoding(options.path);
       if (typeof contentBuffer === 'string') {
         return { content: contentBuffer, encoding: 'utf8' };
       }
@@ -389,18 +389,35 @@ export function registerMainHandlers() {
           let errorMessage: string;
 
           const signals = os.constants.signals;
-          if (code === 0) {
+          switch (code) {
+          case 0: {
             errorMessage = 'Mock generation process exited with code 0.';
-          } else if (code === signals.SIGSEGV) {
+          
+          break;
+          }
+          case signals.SIGSEGV: {
             errorMessage = `Mock generation process crashed with a segmentation fault (SIGSEGV). This may be due to system compatibility when running a GGUF model.`;
-          } else if (code === signals.SIGKILL) {
+          
+          break;
+          }
+          case signals.SIGKILL: {
             errorMessage = `Mock generation process was killed (SIGKILL). This may be due to memory limits or system resources.`;
-          } else if (code === signals.SIGTERM) {
+          
+          break;
+          }
+          case signals.SIGTERM: {
             errorMessage = `Mock generation process was terminated (SIGTERM).`;
-          } else if (code === signals.SIGABRT) {
+          
+          break;
+          }
+          case signals.SIGABRT: {
             errorMessage = `Mock generation process aborted (SIGABRT). This usually indicates an internal error.`;
-          } else {
+          
+          break;
+          }
+          default: {
             errorMessage = `Mock generation process exited unexpectedly with code ${code}.`;
+          }
           }
 
           resolve({ error: errorMessage, routes: [] });
@@ -443,18 +460,35 @@ export function registerMainHandlers() {
         let errorMessage: string;
 
         const signals = os.constants.signals;
-        if (code === 0) {
+        switch (code) {
+        case 0: {
           errorMessage = 'Git commit generation process exited with code 0.';
-        } else if (code === signals.SIGSEGV) {
+        
+        break;
+        }
+        case signals.SIGSEGV: {
           errorMessage = `Git commit generation process crashed with a segmentation fault (SIGSEGV). This may be due to system compatibility when running a GGUF model.`;
-        } else if (code === signals.SIGKILL) {
+        
+        break;
+        }
+        case signals.SIGKILL: {
           errorMessage = `Git commit generation process was killed (SIGKILL). This may be due to memory limits or system resources.`;
-        } else if (code === signals.SIGTERM) {
+        
+        break;
+        }
+        case signals.SIGTERM: {
           errorMessage = `Git commit generation process was terminated (SIGTERM).`;
-        } else if (code === signals.SIGABRT) {
+        
+        break;
+        }
+        case signals.SIGABRT: {
           errorMessage = `Git commit generation process aborted (SIGABRT). This usually indicates an internal error.`;
-        } else {
+        
+        break;
+        }
+        default: {
           errorMessage = `Git commit generation process exited unexpectedly with code ${code}.`;
+        }
         }
 
         resolve({ error: errorMessage });

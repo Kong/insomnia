@@ -37,7 +37,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   const rendered = (await request.json()) as ConnectActionParams;
 
   if (isWebSocketRequestId(requestId)) {
-    window.main.webSocket.open({
+    globalThis.main.webSocket.open({
       requestId,
       workspaceId,
       url: rendered.url,
@@ -47,7 +47,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     });
   }
   if (isGraphqlSubscriptionRequest(req)) {
-    window.main.webSocket.open({
+    globalThis.main.webSocket.open({
       requestId,
       workspaceId,
       // replace url with ws/wss for graphql subscriptions
@@ -72,7 +72,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   if (isEventStreamRequest(req)) {
     const renderedRequest = { ...req, ...rendered } as RenderedRequest;
     const authHeader = await getAuthHeader(renderedRequest, rendered.url);
-    window.main.curl.open({
+    globalThis.main.curl.open({
       requestId,
       workspaceId,
       url: rendered.url,
@@ -84,7 +84,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     });
   }
   if (isSocketIORequest(req)) {
-    window.main.socketIO.open({
+    globalThis.main.socketIO.open({
       requestId,
       workspaceId,
       url: rendered.url,
@@ -95,7 +95,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     });
   }
   if (isMcpRequest(req)) {
-    return window.main.mcp.connect({
+    return globalThis.main.mcp.connect({
       requestId,
       workspaceId,
       transportType: rendered.transportType || TRANSPORT_TYPES.HTTP,
@@ -107,7 +107,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   // HACK: even more elaborate hack to get the request to update
   return new Promise(resolve => {
-    const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
+    const unsubscribe = globalThis.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [event, doc] = change;
         if (isRequestMeta(doc) && doc.parentId === requestId && event === 'update') {

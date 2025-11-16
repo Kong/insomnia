@@ -33,11 +33,7 @@ export const MockResponseExtractor = () => {
   let tipPreventingUserFromCreatingMockRoute = '';
   let canOnlyChooseExistingMockServer = false;
   if (isLocalProject) {
-    if (!isEnterprise) {
-      tipPreventingUserFromCreatingMockRoute = `You can't create a cloud mock server route in a local project.
-Please alter your project to a cloud project to create a cloud mock server route.
-If you want to create a self-hosted mock server route, you need to upgrade to an enterprise plan.`;
-    } else {
+    if (isEnterprise) {
       mockServerAndRoutes = mockServerAndRoutes.filter(({ useInsomniaCloud }) => !useInsomniaCloud);
       if (mockServerAndRoutes.length === 0) {
         // does not have existing self-hosted mock server
@@ -47,6 +43,10 @@ If you want to create a self-hosted mock server route from a request response in
         // has existing self-hosted mock server
         canOnlyChooseExistingMockServer = true;
       }
+    } else {
+      tipPreventingUserFromCreatingMockRoute = `You can't create a cloud mock server route in a local project.
+Please alter your project to a cloud project to create a cloud mock server route.
+If you want to create a self-hosted mock server route, you need to upgrade to an enterprise plan.`;
     }
   }
 
@@ -118,7 +118,7 @@ If you want to create a self-hosted mock server route from a request response in
           e.preventDefault();
           if (selectedMockServer && selectedMockRoute) {
             if (activeResponse && 'bodyPath' in activeResponse) {
-              const body = await window.main.secureReadFile({
+              const body = await globalThis.main.secureReadFile({
                 path: activeResponse.bodyPath,
               });
               const headersWithoutContentLength = activeResponse.headers.filter(

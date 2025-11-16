@@ -12,7 +12,7 @@ interface StageGitChangesData {
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = (await request.json()) as StageGitChangesData;
-  return window.main.git.stageChanges(data);
+  return globalThis.main.git.stageChanges(data);
 }
 
 export const useGitProjectStageActionFetcher = createFetcherSubmitHook(

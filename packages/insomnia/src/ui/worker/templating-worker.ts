@@ -14,7 +14,7 @@ async function performJob(input: {
 }
 
 // Listen for messages from the main thread
-self.onmessage = async event => {
+globalThis.onmessage = async event => {
   const { id, input, context, path, ignoreUndefinedEnvVariable } = JSON.parse(event.data);
   try {
     context.getMeta = () => ({

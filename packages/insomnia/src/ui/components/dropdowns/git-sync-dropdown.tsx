@@ -191,7 +191,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
           action: async () => {
             try {
               setIsPulling(true);
-              await window.main.git
+              await globalThis.main.git
                 .pullFromGitRemote({ projectId, workspaceId })
                 .then(result => {
                   if ('errors' in result && result.errors) {
@@ -212,7 +212,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                       labels: result.labels,
                       onResolveAll: (conflicts: MergeConflict[]) => {
                         setIsPulling(true);
-                        window.main.git
+                        globalThis.main.git
                           .continueMerge({
                             projectId,
                             workspaceId,
@@ -387,7 +387,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
               capability.{' '}
               <Button
                 className="underline"
-                onPress={() => window.main.openInBrowser('https://docs.insomnia.rest/insomnia/git-sync')}
+                onPress={() => globalThis.main.openInBrowser('https://docs.insomnia.rest/insomnia/git-sync')}
               >
                 Migration Guide
               </Button>

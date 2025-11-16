@@ -110,15 +110,15 @@ export const OrganizationMemberRolesSelector = (props: Props) => {
         hasPermissionToChangeRoles,
       });
 
-      if (!allow) {
-        showModal(AlertModal, {
-          title,
-          message,
-        });
-      } else {
+      if (allow) {
         setSelectedRoles([selectedRole.name]);
         onRoleChange(selectedRole).catch(() => {
           setSelectedRoles([...selectedRoles] as string[]);
+        });
+      } else {
+        showModal(AlertModal, {
+          title,
+          message,
         });
       }
     } else {
@@ -152,7 +152,7 @@ export const OrganizationMemberRolesSelector = (props: Props) => {
             disabledKeys={['owner']}
             aria-label="Select a role for the user"
             onAction={(key: Key) => {
-              handleRoleChange(availableRoles.filter(r => r.name === key)[0]);
+              handleRoleChange(availableRoles.find(r => r.name === key));
             }}
           >
             {item => (

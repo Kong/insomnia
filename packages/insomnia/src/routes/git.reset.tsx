@@ -12,7 +12,7 @@ interface ResetGitRepoParams {
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = (await request.json()) as ResetGitRepoParams;
 
-  return window.main.git.resetGitRepo(data);
+  return globalThis.main.git.resetGitRepo(data);
 }
 
 export const useGitProjectResetActionFetcher = createFetcherSubmitHook(

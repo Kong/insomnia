@@ -27,7 +27,7 @@ export default async function extractPostmanDataDumpHandler(_event: unknown, dat
   let archiveJsonData;
   try {
     archiveJsonData = JSON.parse(archiveJsonFile.data.toString());
-  } catch (err) {
+  } catch {
     return {
       err: 'Failed to parse archive.json file',
     };
@@ -43,9 +43,8 @@ export default async function extractPostmanDataDumpHandler(_event: unknown, dat
 
   // get collections and environments listed in archive.json
   try {
-    files
-      .filter(file => file !== archiveJsonFile)
-      .forEach(file => {
+    for (const file of files
+      .filter(file => file !== archiveJsonFile)) {
         const id = path.basename(file.path, '.json');
         const oriFileName = path.basename(file.path);
         if (id in archiveJsonData.collection) {
@@ -63,8 +62,8 @@ export default async function extractPostmanDataDumpHandler(_event: unknown, dat
             oriFileName,
           });
         }
-      });
-  } catch (err) {
+      }
+  } catch {
     return {
       err: 'Failed to parse collection or environment files',
     };

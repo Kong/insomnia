@@ -2,7 +2,7 @@ import CodeMirror from 'codemirror';
 
 CodeMirror.defineMode('openapi', function () {
   const cons = ['true', 'false', 'on', 'off', 'yes', 'no'];
-  const keywordRegex = new RegExp('\\b((' + cons.join(')|(') + '))$', 'i');
+  const keywordRegex = new RegExp(String.raw`\b((` + cons.join(')|(') + '))$', 'i');
   return {
     token: function (stream, state) {
       const ch = stream.peek();
@@ -15,7 +15,7 @@ CodeMirror.defineMode('openapi', function () {
         return 'comment';
       }
 
-      if (stream.match(/^('([^']|\\.)*'?|"([^"]|\\.)*"?)/)) {
+      if (/^('([^']|\\.)*'?|"([^"]|\\.)*"?)/.test(stream)) {
         return 'string';
       }
 
@@ -32,31 +32,42 @@ CodeMirror.defineMode('openapi', function () {
         state.pairStart = false;
 
         /* document start */
-        if (stream.match(/---/)) {
+        if (/---/.test(stream)) {
           return 'def';
         }
 
         /* document end */
-        if (stream.match(/\.\.\./)) {
+        if (/\.\.\./.test(stream)) {
           return 'def';
         }
 
         /* array list item */
-        if (stream.match(/\s*-\s+/)) {
+        if (/\s*-\s+/.test(stream)) {
           return 'meta';
         }
       }
 
       /* inline pairs/lists */
-      if (stream.match(/^(\{|\}|\[|\])/)) {
-        if (ch === '{') {
+      if (/^(\{|\}|\[|\])/.test(stream)) {
+        switch (ch) {
+        case '{': {
           state.inlinePairs++;
-        } else if (ch === '}') {
+        
+        break;
+        }
+        case '}': {
           state.inlinePairs--;
-        } else if (ch === '[') {
+        
+        break;
+        }
+        case '[': {
           state.inlineList++;
-        } else {
+        
+        break;
+        }
+        default: {
           state.inlineList--;
+        }
         }
 
         return 'meta';
@@ -80,39 +91,39 @@ CodeMirror.defineMode('openapi', function () {
       /* start of value of a pair */
       if (state.pairStart) {
         /* block literals */
-        if (stream.match(/^\s*(\||>)\s*/)) {
+        if (/^\s*(\||>)\s*/.test(stream)) {
           state.literal = true;
           return 'meta';
         }
 
         /* references */
-        if (stream.match(/^\s*(&|\*)[a-z0-9._-]+\b/i)) {
+        if (/^\s*(&|\*)[a-z0-9._-]+\b/i.test(stream)) {
           return 'variable-2';
         }
 
         /* numbers */
-        if (state.inlinePairs === 0 && stream.match(/^\s*-?[0-9.,]+\s?$/)) {
+        if (state.inlinePairs === 0 && /^\s*-?[0-9.,]+\s?$/.test(stream)) {
           return 'number';
         }
 
-        if (state.inlinePairs > 0 && stream.match(/^\s*-?[0-9.,]+\s?(?=(,|}))/)) {
+        if (state.inlinePairs > 0 && /^\s*-?[0-9.,]+\s?(?=(,|}))/.test(stream)) {
           return 'number';
         }
 
         /* keywords */
-        if (stream.match(keywordRegex)) {
+        if (keywordRegex.test(stream)) {
           return 'keyword';
         }
       }
 
       /* pairs (associative arrays) -> key */
-      if (!state.pair && stream.match(/^\s*(?:[,[\]{}&*!|>'"%@`][^\s'":]|[^,[\]{}#&*!|>'"%@`])[^#]*?(?=\s*:($|\s))/)) {
+      if (!state.pair && /^\s*(?:[,[\]{}&*!|>'"%@`][^\s'":]|[^,[\]{}#&*!|>'"%@`])[^#]*?(?=\s*:($|\s))/.test(stream)) {
         state.pair = true;
         state.keyCol = stream.indentation();
         return 'atom';
       }
 
-      if (state.pair && stream.match(/^:\s*/)) {
+      if (state.pair && /^:\s*/.test(stream)) {
         state.pairStart = true;
         return 'meta';
       }

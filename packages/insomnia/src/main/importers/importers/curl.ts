@@ -10,7 +10,7 @@ export const description = 'cURL command line tool';
 
 let requestCount = 1;
 
-const SUPPORTED_ARGS = [
+const SUPPORTED_ARGS = new Set([
   'url',
   'u',
   'user',
@@ -30,7 +30,7 @@ const SUPPORTED_ARGS = [
   'F',
   'request',
   'X',
-];
+]);
 
 type Pair = string | boolean;
 
@@ -52,11 +52,11 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
       parseEntry = parseEntry.trim();
     }
 
-    if (typeof parseEntry === 'string' && parseEntry.match(/^-{1,2}[\w-]+/)) {
+    if (typeof parseEntry === 'string' && /^-{1,2}[\w-]+/.test(parseEntry)) {
       const isSingleDash = parseEntry[0] === '-' && parseEntry[1] !== '-';
       let name = parseEntry.replace(/^-{1,2}/, '');
 
-      if (!SUPPORTED_ARGS.includes(name)) {
+      if (!SUPPORTED_ARGS.has(name)) {
         continue;
       }
 
@@ -74,10 +74,10 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
         value = true;
       }
 
-      if (!pairsByName[name]) {
-        pairsByName[name] = [value];
-      } else {
+      if (pairsByName[name]) {
         pairsByName[name].push(value);
+      } else {
+        pairsByName[name] = [value];
       }
     } else if (parseEntry) {
       singletons.push(parseEntry);
@@ -102,7 +102,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     }));
 
     url = href.replace(search, '').replace(/\/$/, '');
-  } catch (error) {}
+  } catch {}
 
   /// /////// Authentication //////////
   const [username, password] = getPairValue(pairsByName, '', ['u', 'user']).split(/:(.*)$/);
@@ -361,12 +361,12 @@ const getPairValue = <T extends string | boolean>(parisByName: PairsByName, defa
 export const convert: Converter = rawData => {
   requestCount = 1;
 
-  if (!rawData.match(/^\s*curl /)) {
+  if (!/^\s*curl /.test(rawData)) {
     return null;
   }
 
   // Parse the whole thing into one big tokenized list
-  const parseEntries = parse(rawData.replace(/\n/g, ' '));
+  const parseEntries = parse(rawData.replaceAll('\n', ' '));
 
   // ~~~~~~~~~~~~~~~~~~~~~~ //
   // Aggregate the commands //
@@ -400,7 +400,7 @@ export const convert: Converter = rawData => {
 
     if (op?.startsWith('$')) {
       // Handle the case where literal like -H $'Header: \'Some Quoted Thing\''
-      const str = op.slice(2, op.length - 1).replace(/\\'/g, "'");
+      const str = op.slice(2, - 1).replaceAll(String.raw`\'`, "'");
 
       currentCommand.push(str);
       continue;

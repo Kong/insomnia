@@ -179,7 +179,7 @@ export const Runner: FC = () => {
       return () => {};
     }
     // Listen on media query changes
-    const mediaQuery = window.matchMedia('(max-width: 880px)');
+    const mediaQuery = globalThis.matchMedia('(max-width: 880px)');
     setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
 
     const handleChange = (e: MediaQueryListEvent) => {
@@ -258,7 +258,7 @@ export const Runner: FC = () => {
     }
     setIsRunning(true);
 
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: SegmentEvent.collectionRunExecute,
       properties: { plan: organizationData?.currentPlan?.type || 'scratchpad', iterations: iterationCount },
     });
@@ -308,7 +308,7 @@ export const Runner: FC = () => {
   const onToggleSelection = () => {
     if (selectedKeys === 'all' || Array.from(selectedKeys).length === Array.from(reqList).length) {
       // unselect all
-      updateRunnerState(organizationId, runnerId, { selectedKeys: new Set([]) });
+      updateRunnerState(organizationId, runnerId, { selectedKeys: new Set() });
     } else {
       // select all
       const allKeys = reqList.map(item => item.id);
@@ -370,16 +370,16 @@ export const Runner: FC = () => {
   };
 
   const refreshPanes = useCallback(async () => {
-    const latestTimingSteps = await window.main.getExecution({ requestId: runnerId });
+    const latestTimingSteps = await globalThis.main.getExecution({ requestId: runnerId });
     let isRunning = false;
     if (latestTimingSteps) {
       // there is a timingStep item and it is not ended (duration is not assigned)
-      isRunning = latestTimingSteps.length > 0 && latestTimingSteps[latestTimingSteps.length - 1].stepName !== 'Done';
+      isRunning = latestTimingSteps.length > 0 && latestTimingSteps.at(-1).stepName !== 'Done';
     }
     setIsRunning(isRunning);
 
     if (isRunning) {
-      const duration = Date.now() - latestTimingSteps[latestTimingSteps.length - 1].startedAt;
+      const duration = Date.now() - latestTimingSteps.at(-1).startedAt;
       const { number: durationNumber, unit: durationUnit } = getTimeAndUnit(duration);
       setTimingSteps(latestTimingSteps);
       setTotalTime({
@@ -422,8 +422,7 @@ export const Runner: FC = () => {
     let passedTestCount = 0;
     let totalTestCount = 0;
 
-    if (!isRunning) {
-      if (executionResult?.iterationResults) {
+    if (!isRunning && executionResult?.iterationResults) {
         for (const iteration of executionResult.iterationResults) {
           for (const requests of iteration) {
             for (const testCase of requests.results) {
@@ -435,7 +434,6 @@ export const Runner: FC = () => {
           }
         }
       }
-    }
 
     const testResultCountTagColor =
       totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-[var(--hl-sm)]';
@@ -484,9 +482,9 @@ export const Runner: FC = () => {
                         disabled={isRunning}
                         onChange={e => {
                           try {
-                            if (parseInt(e.target.value, 10) > 0) {
+                            if (Number.parseInt(e.target.value, 10) > 0) {
                               updateRunnerState(organizationId, runnerId, {
-                                iterationCount: parseInt(e.target.value, 10),
+                                iterationCount: Number.parseInt(e.target.value, 10),
                               });
                             }
                           } catch {}
@@ -503,7 +501,7 @@ export const Runner: FC = () => {
                         name="Delay"
                         onChange={e => {
                           try {
-                            const delay = parseInt(e.target.value, 10);
+                            const delay = Number.parseInt(e.target.value, 10);
                             if (delay >= 0) {
                               updateRunnerState(organizationId, runnerId, { delay }); // also update the temp settings
                             }
@@ -735,7 +733,7 @@ export const Runner: FC = () => {
             {showUploadModal && (
               <UploadDataModal
                 onUploadFile={(file, uploadData) => {
-                  const filePath = file ? window.webUtils.getPathForFile(file) : '';
+                  const filePath = file ? globalThis.webUtils.getPathForFile(file) : '';
                   updateRunnerState(organizationId, runnerId, {
                     uploadData,
                     file,
@@ -865,9 +863,9 @@ function cancelExecution(workspaceId: string) {
   const { activeRequestId } = getExecution(workspaceId);
   if (activeRequestId) {
     cancelRequestById(activeRequestId);
-    window.main.completeExecutionStep({ requestId: activeRequestId });
-    window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
-    window.main.completeExecutionStep({ requestId: workspaceId });
+    globalThis.main.completeExecutionStep({ requestId: activeRequestId });
+    globalThis.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
+    globalThis.main.completeExecutionStep({ requestId: workspaceId });
   }
 }
 const wrapAroundIterationOverIterationData = (
@@ -927,8 +925,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     },
   };
 
-  window.main.startExecution({ requestId: runnerId });
-  window.main.addExecutionStep({
+  globalThis.main.startExecution({ requestId: runnerId });
+  globalThis.main.addExecutionStep({
     requestId: runnerId,
     stepName: 'Initializing',
   });
@@ -988,7 +986,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           updateExecution(runnerId, {
             activeRequestId: targetRequest.id,
           });
-          window.main.updateLatestStepName({
+          globalThis.main.updateLatestStepName({
             requestId: runnerId,
             stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"`,
           });
@@ -1081,8 +1079,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       };
     }
 
-    window.main.updateLatestStepName({ requestId: runnerId, stepName: 'Done' });
-    window.main.completeExecutionStep({ requestId: runnerId });
+    globalThis.main.updateLatestStepName({ requestId: runnerId, stepName: 'Done' });
+    globalThis.main.completeExecutionStep({ requestId: runnerId });
   } catch (e) {
     // the error could be from third party
     const errMsg = e.message || e.error || e;

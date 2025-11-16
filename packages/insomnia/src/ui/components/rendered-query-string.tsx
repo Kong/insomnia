@@ -133,7 +133,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
 
   const showTooLongWarning = useCallback(async () => {
     if (tooLong) {
-      window.showAlert({
+      globalThis.showAlert({
         title: 'URL Too Long',
         message: `Your URL is quite long, so only the first ${MAX_URL_LENGTH} characters were copied.`,
       });

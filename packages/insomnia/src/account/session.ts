@@ -52,7 +52,7 @@ export interface SessionData {
   encPrivateKey: crypt.AESMessage;
 }
 export function onLoginLogout(loginCallback: LoginCallback) {
-  window.main.on('loggedIn', async () => {
+  globalThis.main.on('loggedIn', async () => {
     loginCallback(await isLoggedIn());
   });
 }
@@ -75,7 +75,7 @@ export async function absorbKey(sessionId: string, key: string) {
     JSON.parse(encPrivateKey),
   );
 
-  window.main.loginStateChange();
+  globalThis.main.loginStateChange();
 }
 
 export async function getPublicKey() {
@@ -134,7 +134,7 @@ export async function logout(clearCredentials = false) {
   if (clearCredentials) {
     await _removeAllCredentials();
   }
-  window.main.loginStateChange();
+  globalThis.main.loginStateChange();
 }
 
 /** Set data for the new session and store it encrypted with the sessionId */
@@ -182,7 +182,7 @@ async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse>
     sessionId: sessionId || (await getCurrentSessionId()),
   });
   if (typeof response === 'string') {
-    throw new Error('Unexpected plaintext response: ' + response);
+    throw new TypeError('Unexpected plaintext response: ' + response);
   }
   if (response && !response?.encSymmetricKey) {
     throw new Error('Unexpected response: ' + JSON.stringify(response));
@@ -267,8 +267,8 @@ async function _removeAllCredentials() {
     const apiKey = await pluginData.getByKey(AI_PLUGIN_NAME, `${backend}.apiKey`);
     if (apiKey) {
       removals.push(pluginData.removeByKey(AI_PLUGIN_NAME, `${backend}.apiKey`));
-      if (backend === (await window.main.llm.getActiveBackend())) {
-        removals.push(window.main.llm.clearActiveBackend());
+      if (backend === (await globalThis.main.llm.getActiveBackend())) {
+        removals.push(globalThis.main.llm.clearActiveBackend());
       }
     }
   }
@@ -324,10 +324,10 @@ async function _removeGitRepository(repo: GitRepository) {
 
 // TODO: v12 remove this function and getLocalStorageDataFromFileOrigin from main
 export async function migrateFromLocalStorage() {
-  if (!window.localStorage.getItem('file-origin-localStorage-migrated')) {
+  if (!globalThis.localStorage.getItem('file-origin-localStorage-migrated')) {
     console.log('[migration] Migrating localStorage data from file origin');
     try {
-      const localStorageData = await window.main.getLocalStorageDataFromFileOrigin();
+      const localStorageData = await globalThis.main.getLocalStorageDataFromFileOrigin();
       if (localStorageData) {
         for (const [key, value] of Object.entries(localStorageData)) {
           if (key && value) {
@@ -340,14 +340,14 @@ export async function migrateFromLocalStorage() {
       console.error('[migration] Failed to migrate localStorage data:', error);
     }
   }
-  const sessionId = window.localStorage.getItem('currentSessionId');
+  const sessionId = globalThis.localStorage.getItem('currentSessionId');
 
   if (!sessionId) {
     return;
   }
 
   const sessionKey = `session__${(sessionId || '').slice(0, 10)}`;
-  const session = window.localStorage.getItem(sessionKey);
+  const session = globalThis.localStorage.getItem(sessionKey);
 
   if (!session) {
     return;
@@ -367,8 +367,8 @@ export async function migrateFromLocalStorage() {
     console.error('Failed to parse session data', e);
   } finally {
     // Clean up local storage session data
-    window.localStorage.removeItem(sessionKey);
-    window.localStorage.removeItem('currentSessionId');
+    globalThis.localStorage.removeItem(sessionKey);
+    globalThis.localStorage.removeItem('currentSessionId');
   }
 
   return;

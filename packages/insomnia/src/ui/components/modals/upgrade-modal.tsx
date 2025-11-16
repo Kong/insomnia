@@ -41,7 +41,7 @@ export const UpgradeModal = forwardRef<UpgradeModalHandle, ModalProps>((_, ref) 
         const message = `${featureName} is only enabled for ${planDetail}, ${upgradeDetail}`;
         const onDone = async (isYes: boolean) => {
           if (isYes) {
-            window.main.openInBrowser(
+            globalThis.main.openInBrowser(
               `${getAppWebsiteBaseURL()}/app/subscription/update?plan=team&source=app_feature_${featureName}`,
             );
           }

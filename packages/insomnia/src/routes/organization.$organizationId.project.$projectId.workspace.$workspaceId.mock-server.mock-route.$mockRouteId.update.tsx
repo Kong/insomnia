@@ -47,7 +47,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     await models.mockRoute.update(mockRoute, patch);
 
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: SegmentEvent.mockRouteEdit,
     });
 

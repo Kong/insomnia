@@ -60,7 +60,7 @@ describe('isValidActivity', () => {
     // @ts-expect-error intentionally invalid
     expect(isValidActivity(null)).toBe(false);
     // @ts-expect-error intentionally invalid
-    expect(isValidActivity(undefined)).toBe(false);
+    expect(isValidActivity()).toBe(false);
   });
 });
 

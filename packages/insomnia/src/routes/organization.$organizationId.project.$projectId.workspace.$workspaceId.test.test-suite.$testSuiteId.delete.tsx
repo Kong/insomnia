@@ -16,7 +16,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   await models.unitTestSuite.remove(unitTestSuite);
 
-  window.main.trackSegmentEvent({ event: SegmentEvent.testSuiteDelete });
+  globalThis.main.trackSegmentEvent({ event: SegmentEvent.testSuiteDelete });
 
   return redirect(
     href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/test`, {

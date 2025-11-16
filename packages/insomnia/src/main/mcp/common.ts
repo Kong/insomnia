@@ -257,7 +257,7 @@ export const getMcpReadyState = async (options: CommonMcpOptions) => {
   try {
     const mcpConnection = mcpConnections.get(options.requestId);
     return mcpConnection ? mcpConnection.status : 'disconnected';
-  } catch (error) {
+  } catch {
     return 'disconnected';
   }
 };

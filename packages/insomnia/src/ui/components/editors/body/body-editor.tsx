@@ -37,9 +37,9 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
   const handleRawChange = useCallback(
     (rawValue: string) => {
       const body =
-        typeof request.body.mimeType !== 'string'
-          ? { text: rawValue }
-          : { mimeType: request.body.mimeType.split(';')[0], text: rawValue };
+        typeof request.body.mimeType === 'string'
+          ? { mimeType: request.body.mimeType.split(';')[0], text: rawValue }
+          : { text: rawValue };
       patchRequest(requestId, { body });
     },
     [patchRequest, request.body.mimeType, requestId],
@@ -48,9 +48,9 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
   const handleGraphQLChange = useCallback(
     (content: string) => {
       const body =
-        typeof CONTENT_TYPE_GRAPHQL !== 'string'
-          ? { text: content }
-          : { mimeType: CONTENT_TYPE_GRAPHQL.split(';')[0], text: content };
+        typeof CONTENT_TYPE_GRAPHQL === 'string'
+          ? { mimeType: CONTENT_TYPE_GRAPHQL.split(';')[0], text: content }
+          : { text: content };
       patchRequest(requestId, { body });
     },
     [patchRequest, requestId],
@@ -119,7 +119,8 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
   const isBodyEmpty = typeof mimeType !== 'string' && !request.body.text;
 
   function renderBodyEditor() {
-    if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+    switch (mimeType) {
+    case CONTENT_TYPE_FORM_URLENCODED: {
       return (
         <UrlEncodedEditor
           key={uniqueKey}
@@ -127,11 +128,14 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
           parameters={request.body.params || []}
         />
       );
-    } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
+    }
+    case CONTENT_TYPE_FORM_DATA: {
       return <FormEditor key={uniqueKey} onChange={handleFormChange} parameters={request.body.params || []} />;
-    } else if (mimeType === CONTENT_TYPE_FILE) {
+    }
+    case CONTENT_TYPE_FILE: {
       return <FileEditor key={uniqueKey} onChange={handleFileChange} path={fileName || ''} />;
-    } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
+    }
+    case CONTENT_TYPE_GRAPHQL: {
       return (
         <GraphQLEditor
           key={uniqueKey}
@@ -142,7 +146,8 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
           onChange={handleGraphQLChange}
         />
       );
-    } else if (!isBodyEmpty) {
+    }
+    default: { if (!isBodyEmpty) {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return (
         <RawEditor
@@ -160,6 +165,8 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
           title="Enter a URL and connect to start receiving event stream data"
         />
       );
+    }
+    }
     }
     return (
       <EmptyStatePane

@@ -88,7 +88,7 @@ export function getContentDispositionHeader<T extends Header>(headers: T[]): T |
  * @returns {string}
  */
 export function generateId(prefix?: string) {
-  const id = uuidv4().replace(/-/g, '');
+  const id = uuidv4().replaceAll('-', '');
 
   if (prefix) {
     return `${prefix}_${id}`;
@@ -166,7 +166,7 @@ export function decompressObject<ObjectType>(input: string | null): ObjectType |
  * @returns {string} escaped string
  */
 export function escapeRegex(str: string) {
-  return str.replace(ESCAPE_REGEX_MATCH, '\\$&');
+  return str.replaceAll(ESCAPE_REGEX_MATCH, String.raw`\$&`);
 }
 
 export interface FuzzyMatchOptions {
@@ -248,17 +248,17 @@ export function isNotNullOrUndefined<ValueType>(value: ValueType | null | undefi
   return true;
 }
 
-export const toKebabCase = (value: string) => value.replace(/ /g, '-');
+export const toKebabCase = (value: string) => value.replaceAll(' ', '-');
 
 // unescape forward slashes in a string if needed
 export function unescapeForwardSlash(str: string): string {
   // Use a regular expression to find runs of one or more backslashes (bs) followed by a slash
-  return str.replace(/(\\+)\//g, (match, bs) => {
+  return str.replaceAll(/(\\+)\//g, (match, bs) => {
     // Determine if the number of backslashes is odd or even
     // Odd count: the last backslash escapes the slash; we remove that one
     if (bs.length % 2 === 1) {
       // Keep all but the last backslash, then append the unescaped forward slash
-      return bs.slice(0, bs.length - 1) + '/';
+      return bs.slice(0, - 1) + '/';
     }
     // Even count: all backslashes are literal escapes; leave the sequence unchanged
     return match;

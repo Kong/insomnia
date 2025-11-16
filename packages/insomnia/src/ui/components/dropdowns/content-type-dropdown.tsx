@@ -75,12 +75,12 @@ export const ContentTypeDropdown: FC = () => {
         addCancel: true,
         onConfirm: async () => {
           patchRequest(requestId, { body: { mimeType } });
-          window.main.trackSegmentEvent({ event: SegmentEvent.requestBodyTypeSelect, properties: { type: mimeType } });
+          globalThis.main.trackSegmentEvent({ event: SegmentEvent.requestBodyTypeSelect, properties: { type: mimeType } });
         },
       });
     } else {
       patchRequest(requestId, { body: { mimeType } });
-      window.main.trackSegmentEvent({ event: SegmentEvent.requestBodyTypeSelect, properties: { type: mimeType } });
+      globalThis.main.trackSegmentEvent({ event: SegmentEvent.requestBodyTypeSelect, properties: { type: mimeType } });
     }
   };
 
@@ -231,7 +231,7 @@ export function newBodyGraphQL(rawBody: string): RequestBody {
     JSON.parse(rawBody);
     return {
       mimeType: CONTENT_TYPE_GRAPHQL,
-      text: rawBody.replace(/\\\\n/g, ''),
+      text: rawBody.replaceAll(String.raw`\\n`, ''),
     };
   } catch (error) {
     if (error instanceof SyntaxError) {

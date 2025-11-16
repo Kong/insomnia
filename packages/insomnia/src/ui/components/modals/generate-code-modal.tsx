@@ -49,12 +49,12 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
   let storedTarget: HTTPSnippetTarget | undefined;
   let storedClient: HTTPSnippetClient | undefined;
   try {
-    storedTarget = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target') || '') as HTTPSnippetTarget;
-  } catch (error) {}
+    storedTarget = JSON.parse(globalThis.localStorage.getItem('insomnia::generateCode::target') || '') as HTTPSnippetTarget;
+  } catch {}
 
   try {
-    storedClient = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client') || '') as HTTPSnippetClient;
-  } catch (error) {}
+    storedClient = JSON.parse(globalThis.localStorage.getItem('insomnia::generateCode::client') || '') as HTTPSnippetClient;
+  } catch {}
   const [state, setState] = useState<State>({
     request: undefined,
     target: storedTarget,
@@ -79,8 +79,8 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
         targets,
       });
       // Save client/target for next time
-      window.localStorage.setItem('insomnia::generateCode::client', JSON.stringify(clientOrFallback));
-      window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(targetOrFallback));
+      globalThis.localStorage.setItem('insomnia::generateCode::client', JSON.stringify(clientOrFallback));
+      globalThis.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(targetOrFallback));
 
       // Some clients need a content-length for the request to succeed
       const addContentLength = Boolean(

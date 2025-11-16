@@ -63,13 +63,13 @@ export const RunnerProvider: FC<PropsWithChildren> = ({ children }) => {
 
       setRunnerState(prevState => {
         const newOrgState = { ...prevState?.[organizationId] };
-        ids.forEach(id => {
+        for (const id of ids) {
           // runner tab id starts with 'runner' prefix, but the runnerId in this context doesn't have the prefix, so we need to remove it
           if (id.startsWith('runner')) {
             const runnerId = id.replace('runner_', '');
             delete newOrgState[runnerId];
           }
-        });
+        }
         return {
           ...prevState,
           [organizationId]: newOrgState,

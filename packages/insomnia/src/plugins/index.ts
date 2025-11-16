@@ -158,14 +158,14 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
         }
 
         // Now delete the require cache for this module, ensuring we're deleting only the relevant entries
-        for (const cachePath of Object.keys(global.require.cache)) {
+        for (const cachePath of Object.keys(globalThis.require.cache)) {
           // Check if the cache path starts with the safe module path
           if (cachePath.startsWith(safeModulePath)) {
-            delete global.require.cache[cachePath];
+            delete globalThis.require.cache[cachePath];
           }
         }
 
-        const pluginJson = global.require(packageJSONPath);
+        const pluginJson = globalThis.require(packageJSONPath);
 
         // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
         if (!('insomnia' in pluginJson)) {
@@ -173,7 +173,7 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
         }
 
         // Delete require cache entry and re-require
-        const module = global.require(modulePath);
+        const module = globalThis.require(modulePath);
 
         pluginMap[pluginJson.name] = {
           name: pluginJson.name,
@@ -200,7 +200,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
     const allConfigs: PluginConfigMap = settings.pluginConfig;
     const extraPaths = settings.pluginPath
       .split(':')
-      .filter(p => p)
+      .filter(Boolean)
       .map(p => {
         // Ensure proper resolution of paths and avoid path traversal
         if (p.indexOf('~/') === 0) {
@@ -211,7 +211,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 
     // Make sure the default directories exist
     const pluginPath = path.resolve(
-      process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'),
+      process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? globalThis : electron).app.getPath('userData'),
       'plugins',
     );
 
@@ -234,7 +234,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 export function getBundlePluginMap() {
   const appBundlePlugins = getAppBundlePlugins();
   const bundlePluginMap: Record<string, Plugin> = {};
-  appBundlePlugins.forEach(({ name: pluginName }) => {
+  for (const { name: pluginName } of appBundlePlugins) {
     try {
       const isExecutedInInso = !process.type;
       // In Insomnia, the packagePath is just the pluginName
@@ -247,7 +247,7 @@ export function getBundlePluginMap() {
         bundlePluginPath = require.resolve(pluginName, { paths: [rootNodeModuleDir] });
       }
       console.log('[plugin] Loading bundled plugin %s from %s', pluginName, bundlePluginPath);
-      const module = global.require(bundlePluginPath);
+      const module = globalThis.require(bundlePluginPath);
       bundlePluginMap[pluginName] = {
         name: pluginName,
         description: `Insomnia bundled plugin for ${pluginName}`,
@@ -266,7 +266,7 @@ export function getBundlePluginMap() {
         console.error(`Failed to load bundled plugin ${pluginName}`, err);
       }
     }
-  });
+  }
   return bundlePluginMap;
 }
 
@@ -279,8 +279,8 @@ export async function getActivePlugins(): Promise<Plugin[]> {
 }
 
 export async function getBundlePlugins(): Promise<Plugin[]> {
-  const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
-  return (await getActivePlugins()).filter(p => p.directory === '' && appBundlePluginNames.includes(p.name));
+  const appBundlePluginNames = new Set(getAppBundlePlugins().map(p => p.name));
+  return (await getActivePlugins()).filter(p => p.directory === '' && appBundlePluginNames.has(p.name));
 }
 
 export async function getRequestGroupActions(): Promise<RequestGroupAction[]> {
@@ -380,7 +380,7 @@ export function getPluginCommonContext({
     ...pluginStore.init(plugin),
     ...pluginNetwork.init(),
     util: {
-      openInBrowser: (url: string) => window.main.openInBrowser(url),
+      openInBrowser: (url: string) => globalThis.main.openInBrowser(url),
       models: {
         request: {
           getById: models.request.getById,

@@ -27,7 +27,7 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
   const { name } = data || initialFormValue;
 
   const handleSelectFile = async () => {
-    const { canceled, filePaths } = await window.dialog.showOpenDialog({
+    const { canceled, filePaths } = await globalThis.dialog.showOpenDialog({
       title: 'Select Service Account Key File',
       buttonLabel: 'Select',
       properties: ['openFile'],

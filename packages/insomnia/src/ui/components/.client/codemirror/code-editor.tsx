@@ -41,7 +41,7 @@ import { queryXPath } from '~/utils/xpath/query';
 
 import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;
-const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
+const MAX_SIZE_FOR_LINTING = 1_000_000; // Around 1MB
 
 interface EditorState {
   scroll: CodeMirror.ScrollInfo;
@@ -255,7 +255,7 @@ export const CodeEditor = memo(
                   const results = JSONPath({ json: codeObj, path: filter.trim() });
                   jsonString = JSON.stringify(results);
                 } catch (err) {
-                  console.log('[jsonpath] Error: ', err);
+                  console.log('[jsonpath] Error:', err);
                   jsonString = '[]';
                 }
               }
@@ -388,10 +388,10 @@ export const CodeEditor = memo(
           foldOptions: {
             widget: (from: CodeMirror.Position, to: CodeMirror.Position) => widget(codeMirror.current, from, to),
           },
-          mode: !isNunjucksEnabled ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) },
+          mode: isNunjucksEnabled ? { name: 'nunjucks', baseMode: normalizeMimeType(mode) } : normalizeMimeType(mode),
           environmentAutocomplete: {
-            getVariables: async () => (!handleGetRenderContext ? [] : (await handleGetRenderContext())?.keys || []),
-            getTags: async () => (!handleGetRenderContext ? [] : (await getTagDefinitions()).flatMap(transformEnums)),
+            getVariables: async () => (handleGetRenderContext ? (await handleGetRenderContext())?.keys || [] : []),
+            getTags: async () => (handleGetRenderContext ? (await getTagDefinitions()).flatMap(transformEnums) : []),
             getConstants: getAutocompleteConstants,
             getSnippets: getAutocompleteSnippets,
             hotKeyRegistry: settings.hotKeyRegistry,
@@ -411,12 +411,10 @@ export const CodeEditor = memo(
             doc.scrollTo(0, scrollPosition);
           }
 
-          if (onPaste) {
-            if (change.origin === 'paste' && change.update) {
-              const translatedText = onPaste(change.text.join('\n')).split('\n');
+          if (onPaste && change.origin === 'paste' && change.update) {
+            const translatedText = onPaste(change.text.join('\n')).split('\n');
 
-              change.update(change.from, change.to, translatedText);
-            }
+            change.update(change.from, change.to, translatedText);
           }
         });
 
@@ -622,7 +620,7 @@ export const CodeEditor = memo(
         }
       };
       useEffect(() => {
-        const unsubscribe = window.main.on(
+        const unsubscribe = globalThis.main.on(
           'nunjucks-context-menu-command',
           (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {
             if (id === key) {
@@ -670,7 +668,7 @@ export const CodeEditor = memo(
         () =>
           tryToSetOption(
             'mode',
-            !isNunjucksEnabled ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) },
+            isNunjucksEnabled ? { name: 'nunjucks', baseMode: normalizeMimeType(mode) } : normalizeMimeType(mode),
           ),
         [isNunjucksEnabled, mode],
       );
@@ -746,7 +744,7 @@ export const CodeEditor = memo(
             event.preventDefault();
             const pluginTemplateTags = (await getTemplateTags()).map(tag => ({
               // Skip unsupported objects like functions in template tag to send in IPC
-              templateTag: JSON.parse(JSON.stringify(tag.templateTag)),
+              templateTag: structuredClone(tag.templateTag),
             }));
             const target = event.target as HTMLElement;
             // right click on nunjucks tag
@@ -755,10 +753,10 @@ export const CodeEditor = memo(
               const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
               if (nunjucksTag) {
                 // show context menu for nunjucks tag
-                window.main.showNunjucksContextMenu({ key: id, nunjucksTag, pluginTemplateTags });
+                globalThis.main.showNunjucksContextMenu({ key: id, nunjucksTag, pluginTemplateTags });
               }
             } else {
-              window.main.showNunjucksContextMenu({ key: id, pluginTemplateTags });
+              globalThis.main.showNunjucksContextMenu({ key: id, pluginTemplateTags });
             }
           }}
         >

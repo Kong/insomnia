@@ -63,15 +63,15 @@ export function validatePluginName(pluginName: string, allowScopedPackageNames =
     return 'Plugin name must not end with a dash';
   }
 
-  if (pluginNameWithoutPrefix.match(/--/)) {
+  if (/--/.test(pluginNameWithoutPrefix)) {
     return 'Plugin name must not contain consecutive dashes';
   }
 
-  if (pluginNameWithoutPrefix.match(/^\./)) {
+  if (/^\./.test(pluginNameWithoutPrefix)) {
     return 'Plugin name cannot start with a period';
   }
 
-  if (pluginNameWithoutPrefix.match(/^_/)) {
+  if (pluginNameWithoutPrefix.startsWith('_')) {
     return 'Plugin name cannot start with an underscore';
   }
 
@@ -120,11 +120,11 @@ export function getSafePluginDir(pluginName: string): string {
 
   // Sanitize moduleName to remove any unexpected characters or sequences
   // Remove '../' or path traversal attempts
-  const sanitizedModuleName = pluginName.replace(/\.\.(\/|\\)/g, '');
+  const sanitizedModuleName = pluginName.replaceAll(/\.\.(\/|\\)/g, '');
 
   // Get base directory
   const baseDir = path.resolve(
-    process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'),
+    process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? globalThis : electron).app.getPath('userData'),
     'plugins',
   );
 

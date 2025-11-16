@@ -292,10 +292,10 @@ if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('clipboard', clipboard);
   contextBridge.exposeInMainWorld('webUtils', webUtils);
 } else {
-  window.main = main;
-  window.dialog = dialog;
-  window.app = app;
-  window.shell = shell;
-  window.clipboard = clipboard;
-  window.webUtils = webUtils;
+  globalThis.main = main;
+  globalThis.dialog = dialog;
+  globalThis.app = app;
+  globalThis.shell = shell;
+  globalThis.clipboard = clipboard;
+  globalThis.webUtils = webUtils;
 }

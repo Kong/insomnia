@@ -55,7 +55,7 @@ export const MessageEventView = ({ event }: Props) => {
   const [viewMode, setViewMode] = useState<'raw' | 'form'>('raw');
 
   const handleDownloadResponseBody = useCallback(async () => {
-    const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
+    const { canceled, filePath: outputPath } = await globalThis.dialog.showSaveDialog({
       title: 'Save Response Body',
       buttonLabel: 'Save',
     });
@@ -80,7 +80,7 @@ export const MessageEventView = ({ event }: Props) => {
   }, [raw]);
 
   const handleCopyResponseToClipboard = useCallback(() => {
-    window.clipboard.writeText(raw);
+    globalThis.clipboard.writeText(raw);
   }, [raw]);
 
   const patchRequestMeta = useRequestMetaPatcher();
@@ -127,24 +127,24 @@ export const MessageEventView = ({ event }: Props) => {
         const callToolParsedResult = CallToolResultSchema.safeParse(callToolResult);
         if (callToolParsedResult.success) {
           const callToolResultContents = callToolParsedResult.data.content;
-          callToolResultContents.forEach((callToolResultContent, idx) => {
+          for (const [idx, callToolResultContent] of callToolResultContents.entries()) {
             if (callToolResultContent.type === 'text') {
               const callToolResultContentText = callToolResultContent.text;
               // Try to parse JSON text content
               try {
                 const callToolResultContentTextParsed = JSON.parse(callToolResultContentText);
                 callToolResultContent.text = callToolResultContentTextParsed;
-              } catch (err) {}
+              } catch {}
             }
             parsed.result.content[idx] = callToolResultContent;
-          });
+          }
         }
       }
     }
     // Escape tabs and new lines for CodeMirror display
     pretty = JSON.stringify(parsed, null, '\t')
-      .replace(/\\n|\\r\\n|\\r/g, '\n')
-      .replace(/\\t/g, '\t');
+      .replaceAll(/\\n|\\r\\n|\\r/g, '\n')
+      .replaceAll(String.raw`\t`, '\t');
   } catch {
     // Can't parse as JSON.
   }
@@ -153,7 +153,7 @@ export const MessageEventView = ({ event }: Props) => {
   useEffect(() => {
     const checkRequestCompleted = async () => {
       // check if the server request has been responded
-      const hasRequestResponded = await window.main.mcp.client.hasRequestResponded({
+      const hasRequestResponded = await globalThis.main.mcp.client.hasRequestResponded({
         requestId,
         serverRequestId: eventData?.id,
       });
@@ -251,7 +251,7 @@ export const MessageEventView = ({ event }: Props) => {
             <Button
               onPress={() => {
                 if (rjsfFormRef.current?.validate()) {
-                  window.main.mcp.client.responseElicitationRequest({
+                  globalThis.main.mcp.client.responseElicitationRequest({
                     requestId,
                     serverRequestId: eventData?.id,
                     type: 'submit',
@@ -265,7 +265,7 @@ export const MessageEventView = ({ event }: Props) => {
             </Button>
             <Button
               onPress={() =>
-                window.main.mcp.client.responseElicitationRequest({
+                globalThis.main.mcp.client.responseElicitationRequest({
                   requestId,
                   serverRequestId: eventData?.id,
                   type: 'decline',
@@ -277,7 +277,7 @@ export const MessageEventView = ({ event }: Props) => {
             </Button>
             <Button
               onPress={() =>
-                window.main.mcp.client.responseElicitationRequest({
+                globalThis.main.mcp.client.responseElicitationRequest({
                   requestId,
                   serverRequestId: eventData?.id,
                   type: 'cancel',

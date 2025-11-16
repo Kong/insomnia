@@ -31,19 +31,19 @@ export const EditableInput = ({
       return;
     }
 
-    const keysToIgnore = ['Enter', 'Escape'];
+    const keysToIgnore = new Set(['Enter', 'Escape']);
 
     function lockKeyDownToInput(e: KeyboardEvent) {
-      if (keysToIgnore.includes(e.key)) {
+      if (keysToIgnore.has(e.key)) {
         return;
       }
       e.stopPropagation();
     }
 
-    window.addEventListener('keydown', lockKeyDownToInput, { capture: true });
+    globalThis.addEventListener('keydown', lockKeyDownToInput, { capture: true });
 
     return () => {
-      window.removeEventListener('keydown', lockKeyDownToInput, {
+      globalThis.removeEventListener('keydown', lockKeyDownToInput, {
         capture: true,
       });
     };

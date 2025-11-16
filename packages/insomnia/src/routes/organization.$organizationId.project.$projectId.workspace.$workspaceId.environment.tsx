@@ -233,20 +233,12 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
       if (dropPosition === 'before') {
         const currentEnvIndex = subEnvironments.findIndex(evt => evt._id === targetEnv._id);
         const previousEnv = subEnvironments[currentEnvIndex - 1];
-        if (!previousEnv) {
-          sourceEnv.metaSortKey = targetEnv.metaSortKey - 1;
-        } else {
-          sourceEnv.metaSortKey = (previousEnv.metaSortKey + targetEnv.metaSortKey) / 2;
-        }
+        sourceEnv.metaSortKey = previousEnv ? (previousEnv.metaSortKey + targetEnv.metaSortKey) / 2 : targetEnv.metaSortKey - 1;
       }
       if (dropPosition === 'after') {
         const currentEnvIndex = subEnvironments.findIndex(evt => evt._id === targetEnv._id);
         const nextEnv = subEnvironments[currentEnvIndex + 1];
-        if (!nextEnv) {
-          sourceEnv.metaSortKey = targetEnv.metaSortKey + 1;
-        } else {
-          sourceEnv.metaSortKey = (nextEnv.metaSortKey + targetEnv.metaSortKey) / 2;
-        }
+        sourceEnv.metaSortKey = nextEnv ? (nextEnv.metaSortKey + targetEnv.metaSortKey) / 2 : targetEnv.metaSortKey + 1;
       }
 
       updateEnvironmentFetcher.submit({
@@ -278,11 +270,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
       return;
     }
 
-    if (layout && layout[0] > 0) {
-      layout[0] = 0;
-    } else {
-      layout[0] = DEFAULT_SIDEBAR_SIZE;
-    }
+    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
 
     sidebarPanelRef.current?.setLayout(layout);
   }
@@ -292,7 +280,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   };
 
   useEffect(() => {
-    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
+    const unsubscribe = globalThis.main.on('toggle-sidebar', toggleSidebar);
 
     return unsubscribe;
   }, []);
@@ -569,13 +557,13 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                 }}
                 isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
                 className="flex w-[14ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-colors hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
-                aria-label={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR ? 'Table Edit' : 'Raw Edit'}
+                aria-label={selectedEnvironment?.environmentType === EnvironmentType.KVPAIR ? 'Raw Edit' : 'Table Edit'}
               >
                 {({ isSelected }) => (
                   <Fragment>
                     <Icon
-                      icon={!isSelected ? 'toggle-on' : 'toggle-off'}
-                      className={`${!isSelected ? 'text-[--color-success]' : ''}`}
+                      icon={isSelected ? 'toggle-off' : 'toggle-on'}
+                      className={`${isSelected ? '' : 'text-[--color-success]'}`}
                     />
                     <span>Table View</span>
                   </Fragment>

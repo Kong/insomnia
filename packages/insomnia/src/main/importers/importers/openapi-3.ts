@@ -13,9 +13,9 @@ export const name = 'OpenAPI 3.0';
 export const description = 'Importer for OpenAPI 3.0 specification (json/yaml)';
 const toCamelCase = (a: string) =>
   a
-    .replace(/`|'/g, '')
-    .replace(/[a-z](?=[A-Z][a-z])/g, '$& ')
-    .replace(/[\W_]*([a-z0-9]+)[\W_]*/gi, (_, b, i) => (i ? b[0].toUpperCase() : '') + b.slice(i > 0).toLowerCase());
+    .replaceAll(/`|'/g, '')
+    .replaceAll(/[a-z](?=[A-Z][a-z])/g, '$& ')
+    .replaceAll(/[\W_]*([a-z0-9]+)[\W_]*/gi, (_, b, i) => (i ? b[0].toUpperCase() : '') + b.slice(i > 0).toLowerCase());
 function isPlainObject(value: any) {
   if (typeof value !== 'object' || value === null) {
     return false;
@@ -52,8 +52,8 @@ const OAUTH_FLOWS = {
   IMPLICIT: 'implicit',
   PASSWORD: 'password',
 } as const;
-const SUPPORTED_SECURITY_TYPES = [SECURITY_TYPE.HTTP, SECURITY_TYPE.API_KEY, SECURITY_TYPE.OAUTH];
-const SUPPORTED_HTTP_AUTH_SCHEMES = [HTTP_AUTH_SCHEME.BASIC, HTTP_AUTH_SCHEME.BEARER];
+const SUPPORTED_SECURITY_TYPES = new Set([SECURITY_TYPE.HTTP, SECURITY_TYPE.API_KEY, SECURITY_TYPE.OAUTH]);
+const SUPPORTED_HTTP_AUTH_SCHEMES = new Set([HTTP_AUTH_SCHEME.BASIC, HTTP_AUTH_SCHEME.BEARER]);
 const VARIABLE_SEARCH_VALUE = /{([^}]+)}/g;
 let requestCounts: Record<string, number> = {};
 
@@ -109,7 +109,7 @@ const resolveVariables = (server: OpenAPIV3.ServerObject) => {
 const parseDocument = (rawData: string): OpenAPIV3.Document | null => {
   try {
     return (unthrowableParseJson(rawData) || YAML.parse(rawData)) as OpenAPIV3.Document;
-  } catch (err) {
+  } catch {
     return null;
   }
 };
@@ -131,13 +131,7 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
     return [];
   }
 
-  let servers: OpenAPIV3.ServerObject[] | undefined;
-
-  if (!document.servers) {
-    servers = [{ url: 'http://example.com/' }];
-  } else {
-    servers = document.servers;
-  }
+  const servers = document.servers ? document.servers : [{ url: 'http://example.com/' }];
 
   const securityVariables = getSecurityEnvVariables(
     document.components?.securitySchemes as unknown as OpenAPIV3.SecuritySchemeObject,
@@ -215,19 +209,19 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
   );
 
   const requests: ImportRequest[] = [];
-  endpointsSchemas.forEach(endpointSchema => {
+  for (const endpointSchema of endpointsSchemas) {
     let { tags } = endpointSchema;
 
     if (!tags || tags.length === 0) {
       tags = [''];
     }
 
-    tags.forEach(tag => {
+    for (const tag of tags) {
       const parentId = folderLookup[tag] || defaultParent;
       const resolvedSecurity = (endpointSchema as unknown as OpenAPIV3.Document).security || rootSecurity;
       requests.push(importRequest(endpointSchema, parentId, resolvedSecurity, securitySchemes));
-    });
-  });
+    }
+  }
 
   return [...folders, ...requests];
 };
@@ -259,7 +253,7 @@ const importFolderItem =
  *
  * I.e. "/foo/:bar" => "/foo/{{ bar }}"
  */
-const pathWithParamsAsVariables = (path?: string) => path?.replace(VARIABLE_SEARCH_VALUE, '{{ _.$1 }}') ?? '';
+const pathWithParamsAsVariables = (path?: string) => path?.replaceAll(VARIABLE_SEARCH_VALUE, '{{ _.$1 }}') ?? '';
 
 /**
  * Return Insomnia request
@@ -356,7 +350,7 @@ const parseSecurity = (
         };
       });
     })
-    .filter(({ schemeDetails }) => schemeDetails && SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type));
+    .filter(({ schemeDetails }) => schemeDetails && SUPPORTED_SECURITY_TYPES.has(schemeDetails.type));
   const apiKeySchemes = supportedSchemes.filter(scheme => scheme.schemeDetails.type === SECURITY_TYPE.API_KEY);
   const apiKeyHeaders = apiKeySchemes
     .filter(scheme => scheme.schemeDetails.in === 'header')
@@ -399,10 +393,10 @@ const parseSecurity = (
   const authentication = (() => {
     const authScheme = supportedSchemes.find(
       scheme =>
-        SUPPORTED_SECURITY_TYPES.includes(scheme.schemeDetails.type) &&
+        SUPPORTED_SECURITY_TYPES.has(scheme.schemeDetails.type) &&
         (scheme.schemeDetails.type === SECURITY_TYPE.OAUTH ||
           (apiKeySecuritySchemas === 1 && scheme.schemeDetails.type === SECURITY_TYPE.API_KEY) ||
-          SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.schemeDetails.scheme)),
+          SUPPORTED_HTTP_AUTH_SCHEMES.has(scheme.schemeDetails.scheme)),
     );
 
     if (!authScheme) {
@@ -452,9 +446,9 @@ const getSecurityEnvVariables = (securitySchemeObject?: OpenAPIV3.SecurityScheme
     .filter(scheme => scheme.type === SECURITY_TYPE.API_KEY)
     .map(scheme => toCamelCase(scheme.name));
   const variables: Record<string, string> = {};
-  Array.from(new Set(apiKeyVariableNames)).forEach(name => {
+  for (const name of Array.from(new Set(apiKeyVariableNames))) {
     variables[name] = name;
-  });
+  }
 
   const hasHttpBasicScheme = securitySchemes.some(
     scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic',
@@ -564,8 +558,8 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
     'string_date-time': () => new Date().toISOString(),
     'string_byte': () => 'ZXhhbXBsZQ==',
     'number': () => 0,
-    'number_float': () => 0.0,
-    'number_double': () => 0.0,
+    'number_float': () => 0,
+    'number_double': () => 0,
     'integer': () => 0,
     'boolean': () => true,
     'object': (schema: OpenAPIV3.SchemaObject) => {
@@ -601,7 +595,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
     const { type, format, example, readOnly, default: defaultValue } = schema;
 
     if (readOnly) {
-      return undefined;
+      return;
     }
 
     if (example) {

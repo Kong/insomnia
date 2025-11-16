@@ -57,7 +57,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       delete patch.mockServerName;
       const mockRoute = await models.mockRoute.create({ ...patch, parentId: newMockServer._id });
 
-      window.main.trackSegmentEvent({
+      globalThis.main.trackSegmentEvent({
         event: SegmentEvent.mockRouteCreate,
       });
 
@@ -78,7 +78,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     invariant(mockServer, 'Mock server not found');
     const mockRoute = await models.mockRoute.create(patch);
 
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: SegmentEvent.mockRouteCreate,
     });
 

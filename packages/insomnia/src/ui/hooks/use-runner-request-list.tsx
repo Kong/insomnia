@@ -24,12 +24,12 @@ export const useRunnerRequestList = (organizationId: string, targetFolderId: str
       .map((item: Child) => {
         const ancestors: { id: string; name: string }[] = [];
         if (item.ancestors) {
-          item.ancestors.forEach(ancestorId => {
+          for (const ancestorId of item.ancestors) {
             const ancestor = entityMapRef.current.get(ancestorId);
             if (ancestor && isRequestGroup(ancestor?.doc)) {
               ancestors.push({ id: ancestor?.doc._id, name: ancestor?.doc.name });
             }
-          });
+          }
         }
 
         const requestDoc = item.doc as Request;

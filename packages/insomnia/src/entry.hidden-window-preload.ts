@@ -63,6 +63,6 @@ if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('bridge', bridge);
   contextBridge.exposeInMainWorld('Promise', ProxiedPromise);
 } else {
-  window.bridge = bridge;
-  window.Promise = ProxiedPromise;
+  globalThis.bridge = bridge;
+  globalThis.Promise = ProxiedPromise;
 }

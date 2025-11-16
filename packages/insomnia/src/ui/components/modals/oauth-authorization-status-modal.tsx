@@ -17,7 +17,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
 
   useEffect(() => {
-    const unsubscribe = window.main.on('show-oauth-authorization-modal', (_, authCodeUrlStr: string) => {
+    const unsubscribe = globalThis.main.on('show-oauth-authorization-modal', (_, authCodeUrlStr: string) => {
       uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
         status: 'getting_code',
         authCodeUrlStr,
@@ -28,7 +28,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = window.main.on('hide-oauth-authorization-modal', _ => {
+    const unsubscribe = globalThis.main.on('hide-oauth-authorization-modal', _ => {
       uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
         status: 'none',
       });
@@ -75,7 +75,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
       onHide={() => {
         setStatus('none');
         setSubmitting(false);
-        window.main.cancelAuthorizationInDefaultBrowser('Canceled by user.');
+        globalThis.main.cancelAuthorizationInDefaultBrowser('Canceled by user.');
       }}
     >
       <ModalHeader>OAuth 2.0 Authorization</ModalHeader>
@@ -92,7 +92,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
               <button
                 className="btn btn--super-compact btn--outlined"
                 onClick={() => {
-                  window.clipboard.writeText(authCodeUrlStr as string);
+                  globalThis.clipboard.writeText(authCodeUrlStr as string);
                 }}
                 style={{
                   display: 'flex',

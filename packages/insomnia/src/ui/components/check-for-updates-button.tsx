@@ -10,7 +10,7 @@ export const CheckForUpdatesButton = () => {
       className="btn btn--outlined btn--super-compact flex items-center gap-2"
       disabled={disabled}
       onClick={() => {
-        window.main.manualUpdateCheck();
+        globalThis.main.manualUpdateCheck();
         setDisabled(true);
         setTimeout(() => setDisabled(false), 3000); // re-enable after 3 seconds
       }}

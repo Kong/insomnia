@@ -103,11 +103,11 @@ describe('OAuth 1.0', () => {
       new RegExp(
         [
           'OAuth ' + 'oauth_consumer_key="consumerKey"',
-          'oauth_nonce="[\\w\\d]*"',
-          'oauth_signature="[\\w\\d%]*"',
+          String.raw`oauth_nonce="[\w\d]*"`,
+          String.raw`oauth_signature="[\w\d%]*"`,
           'oauth_signature_method="HMAC-SHA1"',
-          'oauth_timestamp="\\d*"',
-          'oauth_version="1\\.0"',
+          String.raw`oauth_timestamp="\d*"`,
+          String.raw`oauth_version="1\.0"`,
         ].join(', '),
       ),
     );
@@ -208,7 +208,7 @@ describe('getAuthObjectOrNull', () => {
     expect(expected).toBeNull();
   });
   it('returns null if authentication is undefined', async () => {
-    const expected = await getAuthObjectOrNull(undefined);
+    const expected = await getAuthObjectOrNull();
     expect(expected).toBeNull();
   });
   it('returns null if authentication is empty object', async () => {

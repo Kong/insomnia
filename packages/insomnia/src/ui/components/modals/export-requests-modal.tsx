@@ -74,7 +74,7 @@ export const RequestGroupRow: FC<{
         </Button>
       </div>
 
-      <ul className="flex flex-col pl-5">{!isCollapsed ? children : null}</ul>
+      <ul className="flex flex-col pl-5">{isCollapsed ? null : children}</ul>
     </li>
   );
 };
@@ -269,7 +269,7 @@ export const ExportRequestsModal = ({
   const setItemSelected = (node: Node, isSelected: boolean, id?: string) => {
     if (id == null || node.doc._id === id) {
       // Switch the flags of all children in this subtree.
-      node.children.forEach(child => setItemSelected(child, isSelected));
+      for (const child of node.children) setItemSelected(child, isSelected);
       node.selectedRequests = isSelected ? node.totalRequests : 0;
       return true;
     }
@@ -351,7 +351,7 @@ export const ExportRequestsModal = ({
                 <Button
                   onPress={() => {
                     if (state?.treeRoot) {
-                      window.main.trackSegmentEvent({
+                      globalThis.main.trackSegmentEvent({
                         event: SegmentEvent.exportRequestsChosen,
                         properties: {
                           totalRequests: state.treeRoot.totalRequests,

@@ -124,7 +124,7 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
         )}
       </ModalBody>
       <ModalFooter>
-        {!hideMode ? (
+        {hideMode ? null : (
           <Dropdown
             aria-label="Select a mode"
             triggerButton={
@@ -149,7 +149,7 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
               ))}
             </DropdownSection>
           </Dropdown>
-        ) : null}
+        )}
         <div className="margin-left faint txt-sm italic">{hint ? `* ${hint}` : ''}</div>
         {error !== '' && (
           <p className="notice error w-full" style={{ marginTop: 0, marginBottom: 0 }}>

@@ -56,9 +56,9 @@ const showSelectExportTypeModal = ({ onDone }: { onDone: (selectedFormat: Select
     },
   ];
 
-  let lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
+  let lastFormat = globalThis.localStorage.getItem('insomnia.lastExportFormat');
   if (lastFormat === 'json') {
-    window.localStorage.setItem('insomnia.lastExportFormat', VALUE_YAML);
+    globalThis.localStorage.setItem('insomnia.lastExportFormat', VALUE_YAML);
     lastFormat = VALUE_YAML;
   }
 
@@ -71,7 +71,7 @@ const showSelectExportTypeModal = ({ onDone }: { onDone: (selectedFormat: Select
     message: 'Which format would you like to export as?',
     onDone: async selectedFormat => {
       if (selectedFormat) {
-        window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
+        globalThis.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
         await onDone(selectedFormat as SelectedFormat);
       }
     },
@@ -102,28 +102,28 @@ const showSaveExportedFileDialog = async ({
   selectedFormat: SelectedFormat;
 }) => {
   const date = format(Date.now(), 'yyyy-MM-dd');
-  const name = exportedFileNamePrefix.replace(/ /g, '-');
-  const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
-  const dir = lastDir || window.app.getPath('desktop');
+  const name = exportedFileNamePrefix.replaceAll(' ', '-');
+  const lastDir = globalThis.localStorage.getItem('insomnia.lastExportPath');
+  const dir = lastDir || globalThis.app.getPath('desktop');
   const options = {
     title: 'Export Insomnia Data',
     buttonLabel: 'Export',
     defaultPath: `${path.join(dir, `${name}_${date}`)}.${selectedFormat}`,
   };
-  const { filePath } = await window.dialog.showSaveDialog(options);
+  const { filePath } = await globalThis.dialog.showSaveDialog(options);
   return filePath || null;
 };
 
 const showSaveExportedFolderDialog = async () => {
-  const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
-  const dir = lastDir || window.app.getPath('desktop');
+  const lastDir = globalThis.localStorage.getItem('insomnia.lastExportPath');
+  const dir = lastDir || globalThis.app.getPath('desktop');
   const options = {
     title: 'Export Insomnia Data',
     buttonLabel: 'Export',
     properties: ['openDirectory'],
     defaultPath: dir,
   } satisfies Electron.OpenDialogOptions;
-  const { filePaths } = await window.dialog.showOpenDialog(options);
+  const { filePaths } = await globalThis.dialog.showOpenDialog(options);
   const filePath = filePaths[0];
 
   return filePath || null;
@@ -131,7 +131,7 @@ const showSaveExportedFolderDialog = async () => {
 
 async function writeExportedFileToFileSystem(filename: string, data: string) {
   // Remember last exported path
-  window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
+  globalThis.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
   await writeFile(filename, data);
 }
 
@@ -195,12 +195,12 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
               return;
             }
 
-            const projectName = activeProjectName.replace(/ /g, '-');
+            const projectName = activeProjectName.replaceAll(' ', '-');
             const insomniaProjectExportFolder = path.join(dirPath, `insomnia-export.${projectName}.${Date.now()}`);
             await mkdir(insomniaProjectExportFolder);
 
             for (const workspace of workspacesForActiveProject) {
-              const workspaceName = workspace.name.replace(/ /g, '-');
+              const workspaceName = workspace.name.replaceAll(' ', '-');
               const fileName = path.join(insomniaProjectExportFolder, `${workspaceName}-${workspace._id}.yaml`);
               const stringifiedExport = await getInsomniaV5DataExport({
                 workspaceId: workspace._id,
@@ -215,7 +215,7 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
           }
         }
-        window.main.trackSegmentEvent({ event: SegmentEvent.exportCompleted });
+        globalThis.main.trackSegmentEvent({ event: SegmentEvent.exportCompleted });
       } catch (err) {
         showError({
           title: 'Export Failed',
@@ -243,7 +243,7 @@ export const exportMockServerToFile = async (workspace: Workspace) => {
       includePrivateEnvironments: false,
     });
     await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: SegmentEvent.dataExport,
       properties: { type: 'yaml', scope: 'mock-server' },
     });
@@ -285,7 +285,7 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
       includePrivateEnvironments: shouldExportPrivateEnvironments,
     });
     await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: SegmentEvent.dataExport,
       properties: { type: 'yaml', scope: 'environment' },
     });
@@ -353,7 +353,7 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
           }
         }
         await writeExportedFileToFileSystem(fileName, stringifiedExport);
-        window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat } });
+        globalThis.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat } });
       } catch (err) {
         showError({
           title: 'Export Failed',
@@ -378,7 +378,7 @@ export async function exportWorkspaceData({
   const insomniaExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments });
 
   try {
-    const workspaceName = workspace.name.replace(/ /g, '-');
+    const workspaceName = workspace.name.replaceAll(' ', '-');
     const filePath = path.join(dirPath, `${workspaceName}-${workspace._id}.yaml`);
     await writeExportedFileToFileSystem(filePath, insomniaExport);
   } catch (error) {
@@ -680,7 +680,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
       <Button
         className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
         onPress={async () => {
-          const { filePaths, canceled } = await window.dialog.showOpenDialog({
+          const { filePaths, canceled } = await globalThis.dialog.showOpenDialog({
             properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
             buttonLabel: 'Select',
             title: 'Export All Insomnia Data',
@@ -709,7 +709,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
             title: 'Export Complete',
             message: 'All your data have been successfully exported',
           });
-          window.main.trackSegmentEvent({
+          globalThis.main.trackSegmentEvent({
             event: SegmentEvent.exportAllCollections,
           });
         }}
@@ -748,7 +748,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
             <Button
               className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
               onPress={async () => {
-                const { filePaths, canceled } = await window.dialog.showOpenDialog({
+                const { filePaths, canceled } = await globalThis.dialog.showOpenDialog({
                   properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
                   buttonLabel: 'Select',
                   title: 'Export All Insomnia Data',
@@ -777,7 +777,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                   title: 'Export Complete',
                   message: 'All your data have been successfully exported',
                 });
-                window.main.trackSegmentEvent({
+                globalThis.main.trackSegmentEvent({
                   event: SegmentEvent.exportAllCollections,
                 });
               }}
@@ -790,7 +790,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
             <Button
               className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
               isDisabled={!userSession.id}
-              onPress={() => window.main.openInBrowser('https://insomnia.rest/create-run-button')}
+              onPress={() => globalThis.main.openInBrowser('https://insomnia.rest/create-run-button')}
             >
               <i className="fa fa-file-import" />
               Create Run Button

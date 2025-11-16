@@ -14,7 +14,7 @@ interface Options {
 /**
  * Create a shallow clone into the provided FS plugin.
  * */
-export const shallowClone = async ({ fsClient, gitRepository, ref = undefined }: Options) => {
+export const shallowClone = async ({ fsClient, gitRepository, ref }: Options) => {
   await git.clone({
     ...gitCallbacks(gitRepository.credentials),
     ...(ref ? { ref } : {}),

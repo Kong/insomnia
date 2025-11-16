@@ -13,7 +13,7 @@ interface DiscardGitChangesData {
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = (await request.json()) as DiscardGitChangesData;
 
-  return window.main.git.discardChanges(data);
+  return globalThis.main.git.discardChanges(data);
 }
 
 export const useGitProjectDiscardActionFetcher = createFetcherSubmitHook(

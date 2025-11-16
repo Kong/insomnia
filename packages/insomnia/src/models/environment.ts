@@ -59,11 +59,11 @@ export type UserUploadEnvironment = Pick<Environment, 'data' | 'dataPropertyOrde
 export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: Record<string, any> | null) {
   const ordered = orderedJSON.order(data, dataPropertyOrder, JSON_ORDER_SEPARATOR);
   const kvPair: EnvironmentKvPairData[] = [];
-  Object.keys(ordered).forEach(key => {
+  for (const key of Object.keys(ordered)) {
     const val = ordered[key];
     // get all secret items from vaultEnvironmentPath
     if (key === vaultEnvironmentPath && typeof val === 'object') {
-      Object.keys(val).forEach(secretKey => {
+      for (const secretKey of Object.keys(val)) {
         kvPair.push({
           id: generateId('envPair'),
           name: secretKey,
@@ -71,7 +71,7 @@ export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: 
           type: EnvironmentKvPairDataType.SECRET,
           enabled: true,
         });
-      });
+      }
     } else {
       const isValidObject = val && typeof val === 'object' && data !== null;
       kvPair.push({
@@ -82,13 +82,13 @@ export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: 
         enabled: true,
       });
     }
-  });
+  }
   return kvPair;
 }
 
 export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
   const data: Record<string, any> = {};
-  kvPair.forEach(pair => {
+  for (const pair of kvPair) {
     const { name, value, type, enabled } = pair;
     if (enabled) {
       if (type === EnvironmentKvPairDataType.SECRET) {
@@ -101,7 +101,7 @@ export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
         data[name] = type === EnvironmentKvPairDataType.JSON ? JSON.parse(value) : value;
       }
     }
-  });
+  }
   return {
     data,
     dataPropertyOrder: null,
@@ -114,15 +114,16 @@ export const maskVaultEnvironmentData = (environment: Environment) => {
     const { data, kvPairData } = environment;
     const shouldMask = kvPairData?.some(pair => pair.type === EnvironmentKvPairDataType.SECRET);
     if (shouldMask) {
-      kvPairData?.forEach(pair => {
-        const { type } = pair;
-        if (type === EnvironmentKvPairDataType.SECRET) {
-          pair.value = vaultEnvironmentMaskValue;
+      if (kvPairData)
+        for (const pair of kvPairData) {
+          const { type } = pair;
+          if (type === EnvironmentKvPairDataType.SECRET) {
+            pair.value = vaultEnvironmentMaskValue;
+          }
         }
-      });
-      Object.keys(data[vaultEnvironmentPath]).forEach(vaultKey => {
+      for (const vaultKey of Object.keys(data[vaultEnvironmentPath])) {
         data[vaultEnvironmentPath][vaultKey] = vaultEnvironmentMaskValue;
-      });
+      }
     }
   }
   return environment;
@@ -146,7 +147,7 @@ export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWeb
   try {
     const jsonWebKey = base64decode(encryptedValue, true) as crypt.AESMessage;
     return crypt.decryptAES(symmetricKey, jsonWebKey);
-  } catch (error) {
+  } catch {
     // return origin value if failed to decrypt
     return encryptedValue;
   }
@@ -174,14 +175,14 @@ export const removeAllSecrets = async (orgnizationIds: string[]) => {
   });
   const allGlobalEnvironments = allGlobalBaseEnvironments.concat(allGlobalSubEnvironments);
   const allGloablPrivateEnvironments = allGlobalEnvironments.filter(env => env.isPrivate);
-  allGloablPrivateEnvironments.forEach(async privateEnv => {
+  for (const privateEnv of allGloablPrivateEnvironments) {
     const { kvPairData, data } = privateEnv;
     if (vaultEnvironmentPath in data) {
       const { [vaultEnvironmentPath]: secretData, ...restData } = data;
       const filteredKvPairData = kvPairData?.filter(kvPair => kvPair.type !== EnvironmentKvPairDataType.SECRET);
       await update(privateEnv, { data: restData, kvPairData: filteredKvPairData });
     }
-  });
+  }
 };
 
 export const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => model.type === type;
@@ -254,7 +255,7 @@ export async function getOrCreateForParentId(parentId: string) {
     }
   }
 
-  return environments[environments.length - 1];
+  return environments.at(-1);
 }
 
 export function getById(id: string): Promise<Environment | undefined> {

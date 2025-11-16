@@ -60,7 +60,7 @@ type UrlVariable = V200Variable1 | V210Variable1;
 let requestCount = 1;
 let requestGroupCount = 1;
 const fakerTags = Object.keys(fakerFunctions);
-const postmanTagRegexs = fakerTags.map(tag => ({ tag, regex: new RegExp(`\\{\\{\\$${tag}\\}\\}`, 'g') }));
+const postmanTagRegexs = fakerTags.map(tag => ({ tag, regex: new RegExp(String.raw`\{\{\$${tag}\}\}`, 'g') }));
 // example: { 'guid' : '{% faker 'guid' %}' }
 const postmanToNunjucksLookup = fakerTags
   .map(tag => ({ [tag]: `{% faker '${tag}' %}` }))
@@ -89,7 +89,7 @@ export const normaliseJsonPath = (input?: string) => {
     return input;
   }
   // Use a regular expression to find and replace the pattern
-  return input.replace(/{{\s*([^ }]+)\s*[^}]*\s*}}/g, (_, match) => {
+  return input.replaceAll(/{{\s*([^ }]+)\s*[^}]*\s*}}/g, (_, match) => {
     // Replace hyphens with underscores within the match
     const replaced = forceBracketNotation('_', match);
     // Return the replaced pattern within the curly braces
@@ -97,14 +97,14 @@ export const normaliseJsonPath = (input?: string) => {
   });
 };
 
-const POSTMAN_SCHEMA_URLS_V2_0 = [
+const POSTMAN_SCHEMA_URLS_V2_0 = new Set([
   'https://schema.getpostman.com/json/collection/v2.0.0/collection.json',
   'https://schema.postman.com/json/collection/v2.0.0/collection.json',
-];
-const POSTMAN_SCHEMA_URLS_V2_1 = [
+]);
+const POSTMAN_SCHEMA_URLS_V2_1 = new Set([
   'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
   'https://schema.postman.com/json/collection/v2.1.0/collection.json',
-];
+]);
 
 const mapGrantTypeToInsomniaGrantType = (grantType: string) => {
   if (grantType === 'authorization_code_with_pkce') {
@@ -163,17 +163,17 @@ export class ImportPostman {
 
     const preRequestEvent = events.find(event => event.listen === 'prerequest');
 
-    const scriptOrRows = preRequestEvent != null ? preRequestEvent.script : '';
+    const scriptOrRows = preRequestEvent == null ? '' : preRequestEvent.script;
     if (scriptOrRows == null || scriptOrRows === '') {
       return '';
     }
 
     const scriptContent =
-      scriptOrRows.exec != null
-        ? Array.isArray(scriptOrRows.exec)
+      scriptOrRows.exec == null
+        ? ''
+        : Array.isArray(scriptOrRows.exec)
           ? scriptOrRows.exec.join('\n')
-          : scriptOrRows.exec
-        : '';
+          : scriptOrRows.exec;
 
     return translateHandlersInScript(scriptContent);
   };
@@ -248,8 +248,8 @@ export class ImportPostman {
       headers: headers.map(({ key, value, disabled, description }) => ({
         name: transformPostmanToNunjucksString(key),
         value: transformPostmanToNunjucksString(value),
-        ...(disabled !== undefined ? { disabled } : {}),
-        ...(description !== undefined ? { description } : {}),
+        ...(disabled === undefined ? {} : { disabled }),
+        ...(description === undefined ? {} : { description }),
       })),
       body,
       authentication,
@@ -382,9 +382,9 @@ export class ImportPostman {
         name: transformPostmanToNunjucksString(key),
       };
 
-      if (POSTMAN_SCHEMA_URLS_V2_0.includes(schema)) {
+      if (POSTMAN_SCHEMA_URLS_V2_0.has(schema)) {
         item.disabled = !enabled;
-      } else if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
+      } else if (POSTMAN_SCHEMA_URLS_V2_1.has(schema)) {
         item.disabled = !!disabled;
       }
 
@@ -414,9 +414,9 @@ export class ImportPostman {
         name: transformPostmanToNunjucksString(key),
       };
 
-      if (POSTMAN_SCHEMA_URLS_V2_0.includes(schema)) {
+      if (POSTMAN_SCHEMA_URLS_V2_0.has(schema)) {
         item.disabled = !enabled;
-      } else if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
+      } else if (POSTMAN_SCHEMA_URLS_V2_1.has(schema)) {
         item.disabled = !!disabled;
       }
 
@@ -599,7 +599,7 @@ export class ImportPostman {
     };
 
     const { schema } = this.collection.info;
-    if (POSTMAN_SCHEMA_URLS_V2_0.includes(schema)) {
+    if (POSTMAN_SCHEMA_URLS_V2_0.has(schema)) {
       const awsv4 = auth.awsv4 as V200Auth['awsv4'];
       item.accessKeyId = awsv4?.accessKey as string;
       item.region = awsv4?.region as string;
@@ -608,7 +608,7 @@ export class ImportPostman {
       item.sessionToken = awsv4?.sessionToken as string;
     }
 
-    if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
+    if (POSTMAN_SCHEMA_URLS_V2_1.has(schema)) {
       const awsv4 = auth.awsv4 as V210Auth['awsv4'];
       item.accessKeyId = this.findValueByKey(awsv4, 'accessKey');
       item.region = this.findValueByKey(awsv4, 'region');
@@ -662,13 +662,13 @@ export class ImportPostman {
     };
     const { schema } = this.collection.info;
 
-    if (POSTMAN_SCHEMA_URLS_V2_0.includes(schema)) {
+    if (POSTMAN_SCHEMA_URLS_V2_0.has(schema)) {
       const basic = auth.basic as V200Auth['basic'];
       item.username = basic?.username as string;
       item.password = basic?.password as string;
     }
 
-    if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
+    if (POSTMAN_SCHEMA_URLS_V2_1.has(schema)) {
       const basic = auth.basic as V210Auth['basic'];
       item.username = this.findValueByKey(basic, 'username');
       item.password = this.findValueByKey(basic, 'password');
@@ -682,7 +682,7 @@ export class ImportPostman {
       return {};
     }
 
-    const authStringIndex = authHeader.trim().replace(/\s+/g, ' ').indexOf(' ');
+    const authStringIndex = authHeader.trim().replaceAll(/\s+/g, ' ').indexOf(' ');
     const hasEncodedAuthString = authStringIndex !== -1;
     const encodedAuthString = hasEncodedAuthString ? authHeader.slice(Math.max(0, authStringIndex + 1)) : '';
     const authString = Buffer.from(encodedAuthString, 'base64').toString();
@@ -711,11 +711,11 @@ export class ImportPostman {
     };
     const { schema } = this.collection.info;
 
-    if (POSTMAN_SCHEMA_URLS_V2_0.includes(schema)) {
+    if (POSTMAN_SCHEMA_URLS_V2_0.has(schema)) {
       item.token = (auth.bearer as V200Auth['bearer'])?.token as string;
     }
 
-    if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
+    if (POSTMAN_SCHEMA_URLS_V2_1.has(schema)) {
       item.token = this.findValueByKey(auth.bearer as V210Auth['bearer'], 'token');
     }
     item.token = transformPostmanToNunjucksString(item.token);
@@ -750,13 +750,13 @@ export class ImportPostman {
 
     const { schema } = this.collection.info;
 
-    if (POSTMAN_SCHEMA_URLS_V2_0.includes(schema)) {
+    if (POSTMAN_SCHEMA_URLS_V2_0.has(schema)) {
       const digest = auth.digest as V200Auth['digest'];
       item.username = digest?.username as string;
       item.password = digest?.password as string;
     }
 
-    if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
+    if (POSTMAN_SCHEMA_URLS_V2_1.has(schema)) {
       const digest = auth.digest as V210Auth1[];
       item.username = this.findValueByKey<V210Auth1>(digest, 'username');
       item.password = this.findValueByKey<V210Auth1>(digest, 'password');
@@ -800,7 +800,7 @@ export class ImportPostman {
     };
 
     const { schema } = this.collection.info;
-    if (POSTMAN_SCHEMA_URLS_V2_0.includes(schema)) {
+    if (POSTMAN_SCHEMA_URLS_V2_0.has(schema)) {
       const oauth1 = auth.oauth1 as V200Auth['oauth1'];
       item.consumerKey = oauth1?.consumerKey as string;
       item.consumerSecret = oauth1?.consumerSecret as string;
@@ -813,7 +813,7 @@ export class ImportPostman {
       item.version = oauth1?.version as string;
     }
 
-    if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
+    if (POSTMAN_SCHEMA_URLS_V2_1.has(schema)) {
       const oauth1 = auth.oauth1 as V210Auth['oauth1'];
       item.consumerKey = this.findValueByKey(oauth1, 'consumerKey');
       item.consumerSecret = this.findValueByKey(oauth1, 'consumerSecret');
@@ -884,7 +884,7 @@ export class ImportPostman {
     const { schema } = this.collection.info;
     // Workaround for https://github.com/Kong/insomnia/issues/4437
     // Note: We only support importing OAuth2 configuration from Postman v2.1
-    if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
+    if (POSTMAN_SCHEMA_URLS_V2_1.has(schema)) {
       const oauth2 = auth.oauth2 as V210Auth['oauth2'];
       const grantTypeField = this.findValueByKey(oauth2, 'grant_type');
       const grantType = mapGrantTypeToInsomniaGrantType(grantTypeField);
@@ -943,8 +943,8 @@ export const convert: Converter = rawData => {
     const collection = JSON.parse(rawData) as PostmanCollection;
 
     if (
-      POSTMAN_SCHEMA_URLS_V2_0.includes(collection.info.schema) ||
-      POSTMAN_SCHEMA_URLS_V2_1.includes(collection.info.schema)
+      POSTMAN_SCHEMA_URLS_V2_0.has(collection.info.schema) ||
+      POSTMAN_SCHEMA_URLS_V2_1.has(collection.info.schema)
     ) {
       const list = new ImportPostman(collection).importCollection();
       // make import order play nice with existing pattern of descending negavitve numbers (technically ascending) eg. -3, -2, -1
@@ -955,7 +955,7 @@ export const convert: Converter = rawData => {
       }));
       return ordered;
     }
-  } catch (error) {
+  } catch {
     // Nothing
   }
 

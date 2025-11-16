@@ -121,7 +121,7 @@ export const sendActionImplementation = async (options: {
     runtime = defaultSendActionRuntime,
   } = options;
 
-  window.main.startExecution({ requestId });
+  globalThis.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
   const requestMeta = await models.requestMeta.getOrCreateByParentId(requestId);
   const transientVariables = nullableTransientVariables || {
@@ -135,7 +135,7 @@ export const sendActionImplementation = async (options: {
     data: {},
   };
 
-  window.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
+  globalThis.main.addExecutionStep({ requestId, stepName: 'Executing pre-request script' });
   const mutatedContext = await tryToExecutePreRequestScript(
     requestData,
     transientVariables,
@@ -158,7 +158,7 @@ export const sendActionImplementation = async (options: {
       requestData.settings.maxHistoryResponses,
     );
     await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
-    window.main.completeExecutionStep({ requestId });
+    globalThis.main.completeExecutionStep({ requestId });
     return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
 
@@ -178,11 +178,11 @@ export const sendActionImplementation = async (options: {
       requestData.settings.maxHistoryResponses,
     );
     await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
-    window.main.completeExecutionStep({ requestId });
+    globalThis.main.completeExecutionStep({ requestId });
     return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
 
-  window.main.completeExecutionStep({ requestId });
+  globalThis.main.completeExecutionStep({ requestId });
 
   // disable after-response script here to avoiding rendering it
   // @TODO This should be handled in a better way. Maybe remove the key from the request object we pass in tryToInterpolateRequest
@@ -191,7 +191,7 @@ export const sendActionImplementation = async (options: {
     : undefined;
   mutatedContext.request.afterResponseScript = '';
 
-  window.main.addExecutionStep({ requestId, stepName: 'Rendering request' });
+  globalThis.main.addExecutionStep({ requestId, stepName: 'Rendering request' });
   const renderedResult = await tryToInterpolateRequest({
     request: mutatedContext.request,
     environment: mutatedContext.environment,
@@ -203,12 +203,12 @@ export const sendActionImplementation = async (options: {
     ignoreUndefinedEnvVariable,
   });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
-  window.main.completeExecutionStep({ requestId });
+  globalThis.main.completeExecutionStep({ requestId });
 
   // TODO: remove this temporary hack to support GraphQL variables in the request body properly
   parseGraphQLReqeustBody(renderedRequest);
 
-  window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
+  globalThis.main.addExecutionStep({ requestId, stepName: 'Sending request' });
   const response = await sendCurlAndWriteTimeline(
     renderedRequest,
     mutatedContext.clientCertificates,
@@ -218,8 +218,7 @@ export const sendActionImplementation = async (options: {
     requestData.responseId,
     runtime,
   );
-  window.main.completeExecutionStep({ requestId });
-
+  globalThis.main.completeExecutionStep({ requestId });
   if ('error' in response) {
     const createdResponse = await models.response.create(
       {
@@ -251,7 +250,7 @@ export const sendActionImplementation = async (options: {
   const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
 
   mutatedContext.request.afterResponseScript = afterResponseScript;
-  window.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
+  globalThis.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
   const postMutatedContext = await tryToExecuteAfterResponseScript({
     ...requestData,
     ...mutatedContext,
@@ -279,7 +278,7 @@ export const sendActionImplementation = async (options: {
     return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
 
-  window.main.completeExecutionStep({ requestId });
+  globalThis.main.completeExecutionStep({ requestId });
 
   const preTestResults = (mutatedContext.requestTestResults || []).map(
     (result: RequestTestResult): RequestTestResult => ({ ...result, category: 'pre-request' }),
@@ -290,7 +289,7 @@ export const sendActionImplementation = async (options: {
     ) || [];
   if (testResultCollector) {
     testResultCollector.results = [...testResultCollector.results, ...preTestResults, ...postTestResults];
-    const timingSteps = await window.main.getExecution({ requestId });
+    const timingSteps = await globalThis.main.getExecution({ requestId });
     testResultCollector.duration = timingSteps.reduce((acc: number, cur: TimingStep) => {
       return acc + (cur.duration || 0);
     }, 0);
@@ -323,8 +322,8 @@ export const sendActionImplementation = async (options: {
     );
     return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
-  const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
-  const { filePath } = await window.dialog.showSaveDialog({
+  const defaultPath = globalThis.localStorage.getItem('insomnia.sendAndDownloadLocation');
+  const { filePath } = await globalThis.dialog.showSaveDialog({
     title: 'Select Download Location',
     buttonLabel: 'Save',
     // NOTE: An error will be thrown if defaultPath is supplied but not a String
@@ -363,7 +362,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       url.searchParams.set('undefinedEnvironmentVariables', e?.extraInfo?.undefinedEnvironmentVariables);
     }
 
-    window.main.completeExecutionStep({ requestId });
+    globalThis.main.completeExecutionStep({ requestId });
     return redirect(`${url.pathname}?${url.searchParams}`);
   }
 }

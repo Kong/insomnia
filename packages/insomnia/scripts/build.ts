@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { cp, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 

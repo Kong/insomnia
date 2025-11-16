@@ -78,7 +78,7 @@ export function init(): {
         const { request: originRequest, caCertficatePath = null } = options;
         const curlRequest =
           process.type === 'renderer' || process.type === 'worker'
-            ? window.main.curlRequest
+            ? globalThis.main.curlRequest
             : // when exeucted in Inso;
               (await import('../../main/network/libcurl-promise')).curlRequest;
         const response = await curlRequest({
@@ -108,7 +108,7 @@ export function init(): {
         if (headerResults.length === 0) {
           throw new Error('Error in response: no header result is found');
         }
-        const lastRedirect = headerResults[headerResults.length - 1];
+        const lastRedirect = headerResults.at(-1);
         if (!lastRedirect) {
           throw new Error('Error in response: the lastRedirect is not defined');
         }

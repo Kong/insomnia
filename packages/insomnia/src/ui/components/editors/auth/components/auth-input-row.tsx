@@ -94,7 +94,7 @@ export const AuthInputRow: FC<Props> = ({
       }
 
       if (content) {
-        window.clipboard.writeText(content);
+        globalThis.clipboard.writeText(content);
       }
     },
     [overrideValueWhenDisabled, disabled, propVal],

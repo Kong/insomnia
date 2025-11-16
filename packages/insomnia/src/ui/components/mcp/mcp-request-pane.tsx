@@ -91,28 +91,35 @@ export const McpRequestPane: FC<Props> = ({
   const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
   const isNoneOrInherited = requestAuth?.type === 'none' || requestAuth === null;
   const jsonSchema = useMemo(() => {
-    if (selectedPrimitiveItem?.type === 'tools') {
-      return selectedPrimitiveItem?.type === 'tools' ? (selectedPrimitiveItem.inputSchema as RJSFSchema) : undefined;
-    } else if (selectedPrimitiveItem?.type === 'resources' || selectedPrimitiveItem?.type === 'resourceTemplates') {
-      const res = buildResourceJsonSchema(selectedPrimitiveItem);
-      return res;
-    } else if (selectedPrimitiveItem?.type === 'prompts') {
-      const properties: Record<string, any> = {};
-      const required: string[] = [];
-      selectedPrimitiveItem?.arguments?.forEach(arg => {
-        properties[arg.name] = {
-          type: 'string',
-          description: arg?.description || '',
-        };
-        if (arg.required) {
-          required.push(arg.name);
-        }
-      });
-      return {
-        type: 'object',
-        properties,
-        required,
-      } as RJSFSchema;
+    switch (selectedPrimitiveItem?.type) {
+      case 'tools': {
+        return selectedPrimitiveItem?.type === 'tools' ? (selectedPrimitiveItem.inputSchema as RJSFSchema) : undefined;
+      }
+      case 'resources':
+      case 'resourceTemplates': {
+        const res = buildResourceJsonSchema(selectedPrimitiveItem);
+        return res;
+      }
+      case 'prompts': {
+        const properties: Record<string, any> = {};
+        const required: string[] = [];
+        if (selectedPrimitiveItem?.arguments)
+          for (const arg of selectedPrimitiveItem?.arguments || []) {
+            properties[arg.name] = {
+              type: 'string',
+              description: arg?.description || '',
+            };
+            if (arg.required) {
+              required.push(arg.name);
+            }
+          }
+        return {
+          type: 'object',
+          properties,
+          required,
+        } as RJSFSchema;
+      }
+      // No default
     }
     return {};
   }, [selectedPrimitiveItem]);
@@ -135,28 +142,42 @@ export const McpRequestPane: FC<Props> = ({
   const handleSend = async () => {
     if (rjsfFormRef.current?.validate()) {
       try {
-        if (selectedPrimitiveItem?.type === 'tools') {
-          await window.main.mcp.primitive.callTool({
-            name: selectedPrimitiveItem?.name || '',
-            arguments: mcpParams[primitiveId],
-            requestId: requestId,
-          });
-        } else if (selectedPrimitiveItem?.type === 'resources') {
-          await window.main.mcp.primitive.readResource({
-            requestId,
-            uri: selectedPrimitiveItem?.uri || '',
-          });
-        } else if (selectedPrimitiveItem?.type === 'resourceTemplates') {
-          await window.main.mcp.primitive.readResource({
-            requestId,
-            uri: fillUriTemplate(selectedPrimitiveItem.uriTemplate, mcpParams[primitiveId] || {}),
-          });
-        } else if (selectedPrimitiveItem?.type === 'prompts') {
-          await window.main.mcp.primitive.getPrompt({
-            requestId,
-            name: selectedPrimitiveItem?.name || '',
-            arguments: mcpParams[primitiveId],
-          });
+        switch (selectedPrimitiveItem?.type) {
+          case 'tools': {
+            await globalThis.main.mcp.primitive.callTool({
+              name: selectedPrimitiveItem?.name || '',
+              arguments: mcpParams[primitiveId],
+              requestId: requestId,
+            });
+
+            break;
+          }
+          case 'resources': {
+            await globalThis.main.mcp.primitive.readResource({
+              requestId,
+              uri: selectedPrimitiveItem?.uri || '',
+            });
+
+            break;
+          }
+          case 'resourceTemplates': {
+            await globalThis.main.mcp.primitive.readResource({
+              requestId,
+              uri: fillUriTemplate(selectedPrimitiveItem.uriTemplate, mcpParams[primitiveId] || {}),
+            });
+
+            break;
+          }
+          case 'prompts': {
+            await globalThis.main.mcp.primitive.getPrompt({
+              requestId,
+              name: selectedPrimitiveItem?.name || '',
+              arguments: mcpParams[primitiveId],
+            });
+
+            break;
+          }
+          // No default
         }
       } catch (err) {
         console.warn('MCP primitive call error', err);
@@ -180,16 +201,22 @@ export const McpRequestPane: FC<Props> = ({
           };
         });
       }
-    } catch (err) {}
+    } catch {}
   };
 
   const sendButtonText = useMemo(() => {
-    if (selectedPrimitiveItem?.type === 'tools') {
-      return 'Call Tool';
-    } else if (selectedPrimitiveItem?.type === 'resources' || selectedPrimitiveItem?.type === 'resourceTemplates') {
-      return 'Read Resource';
-    } else if (selectedPrimitiveItem?.type === 'prompts') {
-      return 'Get Prompt';
+    switch (selectedPrimitiveItem?.type) {
+      case 'tools': {
+        return 'Call Tool';
+      }
+      case 'resources':
+      case 'resourceTemplates': {
+        return 'Read Resource';
+      }
+      case 'prompts': {
+        return 'Get Prompt';
+      }
+      // No default
     }
     return null;
   }, [selectedPrimitiveItem]);
@@ -285,14 +312,7 @@ export const McpRequestPane: FC<Props> = ({
           </Tab>
         </TabList>
         <TabPanel className="flex h-full w-full flex-1 flex-col overflow-y-auto" id="params">
-          {!isConnected ? (
-            <div className="flex h-full w-full flex-col items-center p-5 text-center">
-              {/*  Hint when mcp server is not connected*/}
-              <p className="notice info text-md no-margin-top w-full">
-                Connect to an MCP server URL to reveal capabilities. &nbsp;<Link href={docsMcpClient}>Learn More</Link>
-              </p>
-            </div>
-          ) : (
+          {isConnected ? (
             <PanelGroup className="flex-1 overflow-hidden" direction={'vertical'}>
               <Panel minSize={20}>
                 <div className="flex h-full flex-col">
@@ -361,6 +381,13 @@ export const McpRequestPane: FC<Props> = ({
                 </Panel>
               )}
             </PanelGroup>
+          ) : (
+            <div className="flex h-full w-full flex-col items-center p-5 text-center">
+              {/*  Hint when mcp server is not connected*/}
+              <p className="notice info text-md no-margin-top w-full">
+                Connect to an MCP server URL to reveal capabilities. &nbsp;<Link href={docsMcpClient}>Learn More</Link>
+              </p>
+            </div>
           )}
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="auth">

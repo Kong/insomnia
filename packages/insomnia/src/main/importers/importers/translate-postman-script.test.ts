@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { translateHandlersInScript } from './translate-postman-script';
 
 describe('test pm to insomnia translation', () => {
-  [
+  for (const testCase of [
     {
       script: "pm.environment.set('', '')",
       expected: "insomnia.environment.set('', '')",
@@ -58,15 +58,15 @@ describe('test pm to insomnia translation', () => {
                 console.log(insomnia.collectionVariables.get('score'));
                 console.log(insomnia.environment.get('score'));`,
     },
-  ].forEach(testCase => {
+  ]) {
     it(`translate: ${testCase.script}`, () => {
       expect(translateHandlersInScript(testCase.script)).toBe(testCase.expected);
     });
-  });
+  }
 });
 
 describe('test deprecate rules translation', () => {
-  [
+  for (const testCase of [
     // --- tests ---
     {
       script: "tests['desc'] = variable === 'value';",
@@ -180,11 +180,11 @@ describe('test deprecate rules translation', () => {
       script: "postman.getResponseHeader('name')",
       expected: "insomnia.response.headers.get('name')",
     },
-  ].forEach(testCase => {
+  ]) {
     it(`translate: ${testCase.script}`, () => {
       expect(translateHandlersInScript(testCase.script)).toBe(testCase.expected);
     });
-  });
+  }
 });
 
 describe('comprehensive script translation test', () => {

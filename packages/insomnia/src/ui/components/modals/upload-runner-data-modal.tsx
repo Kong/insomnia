@@ -28,7 +28,7 @@ const rowHeaderStyle =
   'sticky normal-case top-[-8px] p-2 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none';
 const rowCellStyle =
   'whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none';
-const supportedFileTypes = ['application/json', 'text/csv'];
+const supportedFileTypes = new Set(['application/json', 'text/csv']);
 
 export const genPreviewTableData = (uploadData: UploadDataType[]) => {
   // generate header and body data for preview table from upload data
@@ -68,13 +68,13 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
           } else {
             setInvalidFileReason('Invalid JSON file uploaded, JSON file must be array of key-value pairs.');
           }
-        } catch (error) {
+        } catch {
           setInvalidFileReason('Upload JSON file can not be parsed');
         }
       } else if (fileType === 'text/csv') {
         // Replace CRLF (Windows line break) and CR (Mac link break) with \n, then split into csv arrays
         const csvRows = content
-          .replace(/\r\n|\r/g, '\n')
+          .replaceAll(/\r\n|\r/g, '\n')
           .split('\n')
           .map(row => row.split(','));
         // at least 2 rows required for csv
@@ -107,13 +107,13 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
     const files = Array.from(fileList);
     const file = files[0];
     const fileType = file.type;
-    if (!supportedFileTypes.includes(fileType)) {
+    if (!supportedFileTypes.has(fileType)) {
       setInvalidFileReason(`Uploaded file is unsupported ${file.type}`);
       return;
     }
-    const filePath = window.webUtils.getPathForFile(file);
+    const filePath = globalThis.webUtils.getPathForFile(file);
     try {
-      const { content, encoding } = await window.main.insecureReadFileWithEncoding({ path: filePath });
+      const { content, encoding } = await globalThis.main.insecureReadFileWithEncoding({ path: filePath });
       setFileEncoding(encoding);
       parseFileContent(content, fileType);
     } catch (error) {
@@ -127,10 +127,10 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
     setFileEncoding(newEncoding);
     setInvalidFileReason('');
     if (file) {
-      const filePath = window.webUtils.getPathForFile(file);
+      const filePath = globalThis.webUtils.getPathForFile(file);
       const fileType = file.type;
       try {
-        const { content } = await window.main.insecureReadFileWithEncoding({
+        const { content } = await globalThis.main.insecureReadFileWithEncoding({
           path: filePath,
           encoding: newEncoding,
         });

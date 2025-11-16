@@ -45,7 +45,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     url.searchParams.set('provider', provider);
   }
 
-  window.main.openInBrowser(url.toString());
+  globalThis.main.openInBrowser(url.toString());
 
   return redirect(href('/auth/login-tip'));
 }
@@ -71,10 +71,10 @@ const Component = () => {
     });
   };
 
-  const logoutMessage = window.localStorage.getItem('logoutMessage');
+  const logoutMessage = globalThis.localStorage.getItem('logoutMessage');
   useEffect(() => {
     if (logoutMessage) {
-      window.localStorage.removeItem('logoutMessage');
+      globalThis.localStorage.removeItem('logoutMessage');
       setMessage(logoutMessage);
     }
   }, [logoutMessage]);
@@ -154,7 +154,7 @@ const Component = () => {
 
         <Button
           onPress={() => {
-            window.main.trackSegmentEvent({
+            globalThis.main.trackSegmentEvent({
               event: SegmentEvent.selectScratchpad,
             });
             navigate(

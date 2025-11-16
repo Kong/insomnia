@@ -14,7 +14,7 @@ export const HtmlElementWrapper: FC<Props> = ({ el, onUnmount }) => {
   useEffect(() => {
     if (ref.current) {
       ref.current.innerHTML = '';
-      ref.current.appendChild(el);
+      ref.current.append(el);
     }
     return () => {
       onUnmount && onUnmount();

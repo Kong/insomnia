@@ -18,7 +18,7 @@ describe('Import errors', () => {
 });
 
 describe('test dotInKeyNameInvariant', () => {
-  [
+  for (const testCase of [
     {
       input: {
         '.hehe': 'haha',
@@ -36,9 +36,9 @@ describe('test dotInKeyNameInvariant', () => {
       input: ['', 1],
       noError: true,
     },
-  ].forEach(testCase => {
+  ]) {
     it(`check: ${testCase.input}`, () => {
-      let e: Error | undefined = undefined;
+      let e: Error | undefined;
 
       try {
         dotInKeyNameInvariant(testCase.input);
@@ -47,5 +47,5 @@ describe('test dotInKeyNameInvariant', () => {
       }
       expect(e === undefined).toBe(testCase.noError);
     });
-  });
+  }
 });

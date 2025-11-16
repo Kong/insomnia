@@ -12,7 +12,7 @@ export const DiffEditor = ({ original, modified }: { original: string; modified:
   const { settings } = useRootLoaderData()!;
 
   useEffect(() => {
-    const computedStyles = window.getComputedStyle(document.body);
+    const computedStyles = globalThis.getComputedStyle(document.body);
 
     function getColorVariableAsHex(colorVariable: string, lightnessLimit = 100) {
       try {

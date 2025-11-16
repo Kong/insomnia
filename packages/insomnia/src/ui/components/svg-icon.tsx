@@ -222,7 +222,6 @@ function getThemeClassName(theme: ThemeKeys) {
     case ThemeEnum.highlight: {
       return 'fill-hl text-danger';
     }
-    case ThemeEnum.default:
     default: {
       return 'fill-current text-current';
     }

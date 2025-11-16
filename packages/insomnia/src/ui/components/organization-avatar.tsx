@@ -6,7 +6,7 @@ const getNameInitials = (name: string) => {
   // Split on whitespace and take first letter of each word
   const words = name.toUpperCase().split(' ');
   const firstWord = words[0];
-  const lastWord = words[words.length - 1];
+  const lastWord = words.at(-1);
 
   // If there is only one word, just take the first letter
   if (words.length === 1) {

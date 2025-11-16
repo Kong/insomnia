@@ -18,7 +18,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   invariant(unitTest, 'Test not found');
 
   await models.unitTest.remove(unitTest);
-  window.main.trackSegmentEvent({ event: SegmentEvent.unitTestDelete });
+  globalThis.main.trackSegmentEvent({ event: SegmentEvent.unitTestDelete });
 
   return null;
 }

@@ -10,7 +10,7 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const workspaceId = params.workspaceId;
   const projectId = params.projectId;
 
-  return window.main.git.loadGitRepository({ workspaceId, projectId });
+  return globalThis.main.git.loadGitRepository({ workspaceId, projectId });
 }
 
 export const useGitProjectRepoFetcher = createFetcherLoadHook(

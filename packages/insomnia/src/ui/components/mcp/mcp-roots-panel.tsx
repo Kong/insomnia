@@ -52,7 +52,7 @@ export const McpRootsPanel = ({ request, readyState }: McpRootsPanelProps) => {
         <Button
           className="rounded bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise]"
           onClick={() => {
-            window.main.mcp.notification.rootListChange({ requestId });
+            globalThis.main.mcp.notification.rootListChange({ requestId });
           }}
           isDisabled={!isConnected}
         >

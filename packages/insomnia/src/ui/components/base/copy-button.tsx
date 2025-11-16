@@ -26,7 +26,7 @@ export const CopyButton: FC<Props> = ({
       event.stopPropagation();
 
       if (content) {
-        window.clipboard.writeText(content);
+        globalThis.clipboard.writeText(content);
       }
       if (onClickProp) {
         onClickProp(event);

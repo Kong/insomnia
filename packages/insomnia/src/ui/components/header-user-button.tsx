@@ -39,7 +39,7 @@ export const HeaderUserButton = ({ user, isMinimal = false }: UserButtonProps) =
             }
 
             if (action === 'my-profile') {
-              window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/settings/profile`);
+              globalThis.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/settings/profile`);
             }
 
             if (action === 'preferences') {

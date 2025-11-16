@@ -38,10 +38,10 @@ export const resolveDbByKey = async (request: Request) => {
   const urlHostLowerCase = url.host.toLowerCase();
   try {
     const result = await withLowercasedKeys[urlHostLowerCase](body);
-    return new Response(JSON.stringify(result));
+    return Response.json(result);
   } catch (err) {
     console.error(`Error resolving db by key ${urlHostLowerCase}:`, err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return Response.json({ error: err.message }, { status: 500 });
   }
 };
 
@@ -209,7 +209,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     if (headerResults.length === 0) {
       throw new Error('Error in response: no header result is found');
     }
-    const lastRedirect = headerResults[headerResults.length - 1];
+    const lastRedirect = headerResults.at(-1);
     if (!lastRedirect) {
       throw new Error('Error in response: the lastRedirect is not defined');
     }
@@ -233,13 +233,13 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
         }
       },
     };
-    return new Response(JSON.stringify(result));
+    return Response.json(result);
   },
   // used to generate the template tags for the bundle plugins and send back to the web worker
   'plugin.getBundlePluginTemplateTags': async () => {
     const appBundlePlugins = getAppBundlePlugins();
     const appBundlePluginTemplateTags: TemplateTag[] = [];
-    appBundlePlugins.forEach(p => {
+    for (const p of appBundlePlugins) {
       const { name: pluginName } = p;
       const module = getBundlePluginModule(pluginName);
       const pluginExportedTemplateTags: PluginTemplateTag[] = module?.templateTags || [];
@@ -257,7 +257,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
         templateTag: tt,
       }));
       appBundlePluginTemplateTags.push(...pluginTemplateTags);
-    });
+    }
     return appBundlePluginTemplateTags;
   },
   // execute the plugin tag with the given parameters

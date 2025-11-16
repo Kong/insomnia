@@ -419,7 +419,7 @@ function migrateBody(request: Request) {
 
   // Second, convert all existing urlencoded bodies to new format
   const contentType = getContentTypeFromHeaders(request.headers) || '';
-  const wasFormUrlEncoded = !!contentType.match(/^application\/x-www-form-urlencoded/i);
+  const wasFormUrlEncoded = !!/^application\/x-www-form-urlencoded/i.test(contentType);
 
   if (wasFormUrlEncoded) {
     // Convert old-style form-encoded request bodies to new style
@@ -432,12 +432,12 @@ function migrateBody(request: Request) {
   } else {
     const rawBody: string = typeof request.body === 'string' ? request.body : '';
     request.body =
-      typeof contentType !== 'string'
+      typeof contentType === 'string'
         ? {
+            mimeType: contentType.split(';')[0],
             text: rawBody,
           }
         : {
-            mimeType: contentType.split(';')[0],
             text: rawBody,
           };
   }

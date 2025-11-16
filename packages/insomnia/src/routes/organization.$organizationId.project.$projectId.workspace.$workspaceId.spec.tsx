@@ -82,7 +82,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   // we don't run the lint here because it is expensive and slows first render too much
   // TODO: add this in once we run this loader outside the renderer
   const rulesetPath = gitRepositoryId
-    ? path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
+    ? path.join(globalThis.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
     : '';
 
   let parsedSpec: OpenAPIV3.Document | undefined;
@@ -193,7 +193,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const registerCodeMirrorLint = (rulesetPath: string) => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
       try {
-        const { diagnostics, error, cancelled } = await window.main.lintSpec({
+        const { diagnostics, error, cancelled } = await globalThis.main.lintSpec({
           documentContent: contents,
           rulesetPath,
         });
@@ -206,7 +206,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             title: 'Linting Error',
             message: `An error occurred while linting the OpenAPI specification: ${error}`,
           });
-          return Promise.reject(error);
+          throw error;
         }
         const lintResult = diagnostics?.map(({ severity, code, message, range }) => {
           return {
@@ -228,7 +228,7 @@ const Component = ({ params }: Route.ComponentProps) => {
           title: 'Linting Error',
           message: `An error occurred while linting the OpenAPI specification: ${error}`,
         });
-        return Promise.reject(error);
+        throw error;
       }
     });
   };
@@ -241,7 +241,7 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   reactUse.useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
-    CodeMirror.registerHelper('lint', 'openapi', undefined);
+    CodeMirror.registerHelper('lint', 'openapi', () => {});
   });
 
   const onCodeEditorChange = useMemo(() => {
@@ -328,17 +328,13 @@ const Component = ({ params }: Route.ComponentProps) => {
       return;
     }
 
-    if (layout && layout[0] > 0) {
-      layout[0] = 0;
-    } else {
-      layout[0] = DEFAULT_SIDEBAR_SIZE;
-    }
+    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
 
     sidebarPanelRef.current?.setLayout(layout);
   }
 
   useEffect(() => {
-    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
+    const unsubscribe = globalThis.main.on('toggle-sidebar', toggleSidebar);
 
     return unsubscribe;
   }, []);
@@ -385,7 +381,7 @@ const Component = ({ params }: Route.ComponentProps) => {
       return () => {};
     }
     // Listen on media query changes
-    const mediaQuery = window.matchMedia('(max-width: 880px)');
+    const mediaQuery = globalThis.matchMedia('(max-width: 880px)');
     setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
 
     const handleChange = (e: MediaQueryListEvent) => {
@@ -474,8 +470,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               <Icon icon="file-contract" className="w-5 flex-shrink-0" />
               <span className="truncate">
                 {clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates{' '}
-                {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
-                  .length > 0
+                {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).some(isNotNullOrUndefined)
                   ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
                   : ''}
               </span>
@@ -488,7 +483,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               <Button
                 onPress={() => setNewMockServerModalOpen(true)}
                 isDisabled={!apiSpec.contents}
-                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:bg-[--hl-sm]"
               >
                 <Icon icon="server" className="w-5 flex-shrink-0" />
                 <span className="truncate">Generate Mock</span>
@@ -1004,7 +999,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                     <ListBox
                       className="flex-1 select-none overflow-y-auto"
                       onAction={index => {
-                        const listIndex = parseInt(index.toString(), 10);
+                        const listIndex = Number.parseInt(index.toString(), 10);
                         const lintMessage = lintMessages[listIndex];
                         handleScrollToLintMessage(lintMessage);
                       }}

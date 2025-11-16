@@ -38,12 +38,12 @@ export function initNewOAuthSession() {
   // the value of this variable needs to start with 'persist:'
   // otherwise sessions won't be persisted over application-restarts
   const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
-  window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+  globalThis.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
   return authWindowSessionId;
 }
 
 export function getOAuthSession(): string {
-  const token = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+  const token = globalThis.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
   return token || initNewOAuthSession();
 }
 
@@ -78,7 +78,7 @@ export const getOAuth2Token = async (
       const responseTypeOrFallback = authentication.responseType || 'token';
       const hasNonce = responseTypeOrFallback === 'id_token token' || responseTypeOrFallback === 'id_token';
       const implicitUrl = new URL(authentication.authorizationUrl);
-      [
+      for (const p of [
         { name: 'response_type', value: responseTypeOrFallback },
         { name: 'client_id', value: authentication.clientId },
         ...insertAuthKeyIf('redirect_uri', authentication.redirectUrl),
@@ -89,12 +89,12 @@ export const getOAuth2Token = async (
           ? [
               {
                 name: 'nonce',
-                value: Math.floor(Math.random() * 9999999999999) + 1 + '',
+                value: Math.floor(Math.random() * 9_999_999_999_999) + 1 + '',
               },
             ]
           : []),
-      ].forEach(p => p.value && implicitUrl.searchParams.append(p.name, p.value));
-      const redirectedTo = await window.main.authorizeUserInWindow({
+      ]) p.value && implicitUrl.searchParams.append(p.name, p.value);
+      const redirectedTo = await globalThis.main.authorizeUserInWindow({
         url: implicitUrl.toString(),
         urlSuccessRegex: /(access_token=|id_token=)/,
         urlFailureRegex: /(error=)/,
@@ -122,7 +122,8 @@ export const getOAuth2Token = async (
     }
     invariant(authentication.accessTokenUrl, 'Missing access token URL');
     let params: RequestHeader[] = [];
-    if (authentication.grantType === 'authorization_code') {
+    switch (authentication.grantType) {
+    case 'authorization_code': {
       invariant(authentication.authorizationUrl, 'Invalid authorization URL');
 
       // default to S256 if usePkce is true and pkceMethod is not defined
@@ -136,7 +137,7 @@ export const getOAuth2Token = async (
       const authCodeUrl = new URL(authentication.authorizationUrl);
       const responseType: OAuth2ResponseType = 'code';
       const redirectUrl = authentication.useDefaultBrowser ? getOauthRedirectUrl() : authentication.redirectUrl;
-      [
+      for (const p of [
         { name: 'response_type', value: responseType },
         { name: 'client_id', value: authentication.clientId },
         ...insertAuthKeyIf('redirect_uri', redirectUrl),
@@ -150,7 +151,7 @@ export const getOAuth2Token = async (
               { name: 'code_challenge_method', value: pkceMethod },
             ]
           : []),
-      ].forEach(p => p.value && authCodeUrl.searchParams.append(p.name, p.value));
+      ]) p.value && authCodeUrl.searchParams.append(p.name, p.value);
 
       let redirectedTo: string | null = null;
       if (authentication.useDefaultBrowser) {
@@ -164,13 +165,13 @@ export const getOAuth2Token = async (
         // If the user has selected to use the default browser, we will open the
         // authorization URL in the default browser and wait for the user to
         // authorize the application.
-        const result = await window.main.authorizeUserInDefaultBrowser({
+        const result = await globalThis.main.authorizeUserInDefaultBrowser({
           url: relayUrl,
         });
 
         redirectedTo = decryptOAuthResult(result);
       } else {
-        redirectedTo = await window.main.authorizeUserInWindow({
+        redirectedTo = await globalThis.main.authorizeUserInWindow({
           url: authCodeUrl.toString(),
           urlSuccessRegex: authentication.redirectUrl
             ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]code=)`, 'i')
@@ -200,7 +201,10 @@ export const getOAuth2Token = async (
         ...insertAuthKeyIf('resource', authentication.resource),
         ...insertAuthKeyIf('code_verifier', codeVerifier),
       ];
-    } else if (authentication.grantType === 'password') {
+    
+    break;
+    }
+    case 'password': {
       params = [
         { name: 'grant_type', value: 'password' },
         ...insertAuthKeyIf('username', authentication.username),
@@ -208,13 +212,20 @@ export const getOAuth2Token = async (
         ...insertAuthKeyIf('scope', authentication.scope),
         ...insertAuthKeyIf('audience', authentication.audience),
       ];
-    } else if (authentication.grantType === 'client_credentials') {
+    
+    break;
+    }
+    case 'client_credentials': {
       params = [
         { name: 'grant_type', value: 'client_credentials' },
         ...insertAuthKeyIf('scope', authentication.scope),
         ...insertAuthKeyIf('audience', authentication.audience),
         ...insertAuthKeyIf('resource', authentication.resource),
       ];
+    
+    break;
+    }
+    // No default
     }
     const headers = authentication.origin ? [{ name: 'Origin', value: authentication.origin }] : [];
     if (authentication.credentialsInBody) {
@@ -471,21 +482,21 @@ export const encodePKCE = (buffer: Buffer) => {
       // The characters + / = are reserved for PKCE as per the RFC,
       // so we replace them with unreserved characters
       // Docs: https://tools.ietf.org/html/rfc7636#section-4.2
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=/g, '')
+      .replaceAll('+', '-')
+      .replaceAll('/', '_')
+      .replaceAll('=', '')
   );
 };
 const tryToParse = (body: string): Record<string, any> | null => {
   try {
     return JSON.parse(body);
-  } catch (err) {}
+  } catch {}
 
   try {
     // NOTE: parse does not return a JS Object, so
     //   we cannot use hasOwnProperty on it
     return querystring.parse(body);
-  } catch (err) {}
+  } catch {}
   return null;
 };
 

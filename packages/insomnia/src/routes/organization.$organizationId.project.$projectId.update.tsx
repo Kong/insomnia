@@ -96,7 +96,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       });
 
       if (response && !response.error) {
-        window.main.trackSegmentEvent({
+        globalThis.main.trackSegmentEvent({
           event: SegmentEvent.projectUpdated,
           properties: {
             storage: 'local',
@@ -146,7 +146,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       });
 
       if (newCloudProject && !('error' in newCloudProject)) {
-        window.main.trackSegmentEvent({
+        globalThis.main.trackSegmentEvent({
           event: SegmentEvent.projectUpdated,
           properties: {
             storage: 'remote',
@@ -200,7 +200,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         });
 
         if (response && !response.error) {
-          window.main.trackSegmentEvent({
+          globalThis.main.trackSegmentEvent({
             event: SegmentEvent.projectUpdated,
             properties: {
               storage: 'git',
@@ -228,7 +228,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       if (projectData.connectRepositoryLater) {
         await models.project.update(project, { name, gitRepositoryId: EMPTY_GIT_PROJECT_ID });
       } else {
-        let credentials: GitCredentials | undefined = undefined;
+        let credentials: GitCredentials | undefined;
         if (projectData.oauth2format) {
           credentials = {
             oauth2format: projectData.oauth2format,
@@ -242,7 +242,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           };
         }
 
-        const { errors } = await window.main.git.cloneGitRepo({
+        const { errors } = await globalThis.main.git.cloneGitRepo({
           organizationId,
           cloneIntoProjectId: project._id,
           author: {
@@ -305,7 +305,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     // local project rename
     await models.project.update(project, { name });
 
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: SegmentEvent.projectUpdated,
       properties: {
         storage: 'local',

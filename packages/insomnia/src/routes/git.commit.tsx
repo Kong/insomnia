@@ -18,10 +18,10 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   invariant(typeof data.message === 'string', 'Message is required');
 
   if (data.push) {
-    return window.main.git.commitAndPushToGitRepo(data);
+    return globalThis.main.git.commitAndPushToGitRepo(data);
   }
 
-  return window.main.git.commitToGitRepo(data);
+  return globalThis.main.git.commitToGitRepo(data);
 }
 
 export const useGitProjectCommitActionFetcher = createFetcherSubmitHook(

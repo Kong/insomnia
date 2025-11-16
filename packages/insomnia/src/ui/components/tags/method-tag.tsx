@@ -14,7 +14,7 @@ interface Props {
   fullNames?: boolean;
 }
 function removeVowels(str: string) {
-  return str.replace(/[aeiouyAEIOUY]/g, '');
+  return str.replaceAll(/[aeiouyAEIOUY]/g, '');
 }
 
 export const getMethodShortHand = (doc: Request) => {

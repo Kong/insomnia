@@ -37,19 +37,11 @@ function getDiff(previewDiffItem?: StageEntry) {
   let after = '{}';
 
   if (previewDiffItem && 'previousBlobContent' in previewDiffItem && previewDiffItem.previousBlobContent) {
-    if (previewDiffItem.previousBlobContent === 'null') {
-      before = '';
-    } else {
-      before = previewDiffItem.previousBlobContent || '{}';
-    }
+    before = previewDiffItem.previousBlobContent === 'null' ? '' : previewDiffItem.previousBlobContent || '{}';
   }
 
   if (previewDiffItem && 'blobContent' in previewDiffItem && previewDiffItem.blobContent) {
-    if (previewDiffItem.blobContent === 'null') {
-      after = '';
-    } else {
-      after = previewDiffItem.blobContent || '{}';
-    }
+    after = previewDiffItem.blobContent === 'null' ? '' : previewDiffItem.blobContent || '{}';
   }
 
   try {
@@ -224,7 +216,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                         className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                       >
                         <Icon
-                          icon={createSnapshotFetcher.state !== 'idle' ? 'spinner' : 'check'}
+                          icon={createSnapshotFetcher.state === 'idle' ? 'check' : 'spinner'}
                           className={`w-5 ${createSnapshotFetcher.state === 'idle' ? '' : 'animate-spin'}`}
                         />{' '}
                         Commit
@@ -237,8 +229,8 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                         className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                       >
                         <Icon
-                          icon={createSnapshotFetcher.state !== 'idle' ? 'spinner' : 'cloud-arrow-up'}
-                          className={`w-5 ${createSnapshotFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
+                          icon={createSnapshotFetcher.state === 'idle' ? 'cloud-arrow-up' : 'spinner'}
+                          className={`w-5 ${createSnapshotFetcher.state === 'idle' ? '' : 'animate-spin'}`}
                         />{' '}
                         Commit and push
                       </Button>

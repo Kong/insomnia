@@ -90,7 +90,7 @@ export const getInitialEntry = async () => {
   // Otherwise if the user is not logged in and has not logged in before, then show the login
   // Otherwise if the user is logged in, then show the organization
   try {
-    const hasSeenOnboardingV12 = Boolean(window.localStorage.getItem('hasSeenOnboardingV12'));
+    const hasSeenOnboardingV12 = Boolean(globalThis.localStorage.getItem('hasSeenOnboardingV12'));
 
     if (!hasSeenOnboardingV12) {
       return href('/onboarding/*', {
@@ -98,7 +98,7 @@ export const getInitialEntry = async () => {
       });
     }
 
-    const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
+    const hasUserLoggedInBefore = globalThis.localStorage.getItem('hasUserLoggedInBefore');
 
     const user = await models.userSession.getOrCreate();
     if (user.id) {
@@ -119,7 +119,7 @@ export const getInitialEntry = async () => {
         if (lastVisitedOrganizationId && organizations.find(o => o.id === lastVisitedOrganizationId)) {
           organizationId = lastVisitedOrganizationId;
         }
-      } catch (e) {}
+      } catch {}
 
       return {
         pathname: await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true }),
@@ -139,7 +139,7 @@ export const getInitialEntry = async () => {
       projectId: SCRATCHPAD_PROJECT_ID,
       workspaceId: SCRATCHPAD_WORKSPACE_ID,
     });
-  } catch (e) {
+  } catch {
     return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
       organizationId: SCRATCHPAD_ORGANIZATION_ID,
       projectId: SCRATCHPAD_PROJECT_ID,

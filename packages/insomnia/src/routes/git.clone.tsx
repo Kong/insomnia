@@ -20,7 +20,7 @@ interface CloneGitRepoData {
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = (await request.json()) as CloneGitRepoData;
 
-  const { errors, projectId } = await window.main.git.cloneGitRepo(data);
+  const { errors, projectId } = await globalThis.main.git.cloneGitRepo(data);
 
   if (errors) {
     return { errors };

@@ -40,7 +40,7 @@ const importFolderItem =
 const parseDocument = (rawData: string) => {
   try {
     return unthrowableParseJson(rawData) || YAML.parse(rawData);
-  } catch (err) {
+  } catch {
     return null;
   }
 };
@@ -95,14 +95,14 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
     if (!tags || tags.length === 0) {
       tags = [''];
     }
-    tags.forEach((tag, index) => {
+    for (const [index, tag] of tags.entries()) {
       const requestId = endpointSchema.operationId
         ? `${endpointSchema.operationId}${index > 0 ? index : ''}`
         : `__REQUEST_${requestCount++}__`;
 
       const parentId = folderLookup[tag] || defaultParent;
       requests.push(importRequest(document, endpointSchema, globalMimeTypes, requestId, parentId));
-    });
+    }
   });
 
   return [...folders, ...requests];
@@ -276,7 +276,7 @@ const setupAuthentication = (
  * I.e. "/foo/:bar" => "/foo/{{ bar }}"
  */
 const pathWithParamsAsVariables = (path?: string) => {
-  return path?.replace(/{([^}]+)}/g, '{{ _.$1 }}');
+  return path?.replaceAll(/{([^}]+)}/g, '{{ _.$1 }}');
 };
 
 /**
@@ -411,8 +411,8 @@ const generateParameterExample = (
     'string_date-time': () => new Date().toISOString(),
     'string_byte': () => 'ZXhhbXBsZQ==',
     'number': () => 0,
-    'number_float': () => 0.0,
-    'number_double': () => 0.0,
+    'number_float': () => 0,
+    'number_double': () => 0,
     'integer': () => 0,
     'boolean': () => true,
     'object': (parameter: OpenAPIV2.Parameter) => {
@@ -425,10 +425,10 @@ const generateParameterExample = (
       const { properties } = parameter;
       if (properties) {
         ancestors.push(parameter);
-        Object.keys(properties).forEach(propertyName => {
+        for (const propertyName of Object.keys(properties)) {
           // @ts-expect-error there's no way, so far as I'm aware, for TypeScript to know what's actually going on here.
           example[propertyName] = generateParameterExample(properties[propertyName], ancestors);
-        });
+        }
         ancestors.pop();
       }
 

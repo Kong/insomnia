@@ -253,7 +253,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           }))
           .filter(commit => commit.id !== DO_NOT_COMMIT_ID && commit.files.length > 0);
 
-        window.main.trackSegmentEvent({
+        globalThis.main.trackSegmentEvent({
           event: SegmentEvent.recommendCommitsSaved,
           properties: {
             group_count: commits.length,
@@ -306,10 +306,10 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
                   commitsSections={commitsSections}
                   diffChanges={diffChanges}
                   emptyState={
-                    commit.value.id !== DO_NOT_COMMIT_ID ? (
-                      <p className="p-2 text-sm text-[--hl]">No files to commit. This commit will be omitted.</p>
-                    ) : (
+                    commit.value.id === DO_NOT_COMMIT_ID ? (
                       <p className="p-2 text-sm text-[--hl]">These files will not be committed.</p>
+                    ) : (
+                      <p className="p-2 text-sm text-[--hl]">No files to commit. This commit will be omitted.</p>
                     )
                   }
                 />
@@ -882,12 +882,12 @@ export const GitProjectStagingModal: FC<{
 
   const handleGenerateCommits = React.useCallback(() => {
     if (commitGenerationCompleted) {
-      window.main.trackSegmentEvent({ event: SegmentEvent.recommendCommitsCancelled });
+      globalThis.main.trackSegmentEvent({ event: SegmentEvent.recommendCommitsCancelled });
       setCommitGenerationKey(commitGenerationKey + 1);
       return;
     }
 
-    window.main.trackSegmentEvent({ event: SegmentEvent.recommendCommitsClicked });
+    globalThis.main.trackSegmentEvent({ event: SegmentEvent.recommendCommitsClicked });
     generateCommitsFetcher.submit({
       projectId,
     });

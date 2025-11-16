@@ -30,11 +30,11 @@ export const UpgradePlanModal = () => {
   const startFetcher = useTrialStartActionFetcher();
 
   const handleUpgrade = () => {
-    window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/pricing?source=app_welcome_modal`);
+    globalThis.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/pricing?source=app_welcome_modal`);
   };
 
   const handleClose = () => {
-    window.localStorage.setItem(`upgrade-modal-dismissed:${accountId}`, new Date().toISOString());
+    globalThis.localStorage.setItem(`upgrade-modal-dismissed:${accountId}`, new Date().toISOString());
     setOpen(false);
   };
 
@@ -51,7 +51,7 @@ export const UpgradePlanModal = () => {
     if (!isFreePlan) {
       return;
     }
-    const dismissedDate = window.localStorage.getItem(`upgrade-modal-dismissed:${accountId}`);
+    const dismissedDate = globalThis.localStorage.getItem(`upgrade-modal-dismissed:${accountId}`);
     if (!dismissedDate || new Date(dismissedDate).getTime() + SIXTY_DAYS < Date.now()) {
       checkerLoad();
     }

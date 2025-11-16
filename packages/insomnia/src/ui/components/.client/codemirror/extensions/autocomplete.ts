@@ -381,27 +381,27 @@ async function replaceHintMatch(cm: CodeMirror.Editor, _self: any, data: any) {
   let prefix = '';
   let suffix = '';
 
-  if (data.type === TYPE_VARIABLE && !prevChars.match(/{{[^}]*$/)) {
+  if (data.type === TYPE_VARIABLE && !/{{[^}]*$/.test(prevChars)) {
     prefix = '{{ '; // If no closer before
-  } else if (data.type === TYPE_VARIABLE && prevChars.match(/{{$/)) {
+  } else if (data.type === TYPE_VARIABLE && /{{$/.test(prevChars)) {
     prefix = ' '; // If no space after opener
-  } else if (data.type === TYPE_TAG && prevChars.match(/{%$/)) {
+  } else if (data.type === TYPE_TAG && /{%$/.test(prevChars)) {
     prefix = ' '; // If no space after opener
-  } else if (data.type === TYPE_TAG && !prevChars.match(/{%[^%]*$/)) {
+  } else if (data.type === TYPE_TAG && !/{%[^%]*$/.test(prevChars)) {
     prefix = '{% '; // If no closer before
   }
 
-  if (data.type === TYPE_VARIABLE && !nextChars.match(/^\s*}}/)) {
+  if (data.type === TYPE_VARIABLE && !/^\s*}}/.test(nextChars)) {
     suffix = ' }}'; // If no closer after
-  } else if (data.type === TYPE_VARIABLE && nextChars.match(/^}}/)) {
+  } else if (data.type === TYPE_VARIABLE && nextChars.startsWith('}}')) {
     suffix = ' '; // If no space before closer
-  } else if (data.type === TYPE_TAG && nextChars.match(/^%}/)) {
+  } else if (data.type === TYPE_TAG && nextChars.startsWith('%}')) {
     suffix = ' '; // If no space before closer
-  } else if (data.type === TYPE_TAG && nextChars.match(/^\s*}/)) {
+  } else if (data.type === TYPE_TAG && /^\s*}/.test(nextChars)) {
     // Edge case because "%" doesn't auto-close tags so sometimes you end
     // up in the scenario of {% foo}
     suffix = ' %';
-  } else if (data.type === TYPE_TAG && !nextChars.match(/^\s*%}/)) {
+  } else if (data.type === TYPE_TAG && !/^\s*%}/.test(nextChars)) {
     suffix = ' %}'; // If no closer after
   }
 
@@ -520,7 +520,7 @@ function replaceWithSurround(text: string, find: string, prefix: string, suffix:
 
 function escapeHTML(unsafeText: string) {
   const div = document.createElement('div');
-  div.innerText = unsafeText;
+  div.textContent = unsafeText;
   return div.innerHTML;
 }
 /**

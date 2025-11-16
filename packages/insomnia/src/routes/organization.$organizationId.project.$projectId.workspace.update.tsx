@@ -56,7 +56,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       url: mockServerUrl,
     });
 
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: SegmentEvent.mockEdit,
     });
   }

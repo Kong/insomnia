@@ -18,7 +18,7 @@ export const execFilePromise = promisify(execFile);
 // and to ensure that the tarball is from a known source.
 // The list can be expanded as needed, but should be kept minimal for security.
 // Currently, only npmjs.org and GitHub Packages are allowed.
-const allowedTarballHostnames = ['registry.npmjs.org', 'npm.pkg.github.com'];
+const allowedTarballHostnames = new Set(['registry.npmjs.org', 'npm.pkg.github.com']);
 
 interface InsomniaPlugin {
   // Insomnia attribute from package.json
@@ -100,7 +100,7 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
     try {
       // After fetching info, check the info.dist.tarball. This prevents downloading from weird hosts.
       const tarballUrl = new URL(info.dist.tarball);
-      if (!allowedTarballHostnames.includes(tarballUrl.hostname)) {
+      if (!allowedTarballHostnames.has(tarballUrl.hostname)) {
         throw new Error(`Tarball must come from an allowed host. Got: ${tarballUrl.hostname}`);
       }
 
@@ -382,7 +382,7 @@ export function containsOnlyDeprecationWarnings(output: string): boolean {
  */
 export function hasUnexpectedBinaryData(output: string): boolean {
   for (let i = 0; i < output.length; i++) {
-    const code = output.charCodeAt(i);
+    const code = output.codePointAt(i);
     if (!(code === 0x09 || code === 0x0a || code === 0x0d || (code >= 0x20 && code <= 0x7e))) {
       return true;
     }

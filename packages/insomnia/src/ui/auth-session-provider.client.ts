@@ -10,20 +10,18 @@ interface AuthBox {
 }
 
 const sessionKeyPair = keyPair();
-encodeBase64(sessionKeyPair.publicKey).then(res => {
-  try {
-    window.localStorage.setItem('insomnia.publicKey', getInsomniaPublicKey() || res);
-  } catch (error) {
-    console.error('Failed to store public key in localStorage.');
-  }
-});
-encodeBase64(sessionKeyPair.secretKey).then(res => {
-  try {
-    window.localStorage.setItem('insomnia.secretKey', getInsomniaSecretKey() || res);
-  } catch (error) {
-    console.error('Failed to store secret key in localStorage.');
-  }
-});
+const pub = await encodeBase64(sessionKeyPair.publicKey);
+try {
+  globalThis.localStorage.setItem('insomnia.publicKey', getInsomniaPublicKey() || pub);
+} catch {
+  console.error('Failed to store public key in localStorage.');
+}
+const secret = await encodeBase64(sessionKeyPair.secretKey);
+try {
+  globalThis.localStorage.setItem('insomnia.secretKey', getInsomniaSecretKey() || secret);
+} catch {
+  console.error('Failed to store secret key in localStorage.');
+}
 /**
  * Keypair used for the login handshake.
  * This keypair can be re-used for the entire session.
@@ -45,13 +43,13 @@ export async function decodeBase64(base64: string): Promise<Uint8Array> {
 export async function encodeBase64(data: Uint8Array): Promise<string> {
   const dataUri = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.addEventListener('load', () => {
       if (typeof reader.result === 'string') {
         resolve(reader.result);
       } else {
         reject();
       }
-    };
+    });
     reader.onerror = reject;
     reader.readAsDataURL(new Blob([data]));
   });
@@ -67,8 +65,8 @@ export async function encodeBase64(data: Uint8Array): Promise<string> {
 export async function submitAuthCode(code: string) {
   try {
     const rawBox = await decodeBase64(code.trim());
-    const publicKey = await decodeBase64(window.localStorage.getItem('insomnia.publicKey') || '');
-    const secretKey = await decodeBase64(window.localStorage.getItem('insomnia.secretKey') || '');
+    const publicKey = await decodeBase64(globalThis.localStorage.getItem('insomnia.publicKey') || '');
+    const secretKey = await decodeBase64(globalThis.localStorage.getItem('insomnia.secretKey') || '');
     const boxData = open(rawBox, publicKey, secretKey);
     invariant(boxData, 'Invalid authentication code.');
 
@@ -82,7 +80,7 @@ export async function submitAuthCode(code: string) {
 }
 
 export function getLoginUrl() {
-  const publicKey = window.localStorage.getItem('insomnia.publicKey');
+  const publicKey = globalThis.localStorage.getItem('insomnia.publicKey');
   if (!publicKey) {
     console.log('[auth] No public key found');
     return '';

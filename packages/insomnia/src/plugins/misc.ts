@@ -82,7 +82,7 @@ export interface PluginTheme {
 }
 
 export const validateThemeName = (name: string) => {
-  const validName = name.replace(/\s/gm, '-').toLowerCase();
+  const validName = name.replaceAll(/\s/gm, '-').toLowerCase();
   const isValid = name === validName;
 
   if (!isValid) {
@@ -97,8 +97,8 @@ const getChildValue = (theme: any, path: string[]) => {
   return path.reduce((acc, v: string) => {
     try {
       acc = acc[v];
-    } catch (e) {
-      return undefined;
+    } catch {
+      return;
     }
     return acc;
   }, theme);
@@ -120,9 +120,9 @@ export const validateTheme = (pluginTheme: PluginTheme) => {
     }
 
     if (typeof data === 'object') {
-      Object.keys(data).forEach(ownKey => {
+      for (const ownKey of Object.keys(data)) {
         checkIfContainsNunjucks(pluginTheme)([...keyPath, ownKey]);
-      });
+      }
     }
   };
 
@@ -130,13 +130,13 @@ export const validateTheme = (pluginTheme: PluginTheme) => {
 
   check(['rawCss']);
 
-  ['background', 'foreground', 'highlight'].forEach(rootPath => {
+  for (const rootPath of ['background', 'foreground', 'highlight']) {
     check([rootPath]);
 
-    Object.keys(pluginTheme.theme.styles ?? {}).forEach(style => {
+    for (const style of Object.keys(pluginTheme.theme.styles ?? {})) {
       check(['styles', style, rootPath]);
-    });
-  });
+    }
+  }
 };
 
 export const generateThemeCSS = (pluginTheme: PluginTheme) => {
@@ -206,7 +206,7 @@ function getThemeBlockCSS(block?: ThemeBlock) {
       const rgb = parsedColor.rgb();
       addVar(variable, rgb.string());
       addVar(`${variable}-rgb`, rgb.array().join(', '));
-    } catch (err) {
+    } catch {
       console.log('[theme] Failed to parse theme color', value);
     }
   };
@@ -288,11 +288,11 @@ export function getColorScheme({ autoDetectColorScheme }: ThemeSettings): ColorS
     return 'default';
   }
 
-  if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+  if (globalThis.matchMedia('(prefers-color-scheme: light)').matches) {
     return 'light';
   }
 
-  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  if (globalThis.matchMedia('(prefers-color-scheme: dark)').matches) {
     return 'dark';
   }
 

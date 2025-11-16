@@ -28,7 +28,7 @@ import { Icon } from '../icon';
 function validateMergeResult(mergeResult: string) {
   // Empty string means the file is deleted
   if (mergeResult === '') {
-    return undefined;
+    return;
   }
 
   // Apply schema migration and validate in one step
@@ -39,7 +39,7 @@ function validateMergeResult(mergeResult: string) {
     return extractErrorMessages(result.error).join('\n');
   }
 
-  return undefined; // No errors
+  return; // No errors
 }
 
 type EditorType = 'diff' | 'merge';
@@ -120,14 +120,14 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
         );
         if (editorType === 'merge' && conflicts) {
           const errMsgMap: Record<string, string> = {};
-          conflicts.forEach(conflict => {
+          for (const conflict of conflicts) {
             if (conflict.mergeResult) {
               const errorMsg = validateMergeResult(conflict.mergeResult);
               if (errorMsg) {
                 errMsgMap[conflict.key] = errorMsg;
               }
             }
-          });
+          }
           setErrMsgMapForConflictMergeResult(errMsgMap);
         }
         setLabels(labels);
@@ -137,7 +137,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
         onCancelUnresolvedRef.current = onCancelUnresolved;
         setIsOpen(true);
 
-        window.main.trackSegmentEvent({
+        globalThis.main.trackSegmentEvent({
           event: SegmentEvent.syncConflictResolutionStart,
         });
       },
@@ -231,7 +231,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                       onChange={value => {
                                         setConflicts(prevConflicts =>
                                           prevConflicts.map(c =>
-                                            c.key !== item.key ? c : { ...c, choose: value || null },
+                                            c.key === item.key ? { ...c, choose: value || null } : c,
                                           ),
                                         );
                                       }}
@@ -289,7 +289,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                           onClick={event => {
                             event.preventDefault();
 
-                            if (Object.entries(errMsgMapForConflictMergeResult).filter(([, val]) => val).length > 0) {
+                            if (Object.entries(errMsgMapForConflictMergeResult).some(([, val]) => val)) {
                               showModal(AlertModal, {
                                 title: 'The following files have syntax errors and cannot be saved:',
                                 message: Object.entries(errMsgMapForConflictMergeResult)
@@ -312,13 +312,13 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                             );
                             // if at least one conflict.choose is theirsBlob, track conflict resolution complete as theirs
                             if (conflicts?.some(conflict => conflict.choose === conflict.theirsBlob)) {
-                              window.main.trackSegmentEvent({
+                              globalThis.main.trackSegmentEvent({
                                 event: SegmentEvent.syncConflictResolutionCompleteTheirs,
                               });
                             }
                             // if at least one conflict.choose is mine, track conflict resolution complete as mine
                             if (conflicts?.some(conflict => conflict.choose === conflict.mineBlob)) {
-                              window.main.trackSegmentEvent({
+                              globalThis.main.trackSegmentEvent({
                                 event: SegmentEvent.syncConflictResolutionCompleteMine,
                               });
                             }

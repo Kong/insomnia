@@ -96,11 +96,11 @@ describe('Plugin Installation', () => {
     });
 
     vi.mocked(hasUnexpectedBinaryData).mockImplementation(output => {
-      return output.includes('\x00');
+      return output.includes('\u0000');
     });
 
     vi.mocked(safeTrim).mockImplementation(value => {
-      if (typeof value !== 'string') return undefined;
+      if (typeof value !== 'string') return;
       const trimmed = value.trim();
       return trimmed || undefined;
     });

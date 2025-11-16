@@ -141,7 +141,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
           name: 'Import',
           icon: <Icon icon="file-import" />,
           action: () => {
-            window.main.trackSegmentEvent({
+            globalThis.main.trackSegmentEvent({
               event: SegmentEvent.importStarted,
               properties: {
                 source: `scratchpad-${activeWorkspace.scope}-menu`,
@@ -156,7 +156,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
           name: 'Export',
           icon: <Icon icon="file-export" />,
           action: () => {
-            window.main.trackSegmentEvent({
+            globalThis.main.trackSegmentEvent({
               event: SegmentEvent.exportStarted,
               properties: {
                 source: `scratchpad-${activeWorkspace.scope}-menu`,
@@ -202,7 +202,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
                 name: 'From File',
                 icon: <Icon icon="file-import" />,
                 action: () => {
-                  window.main.trackSegmentEvent({
+                  globalThis.main.trackSegmentEvent({
                     event: SegmentEvent.importStarted,
                     properties: {
                       source: `${activeWorkspace.scope}-menu`,
@@ -273,7 +273,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
                 name: 'Export',
                 icon: <Icon icon="file-export" />,
                 action: () => {
-                  window.main.trackSegmentEvent({
+                  globalThis.main.trackSegmentEvent({
                     event: SegmentEvent.exportStarted,
                     properties: {
                       source: `${activeWorkspace.scope}-menu`,

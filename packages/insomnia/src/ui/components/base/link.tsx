@@ -16,7 +16,7 @@ export const Link: FC<Props> = ({ onClick, button, href, children, className, no
     (event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
       event?.preventDefault();
       onClick?.(event); // Also call onClick that was passed to us if there was one
-      window.main.openInBrowser(href);
+      globalThis.main.openInBrowser(href);
     },
     [onClick, href],
   );

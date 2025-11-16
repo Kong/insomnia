@@ -68,7 +68,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
   reactUse.useMount(async () => {
     if (activeRequest.protoFileId) {
       console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
-      const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);
+      const methods = await globalThis.main.grpc.loadMethods(activeRequest.protoFileId);
       setGrpcState({ ...grpcState, methods });
     } else if (activeRequest.url && activeRequest.reflectionApi) {
       const requestGroups = (
@@ -92,16 +92,16 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
       const caCertificatePath = caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
 
       const clientCert = clientCertificate?.cert
-        ? await window.main.insecureReadFile({
+        ? await globalThis.main.insecureReadFile({
             path: clientCertificate.cert,
           })
         : undefined;
       const clientKey = clientCertificate?.key
-        ? await window.main.insecureReadFile({ path: clientCertificate.key })
+        ? await globalThis.main.insecureReadFile({ path: clientCertificate.key })
         : undefined;
       // allow to read the file as it is chosen by user
       const caCertificate = caCertificatePath
-        ? await window.main.insecureReadFile({ path: caCertificatePath })
+        ? await globalThis.main.insecureReadFile({ path: caCertificatePath })
         : undefined;
 
       const renderedWithCertificates = {
@@ -115,7 +115,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
             }
           : {}),
       };
-      const methods = await window.main.grpc.loadMethodsFromReflection(renderedWithCertificates);
+      const methods = await globalThis.main.grpc.loadMethodsFromReflection(renderedWithCertificates);
       setGrpcState({ ...grpcState, methods });
     }
   });
@@ -155,24 +155,24 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
 
         updateTabById?.(requestId, { temporary: false });
 
-        window.main.grpc.start({
+        globalThis.main.grpc.start({
           request,
           rejectUnauthorized: settings.validateSSL,
           ...(request.url.toLowerCase().startsWith('grpcs:')
             ? {
                 clientCert: clientCertificate?.cert
-                  ? await window.main.insecureReadFile({
+                  ? await globalThis.main.insecureReadFile({
                       path: clientCertificate.cert,
                     })
                   : undefined,
                 clientKey: clientCertificate?.key
-                  ? await window.main.insecureReadFile({
+                  ? await globalThis.main.insecureReadFile({
                       path: clientCertificate.key,
                     })
                   : undefined,
                 // allow to read the file as it is chosen by user
                 caCertificate: caCertificatePath
-                  ? await window.main.insecureReadFile({
+                  ? await globalThis.main.insecureReadFile({
                       path: caCertificatePath,
                     })
                   : undefined,
@@ -293,18 +293,18 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                     const caCertificatePath =
                       caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
                     const clientCert = clientCertificate?.cert
-                      ? await window.main.insecureReadFile({
+                      ? await globalThis.main.insecureReadFile({
                           path: clientCertificate?.cert,
                         })
                       : undefined;
                     const clientKey = clientCertificate?.key
-                      ? await window.main.insecureReadFile({
+                      ? await globalThis.main.insecureReadFile({
                           path: clientCertificate?.key,
                         })
                       : undefined;
                     // allow to read the file as it is chosen by user
                     const caCertificate = caCertificatePath
-                      ? await window.main.insecureReadFile({
+                      ? await globalThis.main.insecureReadFile({
                           path: caCertificatePath,
                         })
                       : undefined;
@@ -320,7 +320,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                           }
                         : {}),
                     };
-                    const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
+                    const methods = await globalThis.main.grpc.loadMethodsFromReflection(rendered);
                     setGrpcState({ ...grpcState, methods });
                     patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
                   } catch (error) {
@@ -342,7 +342,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
               <GrpcSendButton
                 running={running}
                 methodType={methodType}
-                handleCancel={() => window.main.grpc.cancel(requestId)}
+                handleCancel={() => globalThis.main.grpc.cancel(requestId)}
                 handleStart={handleRequestSend}
               />
             </div>
@@ -386,7 +386,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                             body: requestBody,
                             requestId,
                           };
-                          window.main.grpc.sendMessage(preparedMessage);
+                          globalThis.main.grpc.sendMessage(preparedMessage);
                           setGrpcState({
                             ...grpcState,
                             requestMessages: [
@@ -404,7 +404,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                       </button>
                       <button
                         className="btn btn--compact btn--clicky-small margin-left-sm bg-surprise"
-                        onClick={() => window.main.grpc.commit(requestId)}
+                        onClick={() => globalThis.main.grpc.commit(requestId)}
                       >
                         Commit <i className="fa fa-arrow-right" />
                       </button>
@@ -480,13 +480,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           defaultId={activeRequest.protoFileId}
           onHide={() => setIsProtoModalOpen(false)}
           onSave={async (protoFileId: string) => {
-            if (!protoFileId) {
-              patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
-              setGrpcState({ ...grpcState, methods: [] });
-              setIsProtoModalOpen(false);
-            } else {
+            if (protoFileId) {
               try {
-                const methods = await window.main.grpc.loadMethods(protoFileId);
+                const methods = await globalThis.main.grpc.loadMethods(protoFileId);
                 patchRequest(requestId, { protoFileId, protoMethodName: '' });
                 setGrpcState({ ...grpcState, methods });
                 setIsProtoModalOpen(false);
@@ -497,6 +493,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                   error,
                 });
               }
+            } else {
+              patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
+              setGrpcState({ ...grpcState, methods: [] });
+              setIsProtoModalOpen(false);
             }
           }}
         />

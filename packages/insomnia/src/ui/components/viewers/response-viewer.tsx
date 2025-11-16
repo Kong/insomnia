@@ -30,7 +30,7 @@ export function xmlDecode(input: string) {
     '&gt;': '>',
   };
 
-  return input.replace(
+  return input.replaceAll(
     /(&quot;|&lt;|&gt;|&amp;)/g,
     (_: string, item: keyof typeof ESCAPED_CHARACTERS_MAP) => ESCAPED_CHARACTERS_MAP[item],
   );
@@ -125,7 +125,7 @@ export const ResponseViewer = ({
         JSON.parse(overSizedBody.toString('utf8'));
         return 'application/json';
       }
-    } catch (error) {}
+    } catch {}
     // Try to detect HTML in all cases (even if header is set).
     // It is fairly common for webservers to send errors in HTML by default.
     // NOTE: This will probably never throw but I'm not 100% so wrap anyway
@@ -139,7 +139,7 @@ export const ResponseViewer = ({
       if (lowercasedOriginalContentType.indexOf('text/html') !== 0 && isProbablyHTML) {
         return 'text/html';
       }
-    } catch (error) {}
+    } catch {}
 
     return lowercasedOriginalContentType;
   }, [originalContentType, overSizedBody]);
@@ -224,7 +224,7 @@ export const ResponseViewer = ({
     // So we try to unescape the forward slashes before passing it to the CodeEditor.
     try {
       bodyStr = unescapeForwardSlash(bodyStr);
-    } catch (err) {}
+    } catch {}
     return (
       <CodeEditor
         id="json-response-viewer"
@@ -238,7 +238,7 @@ export const ResponseViewer = ({
         noMatchBrackets
         onClickLink={url =>
           !disablePreviewLinks &&
-          window.main.openInBrowser(getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? xmlDecode(url) : url)
+          globalThis.main.openInBrowser(getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? xmlDecode(url) : url)
         }
         placeholder="..."
         readOnly
@@ -357,7 +357,7 @@ export const ResponseViewer = ({
       noMatchBrackets
       onClickLink={url =>
         !disablePreviewLinks &&
-        window.main.openInBrowser(getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? xmlDecode(url) : url)
+        globalThis.main.openInBrowser(getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? xmlDecode(url) : url)
       }
       placeholder="..."
       readOnly

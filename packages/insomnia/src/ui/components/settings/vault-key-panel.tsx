@@ -24,7 +24,7 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
   }, 2000);
 
   const donwloadVaultKey = async () => {
-    const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
+    const { canceled, filePath: outputPath } = await globalThis.dialog.showSaveDialog({
       title: 'Download Vault Key',
       buttonLabel: 'Save',
       defaultPath: `${getProductName()}-vault-key-${Date.now()}.txt`,
@@ -34,7 +34,7 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
       return;
     }
 
-    await window.main.writeFile({
+    await globalThis.main.writeFile({
       path: outputPath,
       content: vaultKey,
     });
@@ -49,7 +49,7 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
           event.preventDefault();
           event.stopPropagation();
           if (vaultKey) {
-            window.clipboard.writeText(vaultKey);
+            globalThis.clipboard.writeText(vaultKey);
           }
           setShowCopyConfirmation(true);
         }}

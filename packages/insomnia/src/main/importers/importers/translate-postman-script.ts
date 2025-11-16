@@ -202,7 +202,7 @@ export const translateHandlersInScript = (scriptContent: string) => {
   }
 
   // Replace `pm.` to `insomnia.`. Doesn't support `µpm`.
-  translated = translated.replace(/(?<![\.\$\-"'])\bpm\./g, 'insomnia.');
+  translated = translated.replaceAll(/(?<![\.\$\-"'])\bpm\./g, 'insomnia.');
 
   return translated;
 };

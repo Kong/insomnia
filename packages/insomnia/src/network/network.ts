@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { join as pathJoin } from 'node:path';
+import nodePath from 'node:path';
 
 import clone from 'clone';
 import orderedJSON from 'json-order';
@@ -102,9 +102,9 @@ export function getOrInheritHeaders({
   // parent folders, then child folders, then request
   const headerContexts = [...requestGroups.reverse(), request];
   const headers = headerContexts.flatMap(({ headers }) => headers || []);
-  headers.forEach(({ name, value, disabled }) => {
+  for (const { name, value, disabled } of headers) {
     if (disabled || !name.trim()) {
-      return;
+      continue;
     }
     const normalizedCase = name.toLowerCase();
     // preserves the casing of the last header with the same name
@@ -112,15 +112,15 @@ export function getOrInheritHeaders({
     const isStrictValueHeader = SINGLE_VALUE_HEADERS.includes(normalizedCase);
     if (isStrictValueHeader) {
       httpHeaders.set(normalizedCase, value);
-      return;
+      continue;
     }
     // appending will join matching header values with a comma
     if (httpHeaders.has(normalizedCase)) {
       httpHeaders.set(normalizedCase, `${httpHeaders.get(normalizedCase)}, ${value}`);
-      return;
+      continue;
     }
     httpHeaders.set(normalizedCase, value);
-  });
+  }
   return Array.from(httpHeaders.entries())
     .sort(ascendingFirstIndexStringSort)
     .map(([name, value]) => ({ name: originalCaseMap.get(name)!, value }));
@@ -154,11 +154,11 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await models.caCertificate.findByParentId(workspaceId);
   const responseId = generateId('res');
-  const responsesDir = pathJoin(
-    (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
+  const responsesDir = nodePath.join(
+    (process.type === 'renderer' ? globalThis : require('electron')).app.getPath('userData'),
     'responses',
   );
-  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
   return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
@@ -200,8 +200,8 @@ export const fetchRequestData = async (
 
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
-  let activeGlobalEnvironment: Environment | undefined = undefined;
-  let activeGlobalBaseEnvironment: Environment | undefined = undefined;
+  let activeGlobalEnvironment: Environment | undefined;
+  let activeGlobalBaseEnvironment: Environment | undefined;
   if (workspaceMeta?.activeGlobalEnvironmentId) {
     activeGlobalEnvironment = (await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId)) || undefined;
     const activeGlobalEnvironmentParentId = activeGlobalEnvironment?.parentId || '';
@@ -220,12 +220,12 @@ export const fetchRequestData = async (
   const caCert = await models.caCertificate.findByParentId(workspaceId);
 
   const responseId = generateId('res');
-  const responsesDir = pathJoin(
+  const responsesDir = nodePath.join(
     process.env['INSOMNIA_DATA_PATH'] ||
-      (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
+      (process.type === 'renderer' ? globalThis : require('electron')).app.getPath('userData'),
     'responses',
   );
-  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
 
   return {
     request,
@@ -264,12 +264,12 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   invariant(settings, 'failed to create settings');
 
   const responseId = generateId('res');
-  const responsesDir = pathJoin(
+  const responsesDir = nodePath.join(
     process.env['INSOMNIA_DATA_PATH'] ||
-      (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
+      (process.type === 'renderer' ? globalThis : require('electron')).app.getPath('userData'),
     'responses',
   );
-  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
 
   return {
     environment,
@@ -469,7 +469,7 @@ export async function savePatchesMadeByScript(patches: {
     await updateEnvironment(activeGlobalBaseEnvironment, mutatedContext.baseGlobals);
   }
 
-  mutatedContext.parentFolders.forEach(mutatedFolder => {
+  for (const mutatedFolder of mutatedContext.parentFolders) {
     const originalFolder = originalRequestGroups.find(originalFolder => originalFolder._id === mutatedFolder.id);
     if (originalFolder) {
       models.requestGroup.update(originalFolder, {
@@ -480,7 +480,7 @@ export async function savePatchesMadeByScript(patches: {
         }),
       });
     }
-  });
+  }
 }
 
 export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
@@ -513,7 +513,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || isProject(doc))
     .reverse()
     .map(doc => doc.name);
-  let vault = undefined;
+  let vault;
   if (globals && vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
     // decrypt and set vault in insomnia sdk if necessary
     globals.data[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(
@@ -851,13 +851,15 @@ export async function sendCurlAndWriteTimeline(
     authentication,
     renderedRequest.settingEncodeUrl,
   );
-  timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
-  timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
-  timeline.push({
-    value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`,
-    name: 'Text',
-    timestamp: Date.now(),
-  });
+  timeline.push(
+    { value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() },
+    { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
+    {
+      value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`,
+      name: 'Text',
+      timestamp: Date.now(),
+    },
+  );
 
   if (!renderedRequest.settingSendCookies) {
     timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
@@ -900,7 +902,7 @@ export async function sendCurlAndWriteTimeline(
   }
   const { patch, debugTimeline, headerResults, responseBodyPath } = output;
   // todo: move to main process
-  debugTimeline.forEach(entry => timeline.push(entry));
+  for (const entry of debugTimeline) timeline.push(entry);
   // transform output
   const { cookies, rejectedCookies, totalSetCookies } = await extractCookies(
     headerResults,
@@ -908,14 +910,13 @@ export async function sendCurlAndWriteTimeline(
     finalUrl,
     renderedRequest.settingStoreCookies,
   );
-  rejectedCookies.forEach(errorMessage =>
-    timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }),
-  );
+  for (const errorMessage of rejectedCookies)
+    timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() });
   if (totalSetCookies) {
     await models.cookieJar.update(renderedRequest.cookieJar, { cookies });
     timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
   }
-  const lastRedirect = headerResults[headerResults.length - 1];
+  const lastRedirect = headerResults.at(-1);
 
   if (runtime) {
     await runtime.appendTimeline(timelinePath, serializeNDJSON(timeline).split('\n'));
@@ -1022,7 +1023,7 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
   if (!headerResults || !headerResults.length) {
     return finalUrl;
   }
-  const lastRedirect = headerResults[headerResults.length - 1];
+  const lastRedirect = headerResults.at(-1);
   const location = getLocationHeader(lastRedirect.headers);
   if (!location || !location.value) {
     return finalUrl;

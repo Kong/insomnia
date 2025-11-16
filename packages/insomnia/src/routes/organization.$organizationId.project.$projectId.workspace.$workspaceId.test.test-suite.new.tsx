@@ -19,7 +19,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     name,
   });
 
-  window.main.trackSegmentEvent({ event: SegmentEvent.testSuiteCreate });
+  globalThis.main.trackSegmentEvent({ event: SegmentEvent.testSuiteCreate });
 
   return redirect(
     href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/:testSuiteId', {

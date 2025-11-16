@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import fs from 'node:fs/promises';
 import inspector from 'node:inspector';
 import path from 'node:path';
@@ -55,7 +56,7 @@ if (checkIfRestartNeeded()) {
 log.info(`Running version ${getAppVersion()}`);
 
 // So if (window) checks don't throw
-global.window = global.window || undefined;
+globalThis.window = globalThis.window || undefined;
 
 // setup right click menu
 app.on('web-contents-created', (_, contents) => {
@@ -98,7 +99,7 @@ app.on('ready', async () => {
       const names = await Promise.all(extensions.map(extension => installExtension(extension)));
       console.log(`[electron-extensions] Added DevTools Extension${extensionsPlural}: ${names.join(', ')}`);
     } catch (err) {
-      console.log('[electron-extensions] An error occurred: ', err);
+      console.log('[electron-extensions] An error occurred:', err);
     }
   }
 
@@ -162,11 +163,11 @@ if (defaultProtocolSuccessful) {
   }
 }
 app.on('quit', () => {
-  if (isDevelopment()) {
-    // stop the inspector if active to unblock electron app exit in development mode
-    if (inspector.url()) {
-      inspector.close();
-    }
+  if (
+    isDevelopment() && // stop the inspector if active to unblock electron app exit in development mode
+    inspector.url()
+  ) {
+    inspector.close();
   }
 });
 // Quit when all windows are closed (except on Mac).
@@ -182,7 +183,7 @@ app.on('activate', (_error, hasVisibleWindows) => {
     try {
       console.log('[main] creating new window for MacOS activate event');
       windowUtils.createWindow();
-    } catch (error) {
+    } catch {
       // This might happen if 'ready' hasn't fired yet. So we're just going
       // to silence these errors.
       console.log('[main] App not ready to "activate" yet');
@@ -200,17 +201,16 @@ const _launchApp = async () => {
     console.log('[main] Check args and create windows', args);
     if (args.length) {
       window = windowUtils.createWindowsAndReturnMain();
-      window.webContents.send('shell:open', args.join());
+      window.webContents.send('shell:open', args.join(','));
     }
   });
   // Disable deep linking in playwright e2e tests in order to run multiple tests in parallel
-  if (!process.env.PLAYWRIGHT) {
+  if (process.env.PLAYWRIGHT) {
+    window = windowUtils.createWindowsAndReturnMain();
+  } else {
     // Deep linking logic - https://www.electronjs.org/docs/latest/tutorial/launch-app-from-url-in-another-app
     const gotTheLock = app.requestSingleInstanceLock();
-    if (!gotTheLock) {
-      console.error('[app] Failed to get instance lock');
-      app.quit();
-    } else {
+    if (gotTheLock) {
       // Called when second instance launched with args (Windows/Linux)
       app.on('second-instance', (_1, args) => {
         console.log('[main] Second instance listener received:', args.join('||'));
@@ -221,7 +221,7 @@ const _launchApp = async () => {
           }
           window.focus();
         }
-        const lastArg = args.slice(-1).join();
+        const lastArg = args.slice(-1).join(',');
         console.log('[main] Open Deep Link URL sent from second instance', lastArg);
         window.webContents.send('shell:open', lastArg);
       });
@@ -245,9 +245,10 @@ const _launchApp = async () => {
       ipcMainOn('openDeepLink', (_event, url) => {
         openDeepLinkUrl(url);
       });
+    } else {
+      console.error('[app] Failed to get instance lock');
+      app.quit();
     }
-  } else {
-    window = windowUtils.createWindowsAndReturnMain();
   }
 
   // Don't send origin header from Insomnia because we're not technically using CORS

@@ -185,27 +185,27 @@ export const Row: FC<Props> = ({
           </Dropdown>
         ) : null}
 
-        {!hideButtons ? (
+        {hideButtons ? (
+          <button>
+            <i className="fa fa-empty" />
+          </button>
+        ) : (
           <button
             onClick={() => onChange({ ...pair, disabled: !pair.disabled })}
             title={pair.disabled ? 'Enable item' : 'Disable item'}
           >
             {pair.disabled ? <i className="fa fa-square-o" /> : <i className="fa fa-check-square-o" />}
           </button>
-        ) : (
+        )}
+
+        {hideButtons ? (
           <button>
             <i className="fa fa-empty" />
           </button>
-        )}
-
-        {!hideButtons ? (
+        ) : (
           <PromptButton tabIndex={-1} confirmMessage="" onClick={() => onDelete?.(pair)} title="Delete item">
             <i className="fa fa-trash-o" />
           </PromptButton>
-        ) : (
-          <button>
-            <i className="fa fa-empty" />
-          </button>
         )}
       </div>
     </li>

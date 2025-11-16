@@ -88,7 +88,7 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
   const interpolateOpenAndSend = async (payload: string) => {
     try {
       const renderedMessage = await tryToInterpolateRequestOrShowRenderErrorModal({ request, environmentId, payload });
-      const readyState = await window.main.webSocket.readyState.getCurrent({ requestId: request._id });
+      const readyState = await globalThis.main.webSocket.readyState.getCurrent({ requestId: request._id });
       if (!readyState) {
         const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
         const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
@@ -102,7 +102,7 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
             workspaceCookieJar,
           },
         });
-        window.main.webSocket.open({
+        globalThis.main.webSocket.open({
           requestId: request._id,
           workspaceId,
           url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
@@ -113,7 +113,7 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
         });
         return;
       }
-      window.main.webSocket.event.send({ requestId: request._id, payload: renderedMessage });
+      globalThis.main.webSocket.event.send({ requestId: request._id, payload: renderedMessage });
     } catch (err) {
       if (err instanceof RenderError) {
         showModal(RequestRenderErrorModal, {
@@ -138,15 +138,11 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
 
   const upsertPayloadWithValue = async (value: string) => {
     const payload = await models.webSocketPayload.getByParentId(request._id);
-    if (payload) {
-      await models.webSocketPayload.update(payload, { value });
-    } else {
-      await models.webSocketPayload.create({
+    await (payload ? models.webSocketPayload.update(payload, { value }) : models.webSocketPayload.create({
         parentId: request._id,
         value,
         mode: previewMode,
-      });
-    }
+      }));
   };
 
   return (
@@ -231,15 +227,11 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   const upsertPayloadWithMode = async (mode: string) => {
     // @TODO: multiple payloads
     const payload = await models.webSocketPayload.getByParentId(requestId);
-    if (payload) {
-      await models.webSocketPayload.update(payload, { mode });
-    } else {
-      await models.webSocketPayload.create({
+    await (payload ? models.webSocketPayload.update(payload, { mode }) : models.webSocketPayload.create({
         parentId: requestId,
         value: '',
         mode,
-      });
-    }
+      }));
   };
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
 
@@ -248,7 +240,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
 
     try {
       query = extractQueryStringFromUrl(activeRequest.url);
-    } catch (error) {
+    } catch {
       console.warn('Failed to parse url to import querystring');
       return;
     }

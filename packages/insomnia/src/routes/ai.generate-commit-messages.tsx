@@ -10,8 +10,8 @@ export async function clientAction(args: Route.ClientActionArgs) {
   const { projectId } = (await args.request.json()) as { projectId: string };
 
   try {
-    const isFeatureEnabled = await window.main.llm.getAIFeatureEnabled('aiCommitMessages');
-    const hasActiveLLM = (await window.main.llm.getCurrentConfig()) !== null;
+    const isFeatureEnabled = await globalThis.main.llm.getAIFeatureEnabled('aiCommitMessages');
+    const hasActiveLLM = (await globalThis.main.llm.getCurrentConfig()) !== null;
 
     if (!isFeatureEnabled || !hasActiveLLM) {
       return {
@@ -19,18 +19,18 @@ export async function clientAction(args: Route.ClientActionArgs) {
       };
     }
 
-    const { changes } = await window.main.git.gitChangesLoader({ projectId });
+    const { changes } = await globalThis.main.git.gitChangesLoader({ projectId });
     if (changes.staged.length > 0) {
       return {
         error: 'You have staged changes. Please commit or unstage them and try again.',
       };
     }
-    const diff = await window.main.git.diff();
+    const diff = await globalThis.main.git.diff();
 
-    const { log } = await window.main.git.gitLogLoader({ projectId });
+    const { log } = await globalThis.main.git.gitLogLoader({ projectId });
 
     const startTime = performance.now();
-    const { error, commits } = await window.main.generateCommitsFromDiff({
+    const { error, commits } = await globalThis.main.generateCommitsFromDiff({
       diff,
       recent_commits: log
         .slice(0, 5)
@@ -38,7 +38,7 @@ export async function clientAction(args: Route.ClientActionArgs) {
         .join('\n'),
     });
 
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: SegmentEvent.recommendCommitsGenerated,
       properties: {
         file_count: commits?.map(commit => commit.files?.length || 0)?.reduce((a, b) => a + b, 0),

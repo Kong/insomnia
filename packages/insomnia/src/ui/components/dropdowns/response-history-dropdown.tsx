@@ -60,15 +60,15 @@ export const ResponseHistoryDropdown = ({
   const handleSetActiveResponse = useCallback(
     async (requestId: string, activeResponse: ResponseType) => {
       if (isWebSocketResponse(activeResponse)) {
-        window.main.webSocket.close({ requestId });
+        globalThis.main.webSocket.close({ requestId });
       }
 
       if (isSocketIOResponse(activeResponse)) {
-        window.main.socketIO.close({ requestId });
+        globalThis.main.socketIO.close({ requestId });
       }
 
       if (isMcpResponse(activeResponse)) {
-        window.main.mcp.close({ requestId });
+        globalThis.main.mcp.close({ requestId });
       }
 
       if (activeResponse.requestVersionId) {
@@ -83,11 +83,11 @@ export const ResponseHistoryDropdown = ({
   const deleteResponsesSubmit = deleteAllReponsesFetcher.submit;
   const handleDeleteResponses = useCallback(async () => {
     if (isWebSocketResponse(activeResponse)) {
-      window.main.webSocket.close({ requestId });
+      globalThis.main.webSocket.close({ requestId });
     } else if (isSocketIOResponse(activeResponse)) {
-      window.main.socketIO.close({ requestId });
+      globalThis.main.socketIO.close({ requestId });
     } else if (isMcpResponse(activeResponse)) {
-      window.main.mcp.close({ requestId });
+      globalThis.main.mcp.close({ requestId });
     }
     deleteResponsesSubmit({
       organizationId,
@@ -101,17 +101,17 @@ export const ResponseHistoryDropdown = ({
   const handleDeleteResponse = useCallback(async () => {
     if (activeResponse) {
       if (isWebSocketResponse(activeResponse)) {
-        window.main.webSocket.close({ requestId });
+        globalThis.main.webSocket.close({ requestId });
       } else if (isSocketIOResponse(activeResponse)) {
-        window.main.socketIO.close({ requestId });
+        globalThis.main.socketIO.close({ requestId });
       } else if (isMcpResponse(activeResponse)) {
-        window.main.mcp.close({ requestId });
+        globalThis.main.mcp.close({ requestId });
       }
     }
     deleteResponseSubmit({ organizationId, projectId, workspaceId, requestId, responseId: activeResponse._id });
   }, [activeResponse, deleteResponseSubmit, organizationId, projectId, workspaceId, requestId]);
 
-  responses.forEach(response => {
+  for (const response of responses) {
     const responseTime = new Date(response.created);
     const match =
       Object.entries({
@@ -122,7 +122,7 @@ export const ResponseHistoryDropdown = ({
         other: true,
       }).find(([, value]) => value === true)?.[0] || 'other';
     categories[match].push(response);
-  });
+  }
 
   const renderResponseRow = (response: ResponseType) => {
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
@@ -170,14 +170,14 @@ export const ResponseHistoryDropdown = ({
                   tooltipDelay={1000}
                 />
               )}
-              {!response.requestVersionId ? (
+              {response.requestVersionId ? null : (
                 <i
                   className="icon fa fa-info-circle"
                   title={
                     'Request will not be restored with this response because it was created before this ability was added'
                   }
                 />
-              ) : null}
+              )}
             </div>
           }
         />
@@ -201,10 +201,10 @@ export const ResponseHistoryDropdown = ({
       triggerButton={
         <Button className="btn btn--super-compact tall">
           {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
-          {!isLatestResponseActive ? (
-            <i className="fa fa-thumb-tack space-left" />
-          ) : (
+          {isLatestResponseActive ? (
             <i className="fa fa-caret-down space-left" />
+          ) : (
+            <i className="fa fa-thumb-tack space-left" />
           )}
         </Button>
       }

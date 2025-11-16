@@ -85,7 +85,7 @@ const Component = () => {
                       isDisabled={state !== 'idle'}
                       className={
                         'rounded-sm bg-[--color-surprise] px-3 py-2 text-sm font-bold text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline' +
-                        (state !== 'idle' ? 'animate-pulse cursor-not-allowed' : '')
+                        (state === 'idle' ? '' : 'animate-pulse cursor-not-allowed')
                       }
                     >
                       Continue

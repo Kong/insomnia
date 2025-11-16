@@ -32,10 +32,10 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     };
   }
   console.log('Login successful');
-  window.main.trackSegmentEvent({
+  globalThis.main.trackSegmentEvent({
     event: SegmentEvent.loginSuccess,
   });
-  window.localStorage.setItem('hasUserLoggedInBefore', 'true');
+  globalThis.localStorage.setItem('hasUserLoggedInBefore', 'true');
   const userSession = await sessionModel.getOrCreate();
   const { accountId, id: sessionId } = userSession;
   try {
@@ -58,7 +58,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
         const validateResult = await validateVaultKey(userSession, localVaultKey, vaultSalt);
         if (validateResult) {
           // Encrypt vault key and save encrypted vault key & raw vault salt to session
-          const encryptedVaultKey = await window.main.secretStorage.encryptString(localVaultKey);
+          const encryptedVaultKey = await globalThis.main.secretStorage.encryptString(localVaultKey);
           await sessionModel.update(userSession, { vaultKey: encryptedVaultKey, vaultSalt });
         }
       }
@@ -84,7 +84,7 @@ export const useAuthorizeActionFetcher = createFetcherSubmitHook(
 const Component = () => {
   const url = getLoginUrl();
   const copyUrl = () => {
-    window.clipboard.writeText(url);
+    globalThis.clipboard.writeText(url);
   };
 
   const authorizeFetcher = useAuthorizeActionFetcher();

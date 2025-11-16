@@ -6,7 +6,7 @@ import { isGitHubAppUserToken } from '../github-app-config-link';
 import { Icon } from '../icon';
 import { GitRemoteBranchSelect } from './git-remote-branch-select';
 
-type GitHubRepository = Awaited<ReturnType<typeof window.main.git.getGitHubRepositories>>['repos'][number];
+type GitHubRepository = Awaited<ReturnType<typeof globalThis.main.git.getGitHubRepositories>>['repos'][number];
 
 export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: string }) => {
   const [loading, setLoading] = useState(false);
@@ -18,7 +18,7 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
   const getRepositories = async () => {
     setLoading(true);
     setRepositories([]);
-    const { repos, errors } = await window.main.git.getGitHubRepositories({});
+    const { repos, errors } = await globalThis.main.git.getGitHubRepositories({});
     setErrors(errors);
     setRepositories(repos);
     setLoading(false);
@@ -38,7 +38,7 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
     }
     if (!selectedRepository && token && isGitHubAppUserToken(token)) {
       (async function getRepository() {
-        const { repo, errors, notFound } = await window.main.git.getGitHubRepository({ uri });
+        const { repo, errors, notFound } = await globalThis.main.git.getGitHubRepository({ uri });
         setCannotFindRepository(notFound);
         setSelectedRepository(errors.length ? null : repo!);
       })();

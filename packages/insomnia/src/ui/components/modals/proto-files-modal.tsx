@@ -121,7 +121,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
   }, [workspaceId]);
 
   useEffect(() => {
-    const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
+    const unsubscribe = globalThis.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [, doc] = change;
         if (isProtoFile(doc) || isProtoDirectory(doc)) {
@@ -229,7 +229,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       return;
     }
     // allow to read the file as it is chosen by user
-    const protoText = await window.main.insecureReadFile({ path: filePath });
+    const protoText = await globalThis.main.insecureReadFile({ path: filePath });
 
     const updatedFile = await models.protoFile.update(protoFile, {
       name: path.basename(filePath),
@@ -237,8 +237,8 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
     });
     const impacted = await models.grpcRequest.findByProtoFileId(updatedFile._id);
     const requestIds = impacted.map(g => g._id);
-    if (requestIds?.length) {
-      requestIds.forEach(async requestId => window.main.grpc.cancel(requestId));
+    for (const requestId of requestIds) {
+      await globalThis.main.grpc.cancel(requestId);
     }
   };
 
@@ -284,7 +284,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       return;
     }
     // allow to read the file as it is chosen by user
-    const protoText = await window.main.insecureReadFile({ path: filePath });
+    const protoText = await globalThis.main.insecureReadFile({ path: filePath });
 
     const newFile = await models.protoFile.create({
       name: path.basename(filePath),

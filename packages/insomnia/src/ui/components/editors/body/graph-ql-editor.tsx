@@ -103,7 +103,8 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
   return JSON.stringify(content);
 }
 
-const isString = (value?: string): value is string => typeof value === 'string' || (value as unknown) instanceof String;
+const isString = (value?: string): value is string =>
+  typeof value === 'string' || typeof (value as unknown) === 'string';
 const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode =>
   def.kind === Kind.OPERATION_DEFINITION;
 
@@ -240,7 +241,7 @@ export const GraphQLEditor: FC<Props> = ({
   let requestBody: GraphQLBody;
   try {
     requestBody = JSON.parse(request.body.text || '');
-  } catch (err) {
+  } catch {
     requestBody = { query: '' };
   }
 
@@ -249,7 +250,7 @@ export const GraphQLEditor: FC<Props> = ({
   let documentAST;
   try {
     documentAST = parse(requestBody.query || '');
-  } catch (error) {
+  } catch {
     documentAST = null;
   }
   const operations =
@@ -359,7 +360,7 @@ export const GraphQLEditor: FC<Props> = ({
       // default to first operation when none selected
       let operationName = operations[0] || '';
       if (operations.length && state.body.operationName) {
-        const operationsChanged = state.operations.join() !== operations.join();
+        const operationsChanged = state.operations.join(',') !== operations.join(',');
         const operationNameWasChanged = !operations.includes(state.body.operationName);
         if (operationsChanged && operationNameWasChanged) {
           // preserve selection during name change or fallback to first operation
@@ -425,7 +426,7 @@ export const GraphQLEditor: FC<Props> = ({
         },
       ],
     };
-    const { canceled, filePaths } = await window.dialog.showOpenDialog(options);
+    const { canceled, filePaths } = await globalThis.dialog.showOpenDialog(options);
     if (canceled) {
       return;
     }
@@ -455,14 +456,16 @@ export const GraphQLEditor: FC<Props> = ({
   const variableTypes: Record<string, GraphQLNonNull<any>> = {};
   if (schema) {
     const operationDefinitions = state.documentAST?.definitions.filter(isOperationDefinition);
-    operationDefinitions?.forEach(({ variableDefinitions }) => {
-      variableDefinitions?.forEach(({ variable, type }) => {
-        const inputType = typeFromAST(schema, type as NonNullTypeNode);
-        if (inputType) {
-          variableTypes[variable.name.value] = inputType;
-        }
-      });
-    });
+    if (operationDefinitions)
+      for (const { variableDefinitions } of operationDefinitions) {
+        if (variableDefinitions)
+          for (const { variable, type } of variableDefinitions) {
+            const inputType = typeFromAST(schema, type as NonNullTypeNode);
+            if (inputType) {
+              variableTypes[variable.name.value] = inputType;
+            }
+          }
+      }
   }
 
   // Create portal for GraphQL Explorer

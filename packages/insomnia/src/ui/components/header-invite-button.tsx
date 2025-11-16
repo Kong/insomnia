@@ -37,7 +37,10 @@ export const HeaderInviteButton = ({
   // if backend API fails, we still allow user to invite, and let backend handle the error
   const hasPermissions =
     userPermission == null || (userPermission['create:invitation'] && userPermission['read:membership']);
-  const tip = !hasAvailableLicenses ? (
+  const tip = hasAvailableLicenses ? (
+    // !hasPermissions && hasAvailableLicenses: will popup 'missing someone'
+    ''
+  ) : (
     hasPermissions ? (
       <div>
         You cannot invite anyone as there are no available licenses.{' '}
@@ -48,9 +51,6 @@ export const HeaderInviteButton = ({
     ) : (
       'You cannot invite anyone as there are no available licenses. Contact your organization’s Insomnia admins for more info.'
     )
-  ) : (
-    // !hasPermissions && hasAvailableLicenses: will popup 'missing someone'
-    ''
   );
 
   const [missingOpen, setMissingOpen] = React.useState(false);
@@ -105,7 +105,7 @@ const MissingSomeoneModal = ({ isOpen, onClose }: any) => {
   const [reason, setReason] = useState<string | null>(null);
   const handleClose = () => {
     if (reason) {
-      window.main.trackSegmentEvent({
+      globalThis.main.trackSegmentEvent({
         event: SegmentEvent.inviteNotPermitted,
         properties: {
           collaboration_type: reason,

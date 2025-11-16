@@ -90,7 +90,7 @@ export const MockResponsePane = () => {
   }
   return (
     <Pane type="response">
-      {!activeResponse ? null : (
+      {activeResponse ? (
         <PaneHeader className="row-spaced">
           <div aria-atomic="true" aria-live="polite" className="no-wrap scrollable scrollable--no-bars pad-left">
             <StatusTag statusCode={activeResponse.statusCode} statusMessage={activeResponse.statusMessage} />
@@ -98,7 +98,7 @@ export const MockResponsePane = () => {
             <SizeTag bytesRead={activeResponse.bytesRead} bytesContent={activeResponse.bytesContent} />
           </div>
         </PaneHeader>
-      )}
+      ) : null}
       <Tabs aria-label="Mock response" className="flex h-full w-full flex-1 flex-col">
         <TabList
           className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
@@ -219,7 +219,7 @@ const HistoryViewWrapperComponentFactory = ({
   // chatgpt: answer my called
   useInterval(() => {
     fetchLogs();
-  }, 10000);
+  }, 10_000);
 
   useEffect(() => {
     fetchLogs();
@@ -325,7 +325,7 @@ const PreviewModeDropdown = ({
             label="Copy raw response"
             onClick={async () => {
               const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
-              bodyBuffer && window.clipboard.writeText(bodyBuffer.toString('utf8'));
+              bodyBuffer && globalThis.clipboard.writeText(bodyBuffer.toString('utf8'));
             }}
           />
         </DropdownItem>
@@ -335,7 +335,7 @@ const PreviewModeDropdown = ({
             label="Export raw response"
             onClick={async () => {
               const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
-              const { canceled, filePath } = await window.dialog.showSaveDialog({
+              const { canceled, filePath } = await globalThis.dialog.showSaveDialog({
                 title: 'Save Full Response',
                 buttonLabel: 'Save',
                 defaultPath: `response-${Date.now()}.txt`,
@@ -355,7 +355,7 @@ const PreviewModeDropdown = ({
               label="Export prettified response"
               onClick={async () => {
                 const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
-                const { canceled, filePath } = await window.dialog.showSaveDialog({
+                const { canceled, filePath } = await globalThis.dialog.showSaveDialog({
                   title: 'Save Full Response',
                   buttonLabel: 'Save',
                   defaultPath: `response-${Date.now()}.txt`,
@@ -374,7 +374,7 @@ const PreviewModeDropdown = ({
             icon="bug"
             label="Export HTTP debug"
             onClick={async () => {
-              const { canceled, filePath } = await window.dialog.showSaveDialog({
+              const { canceled, filePath } = await globalThis.dialog.showSaveDialog({
                 title: 'Save Full Response',
                 buttonLabel: 'Save',
                 defaultPath: `response-${Date.now()}.txt`,
@@ -399,7 +399,7 @@ const PreviewModeDropdown = ({
             label="Export as HAR"
             onClick={async () => {
               const activeRequest = await models.request.getById(activeResponse.parentId);
-              const { canceled, filePath } = await window.dialog.showSaveDialog({
+              const { canceled, filePath } = await globalThis.dialog.showSaveDialog({
                 title: 'Save Full Response',
                 buttonLabel: 'Save',
                 defaultPath: `response-${Date.now()}.txt`,

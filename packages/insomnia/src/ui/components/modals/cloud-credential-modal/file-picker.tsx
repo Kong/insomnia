@@ -17,7 +17,7 @@ export const FilePicker = (props: FilePickerProps) => {
   const { name, value, placeholder, ariaLabel, filePickerOptions, onSelectFile } = props;
 
   const handleSelectFile = async () => {
-    const { canceled, filePaths } = await window.dialog.showOpenDialog(filePickerOptions);
+    const { canceled, filePaths } = await globalThis.dialog.showOpenDialog(filePickerOptions);
     if (canceled) {
       return;
     }

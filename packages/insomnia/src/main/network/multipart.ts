@@ -74,8 +74,8 @@ export async function buildMultipart(params: RequestBodyParameter[]) {
         const contentType = lookup(fileName) || 'application/octet-stream';
         addString(
           'Content-Disposition: form-data; ' +
-            `name="${name.replace(/"/g, '\\"')}"; ` +
-            `filename="${path.basename(fileName).replace(/"/g, '\\"')}"`,
+            `name="${name.replaceAll('"', String.raw`\"`)}"; ` +
+            `filename="${path.basename(fileName).replaceAll('"', String.raw`\"`)}"`,
         );
         addString(lineBreak);
         addString(`Content-Type: ${contentType}`);

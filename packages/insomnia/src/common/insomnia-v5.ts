@@ -107,7 +107,7 @@ function mapParameters(parameters?: RequestParameter[]) {
  */
 function mapMeta(resource: Request | WebSocketRequest | SocketIORequest | GrpcRequest) {
   if (!resource) {
-    return undefined;
+    return;
   }
 
   return {
@@ -129,7 +129,7 @@ function mapMeta(resource: Request | WebSocketRequest | SocketIORequest | GrpcRe
  */
 function mapGroupMeta(resource: RequestGroup) {
   if (!resource) {
-    return undefined;
+    return;
   }
 
   return {
@@ -151,7 +151,7 @@ function mapGroupMeta(resource: RequestGroup) {
  */
 function mapWorkspaceMeta(workspace: Workspace) {
   if (!workspace) {
-    return undefined;
+    return;
   }
 
   return {
@@ -272,12 +272,17 @@ function mapMetaToInsomniaMeta(meta: Meta): {
  * @returns The corresponding workspace scope
  */
 export function insomniaSchemaTypeToScope(type: InsomniaFile['type']): WorkspaceScope {
-  if (type === 'collection.insomnia.rest/5.0') {
+  switch (type) {
+  case 'collection.insomnia.rest/5.0': {
     return 'collection';
-  } else if (type === 'environment.insomnia.rest/5.0') {
+  }
+  case 'environment.insomnia.rest/5.0': {
     return 'environment';
-  } else if (type === 'spec.insomnia.rest/5.0') {
+  }
+  case 'spec.insomnia.rest/5.0': {
     return 'design';
+  }
+  // No default
   }
   return 'mock-server';
 }
@@ -436,7 +441,7 @@ function getTestSuites(file: InsomniaFile): (UnitTestSuite | UnitTest)[] {
   if (file.type === 'spec.insomnia.rest/5.0') {
     const resources: (UnitTestSuite | UnitTest)[] = [];
 
-    file.testSuites?.forEach((testSuite, index) => {
+    if (file.testSuites) for (const [index, testSuite] of file.testSuites.entries()) {
       const suite: WithExportType<UnitTestSuite> = {
         ...mapMetaToInsomniaMeta(
           testSuite.meta || {
@@ -469,7 +474,7 @@ function getTestSuites(file: InsomniaFile): (UnitTestSuite | UnitTest)[] {
         })) || [];
 
       resources.push(...tests);
-    });
+    }
 
     return resources;
   }
@@ -487,7 +492,7 @@ function getCollection(
       collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'],
       parentId: string,
     ) {
-      collection?.forEach(item => {
+      if (collection) for (const item of collection) {
         // Detect groups: items that are NOT requests, gRPC, or WebSocket
         const isGroup = !('method' in item) && !('reflectionApi' in item) && !('url' in item);
 
@@ -630,7 +635,7 @@ function getCollection(
             }
           }
         }
-      });
+      }
     }
 
     walkCollection(file.collection, file.meta?.id || '__WORKSPACE_ID__');
@@ -756,7 +761,7 @@ export async function getInsomniaV5DataExport({
       const collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] = [];
 
       // Filter resources based on requestIds filter and parent relationship
-      resources
+      for (const resource of resources
         .filter(resource => {
           // Include all request groups, or filter by requestIds if specified
           if (!requestIds || requestIds.length === 0 || models.requestGroup.isRequestGroup(resource)) {
@@ -765,8 +770,7 @@ export async function getInsomniaV5DataExport({
 
           return requestIds.includes(resource._id);
         })
-        .filter(resource => resource.parentId === parentId)
-        .forEach(resource => {
+        .filter(resource => resource.parentId === parentId)) {
           // Convert HTTP requests to v5 format
           if (models.request.isRequest(resource)) {
             const request: Insomnia_Request = {
@@ -858,7 +862,7 @@ export async function getInsomniaV5DataExport({
 
             collection.push(grpcRequest);
           }
-        });
+        }
 
       return collection;
     }
@@ -868,7 +872,7 @@ export async function getInsomniaV5DataExport({
       const hasAfterResponse = !!resource?.afterResponseScript;
 
       if (!hasPreRequest && !hasAfterResponse) {
-        return undefined;
+        return;
       }
 
       const scripts: { preRequest?: string; afterResponse?: string } = {};
@@ -956,7 +960,7 @@ export async function getInsomniaV5DataExport({
     ): Extract<InsomniaFile, { type: 'spec.insomnia.rest/5.0' }>['testSuites'] {
       const testSuites: Extract<InsomniaFile, { type: 'spec.insomnia.rest/5.0' }>['testSuites'] = [];
 
-      resources.filter(models.unitTestSuite.isUnitTestSuite).forEach(testSuite => {
+      for (const testSuite of resources.filter(models.unitTestSuite.isUnitTestSuite)) {
         const tests = resources.filter(models.unitTest.isUnitTest).filter(test => test.parentId === testSuite._id);
 
         testSuites.push({
@@ -981,7 +985,7 @@ export async function getInsomniaV5DataExport({
             code: test.code,
           })),
         });
-      });
+      }
 
       return testSuites;
     }
@@ -995,7 +999,7 @@ export async function getInsomniaV5DataExport({
 
       try {
         contents = JSON.parse(spec.contents);
-      } catch (err) {
+      } catch {
         // @TODO For some reason switching a spec from JSON to YAML doesn't update it's content type so we need to handle both here
         // This must be fixed in the apiSpec model
         try {
@@ -1041,7 +1045,8 @@ export async function getInsomniaV5DataExport({
       }));
     }
 
-    if (workspace.scope === 'collection') {
+    switch (workspace.scope) {
+    case 'collection': {
       const collection: InsomniaFile = {
         type: 'collection.insomnia.rest/5.0',
         schema_version: INSOMNIA_SCHEMA_VERSION,
@@ -1068,7 +1073,8 @@ export async function getInsomniaV5DataExport({
       const parsedCollection = InsomniaFileSchema.parse(collection);
 
       return stringify(removeEmptyFields(parsedCollection));
-    } else if (workspace.scope === 'design') {
+    }
+    case 'design': {
       const spec: InsomniaFile = {
         type: 'spec.insomnia.rest/5.0',
         schema_version: INSOMNIA_SCHEMA_VERSION,
@@ -1100,7 +1106,8 @@ export async function getInsomniaV5DataExport({
       const parsedSpec = InsomniaFileSchema.parse(spec);
 
       return stringify(removeEmptyFields(parsedSpec));
-    } else if (workspace.scope === 'environment') {
+    }
+    case 'environment': {
       const environment: InsomniaFile = {
         type: 'environment.insomnia.rest/5.0',
         schema_version: INSOMNIA_SCHEMA_VERSION,
@@ -1115,8 +1122,9 @@ export async function getInsomniaV5DataExport({
       const parsedEnvironment = InsomniaFileSchema.parse(environment);
 
       return stringify(removeEmptyFields(parsedEnvironment));
-    } else if (workspace.scope === 'mock-server') {
-      const server = exportableResources.filter(models.mockServer.isMockServer)[0];
+    }
+    case 'mock-server': {
+      const server = exportableResources.find(models.mockServer.isMockServer);
 
       const mockServer: InsomniaFile = {
         type: 'mock.insomnia.rest/5.0',
@@ -1138,6 +1146,8 @@ export async function getInsomniaV5DataExport({
 
       const parsedMockServer = InsomniaFileSchema.parse(mockServer);
       return stringify(removeEmptyFields(parsedMockServer), {});
+    }
+    // No default
     }
     throw new Error('Unknown workspace scope');
   } catch (err) {

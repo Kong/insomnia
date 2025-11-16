@@ -50,10 +50,10 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
 
     const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
 
-    const allRemoteFilesOrganizationIds = remoteFiles.map(file => file.organizationId);
+    const allRemoteFilesOrganizationIds = new Set(remoteFiles.map(file => file.organizationId));
     const allRemoteFilesProjectIds = remoteFiles.map(file => file.teamProjectId);
 
-    const organizations = allOrganizations.filter(org => allRemoteFilesOrganizationIds.includes(org.id));
+    const organizations = allOrganizations.filter(org => allRemoteFilesOrganizationIds.has(org.id));
 
     const projects = await database.find<Project>(project.type, {
       remoteId: {

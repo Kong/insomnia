@@ -10,7 +10,7 @@ export const AppHooks: FC = () => {
   useThemeChange();
   // Used for detecting if we just updated Insomnia and app --args or insomnia:// and
   useEffect(() => {
-    setTimeout(() => window.main.halfSecondAfterAppStart(), 500);
+    setTimeout(() => globalThis.main.halfSecondAfterAppStart(), 500);
   }, []);
 
   return null;

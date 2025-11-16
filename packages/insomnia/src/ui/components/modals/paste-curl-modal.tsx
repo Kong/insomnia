@@ -21,7 +21,7 @@ export const PasteCurlModal = ({
   useEffect(() => {
     async function parseCurlToRequest() {
       try {
-        const { data } = await window.main.parseImport(
+        const { data } = await globalThis.main.parseImport(
           {
             contentStr: defaultValue || '',
           },
@@ -63,7 +63,7 @@ export const PasteCurlModal = ({
                 return;
               }
               try {
-                const { data } = await window.main.parseImport(
+                const { data } = await globalThis.main.parseImport(
                   {
                     contentStr: value,
                   },

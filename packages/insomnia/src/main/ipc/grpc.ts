@@ -390,7 +390,7 @@ export const start = (event: IpcMainEvent, ipcParams: GrpcIpcRequestParams) => {
 
       if (!url) {
         event.reply('grpc.error', request._id, new Error('URL not specified'));
-        return undefined;
+        return;
       }
       // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
       const Client = makeGenericClientConstructor({});
@@ -409,7 +409,8 @@ export const start = (event: IpcMainEvent, ipcParams: GrpcIpcRequestParams) => {
       try {
         const messageBody = JSON.parse(request.body.text || '');
         const requestPath = path + method.path;
-        if (methodType === 'unary') {
+        switch (methodType) {
+        case 'unary': {
           const unaryCall = client.makeUnaryRequest(
             requestPath,
             method.requestSerialize,
@@ -420,7 +421,10 @@ export const start = (event: IpcMainEvent, ipcParams: GrpcIpcRequestParams) => {
           );
           unaryCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
           grpcCalls.set(request._id, unaryCall);
-        } else if (methodType === 'client') {
+        
+        break;
+        }
+        case 'client': {
           const clientCall = client.makeClientStreamRequest(
             requestPath,
             method.requestSerialize,
@@ -430,7 +434,10 @@ export const start = (event: IpcMainEvent, ipcParams: GrpcIpcRequestParams) => {
           );
           clientCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
           grpcCalls.set(request._id, clientCall);
-        } else if (methodType === 'server') {
+        
+        break;
+        }
+        case 'server': {
           const serverCall = client.makeServerStreamRequest(
             requestPath,
             method.requestSerialize,
@@ -440,7 +447,10 @@ export const start = (event: IpcMainEvent, ipcParams: GrpcIpcRequestParams) => {
           );
           onStreamingResponse(event, serverCall, request._id);
           grpcCalls.set(request._id, serverCall);
-        } else if (methodType === 'bidi') {
+        
+        break;
+        }
+        case 'bidi': {
           const bidiCall = client.makeBidiStreamRequest(
             requestPath,
             method.requestSerialize,
@@ -449,8 +459,12 @@ export const start = (event: IpcMainEvent, ipcParams: GrpcIpcRequestParams) => {
           );
           onStreamingResponse(event, bidiCall, request._id);
           grpcCalls.set(request._id, bidiCall);
-        } else {
+        
+        break;
+        }
+        default: {
           throw new Error(`Unsupported method type: ${methodType}`);
+        }
         }
         // Update request stats
         models.stats.incrementExecutedRequests();
@@ -550,7 +564,7 @@ const filterDisabledOrInvalidMetaData = (metadata: GrpcRequestHeader[]): Metadat
 };
 
 export type GrpcMethodType = 'unary' | 'server' | 'client' | 'bidi';
-const closeAll = (): void => grpcCalls.forEach(x => x.cancel());
+const closeAll = (): void => { for (const x of grpcCalls) x.cancel() };
 
 if (typeof electron.app.on === 'function') {
   electron.app.on('window-all-closed', closeAll);

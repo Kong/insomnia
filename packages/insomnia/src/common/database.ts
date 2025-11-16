@@ -582,12 +582,11 @@ export const database = {
         const parentIdsMap = new Map<AllTypes, (string | null)[]>();
 
         for (const d of docs) {
-          if (d.type) {
-            queryTypesDescendantMap[d.type]?.forEach(t => {
+          if (d.type && queryTypesDescendantMap[d.type])
+            for (const t of queryTypesDescendantMap[d.type]) {
               uniqueDescendantTypes.add(t);
               parentIdsMap.set(t, [...(parentIdsMap.get(t) || []), d._id]);
-            });
-          }
+            }
         }
 
         const queryTypes = Array.from(uniqueDescendantTypes);

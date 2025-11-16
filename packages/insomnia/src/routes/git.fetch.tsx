@@ -12,7 +12,7 @@ interface FetchGitData {
 export async function clientAction({ request }: Route.ClientActionArgs) {
   console.log('Client action for git fetch', request);
   const data = (await request.json()) as FetchGitData;
-  return window.main.git.gitFetchAction(data);
+  return globalThis.main.git.gitFetchAction(data);
 }
 
 export const useGitProjectFetchActionFetcher = createFetcherSubmitHook(

@@ -76,12 +76,12 @@ export default class BaseExtension {
     const tok = parser.nextToken();
     let args;
 
-    if (parser.peekToken().type !== lexer.TOKEN_BLOCK_END) {
-      args = parser.parseSignature(null, true);
-    } else {
+    if (parser.peekToken().type === lexer.TOKEN_BLOCK_END) {
       // Not sure why this is needed, but it fails without it
       args = new nodes.NodeList(tok.lineno, tok.colno);
       args.addChild(new nodes.Literal(0, 0, EMPTY_ARG));
+    } else {
+      args = parser.parseSignature(null, true);
     }
 
     parser.advanceAfterBlockEnd(tok.value);
@@ -90,12 +90,12 @@ export default class BaseExtension {
 
   asyncRun({ ctx }: any, ...runArgs: any[]) {
     const renderContext = ctx as BaseRenderContext & { value: string | number };
-    const callback = runArgs[runArgs.length - 1];
+    const callback = runArgs.at(-1);
     const renderMeta = renderContext.getMeta?.();
     const renderPurpose = renderContext.getPurpose?.();
     // Extract the rest of the args
     const args = runArgs
-      .slice(0, runArgs.length - 1)
+      .slice(0, - 1)
       .filter(a => a !== EMPTY_ARG)
       .map(decodeEncoding);
     // Define a helper context with utils
@@ -129,7 +129,7 @@ export default class BaseExtension {
           templating.render(str, {
             context: renderContext,
           }),
-        openInBrowser: (url: string) => window.main.openInBrowser(url),
+        openInBrowser: (url: string) => globalThis.main.openInBrowser(url),
         models: {
           request: {
             getById: models.request.getById,

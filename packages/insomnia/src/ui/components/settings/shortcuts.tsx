@@ -108,11 +108,11 @@ export const Shortcuts: FC = () => {
                                 onClick={() => {
                                   let toBeRemovedIndex = -1;
                                   const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[keyboardShortcut]);
-                                  keyCombs.forEach((existingKeyComb, index) => {
+                                  for (const [index, existingKeyComb] of keyCombs.entries()) {
                                     if (areSameKeyCombinations(existingKeyComb, keyComb)) {
                                       toBeRemovedIndex = index;
                                     }
-                                  });
+                                  }
                                   if (toBeRemovedIndex >= 0) {
                                     keyCombs.splice(toBeRemovedIndex, 1);
 

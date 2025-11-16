@@ -174,7 +174,7 @@ const defaultRegistry: HotKeyRegistry = {
  * Get a new copy of hotkey registry with default values.
  */
 export function newDefaultRegistry(): HotKeyRegistry {
-  return JSON.parse(JSON.stringify(defaultRegistry));
+  return structuredClone(defaultRegistry);
 }
 
 /**
@@ -208,10 +208,10 @@ export function getChar(keyCode: number) {
   let char;
   const key = Object.keys(keyboardKeys).find(k => keyboardKeys[k].keyCode === keyCode);
 
-  if (!key) {
-    console.error('Invalid key code', keyCode);
-  } else {
+  if (key) {
     char = keyboardKeys[key].label;
+  } else {
+    console.error('Invalid key code', keyCode);
   }
 
   return char || 'unknown';
@@ -254,11 +254,11 @@ export function constructKeyCombinationDisplay(keyComb: KeyCombination, mustUseP
   const chars: string[] = [];
 
   const addModifierKeys = (keys: (keyof Omit<KeyCombination, 'keyCode'>)[]) => {
-    keys.forEach(key => {
+    for (const key of keys) {
       if (keyComb[key]) {
         chars.push(displayModifierKey(key));
       }
-    });
+    }
   };
 
   if (isMac()) {

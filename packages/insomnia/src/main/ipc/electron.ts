@@ -283,20 +283,8 @@ export function registerElectronHandlers() {
             const hasSubmenu = actions?.options?.length;
             return {
               label: fnOrString(l.templateTag.displayName),
-              ...(!hasSubmenu
+              ...(hasSubmenu
                 ? {
-                    click: () => {
-                      const tag = `{% ${l.templateTag.name} ${l.templateTag.args?.map(getTemplateValue).join(', ')} %}`;
-                      const displayName = l.templateTag.displayName;
-                      event.sender.send('nunjucks-context-menu-command', {
-                        key,
-                        tag,
-                        needsEnterprisePlan,
-                        displayName,
-                      });
-                    },
-                  }
-                : {
                     submenu: actions?.options?.map(action => ({
                       label: fnOrString(action.displayName),
                       click: () => {
@@ -313,6 +301,18 @@ export function registerElectronHandlers() {
                         });
                       },
                     })),
+                  }
+                : {
+                    click: () => {
+                      const tag = `{% ${l.templateTag.name} ${l.templateTag.args?.map(getTemplateValue).join(', ')} %}`;
+                      const displayName = l.templateTag.displayName;
+                      event.sender.send('nunjucks-context-menu-command', {
+                        key,
+                        tag,
+                        needsEnterprisePlan,
+                        displayName,
+                      });
+                    },
                   }),
             };
           });
@@ -326,13 +326,13 @@ export function registerElectronHandlers() {
     },
   );
   ipcMainOn('setMenuBarVisibility', (_, visible: boolean) => {
-    BrowserWindow.getAllWindows().forEach(window => {
+    for (const window of BrowserWindow.getAllWindows()) {
       // the `setMenuBarVisibility` signature uses `visible` semantics
       window.setMenuBarVisibility(visible);
       // the `setAutoHideMenu` signature uses `hide` semantics
       const hide = !visible;
       window.setAutoHideMenuBar(hide);
-    });
+    }
   });
   ipcMainHandle('showOpenDialog', async (_, options: OpenDialogOptions) => {
     const { filePaths, canceled } = await dialog.showOpenDialog(options);

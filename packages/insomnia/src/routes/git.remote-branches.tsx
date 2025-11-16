@@ -13,7 +13,7 @@ interface FetchRemoteBranchesData {
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = (await request.json()) as FetchRemoteBranchesData;
 
-  return window.main.git.fetchGitRemoteBranches(data);
+  return globalThis.main.git.fetchGitRemoteBranches(data);
 }
 
 export const useGitRemoteBranchesActionFetcher = createFetcherSubmitHook(

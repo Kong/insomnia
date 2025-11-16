@@ -24,10 +24,10 @@ export const AISettings = () => {
 
   useEffect(() => {
     const loadConfigurations = async () => {
-      const configs = await window.main.llm.getAllConfigurations();
-      const current = await window.main.llm.getActiveBackend();
-      const mockServerFeature = await window.main.llm.getAIFeatureEnabled('aiMockServers');
-      const commitMessagesFeature = await window.main.llm.getAIFeatureEnabled('aiCommitMessages');
+      const configs = await globalThis.main.llm.getAllConfigurations();
+      const current = await globalThis.main.llm.getActiveBackend();
+      const mockServerFeature = await globalThis.main.llm.getAIFeatureEnabled('aiMockServers');
+      const commitMessagesFeature = await globalThis.main.llm.getAIFeatureEnabled('aiCommitMessages');
 
       setMockServerEnabled(isMockServerEnabledByOrg && mockServerFeature);
       setCommitMessagesEnabled(isCommitMessagesEnabledByOrg && commitMessagesFeature);
@@ -44,37 +44,37 @@ export const AISettings = () => {
 
   const saveLLMSettings = useCallback(
     async (setCurrent: boolean, backend: LLMBackend, extras: Partial<LLMConfig> = {}) => {
-      await window.main.llm.updateBackendConfig(backend, extras);
+      await globalThis.main.llm.updateBackendConfig(backend, extras);
 
       if (setCurrent) {
-        await window.main.llm.setActiveBackend(backend);
-        const newCurrentConfig = await window.main.llm.getCurrentConfig();
+        await globalThis.main.llm.setActiveBackend(backend);
+        const newCurrentConfig = await globalThis.main.llm.getCurrentConfig();
         setCurrentLLM(newCurrentConfig);
       }
 
-      const updatedConfigs = await window.main.llm.getAllConfigurations();
+      const updatedConfigs = await globalThis.main.llm.getAllConfigurations();
       setConfiguredLLMs(updatedConfigs);
     },
     [],
   );
 
   const deactivateCurrentLLM = useCallback(async () => {
-    await window.main.llm.clearActiveBackend();
+    await globalThis.main.llm.clearActiveBackend();
     setCurrentLLM(null);
     setMockServerEnabled(false);
     setCommitMessagesEnabled(false);
-    await window.main.llm.setAIFeatureEnabled('aiMockServers', false);
-    await window.main.llm.setAIFeatureEnabled('aiCommitMessages', false);
+    await globalThis.main.llm.setAIFeatureEnabled('aiMockServers', false);
+    await globalThis.main.llm.setAIFeatureEnabled('aiCommitMessages', false);
   }, []);
 
   const handleMockServerToggle = useCallback(async (enabled: boolean) => {
     setMockServerEnabled(enabled);
-    await window.main.llm.setAIFeatureEnabled('aiMockServers', enabled);
+    await globalThis.main.llm.setAIFeatureEnabled('aiMockServers', enabled);
   }, []);
 
   const handleCommitMessagesToggle = useCallback(async (enabled: boolean) => {
     setCommitMessagesEnabled(enabled);
-    await window.main.llm.setAIFeatureEnabled('aiCommitMessages', enabled);
+    await globalThis.main.llm.setAIFeatureEnabled('aiCommitMessages', enabled);
   }, []);
 
   const activeBadge = (
@@ -100,10 +100,10 @@ export const AISettings = () => {
               <Badge color="surprise" icon="sparkles" label="AI" />
               Features
             </h3>
-            {!hasActiveLLM ? (
-              <p className="mb-4 text-sm text-[--hl]">Configure and activate an LLM below to enable AI features.</p>
-            ) : (
+            {hasActiveLLM ? (
               <p className="mb-4 text-sm text-[--color-font]">Enable AI-powered features in Insomnia.</p>
+            ) : (
+              <p className="mb-4 text-sm text-[--hl]">Configure and activate an LLM below to enable AI features.</p>
             )}
           </div>
 
@@ -112,13 +112,13 @@ export const AISettings = () => {
               <span className="text-sm font-medium text-[--color-font]">
                 Auto-generate Mock Servers from natural language
               </span>
-              {!isMockServerEnabledByOrg ? (
+              {isMockServerEnabledByOrg ? hasActiveLLM ? null : (
+                <p className="text-xs text-[--hl]">Configure and activate an LLM to enable this feature</p>
+              ) : (
                 <p className="text-xs text-[--color-danger]">
                   Disabled by organization{features.aiMockServers?.reason ? `: ${features.aiMockServers.reason}` : ''}
                 </p>
-              ) : !hasActiveLLM ? (
-                <p className="text-xs text-[--hl]">Configure and activate an LLM to enable this feature</p>
-              ) : null}
+              )}
             </div>
             <Switch
               isSelected={mockServerEnabled && isMockServerEnabledByOrg}
@@ -135,14 +135,14 @@ export const AISettings = () => {
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium text-[--color-font]">Suggest comments and grouping for Commits</span>
-              {!isCommitMessagesEnabledByOrg ? (
+              {isCommitMessagesEnabledByOrg ? hasActiveLLM ? null : (
+                <p className="text-xs text-[--hl]">Configure and activate an LLM to enable this feature</p>
+              ) : (
                 <p className="text-xs text-[--color-danger]">
                   Disabled by organization
                   {features.aiCommitMessages?.reason ? `: ${features.aiCommitMessages.reason}` : ''}
                 </p>
-              ) : !hasActiveLLM ? (
-                <p className="text-xs text-[--hl]">Configure and activate an LLM to enable this feature</p>
-              ) : null}
+              )}
             </div>
             <Switch
               isSelected={commitMessagesEnabled && isCommitMessagesEnabledByOrg}

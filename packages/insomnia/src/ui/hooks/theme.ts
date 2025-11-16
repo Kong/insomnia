@@ -126,7 +126,7 @@ export const useIsLightTheme = () => {
 
   // Listen to system theme changes
   useEffect(() => {
-    const matches = window.matchMedia('(prefers-color-scheme: dark)');
+    const matches = globalThis.matchMedia('(prefers-color-scheme: dark)');
     const onChange = () => {
       setIsLightTheme(calcIsLightTheme());
     };

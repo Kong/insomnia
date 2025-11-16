@@ -24,7 +24,7 @@ export const ResponseTimelineViewer: FC<Props> = ({ timeline, pinToBottom }) => 
       };
       const prefix: string = prefixLookup[name] || '* ';
       const lines = (value + '').replace(/\n$/, '').split('\n');
-      const newLines = lines.filter(l => !l.match(/^\s*$/)).map(l => `${prefix}${l}`);
+      const newLines = lines.filter(l => !/^\s*$/.test(l)).map(l => `${prefix}${l}`);
       // Prefix each section with a newline to separate them
       const previousName = i > 0 ? all[i - 1].name : '';
 
@@ -48,7 +48,7 @@ export const ResponseTimelineViewer: FC<Props> = ({ timeline, pinToBottom }) => 
       ref={editorRef}
       hideLineNumbers
       readOnly
-      onClickLink={window.main.openInBrowser}
+      onClickLink={globalThis.main.openInBrowser}
       defaultValue={rows}
       className="pad-left"
       mode="curl"

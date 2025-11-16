@@ -364,9 +364,9 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
             {request.workspaceName}
           </span>
         ),
-        textValue: !isRequestGroup(request.item)
-          ? `${isRequest(request.item) ? request.item.method : isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name} ${request.url}`
-          : '',
+        textValue: isRequestGroup(request.item)
+          ? ''
+          : `${isRequest(request.item) ? request.item.method : isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name} ${request.url}`,
       })),
     });
 

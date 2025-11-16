@@ -62,7 +62,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     });
   }
 
-  window.main.trackSegmentEvent({
+  globalThis.main.trackSegmentEvent({
     event: SegmentEvent.generateCollectionFromMock,
   });
 

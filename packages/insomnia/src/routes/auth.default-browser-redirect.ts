@@ -7,7 +7,7 @@ import type { Route } from './+types/auth.default-browser-redirect';
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const param = (await request.json()) as DefaultBrowserRedirectParam;
-  window.main.onDefaultBrowserOAuthRedirect(param);
+  globalThis.main.onDefaultBrowserOAuthRedirect(param);
 
   return null;
 }

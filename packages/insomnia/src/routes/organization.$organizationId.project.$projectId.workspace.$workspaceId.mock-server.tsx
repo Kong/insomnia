@@ -147,17 +147,13 @@ const Component = () => {
       return;
     }
 
-    if (layout && layout[0] > 0) {
-      layout[0] = 0;
-    } else {
-      layout[0] = DEFAULT_SIDEBAR_SIZE;
-    }
+    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
 
     sidebarPanelRef.current?.setLayout(layout);
   }
 
   useEffect(() => {
-    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
+    const unsubscribe = globalThis.main.on('toggle-sidebar', toggleSidebar);
 
     return unsubscribe;
   }, []);
@@ -185,7 +181,7 @@ const Component = () => {
       return () => {};
     }
     // Listen on media query changes
-    const mediaQuery = window.matchMedia('(max-width: 880px)');
+    const mediaQuery = globalThis.matchMedia('(max-width: 880px)');
     setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
 
     const handleChange = (e: MediaQueryListEvent) => {

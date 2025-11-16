@@ -151,7 +151,7 @@ export const EnvironmentPicker = ({
                     `/organization/${organizationId}/project/${projectId}/workspace/${selectedGlobalBaseEnvironment.parentId}/environment`,
                   )
                 }
-                className={`flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] outline-none ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] ${!selectedGlobalBaseEnvironment ? 'opacity-50' : ''}`}
+                className={`flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] outline-none ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] ${selectedGlobalBaseEnvironment ? '' : 'opacity-50'}`}
               >
                 <Icon icon="gear" />
               </Button>

@@ -133,12 +133,12 @@ export function normalizePropertyOrder<T>(obj: any, reference: any): T {
     const referenceMap = new Map();
     const referenceOrder: string[] = [];
 
-    reference.forEach(refItem => {
+    for (const refItem of reference) {
       if (refItem?.meta?.id) {
         referenceMap.set(refItem.meta.id, refItem);
         referenceOrder.push(refItem.meta.id);
       }
-    });
+    }
 
     // Sort obj items to match reference order
     const sorted = [];

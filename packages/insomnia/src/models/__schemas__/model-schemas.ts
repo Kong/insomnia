@@ -14,10 +14,10 @@ const toSchema = <T>(obj: T): Schema<T> => {
   const output: Partial<Schema<T>> = {};
 
   // @ts-expect-error -- mapping unsoundness
-  Object.keys(cloned).forEach(key => {
+  for (const key of Object.keys(cloned)) {
     // @ts-expect-error -- mapping unsoundness
     output[key] = () => cloned[key];
-  });
+  }
 
   return output as Schema<T>;
 };
@@ -35,7 +35,7 @@ export const baseModelSchema: Schema<BaseModel> = {
 export const workspaceModelSchema: Schema<Workspace> = {
   ...baseModelSchema,
   ...toSchema(workspace.init()),
-  certificates: () => undefined,
+  certificates: () => {},
   type: () => workspace.type,
 };
 
@@ -61,6 +61,6 @@ export const environmentModelSchema: Schema<Environment> = {
   ...baseModelSchema,
   ...toSchema(environment.init()),
   type: () => environment.type,
-  environmentType: () => undefined,
-  kvPairData: () => undefined,
+  environmentType: () => {},
+  kvPairData: () => {},
 };

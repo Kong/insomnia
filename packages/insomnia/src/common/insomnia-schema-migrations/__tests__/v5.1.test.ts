@@ -488,7 +488,7 @@ collection:
 `;
 
       const migrated = migrateToLatestYaml(yamlData);
-      const parsed = JSON.parse(JSON.stringify(migrated)); // Parse like YAML parser would
+      const parsed = structuredClone(migrated); // Parse like YAML parser would
 
       expect(parsed).toBeDefined();
       // Note: schema_version is added by migrateToLatest function in index.ts

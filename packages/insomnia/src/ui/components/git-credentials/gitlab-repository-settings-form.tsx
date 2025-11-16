@@ -199,7 +199,7 @@ const GitLabSignInForm = () => {
               let parsedURL: URL;
               try {
                 parsedURL = new URL(link);
-              } catch (error) {
+              } catch {
                 setError('Invalid URL');
                 return;
               }

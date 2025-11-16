@@ -20,12 +20,7 @@ export function getTimeFromNow(timestamp: string | number | Date, titleCase: boo
   const date = new Date(timestamp);
   let text = formatDistanceToNowStrict(date, { addSuffix: true });
   const now = new Date();
-  let lessThanOneMinuteAgo;
-  if (now > date) {
-    lessThanOneMinuteAgo = differenceInMinutes(now, date) < 1;
-  } else {
-    lessThanOneMinuteAgo = differenceInMinutes(date, now) < 1;
-  }
+  const lessThanOneMinuteAgo = now > date ? differenceInMinutes(now, date) < 1 : differenceInMinutes(date, now) < 1;
   if (lessThanOneMinuteAgo) {
     text = 'just now';
   }

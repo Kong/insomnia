@@ -61,7 +61,7 @@ export const PromptButton = <T,>({
       setState('ask');
       // Set a timeout to hide the confirmation
       // using global.setTimeout to force use of the Node timeout rather than DOM timeout
-      triggerTimeout.current = global.setTimeout(() => {
+      triggerTimeout.current = globalThis.setTimeout(() => {
         setState('default');
       }, 2000);
     }
@@ -72,18 +72,7 @@ export const PromptButton = <T,>({
       }
       // Fire the click handler
       const retVal: any = onClick?.(event);
-      if (!referToOnClickReturnValue) {
-        // Set the state to done (but delay a bit to not alarm user)
-        // using global.setTimeout to force use of the Node timeout rather than DOM timeout
-        doneTimeout.current = global.setTimeout(() => {
-          setState('done');
-        }, 100);
-        // Set a timeout to hide the confirmation
-        // using global.setTimeout to force use of the Node timeout rather than DOM timeout
-        triggerTimeout.current = global.setTimeout(() => {
-          setState('default');
-        }, 2000);
-      } else {
+      if (referToOnClickReturnValue) {
         if (retVal instanceof Promise) {
           setState('loading');
           retVal
@@ -91,13 +80,24 @@ export const PromptButton = <T,>({
               setState('done');
             })
             .finally(() => {
-              triggerTimeout.current = global.setTimeout(() => {
+              triggerTimeout.current = globalThis.setTimeout(() => {
                 setState('default');
               }, 1000);
             });
         } else {
-          throw new Error('onClick must return a Promise when referToOnClickReturnValue is true');
+          throw new TypeError('onClick must return a Promise when referToOnClickReturnValue is true');
         }
+      } else {
+        // Set the state to done (but delay a bit to not alarm user)
+        // using global.setTimeout to force use of the Node timeout rather than DOM timeout
+        doneTimeout.current = globalThis.setTimeout(() => {
+          setState('done');
+        }, 100);
+        // Set a timeout to hide the confirmation
+        // using global.setTimeout to force use of the Node timeout rather than DOM timeout
+        triggerTimeout.current = globalThis.setTimeout(() => {
+          setState('default');
+        }, 2000);
       }
     }
   };

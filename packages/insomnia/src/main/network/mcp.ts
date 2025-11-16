@@ -105,7 +105,7 @@ const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
     try {
       // Try to parse error message to JSON if possible
       errorMessage = JSON.parse(originErrorMessage);
-    } catch (error) {}
+    } catch {}
     messageEvent = {
       type: 'error',
       error: {
@@ -250,11 +250,7 @@ const createTransportAndConnect = async (
     };
   };
 
-  if (!isOpenMcpHTTPClientConnectionOptions(connectionOptions)) {
-    transport = await createStdioTransport(connectionOptions, options);
-    wrapTransport();
-    await mcpClient.connect(transport);
-  } else {
+  if (isOpenMcpHTTPClientConnectionOptions(connectionOptions)) {
     const mcpRequest = await models.mcpRequest.getById(connectionOptions.requestId);
     invariant(mcpRequest, 'MCP Request not found');
 
@@ -266,6 +262,10 @@ const createTransportAndConnect = async (
     wrapTransport();
     // Use a longer timeout for initial connection to allow for auth flow to complete
     await mcpClient.connect(transport, { timeout: 3 * 60 * 1000 });
+  } else {
+    transport = await createStdioTransport(connectionOptions, options);
+    wrapTransport();
+    await mcpClient.connect(transport);
   }
 
   const mcpRequest = await models.mcpRequest.getById(connectionOptions.requestId);
@@ -273,11 +273,10 @@ const createTransportAndConnect = async (
 
   let authType = 'none';
   if ('type' in mcpRequest.authentication) {
-    if (mcpRequest.authentication.type === 'oauth2') {
-      authType = 'oauth2-' + mcpRequest.authentication.grantType;
-    } else {
-      authType = mcpRequest.authentication.type;
-    }
+    authType =
+      mcpRequest.authentication.type === 'oauth2'
+        ? 'oauth2-' + mcpRequest.authentication.grantType
+        : mcpRequest.authentication.type;
   }
   const authDisabled = 'disabled' in mcpRequest.authentication && mcpRequest.authentication.disabled;
   const isFirstConnection = !mcpRequest.connected;
@@ -366,7 +365,7 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
       timelinePath,
       eventLogPath,
     });
-    mcpClient.onclose = () => _handleCloseMcpConnection(requestId);
+    mcpClient.addEventListener('close', () => _handleCloseMcpConnection(requestId));
   } catch (error) {
     // Log error when connection fails with exception
     createErrorResponse({
@@ -436,8 +435,7 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
     primitivePromises.push(mcpClient.listTools());
   }
   if (serverCapabilities?.resources) {
-    primitivePromises.push(mcpClient.listResources());
-    primitivePromises.push(mcpClient.listResourceTemplates());
+    primitivePromises.push(mcpClient.listResources(), mcpClient.listResourceTemplates());
   }
   if (serverCapabilities?.prompts) {
     primitivePromises.push(mcpClient.listPrompts());

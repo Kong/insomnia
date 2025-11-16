@@ -16,7 +16,7 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   invariant(projectId, 'Project ID is required');
   const workspaceId = url.searchParams.get('workspaceId') || undefined;
 
-  return window.main.git.diffFileLoader({ filepath, staged, projectId, workspaceId });
+  return globalThis.main.git.diffFileLoader({ filepath, staged, projectId, workspaceId });
 }
 
 export const useGitProjectDiffLoaderFetcher = createFetcherLoadHook(

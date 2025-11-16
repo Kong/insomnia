@@ -127,7 +127,7 @@ export const NewWorkspaceModal = ({
     }
     setProgressMessage(0);
 
-    return undefined;
+    return;
   }, [createNewWorkspaceFetcher.state, scope, progressMessages.length]);
 
   useEffect(() => {
@@ -149,7 +149,7 @@ export const NewWorkspaceModal = ({
 
   useEffect(() => {
     if (isOpen && scope === WorkspaceScopeKeys.mockServer) {
-      window.main.trackSegmentEvent({
+      globalThis.main.trackSegmentEvent({
         event: SegmentEvent.mockCreateModalOpened,
       });
     }
@@ -376,9 +376,9 @@ export const NewWorkspaceModal = ({
                             </Heading>
                           </div>
                           <p className="pt-2">
-                            {!isGenerateMockServersWithAIEnabled
-                              ? 'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.'
-                              : 'Automatically generate a mock server from an OpenAPI spec.'}
+                            {isGenerateMockServersWithAIEnabled
+                              ? 'Automatically generate a mock server from an OpenAPI spec.'
+                              : 'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.'}
                           </p>
                         </Radio>
                       </div>
@@ -451,7 +451,7 @@ export const NewWorkspaceModal = ({
                                 <Button
                                   type="button"
                                   onPress={async () => {
-                                    const result = await window.dialog.showOpenDialog({
+                                    const result = await globalThis.dialog.showOpenDialog({
                                       filters: [{ name: 'OpenAPI Files', extensions: ['yaml', 'yml', 'json'] }],
                                       properties: ['openFile'],
                                     });
@@ -570,7 +570,7 @@ export const NewWorkspaceModal = ({
                           <Button
                             type="button"
                             onPress={async () => {
-                              const result = await window.dialog.showOpenDialog({
+                              const result = await globalThis.dialog.showOpenDialog({
                                 filters: [{ name: 'Files', extensions: ['json', 'yaml', 'yml', 'txt'] }],
                                 properties: ['openFile', 'multiSelections'],
                               });

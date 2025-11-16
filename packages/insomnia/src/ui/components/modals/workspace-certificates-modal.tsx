@@ -138,7 +138,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                             const files = Array.from(fileList);
                             const file = files[0];
 
-                            setPfxPath(window.webUtils.getPathForFile(file));
+                            setPfxPath(globalThis.webUtils.getPathForFile(file));
                           }}
                         >
                           <Button className="flex h-full flex-shrink-0 items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-sm] px-2 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]">
@@ -163,7 +163,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                             const files = Array.from(fileList);
                             const file = files[0];
 
-                            setCertificatePath(window.webUtils.getPathForFile(file));
+                            setCertificatePath(globalThis.webUtils.getPathForFile(file));
                           }}
                         >
                           <Button
@@ -189,7 +189,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                             const files = Array.from(fileList);
                             const file = files[0];
 
-                            setKeyPath(window.webUtils.getPathForFile(file));
+                            setKeyPath(globalThis.webUtils.getPathForFile(file));
                           }}
                         >
                           <Button
@@ -388,7 +388,7 @@ export const CACertificate = ({ caCertificate, tip }: { caCertificate?: CaCertif
                   organizationId,
                   projectId,
                   workspaceId,
-                  patch: { parentId: workspaceId, path: window.webUtils.getPathForFile(file) },
+                  patch: { parentId: workspaceId, path: globalThis.webUtils.getPathForFile(file) },
                 });
               }}
             >

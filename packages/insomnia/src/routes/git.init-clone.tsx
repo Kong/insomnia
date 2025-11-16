@@ -18,7 +18,7 @@ interface RepoInitCloneData {
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = (await request.json()) as RepoInitCloneData;
 
-  const initCloneResult = await window.main.git.initGitRepoClone(data);
+  const initCloneResult = await globalThis.main.git.initGitRepoClone(data);
 
   if ('errors' in initCloneResult) {
     return { errors: initCloneResult.errors };

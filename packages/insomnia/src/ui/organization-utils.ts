@@ -220,8 +220,8 @@ async function syncTeamProjects({
     remoteId: { $in: teamProjects.map(p => p.id) },
   });
 
-  const existingRemoteProjectsRemoteIds = existingRemoteProjects.map(p => p.remoteId);
-  const remoteProjectsThatNeedToBeCreated = teamProjects.filter(p => !existingRemoteProjectsRemoteIds.includes(p.id));
+  const existingRemoteProjectsRemoteIds = new Set(existingRemoteProjects.map(p => p.remoteId));
+  const remoteProjectsThatNeedToBeCreated = teamProjects.filter(p => !existingRemoteProjectsRemoteIds.has(p.id));
 
   // this will create a new project for any remote projects that don't exist in the current organization
   await Promise.all(

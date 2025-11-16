@@ -57,9 +57,9 @@ export function useAIFeatureStatus(): AIFeatureStatus {
   const [hasActiveLLM, setHasActiveLLM] = useState(false);
 
   const loadFeatureStatus = useCallback(async () => {
-    const userEnabledGenerateMockServersWithAI = await window.main.llm.getAIFeatureEnabled('aiMockServers');
-    const userEnabledGenerateCommitMessagesWithAI = await window.main.llm.getAIFeatureEnabled('aiCommitMessages');
-    const currentLLM = await window.main.llm.getCurrentConfig();
+    const userEnabledGenerateMockServersWithAI = await globalThis.main.llm.getAIFeatureEnabled('aiMockServers');
+    const userEnabledGenerateCommitMessagesWithAI = await globalThis.main.llm.getAIFeatureEnabled('aiCommitMessages');
+    const currentLLM = await globalThis.main.llm.getCurrentConfig();
 
     setGenerateMockServersWithAIEnabledByUser(userEnabledGenerateMockServersWithAI);
     setGenerateCommitMessagesWithAIEnabledByUser(userEnabledGenerateCommitMessagesWithAI);

@@ -9,20 +9,20 @@ import { Dropdown as OriginalDropdown, DropdownItem, ItemContent } from '../base
 export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
   const handleCloseThisRequest = () => {
     if (isWebSocketRequestId(requestId)) {
-      window.main.webSocket.close({ requestId });
+      globalThis.main.webSocket.close({ requestId });
     } else if (isSocketIORequestId(requestId)) {
-      window.main.socketIO.close({ requestId });
+      globalThis.main.socketIO.close({ requestId });
     } else if (isMcpRequestId(requestId)) {
-      window.main.mcp.close({ requestId });
+      globalThis.main.mcp.close({ requestId });
     }
   };
   const handleCloseAllRequests = () => {
     if (isWebSocketRequestId(requestId)) {
-      window.main.webSocket.closeAll();
+      globalThis.main.webSocket.closeAll();
     } else if (isSocketIORequestId(requestId)) {
-      window.main.socketIO.closeAll();
+      globalThis.main.socketIO.closeAll();
     } else if (isMcpRequestId(requestId)) {
-      window.main.mcp.closeAll();
+      globalThis.main.mcp.closeAll();
     }
   };
   return (

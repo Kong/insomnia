@@ -5,7 +5,7 @@ import { createFetcherSubmitHook } from '~/utils/router';
 import type { Route } from './+types/git-credentials.github.sign-out';
 
 export async function clientAction(_args: Route.ClientActionArgs) {
-  await window.main.git.signOutOfGitHub();
+  await globalThis.main.git.signOutOfGitHub();
 
   return null;
 }

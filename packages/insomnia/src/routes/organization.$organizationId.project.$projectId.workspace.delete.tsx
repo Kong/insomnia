@@ -49,7 +49,7 @@ async function deleteWorkspace(workspace: Workspace | null, project: Project | n
   await deleteWorkspaceFromLocal(workspace);
 
   if (workspace.scope === 'mock-server') {
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: SegmentEvent.mockDelete,
     });
   }

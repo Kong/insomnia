@@ -31,31 +31,68 @@ export const AuthWrapper: FC<{
   const type = getAuthObjectOrNull(authentication)?.type || '';
   let authBody: ReactNode = null;
 
-  if (type === 'basic') {
+  switch (type) {
+  case 'basic': {
     authBody = <BasicAuth disabled={disabled} />;
-  } else if (type === 'apikey') {
+  
+  break;
+  }
+  case 'apikey': {
     authBody = <ApiKeyAuth disabled={disabled} addToHeaderOnly={addToHeaderOnly} />;
-  } else if (type === 'oauth2') {
+  
+  break;
+  }
+  case 'oauth2': {
     authBody = <OAuth2Auth showMcpAuthFlow={showMcpAuthFlow} disabled={disabled} />;
-  } else if (type === 'hawk') {
+  
+  break;
+  }
+  case 'hawk': {
     authBody = <HawkAuth />;
-  } else if (type === 'oauth1') {
+  
+  break;
+  }
+  case 'oauth1': {
     authBody = <OAuth1Auth />;
-  } else if (type === 'digest') {
+  
+  break;
+  }
+  case 'digest': {
     authBody = <DigestAuth disabled={disabled} />;
-  } else if (type === 'ntlm') {
+  
+  break;
+  }
+  case 'ntlm': {
     authBody = <NTLMAuth />;
-  } else if (type === 'bearer') {
+  
+  break;
+  }
+  case 'bearer': {
     authBody = <BearerAuth disabled={disabled} />;
-  } else if (type === 'iam') {
+  
+  break;
+  }
+  case 'iam': {
     authBody = <AWSAuth />;
-  } else if (type === 'netrc') {
+  
+  break;
+  }
+  case 'netrc': {
     authBody = <NetrcAuth />;
-  } else if (type === 'asap') {
+  
+  break;
+  }
+  case 'asap': {
     authBody = <AsapAuth />;
-  } else if (type === 'singleToken') {
+  
+  break;
+  }
+  case 'singleToken': {
     authBody = <SingleTokenAuth disabled={disabled} />;
-  } else {
+  
+  break;
+  }
+  default: {
     authBody = (
       <div className="flex h-full w-full select-none items-center justify-center">
         <p className="p-4 text-center text-sm text-[--hl]">
@@ -72,6 +109,7 @@ export const AuthWrapper: FC<{
         </p>
       </div>
     );
+  }
   }
 
   return (

@@ -133,9 +133,9 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   const handleUpdate = useCallback(
     async (doc: models.BaseModel, patches: Partial<models.BaseModel>[] = []) => {
       const patchObj: Record<string, any> = {};
-      patches.forEach(patch => {
+      for (const patch of patches) {
         Object.assign(patchObj, patch);
-      });
+      }
       // only need to handle name, method, parentId change
       if (!patchObj.name && !patchObj.method && !patchObj.parentId) {
         return;
@@ -216,7 +216,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
   useEffect(() => {
     // sync tabList with database
-    const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
+    const unsubscribe = globalThis.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [changeType, doc, patches] = change;
 
@@ -289,7 +289,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   };
 
   useEffect(() => {
-    const unsubscribe = window.main.on('contextMenuCommand', (_, { key, label, extra }) => {
+    const unsubscribe = globalThis.main.on('contextMenuCommand', (_, { key, label, extra }) => {
       if (key !== 'insomniaTab') {
         return;
       }

@@ -20,7 +20,7 @@ export function decodeEncoding<T>(value: T) {
     const base64 = results[1];
     try {
       const binary = atob(base64);
-      const bytes = new Uint8Array([...binary].map(char => char.charCodeAt(0)));
+      const bytes = new Uint8Array([...binary].map(char => char.codePointAt(0)));
       return new TextDecoder().decode(bytes);
     } catch (e) {
       console.error('Invalid base64 string:', e);
@@ -103,12 +103,12 @@ export default class BaseExtension {
     const tok = parser.nextToken();
     let args;
 
-    if (parser.peekToken().type !== lexer.TOKEN_BLOCK_END) {
-      args = parser.parseSignature(null, true);
-    } else {
+    if (parser.peekToken().type === lexer.TOKEN_BLOCK_END) {
       // Not sure why this is needed, but it fails without it
       args = new nodes.NodeList(tok.lineno, tok.colno);
       args.addChild(new nodes.Literal(0, 0, EMPTY_ARG));
+    } else {
+      args = parser.parseSignature(null, true);
     }
 
     parser.advanceAfterBlockEnd(tok.value);
@@ -117,12 +117,12 @@ export default class BaseExtension {
 
   asyncRun({ ctx }: any, ...runArgs: any[]) {
     const renderContext = ctx as BaseRenderContext & { value: string | number };
-    const callback = runArgs[runArgs.length - 1];
+    const callback = runArgs.at(-1);
     const renderMeta = renderContext.getMeta?.();
     const renderPurpose = renderContext.getPurpose?.();
     // Extract the rest of the args
     const args = runArgs
-      .slice(0, runArgs.length - 1)
+      .slice(0, -1)
       .filter(a => a !== EMPTY_ARG)
       .map(decodeEncoding);
     const platform = ({ MacIntel: 'darwin', Win32: 'win32' }[globalThis.navigator.platform] ||

@@ -161,7 +161,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                   label="Import"
                   icon="file-import"
                   onClick={() => {
-                    window.main.trackSegmentEvent({
+                    globalThis.main.trackSegmentEvent({
                       event: SegmentEvent.importStarted,
                       properties: {
                         source: `${workspace.scope}-list`,
@@ -177,7 +177,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                   label="Export"
                   icon="file-export"
                   onClick={() => {
-                    window.main.trackSegmentEvent({
+                    globalThis.main.trackSegmentEvent({
                       event: SegmentEvent.exportStarted,
                       properties: {
                         source: `${workspace.scope}-list`,

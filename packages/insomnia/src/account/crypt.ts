@@ -215,7 +215,7 @@ export function decryptAESToBuffer(jwkOrKey: string | JsonWebKey, encryptedResul
  * Generate a random AES256 key for use with symmetric encryption
  */
 export async function generateAES256Key() {
-  const c = window.crypto;
+  const c = globalThis.crypto;
   // @ts-expect-error -- TSCONVERSION: likely needs a module augmentation for webkit
   const subtle = c ? c.subtle || c.webkitSubtle : null;
 
@@ -249,7 +249,7 @@ export async function generateAES256Key() {
  */
 export async function generateKeyPairJWK() {
   // NOTE: Safari has crypto.webkitSubtle, but it does not support RSA-OAEP-SHA256
-  const subtle = window.crypto && window.crypto.subtle;
+  const subtle = globalThis.crypto && globalThis.crypto.subtle;
 
   if (subtle) {
     console.log('[crypt] Using Native RSA Generation');
@@ -274,7 +274,7 @@ export async function generateKeyPairJWK() {
   console.log('[crypt] Using Forge RSA Generation');
   const pair = forge.pki.rsa.generateKeyPair({
     bits: 2048,
-    e: 0x10001,
+    e: 0x1_00_01,
   });
   const privateKey = {
     alg: 'RSA-OAEP-256',
@@ -335,7 +335,7 @@ function _bigIntToB64Url(n: forge.jsbn.BigInteger) {
 
 function _hexToB64Url(h: string) {
   const bytes = forge.util.hexToBytes(h);
-  return window.btoa(bytes).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  return globalThis.btoa(bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
 }
 
 function _b64UrlToBigInt(s: string) {
@@ -345,8 +345,8 @@ function _b64UrlToBigInt(s: string) {
 }
 
 function _b64UrlToHex(s: string) {
-  const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
-  return forge.util.bytesToHex(window.atob(b64));
+  const b64 = s.replaceAll('-', '+').replaceAll('_', '/');
+  return forge.util.bytesToHex(globalThis.atob(b64));
 }
 
 /**
@@ -356,9 +356,9 @@ function _b64UrlToHex(s: string) {
  * @param salt hex representation of salt
  */
 async function _pbkdf2Passphrase(passphrase: string, salt: string) {
-  if (window.crypto && window.crypto.subtle) {
+  if (globalThis.crypto && globalThis.crypto.subtle) {
     console.log('[crypt] Using native PBKDF2');
-    const k = await window.crypto.subtle.importKey(
+    const k = await globalThis.crypto.subtle.importKey(
       'raw',
       Buffer.from(passphrase, 'utf8'),
       {
@@ -373,7 +373,7 @@ async function _pbkdf2Passphrase(passphrase: string, salt: string) {
       iterations: DEFAULT_PBKDF2_ITERATIONS,
       hash: 'SHA-256',
     };
-    const derivedKeyRaw = await window.crypto.subtle.deriveBits(algo, k, DEFAULT_BYTE_LENGTH * 8);
+    const derivedKeyRaw = await globalThis.crypto.subtle.deriveBits(algo, k, DEFAULT_BYTE_LENGTH * 8);
     return Buffer.from(derivedKeyRaw).toString('hex');
   }
   console.log('[crypt] Using Forge PBKDF2');

@@ -1,10 +1,11 @@
+#!/usr/bin/env node
 import { bundlePlugins } from '../config/config.json';
 
 const isModuleInstalled = (moduleName: string) => {
   try {
     require.resolve(moduleName);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 };

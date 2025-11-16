@@ -89,8 +89,8 @@ export const ResponseMultipartViewer: FC<Props> = ({
     }
     const contentType = getContentTypeFromHeaders(selectedPart.headers, 'text/plain');
     const extension = mimeExtension(contentType) || '.txt';
-    const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
-    const dir = lastDir || window.app.getPath('desktop');
+    const lastDir = globalThis.localStorage.getItem('insomnia.lastExportPath');
+    const dir = lastDir || globalThis.app.getPath('desktop');
     const date = format(Date.now(), 'yyyy-MM-dd');
     const filename = selectedPart.filename || `${selectedPart.name}_${date}`;
     const options: SaveDialogOptions = {
@@ -104,14 +104,14 @@ export const ResponseMultipartViewer: FC<Props> = ({
         },
       ],
     };
-    const { canceled, filePath } = await window.dialog.showSaveDialog(options);
+    const { canceled, filePath } = await globalThis.dialog.showSaveDialog(options);
 
     if (canceled || !filePath) {
       return;
     }
 
     // Remember last exported path
-    window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
+    globalThis.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
 
     // Save the file
     try {

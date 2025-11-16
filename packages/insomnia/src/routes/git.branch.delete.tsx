@@ -16,7 +16,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   invariant(typeof data.branch === 'string', 'Branch is required');
 
-  return window.main.git.deleteGitBranch(data);
+  return globalThis.main.git.deleteGitBranch(data);
 }
 
 export const useGitProjectDeleteBranchActionFetcher = createFetcherSubmitHook(

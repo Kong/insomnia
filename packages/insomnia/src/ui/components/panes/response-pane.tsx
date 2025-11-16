@@ -76,10 +76,10 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
 
       const { contentType } = activeResponse;
       const extension = mimeExtension(contentType) || 'unknown';
-      const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
+      const { canceled, filePath: outputPath } = await globalThis.dialog.showSaveDialog({
         title: 'Save Response Body',
         buttonLabel: 'Save',
-        defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
+        defaultPath: `${activeRequest.name.replaceAll(/ +/g, '_')}-${Date.now()}.${extension}`,
       });
 
       if (canceled) {
@@ -120,12 +120,12 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const { passedTestCount, totalTestCount } = useMemo(() => {
     let passedTestCount = 0;
     let totalTestCount = 0;
-    activeResponse?.requestTestResults.forEach(result => {
+    for (const result of activeResponse?.requestTestResults || []) {
       if (result.status === 'passed') {
         passedTestCount++;
       }
       totalTestCount++;
-    });
+    }
     return { passedTestCount, totalTestCount };
   }, [activeResponse]);
   const testResultCountTagColor =
@@ -155,7 +155,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
 
   return (
     <Pane type="response">
-      {!activeResponse ? null : (
+      {activeResponse ? (
         <PaneHeader className="row-spaced">
           <div aria-atomic="true" aria-live="polite" className="no-wrap scrollable scrollable--no-bars pad-left">
             <StatusTag statusCode={activeResponse.statusCode} statusMessage={activeResponse.statusMessage} />
@@ -168,7 +168,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             requestVersions={requestVersions}
           />
         </PaneHeader>
-      )}
+      ) : null}
       <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
         <TabList
           className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
@@ -233,7 +233,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
               copyToClipboard={async () => {
                 const bodyBuffer = activeResponse ? await models.response.getBodyBuffer(activeResponse) : null;
                 if (bodyBuffer) {
-                  window.clipboard.writeText(bodyBuffer.toString('utf8'));
+                  globalThis.clipboard.writeText(bodyBuffer.toString('utf8'));
                 }
               }}
             />

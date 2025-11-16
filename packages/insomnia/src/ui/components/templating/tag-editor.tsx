@@ -54,17 +54,16 @@ interface State {
 }
 const sortRequests = (_models: (Request | RequestGroup)[], parentId: string) => {
   let sortedModels: (Request | RequestGroup)[] = [];
-  _models
+  for (const model of _models
     .filter(model => model.parentId === parentId)
-    .sort(metaSortKeySort)
-    .forEach(model => {
+    .sort(metaSortKeySort)) {
       if (isRequest(model)) {
         sortedModels.push(model);
       }
       if (isRequestGroup(model)) {
         sortedModels = sortedModels.concat(sortRequests(_models, model._id));
       }
-    });
+    }
   return sortedModels;
 };
 export const TagEditor: FC<Props> = props => {
@@ -178,16 +177,16 @@ export const TagEditor: FC<Props> = props => {
   function handleChange(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
     let argIndex = -1;
     if (event.currentTarget.parentNode instanceof HTMLElement) {
-      const index = event.currentTarget.parentNode?.getAttribute('data-arg-index');
-      argIndex = typeof index === 'string' ? parseInt(index, 10) : -1;
+      const index = event.currentTarget.parentNode?.dataset.argIndex;
+      argIndex = typeof index === 'string' ? Number.parseInt(index, 10) : -1;
     }
     // Handle special types
-    if (event.currentTarget.getAttribute('data-encoding') === 'base64') {
+    if (event.currentTarget.dataset.encoding === 'base64') {
       return updateArg(templateUtils.encodeEncoding(event.currentTarget.value, 'base64'), argIndex);
     }
     // Handle normal types
     if (event.currentTarget.type === 'number') {
-      return updateArg(parseFloat(event.currentTarget.value), argIndex);
+      return updateArg(Number.parseFloat(event.currentTarget.value), argIndex);
     } else if (event.currentTarget.type === 'checkbox') {
       return updateArg((event.currentTarget as HTMLInputElement).checked, argIndex);
     }
@@ -250,14 +249,13 @@ export const TagEditor: FC<Props> = props => {
   }
   let finalPreview = preview;
   if (activeTagDefinition?.disablePreview && activeTagDefinition.disablePreview(activeTagData.args)) {
-    finalPreview = preview.replace(/./g, '*');
+    finalPreview = preview.replaceAll(/./g, '*');
   }
   let previewElement;
   if (error) {
     // detects a string to replace with a link to settings
     const linkText = 'Insomnia Preferences → Security';
-    if (error.endsWith(linkText)) {
-      previewElement = (
+    previewElement = error.endsWith(linkText) ? (
         <div className="danger min-h-[115px] rounded-md border border-solid border-[var(--hl-md)] bg-[var(--hl-xxs)] p-[var(--padding-sm)]">
           {error.slice(0, error.length - linkText.length)}
           <Link
@@ -270,10 +268,7 @@ export const TagEditor: FC<Props> = props => {
             {linkText}
           </Link>
         </div>
-      );
-    } else {
-      previewElement = <textarea className="danger" value={error || 'Error'} readOnly rows={5} />;
-    }
+      ) : <textarea className="danger" value={error || 'Error'} readOnly rows={5} />;
   } else if (rendering) {
     previewElement = <textarea value="rendering..." readOnly rows={5} />;
   } else {
@@ -343,7 +338,8 @@ export const TagEditor: FC<Props> = props => {
         let argInput;
         let isVariableAllowed = argDefinition.type !== 'model';
         if (!isVariable) {
-          if (argDefinition.type === 'string') {
+          switch (argDefinition.type) {
+          case 'string': {
             const tagDefinitionName = activeTagDefinition.name;
             const placeholder = typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
             const encoding = argDefinition.encoding || 'utf8';
@@ -370,12 +366,15 @@ export const TagEditor: FC<Props> = props => {
                 />
               );
             }
-          } else if (argDefinition.type === 'enum') {
+          
+          break;
+          }
+          case 'enum': {
             argInput = (
               <select value={strValue} onChange={handleChange}>
-                {!argDefinition.options?.find(o => o.value === strValue) ? (
+                {argDefinition.options?.find(o => o.value === strValue) ? null : (
                   <option value="">-- Select Option --</option>
-                ) : null}
+                )}
                 {argDefinition.options?.map(option => (
                   <option key={option.value.toString()} value={option.value + ''}>
                     {option.description
@@ -385,7 +384,10 @@ export const TagEditor: FC<Props> = props => {
                 ))}
               </select>
             );
-          } else if (argDefinition.type === 'file') {
+          
+          break;
+          }
+          case 'file': {
             argInput = (
               <FileInputButton
                 showFileIcon
@@ -397,7 +399,10 @@ export const TagEditor: FC<Props> = props => {
                 extensions={argDefinition.extensions}
               />
             );
-          } else if (argDefinition.type === 'model') {
+          
+          break;
+          }
+          case 'model': {
             const modelName = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
             let targetDoc = state.allDocs[modelName];
             // hard coded here to filter cloud credential data by the provider
@@ -434,9 +439,15 @@ export const TagEditor: FC<Props> = props => {
                 })}
               </select>
             );
-          } else if (argDefinition.type === 'boolean') {
+          
+          break;
+          }
+          case 'boolean': {
             argInput = <input type="checkbox" checked={strValue.toLowerCase() === 'true'} onChange={handleChange} />;
-          } else if (argDefinition.type === 'number') {
+          
+          break;
+          }
+          case 'number': {
             argInput = (
               <input
                 type="number"
@@ -445,8 +456,12 @@ export const TagEditor: FC<Props> = props => {
                 onChange={handleChange}
               />
             );
-          } else {
+          
+          break;
+          }
+          default: {
             return null;
+          }
           }
         }
         const help =

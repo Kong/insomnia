@@ -93,7 +93,7 @@ export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: 
   const handleDelete = async (id: string) => {
     const newArgs = requestPayload?.args?.filter(arg => arg.id !== id);
     await requestPayloadPatcher(request._id, { args: newArgs });
-    setSelectedArg(newArgs?.[newArgs.length - 1]?.id);
+    setSelectedArg(newArgs?.at(-1)?.id);
   };
 
   const handleSend = async () => {
@@ -103,7 +103,7 @@ export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: 
       payload: requestPayload?.args.map(item => item.value),
     });
 
-    window.main.socketIO.event.send({
+    globalThis.main.socketIO.event.send({
       requestId: request._id,
       eventName: requestPayload?.eventName || 'message',
       ack: requestPayload?.ack,

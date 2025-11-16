@@ -16,7 +16,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   invariant(typeof data.branch === 'string', 'Branch is required');
 
-  return window.main.git.checkoutGitBranch(data);
+  return globalThis.main.git.checkoutGitBranch(data);
 }
 
 export const useGitProjectCheckoutBranchActionFetcher = createFetcherSubmitHook(

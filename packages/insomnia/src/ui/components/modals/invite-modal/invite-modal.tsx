@@ -392,7 +392,7 @@ const MemberListItem: FC<{
                   organizationId,
                   invitationId: member.metadata.invitationId,
                 });
-                window.main.trackSegmentEvent({ event: SegmentEvent.inviteResent });
+                globalThis.main.trackSegmentEvent({ event: SegmentEvent.inviteResent });
               }
             }}
             className="flex min-w-[75px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
@@ -448,7 +448,7 @@ const MemberListItem: FC<{
                   return;
                 }
 
-                window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/enterprise/team/${member.metadata.groupId}`);
+                globalThis.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/enterprise/team/${member.metadata.groupId}`);
               }}
             >
               <Icon icon="users" className="h-3 w-3" />
@@ -499,7 +499,7 @@ const MemberListItem: FC<{
                 .then(() => {
                   onResetCurrentPage();
                   onRemoveMember();
-                  window.main.trackSegmentEvent({ event: SegmentEvent.inviteRevoked });
+                  globalThis.main.trackSegmentEvent({ event: SegmentEvent.inviteRevoked });
                 })
                 .catch(error => {
                   onError(error.message);
@@ -629,7 +629,7 @@ export const InviteModalContainer: FC<{
   // track event when modal is opened
   useEffect(() => {
     if (isOpen) {
-      window.main.trackSegmentEvent({ event: SegmentEvent.inviteTrigger });
+      globalThis.main.trackSegmentEvent({ event: SegmentEvent.inviteTrigger });
     }
   }, [isOpen]);
 

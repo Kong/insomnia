@@ -35,9 +35,9 @@ export const deleteKeys = <T extends BaseModel>(doc: T) => {
 
 export const resetKeys = <T extends BaseModel>(doc: T) => {
   if (isWorkspace(doc)) {
-    (Object.keys(RESET_WORKSPACE_KEYS) as (keyof typeof RESET_WORKSPACE_KEYS)[]).forEach(key => {
+    for (const key of (Object.keys(RESET_WORKSPACE_KEYS) as (keyof typeof RESET_WORKSPACE_KEYS)[])) {
       // @ts-expect-error -- mapping unsoundness
       doc[key] = RESET_WORKSPACE_KEYS[key];
-    });
+    }
   }
 };

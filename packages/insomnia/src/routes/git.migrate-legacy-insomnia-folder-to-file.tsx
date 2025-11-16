@@ -8,7 +8,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const { projectId } = (await request.json()) as {
     projectId: string;
   };
-  return window.main.git.migrateLegacyInsomniaFolderToFile({ projectId });
+  return globalThis.main.git.migrateLegacyInsomniaFolderToFile({ projectId });
 }
 
 export const useGitProjectMigrateLegacyInsomniaFolderActionFetcher = createFetcherSubmitHook(

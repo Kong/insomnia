@@ -1,4 +1,4 @@
-import { format as urlFormat, parse as urlParse } from 'node:url';
+import nodeUrl from 'node:url';
 
 import { setDefaultProtocol } from './protocol';
 
@@ -32,9 +32,8 @@ interface IStrictNullSearchParams extends Omit<ISearchParams, 'value'> {
 type ProcessDeconstructFuncReturnType<T> = T extends { strictNullHandling: true }
   ? IStrictNullSearchParams[]
   : ISearchParams[];
-export const getJoiner = (url: string) => {
-  url = url || '';
-  return !url.includes('?') ? '?' : '&';
+export const getJoiner = (url = '') => {
+  return url.includes('?') ? '&' : '?';
 };
 
 /**
@@ -102,7 +101,7 @@ export const buildQueryParameter = (
       return `${param.name}=${param.value}`;
     }
     // Don't encode ',' in values
-    const value = flexibleEncodeComponent(param.value || '').replace(/%2C/gi, ',');
+    const value = flexibleEncodeComponent(param.value || '').replaceAll(/%2C/gi, ',');
     const name = flexibleEncodeComponent(param.name || '');
 
     return `${name}=${value}`;
@@ -168,7 +167,7 @@ export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
     let name = '';
     try {
       name = decodeURIComponent(encodedName || '');
-    } catch (error) {
+    } catch {
       // Just leave it
       name = encodedName;
     }
@@ -176,7 +175,7 @@ export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
     let value: ValueType = '';
     try {
       value = strictNullHandling && encodedValue === null ? null : decodeURIComponent(encodedValue || '');
-    } catch (error) {
+    } catch {
       // Just leave it
       value = encodedValue;
     }
@@ -208,7 +207,7 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
     return urlWithProto;
   }
   // Parse the URL into components
-  const parsedUrl = urlParse(urlWithProto);
+  const parsedUrl = nodeUrl.parse(urlWithProto);
 
   // ~~~~~~~~~~~ //
   // 1. Pathname //
@@ -237,7 +236,7 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
     parsedUrl.search = `?${parsedUrl.query}`;
   }
 
-  return urlFormat(parsedUrl);
+  return nodeUrl.format(parsedUrl);
 };
 
 /**
@@ -247,10 +246,10 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
  */
 export const flexibleEncodeComponent = (str = '', ignore = '') => {
   // Sometimes spaces screw things up because of url.parse
-  str = str.replace(/%20/g, ' ');
+  str = str.replaceAll('%20', ' ');
 
   // Handle all already-encoded characters so we don't touch them
-  str = str.replace(/%([0-9a-fA-F]{2})/g, '__ENC__$1');
+  str = str.replaceAll(/%([0-9a-fA-F]{2})/g, '__ENC__$1');
 
   // Do a special encode of ignored chars, so they aren't touched.
   // This first pass, surrounds them with a special tag (anything unique
@@ -262,7 +261,7 @@ export const flexibleEncodeComponent = (str = '', ignore = '') => {
     const code = encodeURIComponent(c).replace('%', '');
     const raw = `__RAW__${code}`;
     replacements.push([raw, c]);
-    const escaped = c.replace(ESCAPE_REGEX_MATCH, '\\$&');
+    const escaped = c.replaceAll(ESCAPE_REGEX_MATCH, String.raw`\$&`);
     const re2 = new RegExp(escaped, 'g');
     str = str.replace(re2, raw);
   }
@@ -272,10 +271,10 @@ export const flexibleEncodeComponent = (str = '', ignore = '') => {
 
   // Put back the raw version of the ignored chars
   for (const [raw, c] of replacements) {
-    str = str.replace(new RegExp(raw, 'g'), c);
+    str = str.replaceAll(new RegExp(raw, 'g'), c);
   }
 
   // Put back the encoded version of the ignored chars
-  str = str.replace(/__ENC__([0-9a-fA-F]{2})/g, '%$1');
+  str = str.replaceAll(/__ENC__([0-9a-fA-F]{2})/g, '%$1');
   return str;
 };

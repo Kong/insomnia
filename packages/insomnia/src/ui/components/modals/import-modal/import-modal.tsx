@@ -69,7 +69,7 @@ async function recurse(
   for await (const item of list) {
     if (item.kind === 'file') {
       const file = await item.getFile();
-      const path = window.webUtils.getPathForFile(file);
+      const path = globalThis.webUtils.getPathForFile(file);
       if (validImportExtensions.some(ext => path.endsWith(`.${ext}`))) {
         filePathList.push(path);
       }
@@ -112,7 +112,7 @@ const FileField: FC = () => {
             setEntryList(fileList.map(file => ({ type: ENTRY_TYPE.FILE, name: file.name })));
             // Electron has added a path attribute to the File interface which exposes the file's real path on filesystem.
             // https://www.electronjs.org/docs/latest/api/file-object
-            setFilePathList(fileList.map(file => window.webUtils.getPathForFile(file)));
+            setFilePathList(fileList.map(file => globalThis.webUtils.getPathForFile(file)));
           } else {
             setEntryList([]);
             setFilePathList([]);
@@ -202,7 +202,7 @@ export const ImportModal: FC<ImportModalProps> = ({
     if (importFetcher?.data?.done === true) {
       // Track the import completion event
       if (scanResourcesFetcherData?.length) {
-        window.main.trackSegmentEvent({
+        globalThis.main.trackSegmentEvent({
           event: SegmentEvent.importCompleted,
           properties: {
             workspaces: scanResourcesFetcherData.map(scanResult => scanResult.workspaces?.length || 0),
@@ -265,15 +265,14 @@ export const ImportModal: FC<ImportModalProps> = ({
                 projectId: defaultProjectId || '',
                 workspaceId: shouldImportToWorkspace ? defaultWorkspaceId : undefined,
               });
-              scanResourcesFetcherData
-                .filter(({ errors }) => errors.length === 0)
-                .forEach(scanResult => {
+              for (const scanResult of scanResourcesFetcherData
+                .filter(({ errors }) => errors.length === 0)) {
                   const type = scanResult.type?.id ?? 'unknown';
-                  window.main.trackSegmentEvent({
+                  globalThis.main.trackSegmentEvent({
                     event: SegmentEvent.dataImport,
                     properties: { 'data-import-type': type },
                   });
-                });
+                }
             }}
           />
         ) : (

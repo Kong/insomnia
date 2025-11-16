@@ -123,10 +123,10 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
 
   const handlePopHistory = () => {
     setState(state => {
-      const last = state.history[state.history.length - 1] || null;
+      const last = state.history.at(-1) || null;
       return {
         ...state,
-        history: state.history.slice(0, state.history.length - 1),
+        history: state.history.slice(0, - 1),
         currentType: last ? last.currentType : undefined,
         currentField: last ? last.currentField : undefined,
       };
@@ -216,7 +216,7 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
   const schemaName = schema ? 'Schema' : null;
   const typeOrField = currentType || currentField;
   let name = 'Unknown';
-  const lastHistoryItem = history[history.length - 1] || {};
+  const lastHistoryItem = history.at(-1) || {};
   if (lastHistoryItem.currentField?.name) {
     name = lastHistoryItem.currentField?.name;
   } else if (isNamedType(lastHistoryItem.currentType)) {

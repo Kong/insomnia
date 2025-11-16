@@ -75,7 +75,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
           label: 'URL',
           placeholder: 'e.g. https://petstore.swagger.io/v2/swagger.json',
           onComplete: async (uri: string) => {
-            const response = await window.fetch(uri);
+            const response = await globalThis.fetch(uri);
             if (!response) {
               return;
             }

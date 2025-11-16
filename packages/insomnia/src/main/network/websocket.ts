@@ -199,17 +199,28 @@ const openWebSocketConnection = async (
       }
       if (options.authentication.type === 'apikey') {
         const { key = '', value = '', addTo } = options.authentication; // Ensure key is not undefined
-        if (addTo === HEADER) {
+        switch (addTo) {
+        case HEADER: {
           headers.push({ name: key, value: value });
-        } else if (addTo === COOKIE) {
+        
+        break;
+        }
+        case COOKIE: {
           authCookie = `${key}=${value}`;
-        } else if (addTo === QUERY_PARAMS) {
+        
+        break;
+        }
+        case QUERY_PARAMS: {
           const authQueryParam = {
             name: key,
             value: value,
           };
           const qs = authQueryParam ? buildQueryStringFromParams([authQueryParam]) : '';
           url = joinUrlAndQueryString(options.url, qs);
+        
+        break;
+        }
+        // No default
         }
       }
       if (options.authentication.type === 'bearer' && options.authentication.token) {
@@ -230,7 +241,7 @@ const openWebSocketConnection = async (
     const pemCertificateKeys: KeyObject[] = [];
     const pfxCertificates: PxfObject[] = [];
 
-    filteredClientCertificates.forEach(clientCertificate => {
+    for (const clientCertificate of filteredClientCertificates) {
       const { passphrase, cert, key, pfx } = clientCertificate;
 
       if (cert) {
@@ -240,7 +251,7 @@ const openWebSocketConnection = async (
             JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) +
               '\n',
           );
-        pemCertificates.push(fs.readFileSync(cert, 'utf-8'));
+        pemCertificates.push(fs.readFileSync(cert, 'utf8'));
       }
 
       if (key) {
@@ -249,7 +260,7 @@ const openWebSocketConnection = async (
           ?.write(
             JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n',
           );
-        pemCertificateKeys.push({ pem: fs.readFileSync(key, 'utf-8'), passphrase: passphrase ?? undefined });
+        pemCertificateKeys.push({ pem: fs.readFileSync(key, 'utf8'), passphrase: passphrase ?? undefined });
       }
 
       if (pfx) {
@@ -258,9 +269,9 @@ const openWebSocketConnection = async (
           ?.write(
             JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n',
           );
-        pfxCertificates.push({ buf: fs.readFileSync(pfx, 'utf-8'), passphrase: passphrase ?? undefined });
+        pfxCertificates.push({ buf: fs.readFileSync(pfx, 'utf8'), passphrase: passphrase ?? undefined });
       }
-    });
+    }
 
     if (request.settingSendCookies && options.cookieJar.cookies.length) {
       const jar = jarFromCookies(options.cookieJar.cookies);
@@ -333,9 +344,8 @@ const openWebSocketConnection = async (
             currentUrl,
             cookieJar: options.cookieJar,
           });
-          rejectedCookies.forEach(errorMessage =>
-            timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }),
-          );
+          for (const errorMessage of rejectedCookies) timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() })
+          ;
           const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
           if (hasCookiesToPersist) {
             await models.cookieJar.update(options.cookieJar, { cookies });
@@ -603,7 +613,7 @@ const closeWebSocketConnection = (options: { requestId: string }): void => {
   ws.close();
 };
 
-const closeAllWebSocketConnections = (): void => WebSocketConnections.forEach(ws => ws.close());
+const closeAllWebSocketConnections = (): void => { for (const ws of WebSocketConnections) ws.close() };
 
 const findMany = async (options: { responseId: string }): Promise<WebSocketEvent[]> => {
   const response = await models.webSocketResponse.getById(options.responseId);

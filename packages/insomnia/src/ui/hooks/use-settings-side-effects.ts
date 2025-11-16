@@ -26,6 +26,6 @@ export const useSettingsSideEffects = () => {
   }, [settings.fontSize]);
 
   useEffect(() => {
-    window.main.setMenuBarVisibility(!settings.autoHideMenuBar);
+    globalThis.main.setMenuBarVisibility(!settings.autoHideMenuBar);
   }, [settings.autoHideMenuBar]);
 };

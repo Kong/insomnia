@@ -192,7 +192,7 @@ export async function startInvite({ emails, teamIds, organizationId, roleId }: S
         keys[acctId] = {};
       }
 
-      projectKeys.forEach(key => {
+      for (const key of projectKeys) {
         const pubKey = instruction[acctId].publicKey;
         const newKey = buildMemberProjectKey(acctId, key.projectId, pubKey, key.symmetricKey);
 
@@ -203,7 +203,7 @@ export async function startInvite({ emails, teamIds, organizationId, roleId }: S
             encKey: newKey.encSymmetricKey,
           };
         }
-      });
+      }
     }
   }
 

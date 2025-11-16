@@ -26,7 +26,7 @@ export const ResponseCSVViewer: FC<Props> = ({ body }) => {
         if (tableRef.current) {
           const range = document.createRange();
           range.selectNodeContents(tableRef.current);
-          const selection = window.getSelection();
+          const selection = globalThis.getSelection();
           if (selection) {
             selection.removeAllRanges();
             selection.addRange(range);
@@ -35,9 +35,9 @@ export const ResponseCSVViewer: FC<Props> = ({ body }) => {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    globalThis.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      globalThis.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 

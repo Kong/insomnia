@@ -15,7 +15,7 @@ export function base64decode(base64Str: string, toObject: boolean): string | obj
       return JSON.parse(decodedStr);
     }
     return decodedStr;
-  } catch (error) {
+  } catch {
     console.error(`failed to base64 decode string ${base64Str}`);
   }
   return base64Str;
@@ -32,7 +32,7 @@ export async function decryptVaultKeyFromSession(vaultKey: string, toJsonWebKey:
     }
   }
   if (vaultKey) {
-    const decryptedVaultKey = await window.main.secretStorage.decryptString(vaultKey);
+    const decryptedVaultKey = await globalThis.main.secretStorage.decryptString(vaultKey);
     if (toJsonWebKey) {
       return base64decode(decryptedVaultKey, true);
     }
@@ -47,15 +47,15 @@ export const saveVaultKeyIfNecessary = async (accountId: string, vaultKey: strin
   const userSetting = await settings.getOrCreate();
   const { saveVaultKeyLocally } = userSetting;
   if (saveVaultKeyLocally) {
-    await window.main.secretStorage.setSecret(getVaultSecretKey(accountId), vaultKey);
+    await globalThis.main.secretStorage.setSecret(getVaultSecretKey(accountId), vaultKey);
   }
 };
 
 export const getVaultKeyFromStorage = async (accountId: string) => {
-  const savedVaultKey = await window.main.secretStorage.getSecret(getVaultSecretKey(accountId));
+  const savedVaultKey = await globalThis.main.secretStorage.getSecret(getVaultSecretKey(accountId));
   return savedVaultKey;
 };
 
 export const deleteVaultKeyFromStorage = async (accountId: string) => {
-  await window.main.secretStorage.deleteSecret(getVaultSecretKey(accountId));
+  await globalThis.main.secretStorage.deleteSecret(getVaultSecretKey(accountId));
 };

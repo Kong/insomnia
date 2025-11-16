@@ -24,14 +24,14 @@ export const FileEditor: FC<Props> = ({ onChange, path }) => {
   );
 
   // Replace home path with ~/ to make the path shorter
-  const homeDirectory = window.app.getPath('home');
+  const homeDirectory = globalThis.app.getPath('home');
   const pathDescription = path.replace(homeDirectory, '~');
   let sizeDescription = '';
 
   try {
     const bytes = fs.statSync(path).size;
     sizeDescription = misc.describeByteSize(bytes);
-  } catch (error) {
+  } catch {
     sizeDescription = '';
   }
 

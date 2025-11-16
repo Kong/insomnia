@@ -23,7 +23,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       teamProjectId: project.remoteId,
     });
 
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: SegmentEvent.vcsAction,
       properties: vcsSegmentEventProperties('remote', 'push'),
     });
@@ -36,7 +36,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while pushing to remote.';
 
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: SegmentEvent.vcsAction,
       properties: vcsSegmentEventProperties('remote', 'push', errorMessage),
     });

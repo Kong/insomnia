@@ -29,8 +29,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   const { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId } =
     await fetchRequestData(req._id);
-  window.main.startExecution({ requestId: req._id });
-  window.main.addExecutionStep({
+  globalThis.main.startExecution({ requestId: req._id });
+  globalThis.main.addExecutionStep({
     requestId: req._id,
     stepName: 'Rendering request',
   });
@@ -38,8 +38,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const renderResult = await tryToInterpolateRequest({ request: req, environment: environment._id, purpose: 'send' });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
-  window.main.completeExecutionStep({ requestId: req._id });
-  window.main.addExecutionStep({
+  globalThis.main.completeExecutionStep({ requestId: req._id });
+  globalThis.main.addExecutionStep({
     requestId: req._id,
     stepName: 'Sending request',
   });
@@ -55,7 +55,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
   await models.response.create(response);
-  window.main.completeExecutionStep({ requestId: req._id });
+  globalThis.main.completeExecutionStep({ requestId: req._id });
   return null;
 }
 

@@ -111,7 +111,7 @@ describe('getKeys()', () => {
 
 describe('tokenizeTag()', () => {
   it('tokenizes complex tag', () => {
-    const actual = utils.tokenizeTag('{% name bar, "baz \\"qux\\""   , 1 + 5 | default("foo") %}');
+    const actual = utils.tokenizeTag(String.raw`{% name bar, "baz \"qux\""   , 1 + 5 | default("foo") %}`);
     const expected = {
       name: 'name',
       args: [
@@ -244,10 +244,10 @@ describe('tokenizeTag()', () => {
 
 describe('unTokenizeTag()', () => {
   it('handles the default case', () => {
-    const tagStr = '{% name bar, "baz \\"qux\\""   , 1 + 5, \'hi\' %}';
+    const tagStr = String.raw`{% name bar, "baz \"qux\""   , 1 + 5, 'hi' %}`;
     const tagData = utils.tokenizeTag(tagStr);
     const result = utils.unTokenizeTag(tagData);
-    expect(result).toEqual('{% name bar, "baz \\"qux\\"", 1 + 5, \'hi\' %}');
+    expect(result).toEqual(String.raw`{% name bar, "baz \"qux\"", 1 + 5, 'hi' %}`);
   });
 
   it('quotes for all necessary types', () => {

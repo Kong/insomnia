@@ -31,7 +31,7 @@ class EventBus {
     if (!this.events[event]) {
       return;
     }
-    this.events[event].forEach(handler => handler(...args));
+    for (const handler of this.events[event]) handler(...args);
   }
 }
 

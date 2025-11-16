@@ -248,7 +248,7 @@ export class GitVCS {
     const branch = await git.currentBranch({ ...this._baseOpts });
 
     if (typeof branch !== 'string') {
-      throw new Error('No active branch');
+      throw new TypeError('No active branch');
     }
 
     return branch;
@@ -836,19 +836,21 @@ export class GitVCS {
               `index ${Math.random().toString(36).slice(2, 9)}..${Math.random().toString(36).slice(2, 9)} 100644\n` +
               `--- a/${c.filepath}\n` +
               `+++ b/${c.filepath}\n`;
-
-            diffToUse.forEach((change: any) => {
+            for (const change of diffToUse) {
               const lines = change.value.split('\n').filter((line: string) => line !== '');
-              lines.forEach((line: string) => {
-                if (change.added) {
+              const isAdded = change.added;
+              const isRemoved = change.removed;
+
+              for (const line of lines) {
+                if (isAdded) {
                   output += `+${line}\n`;
-                } else if (change.removed) {
+                } else if (isRemoved) {
                   output += `-${line}\n`;
                 } else {
                   output += ` ${line}\n`;
                 }
-              });
-            });
+              }
+            }
 
             return output;
           })
@@ -912,7 +914,7 @@ export class GitVCS {
             ...entry,
             includesSignificantChanges,
           };
-        } catch (error) {
+        } catch {
           return {
             ...entry,
             includesSignificantChanges: hasChanges,
@@ -1678,20 +1680,20 @@ export class GitVCS {
       } else {
         // resolutionSource is RESOLUTION_SOURCE.CHOOSE
         // The file is deleted
-        if (!conflict.choose) {
-          try {
-            await this._baseOpts.fs.promises.unlink(conflict.key);
-            await git.remove({ ...this._baseOpts, filepath: conflict.key });
-          } catch (error) {
-            console.error('Failed to delete file:', conflict.key, error);
-          }
-        } else {
+        if (conflict.choose) {
           let blobContentToWrite = conflict.mineBlobContent;
           if (conflict.choose === conflict.theirsBlob) {
             blobContentToWrite = conflict.theirsBlobContent;
           }
           await this._baseOpts.fs.promises.writeFile(conflict.key, stringify(blobContentToWrite));
           await git.add({ ...this._baseOpts, filepath: conflict.key });
+        } else {
+          try {
+            await this._baseOpts.fs.promises.unlink(conflict.key);
+            await git.remove({ ...this._baseOpts, filepath: conflict.key });
+          } catch (error) {
+            console.error('Failed to delete file:', conflict.key, error);
+          }
         }
       }
     }
@@ -1825,7 +1827,7 @@ export class GitVCS {
     await git.deleteBranch({ ...this._baseOpts, ref: branch });
   }
 
-  async checkout(branch: string, { force = false }: { force?: boolean } = { force: false }) {
+  async checkout(branch: string, { force = false }: { force?: boolean }) {
     console.log('[git] Checkout', {
       branch,
       force,
@@ -1879,11 +1881,9 @@ export class GitVCS {
 
   async stageChanges(changes: { path: string; status: Status }[]) {
     for (const change of changes) {
-      if (change.status[1] === 0) {
-        await git.remove({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) });
-      } else {
-        await git.add({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) });
-      }
+      await (change.status[1] === 0
+        ? git.remove({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) })
+        : git.add({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) }));
     }
   }
 
@@ -1923,7 +1923,7 @@ export class GitVCS {
         const statusMatrix = await git.statusMatrix({ ...this._baseOpts });
         const row = statusMatrix.find(([filepath]) => filepath === change.path);
         if (row) {
-          const [, , , stageStatusCode] = row;
+          const stageStatusCode = row[3];
           if (stageStatusCode !== 0) {
             // 2. Get staged blob content
             const index = await git.listFiles({ ...this._baseOpts });

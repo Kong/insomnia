@@ -512,15 +512,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               >
                 Back
               </Button>
-              {!projectData.connectRepositoryLater ? (
-                <Button
-                  type="submit"
-                  form={selectedTab}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-                >
-                  Clone
-                </Button>
-              ) : project && projectData.connectRepositoryLater && !gitRepository ? (
+              {projectData.connectRepositoryLater ? project && projectData.connectRepositoryLater && !gitRepository ? (
                 <Button
                   onPress={onCancel}
                   className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
@@ -533,6 +525,14 @@ export const ProjectSettingsForm: FC<Props> = ({
                   className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
                 >
                   {project ? 'Update' : 'Create'}
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  form={selectedTab}
+                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                >
+                  Clone
                 </Button>
               )}
             </div>

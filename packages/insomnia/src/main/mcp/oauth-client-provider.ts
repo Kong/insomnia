@@ -68,20 +68,20 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
   async clientInformation() {
     // If not using MCP Auth Flow, wait for user to confirm in the app UI
     if (!this.isUsingMcpAuthFlow()) {
-      BrowserWindow.getAllWindows().forEach(window => {
+      for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send('mcp-auth-confirmation');
-      });
+      }
       await new Promise<void>((resolve, reject) => {
         ipcMain.once('mcp.authConfirmed', async (_, confirmed: boolean) => {
-          if (!confirmed) {
-            reject(new Error('MCP authorization cancelled by user'));
-          } else {
+          if (confirmed) {
             await this.updateAuthentication({
               type: 'oauth2',
               grantType: 'mcp_auth_flow',
               disabled: false,
             });
             resolve();
+          } else {
+            reject(new Error('MCP authorization cancelled by user'));
           }
         });
       });
@@ -95,7 +95,7 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
         client_secret_expires_at: this.mcpRequest.authentication.clientSecretExpiresAt,
       };
     }
-    return undefined;
+    return;
   }
   async saveClientInformation(clientInformation: OAuthClientInformationFull) {
     const parsedClientInformation = OAuthClientInformationSchema.parse(clientInformation);
@@ -152,9 +152,9 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
   }
   async redirectToAuthorization(authorizationUrl: URL) {
     const { relayUrl, decryptOAuthResult } = encryptOAuthUrl(authorizationUrl.toString());
-    BrowserWindow.getAllWindows().forEach(window => {
+    for (const window of BrowserWindow.getAllWindows()) {
       window.webContents.send('show-oauth-authorization-modal', relayUrl);
-    });
+    }
     const redirectedResult = await authorizeUserInDefaultBrowser({
       url: relayUrl,
     });

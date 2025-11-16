@@ -53,7 +53,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       results,
       parentId: unitTest.parentId,
     });
-    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun, properties: { organizationId, projectId } });
+    globalThis.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun, properties: { organizationId, projectId } });
 
     return redirect(
       href(
@@ -94,7 +94,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       results,
       parentId: unitTest.parentId,
     });
-    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun, properties: { organizationId, projectId } });
+    globalThis.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun, properties: { organizationId, projectId } });
 
     return redirect(
       href(

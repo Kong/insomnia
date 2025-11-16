@@ -171,7 +171,8 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               | BranchDeletedEvent
               | FileChangedEvent
               | VaultKeyChangeEvent;
-            if (event.type === 'PresentUserLeave') {
+            switch (event.type) {
+            case 'PresentUserLeave': {
               setPresence(prev =>
                 prev.filter(p => {
                   const isSameUser = p.acct === event.acct;
@@ -185,20 +186,29 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                   return true;
                 }),
               );
-            } else if (event.type === 'PresentStateChanged') {
+            
+            break;
+            }
+            case 'PresentStateChanged': {
               setPresence(prev => {
                 if (!prev.find(p => p.avatar === event.avatar)) {
                   // if this avatar is new, invalidate the cache
-                  window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
+                  globalThis.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
                 }
                 return [...prev.filter(p => p.acct !== event.acct), event];
               });
-            } else if (event.type === 'OrganizationChanged') {
+            
+            break;
+            }
+            case 'OrganizationChanged': {
               if (event.avatar) {
-                window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
+                globalThis.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
               }
               syncOrganizationsSubmit();
-            } else if (event.type === 'StorageRuleChanged' && event.team && event.team.includes('org_')) {
+            
+            break;
+            }
+            default: { if (event.type === 'StorageRuleChanged' && event.team && event.team.includes('org_')) {
               syncStorageRulesSubmit({
                 organizationId: event.team,
               });
@@ -239,12 +249,12 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                   projectId: latestProjectId.current,
                   workspaceId: latestWorkspaceId.current,
                 });
-              } else if (event.type === 'FileChanged' && !latestWorkspaceId.current) {
-                // FileChanged could be a new file has been added, we need to revalidate the workspace list
-                if (!latestInSubmission.current) {
+              } else if (event.type === 'FileChanged' && !latestWorkspaceId.current && // FileChanged could be a new file has been added, we need to revalidate the workspace list
+                !latestInSubmission.current) {
                   revalidate();
                 }
-              }
+            }
+            }
             }
           } catch (e) {
             console.log('[sse] Error parsing response from SSE', e);

@@ -1,7 +1,7 @@
 import { expect } from 'vitest';
 
 export function setupDateMocks() {
-  let ts = 1000000000000;
+  let ts = 1_000_000_000_000;
 
   class fakeDate extends Date {
     constructor(arg) {
@@ -16,11 +16,11 @@ export function setupDateMocks() {
     }
 
     static now() {
-      return new Date().getTime();
+      return Date.now();
     }
   }
 
-  global.Date = fakeDate;
+  globalThis.Date = fakeDate;
 }
 
 export async function assertAsyncError(promise: Promise<any>, code?: string) {

@@ -240,12 +240,12 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     const build = (node: Child) => {
       if (isRequestGroup(node.doc)) {
         collection.push(node);
-        node.children.forEach(child => build(child));
+        for (const child of node.children) build(child);
       } else {
         collection.push(node);
       }
     };
-    tree.forEach(node => build(node));
+    for (const node of tree) build(node);
 
     return collection;
   }
@@ -272,19 +272,19 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   const collection = flattenTree();
 
   // If there is a filter then we need to show all the parents of the requests that are not hidden.
-  collection.forEach(node => {
+  for (const node of collection) {
     const ancestors = node.ancestors || [];
 
     if (!node.hidden) {
-      ancestors.forEach(ancestorId => {
+      for (const ancestorId of ancestors) {
         const ancestor = collection.find(n => n.doc._id === ancestorId);
 
         if (ancestor) {
           ancestor.hidden = false;
         }
-      });
+      }
     }
-  });
+  }
 
   return {
     workspaces,

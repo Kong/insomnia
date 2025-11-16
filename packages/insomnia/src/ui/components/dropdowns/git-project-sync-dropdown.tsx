@@ -245,7 +245,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
         title: `Pull started`,
       });
 
-      const pullResult = await window.main.git.pullFromGitRemote({ projectId });
+      const pullResult = await globalThis.main.git.pullFromGitRemote({ projectId });
 
       if (
         'errors' in pullResult &&
@@ -280,7 +280,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
           labels: pullResult.labels,
           onResolveAll: (conflicts: MergeConflict[]) => {
             setIsPulling(true);
-            window.main.git
+            globalThis.main.git
               .continueMerge({
                 projectId,
                 handledMergeConflicts: conflicts,
@@ -490,22 +490,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
           </Button>
         </div>
       )}
-      {!isSynced ? (
-        <div className="flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-100 aria-pressed:bg-[--hl-sm]">
-          <Icon icon={icon} className="size-4" />
-          <Separator orientation="vertical" className="h-4 border border-solid border-[--hl-sm] bg-[--color-bg]" />
-          <div className="flex w-full items-center justify-between gap-2 truncate">
-            <span className="truncate">Git is not connected</span>
-            <Button
-              onPress={() => setIsGitRepoSettingsModalOpen(true)}
-              className="flex h-[25px] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-            >
-              <Icon icon="plug" />
-              <span className="text-[--color-font-secondary]">Connect</span>
-            </Button>
-          </div>
-        </div>
-      ) : (
+      {isSynced ? (
         <MenuTrigger
           onOpenChange={isOpen => {
             isOpen && setOperationError(null);
@@ -538,7 +523,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
                 )}
               </div>
               <span className="flex-1 truncate">
-                {isSynced ? currentBranch : gitRepoDataFetcher.state !== 'idle' ? 'Syncing...' : 'Not synced'}
+                {isSynced ? currentBranch : gitRepoDataFetcher.state === 'idle' ? 'Not synced' : 'Syncing...'}
               </span>
               <div className="flex flex-shrink-0 items-center gap-1.5 text-xs text-[--color-font-secondary]">
                 {isSyncing && <Icon icon="spinner" className="w-3 animate-spin" />}
@@ -621,6 +606,21 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
             </Menu>
           </Popover>
         </MenuTrigger>
+      ) : (
+        <div className="flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-100 aria-pressed:bg-[--hl-sm]">
+          <Icon icon={icon} className="size-4" />
+          <Separator orientation="vertical" className="h-4 border border-solid border-[--hl-sm] bg-[--color-bg]" />
+          <div className="flex w-full items-center justify-between gap-2 truncate">
+            <span className="truncate">Git is not connected</span>
+            <Button
+              onPress={() => setIsGitRepoSettingsModalOpen(true)}
+              className="flex h-[25px] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+            >
+              <Icon icon="plug" />
+              <span className="text-[--color-font-secondary]">Connect</span>
+            </Button>
+          </div>
+        </div>
       )}
       {isGitRepoSettingsModalOpen && (
         <GitProjectRepositorySettingsModal

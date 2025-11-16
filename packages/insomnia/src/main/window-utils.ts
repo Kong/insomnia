@@ -610,7 +610,7 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `R${MNEMONIC_SYM}estart`,
-        click: window?.main.restart,
+        click: globalThis?.main.restart,
       },
       {
         label: `Set window for ${MNEMONIC_SYM}FHD Screenshot`,
@@ -657,8 +657,7 @@ export function createWindow(): ElectronBrowserWindow {
     ],
   };
   const template: MenuItemConstructorOptions[] = [];
-  template.push(applicationMenu);
-  template.push({
+  template.push(applicationMenu, {
     label: `${MNEMONIC_SYM}File`,
     submenu: [
       {
@@ -668,12 +667,7 @@ export function createWindow(): ElectronBrowserWindow {
         },
       },
     ],
-  });
-  template.push(editMenu);
-  template.push(viewMenu);
-  template.push(windowMenu);
-  template.push(toolsMenu);
-  template.push(helpMenu);
+  }, editMenu, viewMenu, windowMenu, toolsMenu, helpMenu);
 
   if (isDevelopment() || process.env.INSOMNIA_FORCE_DEBUG) {
     template.push(developerMenu);
@@ -724,12 +718,12 @@ function saveBounds() {
   const fullscreen = browserWindow?.isFullScreen();
 
   // Only save the size if we're not in fullscreen
-  if (!fullscreen) {
+  if (fullscreen) {
+    electronStorage?.setItem('fullscreen', true);
+  } else {
     electronStorage?.setItem('bounds', browserWindow?.getBounds());
     electronStorage?.setItem('maximize', browserWindow?.isMaximized());
     electronStorage?.setItem('fullscreen', false);
-  } else {
-    electronStorage?.setItem('fullscreen', true);
   }
 }
 

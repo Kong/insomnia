@@ -56,7 +56,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     // pretending we are fetching a token for the original request. This makes sure
     // the same tokens are used for schema fetching. See issue #835 on GitHub.
     try {
-      const tokenId = requestId.match(/\.graphql$/) ? requestId.replace(/\.graphql$/, '') : requestId;
+      const tokenId = /\.graphql$/.test(requestId) ? requestId.replace(/\.graphql$/, '') : requestId;
       const oAuth2Token = await getOAuth2Token(tokenId, authentication as AuthTypeOAuth2);
 
       if (oAuth2Token) {
@@ -119,11 +119,9 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
       throw new Error(`Unable to parse additional-claims: ${err}`);
     }
 
-    if (parsedAdditionalClaims) {
-      if (typeof parsedAdditionalClaims !== 'object') {
+    if (parsedAdditionalClaims && typeof parsedAdditionalClaims !== 'object') {
         throw new Error(`additional-claims must be an object received: '${typeof parsedAdditionalClaims}' instead`);
       }
-    }
     const generator = (await import('httplease-asap')).createAuthHeaderGenerator({
       privateKey,
       issuer,
@@ -169,11 +167,7 @@ export const _buildBearerHeader = (accessToken: string, prefix?: string) => {
     value: '',
   };
 
-  if (prefix === 'NO_PREFIX') {
-    header.value = accessToken;
-  } else {
-    header.value = `${prefix || 'Bearer'} ${accessToken}`;
-  }
+  header.value = prefix === 'NO_PREFIX' ? accessToken : `${prefix || 'Bearer'} ${accessToken}`;
 
   return header;
 };

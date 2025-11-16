@@ -76,8 +76,8 @@ const locationHistoryMiddleware: Route.ClientMiddlewareFunction = async ({ reque
     }
 
     const organizationId = match.params.organizationId;
-    window.localStorage.setItem(`locationHistoryEntry:${organizationId}`, url.pathname);
-    window.localStorage.setItem('lastVisitedOrganizationId', organizationId);
+    globalThis.localStorage.setItem(`locationHistoryEntry:${organizationId}`, url.pathname);
+    globalThis.localStorage.setItem('lastVisitedOrganizationId', organizationId);
   } catch (err) {
     console.log('[locationHistoryMiddleware] Failed to store location history entry', err);
   }
@@ -322,7 +322,7 @@ const Root = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    return window.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {
+    return globalThis.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {
       // Get the url without params
       let parsedUrl;
       try {
@@ -345,13 +345,13 @@ const Root = () => {
       }
       if (urlWithoutParams === 'insomnia://app/auth/login') {
         if (params.message) {
-          window.localStorage.setItem('logoutMessage', params.message);
+          globalThis.localStorage.setItem('logoutMessage', params.message);
         }
 
         return logoutSubmit();
       }
       if (urlWithoutParams === 'insomnia://app/import') {
-        window.main.trackSegmentEvent({
+        globalThis.main.trackSegmentEvent({
           event: SegmentEvent.importStarted,
           properties: {
             source: 'import-url',
@@ -381,7 +381,7 @@ const Root = () => {
             if (isYes) {
               try {
                 // TODO (pavkout): Remove second parameter when we will decide about the @scoped packages name validation
-                await window.main.installPlugin(params.name.trim(), true);
+                await globalThis.main.installPlugin(params.name.trim(), true);
                 showModal(SettingsModal, { tab: TAB_INDEX_PLUGINS });
               } catch (err) {
                 showError({
@@ -448,8 +448,8 @@ const Root = () => {
         const userSession = await models.userSession.getOrCreate();
         if (!userSession.id || userSession.id === '') {
           const url = new URL(getLoginUrl());
-          window.main.openInBrowser(url.toString());
-          window.localStorage.setItem('specificOrgRedirectAfterAuthorize', params.organizationId);
+          globalThis.main.openInBrowser(url.toString());
+          globalThis.localStorage.setItem('specificOrgRedirectAfterAuthorize', params.organizationId);
           return navigate(href('/auth/authorize'));
         }
         return navigate(`/organization/${params.organizationId}`);

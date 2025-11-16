@@ -22,7 +22,7 @@ expect(response1.status).to.equal(200);`,
     name,
   });
 
-  window.main.trackSegmentEvent({ event: SegmentEvent.unitTestCreate });
+  globalThis.main.trackSegmentEvent({ event: SegmentEvent.unitTestCreate });
 
   return null;
 }

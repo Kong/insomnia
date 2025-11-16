@@ -10,7 +10,7 @@ export function useMcpReadyState({ requestId }: { requestId: string }): McpReady
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      window.main.mcp.readyState.getCurrent({ requestId }).then(currentReadyState => {
+      globalThis.main.mcp.readyState.getCurrent({ requestId }).then(currentReadyState => {
         isMounted && setReadyState(currentReadyState);
       });
     };
@@ -22,7 +22,7 @@ export function useMcpReadyState({ requestId }: { requestId: string }): McpReady
   // listen for readyState changes
   useEffect(() => {
     let isMounted = true;
-    const unsubscribe = window.main.on(
+    const unsubscribe = globalThis.main.on(
       // @ts-expect-error -- we use a dynamic channel here
       `mcp.${requestId}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`,
       (_, incomingReadyState: McpReadyState) => {

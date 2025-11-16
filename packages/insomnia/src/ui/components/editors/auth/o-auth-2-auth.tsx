@@ -265,7 +265,8 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
   let basic: ReactNode[] = [];
   let advanced: ReactNode[] = [];
 
-  if (grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
+  switch (grantType) {
+  case GRANT_TYPE_AUTHORIZATION_CODE: {
     basic = [
       authorizationUrl,
       accessTokenUrl,
@@ -278,21 +279,37 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
     ];
 
     advanced = [scope, state, credentialsInBody, tokenPrefix, audience, resource, origin];
-  } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
+  
+  break;
+  }
+  case GRANT_TYPE_CLIENT_CREDENTIALS: {
     basic = [accessTokenUrl, clientId, clientSecret];
 
     advanced = [scope, credentialsInBody, tokenPrefix, audience, resource];
-  } else if (grantType === GRANT_TYPE_PASSWORD) {
+  
+  break;
+  }
+  case GRANT_TYPE_PASSWORD: {
     basic = [username, password, accessTokenUrl, clientId, clientSecret];
 
     advanced = [scope, credentialsInBody, tokenPrefix, audience];
-  } else if (grantType === GRANT_TYPE_IMPLICIT) {
+  
+  break;
+  }
+  case GRANT_TYPE_IMPLICIT: {
     basic = [authorizationUrl, clientId, defaultRedirectUri];
 
     advanced = [responseType, scope, state, tokenPrefix, audience];
-  } else if (grantType === GRANT_TYPE_MCP_AUTH_FLOW) {
+  
+  break;
+  }
+  case GRANT_TYPE_MCP_AUTH_FLOW: {
     basic = [clientId, clientSecret, readonlyRedirectUri];
     advanced = [];
+  
+  break;
+  }
+  // No default
   }
 
   return {
@@ -371,7 +388,7 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
 export function convertEpochToMilliseconds(epoch: number) {
   epoch = Math.floor(epoch);
   const expDigitCount = epoch.toString().length;
-  return parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
+  return Number.parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
 }
 const renderIdentityTokenExpiry = (token?: Pick<OAuth2Token, 'identityToken'>) => {
   if (!token || !token.identityToken) {
@@ -382,8 +399,8 @@ const renderIdentityTokenExpiry = (token?: Pick<OAuth2Token, 'identityToken'>) =
   let decodedString = '';
 
   try {
-    decodedString = window.atob(base64Url);
-  } catch (error) {
+    decodedString = globalThis.atob(base64Url);
+  } catch {
     return;
   }
 
@@ -431,11 +448,7 @@ const OAuth2TokenInput: FC<{
   const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const { _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const onChange = async ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => {
-    if (token) {
-      await models.oAuth2Token.update(token, { [property]: value });
-    } else {
-      await models.oAuth2Token.create({ [property]: value, parentId: _id });
-    }
+    await (token ? models.oAuth2Token.update(token, { [property]: value }) : models.oAuth2Token.create({ [property]: value, parentId: _id }));
   };
 
   const expiryLabel = useMemo(() => {

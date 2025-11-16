@@ -141,7 +141,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     useImperativeHandle(ref, () => ({ focusInput, setUrl }), [focusInput, setUrl]);
 
     const [currentInterval, setCurrentInterval] = useState<number | null>(null);
-    const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
+    const [currentTimeout, setCurrentTimeout] = useState<number | undefined>();
     const connectRequestFetcher = useRequestConnectActionFetcher();
     const sendRequestFetcher = useDebugRequestSendActionFetcher();
 
@@ -184,7 +184,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       async (shouldPromptForPathAfterResponse?: boolean, ignoreUndefinedEnvVariable?: boolean) => {
         updateTabById?.(requestId, { temporary: false });
         models.stats.incrementExecutedRequests();
-        window.main.trackSegmentEvent({
+        globalThis.main.trackSegmentEvent({
           event: SegmentEvent.requestExecute,
           properties: {
             preferredHttpVersion: settings.preferredHttpVersion,
@@ -339,11 +339,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                 className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-[--color-font-surprise]"
                 onClick={() => {
                   if (isEventStreamRequest(activeRequest)) {
-                    window.main.curl.close({ requestId: activeRequest._id });
+                    globalThis.main.curl.close({ requestId: activeRequest._id });
                     return;
                   }
                   if (isGraphqlSubscriptionRequest(activeRequest)) {
-                    window.main.webSocket.close({ requestId: activeRequest._id });
+                    globalThis.main.webSocket.close({ requestId: activeRequest._id });
                   }
                   setCurrentInterval(null);
                   setCurrentTimeout(undefined);
@@ -448,7 +448,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                             icon="download"
                             label="Download After Send"
                             onClick={async () => {
-                              const { canceled, filePaths } = await window.dialog.showOpenDialog({
+                              const { canceled, filePaths } = await globalThis.dialog.showOpenDialog({
                                 title: 'Select Download Location',
                                 buttonLabel: 'Select',
                                 properties: ['openDirectory'],

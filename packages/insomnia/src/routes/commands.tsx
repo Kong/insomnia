@@ -73,22 +73,22 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     }
   >();
 
-  allProjects.forEach(project => {
+  for (const project of allProjects) {
     parentReferences.set(project._id, {
       type: 'Project',
       organizationId: project.parentId,
       projectId: project._id,
     });
-  });
+  }
 
-  allOrganizationWorkspaces.forEach(workspaceId => {
+  for (const workspaceId of allOrganizationWorkspaces) {
     parentReferences.set(workspaceId._id, {
       type: 'Workspace',
       organizationId: parentReferences.get(workspaceId.parentId)!.organizationId,
       projectId: workspaceId.parentId,
       workspaceId: workspaceId._id,
     });
-  });
+  }
 
   const getRequestGroups = async ({ $in }: { $in: string[]; root?: boolean }): Promise<RequestGroup[]> => {
     const requestGroups = await database.find<RequestGroup>(requestGroup.type, {

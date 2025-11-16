@@ -33,13 +33,13 @@ CodeMirror.defineExtension(
     this.on('change', (_cm: any, change: any) => {
       const origin = change.origin || 'unknown';
 
-      if (!origin.match(/^[+*]/)) {
+      if (/^[+*]/.test(origin)) {
+        // Debounce all joinable events
+        debouncedRefreshFn();
+      } else {
         // Refresh immediately on non-joinable events
         // (cut, paste, autocomplete; as opposed to +input, +delete)
         refreshFn();
-      } else {
-        // Debounce all joinable events
-        debouncedRefreshFn();
       }
     });
     this.on('cursorActivity', debouncedRefreshFn);
@@ -135,8 +135,8 @@ async function _highlightNunjucksTags(
       const el = document.createElement('span');
       el.className = `nunjucks-tag ${tok.type}`;
       el.setAttribute('draggable', 'true');
-      el.setAttribute('data-error', 'off');
-      el.setAttribute('data-template', tok.string);
+      el.dataset.error = 'off';
+      el.dataset.template = tok.string;
       el.innerHTML = '<label></label>' + tok.string;
       const mark = this.markText(start, end, {
         // @ts-expect-error not a known property of TextMarkerOptions
@@ -197,7 +197,7 @@ async function _highlightNunjucksTags(
       el.addEventListener('dragstart', event => {
         // Setup the drag contents
         if (event.dataTransfer) {
-          const template = (event.target as typeof el)?.getAttribute('data-template') || '';
+          const template = event.target as unknown as string;
           event.dataTransfer.setData('text/plain', template);
           event.dataTransfer.effectAllowed = 'copyMove';
           event.dataTransfer.dropEffect = 'move';
@@ -275,7 +275,7 @@ async function _updateElementText(
   let title = '';
   let dataIgnore = '';
   let dataError = '';
-  const str = text.replace(/\\/g, '');
+  const str = text.replaceAll('\\', '');
   const tagMatch = str.match(/{% *([^ ]+) *.*%}/);
   const cleanedStr = str.replace(/^{%/, '').replace(/%}$/, '').replace(/^{{/, '').replace(/}}$/, '').trim();
 
@@ -302,7 +302,7 @@ async function _updateElementText(
         }
 
         const preview = await render(text);
-        title = tagDefinition.disablePreview(tagData.args) ? preview.replace(/./g, '*') : preview;
+        title = tagDefinition.disablePreview(tagData.args) ? preview.replaceAll(/./g, '*') : preview;
       } else {
         innerHTML = cleanedStr;
         title = 'Unrecognized tag';
@@ -330,10 +330,10 @@ async function _updateElementText(
   }
 
   el.title = title;
-  el.setAttribute('data-ignore', dataIgnore);
+  el.dataset.ignore = dataIgnore;
 
   if (dataError === 'on') {
-    el.setAttribute('data-error', dataError);
+    el.dataset.error = dataError;
     el.innerHTML = '<label><i class="fa fa-exclamation-triangle"></i></label>' + cleanedStr;
   } else {
     el.innerHTML = '<label></label>' + innerHTML;

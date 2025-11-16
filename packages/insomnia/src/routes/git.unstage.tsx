@@ -13,7 +13,7 @@ interface UnstageGitChangesData {
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = (await request.json()) as UnstageGitChangesData;
 
-  return window.main.git.unstageChanges(data);
+  return globalThis.main.git.unstageChanges(data);
 }
 
 export const useGitProjectUnstageActionFetcher = createFetcherSubmitHook(

@@ -37,7 +37,7 @@ export function completeExecutionStep(requestId: string) {
 export function updateLatestStepName(executionId: string, stepName: string) {
   const steps = executions.get(executionId) || [];
   if (steps.length > 0) {
-    const latestStep = steps[steps.length - 1];
+    const latestStep = steps.at(-1);
     latestStep.stepName = stepName;
     executions.set(executionId, steps);
   }

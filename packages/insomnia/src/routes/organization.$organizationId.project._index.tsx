@@ -324,11 +324,11 @@ interface LearningFeature {
 
 const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   let learningFeature = fallbackLearningFeature;
-  const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
-  const lastFetched = lastFetchedString ? parseInt(lastFetchedString, 10) : 0;
-  const oneDay = 86400000;
+  const lastFetchedString = globalThis.localStorage.getItem('learning-feature-last-fetch');
+  const lastFetched = lastFetchedString ? Number.parseInt(lastFetchedString, 10) : 0;
+  const oneDay = 86_400_000;
   const hasOneDayPassedSinceLastFetch = Date.now() - lastFetched > oneDay;
-  const wasDismissed = window.localStorage.getItem('learning-feature-dismissed');
+  const wasDismissed = globalThis.localStorage.getItem('learning-feature-dismissed');
   const wasNotDismissedAndOneDayHasPassed = !wasDismissed && hasOneDayPassedSinceLastFetch;
   if (wasNotDismissedAndOneDayHasPassed) {
     try {
@@ -338,7 +338,7 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
         origin: 'https://storage.googleapis.com',
         sessionId: '',
       });
-      window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
+      globalThis.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
     } catch {
       console.log('[project] Could not fetch learning feature data.');
     }
@@ -360,9 +360,9 @@ const CheckAllProjectSyncStatus = async (projects: Project[]) => {
   const taskList = projects.map(project => checkSingleProjectSyncStatus(project._id));
   const res = await Promise.all(taskList);
   const obj: Record<string, boolean> = {};
-  projects.forEach((project, index) => {
+  for (const [index, project] of projects.entries()) {
     obj[project._id] = res[index];
-  });
+  }
   return obj;
 };
 
@@ -500,12 +500,12 @@ const Component = () => {
 
   const { userSession } = useRootLoaderData()!;
   const pullFileFetcher = useInsomniaSyncPullRemoteFileActionFetcher();
-  const loadingBackendProjects = useFetchers()
+  const loadingBackendProjects = new Set(useFetchers()
     .filter(
       fetcher =>
         fetcher.formAction === href(`/organization/:organizationId/insomnia-sync/pull-remote-file`, { organizationId }),
     )
-    .map(f => f.formData?.get('backendProjectId'));
+    .map(f => f.formData?.get('backendProjectId')));
 
   const organizationData = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
@@ -549,7 +549,7 @@ const Component = () => {
   const isPersonalOrg = organization && isPersonalOrganization(organization);
 
   const filteredFiles = allFiles
-    .filter(w => (workspaceListScope !== 'all' ? w.scope === workspaceListScope : true))
+    .filter(w => (workspaceListScope === 'all' ? true : w.scope === workspaceListScope))
     .filter(workspace =>
       workspaceListFilter
         ? Boolean(
@@ -584,7 +584,7 @@ const Component = () => {
       return {
         ...file,
         loading:
-          loadingBackendProjects.includes(file.remoteId) ||
+          loadingBackendProjects.has(file.remoteId) ||
           (pullFileFetcher.formData?.get('backendProjectId') &&
             pullFileFetcher.formData?.get('backendProjectId') === file.remoteId),
         presence: workspacePresence,
@@ -1156,7 +1156,7 @@ const Component = () => {
 
                     <Button
                       onPress={() => {
-                        window.main.trackSegmentEvent({
+                        globalThis.main.trackSegmentEvent({
                           event: SegmentEvent.importStarted,
                           properties: {
                             source: 'project',

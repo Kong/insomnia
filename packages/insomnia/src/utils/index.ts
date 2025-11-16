@@ -85,5 +85,5 @@ export function diffInDayCeil(dateA: Date, dateB: Date) {
 }
 
 export function formatNumber(num: number) {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d)(?=\.\d*|$))/g, ',');
+  return num.toString().replaceAll(/\B(?=(\d{3})+(?!\d)(?=\.\d*|$))/g, ',');
 }

@@ -27,7 +27,7 @@ export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariabl
   };
 
   // Id to avoid race conditions
-  const id = window.crypto.randomUUID();
+  const id = globalThis.crypto.randomUUID();
   const payloadWithHash = JSON.stringify({ id, input, context: newContext, path, ignoreUndefinedEnvVariable });
   worker.postMessage(payloadWithHash);
   return new Promise((resolve, reject) => {

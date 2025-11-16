@@ -4,18 +4,17 @@ import type { RendererToMainBridgeAPI } from '../src/main/ipc/main';
 import type { DiffMatchPatch, DiffOp } from 'diff-match-patch-ts';
 
 declare global {
+  var main: RendererToMainBridgeAPI;
+  var bridge: HiddenBrowserWindowToMainBridgeAPI;
+  var dialog: Pick<Electron.Dialog, 'showOpenDialog' | 'showSaveDialog'>;
+  var app: Pick<Electron.App, 'getPath' | 'getAppPath'>;
+  var shell: Pick<Electron.Shell, 'showItemInFolder' | 'openPath'>;
+  var clipboard: Pick<Electron.Clipboard, 'readText' | 'writeText' | 'clear'>;
+  var webUtils: Pick<Electron.WebUtils, 'getPathForFile'>;
+  var showAlert: (options?: Record<string, any>) => void;
+  var showWrapper: (options?: Record<string, any>) => void;
+  var showPrompt: (options?: Record<string, any>) => void;
   interface Window {
-    main: RendererToMainBridgeAPI;
-    bridge: HiddenBrowserWindowToMainBridgeAPI;
-    dialog: Pick<Electron.Dialog, 'showOpenDialog' | 'showSaveDialog'>;
-    app: Pick<Electron.App, 'getPath' | 'getAppPath'>;
-    shell: Pick<Electron.Shell, 'showItemInFolder' | 'openPath'>;
-    clipboard: Pick<Electron.Clipboard, 'readText' | 'writeText' | 'clear'>;
-    webUtils: Pick<Electron.WebUtils, 'getPathForFile'>;
-    showAlert: (options?: Record<string, any>) => void;
-    showWrapper: (options?: Record<string, any>) => void;
-    showPrompt: (options?: Record<string, any>) => void;
-
     // Required by codemirror merge addon
     diff_match_patch: typeof DiffMatchPatch;
     DIFF_DELETE: DiffOp;

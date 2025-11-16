@@ -15,12 +15,12 @@ const Component = () => {
   useEffect(() => {
     const handleOnline = () => setStatus('online');
     const handleOffline = () => setStatus('offline');
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    globalThis.addEventListener('online', handleOnline);
+    globalThis.addEventListener('offline', handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      globalThis.removeEventListener('online', handleOnline);
+      globalThis.removeEventListener('offline', handleOffline);
     };
   }, []);
 

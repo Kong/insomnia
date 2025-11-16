@@ -16,7 +16,7 @@ export const ResponseCookiesViewer: FC<Props> = props => {
 
     try {
       cookie = h ? Cookie.parse(h.value || '', { loose: true }) : null;
-    } catch (err) {
+    } catch {
       console.warn('Failed to parse set-cookie header', h);
     }
 
@@ -56,7 +56,7 @@ export const ResponseCookiesViewer: FC<Props> = props => {
             <th>Value</th>
           </tr>
         </thead>
-        <tbody>{!headers.length ? renderRow(null, -1) : headers.map(renderRow)}</tbody>
+        <tbody>{headers.length ? headers.map(renderRow) : renderRow(null, -1)}</tbody>
       </table>
       <p className="pad-top">
         <button className="pull-right btn btn--clicky" onClick={() => setIsCookieModalOpen(true)}>

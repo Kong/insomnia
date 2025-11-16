@@ -217,7 +217,7 @@ const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
 const getRequestNameOrFallback = (
   doc: Request | RequestGroup | GrpcRequest | WebSocketRequest | SocketIORequest,
 ): string => {
-  return !isRequestGroup(doc) ? doc.name || doc.url || 'Untitled request' : doc.name || 'Untitled folder';
+  return isRequestGroup(doc) ? doc.name || 'Untitled folder' : doc.name || doc.url || 'Untitled request';
 };
 
 const RequestTiming = ({ requestId }: { requestId: string }) => {
@@ -312,7 +312,7 @@ const Debug = () => {
   const patchGroup = useRequestGroupPatcher();
   const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
-    const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
+    const unsubscribe = globalThis.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [event, doc] = change;
         if (isGrpcRequest(doc) && event === 'insert') {
@@ -335,21 +335,21 @@ const Debug = () => {
   };
   useEffect(
     () =>
-      window.main.on('grpc.start', (_, id) => {
+      globalThis.main.on('grpc.start', (_, id) => {
         setGrpcStates(state => state.map(s => (s.requestId === id ? { ...s, running: true } : s)));
       }),
     [],
   );
   useEffect(
     () =>
-      window.main.on('grpc.end', (_, id) => {
+      globalThis.main.on('grpc.end', (_, id) => {
         setGrpcStates(state => state.map(s => (s.requestId === id ? { ...s, running: false } : s)));
       }),
     [],
   );
   useEffect(
     () =>
-      window.main.on('grpc.data', (_, id, value) => {
+      globalThis.main.on('grpc.data', (_, id, value) => {
         setGrpcStates(state =>
           state.map(s =>
             s.requestId === id
@@ -372,7 +372,7 @@ const Debug = () => {
   );
   useEffect(
     () =>
-      window.main.on('grpc.error', (_, id, error) => {
+      globalThis.main.on('grpc.error', (_, id, error) => {
         if (isGrpcConnectionError(error)) {
           showModal(ErrorModal, { error, ...getGrpcConnectionErrorDetails(error) });
         }
@@ -382,7 +382,7 @@ const Debug = () => {
   );
   useEffect(
     () =>
-      window.main.on('grpc.status', (_, id, status) => {
+      globalThis.main.on('grpc.status', (_, id, status) => {
         setGrpcStates(state => state.map(s => (s.requestId === id ? { ...s, status } : s)));
       }),
     [],
@@ -397,17 +397,13 @@ const Debug = () => {
       return;
     }
 
-    if (layout && layout[0] > 0) {
-      layout[0] = 0;
-    } else {
-      layout[0] = DEFAULT_SIDEBAR_SIZE;
-    }
+    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
 
     sidebarPanelRef.current?.setLayout(layout);
   }
 
   useEffect(() => {
-    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
+    const unsubscribe = globalThis.main.on('toggle-sidebar', toggleSidebar);
 
     return unsubscribe;
   }, []);
@@ -590,20 +586,12 @@ const Debug = () => {
           const beforeItem = targetItem;
           const afterItem = targetSiblingsCollections[targetIndexInSiblingsCollection + 1];
 
-          if (beforeItem && afterItem) {
-            metaSortKey = beforeItem.doc.metaSortKey - (beforeItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2;
-          } else {
-            metaSortKey = beforeItem.doc.metaSortKey + 100;
-          }
+          metaSortKey = beforeItem && afterItem ? beforeItem.doc.metaSortKey - (beforeItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2 : beforeItem.doc.metaSortKey + 100;
         } else {
           const beforeItem = targetSiblingsCollections[targetIndexInSiblingsCollection - 1];
           const afterItem = targetItem;
 
-          if (beforeItem && afterItem) {
-            metaSortKey = afterItem.doc.metaSortKey - (afterItem.doc.metaSortKey - beforeItem.doc.metaSortKey) / 2;
-          } else {
-            metaSortKey = afterItem.doc.metaSortKey - 100;
-          }
+          metaSortKey = beforeItem && afterItem ? afterItem.doc.metaSortKey - (afterItem.doc.metaSortKey - beforeItem.doc.metaSortKey) / 2 : afterItem.doc.metaSortKey - 100;
         }
       }
 
@@ -791,7 +779,7 @@ const Debug = () => {
       return () => {};
     }
     // Listen on media query changes
-    const mediaQuery = window.matchMedia('(max-width: 880px)');
+    const mediaQuery = globalThis.matchMedia('(max-width: 880px)');
     setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
 
     const handleChange = (e: MediaQueryListEvent) => {
@@ -871,8 +859,7 @@ const Debug = () => {
                 <Icon icon="file-contract" className="w-5 flex-shrink-0" />
                 <span className="truncate">
                   {clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates{' '}
-                  {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
-                    .length > 0
+                  {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).some(isNotNullOrUndefined)
                     ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
                     : ''}
                 </span>

@@ -26,7 +26,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       projectId: project._id,
     });
 
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: SegmentEvent.vcsAction,
       properties: vcsSegmentEventProperties('remote', 'pull'),
     });
@@ -40,7 +40,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while pulling from remote.';
 
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: SegmentEvent.vcsAction,
       properties: vcsSegmentEventProperties('remote', 'pull', errorMessage),
     });

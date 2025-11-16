@@ -26,13 +26,13 @@ await initPlugins();
 await migrateFromLocalStorage();
 
 try {
-  window.showAlert = options => showModal(AlertModal, options);
-  window.showPrompt = options =>
+  globalThis.showAlert = options => showModal(AlertModal, options);
+  globalThis.showPrompt = options =>
     showModal(PromptModal, {
       ...options,
       title: options?.title || '',
     });
-  window.showWrapper = options =>
+  globalThis.showWrapper = options =>
     showModal(WrapperModal, {
       ...options,
       title: options?.title || '',
@@ -43,8 +43,8 @@ try {
   // we need to inject state into localStorage
   const skipOnboarding = getSkipOnboarding();
   if (skipOnboarding) {
-    window.localStorage.setItem('hasSeenOnboardingV12', skipOnboarding.toString());
-    window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
+    globalThis.localStorage.setItem('hasSeenOnboardingV12', skipOnboarding.toString());
+    globalThis.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
   }
 } catch (e) {
   console.log('[onboarding] Failed to parse session data', e);
@@ -85,9 +85,9 @@ applyColorScheme(appSettings);
 
 const initialEntry = await getInitialEntry();
 
-if (typeof initialEntry === 'string' && window.location.pathname !== initialEntry) {
+if (typeof initialEntry === 'string' && globalThis.location.pathname !== initialEntry) {
   console.log('[entry.client] Initial entry:', initialEntry);
-  window.location.pathname = initialEntry;
+  globalThis.location.pathname = initialEntry;
 }
 
 startTransition(() => {

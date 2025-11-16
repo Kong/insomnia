@@ -89,7 +89,7 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
     const newListeners = eventListeners.filter(item => item.id !== deleteItem.id);
     updateRequest(newListeners);
     if (deleteItem.eventName && deleteItem.isOpen) {
-      window.main.socketIO.event.off({
+      globalThis.main.socketIO.event.off({
         requestId: request._id,
         eventName: deleteItem.eventName,
       });
@@ -110,7 +110,7 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
       newItem.isOpen = false;
       const originListener = rows.find(item => item.id === newItem.id);
       if (originListener?.eventName) {
-        window.main.socketIO.event.off({
+        globalThis.main.socketIO.event.off({
           requestId: request._id,
           eventName: originListener.eventName,
         });
@@ -127,12 +127,12 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
 
     if (changeKey === 'isOpen' && newItem.eventName) {
       if (newItem.isOpen) {
-        window.main.socketIO.event.on({
+        globalThis.main.socketIO.event.on({
           requestId: request._id,
           eventName: newItem.eventName,
         });
       } else {
-        window.main.socketIO.event.off({
+        globalThis.main.socketIO.event.off({
           requestId: request._id,
           eventName: newItem.eventName,
         });

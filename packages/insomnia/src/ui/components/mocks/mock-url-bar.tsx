@@ -23,7 +23,7 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
   const [pathInput, setPathInput] = useState<string>(mockRoute.name);
   const dropdownRef = useRef<DropdownHandle>(null);
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
-  const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
+  const [currentTimeout, setCurrentTimeout] = useState<number | undefined>();
 
   useEffect(() => {
     setPathInput(mockRoute.name);
@@ -61,7 +61,7 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
           showModal(AlertModal, {
             title: 'Full URL',
             message: getMockServiceBinURL(mockServer, pathInput),
-            onConfirm: () => window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput)),
+            onConfirm: () => globalThis.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput)),
             addCancel: true,
             okLabel: 'Copy',
           });
@@ -73,7 +73,7 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
       <Button
         className="flex-shrink-0 rounded-sm bg-[--hl-sm] px-3 py-1 text-sm text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-xs]"
         onPress={() => {
-          window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput));
+          globalThis.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput));
         }}
       >
         <Icon icon="copy" /> Copy

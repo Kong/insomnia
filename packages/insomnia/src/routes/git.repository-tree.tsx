@@ -9,7 +9,7 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const params = Object.fromEntries(url.searchParams.entries());
 
   const projectId = params.projectId;
-  return window.main.git.getRepositoryDirectoryTree({ projectId });
+  return globalThis.main.git.getRepositoryDirectoryTree({ projectId });
 }
 
 export const useGitProjectRepositoryTreeLoaderFetcher = createFetcherLoadHook(

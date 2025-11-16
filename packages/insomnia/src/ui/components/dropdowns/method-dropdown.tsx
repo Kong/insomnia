@@ -14,7 +14,7 @@ interface Props {
 }
 
 export const MethodDropdown = forwardRef<DropdownHandle, Props>(({ method, onChange }, ref) => {
-  const localStorageHttpMethods = window.localStorage.getItem(LOCALSTORAGE_KEY);
+  const localStorageHttpMethods = globalThis.localStorage.getItem(LOCALSTORAGE_KEY);
   const parsedLocalStorageHttpMethods = localStorageHttpMethods
     ? (JSON.parse(localStorageHttpMethods) as string[])
     : [];
@@ -34,11 +34,11 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({ method, onCha
       onDeleteHint: methodToDelete => {
         // Note: We need to read and remove the method from localStorage and not rely on react state
         // It solves the case where you try to delete more than one method at a time, because recent is updated only once
-        const localStorageHttpMethods = window.localStorage.getItem(LOCALSTORAGE_KEY);
+        const localStorageHttpMethods = globalThis.localStorage.getItem(LOCALSTORAGE_KEY);
         const currentRecent = localStorageHttpMethods ? (JSON.parse(localStorageHttpMethods) as string[]) : [];
         const newRecent = currentRecent.filter(m => m !== methodToDelete);
         setRecent(newRecent);
-        window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newRecent));
+        globalThis.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newRecent));
       },
       onComplete: methodToAdd => {
         // Don't add empty methods
@@ -52,13 +52,13 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({ method, onCha
 
         // Note: We need to read and remove the method from localStorage and not rely on react state
         // It solves the case where you try to add a new method after you deleted some others
-        const localStorageHttpMethods = window.localStorage.getItem(LOCALSTORAGE_KEY);
+        const localStorageHttpMethods = globalThis.localStorage.getItem(LOCALSTORAGE_KEY);
         const currentRecent = localStorageHttpMethods ? (JSON.parse(localStorageHttpMethods) as string[]) : [];
         // Save method as recent
         if (!currentRecent.includes(methodToAdd)) {
           const newRecent = [...currentRecent, methodToAdd];
           setRecent(newRecent);
-          window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newRecent));
+          globalThis.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newRecent));
         }
         onChange(methodToAdd);
       },

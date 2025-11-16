@@ -168,7 +168,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                       <button
                         className="btn btn--super-compact btn--outlined flex items-center gap-[--padding-xs]"
                         onClick={() => {
-                          window.clipboard.writeText(authUrl);
+                          globalThis.clipboard.writeText(authUrl);
                         }}
                       >
                         <i className="fa fa-clipboard mr-1" aria-hidden="true" />

@@ -32,14 +32,7 @@ export const convert = async (
     importers = importers.filter(i => i.id === importerId);
   }
   for (const importer of importers) {
-    let resources;
-    if (importer.acceptFilePath === true) {
-      // FilePathImporter
-      resources = await importer.convert(importEntry);
-    } else {
-      // ContentStrImporter
-      resources = await importer.convert(importEntry.contentStr);
-    }
+    const resources = await importer.convert(importer.acceptFilePath === true ? importEntry : importEntry.contentStr);
 
     if (!resources) {
       continue;

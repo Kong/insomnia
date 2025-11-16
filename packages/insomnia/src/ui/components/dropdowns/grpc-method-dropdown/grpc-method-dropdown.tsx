@@ -32,15 +32,15 @@ const GrpcMethodTypeAcronym = {
 
 function groupBy(list: {}[], keyGetter: (item: any) => string): Record<string, any[]> {
   const map = new Map();
-  list.forEach(item => {
+  for (const item of list) {
     const key = keyGetter(item);
     const collection = map.get(key);
-    if (!collection) {
-      map.set(key, [item]);
-    } else {
+    if (collection) {
       collection.push(item);
+    } else {
+      map.set(key, [item]);
     }
-  });
+  }
   return Object.fromEntries(map);
 }
 
@@ -61,8 +61,8 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({ disabled, methods
   const groupedByPkg = groupGrpcMethodsByPackage(methods);
   const sections = Object.entries(groupedByPkg).map(([name, pkg]) => ({
     id: name,
-    name: name !== NO_PACKAGE_KEY ? `pkg: ${name}` : 'No package',
-    display_name: name !== NO_PACKAGE_KEY ? `pkg: ${name}` : 'No package',
+    name: name === NO_PACKAGE_KEY ? 'No package' : `pkg: ${name}`,
+    display_name: name === NO_PACKAGE_KEY ? 'No package' : `pkg: ${name}`,
     items: pkg.map(({ type, fullPath, example }) => ({
       id: fullPath,
       fullPath,

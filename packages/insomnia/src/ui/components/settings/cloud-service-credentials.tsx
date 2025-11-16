@@ -106,14 +106,14 @@ export const CloudServiceCredentialList = () => {
         params: { provider: 'azure' },
       });
       // show error modal if no authUrl generated
-      if (!authUrl) {
+      if (authUrl) {
+        setModalState({ show: true, provider: key as CloudProviderName, authUrl });
+      } else {
         console.error('Failed to open Azure auth url', error);
         showError({
           title: 'Azure Authorization Failed',
           message: error || 'Failed to get Azure authentication url',
         });
-      } else {
-        setModalState({ show: true, provider: key as CloudProviderName, authUrl });
       }
     } else {
       setModalState({ show: true, provider: key as CloudProviderName });

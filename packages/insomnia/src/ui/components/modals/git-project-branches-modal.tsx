@@ -98,8 +98,8 @@ const LocalBranchItem = ({
               }}
             >
               <Icon
-                icon={deleteBranchFetcher.state !== 'idle' ? 'spinner' : 'trash'}
-                className={`w-5 text-[--color-danger] ${deleteBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
+                icon={deleteBranchFetcher.state === 'idle' ? 'trash' : 'spinner'}
+                className={`w-5 text-[--color-danger] ${deleteBranchFetcher.state === 'idle' ? '' : 'animate-spin'}`}
               />
               Delete
             </PromptButton>
@@ -116,8 +116,8 @@ const LocalBranchItem = ({
             }}
           >
             <Icon
-              icon={checkoutBranchFetcher.state !== 'idle' ? 'spinner' : 'turn-up'}
-              className={`w-5 ${checkoutBranchFetcher.state !== 'idle' ? 'animate-spin' : 'rotate-90'}`}
+              icon={checkoutBranchFetcher.state === 'idle' ? 'turn-up' : 'spinner'}
+              className={`w-5 ${checkoutBranchFetcher.state === 'idle' ? 'rotate-90' : 'animate-spin'}`}
             />
             Checkout
           </Button>
@@ -139,7 +139,7 @@ const LocalBranchItem = ({
               }
 
               try {
-                const result = await window.main.git.mergeGitBranch({
+                const result = await globalThis.main.git.mergeGitBranch({
                   projectId,
                   theirsBranch: branch,
                   allowUncommittedChangesBeforeMerge: true,
@@ -151,7 +151,7 @@ const LocalBranchItem = ({
                       conflicts: result.conflicts,
                       labels: result.labels,
                       onResolveAll: (conflicts: MergeConflict[]) => {
-                        window.main.git
+                        globalThis.main.git
                           .continueMerge({
                             projectId,
                             handledMergeConflicts: conflicts,
@@ -165,7 +165,7 @@ const LocalBranchItem = ({
                       },
                       onCancelUnresolved: () => {
                         // user aborted merge
-                        window.main.git.abortMerge();
+                        globalThis.main.git.abortMerge();
                         // TODO: the abortMerge method provided by isomorphic-git is unreliable
                         // clean up any partial merges here
                         reject(
@@ -231,8 +231,8 @@ const RemoteBranchItem = ({ branch, projectId }: { branch: string; isCurrent: bo
           }
         >
           <Icon
-            icon={checkoutBranch.state !== 'idle' ? 'spinner' : 'cloud-arrow-down'}
-            className={`w-5 ${checkoutBranch.state !== 'idle' ? 'animate-spin' : ''}`}
+            icon={checkoutBranch.state === 'idle' ? 'cloud-arrow-down' : 'spinner'}
+            className={`w-5 ${checkoutBranch.state === 'idle' ? '' : 'animate-spin'}`}
           />
           Fetch and checkout
         </Button>
@@ -361,8 +361,8 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
                       type="submit"
                     >
                       <Icon
-                        className={`w-5 ${createBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
-                        icon={createBranchFetcher.state !== 'idle' ? 'spinner' : 'plus'}
+                        className={`w-5 ${createBranchFetcher.state === 'idle' ? '' : 'animate-spin'}`}
+                        icon={createBranchFetcher.state === 'idle' ? 'plus' : 'spinner'}
                       />{' '}
                       Create
                     </Button>

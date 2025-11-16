@@ -121,15 +121,15 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           [isMac() ? 'Cmd-F' : 'Ctrl-F']: () => {},
         }),
         gutters: [],
-        mode: !handleRender
-          ? 'text/plain'
-          : {
+        mode: handleRender
+          ? {
               name: 'nunjucks',
               baseMode: 'text/plain',
-            },
+            }
+          : 'text/plain',
         environmentAutocomplete: canAutocomplete && {
-          getVariables: async () => (!handleGetRenderContext ? [] : (await handleGetRenderContext())?.keys || []),
-          getTags: async () => (!handleGetRenderContext ? [] : (await getTagDefinitions()).flatMap(transformEnums)),
+          getVariables: async () => (handleGetRenderContext ? (await handleGetRenderContext())?.keys || [] : []),
+          getTags: async () => (handleGetRenderContext ? (await getTagDefinitions()).flatMap(transformEnums) : []),
           getConstants: getAutocompleteConstants,
           hotKeyRegistry: settings.hotKeyRegistry,
           autocompleteDelay: settings.autocompleteDelay,
@@ -146,7 +146,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             return;
           }
           // If we're in single-line mode, merge all changed lines into one
-          change.update?.(change.from, change.to, [change.text.join('').replace(/\n/g, ' ')]);
+          change.update?.(change.from, change.to, [change.text.join('').replaceAll('\n', ' ')]);
         }
       });
       codeMirror.current.on('paste', (_, e: ClipboardEvent) => {
@@ -200,9 +200,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       });
       // extra event listeners for editor
       if (Array.isArray(eventListeners) && eventListeners.length > 0) {
-        eventListeners.forEach(({ eventName, handler }) => {
+        for (const { eventName, handler } of eventListeners) {
           codeMirror.current?.on(eventName, handler);
-        });
+        }
       }
       codeMirror.current.on('blur', () =>
         codeMirror.current?.getTextArea().parentElement?.removeAttribute('data-focused'),
@@ -304,7 +304,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     }, [onChange]);
 
     useEffect(() => {
-      const unsubscribe = window.main.on(
+      const unsubscribe = globalThis.main.on(
         'nunjucks-context-menu-command',
         (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {
           if (id === key) {
@@ -381,7 +381,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           event.preventDefault();
           const pluginTemplateTags = (await getTemplateTags()).map(tag => ({
             // Skip unsupported objects like functions in template tag to send in IPC
-            templateTag: JSON.parse(JSON.stringify(tag.templateTag)),
+            templateTag: structuredClone(tag.templateTag),
           }));
           const target = event.target as HTMLElement;
           // right click on nunjucks tag
@@ -390,10 +390,10 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
             if (nunjucksTag) {
               // show context menu for nunjucks tag
-              window.main.showNunjucksContextMenu({ key: id, nunjucksTag, pluginTemplateTags });
+              globalThis.main.showNunjucksContextMenu({ key: id, nunjucksTag, pluginTemplateTags });
             }
           } else {
-            window.main.showNunjucksContextMenu({ key: id, pluginTemplateTags });
+            globalThis.main.showNunjucksContextMenu({ key: id, pluginTemplateTags });
           }
         }}
       >

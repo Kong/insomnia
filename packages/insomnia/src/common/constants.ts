@@ -42,8 +42,8 @@ export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLo
 
 export const getBrowserUserAgent = () =>
   encodeURIComponent(
-    String(window.navigator.userAgent)
-      .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
+    String(globalThis.navigator.userAgent)
+      .replace(new RegExp(String.raw`${getAppId()}\/\d+\.\d+\.\d+ `), '')
       .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
   ).replace('%2C', ',');
 
@@ -183,7 +183,6 @@ export const isDesignActivity = (activity?: string): activity is GlobalActivity 
       return true;
     }
 
-    case 'home':
     default: {
       return false;
     }
@@ -196,9 +195,6 @@ export const isCollectionActivity = (activity?: string): activity is GlobalActiv
       return true;
     }
 
-    case 'spec':
-    case 'unittest':
-    case 'home':
     default: {
       return false;
     }

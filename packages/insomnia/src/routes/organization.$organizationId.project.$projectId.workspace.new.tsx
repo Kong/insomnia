@@ -68,9 +68,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       const mockServerType = workspaceData.mockServerType;
       invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
 
-      const modelConfig = await window.main.llm.getCurrentConfig();
+      const modelConfig = await globalThis.main.llm.getCurrentConfig();
       if (workspaceData.mockServerCreationType === 'ai') {
-        const isFeatureEnabled = await window.main.llm.getAIFeatureEnabled('aiMockServers');
+        const isFeatureEnabled = await globalThis.main.llm.getAIFeatureEnabled('aiMockServers');
         invariant(
           isFeatureEnabled,
           'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.',
@@ -164,7 +164,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       event = SegmentEvent.mcpClientWorkspaceCreate;
     }
 
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: event,
     });
 
@@ -190,7 +190,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         })
       )._id;
 
-      window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType: 'HTTP' } });
+      globalThis.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType: 'HTTP' } });
 
       return redirect(
         href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
@@ -218,7 +218,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       });
       const requestId = newMcpRequest._id;
 
-      window.main.trackSegmentEvent({
+      globalThis.main.trackSegmentEvent({
         event: SegmentEvent.mcpClientAdded,
       });
 
@@ -298,7 +298,7 @@ async function createMockServer(
       workspaceId: workspace._id,
     })}/mock-server`;
 
-    const modelConfig = await window.main.llm.getCurrentConfig();
+    const modelConfig = await globalThis.main.llm.getCurrentConfig();
 
     const generationStartTime = Date.now();
 
@@ -309,15 +309,26 @@ async function createMockServer(
 
       if (workspaceData.apiSpecContents) {
         openapiSpec = workspaceData.apiSpecContents;
-      } else if (workspaceData.mockServerSpecSource === 'file') {
+      } else switch (workspaceData.mockServerSpecSource) {
+ case 'file': {
         openapiSpec = fs.readFileSync(workspaceData.mockServerOASFilePath!, 'utf8');
-      } else if (workspaceData.mockServerSpecSource === 'url') {
+      
+ break;
+ }
+ case 'url': {
         specUrl = workspaceData.mockServerSpecURL!;
-      } else if (workspaceData.mockServerSpecSource === 'text') {
+      
+ break;
+ }
+ case 'text': {
         specText = workspaceData.mockServerSpecText!;
-      }
+      
+ break;
+ }
+ // No default
+ }
 
-      const result = await window.main.generateMockRouteDataFromSpec(
+      const result = await globalThis.main.generateMockRouteDataFromSpec(
         openapiSpec,
         specUrl,
         specText,
@@ -352,7 +363,7 @@ async function createMockServer(
       });
     }
 
-    window.main.trackSegmentEvent({
+    globalThis.main.trackSegmentEvent({
       event: SegmentEvent.mockCreate,
       properties: {
         provider: (modelConfig && modelConfig.backend) || '',
@@ -378,7 +389,7 @@ async function createMockServer(
         ),
         status: 'success',
       },
-      { timeout: 10000 },
+      { timeout: 10_000 },
     );
 
     return undefined;

@@ -135,8 +135,8 @@ export const McpPane = () => {
           ...(primitiveNextCursor.resources && { nextCursor: primitiveNextCursor.resources }),
         });
         const hide = collapsedPrimitives.includes('resources');
-        collection.push(...(resources.map(r => ({ ...r, type: 'resources', itemLevel: 1, hide })) as ResourceItem[]));
         collection.push(
+          ...(resources.map(r => ({ ...r, type: 'resources', itemLevel: 1, hide })) as ResourceItem[]),
           ...(resourceTemplates.map(rt => ({
             ...rt,
             type: 'resourceTemplates',
@@ -229,14 +229,14 @@ export const McpPane = () => {
     const isSubscribed = subscribeResources.includes(item.name);
     if (isSubscribed) {
       try {
-        await window.main.mcp.primitive.unsubscribeResource({ uri: item.uri, requestId: requestId });
+        await globalThis.main.mcp.primitive.unsubscribeResource({ uri: item.uri, requestId: requestId });
         patchRequest(requestId, { subscribeResources: subscribeResources.filter(r => r !== item.name) });
       } catch (error) {
         console.error(`Failed to unsubscribe resource ${item.name}: ${error}`);
       }
     } else {
       try {
-        await window.main.mcp.primitive.subscribeResource({ uri: item.uri, requestId: requestId });
+        await globalThis.main.mcp.primitive.subscribeResource({ uri: item.uri, requestId: requestId });
         patchRequest(requestId, { subscribeResources: [...subscribeResources, item.name] });
       } catch (error) {
         console.error(`Failed to subscribe resource ${item.name}: ${error}`);
@@ -268,17 +268,13 @@ export const McpPane = () => {
       return;
     }
 
-    if (layout && layout[0] > 0) {
-      layout[0] = 0;
-    } else {
-      layout[0] = DEFAULT_SIDEBAR_SIZE;
-    }
+    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
 
     sidebarPanelRef.current?.setLayout(layout);
   };
 
   useEffect(() => {
-    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
+    const unsubscribe = globalThis.main.on('toggle-sidebar', toggleSidebar);
     return unsubscribe;
   }, []);
 
@@ -288,7 +284,7 @@ export const McpPane = () => {
       return () => {};
     }
     // Listen on media query changes
-    const mediaQuery = window.matchMedia('(max-width: 880px)');
+    const mediaQuery = globalThis.matchMedia('(max-width: 880px)');
     setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
 
     const handleChange = (e: MediaQueryListEvent) => {
@@ -311,11 +307,11 @@ export const McpPane = () => {
         if (firstMatchEvent) {
           return 'result' in firstMatchEvent.data ? firstMatchEvent.data.result : undefined;
         }
-        return undefined;
+        return;
       };
       const activeResponseId = activeResponse?._id;
       if (activeResponseId) {
-        const allEvents = await window.main.mcp.event.findMany({ responseId: activeResponseId });
+        const allEvents = await globalThis.main.mcp.event.findMany({ responseId: activeResponseId });
         const allMessageEvents = allEvents.filter(
           event => 'method' in event && event.direction === 'INCOMING',
         ) as McpMessageEvent[];

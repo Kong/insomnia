@@ -11,7 +11,7 @@ export function useExecutionState({ requestId }: { requestId?: string }) {
       if (!requestId) {
         return;
       }
-      const targetSteps = await window.main.getExecution({ requestId });
+      const targetSteps = await globalThis.main.getExecution({ requestId });
       if (targetSteps) {
         isMounted && setSteps(targetSteps);
       } else {
@@ -27,7 +27,7 @@ export function useExecutionState({ requestId }: { requestId?: string }) {
   useEffect(() => {
     let isMounted = true;
     // @ts-expect-error -- we use a dynamic channel here
-    const unsubscribe = window.main.on(`syncTimers.${requestId}`, (_, { executions }: { executions: TimingStep[] }) => {
+    const unsubscribe = globalThis.main.on(`syncTimers.${requestId}`, (_, { executions }: { executions: TimingStep[] }) => {
       isMounted && setSteps(executions);
     });
     return () => {
@@ -41,7 +41,7 @@ export function useExecutionState({ requestId }: { requestId?: string }) {
     if (!hasSteps) {
       return false;
     }
-    const latest = steps[steps.length - 1];
+    const latest = steps.at(-1);
     return latest.duration === undefined;
   };
 

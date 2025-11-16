@@ -130,7 +130,7 @@ export const RequestActionsDropdown = ({
       const cmd = snippet.convert('shell', 'curl');
 
       if (cmd) {
-        window.clipboard.writeText(cmd);
+        globalThis.clipboard.writeText(cmd);
       }
     } catch (err) {
       showModal(AlertModal, {
@@ -179,9 +179,8 @@ export const RequestActionsDropdown = ({
       hint?: PlatformKeyCombinations;
       action: () => void;
     }[];
-  }[] = !canGenerateCode
-    ? []
-    : [
+  }[] = canGenerateCode
+    ? [
         {
           name: 'Export',
           id: 'export',
@@ -202,7 +201,8 @@ export const RequestActionsDropdown = ({
             },
           ],
         },
-      ];
+      ]
+    : [];
 
   const requestActionList: {
     name: string;

@@ -37,10 +37,10 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
     const data = await exportHarCurrentRequest(activeRequest, activeResponse);
     const har = JSON.stringify(data, null, '\t');
 
-    const { filePath } = await window.dialog.showSaveDialog({
+    const { filePath } = await globalThis.dialog.showSaveDialog({
       title: 'Export As HAR',
       buttonLabel: 'Save',
-      defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.har`,
+      defaultPath: `${activeRequest.name.replaceAll(/ +/g, '_')}-${Date.now()}.har`,
     });
 
     if (!filePath) {
@@ -65,10 +65,10 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       .map(v => v.value)
       .join('');
 
-    const { canceled, filePath } = await window.dialog.showSaveDialog({
+    const { canceled, filePath } = await globalThis.dialog.showSaveDialog({
       title: 'Save Full Response',
       buttonLabel: 'Save',
-      defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
+      defaultPath: `${activeRequest.name.replaceAll(/ +/g, '_')}-${Date.now()}.txt`,
     });
 
     if (canceled) {

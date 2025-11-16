@@ -123,7 +123,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   invariant(typeof activeRequestId === 'string', 'Request ID is required');
   models.stats.incrementCreatedRequests();
-  window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType } });
+  globalThis.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType } });
 
   // add a created query param to the URL to indicate that the request was just created, this is for distinguishing if we will create a temporary or permanent tab
   return redirect(

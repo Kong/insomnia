@@ -39,19 +39,19 @@ export function useFilteredRequests<T extends { doc: SearchableFields; ancestors
       };
     });
     // If there is a filter then we need to show all the parents of the requests that are not hidden.
-    collection.forEach(node => {
+    for (const node of collection) {
       const ancestors = node.ancestors || [];
 
       if (!node.hidden) {
-        ancestors.forEach(ancestorId => {
+        for (const ancestorId of ancestors) {
           const ancestor = collection.find(n => n.doc._id === ancestorId);
 
           if (ancestor) {
             ancestor.hidden = false;
           }
-        });
+        }
       }
-    });
+    }
 
     return collection;
   }, [requests, filter]);

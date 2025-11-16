@@ -16,23 +16,35 @@ export function getKeys(obj: any, prefix = ''): { name: string; value: any }[] {
   let allKeys: { name: string; value: any }[] = [];
   const typeOfObj = Object.prototype.toString.call(obj);
 
-  if (typeOfObj === '[object Array]') {
+  switch (typeOfObj) {
+  case '[object Array]': {
     for (const [i, element] of obj.entries()) {
       allKeys = [...allKeys, ...getKeys(element, forceBracketNotation(prefix, i))];
     }
-  } else if (typeOfObj === '[object Object]') {
+  
+  break;
+  }
+  case '[object Object]': {
     const keys = Object.keys(obj);
 
     for (const key of keys) {
       allKeys = [...allKeys, ...getKeys(obj[key], forceBracketNotation(prefix, key))];
     }
-  } else if (typeOfObj === '[object Function]') {
+  
+  break;
+  }
+  case '[object Function]': {
     // Ignore functions
-  } else if (prefix) {
+  
+  break;
+  }
+  default: { if (prefix) {
     allKeys.push({
       name: normalizeToDotAndBracketNotation(prefix),
       value: obj,
     });
+  }
+  }
   }
 
   return allKeys;
@@ -71,7 +83,7 @@ export function tokenizeTag(tagStr: string) {
     const c = argsStr.charAt(i) || ',';
 
     // Do nothing if we're still on a space or comma
-    if (currentArg === null && c.match(/[\s,]/)) {
+    if (currentArg === null && /[\s,]/.test(c)) {
       continue;
     }
 
@@ -126,12 +138,12 @@ export function tokenizeTag(tagStr: string) {
           type: 'boolean',
           value: currentArg.toLowerCase() === 'true',
         };
-      } else if (currentArg.match(/^\d*\.?\d*$/)) {
+      } else if (/^\d*\.?\d*$/.test(currentArg)) {
         arg = {
           type: 'number',
           value: currentArg,
         };
-      } else if (currentArg.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
+      } else if (/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(currentArg)) {
         arg = {
           type: 'variable',
           value: currentArg,
@@ -163,7 +175,7 @@ export function unTokenizeTag(tagData: NunjucksParsedTag) {
   for (const arg of tagData.args) {
     if (['string', 'model', 'file', 'enum'].includes(arg.type)) {
       const q = arg.quotedBy || "'";
-      const re = new RegExp(`([^\\\\])${q}`, 'g');
+      const re = new RegExp(String.raw`([^\\])${q}`, 'g');
       const str = arg.value?.toString().replace(re, `$1\\${q}`);
       args.push(`${q}${str}${q}`);
     } else if (arg.type === 'boolean') {
@@ -184,11 +196,11 @@ export function getDefaultFill(name: string, args: NunjucksParsedTagArg[]) {
     if (argDefinition.type === 'enum') {
       const { defaultValue, options } = argDefinition;
       const fallback = options && options.length ? options[0].value : '';
-      const value = defaultValue !== undefined ? String(defaultValue) : String(fallback);
+      const value = defaultValue === undefined ? String(fallback) : String(defaultValue);
       return `'${value}'`;
     }
     if (argDefinition.type === 'number') {
-      return `${parseFloat(argDefinition.defaultValue + '') || 0}`;
+      return `${Number.parseFloat(argDefinition.defaultValue + '') || 0}`;
     }
     if (argDefinition.type === 'boolean') {
       return argDefinition.defaultValue ? 'true' : 'false';
@@ -247,19 +259,19 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
       if (isVaultEnabled && vaultKey) {
         const symmetricKey = (await decryptVaultKeyFromSession(vaultKey, true)) as JsonWebKey;
         // decrypt all secret values under vaultEnvironmentPath property in context
-        Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
+        for (const vaultContextKey of Object.keys(vaultEnvironmentData)) {
           const encryptedValue = vaultEnvironmentData[vaultContextKey];
           vaultEnvironmentData[vaultContextKey] = decryptSecretValue(encryptedValue, symmetricKey);
-        });
+        }
       } else if (isVaultEnabled && !vaultKey) {
         // remove all values under vaultEnvironmentPath if no vault key found
         vaultEnvironmentData = {};
       }
     } else {
       // mask all secret values under vaultEnvironmentPath property in context
-      Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
+      for (const vaultContextKey of Object.keys(vaultEnvironmentData)) {
         vaultEnvironmentData[vaultContextKey] = vaultEnvironmentMaskValue;
-      });
+      }
     }
   }
   return vaultEnvironmentData;
@@ -289,5 +301,5 @@ export function extractNunjucksTagFromCoords(
 export const responseTagRegex = new RegExp('{% *response *.* %}');
 
 export function sanitizeStrForWin32(str: string) {
-  return str.replace(/\\/g, '\\\\\\\\');
+  return str.replaceAll('\\', '\\\\\\\\');
 }

@@ -32,26 +32,26 @@ class ImageCache {
       // Otherwise, load the image and add it to the cache
       const promise = new Promise<string>(resolve => {
         const img = new Image();
-        img.onload = () => {
-          if (!this.__cache[base]) {
+        img.addEventListener('load', () => {
+          if (this.__cache[base]) {
+            this.__cache[base].value = value;
+            this.__cache[base].timestamp = now;
+            this.__cache[base].version = version;
+          } else {
             this.__cache[base] = {
               value,
               timestamp: now,
               version,
               subscribers: [],
             };
-          } else {
-            this.__cache[base].value = value;
-            this.__cache[base].timestamp = now;
-            this.__cache[base].version = version;
           }
           resolve(value);
           // Notify all subscribers
           if (!this.__cache[base].subscribers) {
             this.__cache[base].subscribers = [];
           }
-          this.__cache[base].subscribers.forEach(callback => callback());
-        };
+          for (const callback of this.__cache[base].subscribers) callback();
+        });
         img.onerror = () => {
           // infinitely suspended if the image fails to load
           this.__cache[base].value = new Promise(() => {});
@@ -99,7 +99,7 @@ class ImageCache {
   }
 
   invalidateAll() {
-    Object.keys(this.__cache).forEach(src => this.invalidate(src));
+    for (const src of Object.keys(this.__cache)) this.invalidate(src);
   }
 }
 

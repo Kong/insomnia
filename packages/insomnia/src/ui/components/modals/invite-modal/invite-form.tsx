@@ -239,8 +239,9 @@ export const InviteForm = ({
 
     const pastedText = e.clipboardData.getData('text');
     const emailsArray = pastedText.split(',');
-
-    emailsArray.forEach((email: string) => addEmail({ email }));
+    for (const email of emailsArray) {
+      addEmail({ email });
+    }
 
     if (inputRef.current) {
       inputRef.current.value = '';
@@ -377,7 +378,7 @@ export const InviteForm = ({
             })
               .then(
                 () => {
-                  window.main.trackSegmentEvent({
+                  globalThis.main.trackSegmentEvent({
                     event: SegmentEvent.inviteMember,
                     properties: {
                       numberOfInvites: emailsToInvite.length,
@@ -415,7 +416,7 @@ export const InviteForm = ({
             selectionMode="single"
             aria-label="Organization members"
             onAction={(email: Key) => {
-              const exists = emails.findIndex(({ email: e }) => e === email) !== -1;
+              const exists = emails.some(({ email: e }) => e === email);
 
               if (exists) {
                 setEmails((prev: EmailInput[]) => prev.filter(({ email: e }) => e !== email));
@@ -439,7 +440,7 @@ export const InviteForm = ({
                 id={item.name}
                 key={item.name}
                 textValue={item.name}
-                isSelected={emails.findIndex(({ email: e }) => e === item.name) !== -1}
+                isSelected={emails.some(({ email: e }) => e === item.name)}
               >
                 <img alt="" src={item.picture} className="h-6 w-6 rounded-full" />
                 <span className="truncate">{item.name}</span>

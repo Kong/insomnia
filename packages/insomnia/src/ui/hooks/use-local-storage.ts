@@ -121,7 +121,7 @@ function useLocalStorage<T>(
   );
   const setState = useCallback(
     (newValue: SetStateAction<T | undefined>): void => {
-      const value = newValue instanceof Function ? newValue(storageItem.current.parsed) : newValue;
+      const value = typeof newValue === 'function' ? newValue(storageItem.current.parsed) : newValue;
 
       // reasons for `localStorage` to throw an error:
       // - maximum quota is exceeded
@@ -154,7 +154,7 @@ function useLocalStorage<T>(
   //   triggered the change
   useEffect(() => {
     if (!storageSync) {
-      return undefined;
+      return;
     }
 
     const onStorage = (e: StorageEvent): void => {
@@ -163,9 +163,9 @@ function useLocalStorage<T>(
       }
     };
 
-    window.addEventListener('storage', onStorage);
+    globalThis.addEventListener('storage', onStorage);
 
-    return (): void => window.removeEventListener('storage', onStorage);
+    return (): void => globalThis.removeEventListener('storage', onStorage);
   }, [key, storageSync]);
 
   return useMemo(

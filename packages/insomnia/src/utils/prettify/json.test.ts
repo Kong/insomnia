@@ -9,12 +9,12 @@ describe('jsonPrettify()', () => {
   const basePath = path.join(__dirname, './fixtures');
   const files = fs.readdirSync(basePath);
   for (const file of files) {
-    if (!file.match(/-input\.json$/)) {
+    if (!/-input\.json$/.test(file)) {
       continue;
     }
 
     const slug = file.replace(/-input\.json$/, '');
-    const name = slug.replace(/-/g, ' ');
+    const name = slug.replaceAll('-', ' ');
 
     it(`handles ${name}`, () => {
       const input = fs.readFileSync(path.join(basePath, `${slug}-input.json`), 'utf8').trim();

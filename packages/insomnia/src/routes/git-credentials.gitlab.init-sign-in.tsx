@@ -5,7 +5,7 @@ import { createFetcherSubmitHook } from '~/utils/router';
 import type { Route } from './+types/git-credentials.gitlab.init-sign-in';
 
 export async function clientAction(_args: Route.ClientActionArgs) {
-  return await window.main.git.initSignInToGitLab();
+  return await globalThis.main.git.initSignInToGitLab();
 }
 
 export const useInitSignInToGitLabFetcher = createFetcherSubmitHook(

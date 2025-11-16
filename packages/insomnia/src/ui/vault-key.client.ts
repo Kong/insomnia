@@ -36,7 +36,7 @@ const resetVaultKeyRequest = async (sessionId: string, salt: string, verifier: s
 
 export const saveVaultKey = async (accountId: string, vaultKey: string) => {
   // save encrypted vault key and vault salt to session
-  const encryptedVaultKey = await window.main.secretStorage.encryptString(vaultKey);
+  const encryptedVaultKey = await globalThis.main.secretStorage.encryptString(vaultKey);
   await sessionModel.patch({ vaultKey: encryptedVaultKey });
 
   await saveVaultKeyIfNecessary(accountId, vaultKey);

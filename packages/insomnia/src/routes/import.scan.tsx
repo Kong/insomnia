@@ -22,7 +22,7 @@ export const scanImportResources = async (data: {
   invariant(typeof source === 'string', 'Source is required.');
   invariant(['file', 'uri', 'clipboard'].includes(source), 'Unsupported import type');
 
-  window.main.trackSegmentEvent({
+  globalThis.main.trackSegmentEvent({
     event: SegmentEvent.importScanned,
     properties: {
       source,
@@ -44,7 +44,7 @@ export const scanImportResources = async (data: {
     try {
       filePaths = typeof data.filePaths === 'string' ? JSON.parse(data.filePaths) : data.filePaths;
       if (!Array.isArray(filePaths)) {
-        throw new Error('filePaths is not an array');
+        throw new TypeError('filePaths is not an array');
       }
       filePaths = filePaths.filter(filePath => typeof filePath === 'string' && filePath);
       if (filePaths.length === 0) {
@@ -79,11 +79,11 @@ export const scanImportResources = async (data: {
     let postmanArchiveJsonData: { environment?: Record<string, boolean> } | null = null;
     if (postmanArchiveFile) {
       try {
-        const postmanArchiveFileContent = await window.main.insecureReadFile({
+        const postmanArchiveFileContent = await globalThis.main.insecureReadFile({
           path: postmanArchiveFile,
         });
         postmanArchiveJsonData = JSON.parse(postmanArchiveFileContent);
-      } catch (err) {
+      } catch {
         return [
           {
             oriFileName: postmanArchiveFile,
@@ -104,7 +104,7 @@ export const scanImportResources = async (data: {
             jsonData._postman_variable_scope = 'environment';
             contentStr = JSON.stringify(jsonData);
           }
-        } catch (error) {
+        } catch {
           // It's not a valid JSON, shouldn't be a postman environment
         }
       }
@@ -118,7 +118,7 @@ export const scanImportResources = async (data: {
   } else {
     // from clipboard
     contentList.push({
-      contentStr: window.clipboard.readText(),
+      contentStr: globalThis.clipboard.readText(),
       oriFileName: 'clipboard',
     });
   }

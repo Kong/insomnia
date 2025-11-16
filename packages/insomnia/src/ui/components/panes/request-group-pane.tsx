@@ -221,8 +221,8 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
                 {({ isSelected }) => (
                   <>
                     <Icon
-                      icon={!isSelected ? 'toggle-on' : 'toggle-off'}
-                      className={`${!isSelected ? 'text-[--color-success]' : ''}`}
+                      icon={isSelected ? 'toggle-off' : 'toggle-on'}
+                      className={`${isSelected ? '' : 'text-[--color-success]'}`}
                     />
                     <span>Table View</span>
                   </>

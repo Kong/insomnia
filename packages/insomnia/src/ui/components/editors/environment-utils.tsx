@@ -16,7 +16,7 @@ import { AskModal } from '../modals/ask-modal';
 const INVALID_NEDB_KEY_REGEX = /^\$|\./;
 
 export const ensureKeyIsValid = (key: string, isRoot: boolean): string | null => {
-  if (key.match(INVALID_NEDB_KEY_REGEX)) {
+  if (INVALID_NEDB_KEY_REGEX.test(key)) {
     return `"${key}" cannot begin with '$' or contain a '.'`;
   }
 

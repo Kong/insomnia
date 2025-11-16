@@ -121,17 +121,13 @@ const Component = () => {
       return;
     }
 
-    if (layout && layout[0] > 0) {
-      layout[0] = 0;
-    } else {
-      layout[0] = DEFAULT_SIDEBAR_SIZE;
-    }
+    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
 
     sidebarPanelRef.current?.setLayout(layout);
   }
 
   useEffect(() => {
-    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
+    const unsubscribe = globalThis.main.on('toggle-sidebar', toggleSidebar);
 
     return unsubscribe;
   }, []);
@@ -223,20 +219,12 @@ const Component = () => {
       if (dropPosition === 'before') {
         const currentTestSuiteIndex = unitTestSuites.findIndex(testSuite => testSuite._id === targetTestSuite._id);
         const previousTestSuite = unitTestSuites[currentTestSuiteIndex - 1];
-        if (!previousTestSuite) {
-          sourceTestSuite.metaSortKey = targetTestSuite.metaSortKey - 1;
-        } else {
-          sourceTestSuite.metaSortKey = (previousTestSuite.metaSortKey + targetTestSuite.metaSortKey) / 2;
-        }
+        sourceTestSuite.metaSortKey = previousTestSuite ? (previousTestSuite.metaSortKey + targetTestSuite.metaSortKey) / 2 : targetTestSuite.metaSortKey - 1;
       }
       if (dropPosition === 'after') {
         const currentTestSuiteIndex = unitTestSuites.findIndex(testSuite => testSuite._id === targetTestSuite._id);
         const nextEnv = unitTestSuites[currentTestSuiteIndex + 1];
-        if (!nextEnv) {
-          sourceTestSuite.metaSortKey = targetTestSuite.metaSortKey + 1;
-        } else {
-          sourceTestSuite.metaSortKey = (nextEnv.metaSortKey + targetTestSuite.metaSortKey) / 2;
-        }
+        sourceTestSuite.metaSortKey = nextEnv ? (nextEnv.metaSortKey + targetTestSuite.metaSortKey) / 2 : targetTestSuite.metaSortKey + 1;
       }
 
       updateTestSuiteFetcher.submit({
@@ -261,7 +249,7 @@ const Component = () => {
       return () => {};
     }
     // Listen on media query changes
-    const mediaQuery = window.matchMedia('(max-width: 880px)');
+    const mediaQuery = globalThis.matchMedia('(max-width: 880px)');
     setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
 
     const handleChange = (e: MediaQueryListEvent) => {
@@ -348,8 +336,7 @@ const Component = () => {
                   <Icon icon="file-contract" className="w-5 flex-shrink-0" />
                   <span className="truncate">
                     {clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates{' '}
-                    {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
-                      .length > 0
+                    {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).some(isNotNullOrUndefined)
                       ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
                       : ''}
                   </span>

@@ -37,7 +37,7 @@ beforeAll(() => {
   }
 });
 
-const deepClone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
+const deepClone = <T>(v: T): T => structuredClone(v);
 
 // -----------------------------
 // Factory helpers

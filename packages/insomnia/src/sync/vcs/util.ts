@@ -241,8 +241,8 @@ export function threeWayMerge(
 export function compareBranches(a: Branch | null, b: Branch | null): Compare {
   const snapshotsA = a ? a.snapshots : [];
   const snapshotsB = b ? b.snapshots : [];
-  const latestA = snapshotsA[snapshotsA.length - 1] || null;
-  const latestB = snapshotsB[snapshotsB.length - 1] || null;
+  const latestA = snapshotsA.at(-1) || null;
+  const latestB = snapshotsB.at(-1) || null;
   const result = {
     ahead: 0,
     behind: 0,

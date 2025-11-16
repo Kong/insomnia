@@ -135,7 +135,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    window.main.showContextMenu({
+    globalThis.main.showContextMenu({
       key: 'insomniaTab',
       menuItems: [
         {
@@ -203,7 +203,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
               className={`absolute bottom-[0px] left-0 right-0 block h-[1px] bg-[--color-bg] ${isSelected ? 'opacity-100' : 'opacity-0'}`}
             />
             <span
-              className={`absolute bottom-[0px] left-0 right-0 block h-[1px] bg-[--hl-sm] ${!isSelected ? 'opacity-100' : 'opacity-0'}`}
+              className={`absolute bottom-[0px] left-0 right-0 block h-[1px] bg-[--hl-sm] ${isSelected ? 'opacity-0' : 'opacity-100'}`}
             />
           </div>
           <Button slot="drag" className="hidden" />

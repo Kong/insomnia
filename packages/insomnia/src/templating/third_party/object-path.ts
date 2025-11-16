@@ -85,8 +85,8 @@ const ObjectPath = {
             str
               .slice(i + 2, closing)
               .replace(regex[quote], quote)
-              .replace(/\\+/g, function (backslash) {
-                return new Array(Math.ceil(backslash.length / 2) + 1).join('\\');
+              .replaceAll(/\\+/g, function (backslash) {
+                return Array.from({length: Math.ceil(backslash.length / 2) + 1}).join('\\');
               }),
           );
           i = str.slice(closing + 2, closing + 3) === '.' ? closing + 3 : closing + 2;
@@ -104,19 +104,19 @@ const ObjectPath = {
     }
 
     quote = quote === '"' ? '"' : "'";
-    const regexp = new RegExp('(\\\\|' + quote + ')', 'g'); // regex => /(\\|')/g
+    const regexp = new RegExp(String.raw`(\\|` + quote + ')', 'g'); // regex => /(\\|')/g
 
     return arr
       .map(function (value: string | number, key: number) {
         let property = value.toString();
-        if (!forceQuote && /^[A-z_]\w*$/.exec(property)) {
+        if (!forceQuote && /^[A-z_]\w*$/.test(property)) {
           // str with only A-z0-9_ chars will display `foo.bar`
-          return key !== 0 ? '.' + property : property;
-        } else if (!forceQuote && /^\d+$/.exec(property)) {
+          return key === 0 ? property : '.' + property;
+        } else if (!forceQuote && /^\d+$/.test(property)) {
           // str with only numbers will display `foo[0]`
           return '[' + property + ']';
         }
-        property = property.replace(regexp, '\\$1');
+        property = property.replace(regexp, String.raw`\$1`);
         return '[' + quote + property + quote + ']';
       })
       .join('');

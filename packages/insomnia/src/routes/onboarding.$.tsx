@@ -156,8 +156,8 @@ const Component = () => {
                 )}
                 <Link
                   className="rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-sm text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
-                  to={window.localStorage.getItem('prefers-project-type') ? '/organization' : '/onboarding/migrate'}
-                  onClick={() => window.localStorage.setItem('hasSeenOnboardingV12', 'true')}
+                  to={globalThis.localStorage.getItem('prefers-project-type') ? '/organization' : '/onboarding/migrate'}
+                  onClick={() => globalThis.localStorage.setItem('hasSeenOnboardingV12', 'true')}
                 >
                   Continue
                 </Link>

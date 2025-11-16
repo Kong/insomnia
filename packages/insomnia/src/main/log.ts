@@ -1,4 +1,4 @@
-import path, { dirname } from 'node:path';
+import path from 'node:path';
 
 import log from 'electron-log/main';
 
@@ -39,7 +39,7 @@ export const initializeLogging = () => {
 
 export function getLogDirectory() {
   const logPath = log.transports.file.getFile().path;
-  return dirname(logPath);
+  return path.dirname(logPath);
 }
 
 export default log;

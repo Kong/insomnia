@@ -37,8 +37,7 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
   // Disable Expect and Transfer-Encoding headers when we have POST body/file
   const hasRequestBodyOrFilePath = requestBody !== undefined || requestBodyPath;
   if (hasRequestBodyOrFilePath) {
-    headers.push({ name: 'Expect', value: DISABLE_HEADER_VALUE });
-    headers.push({ name: 'Transfer-Encoding', value: DISABLE_HEADER_VALUE });
+    headers.push({ name: 'Expect', value: DISABLE_HEADER_VALUE }, { name: 'Transfer-Encoding', value: DISABLE_HEADER_VALUE });
   }
   const { authentication, method } = req;
   if (authentication && 'type' in authentication) {
@@ -53,14 +52,14 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
     if (isAWSIAM) {
       const hostHeader = getHostHeader(headers)?.value;
       const contentTypeHeader = getContentTypeHeader(headers)?.value;
-      _getAwsAuthHeaders({
+      for (const header of _getAwsAuthHeaders({
         authentication,
         url: finalUrl,
         hostHeader,
         contentTypeHeader,
         body: requestBody,
         method,
-      }).forEach(header => headers.push(header));
+      })) headers.push(header);
     }
   }
   const isMultipartForm = req.body.mimeType === CONTENT_TYPE_FORM_DATA;

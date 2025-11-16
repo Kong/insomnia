@@ -107,8 +107,8 @@ const LocalBranchItem = ({
             }
           >
             <Icon
-              icon={deleteBranchFetcher.state !== 'idle' ? 'spinner' : 'trash'}
-              className={`w-5 text-[--color-danger] ${deleteBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
+              icon={deleteBranchFetcher.state === 'idle' ? 'trash' : 'spinner'}
+              className={`w-5 text-[--color-danger] ${deleteBranchFetcher.state === 'idle' ? '' : 'animate-spin'}`}
             />
             Delete
           </PromptButton>
@@ -126,8 +126,8 @@ const LocalBranchItem = ({
           }
         >
           <Icon
-            icon={checkoutBranchFetcher.state !== 'idle' ? 'spinner' : 'turn-up'}
-            className={`w-5 ${checkoutBranchFetcher.state !== 'idle' ? 'animate-spin' : 'rotate-90'}`}
+            icon={checkoutBranchFetcher.state === 'idle' ? 'turn-up' : 'spinner'}
+            className={`w-5 ${checkoutBranchFetcher.state === 'idle' ? 'rotate-90' : 'animate-spin'}`}
           />
           Checkout
         </Button>
@@ -146,8 +146,8 @@ const LocalBranchItem = ({
           }}
         >
           <Icon
-            icon={mergeBranchFetcher.state !== 'idle' ? 'spinner' : 'code-merge'}
-            className={`w-5 ${mergeBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
+            icon={mergeBranchFetcher.state === 'idle' ? 'code-merge' : 'spinner'}
+            className={`w-5 ${mergeBranchFetcher.state === 'idle' ? '' : 'animate-spin'}`}
           />
           Merge
         </PromptButton>
@@ -222,8 +222,8 @@ const RemoteBranchItem = ({
             }
           >
             <Icon
-              icon={deleteBranchFetcher.state !== 'idle' ? 'spinner' : 'trash'}
-              className={`w-5 text-[--color-danger] ${deleteBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
+              icon={deleteBranchFetcher.state === 'idle' ? 'trash' : 'spinner'}
+              className={`w-5 text-[--color-danger] ${deleteBranchFetcher.state === 'idle' ? '' : 'animate-spin'}`}
             />
             Delete
           </PromptButton>
@@ -240,8 +240,8 @@ const RemoteBranchItem = ({
           }
         >
           <Icon
-            icon={pullBranchFetcher.state !== 'idle' ? 'spinner' : 'cloud-arrow-down'}
-            className={`w-5 ${pullBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
+            icon={pullBranchFetcher.state === 'idle' ? 'cloud-arrow-down' : 'spinner'}
+            className={`w-5 ${pullBranchFetcher.state === 'idle' ? '' : 'animate-spin'}`}
           />
           Fetch
         </Button>
@@ -332,8 +332,8 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
                       type="submit"
                     >
                       <Icon
-                        className={`w-5 ${createBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
-                        icon={createBranchFetcher.state !== 'idle' ? 'spinner' : 'plus'}
+                        className={`w-5 ${createBranchFetcher.state === 'idle' ? '' : 'animate-spin'}`}
+                        icon={createBranchFetcher.state === 'idle' ? 'plus' : 'spinner'}
                       />{' '}
                       Create
                     </Button>

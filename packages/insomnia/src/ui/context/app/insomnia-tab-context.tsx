@@ -281,7 +281,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   );
 
   const changeActiveTab = useCallback(
-    (id: string, options = { navigate: true }) => {
+    (id: string, options: { navigate: boolean }) => {
       const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
       if (!currentTabs) {
         return;

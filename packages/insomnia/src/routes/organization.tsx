@@ -114,12 +114,12 @@ const NetworkAndSyncIndicator = ({ asyncTaskStatus, settings, sync }: IndicatorP
   useEffect(() => {
     const handleOnline = () => setStatus('online');
     const handleOffline = () => setStatus('offline');
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    globalThis.addEventListener('online', handleOnline);
+    globalThis.addEventListener('offline', handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      globalThis.removeEventListener('online', handleOnline);
+      globalThis.removeEventListener('offline', handleOffline);
     };
   }, []);
 
@@ -136,17 +136,17 @@ const NetworkAndSyncIndicator = ({ asyncTaskStatus, settings, sync }: IndicatorP
             }}
           >
             <Icon
-              icon={asyncTaskStatus !== 'error' ? 'spinner' : 'circle'}
-              className={`${asyncTaskStatus === 'error' ? 'text-[--color-danger]' : 'text-[--color-font]'} w-5 ${asyncTaskStatus !== 'error' ? 'animate-spin' : ''}`}
+              icon={asyncTaskStatus === 'error' ? 'circle' : 'spinner'}
+              className={`${asyncTaskStatus === 'error' ? 'text-[--color-danger]' : 'text-[--color-font]'} w-5 ${asyncTaskStatus === 'error' ? '' : 'animate-spin'}`}
             />
-            {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
+            {asyncTaskStatus === 'error' ? 'Sync error: click to retry' : 'Syncing'}
           </Button>
           <Tooltip
             placement="top"
             offset={8}
             className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
           >
-            {asyncTaskStatus !== 'error' ? 'Syncing' : 'Sync error: click to retry'}
+            {asyncTaskStatus === 'error' ? 'Sync error: click to retry' : 'Syncing'}
           </Tooltip>
         </TooltipTrigger>
       ) : (
@@ -259,7 +259,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   <div className="flex w-[50px] shrink-0 justify-center py-2">
                     <InsomniaLogo />
                   </div>
-                  {!user ? <GitHubStarsButton /> : null}
+                  {user ? null : <GitHubStarsButton />}
                 </div>
                 <CommandPalette />
                 <div className="flex min-w-min items-center justify-end gap-[--padding-sm] space-x-3 p-2">
@@ -366,13 +366,13 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       <Menu
                         onAction={action => {
                           if (action === 'join-organization') {
-                            window.main.openInBrowser(getLoginUrl());
+                            globalThis.main.openInBrowser(getLoginUrl());
                           }
 
                           if (action === 'new-organization') {
                             // If user is in the scratchpad workspace redirect them to the login page
                             if (isScratchpadWorkspace) {
-                              window.main.openInBrowser(getLoginUrl());
+                              globalThis.main.openInBrowser(getLoginUrl());
                             }
 
                             if (!currentPlan) {
@@ -388,10 +388,10 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                               });
                             } else if (['free', 'individual'].includes(currentPlan.type)) {
                               // If user has a free or individual plan redirect them to the landing page
-                              window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/landing-page`);
+                              globalThis.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/landing-page`);
                             } else {
                               // If user has a team or enterprise plan redirect them to the create organization page
-                              window.main.openInBrowser(
+                              globalThis.main.openInBrowser(
                                 `${getAppWebsiteBaseURL()}/app/dashboard/organizations?create_org=true`,
                               );
                             }

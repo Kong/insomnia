@@ -117,9 +117,8 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
   allRequests.map(r => syncItemsList.push(r));
   tests.map(t => syncItemsList.push(t));
   testSuites.map(t => syncItemsList.push(t));
-  syncItemsList.push(activeWorkspace);
-  syncItemsList.push(baseEnvironment);
-  subEnvironments.forEach(e => syncItemsList.push(e));
+  syncItemsList.push(activeWorkspace, baseEnvironment);
+  for (const e of subEnvironments) syncItemsList.push(e);
   if (activeApiSpec) {
     syncItemsList.push(activeApiSpec);
   }

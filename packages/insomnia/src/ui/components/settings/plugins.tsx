@@ -1,4 +1,4 @@
-import * as path from 'node:path';
+import path from 'node:path';
 
 import React, { type FC, useEffect, useState } from 'react';
 import {
@@ -201,7 +201,7 @@ export const Plugins: FC = () => {
                     }
 
                     try {
-                      await window.main.installPlugin(npmPluginValue.trim());
+                      await globalThis.main.installPlugin(npmPluginValue.trim());
                       await handleReloadPlugins();
                       setState(state => ({ ...state, ...idleState, npmPluginValue: '' }));
                     } catch (err) {
@@ -271,7 +271,7 @@ export const Plugins: FC = () => {
                       if (files.length === 0) {
                         return;
                       }
-                      patchSettings({ pluginNodeExtraCerts: window.webUtils.getPathForFile(files[0]) });
+                      patchSettings({ pluginNodeExtraCerts: globalThis.webUtils.getPathForFile(files[0]) });
                     }}
                   >
                     <Button>
@@ -368,7 +368,7 @@ export const Plugins: FC = () => {
                     >
                       <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
                         <Icon
-                          icon={!isAllPluginsSelected ? 'minus' : 'check'}
+                          icon={isAllPluginsSelected ? 'check' : 'minus'}
                           className="h-3 w-3 opacity-0 group-data-[indeterminate]:text-[--color-success] group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
                         />
                       </div>
@@ -464,7 +464,7 @@ export const Plugins: FC = () => {
                         >
                           <Icon icon="copy" className="h-4 w-4 text-white" />
                         </CopyButton>
-                        <Button onPress={() => window.shell.showItemInFolder(plugin.directory)}>
+                        <Button onPress={() => globalThis.shell.showItemInFolder(plugin.directory)}>
                           <Icon icon="folder-open" className="h-4 w-4 text-white" />
                         </Button>
                       </div>
@@ -481,7 +481,7 @@ export const Plugins: FC = () => {
             Need more plugins?{' '}
             <Button
               className="text-[var(--color-surprise)] underline"
-              onPress={() => window.main.openInBrowser(PLUGIN_HUB_BASE)}
+              onPress={() => globalThis.main.openInBrowser(PLUGIN_HUB_BASE)}
             >
               Browse Plugin Hub
             </Button>{' '}
@@ -489,8 +489,8 @@ export const Plugins: FC = () => {
             <Button
               className="text-[var(--color-surprise)] underline"
               onPress={() =>
-                window.shell.showItemInFolder(
-                  path.resolve(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'),
+                globalThis.shell.showItemInFolder(
+                  path.resolve(process.env['INSOMNIA_DATA_PATH'] || globalThis.app.getPath('userData'), 'plugins'),
                 )
               }
             >

@@ -71,12 +71,12 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     uri = uri.replace('https://github.com', 'https://raw.githubusercontent.com').replace('blob/', '');
   }
 
-  if (uri.match(/^(http|https):\/\//)) {
+  if (/^(http|https):\/\//.test(uri)) {
     const response = await fetch(uri);
     const content = await response.text();
 
     return content;
-  } else if (uri.match(/^(file):\/\//)) {
+  } else if (/^(file):\/\//.test(uri)) {
     const path = uri.replace(/^(file):\/\//, '');
     // allow reading the file as it is chosen by user
     return insecureReadFile(path);
@@ -95,7 +95,7 @@ export interface PostmanDataDumpRawData {
 export async function getFilesFromPostmanExportedDataDump(filePath: string): Promise<PostmanDataDumpRawData> {
   let res;
   try {
-    res = await window.main.extractJsonFileFromPostmanDataDumpArchive(filePath);
+    res = await globalThis.main.extractJsonFileFromPostmanDataDumpArchive(filePath);
   } catch {
     throw new Error('Extract failed');
   }
@@ -178,7 +178,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
           };
         } else {
           const processFork =
-            process.type === 'renderer' ? window.main.parseImport : (await import('../main/importers/convert')).convert;
+            process.type === 'renderer' ? globalThis.main.parseImport : (await import('../main/importers/convert')).convert;
           result = (await processFork(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {
@@ -274,11 +274,11 @@ export function extractErrorMessages(v5Error: ZodError | any): string[] {
       }
     }
     if ('items' in err) {
-      (err.items as (ZodTreeifiedError | undefined)[]).forEach((item, index) => {
+      for (const [index, item] of (err.items as (ZodTreeifiedError | undefined)[]).entries()) {
         if (item) {
           walkError(item, path ? `${path}.${index}` : String(index));
         }
-      });
+      }
     }
   }
 
@@ -382,12 +382,12 @@ export async function importResourcesToProject({
 function filterResourcesInWorkspace(resources: BaseModel[], workspace: Workspace) {
   const workspaceId = workspace._id;
   const idToParentIdMap = new Map<string, string>();
-  resources.forEach(resource => {
+  for (const resource of resources) {
     // _id is not supposed to be the same as parentId, but who knows, just check it in case
     if (resource.parentId && resource._id !== resource.parentId) {
       idToParentIdMap.set(resource._id, resource.parentId);
     }
-  });
+  }
   // find the workspace id that the resource belongs to
   function findRootId(id: string, existingResourceIds: Set<string>) {
     // avoid infinite loop
@@ -407,7 +407,7 @@ function filterResourcesInWorkspace(resources: BaseModel[], workspace: Workspace
 const updateIdsInString = (str: string, ResourceIdMap: Map<string, string>) => {
   let newString = str;
   for (const [idA, idB] of ResourceIdMap.entries()) {
-    newString = newString.replace(new RegExp(idA, 'g'), idB);
+    newString = newString.replaceAll(new RegExp(idA, 'g'), idB);
   }
   return newString;
 };

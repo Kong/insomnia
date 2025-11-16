@@ -51,7 +51,7 @@ const selectDir = async () => {
   const rootFolder: RootFolder = {
     name: filePath.split('/').pop() || 'Selected Folder',
     getProjectFolders: async () => {
-      return window.main.readDir({ path: filePath }).then(files => {
+      return globalThis.main.readDir({ path: filePath }).then(files => {
         const projectFolders: ProjectFolder[] = [];
 
         for (const file of files) {
@@ -73,14 +73,14 @@ const selectDir = async () => {
                         filePaths.push(file.path);
                       }
                     } else if (file.type === 'directory') {
-                      const subFilePaths = await recurse(await window.main.readDir({ path: file.path }));
+                      const subFilePaths = await recurse(await globalThis.main.readDir({ path: file.path }));
                       filePaths.push(...subFilePaths);
                     }
                   }
                   return filePaths;
                 };
 
-                const filePaths = await recurse(await window.main.readDir({ path: file.path }));
+                const filePaths = await recurse(await globalThis.main.readDir({ path: file.path }));
                 return filePaths;
               },
             });
@@ -137,7 +137,7 @@ const FileField = ({
                     for await (const fileEntry of fileEntries) {
                       if (fileEntry.kind === 'file') {
                         const fileObj = await fileEntry.getFile();
-                        const filePath = window.webUtils.getPathForFile(fileObj);
+                        const filePath = globalThis.webUtils.getPathForFile(fileObj);
                         if (validImportExtensions.some(ext => filePath.endsWith(ext))) {
                           files.push(filePath);
                         }
@@ -398,7 +398,7 @@ const ImportProjectsList = ({
     return {
       total,
       completed,
-      progress: total > 0 ? ((completed / total) * 100) | 0 : 0,
+      progress: total > 0 ? Math.trunc((completed / total) * 100) : 0,
     };
   }, [projectItems]);
 
@@ -605,11 +605,11 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
           const filePaths = await project.folder.getFilePaths();
           // Use archive.json to identify Postman environment files, only consider the first one currently.
           const archiveFileIndex = filePaths.findIndex(
-            filePath => filePath.endsWith('/archive.json') || filePath.endsWith('\\archive.json'),
+            filePath => filePath.endsWith('/archive.json') || filePath.endsWith(String.raw`\archive.json`),
           );
 
           let postmanArchiveFile: string | null = null;
-          if (archiveFileIndex >= 0) {
+          if (archiveFileIndex !== -1) {
             postmanArchiveFile = filePaths[archiveFileIndex];
             filePaths.splice(archiveFileIndex, 1);
           }
@@ -714,9 +714,7 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
       >
         <ModalHeader hideCloseButton={!!rootFolder}>Import projects to "{organizationName}" Organization</ModalHeader>
 
-        {!rootFolder ? (
-          <ImportProjectsResourceForm onConfirm={handleConfirm} />
-        ) : (
+        {rootFolder ? (
           <ImportProjectsList
             rootFolder={rootFolder}
             projectItems={projectItems}
@@ -726,6 +724,8 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
             cancelled={processingCancelled}
             onCancel={handleCancel}
           />
+        ) : (
+          <ImportProjectsResourceForm onConfirm={handleConfirm} />
         )}
       </Modal>
     </OverlayContainer>

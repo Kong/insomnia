@@ -87,7 +87,7 @@ const TutorialContent = ({ panel }: { panel?: string }) => {
         <Icon icon="book-open" className="mr-2 h-4 w-4" />
         Learn more about{' '}
         <Button
-          onPress={() => window.main.openInBrowser(selectedTutorial.learnMoreLink)}
+          onPress={() => globalThis.main.openInBrowser(selectedTutorial.learnMoreLink)}
           className="inline-flex items-center gap-2 text-sm text-[--color-font-secondary] underline transition-colors hover:text-[--color-font]"
         >
           {selectedTutorial.name}

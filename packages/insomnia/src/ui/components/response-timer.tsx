@@ -37,19 +37,19 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
             <div key={`${activeRequestId}-${record.stepName}`} className="flex w-full leading-8">
               <div className="ml-1 w-3/4 content-center text-left leading-8">
                 <span className="w-1/5 leading-8">
-                  {record.duration !== undefined ? (
-                    <i className="fa fa-circle-check fa-1x mr-2 text-green-500" />
-                  ) : (
+                  {record.duration === undefined ? (
                     <i className="fa fa-spinner fa-spin fa-1x mr-2" />
+                  ) : (
+                    <i className="fa fa-circle-check fa-1x mr-2 text-green-500" />
                   )}
                 </span>
                 <span className="inline-block w-4/5 text-clip align-top">{record.stepName}</span>
               </div>
               <div className="mr-1 w-1/4 text-right leading-8">
-                {record.duration !== undefined ? (
-                  `${(record.duration / 1000).toFixed(1)} s`
-                ) : (
+                {record.duration === undefined ? (
                   <MillisecondTimer startedAt={record.startedAt} />
+                ) : (
+                  `${(record.duration / 1000).toFixed(1)} s`
                 )}
               </div>
             </div>

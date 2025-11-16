@@ -34,7 +34,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   }
 
   const handleDownloadResponseBody = useCallback(async () => {
-    const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
+    const { canceled, filePath: outputPath } = await globalThis.dialog.showSaveDialog({
       title: 'Save Response Body',
       buttonLabel: 'Save',
     });
@@ -59,7 +59,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   }, [raw]);
 
   const handleCopyResponseToClipboard = useCallback(() => {
-    window.clipboard.writeText(raw);
+    globalThis.clipboard.writeText(raw);
   }, [raw]);
 
   const patchRequestMeta = useRequestMetaPatcher();

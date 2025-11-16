@@ -51,12 +51,12 @@ interface Task {
 const q: queueAsPromised<Task> = fastq.promise(asyncWorker, 1);
 
 async function asyncWorker(arg: Task): Promise<any> {
-  const timeoutValue = arg.context.settings.timeout || 30000;
+  const timeoutValue = arg.context.settings.timeout || 30_000;
   const timeoutPromise = new Promise<{ error: string }>(resolve =>
     setTimeout(resolve, timeoutValue, { error: `Executing script timeout: ${timeoutValue}` }),
   );
   const executionPromise = Promise.race([
-    window.main.hiddenBrowserWindow.runScript({ script: arg.script, context: arg.context }),
+    globalThis.main.hiddenBrowserWindow.runScript({ script: arg.script, context: arg.context }),
     timeoutPromise,
   ]);
   const result = await cancellableExecution({ id: arg.context.request._id, fn: executionPromise });

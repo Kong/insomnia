@@ -49,7 +49,7 @@ const InsomniaIcon = (props: React.SVGProps<SVGSVGElement>) => {
           x1={16.1807}
           y1={27.3898}
           x2={16.1807}
-          y2={4.61017}
+          y2={4.610_17}
           gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#7400E1" />

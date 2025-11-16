@@ -17,7 +17,7 @@ interface CommitGitRepoData {
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = (await request.json()) as CommitGitRepoData;
 
-  await window.main.git.multipleCommitToGitRepo({
+  await globalThis.main.git.multipleCommitToGitRepo({
     projectId: data.projectId,
     workspaceId: data.workspaceId,
     commits: data.commits,
@@ -25,7 +25,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   if (data.push) {
     // For push, we need to use the standard push action since all commits are already made
-    return window.main.git.pushToGitRemote({
+    return globalThis.main.git.pushToGitRemote({
       projectId: data.projectId,
       workspaceId: data.workspaceId,
     });

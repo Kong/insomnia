@@ -16,7 +16,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   await models.mockRoute.remove(mockRoute);
 
-  window.main.trackSegmentEvent({
+  globalThis.main.trackSegmentEvent({
     event: SegmentEvent.mockRouteDelete,
   });
 

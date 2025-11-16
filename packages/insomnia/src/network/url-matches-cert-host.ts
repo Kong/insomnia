@@ -11,21 +11,21 @@ export function urlMatchesCertHost(certificateHost: string, requestUrl: string, 
   let certificateHostWithProtocol = new URL('https://example.com');
   try {
     certificateHostWithProtocol = new URL(cHostWithProtocol);
-  } catch (err) {
+  } catch {
     // return false early if the certificate host is invalid
     return false;
   }
   const { hostname: cHostname, port: cPort } = certificateHostWithProtocol;
   // @ts-expect-error -- TSCONVERSION `parseInt(null)` returns `NaN`
-  const assumedPort = parseInt(port) || DEFAULT_PORT;
-  const assumedCPort = parseInt(cPort) || DEFAULT_PORT;
-  const cHostnameRegex = escapeRegex(cHostname || '').replace(/\\\*/g, '.*');
-  const cPortRegex = escapeRegex(cPort || '').replace(/\\\*/g, '.*');
+  const assumedPort = Number.parseInt(port) || DEFAULT_PORT;
+  const assumedCPort = Number.parseInt(cPort) || DEFAULT_PORT;
+  const cHostnameRegex = escapeRegex(cHostname || '').replaceAll(String.raw`\*`, '.*');
+  const cPortRegex = escapeRegex(cPort || '').replaceAll(String.raw`\*`, '.*');
 
   // Check ports
   if (needCheckPort) {
     if ((cPort + '').includes('*')) {
-      if (!(port || '').match(`^${cPortRegex}$`)) {
+      if (!new RegExp(`^${cPortRegex}$`).test(port || '')) {
         return false;
       }
     } else {
@@ -36,7 +36,7 @@ export function urlMatchesCertHost(certificateHost: string, requestUrl: string, 
   }
 
   // Check hostnames
-  if (!(hostname || '').match(`^${cHostnameRegex}$`)) {
+  if (!new RegExp(`^${cHostnameRegex}$`).test(hostname || '')) {
     return false;
   }
 

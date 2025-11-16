@@ -96,7 +96,20 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                   </Button>
                 )}
               </div>
-              {!resetDone ? (
+              {resetDone ? (
+                <>
+                  <div>Please save or download the vault key which will be needed when you login again.</div>
+                  <VaultKeyDisplayInput vaultKey={vaultKey} />
+                  <div className="mt-2 flex items-center justify-end">
+                    <Button
+                      className="ml-4 flex items-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+                      onPress={() => onClose(vaultKey)}
+                    >
+                      OK
+                    </Button>
+                  </div>
+                </>
+              ) : (
                 <>
                   <div className="flex w-full shrink-0 grow basis-12 select-none flex-col gap-3 rounded">
                     <label>Unlock all secrets by entering the vault key</label>
@@ -131,19 +144,6 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                         <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-[--color-font]" />
                       )}
                       Unlock
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>Please save or download the vault key which will be needed when you login again.</div>
-                  <VaultKeyDisplayInput vaultKey={vaultKey} />
-                  <div className="mt-2 flex items-center justify-end">
-                    <Button
-                      className="ml-4 flex items-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
-                      onPress={() => onClose(vaultKey)}
-                    >
-                      OK
                     </Button>
                   </div>
                 </>

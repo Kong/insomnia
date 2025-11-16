@@ -148,7 +148,7 @@ const getCertificates = async ({
 }) => {
   // attach certificates to the request
   const caCert = await models.caCertificate.findByParentId(workspaceId);
-  const caCertficatePath = !caCert?.disabled ? caCert?.path : '';
+  const caCertficatePath = caCert?.disabled ? '' : caCert?.path;
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
   // allow to read the file as it is chosen by user
   const caCertificate =
@@ -160,7 +160,7 @@ const getCertificates = async ({
   const pemCertificateKeys: string[] = [];
   const pfxCertificates: string[] = [];
 
-  filteredClientCertificates.forEach(clientCertificate => {
+  for (const clientCertificate of filteredClientCertificates) {
     const { cert, key, pfx } = clientCertificate;
 
     if (cert) {
@@ -169,7 +169,7 @@ const getCertificates = async ({
         ?.write(
           JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      pemCertificates.push(fs.readFileSync(cert, 'utf-8'));
+      pemCertificates.push(fs.readFileSync(cert, 'utf8'));
     }
 
     if (key) {
@@ -178,7 +178,7 @@ const getCertificates = async ({
         ?.write(
           JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      pemCertificateKeys.push(fs.readFileSync(key, 'utf-8'));
+      pemCertificateKeys.push(fs.readFileSync(key, 'utf8'));
     }
 
     if (pfx) {
@@ -187,9 +187,9 @@ const getCertificates = async ({
         ?.write(
           JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      pfxCertificates.push(fs.readFileSync(pfx, 'utf-8'));
+      pfxCertificates.push(fs.readFileSync(pfx, 'utf8'));
     }
-  });
+  }
 
   return {
     caCertificate,
@@ -403,9 +403,9 @@ const openSocketIOConnection = async (
     });
 
     // listen to all open events when the connection is opened
-    openedEvents.forEach(event => {
+    for (const event of openedEvents) {
       addSocketIOListener({ eventName: event.eventName, requestId: request._id });
-    });
+    }
   } catch (e) {
     console.error('unhandled error:', e);
     const errorEvent: SocketIOErrorEvent = {
@@ -458,9 +458,7 @@ const sendPayload = async (
   options: { requestId: string; eventName: string; args: any[]; ack?: boolean },
 ): Promise<void> => {
   const { eventName = 'message', args, ack } = options;
-  if (!ack) {
-    socket.emit(eventName, ...args);
-  } else {
+  if (ack) {
     socket.emit(eventName, ...args, (...ack: any[]) => {
       console.log('ack response', ...ack);
       const ackEvent: SocketIOMessageEvent = {
@@ -474,6 +472,8 @@ const sendPayload = async (
       };
       writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(ackEvent) + '\n' });
     });
+  } else {
+    socket.emit(eventName, ...args);
   }
 
   const lastMessage: SocketIOMessageEvent = {
@@ -512,7 +512,7 @@ const closeSocketIOConnection = (options: { requestId: string }): void => {
   socket.close();
 };
 
-const closeAllSocketIOConnections = (): void => SocketIOConnections.forEach(socket => socket.close());
+const closeAllSocketIOConnections = (): void => { for (const socket of SocketIOConnections) socket.close() };
 
 const addSocketIOListener = (options: { eventName: string; requestId: string }) => {
   console.log('start listen event:', options.eventName);

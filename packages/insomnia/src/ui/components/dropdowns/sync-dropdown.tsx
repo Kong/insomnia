@@ -78,7 +78,7 @@ export const SyncDropdown: FC<Props> = () => {
   }, [organizationId, projectId, syncDataActionFetcher.submit, workspaceId]);
 
   useEffect(() => {
-    const unsubscribe = window.main.on('mainWindowFocusChange', (_, isFocus) => {
+    const unsubscribe = globalThis.main.on('mainWindowFocusChange', (_, isFocus) => {
       setIsWindowFocused(isFocus);
       if (isFocus) {
         // trigger sync when user comes back to the app
@@ -266,12 +266,12 @@ export const SyncDropdown: FC<Props> = () => {
     {
       id: 'pull',
       name:
-        pullFetcher.state !== 'idle'
-          ? 'Pulling...'
-          : compare.behind > 0
+        pullFetcher.state === 'idle'
+          ? compare.behind > 0
             ? `Pull ${compare.behind || ''} Commit${compare.behind === 1 ? '' : 's'}`
-            : 'Pull',
-      icon: pullFetcher.state !== 'idle' ? 'refresh' : 'cloud-download',
+            : 'Pull'
+          : 'Pulling...',
+      icon: pullFetcher.state === 'idle' ? 'cloud-download' : 'refresh',
       isDisabled: compare.behind === 0 || pullFetcher.state !== 'idle',
       action: () => {
         setOperationError(null);
@@ -290,12 +290,12 @@ export const SyncDropdown: FC<Props> = () => {
     {
       id: 'push',
       name:
-        pushFetcher.state !== 'idle'
-          ? 'Pushing...'
-          : compare.ahead > 0
+        pushFetcher.state === 'idle'
+          ? compare.ahead > 0
             ? `Push ${compare.ahead || ''} Commit${compare.ahead === 1 ? '' : 's'}`
-            : 'Push',
-      icon: pushFetcher.state !== 'idle' ? 'refresh' : 'cloud-upload',
+            : 'Push'
+          : 'Pushing...',
+      icon: pushFetcher.state === 'idle' ? 'cloud-upload' : 'refresh',
       isDisabled: compare.ahead === 0 || pushFetcher.state !== 'idle',
       action: () => {
         setOperationError(null);

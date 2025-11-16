@@ -5,7 +5,7 @@ import { runScript as nodejsRunScript } from '../script-executor';
 const cancelRequestFunctionMap = new Map<string, () => void>();
 
 export async function cancelRequestById(requestId: string) {
-  window.main.completeExecutionStep({ requestId });
+  globalThis.main.completeExecutionStep({ requestId });
   const cancel = cancelRequestFunctionMap.get(requestId);
   if (cancel) {
     return cancel();
@@ -49,7 +49,7 @@ export const cancellableRunScript = async (options: { script: string; context: R
   try {
     const result = await cancellablePromise({
       signal: controller.signal,
-      fn: process.type === 'renderer' ? window.main.hiddenBrowserWindow.runScript(options) : nodejsRunScript(options),
+      fn: process.type === 'renderer' ? globalThis.main.hiddenBrowserWindow.runScript(options) : nodejsRunScript(options),
     });
 
     return result;
@@ -68,12 +68,12 @@ export const cancellableCurlRequest = async (requestOptions: CurlRequestOptions)
   const requestId = requestOptions.requestId;
   const controller = new AbortController();
   const cancelRequest = () => {
-    window.main.cancelCurlRequest(requestId);
+    globalThis.main.cancelCurlRequest(requestId);
     controller.abort();
   };
   cancelRequestFunctionMap.set(requestId, cancelRequest);
   try {
-    const result = await cancellablePromise({ signal: controller.signal, fn: window.main.curlRequest(requestOptions) });
+    const result = await cancellablePromise({ signal: controller.signal, fn: globalThis.main.curlRequest(requestOptions) });
     return result;
   } catch (err) {
     cancelRequestFunctionMap.delete(requestId);

@@ -15,7 +15,7 @@ export function useRealtimeConnectionNotifications({
   const updateEvents = useCallback(async () => {
     if (protocol === 'mcp') {
       // only mcp has notifications for now
-      const notifications = await window.main[protocol].event.findNotifications({ responseId });
+      const notifications = await globalThis.main[protocol].event.findNotifications({ responseId });
       setNotifications(notifications);
     }
   }, [protocol, responseId]);
@@ -26,7 +26,7 @@ export function useRealtimeConnectionNotifications({
 
   useEffect(() => {
     // @ts-expect-error -- we use a dynamic channel here
-    const unsubscribe = window.main.on(`${protocol}.${responseId}.${REALTIME_EVENTS_CHANNELS.MCP_NOTIFICATION}`, () => {
+    const unsubscribe = globalThis.main.on(`${protocol}.${responseId}.${REALTIME_EVENTS_CHANNELS.MCP_NOTIFICATION}`, () => {
       updateEvents();
     });
     return () => {

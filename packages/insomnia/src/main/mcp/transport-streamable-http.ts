@@ -76,7 +76,7 @@ export const createStreamableHTTPTransport = async (
         authProvider,
       }),
     reconnectionOptions: {
-      maxReconnectionDelay: 30000,
+      maxReconnectionDelay: 30_000,
       initialReconnectionDelay: 1000,
       reconnectionDelayGrowFactor: 1.5,
       maxRetries: 2,
@@ -284,9 +284,9 @@ const wrappedFetch = async (
         });
       }
       // Close the oauth authorization modal after authorization is complete
-      BrowserWindow.getAllWindows().forEach(window => {
+      for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send('hide-oauth-authorization-modal');
-      });
+      }
       if (authResult !== 'AUTHORIZED') {
         throw new UnauthorizedError();
       }

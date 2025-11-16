@@ -24,18 +24,18 @@ Sentry.init({
   ...SENTRY_OPTIONS,
 });
 
-window.bridge.onmessage(
+globalThis.bridge.onmessage(
   async (data: { script: string; context: RequestContext }, callback: ({ error }: { error: string }) => void) => {
-    window.bridge.setBusy(true);
+    globalThis.bridge.setBusy(true);
 
     try {
       const timeout = data.context.timeout || 5000;
-      const timeoutPromise = new window.bridge.Promise((resolve: ({ error }: { error: string }) => void) => {
+      const timeoutPromise = new globalThis.bridge.Promise((resolve: ({ error }: { error: string }) => void) => {
         setTimeout(() => {
           resolve({ error: 'Timeout: Running script took too long' });
         }, timeout);
       });
-      const result = await window.bridge.Promise.race([timeoutPromise, runScript(data)]);
+      const result = await globalThis.bridge.Promise.race([timeoutPromise, runScript(data)]);
       callback(result);
     } catch (err) {
       const errMessage = err.message
@@ -53,7 +53,7 @@ ${err.stack ? `Stack: ${err.stack}` : ''}`;
       });
       callback({ error: fullErrMessage });
     } finally {
-      window.bridge.setBusy(false);
+      globalThis.bridge.setBusy(false);
     }
   },
 );
@@ -89,7 +89,7 @@ const runScript = async ({ script, context }: { script: string; context: Request
 
   const mutatedInsomniaObject = await executeScript(
     executionContext,
-    window.bridge.requireInterceptor,
+    globalThis.bridge.requireInterceptor,
     scriptConsole,
     _,
     proxiedSetTimeout,

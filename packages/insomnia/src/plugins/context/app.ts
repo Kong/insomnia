@@ -9,12 +9,12 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
   app: {
     alert: (title: string, message?: string) => {
       if (isRenderer) {
-        return window.showAlert({ title, message });
+        return globalThis.showAlert({ title, message });
       }
     },
     dialog: (title, body, options = {}) => {
       if (isRenderer) {
-        window.showWrapper({
+        globalThis.showWrapper({
           ...options,
           title,
           body,
@@ -28,21 +28,21 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
       // This custom promise converts the prompt modal from being callback-based to reject when the modal is cancelled and resolve when the modal is submitted and hidden
       return new Promise<string>((resolve, reject) => {
         let selected: string | null = null;
-        window.showPrompt({
+        globalThis.showPrompt({
           ...options,
           title,
           onComplete: (value: string) => {
             selected = value;
           },
           // don't resolve the overall promise until the modal has hidden after clicking submit
-          onHide: () => (selected !== null ? resolve(selected) : reject(new Error(`Prompt ${title} cancelled`))),
+          onHide: () => (selected === null ? reject(new Error(`Prompt ${title} cancelled`)) : resolve(selected)),
         });
       });
     },
 
     getPath: (name: string) => {
       invariant(name.toLowerCase() === 'desktop', `Unknown path name ${name}`);
-      return window.app.getPath('desktop');
+      return globalThis.app.getPath('desktop');
     },
 
     getInfo: () => ({ version: getAppVersion(), platform: getAppPlatform() }),
@@ -53,7 +53,7 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
         return null;
       }
 
-      const { filePath } = await window.dialog.showSaveDialog({
+      const { filePath } = await globalThis.dialog.showSaveDialog({
         title: 'Save File',
         buttonLabel: 'Save',
         defaultPath: options.defaultPath,
@@ -62,9 +62,9 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
     },
 
     clipboard: {
-      readText: () => window.clipboard.readText(),
-      writeText: text => window.clipboard.writeText(text),
-      clear: () => window.clipboard.clear(),
+      readText: () => globalThis.clipboard.readText(),
+      writeText: text => globalThis.clipboard.writeText(text),
+      clear: () => globalThis.clipboard.clear(),
     },
   },
 });

@@ -4,7 +4,7 @@ export function safeToUseInsomniaFileName(fileName: string) {
     .toLowerCase()
     .trim()
     // Replace all non-alphanumeric characters with underscores, allow -
-    .replace(/[^a-z0-9_-]/g, '_');
+    .replaceAll(/[^a-z0-9_-]/g, '_');
 
   return fileNameWithSafeCharacters;
 }

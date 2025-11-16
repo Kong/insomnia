@@ -22,17 +22,17 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink }) => {
         Disable SSL Validation
       </button>
     );
-  } else if (error?.toLowerCase().indexOf('getaddrinfo') !== -1) {
-    msg = (
-      <button className="btn btn--clicky" onClick={() => showModal(SettingsModal)}>
-        Setup Network Proxy
-      </button>
-    );
-  } else {
+  } else if (error?.toLowerCase().indexOf('getaddrinfo') === -1) {
     msg = (
       <Link button className="btn btn--clicky" href={docsLink || docsBase}>
         Documentation
       </Link>
+    );
+  } else {
+    msg = (
+      <button className="btn btn--clicky" onClick={() => showModal(SettingsModal)}>
+        Setup Network Proxy
+      </button>
     );
   }
 

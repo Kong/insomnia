@@ -12,7 +12,7 @@ interface GitStatusData {
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = (await request.json()) as GitStatusData;
 
-  return window.main.git.gitStatus(data);
+  return globalThis.main.git.gitStatus(data);
 }
 
 export const useGitProjectStatusActionFetcher = createFetcherSubmitHook(

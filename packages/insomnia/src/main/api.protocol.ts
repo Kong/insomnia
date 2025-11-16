@@ -67,20 +67,32 @@ export async function registerInsomniaProtocols() {
           curl.setOpt(Curl.option.ACCEPT_ENCODING, '');
           curl.setOpt(Curl.option.SSL_OPTIONS, CurlSslOpt.NativeCa);
 
-          if (!settings.proxyEnabled) {
+          if (settings.proxyEnabled) {
+            const { protocol } = urlParse(urlStr);
+            const { httpProxy, httpsProxy, noProxy } = settings;
+            const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
+            const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
+            if (proxy) {
+              curl.setOpt(Curl.option.PROXY, proxy);
+              curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
+            }
+            if (noProxy) {
+              curl.setOpt(Curl.option.NOPROXY, noProxy);
+            }
+          } else {
             // follow system proxy
             if (!systemProxyStr) {
               // if systemProxy is empty, it means no proxy is used
               systemProxyStr = 'DIRECT';
             }
 
-            const proxies = systemProxyStr
+            const proxy = systemProxyStr
               .trim()
               .split(/\s*;\s*/g)
-              .filter(Boolean);
+              .find(Boolean);
 
             // only the first proxy specified will be used
-            const firstProxy = proxies[0];
+            const firstProxy = proxy;
             const parts = firstProxy.split(/\s+/);
 
             const proxyType = parts[0];
@@ -127,18 +139,6 @@ export async function registerInsomniaProtocols() {
                 curl.setOpt(Curl.option.PROXYTYPE, curlOptProxyType);
                 curl.setOpt(Curl.option.PROXY, parts[1]);
               }
-            }
-          } else {
-            const { protocol } = urlParse(urlStr);
-            const { httpProxy, httpsProxy, noProxy } = settings;
-            const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
-            const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-            if (proxy) {
-              curl.setOpt(Curl.option.PROXY, proxy);
-              curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
-            }
-            if (noProxy) {
-              curl.setOpt(Curl.option.NOPROXY, noProxy);
             }
           }
 

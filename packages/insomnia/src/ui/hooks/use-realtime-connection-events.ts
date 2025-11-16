@@ -16,7 +16,7 @@ export function useRealtimeConnectionEvents({
 }) {
   const [events, setEvents] = useState<CurlEvent[] | WebSocketEvent[] | SocketIOEvent[] | McpEvent[]>([]);
   const updateEvents = useCallback(async () => {
-    const allEvents = await window.main[protocol].event.findMany({ responseId });
+    const allEvents = await globalThis.main[protocol].event.findMany({ responseId });
     setEvents(allEvents);
   }, [responseId, protocol]);
 
@@ -26,7 +26,7 @@ export function useRealtimeConnectionEvents({
 
   useEffect(() => {
     // @ts-expect-error -- we use a dynamic channel here
-    const unsubscribe = window.main.on(`${protocol}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`, () => {
+    const unsubscribe = globalThis.main.on(`${protocol}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`, () => {
       // update events when new event message is received
       updateEvents();
     });

@@ -15,7 +15,7 @@ export function useReadyState({
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      window.main[protocol].readyState.getCurrent({ requestId }).then((currentReadyState: boolean) => {
+      globalThis.main[protocol].readyState.getCurrent({ requestId }).then((currentReadyState: boolean) => {
         isMounted && setReadyState(currentReadyState);
       });
     };
@@ -27,7 +27,7 @@ export function useReadyState({
   // listen for readyState changes
   useEffect(() => {
     let isMounted = true;
-    const unsubscribe = window.main.on(
+    const unsubscribe = globalThis.main.on(
       // @ts-expect-error -- we use a dynamic channel here
       `${protocol}.${requestId}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`,
       (_, incomingReadyState: boolean) => {

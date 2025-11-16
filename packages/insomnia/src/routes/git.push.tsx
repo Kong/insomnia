@@ -13,7 +13,7 @@ interface PushGitData {
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = (await request.json()) as PushGitData;
 
-  return window.main.git.pushToGitRemote(data);
+  return globalThis.main.git.pushToGitRemote(data);
 }
 
 export const useGitProjectPushActionFetcher = createFetcherSubmitHook(

@@ -21,11 +21,11 @@ function useTimeoutWhen(callback_: () => void, timeoutDelayMs = 0, when = true):
 
   useEffect(() => {
     if (when) {
-      if (typeof window !== 'undefined') {
-        const timeout = window.setTimeout(callback, timeoutDelayMs);
+      if (globalThis.window !== undefined) {
+        const timeout = globalThis.setTimeout(callback, timeoutDelayMs);
 
         return () => {
-          window.clearTimeout(timeout);
+          globalThis.clearTimeout(timeout);
         };
       }
       console.warn('useTimeoutWhen: window is undefined.');

@@ -84,9 +84,9 @@ export function animateTrailPaths(totalActiveLines: number, scope: RefObject<Ele
 
   return () => {
     ctx.kill();
-    Array.from(animations).forEach((a: GSAPAnimation) => {
+    for (const a of animations) {
       a?.kill();
-    });
+    }
   };
 }
 

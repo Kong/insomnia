@@ -60,24 +60,35 @@ export const McpActionsDropdown = ({
     const params = {
       ...(nextCursor && { cursor: nextCursor }),
     };
-    if (type === 'tools') {
-      const toolList = await window.main.mcp.primitive.listTools({ requestId, ...params });
+    switch (type) {
+    case 'tools': {
+      const toolList = await globalThis.main.mcp.primitive.listTools({ requestId, ...params });
       if (toolList) {
         updateMethod(toolList.tools, type);
         toolList.nextCursor && onUpdatePrimitiveNextCursor(toolList.nextCursor, type);
       }
-    } else if (type === 'prompts') {
-      const promptList = await window.main.mcp.primitive.listPrompts({ requestId, ...params });
+    
+    break;
+    }
+    case 'prompts': {
+      const promptList = await globalThis.main.mcp.primitive.listPrompts({ requestId, ...params });
       if (promptList) {
         updateMethod(promptList.prompts, type);
         promptList.nextCursor && onUpdatePrimitiveNextCursor(promptList.nextCursor, type);
       }
-    } else if (type === 'resources') {
-      const resourceList = await window.main.mcp.primitive.listResources({ requestId, ...params });
+    
+    break;
+    }
+    case 'resources': {
+      const resourceList = await globalThis.main.mcp.primitive.listResources({ requestId, ...params });
       if (resourceList) {
         updateMethod(resourceList.resources, type);
         resourceList.nextCursor && onUpdatePrimitiveNextCursor(resourceList.nextCursor, type);
       }
+    
+    break;
+    }
+    // No default
     }
   };
 

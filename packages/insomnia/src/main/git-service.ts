@@ -989,30 +989,7 @@ export const cloneGitRepoAction = async ({
     let workspaceId = '';
     let scope: 'design' | 'collection' = WorkspaceScopeKeys.design;
     // If no workspace exists we create a new one
-    if (!(await containsInsomniaWorkspaceDir(inMemoryFsClient))) {
-      // Create a new workspace
-
-      const workspace = await models.workspace.create({
-        name: repoSettingsPatch.uri?.split('/').pop(),
-        scope: scope,
-        parentId: project._id,
-        description: `Insomnia Workspace for ${repoSettingsPatch.uri}}`,
-      });
-      await models.apiSpec.getOrCreateForParentId(workspace._id);
-
-      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-        ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
-        providerName,
-      });
-
-      workspaceId = workspace._id;
-
-      const newRepo = await models.gitRepository.create(repoSettingsPatch);
-      const meta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-      await models.workspaceMeta.update(meta, {
-        gitRepositoryId: newRepo._id,
-      });
-    } else {
+    if (await containsInsomniaWorkspaceDir(inMemoryFsClient)) {
       // Clone all entities from the repository
       const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
       const workspaces = await inMemoryFsClient.promises.readdir(workspaceBase);
@@ -1111,6 +1088,29 @@ export const cloneGitRepoAction = async ({
 
       await GitVCS.setAuthor();
       await GitVCS.addRemote(uri);
+    } else {
+      // Create a new workspace
+
+      const workspace = await models.workspace.create({
+        name: repoSettingsPatch.uri?.split('/').pop(),
+        scope: scope,
+        parentId: project._id,
+        description: `Insomnia Workspace for ${repoSettingsPatch.uri}}`,
+      });
+      await models.apiSpec.getOrCreateForParentId(workspace._id);
+
+      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
+        ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
+        providerName,
+      });
+
+      workspaceId = workspace._id;
+
+      const newRepo = await models.gitRepository.create(repoSettingsPatch);
+      const meta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+      await models.workspaceMeta.update(meta, {
+        gitRepositoryId: newRepo._id,
+      });
     }
 
     // Flush DB changes
@@ -2323,8 +2323,7 @@ async function completeSignInToGitHub({ code, state }: { code: string; state: st
     const userProfileEmail = user.email ?? '';
     const email = emails.find(e => e.primary)?.email ?? userProfileEmail ?? '';
 
-    if (existingGitHubCredentials) {
-      await models.gitCredentials.update(existingGitHubCredentials, {
+    await (existingGitHubCredentials ? models.gitCredentials.update(existingGitHubCredentials, {
         token: data.access_token,
         provider: 'githubapp',
         author: {
@@ -2332,9 +2331,7 @@ async function completeSignInToGitHub({ code, state }: { code: string; state: st
           name: user.name ?? user.login ?? '',
           avatarUrl: user.avatar_url,
         },
-      });
-    } else {
-      await models.gitCredentials.create({
+      }) : models.gitCredentials.create({
         token: data.access_token,
         provider: 'githubapp',
         author: {
@@ -2342,8 +2339,7 @@ async function completeSignInToGitHub({ code, state }: { code: string; state: st
           name: user.name ?? user.login ?? '',
           avatarUrl: user.avatar_url,
         },
-      });
-    }
+      }));
 
     return {};
   } catch (error) {
@@ -2513,7 +2509,7 @@ const getGitLabConfig = async () => {
 };
 
 function base64URLEncode(buffer: Buffer) {
-  return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  return buffer.toString('base64').replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
 }
 
 export const getGitLabOauthApiURL = () => INSOMNIA_GITLAB_API_URL || 'https://gitlab.com';

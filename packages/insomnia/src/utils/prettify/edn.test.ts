@@ -9,12 +9,12 @@ describe('ednPrettify()', () => {
   const basePath = path.join(__dirname, './fixtures/edn');
   const files = fs.readdirSync(basePath);
   for (const file of files) {
-    if (!file.match(/-input\.edn$/)) {
+    if (!/-input\.edn$/.test(file)) {
       continue;
     }
 
     const slug = file.replace(/-input\.edn$/, '');
-    const name = slug.replace(/-/g, ' ');
+    const name = slug.replaceAll('-', ' ');
 
     it(`handles ${name}`, () => {
       const input = fs.readFileSync(path.join(basePath, `${slug}-input.edn`), 'utf8').trim();

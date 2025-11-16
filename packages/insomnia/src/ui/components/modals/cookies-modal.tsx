@@ -35,7 +35,7 @@ import { RenderedText } from '../rendered-text';
 
 // Use tough-cookie MAX_DATE value
 // https://github.com/salesforce/tough-cookie/blob/5ae97c6a28122f3fb309adcd8428274d9b2bd795/lib/cookie.js#L77
-const MAX_TIME = 2147483647000;
+const MAX_TIME = 2_147_483_647_000;
 const ItemsPerPage = 5;
 
 export function chunkArray<T>(array: T[], chunkSize: number = ItemsPerPage): T[][] {
@@ -85,7 +85,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     for (const cookie of activeCookieJar?.cookies || []) {
       try {
         renderedCookies.push(await handleRender(cookie));
-      } catch (err) {
+      } catch {
         renderedCookies.push(cookie);
       }
     }
@@ -97,11 +97,11 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
 
     const filteredCookies: Cookie[] = [];
 
-    renderedCookies.forEach(cookie => {
+    for (const cookie of renderedCookies) {
       if (fuzzyMatch(value, JSON.stringify(cookie), { splitSpace: true })) {
         filteredCookies.push(cookie);
       }
-    });
+    }
 
     setFilteredCookies(chunkArray(filteredCookies));
   };
@@ -153,7 +153,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     const cookieJar = clone(activeCookieJar);
     const index = activeCookieJar.cookies.findIndex(c => c.id === cookie.id);
 
-    if (index < 0) {
+    if (index === -1) {
       console.warn(`Could not find cookie with id=${cookie.id} to edit`);
       return;
     }
@@ -408,9 +408,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
   }
 
   let rawDefaultValue;
-  if (!editCookie) {
-    rawDefaultValue = '';
-  } else {
+  if (editCookie) {
     try {
       const c = ToughCookie.fromJSON(JSON.stringify(editCookie));
       rawDefaultValue = c ? cookieToString(c) : '';
@@ -418,6 +416,8 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
       console.warn('Failed to parse cookie string', err);
       rawDefaultValue = '';
     }
+  } else {
+    rawDefaultValue = '';
   }
 
   return (

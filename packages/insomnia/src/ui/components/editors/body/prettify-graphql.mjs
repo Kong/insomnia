@@ -64,14 +64,14 @@ const mergeDuplicatedNotLeafNodes = sourceNode => {
     return false;
   });
 
-  nodesToMerge.forEach(node => {
+  for (const node of nodesToMerge) {
     const index = newNode.selectionSet.selections.findIndex(selection => findIndex(selection, node));
 
     newNode.selectionSet.selections[index].selectionSet.selections = [
       ...newNode.selectionSet.selections[index].selectionSet.selections,
       ...node.selectionSet.selections,
     ];
-  });
+  }
 
   newNode.selectionSet.selections = newNode.selectionSet.selections.map(mergeDuplicatedNotLeafNodes);
 
