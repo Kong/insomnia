@@ -26,7 +26,7 @@ describe('util', () => {
     });
 
     it('escapes something with quotes', () => {
-      expect(escapeJsStr(`"Hello" 'World'`)).toBe(`"Hello" \\'World\\'`);
+      expect(escapeJsStr(`"Hello" 'World'`)).toBe(String.raw`"Hello" \'World\'`);
     });
   });
 });

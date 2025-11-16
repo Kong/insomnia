@@ -89,10 +89,7 @@ export class PropertyBase {
 
       const cloned = clone(ancestor);
       const hasProperty = Object.keys(cloned.meta()).includes(property);
-      if (!hasProperty) {
-        // keep traversing until parent has the property
-        // no op
-      } else {
+      if (hasProperty) {
         if (customizer) {
           if (customizer(cloned)) {
             // continue until customizer returns a truthy value
@@ -103,6 +100,9 @@ export class PropertyBase {
           // stop at the first parent that contains the property
           return cloned;
         }
+      } else {
+        // keep traversing until parent has the property
+        // no op
       }
 
       const olderAncestor = ancestor.parent();
@@ -149,21 +149,21 @@ export class Property extends PropertyBase {
 
   static replaceSubstitutions(content: string, ...variables: object[]): string {
     if (!Array.isArray(variables) || typeof content !== 'string') {
-      throw new Error(
+      throw new TypeError(
         "replaceSubstitutions: the first param's type is not string or other parameters are not an array",
       );
     }
 
     let context: object = {};
     // the searching priority of rendering is from left to right
-    variables.reverse().forEach(variable => (context = { ...context, ...variable }));
+    for (const variable of variables.reverse()) context = { ...context, ...variable };
 
     return getInterpolator().render(content, context);
   }
 
   static replaceSubstitutionsIn(obj: object, ...variables: object[]): object {
     if (!Array.isArray(variables) || typeof obj !== 'object') {
-      throw new Error(
+      throw new TypeError(
         "replaceSubstitutions: the first param's type is not object or other parameters are not an array",
       );
     }
@@ -173,9 +173,9 @@ export class Property extends PropertyBase {
 
       let context: object = {};
       // the searching priority of rendering is from left to right
-      variables.reverse().forEach(variable => {
+      for (const variable of variables.reverse()) {
         context = { ...context, ...variable };
-      });
+      }
 
       const rendered = getInterpolator().render(content, context);
       return JSON.parse(rendered);
@@ -247,8 +247,9 @@ export class PropertyList<T extends Property> {
     }
     const it: Iterator = iterator;
     it.context = context;
-
-    this.list.forEach(it);
+    for (const item of this.list) {
+      it(item);
+    }
   }
 
   // TODO: unsupported yet as properties are not organized as hierarchy
@@ -296,7 +297,7 @@ export class PropertyList<T extends Property> {
     if (index <= this.list.length - 1) {
       return this.list[index];
     }
-    return undefined;
+    return;
   }
 
   indexOf(item: string | T) {
@@ -356,7 +357,7 @@ export class PropertyList<T extends Property> {
       }
     }
 
-    return undefined;
+    return;
   }
 
   populate(items: T[]) {
@@ -411,7 +412,7 @@ export class PropertyList<T extends Property> {
     }
 
     const itemIdx = this.indexOf(item);
-    if (itemIdx >= 0) {
+    if (itemIdx !== -1) {
       this.list = [...this.list.splice(0, itemIdx), item, ...this.list.splice(itemIdx + 1)];
       return false;
     }

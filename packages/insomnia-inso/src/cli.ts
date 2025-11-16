@@ -1,7 +1,9 @@
+#!/usr/bin/env node
+
 import fs from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import path, { dirname } from 'node:path';
+import path from 'node:path';
 
 import * as commander from 'commander';
 import type { logType } from 'consola';
@@ -152,7 +154,7 @@ export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string;
 
   if (workingDir) {
     if (fs.existsSync(workingDir) && !fs.statSync(workingDir).isDirectory()) {
-      return path.resolve(dirname(workingDir), file);
+      return path.resolve(path.dirname(workingDir), file);
     }
     return path.resolve(workingDir, file);
   }
@@ -219,8 +221,8 @@ const getRequestsToRunFromListOrWorkspace = (db: Database, workspaceId: string, 
   const hasItems = item.length > 0;
   if (hasItems) {
     const folderIds = item.filter(id => db.RequestGroup.find(rg => rg._id === id));
-    const allRequestGroupIds = [...folderIds, ...getRequestGroupIdsRecursively(folderIds)];
-    const folderRequests = db.Request.filter(req => allRequestGroupIds.includes(req.parentId)) as Request[];
+    const allRequestGroupIds = new Set([...folderIds, ...getRequestGroupIdsRecursively(folderIds)]);
+    const folderRequests = db.Request.filter(req => allRequestGroupIds.has(req.parentId)) as Request[];
     const reqItems = db.Request.filter(req => item.includes(req._id)) as Request[];
 
     return [...reqItems, ...folderRequests];
@@ -266,13 +268,13 @@ const getListFromFileOrUrl = (content: string, fileType?: string): Record<string
         );
       }
       throw new Error('Invalid JSON file uploaded, JSON file must be array of key-value pairs.');
-    } catch (error) {
+    } catch {
       throw new Error('Upload JSON file can not be parsed');
     }
   } else if (fileType === 'csv') {
     // Replace CRLF (Windows line break) and CR (Mac link break) with \n, then split into csv arrays
     const csvRows = content
-      .replace(/\r\n|\r/g, '\n')
+      .replaceAll(/\r\n|\r/g, '\n')
       .split('\n')
       .map(row => row.split(','));
     // at least 2 rows required for csv
@@ -345,7 +347,7 @@ export const go = (args?: string[]) => {
     const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
 
     const options = {
-      ...(__configFile?.options || {}),
+      ...__configFile?.options,
       ...commandOptions,
       configFileContent: __configFile,
     };
@@ -605,7 +607,7 @@ export const go = (args?: string[]) => {
             }
             try {
               fs.accessSync(outputFilePath, fs.constants.W_OK);
-            } catch (err) {
+            } catch {
               logger.fatal(`Output file "${outputFilePath}" is not writable.`);
               return process.exit(1);
             }
@@ -676,7 +678,7 @@ export const go = (args?: string[]) => {
               db.WorkspaceMeta = [
                 {
                   activeGlobalEnvironmentId: globalEnv._id,
-                  _id: `wrkm_${uuidv4().replace(/-/g, '')}`,
+                  _id: `wrkm_${uuidv4().replaceAll('-', '')}`,
                   type: 'WorkspaceMeta',
                   parentId: workspaceId,
                   name: '',
@@ -700,7 +702,7 @@ export const go = (args?: string[]) => {
             db.WorkspaceMeta = [
               {
                 activeGlobalEnvironmentId: firstGlobalEnv._id,
-                _id: `wrkm_${uuidv4().replace(/-/g, '')}`,
+                _id: `wrkm_${uuidv4().replaceAll('-', '')}`,
                 type: 'WorkspaceMeta',
                 parentId: workspaceId,
                 name: '',
@@ -731,9 +733,9 @@ export const go = (args?: string[]) => {
         const isRunningFolder = options.item.length === 1 && options.item[0].startsWith('fld_');
         if (options.item.length && !isRunningFolder) {
           const requestOrder = new Map<string, number>();
-          options.item.forEach((reqId: string, order: number) => {
+          for (const [order, reqId] of options.item.entries()) {
             requestOrder.set(reqId, order + 1);
-          });
+          }
           requestsToRun = requestsToRun.sort(
             (a, b) =>
               (requestOrder.get(a._id) || requestsToRun.length) - (requestOrder.get(b._id) || requestsToRun.length),
@@ -792,7 +794,7 @@ export const go = (args?: string[]) => {
         }
 
         try {
-          const iterationCount = parseInt(options.iterationCount, 10);
+          const iterationCount = Number.parseInt(options.iterationCount, 10);
 
           const iterationData = await pathToIterationData(options.iterationData, options.envVar);
           const transientVariables: Environment = {
@@ -888,7 +890,7 @@ export const go = (args?: string[]) => {
                 }
               }
 
-              await new Promise(r => setTimeout(r, parseInt(options.delayRequest, 10)));
+              await new Promise(r => setTimeout(r, Number.parseInt(options.delayRequest, 10)));
 
               if (res.nextRequestIdOrName) {
                 const offset = getNextRequestOffset(requestsToRun.slice(reqIndex), res.nextRequestIdOrName);
@@ -934,7 +936,7 @@ export const go = (args?: string[]) => {
       let isIdentifierAFile = false;
       try {
         isIdentifierAFile = identifier && (await fs.promises.stat(identifierAsAbsPath)).isFile();
-      } catch (err) {}
+      } catch {}
       const pathToSearch = '';
       let specContent: string | undefined;
       let rulesetFileName: string | undefined;
@@ -1048,12 +1050,12 @@ export const go = (args?: string[]) => {
 
 const getNextRequestOffset = (leftRequestsToRun: Request[], nextRequestIdOrName: string) => {
   const idMatchOffset = leftRequestsToRun.findIndex(req => req._id.trim() === nextRequestIdOrName.trim());
-  if (idMatchOffset >= 0) {
+  if (idMatchOffset !== -1) {
     return idMatchOffset;
   }
 
   const nameMatchOffset = leftRequestsToRun.reverse().findIndex(req => req.name.trim() === nextRequestIdOrName.trim());
-  if (nameMatchOffset >= 0) {
+  if (nameMatchOffset !== -1) {
     return leftRequestsToRun.length - 1 - nameMatchOffset;
   }
 

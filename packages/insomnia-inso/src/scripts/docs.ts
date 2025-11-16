@@ -24,14 +24,14 @@ ${options.map(option => `- \`${option.flags}\`: ${option.description}
 function generateSubcommandsMarkdown(commandName: string, subcommands: { name: string; description: string }[]): string {
     return subcommands.length ? `## Subcommands
 
-${subcommands.map(sub => `- [\`${commandName} ${sub.name}\`](/inso-cli/reference/${commandName.replace(/\s+/g, '_')}_${sub.name.replace(/\s+/g, '_')}/{{page.release}}/): ${sub.description}
+${subcommands.map(sub => `- [\`${commandName} ${sub.name}\`](/inso-cli/reference/${commandName.replaceAll(/\s+/g, '_')}_${sub.name.replaceAll(/\s+/g, '_')}/{{page.release}}/): ${sub.description}
 `).join('')}
 ` : '';
 }
 
 export function generateCommandMarkdown(command: commander.Command, programOptions: readonly commander.Option[], parentName?: string): { name: string; fileName: string; description: string; subcommands: readonly commander.Command[] } {
     const commandName = parentName ? `${parentName} ${command.name()}` : command.name();
-    const fileName = `${commandName.replace(/\s+/g, '_')}.md`;
+    const fileName = `${commandName.replaceAll(/\s+/g, '_')}.md`;
 
     writeMarkdownFile(fileName, `---
 title: ${commandName}
@@ -65,7 +65,7 @@ export function generateDocumentation(program: commander.Command): void {
 
     const allCommands: any[] = [];
 
-    program.commands.forEach(command => {
+    for (const command of program.commands) {
         const commandData = generateCommandMarkdown(command, program.options, '');
 
         allCommands.push({
@@ -75,14 +75,14 @@ export function generateDocumentation(program: commander.Command): void {
             subcommands: commandData.subcommands.map(sub => ({
                 name: sub.name(),
                 description: sub.description() || 'No description available',
-                fileName: `${commandData.name.replace(/\s+/g, '_')}_${sub.name().replace(/\s+/g, '_')}.md`,
+                fileName: `${commandData.name.replaceAll(/\s+/g, '_')}_${sub.name().replaceAll(/\s+/g, '_')}.md`,
             })),
         });
 
-        commandData.subcommands.forEach(sub => {
+        for (const sub of commandData.subcommands) {
             generateCommandMarkdown(sub, program.options, commandData.name);
-        });
-    });
+        }
+    }
 
     writeMarkdownFile('index.md', `---
 title: CLI Documentation

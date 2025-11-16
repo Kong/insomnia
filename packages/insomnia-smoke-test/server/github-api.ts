@@ -1,10 +1,10 @@
 import type { Application } from 'express';
 
-export default (app: Application) => {
+const setupRoutes = (app: Application) => {
   app.get('/github-api/rest/user/repos', (_req, res) => {
     res.status(200).send([
       {
-        id: 123456,
+        id: 123_456,
         full_name: 'kong-test/sleepless',
         clone_url: 'https://github.com/kong-test/sleepless.git',
         permissions: {
@@ -46,3 +46,5 @@ export default (app: Application) => {
     });
   });
 };
+
+export default setupRoutes;

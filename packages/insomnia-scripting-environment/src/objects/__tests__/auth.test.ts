@@ -5,7 +5,7 @@ import type { Variable, VariableList } from '../variables';
 
 const varListToObject = (obj: VariableList<Variable> | undefined) => {
   if (!obj) {
-    return undefined;
+    return;
   }
 
   return obj.map(
@@ -169,7 +169,7 @@ describe('test auth transforming', () => {
       origin: 'origin',
     };
 
-    [
+    for (const authMethod of [
       basicAuth,
       apikeyAuth,
       hawkAuth,
@@ -181,8 +181,8 @@ describe('test auth transforming', () => {
       asapAuth,
       noneAuth,
       oauth2Auth,
-    ].forEach(authMethod => {
+    ]) {
       expect(fromPreRequestAuth(new RequestAuth(toPreRequestAuth(authMethod)))).toEqual(authMethod);
-    });
+    }
   });
 });

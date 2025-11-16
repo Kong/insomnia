@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // This file is responsible for compressing the binaries for each architecture
 import type { ProcessEnvOptions } from 'node:child_process';
 import { spawn } from 'node:child_process';
@@ -55,11 +57,9 @@ const artifacts = async () => {
   });
 };
 
-artifacts()
-  .then(() => {
-    process.exit(0);
-  })
-  .catch(error => {
-    console.error(error);
-    process.exit(1);
-  });
+try {
+  artifacts();
+} catch (error) {
+  console.error(error);
+  process.exit(1);
+}

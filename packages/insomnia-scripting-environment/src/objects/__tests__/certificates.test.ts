@@ -12,9 +12,9 @@ describe('test Certificate object', () => {
       passphrase: 'iampassphrase',
     });
 
-    ['https://example.com', 'https://example.com/subdomain'].forEach(testCase => {
+    for (const testCase of ['https://example.com', 'https://example.com/subdomain']) {
       expect(cert.canApplyTo(testCase)).toBeTruthy();
-    });
+    }
 
     cert.update({
       name: 'Certificate for api.com',

@@ -13,7 +13,7 @@ test('Check vault key generation', async ({ page }) => {
   await page.locator('text=Insomnia Preferences').first().click();
   // generate vault key
   await page.getByRole('button', { name: 'Generate Vault Key' }).click();
-  const vaultKeyValue = await page.getByTestId('VaultKeyDisplayPanel').innerText();
+  const vaultKeyValue = await page.getByTestId('VaultKeyDisplayPanel').textContent();
   expect.soft(vaultKeyValue.length).toBeGreaterThan(0);
 });
 
@@ -43,7 +43,7 @@ test.describe('Vault key actions', () => {
     // test reset vault key
     await page.getByRole('dialog').getByText('Reset Vault Key').dblclick();
     await expect.soft(modal).toBeVisible();
-    const vaultKeyValueInModal = await modal.getByTestId('VaultKeyDisplayPanel').innerText();
+    const vaultKeyValueInModal = await modal.getByTestId('VaultKeyDisplayPanel').textContent();
     expect.soft(vaultKeyValueInModal.length).toBeGreaterThan(0);
     await page.getByText('OK').click();
     const vaultKeyValue = page.getByTestId('VaultKeyDisplayPanel');
@@ -60,7 +60,7 @@ test.describe('Vault key actions', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     await page.getByText('Global env with secret vault').click();
     await page.getByRole('dialog').getByText('Reset Vault Key').dblclick();
-    const vaultKeyValueInModal = await page.getByTestId('VaultKeyDisplayPanel').innerText();
+    const vaultKeyValueInModal = await page.getByTestId('VaultKeyDisplayPanel').textContent();
     expect.soft(vaultKeyValueInModal.length).toBeGreaterThan(0);
   });
 });

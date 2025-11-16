@@ -273,7 +273,7 @@ export class Variables {
    */
   get = (variableName: string) => {
     let finalVal: boolean | number | string | object | undefined;
-    [
+    for (const vars of [
       this.localVars,
       mergeFolderLevelVars(this.folderLevelVars),
       this.iterationDataVars,
@@ -281,12 +281,12 @@ export class Variables {
       this.collectionVars,
       this.globalVars,
       this.baseGlobalVars,
-    ].forEach(vars => {
+    ]) {
       const value = vars.get(variableName);
       if (!finalVal && value) {
         finalVal = value;
       }
-    });
+    }
 
     return finalVal;
   };

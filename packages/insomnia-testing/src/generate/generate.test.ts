@@ -1,16 +1,16 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
 import { generate } from './generate';
 
-const fixturesPath = join(__dirname, 'fixtures');
+const fixturesPath = path.join(__dirname, 'fixtures');
 const fixtures = readdirSync(fixturesPath);
 
 describe('fixtures', () => {
   for (const input of fixtures) {
-    if (input.match(/\.output\.js$/)) {
+    if (/\.output\.js$/.test(input)) {
       continue;
     }
 

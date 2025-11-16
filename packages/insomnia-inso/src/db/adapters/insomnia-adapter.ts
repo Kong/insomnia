@@ -120,7 +120,7 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
   const toFilter = new Set<string>(filterTypes);
 
   // Execute translation between raw and imported models
-  parsed.resources.forEach(model => {
+  for (const model of parsed.resources) {
     // If there is no filter to apply, or this model is included in the filter
     if (!toFilter.size || toFilter.has(parseRawType(model._type))) {
       // Rename field, transform value and return a new object
@@ -129,7 +129,7 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
       // Store it, only if the key value exists
       (db[obj.type] as {}[])?.push(obj);
     }
-  });
+  }
 
   return db;
 };

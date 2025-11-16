@@ -20,7 +20,7 @@ export async function sendRequest(
       const requestOptions = requestToCurlOptions(request, settings);
       const nodejsCurlRequest =
         process.type === 'renderer'
-          ? window.bridge.curlRequest
+          ? globalThis.bridge.curlRequest
           : (await import('insomnia/src/main/network/libcurl-promise')).curlRequest;
 
       const output = (await nodejsCurlRequest(requestOptions)) as CurlRequestOutput;
@@ -32,8 +32,8 @@ export async function sendRequest(
       return resolve(transformedOutput);
     } catch (e) {
       if (cb) {
-        cb(e, undefined);
-        resolve(undefined);
+        cb(e);
+        resolve();
       } else {
         reject(e);
       }
@@ -207,7 +207,7 @@ async function curlOutputToResponse(
     throw result.patch.error;
   }
 
-  const lastRedirect = result.headerResults[result.headerResults.length - 1];
+  const lastRedirect = result.headerResults.at(-1);
   if (!lastRedirect) {
     throw new Error('curlOutputToResponse: the lastRedirect is not defined');
   }
@@ -263,7 +263,7 @@ async function curlOutputToResponse(
       originalRequest,
     });
   }
-  const nodejsReadCurlResponse = process.type === 'renderer' ? window.bridge.readCurlResponse : readCurlResponse;
+  const nodejsReadCurlResponse = process.type === 'renderer' ? globalThis.bridge.readCurlResponse : readCurlResponse;
   const bodyResult = await nodejsReadCurlResponse({
     bodyPath: result.responseBodyPath,
     bodyCompression: result.patch.bodyCompression,

@@ -271,7 +271,7 @@ export class RequestAuth extends Property {
     const optsObj = options as AuthOptions;
     const optsEntries = Object.entries(optsObj).filter(optsObjEntry => optsObjEntry[0] !== 'type');
 
-    optsEntries
+    for (const authOpts of optsEntries
       .map((optsEntry: [string, AuthOption[]]) => {
         const optVars = optsEntry[1].map(opt => {
           return new Variable({
@@ -285,10 +285,9 @@ export class RequestAuth extends Property {
           type: optsEntry[0],
           options: new VariableList(undefined, optVars),
         };
-      })
-      .forEach(authOpts => {
+      })) {
         this.authOptions.set(authOpts.type, authOpts.options);
-      });
+      }
 
     this._parent = parent;
   }

@@ -178,12 +178,12 @@ describe('test Url object', () => {
     },
   ];
 
-  urlParsingTests.forEach(testCase => {
+  for (const testCase of urlParsingTests) {
     it(`parsing url: ${testCase.testName}`, () => {
       const urlObj = new Url(testCase.url);
       expect(urlObj.toString()).toEqual(testCase.url);
     });
-  });
+  }
 
   const additionalCases = [
     {
@@ -242,14 +242,14 @@ describe('test Url object', () => {
     },
   ];
 
-  additionalCases.forEach(testCase => {
+  for (const testCase of additionalCases) {
     it(`parsing url: ${testCase.origin}`, () => {
       const urlObj = new Url(testCase.origin);
       urlObj.addQueryParams([{ key: 'key', value: 'value' }]);
       urlObj.removeQueryParams('key');
       expect(urlObj.toString()).toEqual(testCase.expected);
     });
-  });
+  }
 });
 
 describe('test Url Match Pattern', () => {

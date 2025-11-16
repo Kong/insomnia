@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:https';
-import { join } from 'node:path';
+import path from 'node:path';
 
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
@@ -24,7 +24,7 @@ const app = express();
 app.use(cookieParser());
 const port = 4010;
 const httpsPort = 4011;
-const grpcPort = 50051;
+const grpcPort = 50_051;
 const rawParser = bodyParser.raw({
   inflate: true,
   type: '*/*',
@@ -122,7 +122,7 @@ app.get('/events', (request, response) => {
 app.post('/send-event', (request, response) => {
   // Requires middleware to parse JSON body
   console.log('Received event', request.body);
-  subscribers.forEach(subscriber => subscriber.response.write(`data: ${JSON.stringify(request.body)}\n\n`));
+  for (const subscriber of subscribers) subscriber.response.write(`data: ${JSON.stringify(request.body)}\n\n`);
   response.json({ success: true });
 });
 // auto update endpoints, use INSOMNIA_UPDATES_URL=http://localhost:4010 npm run dev for testing
@@ -149,9 +149,9 @@ startWebSocketServer(
 startWebSocketServer(
   createServer(
     {
-      cert: readFileSync(join(__dirname, '../fixtures/certificates/localhost.pem')),
-      key: readFileSync(join(__dirname, '../fixtures/certificates/localhost-key.pem')),
-      ca: readFileSync(join(__dirname, '../fixtures/certificates/rootCA.pem')),
+      cert: readFileSync(path.join(__dirname, '../fixtures/certificates/localhost.pem')),
+      key: readFileSync(path.join(__dirname, '../fixtures/certificates/localhost-key.pem')),
+      ca: readFileSync(path.join(__dirname, '../fixtures/certificates/rootCA.pem')),
       requestCert: true,
       rejectUnauthorized: false,
     },

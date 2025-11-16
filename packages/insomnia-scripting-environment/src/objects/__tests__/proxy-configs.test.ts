@@ -52,10 +52,10 @@ describe('test ProxyConfig object', () => {
     'http://user:pass@localhost',
   ];
 
-  proxyUrls.forEach(url => {
+  for (const url of proxyUrls) {
     it(`test proxy transforming: ${url}`, () => {
       const proxy = new ProxyConfig(transformToSdkProxyOptions(url, '', true, ''));
       expect(proxy.getProxyUrl()).toEqual(url);
     });
-  });
+  }
 });

@@ -28,7 +28,10 @@ const templateTagTestCases: Record<string, TemplateTagTestCase[]> = {
   jsonPath: [{ tagPrefix: '{% jsonpath', expectedResult: 'bar' }],
   os: [{ tagPrefix: "{% os 'arch', '' %}", expectedResult: os.arch() }],
   timeStamp: [
-    { tagPrefix: "{% now 'millis', '' %}", expectedResult: result => !isNaN(Number(result)) && result.length === 13 },
+    {
+      tagPrefix: "{% now 'millis', '' %}",
+      expectedResult: result => !Number.isNaN(Number(result)) && result.length === 13,
+    },
   ],
   uuid: [{ tagPrefix: "{% uuid 'v4' %}", expectedResult: result => result.length === 36 }],
   request: [
@@ -83,9 +86,10 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
   await page.getByLabel('Request Collection').getByTestId('Common Tag').press('Enter');
   await page.getByText('Body', { exact: true }).click();
   let commonTagTestCases: TemplateTagTestCase[] = [];
-  Object.keys(templateTagTestCases)
-    .filter(key => key !== 'request' && key !== 'response' && key !== 'prompt')
-    .forEach(tagName => (commonTagTestCases = commonTagTestCases.concat(templateTagTestCases[tagName])));
+  for (const tagName of Object.keys(templateTagTestCases).filter(
+    key => key !== 'request' && key !== 'response' && key !== 'prompt',
+  ))
+    commonTagTestCases = commonTagTestCases.concat(templateTagTestCases[tagName]);
   const testCases = commonTagTestCases;
   for (const { tagPrefix, expectedResult } of testCases) {
     await page.locator(`[data-template^="${tagPrefix}"]`).click();

@@ -123,13 +123,13 @@ describe('test Cookie object', () => {
       },
     ];
 
-    cookieJars.forEach(jar => {
+    for (const jar of cookieJars) {
       const originalJar = { ...fakeBaseModel, ...jar };
       const sdkJar = new CookieObject(originalJar);
       const convertedJar = mergeCookieJar(originalJar, sdkJar.jar().toInsomniaCookieJar());
 
       expect(convertedJar).toEqual(originalJar);
-    });
+    }
   });
 });
 

@@ -87,7 +87,7 @@ const user = {
 };
 
 const whoami = {
-  sessionExpiry: 4838400,
+  sessionExpiry: 4_838_400,
   publicKey: {
     alg: 'RSA-OAEP-256',
     e: 'AQAB',
@@ -393,7 +393,7 @@ const collaboratorsList = getCollaborators({
   groupsCount: 1,
 });
 
-emailsAndGroupsToInvite.forEach((collaborator, index) => {
+for (const [index, collaborator] of emailsAndGroupsToInvite.entries()) {
   collaboratorsList.collaborators.push({
     ...collaborator,
     createdAt: '2024-09-14T10:16:10.513Z',
@@ -404,11 +404,11 @@ emailsAndGroupsToInvite.forEach((collaborator, index) => {
       expiresAt: '2077-09-21T10:16:10.513Z',
     },
   });
-});
+}
 
 collaboratorsList.total = collaboratorsList.collaborators.length + emailsAndGroupsToInvite.length;
 
-export default (app: Application) => {
+const setupRoutes = (app: Application) => {
   // User
   app.get('/v1/user/profile', (_req, res) => {
     console.log('GET *');
@@ -642,3 +642,5 @@ export default (app: Application) => {
     });
   });
 };
+
+export default setupRoutes;

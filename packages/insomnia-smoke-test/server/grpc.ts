@@ -63,9 +63,9 @@ const listFeatures: HandleCall<any, any> = (call: any) => {
   const top = Math.max(lo.latitude, hi.latitude);
   const bottom = Math.min(lo.latitude, hi.latitude);
   // For each feature, check if it is in the given bounding box
-  featureList.forEach(function (feature) {
+  for (const feature of featureList) {
     if (feature.name === '') {
-      return;
+      continue;
     }
     if (
       feature.location.longitude >= left &&
@@ -75,7 +75,7 @@ const listFeatures: HandleCall<any, any> = (call: any) => {
     ) {
       call.write(feature);
     }
-  });
+  }
   call.end();
 };
 
@@ -90,7 +90,7 @@ function getDistance(start: { latitude: number; longitude: number }, end: { lati
   function toRadians(num: number) {
     return (num * Math.PI) / 180;
   }
-  const R = 6371000; // earth radius in metres
+  const R = 6_371_000; // earth radius in metres
   const lat1 = toRadians(start.latitude / COORD_FACTOR);
   const lat2 = toRadians(end.latitude / COORD_FACTOR);
   const lon1 = toRadians(start.longitude / COORD_FACTOR);
@@ -132,7 +132,7 @@ const recordRoute: HandleCall<any, any> = (call: any, callback: any) => {
       point_count: pointCount,
       feature_count: featureCount,
       // Cast the distance to an integer
-      distance: distance | 0,
+      distance: Math.trunc(distance),
       // End the timer
       elapsed_time: process.hrtime(startTime)[0],
     });
@@ -161,14 +161,14 @@ const routeChat: HandleCall<any, any> = (call: any) => {
     /* For each note sent, respond with all previous notes that correspond to
      * the same point */
     if (key in routeNotes) {
-      routeNotes[key].forEach(function (note: any) {
+      for (const note of routeNotes[key]) {
         call.write(note);
-      });
+      }
     } else {
       routeNotes[key] = [];
     }
     // Then add the new note to the list
-    routeNotes[key].push(JSON.parse(JSON.stringify(note)));
+    routeNotes[key].push(structuredClone(note));
   });
   call.on('end', function () {
     call.end();

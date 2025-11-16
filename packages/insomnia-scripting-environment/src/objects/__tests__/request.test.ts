@@ -110,11 +110,11 @@ describe('test request and response objects', () => {
       },
     ];
 
-    bodies.forEach(body => {
+    for (const body of bodies) {
       const originalReqBody = body;
       const scriptReqBody = new RequestBody(toScriptRequestBody(body));
       expect(mergeRequestBody(scriptReqBody, originalReqBody)).toEqual(originalReqBody);
-    });
+    }
   });
 
   const reqBodyTestCases: { body: RequestBodyOptions; headers: HeaderList<Header>; expectedTotal: number }[] = [
@@ -144,11 +144,11 @@ describe('test request and response objects', () => {
     },
   ];
 
-  reqBodyTestCases.forEach(({ body, headers, expectedTotal }) => {
+  for (const { body, headers, expectedTotal } of reqBodyTestCases) {
     it(`test calculatePayloadSize: ${body.raw}`, () => {
       const reqSize = calculatePayloadSize(new RequestBody(body).toString(), headers);
 
       expect(reqSize.total).toEqual(expectedTotal);
     });
-  });
+  }
 });

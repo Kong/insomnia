@@ -28,7 +28,7 @@ const invalidNames = [
     expectedError:
       'Scoped packages are not permitted in this context. To install scoped packages, please use the Plugin Host instead.',
   },
-  { name: 'foo\\bar', expectedError: 'Plugin name must not contain path traversal characters' },
+  { name: String.raw`foo\bar`, expectedError: 'Plugin name must not contain path traversal characters' },
   { name: 'foo\nbar', expectedError: 'Plugin name must be lowercase, alphanumeric, and dash-separated' },
   { name: '\u0000foo', expectedError: 'Plugin name must be lowercase, alphanumeric, and dash-separated' },
   { name: 'foo🚀bar', expectedError: 'Plugin name must be lowercase, alphanumeric, and dash-separated' },
@@ -40,12 +40,12 @@ const invalidNames = [
   { name: '_plugin', expectedError: 'Plugin name cannot start with an underscore' },
   { name: ' plugin ', expectedError: 'Plugin name cannot contain leading or trailing spaces' },
   { name: 'plugin@name', expectedError: 'Plugin name must be lowercase, alphanumeric, and dash-separated' },
-  { name: '..\\plugin', expectedError: 'Plugin name must not contain path traversal characters' },
+  { name: String.raw`..\plugin`, expectedError: 'Plugin name must not contain path traversal characters' },
   { name: 'plugin..', expectedError: 'Plugin name must not contain path traversal characters' },
   { name: 'plugin..foo', expectedError: 'Plugin name must not contain path traversal characters' },
   { name: 'plugin..foo..bar', expectedError: 'Plugin name must not contain path traversal characters' },
   { name: 'plugin..foo/bar', expectedError: 'Plugin name must not contain path traversal characters' },
-  { name: 'plugin..foo\\bar', expectedError: 'Plugin name must not contain path traversal characters' },
+  { name: String.raw`plugin..foo\bar`, expectedError: 'Plugin name must not contain path traversal characters' },
   { name: 'plugin..foo/bar/baz', expectedError: 'Plugin name must not contain path traversal characters' },
   {
     name: 'insomnia-plugin-demo-example | bash -s 192.168.0.101 4242 |',

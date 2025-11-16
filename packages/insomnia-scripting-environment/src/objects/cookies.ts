@@ -197,11 +197,7 @@ export class CookieObject extends CookieList {
       ? cookieJar.cookies.map((cookie: InsomniaCookie): Cookie => {
           let expires: string | Date | null = null;
           if (cookie.expires || cookie.expires === 0) {
-            if (typeof cookie.expires === 'number') {
-              expires = new Date(cookie.expires);
-            } else {
-              expires = cookie.expires;
-            }
+            expires = typeof cookie.expires === 'number' ? new Date(cookie.expires) : cookie.expires;
           }
 
           return new Cookie({
@@ -248,16 +244,16 @@ export class CookieJar {
     this.jar = new Map();
 
     if (cookies) {
-      cookies.forEach(cookie => {
+      for (const cookie of cookies) {
         const properties = cookie.toJSON();
         if (!properties.domain) {
           getExistingConsole().warn(`domain is not specified for the cookie "${cookie.key}" so it is omitted`);
-          return;
+          continue;
         }
 
         const domainCookies = this.jar.get(properties.domain) || new Map();
         this.jar.set(properties.domain, domainCookies.set(properties.key, cookie));
-      });
+      }
     }
   }
 
@@ -305,23 +301,23 @@ export class CookieJar {
 
   unset(url: string, name: string, cb: (error?: Error | null) => void) {
     const domainCookies = this.jar.get(url);
-    if (!domainCookies) {
-      cb(undefined);
-    } else {
+    if (domainCookies) {
       domainCookies.delete(name);
-      cb(undefined);
+      cb();
+    } else {
+      cb();
     }
   }
 
   clear(url: string, cb: (error?: Error | null) => void) {
     this.jar.delete(url);
-    cb(undefined);
+    cb();
   }
 
   toInsomniaCookieJar() {
     const cookies = new Array<Partial<InsomniaCookie>>();
-    Array.from(this.jar.values()).forEach((domainCookies: Map<string, Cookie>) => {
-      Array.from(domainCookies.values()).forEach(cookie => {
+    for (const domainCookies of Array.from(this.jar.values())) {
+      for (const cookie of Array.from(domainCookies.values())) {
         const cookieObj = cookie.toJSON();
         cookies.push({
           id: cookieObj.id,
@@ -339,8 +335,8 @@ export class CookieJar {
           pathIsDefault: cookieObj.pathIsDefault,
           lastAccessed: cookieObj.lastAccessed,
         });
-      });
-    });
+      }
+    }
 
     return {
       name: this.jarName,

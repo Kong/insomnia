@@ -18,11 +18,11 @@ function convertToTAP(testCases: RequestTestResult[]): string {
   // Add the number of test cases
   tapOutput += `1..${totalTests}\n`;
   // Iterate through each test case and format it in TAP
-  testCases.forEach((test, index) => {
+  for (const [index, test] of testCases.entries()) {
     const testNumber = index + 1;
     const testStatus = test.status === 'passed' ? 'ok' : 'not ok';
     tapOutput += `${testStatus} ${testNumber} - ${test.testCase}\n`;
-  });
+  }
   return tapOutput;
 }
 
@@ -89,7 +89,7 @@ export const logTestResultSummary = (testResultsList: RequestTestResult[][], log
     totalTestCount = 0,
     failedTestCount = 0;
 
-  testResultsList.forEach(testResults => {
+  for (const testResults of testResultsList) {
     const { total, failed } = countTestResults(testResults);
 
     totalTestCount += total;
@@ -97,7 +97,7 @@ export const logTestResultSummary = (testResultsList: RequestTestResult[][], log
     if (failed > 0) {
       failedRequestCount++;
     }
-  });
+  }
 
   const passedTestCount = totalTestCount - failedTestCount;
   const passedRequestCount = totalRequestCount - failedRequestCount;

@@ -55,13 +55,12 @@ export async function lintSpecification({
   if (results.some(r => r.severity === DiagnosticSeverity.Warning)) {
     logger.warn(`${results.filter(r => r.severity === DiagnosticSeverity.Warning).length} lint warnings found. \n`);
   }
-  results.forEach(r =>
-    logger.log(
+  for (const r of results) logger.log(
       `${r.range.start.line + 1}:${r.range.start.character + 1} - ${DiagnosticSeverity[r.severity]} - ${r.code} - ${
         r.message
       } - ${r.path.join('.')}`,
-    ),
-  );
+    )
+  ;
 
   // Fail if errors present
   if (results.some(r => r.severity === DiagnosticSeverity.Error)) {

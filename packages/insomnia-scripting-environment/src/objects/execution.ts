@@ -16,7 +16,7 @@ export class Execution {
       this.location = new Proxy([...location], {
         get: (target, prop, receiver) => {
           if (prop === 'current') {
-            return target.length > 0 ? target[target.length - 1] : '';
+            return target.length > 0 ? target.at(-1) : '';
           }
           return Reflect.get(target, prop, receiver);
         },
@@ -24,7 +24,7 @@ export class Execution {
       this._skipRequest = skipRequest;
       this._nextRequestIdOrName = nextRequestIdOrName;
     } else {
-      throw new Error('Location input must be array of string');
+      throw new TypeError('Location input must be array of string');
     }
   }
 

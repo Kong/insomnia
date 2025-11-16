@@ -91,7 +91,7 @@ function getClassFields(opts: RequestBodyOptions) {
       )
     : undefined;
 
-  let urlencoded = undefined;
+  let urlencoded;
   if (opts.urlencoded != null) {
     if (typeof opts.urlencoded === 'string') {
       const queryParamObj = QueryParam.parse(opts.urlencoded);
@@ -246,17 +246,13 @@ function requestOptionsToClassFields(options: RequestOptions) {
   const method = options.method || 'GET';
 
   let headers: HeaderList<Header>;
-  if (options.header != null) {
-    if (Array.isArray(options.header)) {
-      headers = new HeaderList(undefined, options.header ? options.header.map(header => new Header(header)) : []);
-    } else {
-      headers = new HeaderList(
+  if (options.header == null) {
+    headers = new HeaderList(undefined, new Array<Header>());
+  } else {
+    headers = Array.isArray(options.header) ? new HeaderList(undefined, options.header ? options.header.map(header => new Header(header)) : []) : new HeaderList(
         undefined,
         Object.entries(options.header).map(entry => new Header({ key: entry[0], value: entry[1] })),
       );
-    }
-  } else {
-    headers = new HeaderList(undefined, new Array<Header>());
   }
 
   const body = options.body ? new RequestBody(options.body) : undefined;
@@ -364,9 +360,9 @@ export class Request extends Property {
     }, {});
 
     const headersObj: Record<string, string[] | string> = {};
-    Array.from(headerMap.entries()).forEach(headerEntry => {
+    for (const headerEntry of Array.from(headerMap.entries())) {
       headersObj[headerEntry[0]] = headerEntry[1];
-    });
+    }
 
     return headersObj;
   }
@@ -650,11 +646,11 @@ export function mergeRequestBody(
 
   try {
     const textContent =
-      updatedReqBody?.raw !== undefined
-        ? updatedReqBody?.raw
-        : updatedReqBody?.graphql
+      updatedReqBody?.raw === undefined
+        ? updatedReqBody?.graphql
           ? JSON.stringify(updatedReqBody?.graphql)
-          : undefined;
+          : undefined
+        : updatedReqBody?.raw;
 
     return {
       mimeType: mimeType,

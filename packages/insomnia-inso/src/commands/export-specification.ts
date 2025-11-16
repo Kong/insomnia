@@ -28,13 +28,13 @@ export async function exportSpecification({
   }
 
   const recursiveDeleteKey = (obj: any) => {
-    Object.keys(obj).forEach(key => {
+    for (const key of Object.keys(obj)) {
       if (key.startsWith('x-kong-')) {
         delete obj[key];
       } else if (typeof obj[key] === 'object') {
         recursiveDeleteKey(obj[key]);
       }
-    });
+    }
     return obj;
   };
   return YAML.stringify(recursiveDeleteKey(YAML.parse(specContent)));

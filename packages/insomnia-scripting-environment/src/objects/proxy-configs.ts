@@ -349,7 +349,7 @@ export function transformToSdkProxyOptions(
       const sanitizedProxyUrlOptions = new URL(sanitizedProxy); // it should just work in node and browser
 
       if (sanitizedProxyUrlOptions.port !== '') {
-        proxy.port = parseInt(sanitizedProxyUrlOptions.port, 10);
+        proxy.port = Number.parseInt(sanitizedProxyUrlOptions.port, 10);
       }
 
       proxy.protocol = sanitizedProxyUrlOptions.protocol;

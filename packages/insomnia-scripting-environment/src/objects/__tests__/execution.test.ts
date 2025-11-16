@@ -9,7 +9,7 @@ describe('test execution object', () => {
 
     expect(executionInstance.location).toStrictEqual(['project', 'workspace', 'file', 'requestname']);
     // @ts-expect-error location should have current property by design
-    expect(executionInstance.location.current).toEqual(location[location.length - 1]);
+    expect(executionInstance.location.current).toEqual(location.at(-1));
     expect(executionInstance.toObject()).toEqual({
       location: ['project', 'workspace', 'file', 'requestname'],
       skipRequest: false,

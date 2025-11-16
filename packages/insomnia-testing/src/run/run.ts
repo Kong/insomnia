@@ -1,7 +1,7 @@
 import { unlink, writeFileSync } from 'node:fs';
 import fs from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import path from 'node:path';
 
 import chai from 'chai';
 import type { Reporter, ReporterConstructor } from 'mocha';
@@ -69,13 +69,13 @@ const runInternal = async <TReturn, TNetworkResponse>(
     // Add global `insomnia` helper.
     // This is the only way to add new globals to the Mocha environment as far as I can tell
     // @ts-expect-error -- global hack
-    global.insomnia = new Insomnia(options);
+    globalThis.insomnia = new Insomnia(options);
 
     chai.use(require('chai-json-schema'));
     // @ts-expect-error -- global hack
-    global.chai = chai;
+    globalThis.chai = chai;
     // @ts-expect-error -- global hack
-    global.chaiJSONSchema = require('chai-json-schema');
+    globalThis.chaiJSONSchema = require('chai-json-schema');
 
     const mocha: Mocha = new Mocha({
       //       ms   * sec * min
@@ -87,9 +87,9 @@ const runInternal = async <TReturn, TNetworkResponse>(
     });
 
     const sources = Array.isArray(testSrc) ? testSrc : [testSrc];
-    sources.forEach(source => {
+    for (const source of sources) {
       mocha.addFile(writeTempFile(prependInterceptedRequireToSource(source)));
-    });
+    }
 
     try {
       const runner = mocha.run(() => {
@@ -97,11 +97,11 @@ const runInternal = async <TReturn, TNetworkResponse>(
 
         // Remove global since we don't need it anymore
         // @ts-expect-error -- global hack
-        delete global.insomnia;
+        delete globalThis.insomnia;
         // @ts-expect-error -- global hack
-        delete global.chai;
+        delete globalThis.chai;
         // @ts-expect-error -- global hack
-        delete global.chaiJSONSchema;
+        delete globalThis.chaiJSONSchema;
 
         if (keepFile && mocha.files.length) {
           console.log(`Test files: ${JSON.stringify(mocha.files)}.`);
@@ -109,13 +109,13 @@ const runInternal = async <TReturn, TNetworkResponse>(
         }
 
         // Clean up temp files
-        mocha.files.forEach(file => {
+        for (const file of mocha.files) {
           unlink(file, err => {
             if (err) {
               console.log('Failed to clean up test file', file, err);
             }
           });
-        });
+        }
       });
     } catch (err) {
       reject(err);
@@ -126,12 +126,12 @@ const runInternal = async <TReturn, TNetworkResponse>(
  * Copy test to tmp dir and return the file path
  */
 const writeTempFile = (sourceCode: string) => {
-  const root = join(tmpdir(), 'insomnia-testing');
+  const root = path.join(tmpdir(), 'insomnia-testing');
   fs.mkdirSync(root, { recursive: true });
 
-  const path = join(root, `${crypto.randomUUID()}-test.ts`);
-  writeFileSync(path, sourceCode);
-  return path;
+  const filePath = path.join(root, `${crypto.randomUUID()}-test.ts`);
+  writeFileSync(filePath, sourceCode);
+  return filePath;
 };
 
 type CliOptions<TNetworkResponse> = InsomniaOptions<TNetworkResponse> & {

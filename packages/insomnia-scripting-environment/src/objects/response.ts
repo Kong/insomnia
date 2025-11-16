@@ -111,11 +111,11 @@ export class Response extends Property {
           throw new Error('contentInfo: mime type in header Content-Type is invalid');
         }
         mimeInfo.mimeType = mimeType;
-        directives.forEach(dir => {
+        for (const dir of directives) {
           if (dir.startsWith('charset')) {
             mimeInfo.charset = dir.slice(dir.indexOf('=') + 1);
           }
-        });
+        }
       }
     }
 
@@ -127,13 +127,13 @@ export class Response extends Property {
     const contentDisposition = this.headers.find(header => header.key === 'Content-Disposition');
     if (contentDisposition) {
       const directives = contentDisposition.valueOf().split('; ');
-      directives.forEach(dir => {
+      for (const dir of directives) {
         if (dir.startsWith('filename')) {
           const fileName = (fileInfo.extension = dir.slice(dir.indexOf('=') + 1));
           fileInfo.name = fileName.slice(1, fileName.lastIndexOf('.')); // ignore '"' arounds the file name
-          fileInfo.extension = fileName.slice(fileName.lastIndexOf('.') + 1, fileName.length - 1);
+          fileInfo.extension = fileName.slice(fileName.lastIndexOf('.') + 1, - 1);
         }
-      });
+      }
     }
 
     return {
@@ -198,11 +198,11 @@ export class Response extends Property {
         const resp: Response = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined | string = undefined;
+        let respBody: object | undefined | string;
 
         try {
           respBody = resp.body ? resp.json() : undefined;
-        } catch (e) {
+        } catch {
           respBody = resp.body;
         }
 
@@ -239,10 +239,10 @@ export class Response extends Property {
         const resp = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined | string = undefined;
+        let respBody: object | undefined | string;
         try {
           respBody = resp.body ? resp.json() : undefined;
-        } catch (e) {
+        } catch {
           respBody = resp.body;
         }
 
@@ -290,10 +290,10 @@ export class Response extends Property {
         const resp: Response = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined = undefined;
+        let respBody: object | undefined;
         try {
           respBody = resp.body ? resp.json() : {};
-        } catch (e) {
+        } catch {
           respBody = {};
         }
 
@@ -308,10 +308,10 @@ export class Response extends Property {
         const resp: Response = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined = undefined;
+        let respBody: object | undefined;
         try {
           respBody = resp.body ? resp.json() : {};
-        } catch (e) {
+        } catch {
           respBody = {};
         }
 
@@ -394,7 +394,7 @@ export async function readBodyFromPath(
   } else if (!response.bodyPath) {
     return '';
   }
-  const nodejsReadCurlResponse = process.type === 'renderer' ? window.bridge.readCurlResponse : readCurlResponse;
+  const nodejsReadCurlResponse = process.type === 'renderer' ? globalThis.bridge.readCurlResponse : readCurlResponse;
   const readResponseResult = await nodejsReadCurlResponse({
     bodyPath: response.bodyPath,
     bodyCompression: response.bodyCompression,

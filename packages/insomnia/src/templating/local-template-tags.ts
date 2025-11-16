@@ -73,8 +73,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           }
         }
         const binary = atob(text);
-        const bytes = new Uint8Array([...binary].map(char => char.charCodeAt(0)));
-
+        const bytes = Uint8Array.from(binary, (c: string) => c.codePointAt(0) ?? 0);
         if (kind === 'hex') {
           return [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('');
         }

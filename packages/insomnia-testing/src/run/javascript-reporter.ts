@@ -15,8 +15,6 @@ export class JavaScriptReporter extends reporters.Base {
     super(runner, options);
 
     Mocha.reporters.Base.call(this, runner, options);
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const self = this;
     const tests: Test[] = [];
     const pending: Test[] = [];
     const failures: Test[] = [];
@@ -40,7 +38,7 @@ export class JavaScriptReporter extends reporters.Base {
 
     runner.once(Mocha.Runner.constants.EVENT_RUN_END, () => {
       runner.testResults = {
-        stats: self.stats,
+        stats: this.stats,
         tests: tests.map(clean),
         pending: pending.map(clean),
         failures: failures.map(clean),
