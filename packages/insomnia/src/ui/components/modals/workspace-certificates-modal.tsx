@@ -327,6 +327,10 @@ export const CACertificate = ({ caCertificate, tip }: { caCertificate?: CaCertif
   return (
     <>
       <Heading className="text-xl">CA Certificate</Heading>
+      <p className="max-w-[80ch] text-sm text-[--hl]">
+        {tip ||
+          'One or more PEM format certificates in a single file to pass to curl. Overrides the root CA certificate. On MacOS please upload your local Keychain certificates here.'}
+      </p>
       <div className="flex flex-col gap-2">
         {caCertificate ? (
           <div className="flex items-center justify-between gap-2 rounded-sm border border-solid border-[--hl-sm] p-4">
@@ -399,11 +403,6 @@ export const CACertificate = ({ caCertificate, tip }: { caCertificate?: CaCertif
             </FileTrigger>
           </div>
         )}
-        <p className="max-w-[80ch] text-sm italic text-[--hl]">
-          <Icon icon="info-circle" className="pr-2" />
-          {tip ||
-            'One or more PEM format certificates in a single file to pass to curl. Overrides the root CA certificate. On MacOS please upload your local Keychain certificates here.'}
-        </p>
       </div>
     </>
   );

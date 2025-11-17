@@ -53,18 +53,18 @@ export const MCPCertificatesModal = ({ onClose }: { onClose: () => void }) => {
               <div className="flex w-full flex-1 basis-96 select-none flex-col gap-6 overflow-hidden overflow-y-auto rounded">
                 <CACertificate caCertificate={caCertificate} />
 
-                <div className="flex flex-col gap-4 px-2 pb-4">
+                <div className="flex flex-col gap-4">
                   <Heading className="text-xl">Extra Options</Heading>
                   <div className="flex items-center justify-between gap-2">
-                    <span>Disable SSL Certificate Validation</span>
+                    <span>SSL Certificate Validation</span>
                     <ToggleButton
                       data-test-id="mcp-reject-unauthorized-toggle"
                       onChange={isSelected => {
                         patchRequest(activeRequest._id, {
-                          disableSslValidation: isSelected,
+                          sslValidation: isSelected,
                         });
                       }}
-                      isSelected={activeRequest.disableSslValidation}
+                      isSelected={activeRequest.sslValidation}
                       className="flex h-full w-[12ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
                     >
                       {({ isSelected }) => (
@@ -79,11 +79,10 @@ export const MCPCertificatesModal = ({ onClose }: { onClose: () => void }) => {
                     </ToggleButton>
                   </div>
 
-                  <p className="max-w-[80ch] text-sm italic text-[--hl]">
-                    <Icon icon="info-circle" className="pr-2" />
-                    When enabled, we will not validate SSL/TLS certificates. This allows connecting to servers with
-                    self-signed, expired, or otherwise invalid certificates. Please use only for isolated, trusted local
-                    development environments.
+                  <p className="max-w-[80ch] text-sm text-[--hl]">
+                    When disabled, SSL/TLS certificates will not be validated. Disabling this allows connecting to
+                    servers with self-signed, expired, or invalid certificates. It is recommended that you only disable
+                    this when using trusted local development environments.
                   </p>
                 </div>
               </div>

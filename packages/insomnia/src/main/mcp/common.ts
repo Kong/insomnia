@@ -315,7 +315,7 @@ export const getFetchDispatcher = async (requestId: string) => {
       ...(workspaceCaCert?.path && !workspaceCaCert?.disabled
         ? { ca: await insecureReadFile(workspaceCaCert.path) }
         : {}),
-      ...(mcpRequest.disableSslValidation === true ? { rejectUnauthorized: false } : {}),
+      ...(mcpRequest.sslValidation === false ? { rejectUnauthorized: false } : {}),
     },
   });
 };

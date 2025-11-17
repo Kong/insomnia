@@ -366,7 +366,7 @@ export const McpPane = () => {
   }, [activeResponse?._id, readyState]);
 
   const caStatus =
-    activeRequest.disableSslValidation === true
+    activeRequest.sslValidation === false
       ? 'warning'
       : caCertificate?.path && !caCertificate.disabled
         ? 'success'
