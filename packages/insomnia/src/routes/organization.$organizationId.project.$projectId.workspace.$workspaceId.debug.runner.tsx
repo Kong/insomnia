@@ -54,7 +54,7 @@ import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
 import { moveAfter, moveBefore } from '~/utils';
 import { invariant } from '~/utils/invariant';
 
-import { type RequestContext } from '../../../insomnia-scripting-environment/src/objects';
+import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 
 const inputStyle =
@@ -64,7 +64,7 @@ const iterationInputStyle =
 
 // TODO: improve the performance for a lot of logs
 async function aggregateAllTimelines(errorMsg: string | null, testResult: RunnerTestResult) {
-  let timelines = new Array<ResponseTimelineEntry>();
+  let timelines: ResponseTimelineEntry[] = [];
   const responsesInfo = testResult.responsesInfo;
 
   for (const respInfo of responsesInfo) {
@@ -135,7 +135,7 @@ const defaultAdvancedConfig = {
   keepLog: true,
 };
 
-export const Runner: FC<{}> = () => {
+export const Runner: FC = () => {
   const [searchParams] = useSearchParams();
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
 
@@ -952,7 +952,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       while (j < requests.length) {
         // TODO: we might find a better way to do runner cancellation
         if (getExecution(runnerId) === undefined) {
-          throw 'Runner has been stopped';
+          throw new Error('Runner has been stopped');
         }
 
         const targetRequest = requests[j];
@@ -1086,10 +1086,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     window.main.completeExecutionStep({ requestId: runnerId });
   } catch (e) {
     // the error could be from third party
-    const errMsg = e.error || e;
-    updateExecution(runnerId, {
-      error: errMsg,
-    });
+    const errMsg = e.message || e.error || e;
+    updateExecution(runnerId, { error: errMsg });
     return null;
   } finally {
     cancelExecution(runnerId);
