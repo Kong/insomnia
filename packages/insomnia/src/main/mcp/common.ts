@@ -139,7 +139,9 @@ export const writeEventLogAndNotify = (
       const isUnsupportedMethod = eventMethod.startsWith(unsupportedMethodPrefix);
       const isErrorRequest = 'error' in data && data.error;
       const isServerRequest =
-        eventMethod === METHOD_ELICITATION_CREATE_MESSAGE || eventMethod === METHOD_SAMPLING_CREATE_MESSAGE;
+        eventMethod === METHOD_ELICITATION_CREATE_MESSAGE ||
+        eventMethod === METHOD_SAMPLING_CREATE_MESSAGE ||
+        eventMethod === METHOD_LIST_ROOTS;
       if (eventMethod === METHOD_NOTIFICATION_CANCELLED) {
         // find the cancelled notification message indicates cancellation of the request
         removePendingEvent(e => e.jsonRPCId === (data as CancelledNotification).params.requestId);
