@@ -9,20 +9,23 @@ import type { Route } from './+types/ai.generate-commit-messages';
 interface RequestData {
   messages: MultiTurnMessage[];
   maxTokens: number;
+  requestId: string;
+  serverRequestId: string;
   temperature?: number;
   systemPrompt?: string;
 }
 
 export async function clientAction(args: Route.ClientActionArgs) {
-  const { messages, maxTokens, temperature, systemPrompt } = (await args.request.json()) as RequestData;
+  const { messages, maxTokens, temperature, systemPrompt, requestId, serverRequestId } =
+    (await args.request.json()) as RequestData;
 
   try {
-    const isFeatureEnabled = await window.main.llm.getAIFeatureEnabled('aiCommitMessages');
+    const isFeatureEnabled = await window.main.llm.getAIFeatureEnabled('aiMcpClient');
     const hasActiveLLM = (await window.main.llm.getCurrentConfig()) !== null;
 
     if (!isFeatureEnabled || !hasActiveLLM) {
       return {
-        error: 'Enable MCP integration with AI in Insomnia Preferences → AI Settings to use this feature.',
+        error: 'Enable MCP LLM integration with AI in Insomnia Preferences → AI Settings to use this feature.',
       };
     }
 
@@ -46,6 +49,21 @@ export async function clientAction(args: Route.ClientActionArgs) {
         error: `The AI service returned invalid data. Please try again. ${error}`,
       };
     }
+
+    // Response sampling request with AI-generated response
+    window.main.mcp.client.responseSamplingRequest({
+      requestId,
+      serverRequestId,
+      type: 'approve',
+      result: {
+        content: {
+          type: 'text',
+          text: response.content,
+        },
+        model: response.modelConfig.model,
+        role: 'assistant',
+      },
+    });
 
     return { response };
   } catch (err) {

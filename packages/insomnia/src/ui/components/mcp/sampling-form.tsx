@@ -57,28 +57,6 @@ export const SamplingForm = ({ requestId, serverRequestId, samplingData }: Sampl
   const generateSamplingResponseFetcher = useAIGenerateActionFetcher();
   const isGenerating = generateSamplingResponseFetcher.state !== 'idle';
 
-  useEffect(() => {
-    if (
-      generateSamplingResponseFetcher.state !== 'idle' &&
-      generateSamplingResponseFetcher.data &&
-      generateSamplingResponseFetcher.data.response
-    ) {
-      // Response sampling request with AI-generated response
-      window.main.mcp.client.responseSamplingRequest({
-        requestId,
-        serverRequestId,
-        type: 'approve',
-        result: {
-          content: {
-            type: 'text',
-            text: generateSamplingResponseFetcher.data.response.content,
-          },
-          model: generateSamplingResponseFetcher.data.response.modelConfig.model,
-          role: 'assistant',
-        },
-      });
-    }
-  }, [generateSamplingResponseFetcher, requestId, serverRequestId]);
   return (
     <div className="flex flex-grow flex-col overflow-hidden">
       <div className="h-[calc(100%-var(--line-height-sm))] overflow-auto bg-inherit px-5 py-1">
@@ -114,6 +92,8 @@ export const SamplingForm = ({ requestId, serverRequestId, samplingData }: Sampl
                 systemPrompt,
                 maxTokens,
                 temperature,
+                requestId,
+                serverRequestId,
               });
             }}
             className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
