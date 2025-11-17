@@ -24,6 +24,7 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '~/network/network';
+import { RenderError } from '~/templating/render-error';
 import { parseGraphQLReqeustBody } from '~/utils/graph-ql';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -139,36 +140,40 @@ export const sendActionImplementation = async (options: {
     iterationCount,
     runtime,
   );
+
   if ('error' in mutatedContext) {
-    const responseId = requestData.responseId;
-    const responsePatch = {
-      _id: responseId,
-      parentId: requestId,
-      environmentId: requestData.environment._id,
+    return await handleSendActionFailure({
+      responsePatch: {
+        _id: requestData.responseId,
+        parentId: requestId,
+        environmentId: requestData.environment._id,
+        statusMessage: 'Error',
+        error: mutatedContext.error,
+        elapsedTime: 0,
+      },
+      requestData,
+      requestMeta,
       statusMessage: 'Error',
       error: mutatedContext.error,
-    };
-    // create and update response to activeResponse
-    await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
-    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: responseId });
-    window.main.completeExecutionStep({ requestId });
-    return mutatedContext;
+    });
   }
+
   if (mutatedContext.execution?.skipRequest) {
     // cancel request running if skipRequest in pre-request script
-    const responseId = requestData.responseId;
-    const responsePatch = {
-      _id: responseId,
-      parentId: requestId,
-      environmentId: requestData.environment._id,
+    return await handleSendActionFailure({
+      responsePatch: {
+        _id: requestData.responseId,
+        parentId: requestId,
+        environmentId: requestData.environment._id,
+        statusMessage: 'Cancelled',
+        error: 'Request was cancelled by pre-request script',
+        elapsedTime: 0,
+      },
+      requestData,
+      requestMeta,
       statusMessage: 'Cancelled',
       error: 'Request was cancelled by pre-request script',
-    };
-    // create and update response to activeResponse
-    await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
-    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: responseId });
-    window.main.completeExecutionStep({ requestId });
-    return mutatedContext;
+    });
   }
 
   window.main.completeExecutionStep({ requestId });
@@ -212,19 +217,19 @@ export const sendActionImplementation = async (options: {
   window.main.completeExecutionStep({ requestId });
 
   if ('error' in response) {
-    const responseId = requestData.responseId;
-    const responsePatch = {
-      _id: responseId,
-      parentId: requestId,
-      environmentId: requestData.environment._id,
+    const responsePatch = await responseTransform(
+      response,
+      requestData.activeEnvironmentId,
+      renderedRequest,
+      renderedResult.context,
+    );
+    return await handleSendActionFailure({
+      responsePatch: { _id: response._id, ...responsePatch },
+      requestData,
+      requestMeta,
       statusMessage: 'Error',
       error: response.error,
-    };
-    // create and update response to activeResponse
-    await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
-    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: responseId });
-    window.main.completeExecutionStep({ requestId });
-    return mutatedContext;
+    });
   }
 
   const baseResponsePatch = await responseTransform(
@@ -251,20 +256,21 @@ export const sendActionImplementation = async (options: {
     iterationCount,
     runtime,
   });
+
   if ('error' in postMutatedContext) {
-    const responseId = requestData.responseId;
-    const responsePatch = {
-      _id: responseId,
-      parentId: requestId,
-      environmentId: requestData.environment._id,
+    const responsePatch = await responseTransform(
+      response,
+      requestData.activeEnvironmentId,
+      renderedRequest,
+      renderedResult.context,
+    );
+    return await handleSendActionFailure({
+      responsePatch: { _id: response._id, ...responsePatch },
+      requestData,
+      requestMeta,
       statusMessage: 'Error',
       error: postMutatedContext.error,
-    };
-    // create and update response to activeResponse
-    await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
-    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: responseId });
-    window.main.completeExecutionStep({ requestId });
-    return mutatedContext;
+    });
   }
 
   window.main.completeExecutionStep({ requestId });
@@ -324,6 +330,44 @@ export const sendActionImplementation = async (options: {
   return writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
 };
 
+const handleSendActionFailure = async ({
+  responsePatch,
+  requestData,
+  requestMeta,
+  statusMessage,
+  error,
+}: {
+  responsePatch?: ResponsePatch & { _id: string; elapsedTime?: number };
+  requestData: Awaited<ReturnType<typeof fetchRequestData>>;
+  requestMeta?: RequestMeta;
+  statusMessage?: string;
+  error?: Error | RenderError | string;
+}) => {
+  console.log('[request] Failed to send request', error, responsePatch, requestMeta);
+
+  const url = new URL(window.location.href);
+  if (responsePatch && requestMeta && responsePatch._id) {
+    if (!error) {
+      responsePatch.error = error;
+      responsePatch.statusMessage = statusMessage || 'Error';
+      responsePatch.statusCode = 0;
+    }
+    const existingResponse = await models.response.getById(responsePatch._id);
+    const updatedResponse =
+      existingResponse || (await models.response.create(responsePatch, requestData.settings.maxHistoryResponses));
+    await models.requestMeta.update(requestMeta, { activeResponseId: updatedResponse._id });
+  } else {
+    url.searchParams.set('error', error instanceof Error ? error.message : error?.toString() || 'Unknown error');
+    if (error instanceof RenderError && error?.extraInfo && error?.extraInfo?.subType === 'environmentVariable') {
+      url.searchParams.set('envVariableMissing', '1');
+      url.searchParams.set('undefinedEnvironmentVariables', error?.extraInfo?.undefinedEnvironmentVariables.join(','));
+    }
+  }
+
+  window.main.completeExecutionStep({ requestId: requestData.request._id });
+  return redirect(`${url.pathname}?${url.searchParams}`);
+};
+
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { requestId } = params;
   const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = (await request.json()) as SendActionParams;
@@ -335,6 +379,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       ignoreUndefinedEnvVariable,
     });
   } catch (error) {
+    // NOTE: this handling has been mostly superseded by the new handleSendActionFailure function
+    // it is kept here for potentially unhandled cases that still match the original logic
     const err = error as unknown as {
       error: any;
       response?: ResponsePatch & { _id: string };
