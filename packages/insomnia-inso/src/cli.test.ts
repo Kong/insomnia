@@ -47,6 +47,8 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-smoke-test/fixtures/simple.yaml -e production --requestNamePattern "example http" wrk_dc393c',
   // after-response script and test
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/after-response.yml wrk_616795 --verbose',
+  // transient variables
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/transient-variables.yml wrk_3d6697b --verbose',
   // select request by id
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/three-requests.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -i req_6063adcdab5b409e9b4f00f47322df4a wrk_c992d40',
   // setNextRequest runs the next request then ends

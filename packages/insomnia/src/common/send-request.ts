@@ -89,6 +89,7 @@ export async function getSendRequestCallbackMemDb(
       environment: mutatedContext.environment,
       purpose: 'send',
       extraInfo: undefined,
+      transientVariables: mutatedContext.transientVariables || transientVariables,
       baseEnvironment: mutatedContext.baseEnvironment,
       userUploadEnvironment: mutatedContext.userUploadEnvironment,
       ignoreUndefinedEnvVariable,
