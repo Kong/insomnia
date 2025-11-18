@@ -501,9 +501,7 @@ export function registerMainHandlers() {
       if (!modelConfig) {
         reject(new Error('No LLM model configured'));
       }
-      const process = utilityProcess.fork(path.join(__dirname, 'main/mcp-generate-sampling-response.mjs'), [], {
-        // execArgv: ['--inspect-brk=9229'],
-      });
+      const process = utilityProcess.fork(path.join(__dirname, 'main/mcp-generate-sampling-response.mjs'));
 
       process.on('exit', code => {
         console.log('[git-commit-generation-process] exited with code:', code);
