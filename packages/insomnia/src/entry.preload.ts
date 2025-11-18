@@ -6,6 +6,7 @@ import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
 import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
+import type { AIFeatureNames } from './main/llm-config-service';
 import type { CurlBridgeAPI } from './main/network/curl';
 import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
@@ -158,9 +159,8 @@ const llm: LLMConfigServiceAPI = {
     ipcRenderer.invoke('llm.updateBackendConfig', backend, config),
   getAllConfigurations: () => ipcRenderer.invoke('llm.getAllConfigurations'),
   getCurrentConfig: () => ipcRenderer.invoke('llm.getCurrentConfig'),
-  getAIFeatureEnabled: (feature: 'aiMockServers' | 'aiCommitMessages') =>
-    ipcRenderer.invoke('llm.getAIFeatureEnabled', feature),
-  setAIFeatureEnabled: (feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean) =>
+  getAIFeatureEnabled: (feature: AIFeatureNames) => ipcRenderer.invoke('llm.getAIFeatureEnabled', feature),
+  setAIFeatureEnabled: (feature: AIFeatureNames, enabled: boolean) =>
     ipcRenderer.invoke('llm.setAIFeatureEnabled', feature, enabled),
 };
 
