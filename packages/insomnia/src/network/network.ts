@@ -489,7 +489,6 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     request,
     environment,
     timelinePath,
-    responseId,
     baseEnvironment,
     clientCertificates,
     cookieJar,

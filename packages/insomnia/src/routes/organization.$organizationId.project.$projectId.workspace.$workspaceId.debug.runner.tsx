@@ -54,7 +54,6 @@ import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
 import { moveAfter, moveBefore } from '~/utils';
 import { invariant } from '~/utils/invariant';
 
-import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 
 const inputStyle =
