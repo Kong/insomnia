@@ -21,7 +21,6 @@ import * as plugins from '../../../plugins';
 import * as pluginStore from '../../../plugins/context/store';
 import * as templating from '../../../templating';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../../../templating/types';
-import { sanitizeStrForWin32 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -113,7 +112,7 @@ export const TagEditor: FC<Props> = props => {
     // Fix strings: arg.value expects an escaped value (based on updateArg logic)
     for (const arg of activeTagData.args) {
       if (typeof arg.value === 'string') {
-        arg.value = sanitizeStrForWin32(arg.value);
+        arg.value = arg.value.replace(/\\/g, '\\\\');
       }
     }
     await Promise.all([refreshModels(), update(tagDefinitions, activeTagDefinition, activeTagData, true)]);
@@ -143,7 +142,7 @@ export const TagEditor: FC<Props> = props => {
     }
     // Fix strings
     if (typeof argValue === 'string') {
-      argValue = sanitizeStrForWin32(argValue);
+      argValue = argValue.replace(/\\/g, '\\\\');
     }
     // Ensure all arguments exist
     const defaultArgs = templateUtils.tokenizeTag(
@@ -351,7 +350,7 @@ export const TagEditor: FC<Props> = props => {
             if (needToRenderSubForm) {
               argInput = (
                 <ArgConfigSubForm
-                  configValue={sanitizeStrForWin32(strValue)}
+                  configValue={strValue.replace(/\\\\/g, '\\') || ''}
                   onChange={(newConfigValue: string) => updateArg(newConfigValue, index)}
                   activeTagData={activeTagData}
                   activeTagDefinition={activeTagDefinition}
@@ -363,7 +362,7 @@ export const TagEditor: FC<Props> = props => {
               argInput = (
                 <input
                   type="text"
-                  defaultValue={sanitizeStrForWin32(strValue)}
+                  defaultValue={strValue.replace(/\\\\/g, '\\') || ''}
                   placeholder={placeholder}
                   onChange={handleChange}
                   data-encoding={encoding}
@@ -392,7 +391,7 @@ export const TagEditor: FC<Props> = props => {
                 showFileName
                 className="btn btn--clicky btn--super-compact"
                 onChange={path => updateArg(path, index)}
-                path={sanitizeStrForWin32(strValue)}
+                path={strValue.replace(/\\\\/g, '\\')}
                 itemtypes={argDefinition.itemTypes}
                 extensions={argDefinition.extensions}
               />
