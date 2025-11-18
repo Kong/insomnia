@@ -951,6 +951,7 @@ export async function sendCurlAndWriteTimeline(
   };
 }
 
+// Apply plugins to response
 export const responseTransform = async (
   patch: ResponsePatch,
   environmentId: string | null,
