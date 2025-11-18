@@ -1001,7 +1001,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
           await new Promise(resolve => setTimeout(resolve, delay));
 
-          const mutatedContext = (await sendActionImplementation({
+          const execution = await sendActionImplementation({
             requestId: targetRequest.id,
             iteration: i + 1,
             iterationCount,
@@ -1011,9 +1011,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             testResultCollector: resultCollector,
             runtime,
             transientVariables: testCtx.transientVariables,
-          })) as RequestContext | null;
-          if (mutatedContext?.execution?.nextRequestIdOrName) {
-            nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
+          });
+          if (execution?.nextRequestIdOrName) {
+            nextRequestIdOrName = execution.nextRequestIdOrName || '';
           }
 
           const requestResults: RunnerResultPerRequest = {

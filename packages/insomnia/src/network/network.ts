@@ -663,7 +663,6 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       timelinePath,
       serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
     );
-
     // stack trace is ignored as it is always from preload
     const errMessage = err.message ? err.message : err;
     return { error: errMessage };

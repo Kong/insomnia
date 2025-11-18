@@ -108,7 +108,7 @@ export const sendActionImplementation = async (options: {
   userUploadEnvironment?: UserUploadEnvironment;
   transientVariables?: Environment;
   runtime?: SendActionRuntime;
-}) => {
+}): Promise<{ nextRequestIdOrName: string | undefined } | undefined> => {
   const {
     requestId,
     userUploadEnvironment,
@@ -153,12 +153,13 @@ export const sendActionImplementation = async (options: {
         environmentId: requestData.environment._id,
         statusMessage: 'Error',
         error: mutatedContext.error,
+        timelinePath: requestData.timelinePath,
       },
       requestData.settings.maxHistoryResponses,
     );
     await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
-    return mutatedContext;
+    return;
   }
 
   if (mutatedContext.execution?.skipRequest) {
@@ -172,12 +173,13 @@ export const sendActionImplementation = async (options: {
         environmentId: requestData.environment._id,
         statusMessage: 'Cancelled',
         error: 'Request was cancelled by pre-request script',
+        timelinePath: requestData.timelinePath,
       },
       requestData.settings.maxHistoryResponses,
     );
     await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
-    return mutatedContext;
+    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
 
   window.main.completeExecutionStep({ requestId });
@@ -226,12 +228,13 @@ export const sendActionImplementation = async (options: {
         environmentId: requestData.environment._id,
         statusMessage: 'Error',
         error: response.error,
+        timelinePath: requestData.timelinePath,
       },
       requestData.settings.maxHistoryResponses,
     );
     await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
-    return redirect(window.location.href);
+    return;
   }
 
   const baseResponsePatch = await responseTransform(
@@ -267,12 +270,13 @@ export const sendActionImplementation = async (options: {
         environmentId: requestData.environment._id,
         statusMessage: 'Error',
         error: postMutatedContext.error,
+        timelinePath: requestData.timelinePath,
       },
       requestData.settings.maxHistoryResponses,
     );
     await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
-    return redirect(window.location.href);
+    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
 
   window.main.completeExecutionStep({ requestId });
@@ -303,7 +307,7 @@ export const sendActionImplementation = async (options: {
   if (!shouldWriteToFile) {
     const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
     await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-    return postMutatedContext;
+    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
 
   if (requestMeta.downloadPath) {
@@ -311,12 +315,13 @@ export const sendActionImplementation = async (options: {
     const name = header
       ? contentDisposition.parse(header.value).parameters.filename
       : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${(responsePatch.contentType && mimeExtension(responsePatch.contentType)) || 'unknown'}`;
-    return writeToDownloadPath(
+    writeToDownloadPath(
       path.join(requestMeta.downloadPath, name),
       responsePatch,
       requestMeta,
       requestData.settings.maxHistoryResponses,
     );
+    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
   const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
   const { filePath } = await window.dialog.showSaveDialog({
@@ -326,10 +331,11 @@ export const sendActionImplementation = async (options: {
     ...(defaultPath ? { defaultPath } : {}),
   });
   if (!filePath) {
-    return null;
+    return;
   }
   window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-  return writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
+  writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
+  return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
 };
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
@@ -337,11 +343,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = (await request.json()) as SendActionParams;
 
   try {
-    return await sendActionImplementation({
+    await sendActionImplementation({
       requestId,
       shouldPromptForPathAfterResponse,
       ignoreUndefinedEnvVariable,
     });
+    return null;
   } catch (error) {
     console.error('[request] Failed to send request', error);
     // TODO: consider if interpolation errors should be handled in the send request catch block
