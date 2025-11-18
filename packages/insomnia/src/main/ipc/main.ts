@@ -31,8 +31,8 @@ import {
   authorizeUserInDefaultBrowser,
   cancelAuthorizationInDefaultBrowser,
   onDefaultBrowserOAuthRedirect,
-} from '../authorizeUserInDefaultBrowser';
-import { authorizeUserInWindow } from '../authorizeUserInWindow';
+} from '../authorize-user-in-default-browser';
+import { authorizeUserInWindow } from '../authorize-user-in-window';
 import { backup, restoreBackup } from '../backup';
 import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';

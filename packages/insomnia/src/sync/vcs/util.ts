@@ -5,7 +5,7 @@ import clone from 'clone';
 import { strings } from '../../common/strings';
 import type { BaseModel } from '../../models';
 import { deleteKeys, resetKeys, shouldIgnoreKey } from '../ignore-keys';
-import { deterministicStringify } from '../lib/deterministicStringify';
+import { deterministicStringify } from '../lib/deterministic-stringify';
 import type {
   Branch,
   Compare,

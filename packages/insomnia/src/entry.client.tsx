@@ -1,4 +1,4 @@
-import './ui/rendererListeners';
+import './ui/renderer-listeners';
 import './ui/log';
 
 import { startTransition, StrictMode } from 'react';

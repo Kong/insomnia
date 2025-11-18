@@ -39,7 +39,7 @@ import { ednPrettify } from '~/utils/prettify/edn';
 import { jsonPrettify } from '~/utils/prettify/json';
 import { queryXPath } from '~/utils/xpath/query';
 
-import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
+import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
 
