@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 
 import {
   type CancelledNotification,
@@ -7,6 +8,7 @@ import {
   JSONRPCErrorSchema,
   ListRootsResultSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import electron from 'electron';
 import { BrowserWindow } from 'electron';
 import { Agent } from 'undici';
 import { v4 as uuidV4 } from 'uuid';
@@ -20,6 +22,7 @@ import {
   METHOD_UNKNOWN,
   unsupportedMethodPrefix,
 } from '~/common/mcp-utils';
+import { generateId } from '~/common/misc';
 import type {
   CommonMcpOptions,
   McpClient,
@@ -29,9 +32,11 @@ import type {
   McpNotificationEvent,
   McpReadyState,
   McpRequestEventWithoutBase,
+  OpenMcpClientConnectionOptions,
 } from '~/main/mcp/types';
 import { insecureReadFile } from '~/main/secure-read-file';
 import * as models from '~/models';
+import { prefix as mcpResponsePrefix } from '~/models/mcp-response';
 import { invariant } from '~/utils/invariant';
 
 interface ConnectingState {
@@ -44,63 +49,197 @@ interface ConnectedState {
 }
 interface DisconnectedState {
   status: 'disconnected';
+  client: null;
 }
 
 export const protocol = 'mcp';
-export const mcpConnections = new Map<string, ConnectingState | ConnectedState>();
-export const eventLogFileStreams = new Map<string, fs.WriteStream>();
-export const timelineFileStreams = new Map<string, fs.WriteStream>();
-export const requestIdToResponseIdMap = new Map<string, string>();
-export const pendingMcpRequestEventIds = new Map<
-  string,
-  { jsonRPCId: string; eventId: string; direction: McpEventDirection }[]
->();
-// map to save server elicitation requests
-export const mcpServerElicitationRequests = new Map<
-  string,
-  Map<string | number, { resolve: (value: ElicitResult) => void; reject: (reason?: any) => void }>
->();
-// map to save abort controllers for each MCP request
-export const mcpRequestAbortControllers = new Map<string, Map<string, AbortController>>();
+
+// Used to represent a connection context that is not yet ready
+export interface NotReadyConnectionContext {
+  abortController: AbortController;
+}
+
+/**
+ * Connection Context - Encapsulates all state for a single MCP connection
+ * This ensures connections don't interfere with each other
+ */
+export type ConnectionContext = {
+  // Unique identifier for this connection attempt
+  connectionId: string;
+  requestId: string;
+  workspaceId: string;
+  // Response and file paths - unique to this connection
+  responseId: string;
+  eventLogPath: string;
+  timelinePath: string;
+  // File streams - owned by this connection
+  eventLogStream: fs.WriteStream;
+  timelineStream: fs.WriteStream;
+  pendingEventIds: { jsonRPCId: string; eventId: string; direction: McpEventDirection }[];
+  mcpServerElicitationRequests: Map<
+    string | number,
+    { resolve: (value: ElicitResult) => void; reject: (reason?: any) => void }
+  >;
+  mcpRequestAbortControllers: Map<string, AbortController>;
+  // Abort controller for this specific connection
+  abortController: AbortController;
+  // Environment context
+  environmentId: string | null;
+  // Connection options
+  options: OpenMcpClientConnectionOptions;
+} & (ConnectedState | ConnectingState | DisconnectedState);
+
+export const activeConnectionContexts = new Map<string, ConnectionContext | NotReadyConnectionContext>();
+
+export const isContextReady = (
+  context?: ConnectionContext | NotReadyConnectionContext,
+): context is ConnectionContext => {
+  return !!context && 'connectionId' in context;
+};
+
+/**
+ * Create a new connection context with all isolated state
+ */
+export const createConnectionContext = async (
+  options: OpenMcpClientConnectionOptions,
+  abortController: AbortController,
+): Promise<ConnectionContext> => {
+  const { requestId, workspaceId } = options;
+  const connectionId = uuidV4();
+
+  console.debug('[debug] Create MCP connection context: ', requestId, connectionId);
+  // Create response model and file streams
+  const responseId = generateId(mcpResponsePrefix);
+  const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
+  const eventLogPath = path.join(responsesDir, uuidV4() + '.response');
+  const timelinePath = path.join(responsesDir, responseId + '.timeline');
+
+  const eventLogStream = fs.createWriteStream(eventLogPath);
+  const timelineStream = fs.createWriteStream(timelinePath);
+
+  const pendingEventIds: { jsonRPCId: string; eventId: string; direction: McpEventDirection }[] = [];
+  const mcpServerElicitationRequests = new Map();
+
+  const mcpRequestAbortControllers = new Map();
+
+  // Get environment
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(workspaceId));
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
+  const environmentId = environment ? environment._id : null;
+
+  // Create MCP payload model if not exists
+  await models.mcpPayload.getOrCreateByParentIdAndUrl(requestId, options.url);
+
+  const context: ConnectionContext = {
+    connectionId,
+    requestId,
+    workspaceId,
+    responseId,
+    eventLogPath,
+    timelinePath,
+    eventLogStream,
+    timelineStream,
+    pendingEventIds,
+    abortController,
+    environmentId,
+    mcpServerElicitationRequests,
+    mcpRequestAbortControllers,
+    options,
+    status: 'connecting',
+    client: null,
+  };
+
+  return context;
+};
+
+export const clearConnectionContext = async (context: ConnectionContext) => {
+  const { eventLogStream, timelineStream } = context;
+  if (!eventLogStream.writableFinished) {
+    await new Promise<void>(resolve => eventLogStream.on('finish', () => resolve()));
+  }
+  eventLogStream.end();
+  if (!timelineStream.writableFinished) {
+    await new Promise<void>(resolve => timelineStream.on('finish', () => resolve()));
+  }
+  timelineStream.end();
+  console.debug('[debug] Cleaned up MCP connection context: ', context.requestId, context.connectionId);
+  // notify renderer process about state change
+  updateMcpConnectionState(context, 'disconnected');
+};
 
 const mcpEventIdGenerator = () => `mcp-${uuidV4()}`;
-export const getMcpStateChannel = (requestId: string) =>
-  `${protocol}.${requestId}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
+const getMcpStateChannel = (requestId: string) => `${protocol}.${requestId}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
-export const getMcpClient = (id: string) => {
-  const mcpConnection = mcpConnections.get(id);
-  invariant(
-    mcpConnection,
-    `No existing MCP client connection found for requestId: ${id}. It might have been disconnected.`,
-  );
-  return mcpConnection.client;
+export const getReadyActiveMcpConnectionContext = (requestId: string) => {
+  const context = activeConnectionContexts.get(requestId);
+  if (isContextReady(context)) {
+    return context;
+  }
+  return null;
+};
+
+export const isActiveConnectionContext = (context: ConnectionContext) => {
+  const activeContext = getReadyActiveMcpConnectionContext(context.requestId);
+  return activeContext?.connectionId === context.connectionId;
+};
+
+export const getActiveMcpClient = (requestId: string): McpClient | null => {
+  const activeContext = getReadyActiveMcpConnectionContext(requestId);
+  return activeContext?.client || null;
 };
 
 export function updateMcpConnectionState(
-  requestId: string,
-  state: ConnectingState | ConnectedState | DisconnectedState,
+  context: ConnectionContext,
+  status: McpReadyState,
+  mcpClient: McpClient | null = null,
 ) {
-  if (state.status === 'disconnected') {
-    mcpConnections.delete(requestId);
-  } else {
-    mcpConnections.set(requestId, state);
+  const { requestId } = context;
+
+  context.status = status;
+  context.client = mcpClient;
+
+  console.debug(
+    '[debug] MCP connection state updated: ',
+    requestId,
+    status,
+    isActiveConnectionContext(context),
+    !activeConnectionContexts.get(requestId),
+  );
+
+  // Only notify if this context is still the active connection
+  if (isActiveConnectionContext(context)) {
+    _notifyMcpClientChange(getMcpStateChannel(requestId), status);
+  } else if (!activeConnectionContexts.get(requestId) && status === 'disconnected') {
+    //  or if there is no active context(when the map is cleared but the connection is not closed yet)
+    _notifyMcpClientChange(getMcpStateChannel(requestId), 'disconnected');
   }
-  notifyMcpClientStateChange(getMcpStateChannel(requestId), state.status);
 }
 
+export const writeTimeline = (context: ConnectionContext, chunk: string) => {
+  const { timelineStream } = context;
+
+  // The write stream may be closed when closing the connection
+  if (!timelineStream.closed) {
+    timelineStream.write(chunk + '\n');
+  }
+};
+
 export const writeEventLogAndNotify = (
-  requestId: string,
+  context: ConnectionContext,
   data: McpEventWithoutBase,
   {
-    clearRequestIdMap = false,
     newLine = true,
     channel = REALTIME_EVENTS_CHANNELS.NEW_EVENT,
   }: {
-    clearRequestIdMap?: boolean;
     newLine?: boolean;
     channel?: string;
   } = {},
 ) => {
+  const { requestId, responseId, eventLogStream, pendingEventIds } = context;
+
   const eventData: McpEvent = {
     ...data,
     _id: mcpEventIdGenerator(),
@@ -109,74 +248,70 @@ export const writeEventLogAndNotify = (
   };
   const stringifiedData = JSON.stringify(eventData);
   const dataToWrite = newLine ? stringifiedData + '\n' : stringifiedData;
-  eventLogFileStreams.get(requestId)?.write(dataToWrite, () => {
-    // notify all renderers of new event has been received
-    const resId = requestIdToResponseIdMap.get(requestId);
-    if (resId) {
-      const notifyChannel = `${protocol}.${resId}.${channel}`;
-      notifyMcpClientStateChange(notifyChannel);
-      if (clearRequestIdMap) {
-        // clean up maps after last event has been written to file
-        requestIdToResponseIdMap.delete(requestId);
-      }
-    }
-  });
-  const pendingEventIds = pendingMcpRequestEventIds.get(requestId);
-  if (pendingEventIds) {
-    const removePendingEvent = (condition: (value: { jsonRPCId: string; direction: McpEventDirection }) => unknown) => {
-      if (pendingEventIds.length > 0) {
-        const index = pendingEventIds.findIndex(condition);
-        if (index !== -1) {
-          pendingEventIds.splice(index, 1);
-        }
-      }
-    };
+  // The write stream may be closed when closing the connection
+  if (!eventLogStream.closed) {
+    console.log('eventLogStream write');
 
-    if (eventData.type === 'message') {
-      const { direction, data } = eventData;
-      const jsonRPCId = 'id' in data ? data.id : null;
-      const eventMethod = eventData.method;
-      const isUnsupportedMethod = eventMethod.startsWith(unsupportedMethodPrefix);
-      const isErrorRequest = 'error' in data && data.error;
-      const isServerRequest =
-        eventMethod === METHOD_ELICITATION_CREATE_MESSAGE ||
-        eventMethod === METHOD_SAMPLING_CREATE_MESSAGE ||
-        eventMethod === METHOD_LIST_ROOTS;
-      if (eventMethod === METHOD_NOTIFICATION_CANCELLED) {
-        // find the cancelled notification message indicates cancellation of the request
-        removePendingEvent(e => e.jsonRPCId === (data as CancelledNotification).params.requestId);
-      } else if (jsonRPCId !== null && !isUnsupportedMethod && !isErrorRequest) {
-        if (direction === 'OUTGOING') {
-          if (isServerRequest) {
-            removePendingEvent(e => e.jsonRPCId === jsonRPCId && e.direction === 'INCOMING');
-          } else {
-            // Track mcp client outgoing requests
-            pendingEventIds.push({ jsonRPCId, eventId: eventData._id, direction });
-          }
-        } else if (direction === 'INCOMING') {
-          if (isServerRequest) {
-            // Track mcp server incoming requests
-            pendingEventIds.push({ jsonRPCId, eventId: eventData._id, direction });
-          } else {
-            removePendingEvent(e => e.jsonRPCId === jsonRPCId && e.direction === 'OUTGOING');
-          }
+    eventLogStream.write(dataToWrite, () => {
+      // notify all renderers of new event has been received
+      if (responseId) {
+        const notifyChannel = `${protocol}.${responseId}.${channel}`;
+        _notifyMcpClientChange(notifyChannel);
+      }
+    });
+  }
+
+  const removePendingEvent = (condition: (value: { jsonRPCId: string; direction: McpEventDirection }) => unknown) => {
+    if (pendingEventIds.length > 0) {
+      const index = pendingEventIds.findIndex(condition);
+      if (index !== -1) {
+        pendingEventIds.splice(index, 1);
+      }
+    }
+  };
+
+  if (eventData.type === 'message') {
+    const { direction, data } = eventData;
+    const jsonRPCId = 'id' in data ? data.id : null;
+    const eventMethod = eventData.method;
+    const isUnsupportedMethod = eventMethod.startsWith(unsupportedMethodPrefix);
+    const isErrorRequest = 'error' in data && data.error;
+    const isServerRequest =
+      eventMethod === METHOD_ELICITATION_CREATE_MESSAGE || eventMethod === METHOD_SAMPLING_CREATE_MESSAGE;
+    if (eventMethod === METHOD_NOTIFICATION_CANCELLED) {
+      // find the cancelled notification message indicates cancellation of the request
+      removePendingEvent(e => e.jsonRPCId === (data as CancelledNotification).params.requestId);
+    } else if (jsonRPCId !== null && !isUnsupportedMethod && !isErrorRequest) {
+      if (direction === 'OUTGOING') {
+        if (isServerRequest) {
+          removePendingEvent(e => e.jsonRPCId === jsonRPCId && e.direction === 'INCOMING');
+        } else {
+          // Track mcp client outgoing requests
+          pendingEventIds.push({ jsonRPCId, eventId: eventData._id, direction });
+        }
+      } else if (direction === 'INCOMING') {
+        if (isServerRequest) {
+          // Track mcp server incoming requests
+          pendingEventIds.push({ jsonRPCId, eventId: eventData._id, direction });
+        } else {
+          removePendingEvent(e => e.jsonRPCId === jsonRPCId && e.direction === 'OUTGOING');
         }
       }
-    } else if (eventData.type === 'error' && eventData.error?.requestId) {
-      const errorRequestId = eventData.error.requestId;
-      // Remove pending event from map on error response from server
-      removePendingEvent(e => e.jsonRPCId === errorRequestId);
     }
+  } else if (eventData.type === 'error' && eventData.error?.requestId) {
+    const errorRequestId = eventData.error.requestId;
+    // Remove pending event from map on error response from server
+    removePendingEvent(e => e.jsonRPCId === errorRequestId);
   }
 };
 
-export const notifyMcpClientStateChange = (channel: string, value?: McpReadyState) => {
+const _notifyMcpClientChange = (channel: string, value?: McpReadyState) => {
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send(channel, value);
   }
 };
 
-export const parseAndLogMcpRequest = (requestId: string, message: any) => {
+export const parseAndLogMcpRequest = (context: ConnectionContext, message: any) => {
   if (message) {
     // Add request event
     let requestMethod = message?.method;
@@ -197,26 +332,8 @@ export const parseAndLogMcpRequest = (requestId: string, message: any) => {
       direction: 'OUTGOING',
       data: message,
     };
-    writeEventLogAndNotify(requestId, requestEvent);
+    writeEventLogAndNotify(context, requestEvent);
   }
-};
-
-export const clearMcpMaps = (requestId: string, timelineMessage: string, event?: McpEventWithoutBase) => {
-  if (event) {
-    writeEventLogAndNotify(requestId, event, {
-      clearRequestIdMap: true,
-    });
-  }
-  eventLogFileStreams.get(requestId)?.end();
-  eventLogFileStreams.delete(requestId);
-  timelineFileStreams
-    .get(requestId)
-    ?.write(JSON.stringify({ value: timelineMessage, name: 'Text', timestamp: Date.now() }) + '\n');
-  timelineFileStreams.get(requestId)?.end();
-  timelineFileStreams.delete(requestId);
-  pendingMcpRequestEventIds.delete(requestId);
-  mcpRequestAbortControllers.delete(requestId);
-  mcpServerElicitationRequests.delete(requestId);
 };
 
 const getAllEvents = async (options: { responseId: string }): Promise<McpEvent[]> => {
@@ -246,20 +363,16 @@ export const findNotifications = async (options: { responseId: string }): Promis
 };
 
 export const findPendingEvents = async (options: CommonMcpOptions): Promise<string[]> => {
-  const pendingEventIds = pendingMcpRequestEventIds.get(options.requestId);
-  if (pendingEventIds) {
-    return pendingEventIds.map(e => e.eventId);
+  const context = getReadyActiveMcpConnectionContext(options.requestId);
+  if (context?.pendingEventIds) {
+    return context?.pendingEventIds.map(e => e.eventId);
   }
   return [];
 };
 
 export const getMcpReadyState = async (options: CommonMcpOptions) => {
-  try {
-    const mcpConnection = mcpConnections.get(options.requestId);
-    return mcpConnection ? mcpConnection.status : 'disconnected';
-  } catch (error) {
-    return 'disconnected';
-  }
+  const context = getReadyActiveMcpConnectionContext(options.requestId);
+  return context?.status || 'disconnected';
 };
 
 export const hasRequestResponded = async ({
@@ -267,41 +380,49 @@ export const hasRequestResponded = async ({
   serverRequestId,
 }: CommonMcpOptions & { serverRequestId: string }) => {
   const hasResponded = true;
-  const pendingServerRequestResolvers = mcpServerElicitationRequests.get(requestId);
+  const context = getReadyActiveMcpConnectionContext(requestId);
+  const pendingServerRequestResolvers = context?.mcpServerElicitationRequests;
   if (pendingServerRequestResolvers) {
     return !pendingServerRequestResolvers.has(serverRequestId);
   }
   return hasResponded;
 };
 
-export const setAbortControllerForMcpRequest = (options: { messageId: string } & CommonMcpOptions) => {
-  const { requestId, messageId } = options;
-  const abortControllersForRequest = mcpRequestAbortControllers.get(requestId) || new Map();
-  if (!mcpRequestAbortControllers.has(requestId)) {
-    mcpRequestAbortControllers.set(requestId, abortControllersForRequest);
-  }
+export const setAbortControllerForMcpRequest = (
+  context: ConnectionContext,
+  options: { messageId: string } & CommonMcpOptions,
+) => {
+  const { mcpRequestAbortControllers } = context;
+  const { messageId } = options;
+
   const abortController = new AbortController();
-  abortControllersForRequest.set(messageId, abortController);
+  mcpRequestAbortControllers.set(messageId, abortController);
   return abortController;
 };
 
-export const clearAbortControllerForMcpRequest = (options: { messageId: string } & CommonMcpOptions) => {
-  const { requestId, messageId } = options;
-  const abortControllersForRequest = mcpRequestAbortControllers.get(requestId);
-  if (abortControllersForRequest) {
-    abortControllersForRequest.delete(messageId);
-  }
+export const clearAbortControllerForMcpRequest = (
+  context: ConnectionContext,
+  options: { messageId: string } & CommonMcpOptions,
+) => {
+  const { mcpRequestAbortControllers } = context;
+  const { messageId } = options;
+
+  mcpRequestAbortControllers.delete(messageId);
 };
 
 export const cancelRequest = async (options: { messageId: string } & CommonMcpOptions) => {
   const { requestId, messageId } = options;
-  const abortControllersForRequest = mcpRequestAbortControllers.get(requestId);
-  if (abortControllersForRequest) {
-    const abortController = abortControllersForRequest.get(messageId);
-    if (abortController) {
-      abortController.abort();
-      abortControllersForRequest.delete(messageId);
-    }
+  const context = getReadyActiveMcpConnectionContext(requestId);
+  if (!context) {
+    return;
+  }
+
+  const { mcpRequestAbortControllers } = context;
+
+  const abortController = mcpRequestAbortControllers.get(messageId);
+  if (abortController) {
+    abortController.abort();
+    mcpRequestAbortControllers.delete(messageId);
   }
 };
 
