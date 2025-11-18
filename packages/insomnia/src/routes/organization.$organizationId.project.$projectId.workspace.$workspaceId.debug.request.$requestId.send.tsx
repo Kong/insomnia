@@ -118,7 +118,7 @@ export const sendActionImplementation = async (options: {
 
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
-  const requestMeta = await models.requestMeta.getByParentId(requestId);
+  const requestMeta = await models.requestMeta.getOrCreateByParentId(requestId);
   const transientVariables = nullableTransientVariables || {
     ...models.environment.init(),
     _id: uuidv4(),
@@ -148,13 +148,8 @@ export const sendActionImplementation = async (options: {
       statusMessage: 'Error',
       error: mutatedContext.error,
     };
-    // there's a chance that the response was already created upstream
-    const existingResponse = await models.response.getById(requestData.responseId);
-    const createdResponse =
-      existingResponse || (await models.response.create(responsePatch, requestData.settings.maxHistoryResponses));
-    if (requestMeta) {
-      await models.requestMeta.update(requestMeta, { activeResponseId: createdResponse._id });
-    }
+    const createdResponse = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
+    await models.requestMeta.update(requestMeta, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
     return mutatedContext;
   }
