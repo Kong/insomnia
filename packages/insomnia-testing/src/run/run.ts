@@ -1,5 +1,4 @@
-import { unlink, writeFileSync } from 'node:fs';
-import fs from 'node:fs';
+import fs, { unlink, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -20,17 +19,18 @@ function prependInterceptedRequireToSource(source: string): string {
     if (
       [
         // node.js modules
-        'path',
         'assert',
         'buffer',
-        'util',
-        'url',
+        'crypto',
+        'events',
+        'path',
         'punycode',
         'querystring',
-        'string_decoder',
         'stream',
+        'string_decoder',
         'timers',
-        'events',
+        'url',
+        'util',
         // follows should be npm modules
         // but they are moved to here to avoid introducing additional dependencies
       ].includes(moduleName)
