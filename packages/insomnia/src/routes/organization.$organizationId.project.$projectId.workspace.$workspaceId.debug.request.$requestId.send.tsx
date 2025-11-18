@@ -159,7 +159,7 @@ export const sendActionImplementation = async (options: {
     );
     await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
-    return;
+    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
 
   if (mutatedContext.execution?.skipRequest) {
@@ -234,7 +234,7 @@ export const sendActionImplementation = async (options: {
     );
     await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
-    return;
+    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
 
   const baseResponsePatch = await responseTransform(
@@ -276,7 +276,7 @@ export const sendActionImplementation = async (options: {
     );
     await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
-    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
+    return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
 
   window.main.completeExecutionStep({ requestId });
@@ -307,7 +307,7 @@ export const sendActionImplementation = async (options: {
   if (!shouldWriteToFile) {
     const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
     await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
+    return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
 
   if (requestMeta.downloadPath) {
@@ -321,7 +321,7 @@ export const sendActionImplementation = async (options: {
       requestMeta,
       requestData.settings.maxHistoryResponses,
     );
-    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
+    return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
   const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
   const { filePath } = await window.dialog.showSaveDialog({
@@ -331,11 +331,11 @@ export const sendActionImplementation = async (options: {
     ...(defaultPath ? { defaultPath } : {}),
   });
   if (!filePath) {
-    return;
+    return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
   window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
   writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
-  return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
+  return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
 };
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
