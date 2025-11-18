@@ -24,7 +24,7 @@ import type { MockRoute } from '../../../models/mock-route';
 import type { MockServer } from '../../../models/mock-server';
 import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
-import { insomniaFetch } from '../../../ui/insomniaFetch';
+import { insomniaFetch } from '../../insomnia-fetch';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
