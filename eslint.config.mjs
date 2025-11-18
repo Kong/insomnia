@@ -171,7 +171,6 @@ export default tseslint.config(
       '**/svgr',
       '**/traces/*',
       '**/verify-pkg.js',
-      '**/*preload.js',
       '**/__mocks__/*',
       '**/.react-router/*',
     ],

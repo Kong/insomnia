@@ -19,7 +19,11 @@ import { database } from './database';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
-type SettingsOverride = Partial<Settings>;
+interface SettingsOverride {
+  validateSSL?: Settings['validateSSL'];
+  dataFolders?: Settings['dataFolders'];
+  timeout?: Settings['timeout'];
+}
 const wrapAroundIterationOverIterationData = (
   list?: UserUploadEnvironment[],
   currentIteration?: number,
