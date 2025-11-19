@@ -1,0 +1,12 @@
+{
+    "T001": {
+        "request": {
+            "url": "pets/1"
+        },
+        "response": {
+            "status": "200 OK",
+            "body": "\"id\": \"1\"",
+            "previewBody": "{\"id\":\"1\"}"
+        }
+    }
+}
