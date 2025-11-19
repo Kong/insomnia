@@ -8,7 +8,7 @@ export async function clientAction(_args: ActionFunctionArgs) {
   try {
     const userSession = await sessionModel.getOrCreate();
     const { id: sessionId } = userSession;
-    const { salt: vaultSalt } = await await getVault({ sessionId });
+    const { salt: vaultSalt } = await getVault({ sessionId });
     if (vaultSalt) {
       await sessionModel.update(userSession, { vaultSalt });
       return vaultSalt;
