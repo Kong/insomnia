@@ -7,9 +7,8 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-core/insomnia-api';
 
-import { insomniaFetch } from '~/ui/insomniaFetch';
-
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
+import { insomniaFetch } from '~/ui/insomniaFetch';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
