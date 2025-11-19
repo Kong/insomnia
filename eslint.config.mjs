@@ -55,6 +55,7 @@ export default tseslint.config(
           ],
         },
       ],
+      'no-throw-literal': 'error',
       // 'unicorn/custom-error-definition': 'error', //TODO: Enable this rule
       // 'unicorn/expiring-todo-comments': 'error', //TODO: Enable this rule
       // 'unicorn/explicit-length-check': 'error', //TODO: Enable this rule

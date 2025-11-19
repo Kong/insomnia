@@ -2,13 +2,14 @@ import fs from 'node:fs/promises';
 import inspector from 'node:inspector';
 import path from 'node:path';
 
-import electron, { app, session } from 'electron';
-import { BrowserWindow } from 'electron';
+import electron, { app, BrowserWindow, session } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-core/insomnia-api';
 
 import { insomniaFetch } from '~/ui/insomniaFetch';
+
+import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
@@ -23,6 +24,7 @@ import { registerMainHandlers } from './main/ipc/main';
 import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
 import log, { initializeLogging } from './main/log';
 import { registerCurlHandlers } from './main/network/curl';
+import { registerMcpHandlers } from './main/network/mcp';
 import { registerSocketIOHandlers } from './main/network/socket-io';
 import { registerWebSocketHandlers } from './main/network/websocket';
 import { watchProxySettings } from './main/proxy';
@@ -76,9 +78,11 @@ app.on('ready', async () => {
   registerMainHandlers();
   registergRPCHandlers();
   registerGitServiceAPI();
+  registerLLMConfigServiceAPI();
   registerWebSocketHandlers();
   registerSocketIOHandlers();
   registerCurlHandlers();
+  registerMcpHandlers();
   registerSecretStorageHandlers();
 
   /**

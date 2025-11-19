@@ -34,7 +34,7 @@ jobs:
 
       - name: Install packages
         run: npm ci
-        env: 
+        env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build app for smoke tests

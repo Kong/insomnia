@@ -51,6 +51,7 @@ import { SvgIcnReceive } from './assets/svgr/IcnReceive';
 import { SvgIcnSearch } from './assets/svgr/IcnSearch';
 import { SvgIcnSecCert } from './assets/svgr/IcnSecCert';
 import { SvgIcnSent } from './assets/svgr/IcnSent';
+import { SvgIcnSparkles } from './assets/svgr/IcnSparkles';
 import { SvgIcnSuccess } from './assets/svgr/IcnSuccess';
 import { SvgIcnSync } from './assets/svgr/IcnSync';
 import { SvgIcnSystemEvent } from './assets/svgr/IcnSystemEvent';
@@ -120,6 +121,7 @@ export const IconEnum = {
   questionFill: 'question-fill',
   search: 'search',
   secCert: 'sec-cert',
+  sparkles: 'sparkles',
   success: 'success',
   sync: 'sync',
   trashcan: 'trashcan',
@@ -185,6 +187,7 @@ const icons: Record<IconId, [ThemeKeys, NamedExoticComponent<SVGProps<SVGSVGElem
   [IconEnum.question]: [ThemeEnum.default, SvgIcnQuestion],
   [IconEnum.search]: [ThemeEnum.default, SvgIcnSearch],
   [IconEnum.secCert]: [ThemeEnum.default, SvgIcnSecCert],
+  [IconEnum.sparkles]: [ThemeEnum.surprise, SvgIcnSparkles],
   [IconEnum.success]: [ThemeEnum.success, SvgIcnSuccess],
   [IconEnum.sync]: [ThemeEnum.default, SvgIcnSync],
   [IconEnum.trashcan]: [ThemeEnum.default, SvgIcnTrashcan],

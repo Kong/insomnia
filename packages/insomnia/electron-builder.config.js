@@ -42,6 +42,7 @@ const config = {
     entitlements: './build/static/entitlements.mac.inherit.plist',
     entitlementsInherit: './build/static/entitlements.mac.inherit.plist',
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
+    x64ArchFiles: '*',
     target: [
       {
         target: 'dmg',
@@ -58,7 +59,30 @@ const config = {
     },
     // If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
     notarize: true,
-    asarUnpack: ['node_modules/@getinsomnia/node-libcurl'],
+    asarUnpack: [
+      'node_modules/@getinsomnia/node-libcurl',
+      'node_modules/@node-llama-cpp/mac-arm64-metal',
+      'node_modules/@node-llama-cpp/mac-x64',
+      'node_modules/@node-llama-cpp/linux-arm64',
+      'node_modules/@node-llama-cpp/linux-armv7l',
+      'node_modules/@node-llama-cpp/linux-x64',
+      'node_modules/@node-llama-cpp/linux-x64-cuda',
+      'node_modules/@node-llama-cpp/linux-x64-cuda-ext',
+      'node_modules/@node-llama-cpp/linux-x64-vulkan',
+      'node_modules/@node-llama-cpp/win-arm64',
+      'node_modules/@node-llama-cpp/win-x64',
+      'node_modules/@node-llama-cpp/win-x64-cuda',
+      'node_modules/@node-llama-cpp/win-x64-cuda-ext',
+      'node_modules/@node-llama-cpp/win-x64-vulkan',
+      'node_modules/@reflink/reflink-darwin-arm64',
+      'node_modules/@reflink/reflink-darwin-x64',
+      'node_modules/@reflink/reflink-linux-arm64-gnu',
+      'node_modules/@reflink/reflink-linux-arm64-musl',
+      'node_modules/@reflink/reflink-linux-x64-gnu',
+      'node_modules/@reflink/reflink-linux-x64-musl',
+      'node_modules/@reflink/reflink-win32-arm64-msvc',
+      'node_modules/@reflink/reflink-win32-x64-msvc',
+    ],
   },
   dmg: {
     window: {

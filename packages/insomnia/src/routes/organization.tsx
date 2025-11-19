@@ -27,6 +27,7 @@ import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CommandPalette } from '~/ui/components/command-palette';
 import { GitHubStarsButton } from '~/ui/components/github-stars-button';
 import { HeaderInviteButton } from '~/ui/components/header-invite-button';
+import { HeaderPlanIndicator } from '~/ui/components/header-plan-indicator';
 import { HeaderUserButton } from '~/ui/components/header-user-button';
 import { Hotkey } from '~/ui/components/hotkey';
 import { Icon } from '~/ui/components/icon';
@@ -39,6 +40,7 @@ import { PresentUsers } from '~/ui/components/present-users';
 import { InsomniaEventStreamProvider } from '~/ui/context/app/insomnia-event-stream-context';
 import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
+import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { sortOrganizations } from '~/ui/organization-utils';
 import { AsyncTask, getInitialRouteForOrganization } from '~/utils/router';
@@ -57,7 +59,6 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
     const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as UserProfileResponse;
     const currentPlan = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan;
-
     return {
       organizations: sortOrganizations(accountId, organizations),
       user,
@@ -80,6 +81,8 @@ export interface FeatureList {
   bulkImport: FeatureStatus;
   gitSync: FeatureStatus;
   orgBasicRbac: FeatureStatus;
+  aiMockServers: FeatureStatus;
+  aiCommitMessages: FeatureStatus;
 }
 
 export interface Billing {
@@ -237,8 +240,12 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     'organizationSidebarOpen',
     true,
   );
-  const [isMinimal, setIsMinimal] = reactUse.useLocalStorage('isMinimal', false);
 
+  useCloseConnection({
+    organizationId,
+  });
+
+  const [isMinimal, setIsMinimal] = reactUse.useLocalStorage('isMinimal', false);
   return (
     <InsomniaEventStreamProvider>
       <InsomniaTabProvider>
@@ -255,11 +262,15 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   {!user ? <GitHubStarsButton /> : null}
                 </div>
                 <CommandPalette />
-                <div className="flex items-center justify-end gap-[--padding-sm] p-2">
+                <div className="flex min-w-min items-center justify-end gap-[--padding-sm] space-x-3 p-2">
                   {user ? (
                     <Fragment>
                       <PresentUsers />
-                      <HeaderInviteButton className="border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 font-semibold text-[--color-font-surprise]" />
+                      <HeaderInviteButton
+                        organizationId={organizationId}
+                        className="border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 font-semibold text-[--color-font-surprise]"
+                      />
+                      <HeaderPlanIndicator isMinimal={isMinimal} />
                       <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
                     </Fragment>
                   ) : (
@@ -390,7 +401,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       >
                         <MenuItem
                           id="join-organization"
-                          className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                          className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                           aria-label="Join an organization"
                         >
                           <Icon icon="city" />
@@ -398,7 +409,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                         </MenuItem>
                         <MenuItem
                           id="new-organization"
-                          className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                          className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                           aria-label="Create new organization"
                         >
                           <Icon icon="sign-out" />
@@ -576,7 +587,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       {user ? (
                         <Fragment>
                           <PresentUsers />
-                          <HeaderInviteButton className="text-[--color-font]" />
+                          <HeaderInviteButton className="text-[--color-font]" organizationId={organizationId} />
+                          <HeaderPlanIndicator isMinimal={isMinimal} />
                           <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
                         </Fragment>
                       ) : (

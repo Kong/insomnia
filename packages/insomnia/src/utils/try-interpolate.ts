@@ -1,5 +1,6 @@
 import { getRenderContext, render } from '../common/render';
 import type { GrpcRequest } from '../models/grpc-request';
+import type { McpRequest } from '../models/mcp-request';
 import type { Request } from '../models/request';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
@@ -13,7 +14,7 @@ export const tryToInterpolateRequestOrShowRenderErrorModal = async ({
   environmentId,
   payload,
 }: {
-  request: Request | WebSocketRequest | GrpcRequest | SocketIORequest;
+  request: Request | WebSocketRequest | GrpcRequest | SocketIORequest | McpRequest;
   environmentId: string;
   payload: any;
 }): Promise<any> => {

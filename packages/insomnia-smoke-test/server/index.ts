@@ -16,6 +16,7 @@ import { startGRPCServer } from './grpc';
 import insomniaApi from './insomnia-api';
 import { mtlsRouter } from './mtls';
 import { oauthRoutes } from './oauth';
+import simpleCrud from './simple-crud';
 import { startSocketIOServer } from './socket-io';
 import { startWebSocketServer } from './websocket';
 
@@ -71,6 +72,7 @@ app.use('/protected', mtlsRouter);
 githubApi(app);
 gitlabApi(app);
 insomniaApi(app);
+simpleCrud(app);
 
 app.get('/delay/seconds/:duration', (req, res) => {
   const delaySec = Number.parseInt(req.params.duration || '2');
@@ -122,6 +124,19 @@ app.post('/send-event', (request, response) => {
   console.log('Received event', request.body);
   subscribers.forEach(subscriber => subscriber.response.write(`data: ${JSON.stringify(request.body)}\n\n`));
   response.json({ success: true });
+});
+// auto update endpoints, use INSOMNIA_UPDATES_URL=http://localhost:4010 npm run dev for testing
+app.get('/builds/check/mac', (request, response) => {
+  return response.json({
+    url: 'https://github.com/Kong/insomnia/releases/download/core@11.6.1/Insomnia.Core-11.6.1.dmg',
+    name: '11.6.1',
+  });
+});
+app.get('/updates/win', (request, response) => {
+  return response.json({
+    url: 'https://github.com/Kong/insomnia/releases/download/core@11.6.1/Insomnia.Core-11.6.1.zip',
+    name: '11.6.1',
+  });
 });
 
 startWebSocketServer(

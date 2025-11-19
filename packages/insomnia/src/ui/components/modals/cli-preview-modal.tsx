@@ -86,7 +86,7 @@ export const CLIPreviewModal = ({
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className="text-md h-full w-full flex-row p-2">
+              <div className="h-full w-full flex-row p-2">
                 <div className="pb-4">Copy this command to run your collection in the terminal</div>
                 <div className="flex max-h-32 min-h-[2em] flex-col overflow-y-auto border border-solid border-[--hl-sm] bg-[--hl-xs] px-2 py-1">
                   <div className="relative flex h-full w-full justify-between gap-[var(--padding-sm)] overflow-auto font-mono">

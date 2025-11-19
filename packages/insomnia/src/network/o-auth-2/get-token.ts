@@ -3,6 +3,9 @@ import querystring from 'node:querystring';
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { isMcpRequestId } from '~/models/mcp-request';
+import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
+
 import { version } from '../../../package.json';
 import { getOauthRedirectUrl } from '../../common/constants';
 import { database as db } from '../../common/database';
@@ -19,6 +22,7 @@ import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getAuthObjectOrNull, isAuthEnabled } from '../authentication';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import {
+  fetchMcpRequestData,
   fetchRequestData,
   fetchRequestGroupData,
   responseTransform,
@@ -53,6 +57,10 @@ export const getOAuth2Token = async (
   forceRefresh = false,
 ): Promise<OAuth2Token | undefined> => {
   try {
+    // If it's MCP Auth Flow, should leave it to be handled by the MCP auth provider
+    if (authentication.grantType === 'mcp_auth_flow') {
+      return undefined;
+    }
     const { oAuth2Token, closestAuthId } = await getExistingAccessTokenAndRefreshIfExpired(
       requestId,
       authentication,
@@ -147,16 +155,20 @@ export const getOAuth2Token = async (
       let redirectedTo: string | null = null;
       if (authentication.useDefaultBrowser) {
         const authCodeUrlStr = authCodeUrl.toString();
+        const { relayUrl, decryptOAuthResult } = encryptOAuthUrl(authCodeUrlStr);
+
         uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
           status: 'getting_code',
-          authCodeUrlStr,
+          authCodeUrlStr: relayUrl,
         });
         // If the user has selected to use the default browser, we will open the
         // authorization URL in the default browser and wait for the user to
         // authorize the application.
-        redirectedTo = await window.main.authorizeUserInDefaultBrowser({
-          url: authCodeUrlStr,
+        const result = await window.main.authorizeUserInDefaultBrowser({
+          url: relayUrl,
         });
+
+        redirectedTo = decryptOAuthResult(result);
       } else {
         redirectedTo = await window.main.authorizeUserInWindow({
           url: authCodeUrl.toString(),
@@ -252,16 +264,21 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   authentication: AuthTypeOAuth2,
   forceRefresh: boolean,
 ): Promise<{ oAuth2Token: OAuth2Token | undefined; closestAuthId: string }> {
-  const activeRequest = await models.request.getById(requestId);
-  const requestGroups = (
-    await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
-  ).filter(isRequestGroup) as RequestGroup[];
-  const closestFolderAuth = [...requestGroups]
-    .reverse()
-    .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
-  const isRequestAuthEnabled =
-    getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);
-  const closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
+  let closestAuthId = requestId;
+
+  if (!isMcpRequestId(requestId)) {
+    const activeRequest = await models.request.getById(requestId);
+    const requestGroups = (
+      await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
+    ).filter(isRequestGroup) as RequestGroup[];
+    const closestFolderAuth = [...requestGroups]
+      .reverse()
+      .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
+    const isRequestAuthEnabled =
+      getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);
+    closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
+  }
+
   const token = await models.oAuth2Token.getByParentId(closestAuthId);
   if (!token) {
     return { oAuth2Token: undefined, closestAuthId };
@@ -391,10 +408,12 @@ const sendAccessTokenRequest = async (
 ) => {
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
   console.log(`[network] Sending with settings req=${requestOrGroupId}`);
-  // @TODO unpack oauth into regular timeline and remove oauth timeine dialog
+  // @TODO unpack oauth into regular timeline and remove oauth timeline dialog
   const initializedData = isRequestGroupId(requestOrGroupId)
     ? await fetchRequestGroupData(requestOrGroupId)
-    : await fetchRequestData(requestOrGroupId);
+    : isMcpRequestId(requestOrGroupId)
+      ? await fetchMcpRequestData(requestOrGroupId)
+      : await fetchRequestData(requestOrGroupId);
 
   const { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId } =
     initializedData;

@@ -6,9 +6,6 @@ import { nunjucks } from './nunjucks.client';
 import { extractUndefinedVariableKey, RenderError } from './render-error';
 
 // Some constants
-export const RENDER_ALL = 'all';
-export const RENDER_VARS = 'variables';
-export const RENDER_TAGS = 'tags';
 export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
 
 type NunjucksEnvironment = Environment & {
@@ -16,8 +13,6 @@ type NunjucksEnvironment = Environment & {
 };
 
 // Cached globals
-let nunjucksVariablesOnly: NunjucksEnvironment | null = null;
-let nunjucksTagsOnly: NunjucksEnvironment | null = null;
 let nunjucksAll: NunjucksEnvironment | null = null;
 
 /**
@@ -26,14 +21,12 @@ let nunjucksAll: NunjucksEnvironment | null = null;
  * @param {Object} [config] - Config options for rendering
  * @param {Object} [config.context] - Context to render with
  * @param {Object} [config.path] - Path to include in the error message
- * @param {Object} [config.renderMode] - Only render variables (not tags)
  */
 export function render(
   text: string,
   config: {
     context?: Record<string, any>;
     path?: string;
-    renderMode?: string;
     ignoreUndefinedEnvVariable?: boolean;
   } = {},
 ) {
@@ -49,11 +42,10 @@ export function render(
   // new: {{ _['arr-name-with-dash'][0].prop }}
   const templatingContext = { ...context, [NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME]: context };
   const path = config.path || null;
-  const renderMode = config.renderMode || RENDER_ALL;
   return new Promise<string | null>(async (resolve, reject) => {
     // NOTE: this is added as a breadcrumb because renderString sometimes hangs
     const id = setTimeout(() => console.log('[templating] Warning: nunjucks failed to respond within 5 seconds'), 5000);
-    const nj = await getNunjucks(renderMode, config.ignoreUndefinedEnvVariable);
+    const nj = await getNunjucks(config.ignoreUndefinedEnvVariable);
     nj?.renderString(text, templatingContext, (err: Error | null, result: any) => {
       clearTimeout(id);
       if (!err) {
@@ -95,15 +87,13 @@ export function render(
  */
 export function reload() {
   nunjucksAll = null;
-  nunjucksVariablesOnly = null;
-  nunjucksTagsOnly = null;
 }
 
 /**
  * Get definitions of template tags
  */
 export async function getTagDefinitions() {
-  const env = await getNunjucks(RENDER_ALL);
+  const env = await getNunjucks();
 
   return Object.keys(env.extensions)
     .map(k => env.extensions[k])
@@ -120,20 +110,12 @@ export async function getTagDefinitions() {
     }));
 }
 
-async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: boolean): Promise<NunjucksEnvironment> {
+async function getNunjucks(ignoreUndefinedEnvVariable?: boolean): Promise<NunjucksEnvironment> {
   let throwOnUndefined = true;
   if (ignoreUndefinedEnvVariable) {
     throwOnUndefined = false;
-  } else {
-    if (renderMode === RENDER_VARS && nunjucksVariablesOnly) {
-      return nunjucksVariablesOnly;
-    }
-    if (renderMode === RENDER_TAGS && nunjucksTagsOnly) {
-      return nunjucksTagsOnly;
-    }
-    if (renderMode === RENDER_ALL && nunjucksAll) {
-      return nunjucksAll;
-    }
+  } else if (nunjucksAll) {
+    return nunjucksAll;
   }
 
   // ~~~~~~~~~~~~ //
@@ -153,18 +135,6 @@ async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: bool
       commentEnd: '#}',
     },
   };
-
-  if (renderMode === RENDER_VARS) {
-    // Set tag syntax to something that will never happen naturally
-    config.tags.blockStart = '<[{[{[{[{[$%';
-    config.tags.blockEnd = '%$]}]}]}]}]>';
-  }
-
-  if (renderMode === RENDER_TAGS) {
-    // Set tag syntax to something that will never happen naturally
-    config.tags.variableStart = '<[{[{[{[{[$%';
-    config.tags.variableEnd = '%$]}]}]}]}]>';
-  }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Create Env with Extensions //
@@ -199,13 +169,8 @@ async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: bool
   if (ignoreUndefinedEnvVariable) {
     return nunjucksEnvironment;
   }
-  if (renderMode === RENDER_VARS) {
-    nunjucksVariablesOnly = nunjucksEnvironment;
-  } else if (renderMode === RENDER_TAGS) {
-    nunjucksTagsOnly = nunjucksEnvironment;
-  } else {
-    nunjucksAll = nunjucksEnvironment;
-  }
+
+  nunjucksAll = nunjucksEnvironment;
 
   return nunjucksEnvironment;
 }

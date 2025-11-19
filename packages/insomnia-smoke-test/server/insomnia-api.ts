@@ -635,4 +635,10 @@ export default (app: Application) => {
   app.delete('/v1/desktop/organizations/:organizationId/collaborators/:collaboratorId/unlink', (_req, res) => {
     res.json(null);
   });
+
+  app.post('/v1/organizations/:organizationId/check-seats', (_req, res) => {
+    res.json({
+      isAllowed: true,
+    });
+  });
 };

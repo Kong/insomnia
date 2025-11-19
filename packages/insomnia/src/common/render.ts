@@ -9,6 +9,7 @@ import {
   vaultEnvironmentRuntimePath,
 } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
+import type { McpRequest } from '../models/mcp-request';
 import { isProject } from '../models/project';
 import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
@@ -704,12 +705,13 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): st
 }
 
 export async function getRenderContextAncestors(
-  base?: Request | GrpcRequest | WebSocketRequest | SocketIORequest | RequestGroup | Workspace,
+  base?: Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest | RequestGroup | Workspace,
 ): Promise<RenderContextAncestor[]> {
   return await db.withAncestors<RenderContextAncestor>(base, [
     models.request.type,
     models.grpcRequest.type,
     models.webSocketRequest.type,
+    models.mcpRequest.type,
     models.requestGroup.type,
     models.workspace.type,
     models.project.type,

@@ -4,12 +4,11 @@ import './ui/log';
 import { configureFetch } from 'insomnia-core/insomnia-api';
 import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
-import type { SessionData } from 'react-router';
 import { HydratedRouter } from 'react-router/dom';
 
 import { insomniaFetch } from '~/ui/insomniaFetch';
 
-import { migrateFromLocalStorage, setSessionData, setVaultSessionData } from './account/session';
+import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
 import { settings } from './models';
 import { initNewOAuthSession } from './network/o-auth-2/get-token';
@@ -50,7 +49,7 @@ try {
   // we need to inject state into localStorage
   const skipOnboarding = getSkipOnboarding();
   if (skipOnboarding) {
-    window.localStorage.setItem('hasSeenOnboardingV11', skipOnboarding.toString());
+    window.localStorage.setItem('hasSeenOnboardingV12', skipOnboarding.toString());
     window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
   }
 } catch (e) {

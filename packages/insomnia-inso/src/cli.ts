@@ -1,12 +1,15 @@
 import fs from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import path from 'node:path';
+import path, { dirname } from 'node:path';
 
 import * as commander from 'commander';
 import type { logType } from 'consola';
 import consola, { BasicReporter, FancyReporter, LogLevel } from 'consola';
 import { cosmiconfig } from 'cosmiconfig';
+// @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
+import { Confirm } from 'enquirer';
+import { pick } from 'es-toolkit';
 import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
 import type { Environment, UserUploadEnvironment } from 'insomnia/src/models/environment';
@@ -21,10 +24,13 @@ import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';
 
-import { type RequestTestResult } from '../../insomnia-scripting-environment/src/objects';
+import type { Workspace } from '~/models/workspace';
+
+import type { RequestTestResult } from '../../insomnia-scripting-environment/src/objects';
 import packageJson from '../package.json';
 import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';
 import { getRuleSetFileFromFolderByFilename, lintSpecification } from './commands/lint-specification';
+import { RunCollectionResultReport } from './commands/run-collection/result-report';
 import type { Database } from './db';
 import { isFile, loadDb } from './db';
 import { insomniaExportAdapter } from './db/adapters/insomnia-adapter';
@@ -145,7 +151,18 @@ export const getDefaultProductName = (): string => {
 const localAppDir = getAppDataDir(getDefaultProductName());
 
 export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string; file: string }) => {
-  return file && path.resolve(workingDir || process.cwd(), file);
+  if (!file) {
+    return '';
+  }
+
+  if (workingDir) {
+    if (fs.existsSync(workingDir) && !fs.statSync(workingDir).isDirectory()) {
+      return path.resolve(dirname(workingDir), file);
+    }
+    return path.resolve(workingDir, file);
+  }
+
+  return path.resolve(process.cwd(), file);
 };
 export const logErrorAndExit = (err?: Error) => {
   if (err instanceof InsoError) {
@@ -390,6 +407,7 @@ export const go = (args?: string[]) => {
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first test failure', false)
     .option('--keepFile', 'do not delete the generated test file', false)
+    .option('--requestTimeout <duration>', 'milliseconds before request times out', undefined) // defaults to user settings
     .option('-k, --disableCertValidation', 'disable certificate validation for requests with SSL', false)
     .option('--httpsProxy <proxy>', 'URL for the proxy server for https requests.', proxySettings.httpsProxy)
     .option('--httpProxy <proxy>', 'URL for the proxy server for http requests.', proxySettings.httpProxy)
@@ -418,6 +436,7 @@ export const go = (args?: string[]) => {
           httpProxy?: string;
           noProxy?: string;
           dataFolders: string[];
+          requestTimeout?: string;
         },
       ) => {
         const options = await mergeOptionsAndInit(cmd);
@@ -482,6 +501,7 @@ export const go = (args?: string[]) => {
             validateSSL: !options.disableCertValidation,
             ...proxyOptions,
             dataFolders: options.dataFolders,
+            ...(options.requestTimeout ? { timeout: parseInt(options.requestTimeout, 10) } : {}),
           });
           // Generate test file
           const testFileContents = generate(
@@ -520,6 +540,7 @@ export const go = (args?: string[]) => {
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('-g, --globals <identifier>', 'global environment to use (filepath or id)', '')
     .option('--delay-request <duration>', 'milliseconds to delay between requests', '0')
+    .option('--requestTimeout <duration>', 'milliseconds before request times out', undefined) // defaults to user settings
     .option('--env-var <key=value>', 'override environment variables', collect, [])
     .option('-n, --iteration-count <count>', 'number of times to repeat', '1')
     .option('-d, --iteration-data <path/url>', 'file path or url (JSON or CSV)', '')
@@ -537,6 +558,18 @@ export const go = (args?: string[]) => {
       '-f, --dataFolders [dataFolders...]',
       'This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to.',
       [],
+    )
+    .option('--output <file>', 'Output the results to a file in JSON format.')
+    .addOption(
+      new commander.Option(
+        '--includeFullData <type>',
+        'Include full data in the output file, including request, response, environment and etc.',
+      ).choices(['redact', 'plaintext']),
+    )
+    .option(
+      '--acceptRisk',
+      'Accept the security warning when outputting to a file, please make sure you understand the risks.',
+      false,
     )
     .action(
       async (
@@ -557,12 +590,58 @@ export const go = (args?: string[]) => {
           noProxy?: string;
           reporter: TestReporter;
           dataFolders: string[];
+          output?: string;
+          includeFullData?: 'redact' | 'plaintext';
+          acceptRisk: boolean;
+          requestTimeout?: string;
         },
       ) => {
         const options = await mergeOptionsAndInit(cmd);
 
-        const pathToSearch = getWorkingDir(options);
+        let outputFilePath = '';
+        // Check if the output file is a writable file if it exists
+        if (options.output) {
+          outputFilePath = getAbsoluteFilePath({ workingDir: options.workingDir, file: options.output });
+          if (fs.existsSync(outputFilePath)) {
+            const stats = fs.statSync(outputFilePath);
+            if (!stats.isFile()) {
+              logger.fatal(`Output path "${outputFilePath}" is not a file.`);
+              return process.exit(1);
+            }
+            try {
+              fs.accessSync(outputFilePath, fs.constants.W_OK);
+            } catch (err) {
+              logger.fatal(`Output file "${outputFilePath}" is not writable.`);
+              return process.exit(1);
+            }
+          }
 
+          // Show security disclaimer when outputting to a file with data
+          if (options.includeFullData && !options.acceptRisk) {
+            const disclaimerMessage = [
+              'SECURITY WARNING',
+              'Outputting to a file could contain sensitive data like API tokens or secrets. Make sure you understand this, and the contents of your collection, before proceeding.',
+              'Are you sure you want to continue?',
+            ].join('\n');
+
+            const acceptDisclaimer = await new Confirm({ message: disclaimerMessage, initial: false }).run();
+
+            if (!acceptDisclaimer) {
+              logger.fatal('User did not accept the disclaimer, aborting.');
+              return process.exit(1);
+            }
+          }
+        }
+
+        const report = new RunCollectionResultReport(
+          {
+            outputFilePath,
+            includeFullData: options.includeFullData,
+          },
+          logger,
+        );
+
+        const pathToSearch = getWorkingDir(options);
         const db = await loadDb({
           pathToSearch,
           filterTypes: [],
@@ -573,6 +652,8 @@ export const go = (args?: string[]) => {
           logger.fatal('No workspace found in the provided data store or fallbacks.');
           return process.exit(1);
         }
+
+        report.update({ collection: workspace as Workspace });
 
         // Find environment
         const workspaceId = workspace._id;
@@ -639,6 +720,8 @@ export const go = (args?: string[]) => {
           logger.fatal('No environment identified; cannot run requests without a valid environment.');
           return process.exit(1);
         }
+
+        report.update({ environment: environment as Environment });
 
         let requestsToRun = getRequestsToRunFromListOrWorkspace(db, workspaceId, options.item);
         if (options.requestNamePattern) {
@@ -740,11 +823,23 @@ export const go = (args?: string[]) => {
             noProxy: options.noProxy,
           };
 
+          report.update({
+            proxy: proxyOptions,
+            iterationCount,
+            iterationData,
+            startedAt: Date.now(),
+          });
+
           const sendRequest = await getSendRequestCallbackMemDb(
             environment._id,
             db,
             transientVariables,
-            { validateSSL: !options.disableCertValidation, ...proxyOptions, dataFolders: options.dataFolders },
+            {
+              validateSSL: !options.disableCertValidation,
+              ...proxyOptions,
+              dataFolders: options.dataFolders,
+              ...(options.requestTimeout ? { timeout: parseInt(options.requestTimeout, 10) } : {}),
+            },
             iterationData,
             iterationCount,
           );
@@ -766,6 +861,21 @@ export const go = (args?: string[]) => {
                 success = false;
                 continue;
               }
+
+              report.addExecution({
+                request: req,
+                response: {
+                  status: res.statusMessage,
+                  code: res.status,
+                  headers: res.headers,
+                  data: res.data,
+                  responseTime: res.responseTime,
+                },
+                // TODO: Remove the category field from test results since it is not needed in the report and is always incorrect as unknown.
+                tests: res.testResults.map(t => pick(t, ['testCase', 'status', 'executionTime', 'errorMessage'])),
+                iteration: i,
+                success,
+              });
 
               const timelineString = await readFile(res.timelinePath, 'utf8');
               const appendNewLineIfNeeded = (str: string) => (str.endsWith('\n') ? str : str + '\n');
@@ -801,8 +911,12 @@ export const go = (args?: string[]) => {
 
           logTestResultSummary(testResultsQueue);
 
+          await report.saveReport();
           return process.exit(success ? 0 : 1);
         } catch (error) {
+          report.update({ error: (error instanceof Error ? error.message : String(error)) || 'Unknown error' });
+          await report.saveReport();
+
           logErrorAndExit(error);
         }
         return process.exit(1);
@@ -827,8 +941,8 @@ export const go = (args?: string[]) => {
         isIdentifierAFile = identifier && (await fs.promises.stat(identifierAsAbsPath)).isFile();
       } catch (err) {}
       const pathToSearch = '';
-      let specContent;
-      let rulesetFileName;
+      let specContent: string | undefined;
+      let rulesetFileName: string | undefined;
       if (isIdentifierAFile) {
         // try load as a file
         logger.trace(`Linting specification file from identifier: \`${identifierAsAbsPath}\``);

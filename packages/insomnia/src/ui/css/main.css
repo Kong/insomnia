@@ -1441,6 +1441,9 @@ html {
 .editor.editor--readonly .CodeMirror-cursors {
   visibility: hidden;
 }
+.editor.editor--readonly .nunjucks-tag {
+  cursor: default;
+}
 .editor.editor--dynamic-height .CodeMirror {
   position: static;
 }
@@ -3462,8 +3465,4 @@ input.editable {
 
 .pane-two {
   z-index: 0;
-}
-
-.mismerge {
-  height: 100% !important;
 }

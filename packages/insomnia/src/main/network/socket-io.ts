@@ -8,6 +8,8 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
 import { v4 as uuidV4 } from 'uuid';
 
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
@@ -88,7 +90,8 @@ const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
 
 const protocolName = 'socketIO';
-const getEventNotificationChannel = (responseId: string) => `${protocolName}.${responseId}.newEventReceived`;
+const getEventNotificationChannel = (responseId: string) =>
+  `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
 
 const writeEventLogAndNotify = ({
   requestId,
@@ -261,7 +264,7 @@ const openSocketIOConnection = async (
     if (!options.url) {
       throw new Error('URL is required');
     }
-    const readyStateChannel = `socketIO.${request._id}.readyState`;
+    const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
     const reduceArrayToLowerCaseKeyedDictionary = (
       acc: Record<string, string>,

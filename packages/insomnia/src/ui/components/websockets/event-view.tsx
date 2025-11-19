@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 
-import React, { type FC, useCallback } from 'react';
+import React, { type FC, useCallback, useRef } from 'react';
 import { useParams } from 'react-router';
 
-import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import type { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
@@ -20,6 +20,8 @@ interface Props<T> {
 
 export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent>> = ({ event }) => {
   const { requestId } = useParams() as { requestId: string };
+  const editorRef = useRef<CodeEditorHandle>(null);
+
   let raw = event.data.toString();
   // Best effort to parse the binary data as a string
   try {
@@ -78,7 +80,10 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
           download={handleDownloadResponseBody}
           copyToClipboard={handleCopyResponseToClipboard}
           previewMode={previewMode}
-          setPreviewMode={previewMode => patchRequestMeta(requestId, { previewMode })}
+          setPreviewMode={previewMode => {
+            patchRequestMeta(requestId, { previewMode });
+            editorRef.current?.setValue(previewMode === PREVIEW_MODE_FRIENDLY ? pretty : raw);
+          }}
         />
       </div>
       <div className="flex-grow p-4">
@@ -88,6 +93,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
           mode={previewMode === PREVIEW_MODE_RAW ? 'text/plain' : 'text/json'}
           defaultValue={previewMode === PREVIEW_MODE_FRIENDLY ? pretty : raw}
           uniquenessKey={event._id}
+          ref={editorRef}
           readOnly
         />
       </div>

@@ -1,5 +1,7 @@
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
+import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
+
 import type { OAuth2AuthorizationStatusType } from '../../../network/o-auth-2/constants';
 import { invariant } from '../../../utils/invariant';
 import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../eventBus';
@@ -12,6 +14,28 @@ export const OAuthAuthorizationStatusModal: FC = () => {
   const [status, setStatus] = useState<OAuth2AuthorizationStatusType>('none');
   const [authCodeUrlStr, setAuthCodeUrlStr] = useState<string | undefined>();
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('show-oauth-authorization-modal', (_, authCodeUrlStr: string) => {
+      uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
+        status: 'getting_code',
+        authCodeUrlStr,
+      });
+    });
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('hide-oauth-authorization-modal', _ => {
+      uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
+        status: 'none',
+      });
+    });
+
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     const handleStatusChange = ({
@@ -49,6 +73,8 @@ export const OAuthAuthorizationStatusModal: FC = () => {
       centered
       ref={modalRef}
       onHide={() => {
+        setStatus('none');
+        setSubmitting(false);
         window.main.cancelAuthorizationInDefaultBrowser('Canceled by user.');
       }}
     >
@@ -94,8 +120,18 @@ export const OAuthAuthorizationStatusModal: FC = () => {
                   return;
                 }
                 setSubmitting(true);
-                window.main.onDefaultBrowserOAuthRedirect({
-                  url,
+                const parsedUrl = new URL(url);
+                const params = Object.fromEntries(parsedUrl.searchParams);
+                const { encryptedUrl: encryptedRedirectUrl, encryptedKey, iv } = params;
+                if (encryptedRedirectUrl && encryptedKey && iv) {
+                  return redirectToDefaultBrowserSubmit({
+                    encryptedRedirectUrl,
+                    encryptedKey,
+                    iv,
+                  });
+                }
+                return redirectToDefaultBrowserSubmit({
+                  redirectUrl: url,
                 });
               }}
             >

@@ -66,6 +66,7 @@ async function _highlightNunjucksTags(
 
   // Only mark up Nunjucks tokens that are in the viewport
   const vp = this.getViewport();
+  const readOnly = this.isReadOnly();
 
   for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
     const line = this.getLineTokens(lineNo);
@@ -156,6 +157,7 @@ async function _highlightNunjucksTags(
       });
       activeMarks.push(mark);
       el.addEventListener('click', async () => {
+        if (readOnly) return;
         // Define the dialog HTML
         showModal(NunjucksModal, {
           // @ts-expect-error not a known property of TextMarkerOptions

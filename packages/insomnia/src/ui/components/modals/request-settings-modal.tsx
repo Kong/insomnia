@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useNavigate, useParams } from 'react-router';
 
+import type { McpRequest } from '~/models/mcp-request';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 
@@ -22,7 +23,7 @@ import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 
 export interface RequestSettingsModalOptions {
-  request: Request | GrpcRequest | WebSocketRequest | SocketIORequest;
+  request: Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest;
 }
 
 export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSettingsModalOptions) => {
@@ -94,7 +95,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   };
 
   return (
-    <OverlayContainer>
+    <OverlayContainer onContextMenu={e => e.stopPropagation()}>
       <Modal ref={modalRef} onHide={onHide}>
         <ModalHeader>
           Request Settings <span className="txt-sm selectable faint monospace">{request ? request._id : ''}</span>
