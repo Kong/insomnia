@@ -130,6 +130,7 @@ interface ResourceCacheType {
 
 let resourceCacheList: ResourceCacheType[] = [];
 
+// All models that can be exported should be listed here
 export const MODELS_BY_EXPORT_TYPE: Record<AllExportTypes, AllTypes> = {
   request: 'Request',
   websocket_payload: 'WebSocketPayload',

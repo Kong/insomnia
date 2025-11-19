@@ -245,6 +245,43 @@ export const fetchRequestData = async (
   };
 };
 
+export const fetchMcpRequestData = async (mcpRequestId: string) => {
+  const mcpRequest = await models.mcpRequest.getById(mcpRequestId);
+  invariant(mcpRequest, 'failed to find MCP request ' + mcpRequestId);
+
+  const workspace = await models.workspace.getById(mcpRequest.parentId);
+  invariant(workspace, 'failed to find workspace');
+  const workspaceId = workspace._id;
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
+  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  // no active environment in workspaceMeta, fallback to workspace root environment as active environment
+  const environment = activeEnvironment || baseEnvironment;
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
+
+  const settings = await models.settings.get();
+  invariant(settings, 'failed to create settings');
+
+  const responseId = generateId('res');
+  const responsesDir = pathJoin(
+    process.env['INSOMNIA_DATA_PATH'] ||
+      (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
+    'responses',
+  );
+  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+
+  return {
+    environment,
+    settings,
+    clientCertificates: [] as ClientCertificate[],
+    caCert: undefined,
+    activeEnvironmentId,
+    timelinePath,
+    responseId,
+  };
+};
+
 export const tryToExecutePreRequestScript = async (
   {
     request,
@@ -452,7 +489,6 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     request,
     environment,
     timelinePath,
-    responseId,
     baseEnvironment,
     clientCertificates,
     cookieJar,
@@ -626,21 +662,8 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       timelinePath,
       serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
     );
-
-    const requestId = request._id;
     // stack trace is ignored as it is always from preload
     const errMessage = err.message ? err.message : err;
-    const responsePatch = {
-      _id: responseId,
-      parentId: requestId,
-      environemntId: environment._id,
-      globalEnvironmentId: globals?._id,
-      timelinePath,
-      statusMessage: 'Error',
-      error: errMessage,
-    };
-    const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
-    models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
     return { error: errMessage };
   }
 };
@@ -914,6 +937,7 @@ export async function sendCurlAndWriteTimeline(
   };
 }
 
+// Apply plugins to response
 export const responseTransform = async (
   patch: ResponsePatch,
   environmentId: string | null,

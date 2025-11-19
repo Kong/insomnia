@@ -95,7 +95,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
   return (
     <div className="pointer-events-none absolute left-0 top-0 flex h-full w-full select-none items-center">
       <div className="flex h-full w-full flex-1 flex-col items-center gap-2 divide-y divide-solid divide-[--hl-md] overflow-hidden overflow-y-auto p-[--padding-md] text-[--hl-lg]">
-        <Heading className="text-md flex flex-1 flex-col items-center gap-2 p-[--padding-sm] font-bold">
+        <Heading className="flex flex-1 flex-col items-center gap-2 p-[--padding-sm] font-bold">
           <Icon icon="drafting-compass" className="w-20 flex-1" />
           <span>Enter your OpenAPI specification here</span>
         </Heading>
@@ -134,7 +134,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
                           <MenuItem
                             key={item.id}
                             id={item.id}
-                            className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                            className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                             aria-label={item.name}
                           >
                             {item.icon && <Icon icon={item.icon} />}

@@ -305,6 +305,7 @@ export const MockRouteRoute = () => {
                 onBlur={onBlurTriggerUpsert}
                 mode={mockRoute.mimeType}
                 placeholder="..."
+                noLint={mockRoute.body?.includes('{{') && mockRoute.body?.includes('}}')}
               />
             ) : (
               <EmptyStatePane

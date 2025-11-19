@@ -1,4 +1,18 @@
-import { userSession } from '../models';
+import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
+import { database } from '../common/database';
+import {
+  cloudCredential,
+  gitCredentials,
+  gitRepository,
+  pluginData,
+  project,
+  settings,
+  userSession,
+  workspaceMeta,
+} from '../models';
+import { type GitRepository, isGitCredentialsOAuth } from '../models/git-repository';
+import { EMPTY_GIT_PROJECT_ID, type Project } from '../models/project';
+import type { WorkspaceMeta } from '../models/workspace-meta';
 import { insomniaFetch } from '../ui/insomniaFetch';
 import * as crypt from './crypt';
 
@@ -100,7 +114,7 @@ export async function isLoggedIn() {
 }
 
 /** Log out and delete session data */
-export async function logout() {
+export async function logout(clearCredentials = false) {
   const sessionId = await getCurrentSessionId();
   if (sessionId) {
     try {
@@ -117,6 +131,9 @@ export async function logout() {
   }
 
   await _unsetSessionData();
+  if (clearCredentials) {
+    await _removeAllCredentials();
+  }
   window.main.loginStateChange();
 }
 
@@ -193,6 +210,116 @@ async function _unsetSessionData() {
     vaultSalt: '',
     vaultKey: '',
   });
+}
+
+/**
+ * Removes all sensitive data (credentials, keys, tokens, etc.) from disk.
+ *
+ * If any cloud credential is authenticated (key/token provided), it is cleared.
+ *
+ * All Git provider (GitHub, GitLab) credentials are deleted.
+ *
+ * If any custom git repositories are authenticated, the workspace is disconnected and the git
+ * repository is deleted from the database (but it does not remove a checkout from the filesystem).
+ *
+ * If any proxy is authenticated, it is cleared.
+ *
+ * If any LLM provider is authenticated, the API key is removed, and deactivated if active.
+ */
+async function _removeAllCredentials() {
+  const removals: Promise<unknown>[] = [gitCredentials.removeAll()];
+
+  const cloudCredentials = await cloudCredential.all();
+  for (const cred of cloudCredentials) {
+    if ('credentials' in cred) {
+      if ('secretAccessKey' in cred.credentials) {
+        removals.push(
+          cloudCredential.update(cred, {
+            // AWS
+            credentials: { ...cred.credentials, secretAccessKey: '', sessionToken: '' },
+          }),
+        );
+        continue;
+      }
+      // hashicorp
+      if ('access_token' in cred.credentials) {
+        removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, access_token: '' } }));
+        continue;
+      }
+      if ('client_secret' in cred.credentials) {
+        removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, client_secret: '' } }));
+        continue;
+      }
+      if ('secret_id' in cred.credentials) {
+        removals.push(
+          cloudCredential.update(cred, { credentials: { ...cred.credentials, secret_id: '', role_id: '' } }),
+        );
+        continue;
+      }
+      // azure
+      if ('accessToken' in cred.credentials) {
+        removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, accessToken: '' } }));
+      }
+    }
+  }
+
+  for (const backend of LLM_BACKENDS) {
+    const apiKey = await pluginData.getByKey(AI_PLUGIN_NAME, `${backend}.apiKey`);
+    if (apiKey) {
+      removals.push(pluginData.removeByKey(AI_PLUGIN_NAME, `${backend}.apiKey`));
+      if (backend === (await window.main.llm.getActiveBackend())) {
+        removals.push(window.main.llm.clearActiveBackend());
+      }
+    }
+  }
+
+  const customGitRepos = await gitRepository.all();
+  for (const repo of customGitRepos) {
+    if (!repo.credentials) continue; // unauthenticated git repositories need not be removed
+    if (isGitCredentialsOAuth(repo.credentials)) {
+      if (repo.credentials.token) {
+        removals.push(_removeGitRepository(repo));
+      }
+    } else if (repo.credentials.password) {
+      removals.push(_removeGitRepository(repo));
+    }
+  }
+
+  const proxySettings = await settings.get();
+  if (proxySettings.httpProxy?.includes('@')) {
+    removals.push(settings.update(proxySettings, { httpProxy: '' }));
+  }
+  if (proxySettings.httpsProxy?.includes('@')) {
+    removals.push(settings.update(proxySettings, { httpsProxy: '' }));
+  }
+
+  await Promise.all(removals);
+}
+
+/*
+ * Removes a git repo from the database and unlinks it from associated projects and workspaces.
+ *
+ * Clearing only the credentials from the git repo would leave the associated workspace in a broken
+ * state where the user would need to manually reset the git repo settings, and that is not
+ * immediately apparent in the UI.
+ *
+ * This way, the user can simply re-connect with their settings.
+ *
+ * Almost identical to resetGitRepoAction in main/git-service.ts, but walks through
+ * each model instance individually to clear them all out.
+ *
+ */
+async function _removeGitRepository(repo: GitRepository) {
+  const projects = await database.find<Project>(project.type, { gitRepositoryId: repo._id });
+  for (const p of projects) {
+    await project.update(p, { gitRepositoryId: EMPTY_GIT_PROJECT_ID });
+  }
+
+  const workspaceMetas = await database.find<WorkspaceMeta>(workspaceMeta.type, { gitRepositoryId: repo._id });
+  for (const wsMeta of workspaceMetas) {
+    await workspaceMeta.update(wsMeta, { gitRepositoryId: null });
+  }
+  await gitRepository.remove(repo);
 }
 
 // TODO: v12 remove this function and getLocalStorageDataFromFileOrigin from main

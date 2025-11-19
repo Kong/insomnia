@@ -16,7 +16,7 @@ import type { ApiSpec } from '../../../models/api-spec';
 import type { MockServer } from '../../../models/mock-server';
 import { isRemoteProject, type Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
-import { WorkspaceScopeKeys } from '../../../models/workspace';
+import { isMcp, WorkspaceScopeKeys } from '../../../models/workspace';
 import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -124,9 +124,11 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           </Button>
         }
       >
-        <DropdownItem aria-label="Duplicate / Move">
-          <ItemContent label="Duplicate / Move" icon="copy" onClick={() => setIsDuplicateModalOpen(true)} />
-        </DropdownItem>
+        {!isMcp(workspace) && (
+          <DropdownItem aria-label="Duplicate / Move">
+            <ItemContent label="Duplicate / Move" icon="copy" onClick={() => setIsDuplicateModalOpen(true)} />
+          </DropdownItem>
+        )}
         <DropdownItem aria-label="Rename">
           <ItemContent
             label="Rename"
@@ -152,44 +154,48 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           />
         </DropdownItem>
         <DropdownSection aria-label="Meta section">
-          <DropdownItem aria-label="Import">
-            <ItemContent
-              label="Import"
-              icon="file-import"
-              onClick={() => {
-                window.main.trackSegmentEvent({
-                  event: SegmentEvent.importStarted,
-                  properties: {
-                    source: `${workspace.scope}-list`,
-                  },
-                });
+          {isMcp(workspace) ? null : (
+            <>
+              <DropdownItem aria-label="Import">
+                <ItemContent
+                  label="Import"
+                  icon="file-import"
+                  onClick={() => {
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.importStarted,
+                      properties: {
+                        source: `${workspace.scope}-list`,
+                      },
+                    });
 
-                setIsImportModalOpen(true);
-              }}
-            />
-          </DropdownItem>
-          <DropdownItem aria-label="Export">
-            <ItemContent
-              label="Export"
-              icon="file-export"
-              onClick={() => {
-                window.main.trackSegmentEvent({
-                  event: SegmentEvent.exportStarted,
-                  properties: {
-                    source: `${workspace.scope}-list`,
-                  },
-                });
+                    setIsImportModalOpen(true);
+                  }}
+                />
+              </DropdownItem>
+              <DropdownItem aria-label="Export">
+                <ItemContent
+                  label="Export"
+                  icon="file-export"
+                  onClick={() => {
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.exportStarted,
+                      properties: {
+                        source: `${workspace.scope}-list`,
+                      },
+                    });
 
-                if (workspace.scope === 'mock-server') {
-                  return exportMockServerToFile(workspace);
-                }
-                if (workspace.scope === 'environment') {
-                  return exportGlobalEnvironmentToFile(workspace);
-                }
-                return setIsExportModalOpen(true);
-              }}
-            />
-          </DropdownItem>
+                    if (workspace.scope === 'mock-server') {
+                      return exportMockServerToFile(workspace);
+                    }
+                    if (workspace.scope === 'environment') {
+                      return exportGlobalEnvironmentToFile(workspace);
+                    }
+                    return setIsExportModalOpen(true);
+                  }}
+                />
+              </DropdownItem>
+            </>
+          )}
           <DropdownItem aria-label="Settings">
             <ItemContent label="Settings" icon="gear" onClick={() => setIsSettingsModalOpen(true)} />
           </DropdownItem>

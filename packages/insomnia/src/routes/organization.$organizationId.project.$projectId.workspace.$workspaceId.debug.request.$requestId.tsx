@@ -6,6 +6,9 @@ import * as models from '~/models';
 import { type GrpcRequest, isGrpcRequestId } from '~/models/grpc-request';
 import type { GrpcRequestMeta } from '~/models/grpc-request-meta';
 import * as requestOperations from '~/models/helpers/request-operations';
+import { isMcpRequest, type McpRequest } from '~/models/mcp-request';
+import type { McpPayload } from '~/models/mcp-request-payload';
+import type { McpResponse } from '~/models/mcp-response';
 import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import { isGraphqlSubscriptionRequest } from '~/models/request';
@@ -45,6 +48,15 @@ export interface GrpcRequestLoaderData {
   responses: [];
   requestVersions: RequestVersion[];
 }
+
+export interface McpRequestLoaderData {
+  activeRequest: McpRequest;
+  activeRequestMeta: RequestMeta;
+  activeResponse: McpResponse;
+  responses: McpResponse[];
+  requestVersions: RequestVersion[];
+  requestPayload: McpPayload;
+}
 export interface RequestLoaderData {
   activeRequest: Request;
   activeRequestMeta: RequestMeta;
@@ -54,13 +66,16 @@ export interface RequestLoaderData {
   mockServerAndRoutes: (MockServer & { routes: MockRoute[] })[];
 }
 
-const getResponseModelName = (request: Request | WebSocketRequest | SocketIORequest | GrpcRequest) => {
+const getResponseModelName = (request: Request | WebSocketRequest | SocketIORequest | GrpcRequest | McpRequest) => {
   const isGraphqlWsRequest = isGraphqlSubscriptionRequest(request);
   if (isWebSocketRequest(request) || isGraphqlWsRequest) {
     return 'webSocketResponse';
   }
   if (isSocketIORequest(request)) {
     return 'socketIOResponse';
+  }
+  if (isMcpRequest(request)) {
+    return 'mcpResponse';
   }
   return 'response';
 };
@@ -151,6 +166,19 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       requestPayload: socketIOPayload,
     } as SocketIORequestLoaderData;
   }
+
+  if (isMcpRequest(activeRequest)) {
+    const requestPayload = await models.mcpPayload.getByParentIdAndUrl(requestId, activeRequest.url);
+    return {
+      activeRequest,
+      activeRequestMeta,
+      activeResponse,
+      requestPayload,
+      responses,
+      requestVersions: await models.requestVersion.findByParentId(requestId),
+    } as McpRequestLoaderData;
+  }
+
   return {
     activeRequest,
     activeRequestMeta,

@@ -52,7 +52,6 @@ const createCredentialItemList: createCredentialItemType[] = [
 ];
 const buttonClassName =
   'disabled:opacity-50 h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] transition-all text-sm py-1 px-2';
-const externalVaultPluginName = EXTERNAL_VAULT_PLUGIN_NAME;
 
 export const CloudServiceCredentialList = () => {
   const { isOwner, isEnterprisePlan } = usePlanData();
@@ -68,7 +67,7 @@ export const CloudServiceCredentialList = () => {
   useEffect(() => {
     const checkVaultPlugin = async () => {
       const plugins = await getBundlePlugins();
-      const vaultPlugin = plugins.find(p => p.name === externalVaultPluginName);
+      const vaultPlugin = plugins.find(p => p.name === EXTERNAL_VAULT_PLUGIN_NAME);
       setIsVaultPluginInstalled(!!vaultPlugin);
     };
     checkVaultPlugin();
@@ -102,7 +101,7 @@ export const CloudServiceCredentialList = () => {
   const handleCreateCloudServiceCredential = async (key: CloudProviderName) => {
     if (key === 'azure') {
       const { authUrl, error } = await executePluginMainAction({
-        pluginName: externalVaultPluginName,
+        pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
         actionName: 'openAuthUrl',
         params: { provider: 'azure' },
       });
@@ -155,7 +154,7 @@ export const CloudServiceCredentialList = () => {
                 <MenuItem
                   key={item.id}
                   id={item.id}
-                  className="text-md flex h-[--line-height-xxs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                  className="flex h-[--line-height-xxs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                   aria-label={item.name}
                 >
                   {item.icon}
@@ -251,7 +250,7 @@ export const CloudServiceCredentialList = () => {
             className="pointer mb-[--padding-sm] ml-[--padding-sm] flex h-[--line-height-xs] w-32 items-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
             onClick={async () =>
               await executePluginMainAction({
-                pluginName: externalVaultPluginName,
+                pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
                 actionName: 'clearCache',
               })
             }

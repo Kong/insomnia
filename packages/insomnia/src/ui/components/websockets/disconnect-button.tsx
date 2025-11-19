@@ -1,6 +1,7 @@
 import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
 
+import { isMcpRequestId } from '../../../models/mcp-request';
 import { isSocketIORequestId } from '../../../models/socket-io-request';
 import { isWebSocketRequestId } from '../../../models/websocket-request';
 import { Dropdown as OriginalDropdown, DropdownItem, ItemContent } from '../base/dropdown';
@@ -11,6 +12,8 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
       window.main.webSocket.close({ requestId });
     } else if (isSocketIORequestId(requestId)) {
       window.main.socketIO.close({ requestId });
+    } else if (isMcpRequestId(requestId)) {
+      window.main.mcp.close({ requestId });
     }
   };
   const handleCloseAllRequests = () => {
@@ -18,6 +21,8 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
       window.main.webSocket.closeAll();
     } else if (isSocketIORequestId(requestId)) {
       window.main.socketIO.closeAll();
+    } else if (isMcpRequestId(requestId)) {
+      window.main.mcp.closeAll();
     }
   };
   return (

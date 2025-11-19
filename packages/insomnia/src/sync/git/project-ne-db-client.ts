@@ -7,7 +7,7 @@ import { database, database as db } from '../../common/database';
 import type { InsomniaFile } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '../../common/insomnia-v5';
 import * as models from '../../models';
-import { isWorkspace, type Workspace } from '../../models/workspace';
+import { isMcp, isWorkspace, type Workspace } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import Stat from './stat';
 import { SystemError } from './system-error';
@@ -140,7 +140,10 @@ export class GitProjectNeDBClient {
 
   async readdir(filePath: string) {
     filePath = path.normalize(filePath);
-    const workspaces = await db.find<Workspace>(models.workspace.type, { parentId: this._projectId });
+    // Exclude the mcp workspace since it's not supported in git sync
+    const workspaces = (await db.find<Workspace>(models.workspace.type, { parentId: this._projectId })).filter(
+      w => !isMcp(w),
+    );
     const workspaceMetas = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
       parentId: {
         $in: workspaces.map(w => w._id),
@@ -235,24 +238,33 @@ export class GitProjectNeDBClient {
     });
   }
 
+  /**
+   * Given a file path, find the workspace ID associated with it.
+   * This is used to map a git file path to the corresponding workspace in the database.
+   */
   async getWorkspaceIdFromFilePath(filePath: string) {
+    // Normalize the file path to ensure consistency (handles OS differences, etc.)
     filePath = path.normalize(filePath);
 
+    // Find all workspaces that belong to the current project
     const workspaces = await db.find<Workspace>(models.workspace.type, {
       parentId: this._projectId,
     });
 
+    // Find workspaceMeta entries that match the file path and belong to one of the found workspaces
     const workspaceMeta = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
       gitFilePath: filePath,
       parentId: {
-        $in: workspaces.map(w => w._id),
+        $in: workspaces.map(w => w._id), // Only consider metas for workspaces in this project
       },
     });
 
+    // If no matching workspaceMeta is found, return null (file is not tracked)
     if (workspaceMeta.length === 0) {
       return null;
     }
 
+    // Return the parentId (workspace ID) of the first matching workspaceMeta
     return workspaceMeta[0].parentId;
   }
 }

@@ -1,4 +1,4 @@
-import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { IconName, IconPrefix } from '@fortawesome/fontawesome-svg-core';
 import { Button } from 'react-aria-components';
 import { Panel } from 'react-resizable-panels';
 import { href, useNavigate, useParams } from 'react-router';
@@ -12,7 +12,7 @@ export const scratchPadTutorialList: {
   name: string;
   desc: string;
   learnMoreLink: string;
-  icon: IconName;
+  icon: IconName | [IconPrefix, IconName];
 }[] = [
   {
     id: 'document',
@@ -29,6 +29,14 @@ export const scratchPadTutorialList: {
     desc: 'Use collections to tests APIs and run automated tests.',
     learnMoreLink: 'https://developer.konghq.com/insomnia/collections/',
     icon: 'bars',
+  },
+  {
+    id: 'mcp',
+    title: `MCP Clients`,
+    name: 'MCP clients',
+    desc: 'Use MCP clients to connect external Model Context Protocol (MCP) Servers to access AI-ready tools, prompts, and resource.',
+    learnMoreLink: 'https://developer.konghq.com/insomnia/mcp-clients-in-insomnia/',
+    icon: ['fac', 'mcp'] as unknown as [IconPrefix, IconName],
   },
   {
     id: 'mock-server',

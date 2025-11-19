@@ -93,6 +93,7 @@ import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
+import { McpPane } from '~/ui/components/mcp/mcp-pane';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { CookiesModal } from '~/ui/components/modals/cookies-modal';
@@ -116,7 +117,6 @@ import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-request-pane';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
-import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useExecutionState } from '~/ui/hooks/use-execution-state';
 import { useFilteredRequests } from '~/ui/hooks/use-filtered-requests';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
@@ -230,6 +230,36 @@ const RequestTiming = ({ requestId }: { requestId: string }) => {
   ) : null;
 };
 
+const DebugEntry = () => {
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+    requestId?: string;
+    requestGroupId?: string;
+  };
+  const { activeRequestGroup } = useRequestGroupLoaderData() || {};
+  const { activeWorkspace, activeProject } = useWorkspaceLoaderData()!;
+  const requestData = useRequestLoaderData();
+  const { activeRequest } = requestData || {};
+
+  useInsomniaTab({
+    organizationId,
+    projectId,
+    workspaceId,
+    activeWorkspace,
+    activeProject,
+    activeRequest,
+    activeRequestGroup,
+  });
+
+  if (activeWorkspace.scope === 'mcp') {
+    // MCP request under mcp workspace has different layout so we need to render a different component
+    return <McpPane />;
+  }
+  return <Debug />;
+};
+
 const Debug = () => {
   const {
     activeWorkspace,
@@ -264,8 +294,6 @@ const Debug = () => {
 
   const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:collection-list-filter`);
   const collection = useFilteredRequests(_collection, filter ?? '');
-
-  const { activeRequestGroup } = useRequestGroupLoaderData() || {};
 
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(
     grpcRequests.map(r => ({
@@ -474,10 +502,6 @@ const Debug = () => {
         showModal(GenerateCodeModal, { request: activeRequest });
       }
     },
-  });
-
-  useCloseConnection({
-    organizationId,
   });
 
   const isRealtimeRequest =
@@ -781,16 +805,6 @@ const Debug = () => {
     };
   }, [settings.forceVerticalLayout, direction]);
 
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
-    activeRequest,
-    activeRequestGroup,
-  });
-
   return (
     <PanelGroup
       ref={sidebarPanelRef}
@@ -915,7 +929,7 @@ const Debug = () => {
                       <ListBoxItem
                         id={item.id}
                         key={item.id}
-                        className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                        className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                         aria-label={item.name}
                         textValue={item.name}
                         value={item}
@@ -991,7 +1005,7 @@ const Debug = () => {
                             <MenuItem
                               key={item.id}
                               id={item.id}
-                              className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
                             >
                               <Icon icon={item.icon} />
@@ -1265,7 +1279,7 @@ const Debug = () => {
   );
 };
 
-export default Debug;
+export default DebugEntry;
 
 const ScratchPadTutorialPanel = () => {
   const [signUpTipDismissedState, setSignUpTipDismissedState] = useLocalStorage<{
@@ -1321,7 +1335,7 @@ const ScratchPadTutorialPanel = () => {
               </Button>
             </div>
             <p className="mb-4 text-sm text-[--color-font-secondary]">
-              Create multiple collections, design APIs, manage projects, and collaborate with your team.
+              Create multiple collections, design APIs, MCP clients, manage projects, and collaborate with your team.
             </p>
             <Button
               onPress={handleSignUp}

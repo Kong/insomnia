@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import {
   href,
+  isRouteErrorResponse,
   Links,
   matchPath,
   Meta,
@@ -12,10 +13,10 @@ import {
   Scripts,
   ScrollRestoration,
   useNavigate,
+  useNavigation,
   useParams,
   useRouteLoaderData,
 } from 'react-router';
-import { isRouteErrorResponse, useNavigation } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import * as models from '~/models';
@@ -87,14 +88,8 @@ export const clientMiddleware: Route.ClientMiddlewareFunction[] = [locationHisto
 export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
-      return err.data;
+      return typeof err.data === 'string' ? err.data : (err.data?.message ?? 'Unknown error');
     }
-
-    if (err?.message) {
-      return err?.message;
-    }
-
-    return 'Unknown error';
   };
 
   const getErrorStack = (err: any) => {
@@ -121,9 +116,11 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
           our Github Issues
         </a>
       </p>
-      <div className="p-6 text-[--color-font]">
-        <code className="break-words p-2">{errorMessage}</code>
-      </div>
+      {errorMessage && (
+        <div className="p-6 text-[--color-font]">
+          <code className="break-words p-2">{errorMessage}</code>
+        </div>
+      )}
       <div className="flex items-center gap-2">
         <Button
           className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-base font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
@@ -160,12 +157,14 @@ export const useRootLoaderData = () => {
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await models.settings.get();
   const workspaceCount = await models.workspace.count();
+  const mcpWorkspaceCount = await models.workspace.count('mcp');
   const userSession = await models.userSession.getOrCreate();
   const cloudCredentials = await models.cloudCredential.all();
 
   return {
     settings,
     workspaceCount,
+    mcpWorkspaceCount,
     userSession,
     cloudCredentials,
   };

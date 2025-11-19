@@ -1,4 +1,5 @@
-import fs from 'node:fs';
+import fs, { mkdirSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
@@ -15,8 +16,11 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
+import { AI_PLUGIN_NAME } from '~/common/constants';
 import { convert } from '~/main/importers/convert';
+import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { insecureReadFile, insecureReadFileWithEncoding, secureReadFile } from '~/main/secure-read-file';
+import type { GenerateCommitsFromDiffFunction, MockRouteData, ModelConfig } from '~/plugins/types';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
@@ -34,6 +38,7 @@ import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';
 import type { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
+import type { McpBridgeAPI } from '../network/mcp';
 import {
   addExecutionStep,
   completeExecutionStep,
@@ -50,6 +55,31 @@ import type { gRPCBridgeAPI } from './grpc';
 import type { secretStorageBridgeAPI } from './secret-storage';
 
 let lintProcess: Electron.UtilityProcess | null = null;
+
+export const openInBrowser = (href: string) => {
+  const { protocol } = new URL(href);
+  if (protocol === 'http:' || protocol === 'https:') {
+    shell.openExternal(href);
+  }
+};
+
+const readDir = async (_: unknown, options: { path: string }) => {
+  try {
+    const files = await fs.promises.readdir(options.path);
+    return files
+      .map(file => {
+        const filePath = path.join(options.path, file);
+        return {
+          type: fs.statSync(filePath).isDirectory() ? 'directory' : fs.statSync(filePath).isFile() ? 'file' : 'other',
+          name: file,
+          path: filePath,
+        };
+      })
+      .filter(file => file.type !== 'other');
+  } catch (err) {
+    throw new Error(`Failed to read directory: ${err}`);
+  }
+};
 
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
@@ -75,14 +105,19 @@ export interface RendererToMainBridgeAPI {
     encoding?: string;
   }) => Promise<{ content: string; encoding: string; error: string | undefined }>;
   readDir: (options: { path: string }) => Promise<{ type: 'file' | 'directory'; name: string; path: string }[]>;
+  readOrCreateDataDir: (options: {
+    folder: string;
+  }) => Promise<{ type: 'file' | 'directory'; name: string; path: string }[]>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
   webSocket: WebSocketBridgeAPI;
   socketIO: SocketIOBridgeAPI;
+  mcp: McpBridgeAPI;
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
   git: GitServiceAPI;
+  llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
@@ -113,6 +148,20 @@ export interface RendererToMainBridgeAPI {
   updateLatestStepName: (options: { requestId: string; stepName: string }) => void;
   extractJsonFileFromPostmanDataDumpArchive: (archivePath: string) => Promise<any>;
   getLocalStorageDataFromFileOrigin: () => Promise<Record<string, any>>;
+  generateMockRouteDataFromSpec: (
+    openApiSpec: string | undefined,
+    specUrl: string | undefined,
+    specText: string | undefined,
+    modelConfig: any,
+    useDynamicMockResponses: boolean,
+    mockServerAdditionalFiles: string[],
+  ) => Promise<{ error: string; routes: MockRouteData[] }>;
+  generateCommitsFromDiff: (
+    input: Parameters<GenerateCommitsFromDiffFunction>[0],
+  ) => Promise<
+    | { commits: Awaited<ReturnType<GenerateCommitsFromDiffFunction>>; error: undefined }
+    | { commits: undefined; error: string }
+  >;
 }
 
 export function registerMainHandlers() {
@@ -238,22 +287,13 @@ export function registerMainHandlers() {
     }
   });
 
-  ipcMainHandle('readDir', async (_, options: { path: string }) => {
-    try {
-      const files = await fs.promises.readdir(options.path);
-      return files
-        .map(file => {
-          const filePath = path.join(options.path, file);
-          return {
-            type: fs.statSync(filePath).isDirectory() ? 'directory' : fs.statSync(filePath).isFile() ? 'file' : 'other',
-            name: file,
-            path: filePath,
-          };
-        })
-        .filter(file => file.type !== 'other');
-    } catch (err) {
-      throw new Error(`Failed to read directory: ${err}`);
-    }
+  ipcMainHandle('readDir', readDir);
+
+  ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
+    const dataPath = app.getPath('userData');
+    const folderPath = path.join(dataPath, options.folder);
+    mkdirSync(folderPath, { recursive: true });
+    return readDir(_, { path: folderPath });
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
@@ -280,11 +320,8 @@ export function registerMainHandlers() {
     app.exit();
   });
 
-  ipcMainOn('openInBrowser', (_, href: string) => {
-    const { protocol } = new URL(href);
-    if (protocol === 'http:' || protocol === 'https:') {
-      shell.openExternal(href);
-    }
+  ipcMainOn('openInBrowser', async (_, href: string) => {
+    return openInBrowser(href);
   });
 
   ipcMainHandle('extractJsonFileFromPostmanDataDumpArchive', extractPostmanDataDumpHandler);
@@ -329,6 +366,115 @@ export function registerMainHandlers() {
         fileOriginWindow.close();
         tmpHTMLFile && fs.unlinkSync(tmpHTMLFile);
         reject(new Error('Failed to load file:// origin to get localStorage data'));
+      });
+    });
+  });
+
+  ipcMainHandle(
+    'generateMockRouteDataFromSpec',
+    async (
+      _,
+      openApiSpec: string | undefined,
+      specUrl: string | undefined,
+      specText: string | undefined,
+      modelConfig: any,
+      useDynamicMockResponses: boolean,
+      mockServerAdditionalFiles: string[],
+    ) => {
+      return new Promise((resolve, reject) => {
+        const process = utilityProcess.fork(path.join(__dirname, 'main/mock-generation-process.mjs'));
+
+        process.on('exit', code => {
+          console.log('[mock-generation-process] exited with code:', code);
+          let errorMessage: string;
+
+          const signals = os.constants.signals;
+          if (code === 0) {
+            errorMessage = 'Mock generation process exited with code 0.';
+          } else if (code === signals.SIGSEGV) {
+            errorMessage = `Mock generation process crashed with a segmentation fault (SIGSEGV). This may be due to system compatibility when running a GGUF model.`;
+          } else if (code === signals.SIGKILL) {
+            errorMessage = `Mock generation process was killed (SIGKILL). This may be due to memory limits or system resources.`;
+          } else if (code === signals.SIGTERM) {
+            errorMessage = `Mock generation process was terminated (SIGTERM).`;
+          } else if (code === signals.SIGABRT) {
+            errorMessage = `Mock generation process aborted (SIGABRT). This usually indicates an internal error.`;
+          } else {
+            errorMessage = `Mock generation process exited unexpectedly with code ${code}.`;
+          }
+
+          resolve({ error: errorMessage, routes: [] });
+        });
+
+        process.on('message', msg => {
+          console.log('[mock-generation-process] received message');
+          resolve(msg);
+          process.kill();
+        });
+
+        process.on('error', err => {
+          console.error('[mock-generation-process] error:', err);
+          reject({ error: err.toString() });
+        });
+
+        process.postMessage({
+          openApiSpec,
+          specUrl,
+          specText,
+          modelConfig,
+          useDynamicMockResponses,
+          mockServerAdditionalFiles,
+          aiPluginName: AI_PLUGIN_NAME,
+        });
+      });
+    },
+  );
+
+  ipcMainHandle('generateCommitsFromDiff', async (_, input) => {
+    return new Promise(async (resolve, reject) => {
+      const modelConfig = (await getCurrentConfig()) as ModelConfig | null;
+      if (!modelConfig) {
+        reject(new Error('No LLM model configured'));
+      }
+      const process = utilityProcess.fork(path.join(__dirname, 'main/git-commit-generation-process.mjs'));
+
+      process.on('exit', code => {
+        console.log('[git-commit-generation-process] exited with code:', code);
+        let errorMessage: string;
+
+        const signals = os.constants.signals;
+        if (code === 0) {
+          errorMessage = 'Git commit generation process exited with code 0.';
+        } else if (code === signals.SIGSEGV) {
+          errorMessage = `Git commit generation process crashed with a segmentation fault (SIGSEGV). This may be due to system compatibility when running a GGUF model.`;
+        } else if (code === signals.SIGKILL) {
+          errorMessage = `Git commit generation process was killed (SIGKILL). This may be due to memory limits or system resources.`;
+        } else if (code === signals.SIGTERM) {
+          errorMessage = `Git commit generation process was terminated (SIGTERM).`;
+        } else if (code === signals.SIGABRT) {
+          errorMessage = `Git commit generation process aborted (SIGABRT). This usually indicates an internal error.`;
+        } else {
+          errorMessage = `Git commit generation process exited unexpectedly with code ${code}.`;
+        }
+
+        resolve({ error: errorMessage });
+      });
+
+      process.on('message', msg => {
+        console.log('[git-commit-generation-process] received message');
+        resolve(msg);
+        process.kill();
+      });
+
+      process.on('error', err => {
+        console.error('[git-commit-generation-process] error:', err);
+        reject({ error: err.toString() });
+      });
+
+      process.postMessage({
+        input,
+        modelConfig,
+        aiPluginName: AI_PLUGIN_NAME,
       });
     });
   });

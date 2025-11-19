@@ -86,13 +86,14 @@ import { invariant } from '~/utils/invariant';
 
 export const scopeToLabelMap: Record<
   WorkspaceScope | 'unsynced',
-  'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment'
+  'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client'
 > = {
   'design': 'Document',
   'collection': 'Collection',
   'mock-server': 'Mock Server',
   'unsynced': 'Unsynced',
   'environment': 'Environment',
+  'mcp': 'MCP Client',
 };
 
 export const scopeToIconMap: Record<string, IconName> = {
@@ -124,7 +125,7 @@ export interface InsomniaFile {
   name: string;
   remoteId?: string;
   scope: WorkspaceScope | 'unsynced';
-  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment';
+  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client';
   created: number;
   lastModifiedTimestamp: number;
   branch?: string;
@@ -665,10 +666,8 @@ const Component = () => {
     });
   };
 
-  const isEnterprise = organizationData?.currentPlan?.type.includes('enterprise');
-  const isCloudProjectOrEnterprisePlan = activeProject?.remoteId || isEnterprise;
-  const canCreateMockServer = activeProject?._id && isCloudProjectOrEnterprisePlan;
 
+  const canCreateMockServer = activeProject?._id;
   const isGitSyncEnabled = features.gitSync.enabled;
 
   const createInProjectActionList: {
@@ -689,12 +688,12 @@ const Component = () => {
       icon: 'file',
       action: createNewDocument,
     },
-    {
+    ...(canCreateMockServer ? [{
       id: 'new-mock-server',
       name: 'Mock Server',
-      icon: 'server',
+      icon: 'server' as IconName,
       action: createNewMockServer,
-    },
+    }] : []),
     {
       id: 'new-environment',
       name: 'Environment',
@@ -738,16 +737,16 @@ const Component = () => {
         run: createNewCollection,
       },
     },
-    {
+    ...(canCreateMockServer ? [{
       id: 'mock-server',
       label: `Mock (${mockServersCount})`,
-      icon: 'server',
+      icon: 'server' as IconName,
       action: {
-        icon: 'plus',
+        icon: 'plus' as IconName,
         label: 'New Mock Server',
         run: createNewMockServer,
       },
-    },
+    }] : []),
     {
       id: 'environment',
       label: `Environments (${environmentsCount})`,
@@ -810,7 +809,7 @@ const Component = () => {
                         <ListBoxItem
                           id={item.id}
                           key={item.id}
-                          className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                          className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                           aria-label={item.display_name}
                           textValue={item.display_name}
                           value={item}
@@ -1094,7 +1093,7 @@ const Component = () => {
                             <ListBoxItem
                               id={item.id}
                               key={item.id}
-                              className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
                               textValue={item.name}
                               value={item}
@@ -1137,7 +1136,7 @@ const Component = () => {
                             <MenuItem
                               key={item.id}
                               id={item.id}
-                              className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
                             >
                               <Icon icon={item.icon} />

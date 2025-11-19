@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 
 import {
@@ -36,4 +36,45 @@ export function useOrganizationPermissions() {
   const [billing = fallbackBilling] = useLoaderDeferData(billingPromise, organizationId);
 
   return { features, billing };
+}
+
+/**
+ * Hook to check if AI features are fully enabled at both organization and user level
+ * A feature is considered fully enabled only if:
+ * 1. Organization has enabled the feature
+ * 2. User has enabled the feature in their settings
+ * 3. User has an active LLM configured
+ */
+interface AIFeatureStatus {
+  isGenerateMockServersWithAIEnabled: boolean;
+  isGenerateCommitMessagesWithAIEnabled: boolean;
+}
+
+export function useAIFeatureStatus(): AIFeatureStatus {
+  const { features } = useOrganizationPermissions();
+  const [generateMockServersWithAIEnabledByUser, setGenerateMockServersWithAIEnabledByUser] = useState(false);
+  const [generateCommitMessagesWithAIEnabledByUser, setGenerateCommitMessagesWithAIEnabledByUser] = useState(false);
+  const [hasActiveLLM, setHasActiveLLM] = useState(false);
+
+  const loadFeatureStatus = useCallback(async () => {
+    const userEnabledGenerateMockServersWithAI = await window.main.llm.getAIFeatureEnabled('aiMockServers');
+    const userEnabledGenerateCommitMessagesWithAI = await window.main.llm.getAIFeatureEnabled('aiCommitMessages');
+    const currentLLM = await window.main.llm.getCurrentConfig();
+
+    setGenerateMockServersWithAIEnabledByUser(userEnabledGenerateMockServersWithAI);
+    setGenerateCommitMessagesWithAIEnabledByUser(userEnabledGenerateCommitMessagesWithAI);
+    setHasActiveLLM(currentLLM !== null);
+  }, []);
+
+  useEffect(() => {
+    loadFeatureStatus();
+  }, [loadFeatureStatus]);
+
+  const generateMockServersWithAIAllowedByOrg = features.aiMockServers ? features.aiMockServers.enabled : true;
+  const generateCommitMessagesWithAIAllowedByOrg = features.aiCommitMessages ? features.aiCommitMessages.enabled : true;
+
+  return {
+    isGenerateMockServersWithAIEnabled: generateMockServersWithAIAllowedByOrg && generateMockServersWithAIEnabledByUser && hasActiveLLM,
+    isGenerateCommitMessagesWithAIEnabled: generateCommitMessagesWithAIAllowedByOrg && generateCommitMessagesWithAIEnabledByUser && hasActiveLLM,
+  };
 }

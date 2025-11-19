@@ -1,5 +1,6 @@
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { OAuthAuthorizationStatusModal } from '~/ui/components/modals/oauth-authorization-status-modal';
+import { UpgradePlanModal } from '~/ui/components/modals/upgrade-plan-modal';
 
 import { ErrorBoundary } from './components/error-boundary';
 import { registerModal } from './components/modals';
@@ -9,6 +10,7 @@ import { AskModal } from './components/modals/ask-modal';
 import { CodePromptModal } from './components/modals/code-prompt-modal';
 import { ErrorModal } from './components/modals/error-modal';
 import { GenerateCodeModal } from './components/modals/generate-code-modal';
+import { LogoutModal } from './components/modals/logout-modal';
 import { NunjucksModal } from './components/modals/nunjucks-modal';
 import { PromptModal } from './components/modals/prompt-modal';
 import { RequestRenderErrorModal } from './components/modals/request-render-error-modal';
@@ -22,7 +24,6 @@ import { WrapperModal } from './components/modals/wrapper-modal';
 const Modals = () => {
   const workspaceData = useWorkspaceLoaderData();
   const { activeWorkspace, activeEnvironment } = workspaceData || {};
-
   return (
     <div key="modals" className="modals">
       <ErrorBoundary showAlert>
@@ -49,6 +50,8 @@ const Modals = () => {
 
         <SettingsModal ref={instance => registerModal(instance, 'SettingsModal')} />
 
+        <UpgradePlanModal />
+
         <ResponseDebugModal ref={instance => registerModal(instance, 'ResponseDebugModal')} />
 
         <AddKeyCombinationModal ref={instance => registerModal(instance, 'AddKeyCombinationModal')} />
@@ -56,6 +59,8 @@ const Modals = () => {
         <SyncMergeModal ref={instance => registerModal(instance, 'SyncMergeModal')} />
 
         <UpgradeModal ref={instance => registerModal(instance, 'UpgradeModal')} />
+
+        <LogoutModal ref={instance => registerModal(instance, 'LogoutModal')} />
 
         <OAuthAuthorizationStatusModal />
       </ErrorBoundary>

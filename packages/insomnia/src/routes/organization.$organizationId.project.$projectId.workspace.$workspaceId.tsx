@@ -21,7 +21,7 @@ import type { RequestGroupMeta } from '~/models/request-group-meta';
 import type { RequestMeta } from '~/models/request-meta';
 import type { SocketIORequest } from '~/models/socket-io-request';
 import type { WebSocketRequest } from '~/models/websocket-request';
-import type { Workspace } from '~/models/workspace';
+import { isMcp, type Workspace } from '~/models/workspace';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
@@ -253,7 +253,8 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   const userSession = await models.userSession.getOrCreate();
   const isLoggedInIsCloudProjectAndIsNotGitRepo = userSession.id && activeProject.remoteId && !gitRepository;
   let vcsVersion = null;
-  if (isLoggedInIsCloudProjectAndIsNotGitRepo) {
+  // Mcp workspace do not support cloud sync for now
+  if (isLoggedInIsCloudProjectAndIsNotGitRepo && !isMcp(activeWorkspace)) {
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);

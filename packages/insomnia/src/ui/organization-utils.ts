@@ -54,6 +54,21 @@ export function sortOrganizations(accountId: string, organizations: Organization
   return [...(home ? [home] : []), ...myOrgs, ...notMyOrgs];
 }
 
+export async function syncCurrentPlan(sessionId: string, accountId: string) {
+  const [currentPlanResult] = await Promise.allSettled([
+    insomniaFetch<CurrentPlan | void>({
+      method: 'GET',
+      path: '/v1/billing/current-plan',
+      sessionId,
+    }),
+  ]);
+  if (currentPlanResult.status === 'fulfilled' && currentPlanResult.value) {
+    localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlanResult.value));
+  } else {
+    console.log('[current-plan] Failed to load current-plan', currentPlanResult.status);
+  }
+}
+
 export async function syncOrganizations(sessionId: string, accountId: string) {
   try {
     const [organizationsResult, user, currentPlan] = await Promise.all([

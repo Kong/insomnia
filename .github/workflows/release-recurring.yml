@@ -51,8 +51,12 @@ jobs:
 
       - name: Install packages
         run: npm ci
-        env: 
+        env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install x64 version of native Mac dependencies
+        run: npm run install-x64-native-dependencies -w insomnia
+        if: ${{ matrix.os == 'macos-latest-large' }}
 
       - name: Bump version
         shell: bash

@@ -33,7 +33,7 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disab
   const patchRequestGroup = useRequestGroupPatcher();
   const patcher = reqData ? patchRequest : patchRequestGroup;
 
-  const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
+  const { authentication, _id } = reqData?.activeRequest || groupData?.activeRequestGroup || {};
   const authOrNull = getAuthObjectOrNull(authentication);
   const selectedValue = authOrNull ? authOrNull[property as keyof RequestAuthentication] + '' : options[0].value;
 
@@ -51,7 +51,7 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disab
 
   return (
     <AuthRow labelFor={toKebabCase(label)} label={label} help={help} disabled={disabled}>
-      <select id={toKebabCase(label)} onChange={onChange} value={selectedValue}>
+      <select id={toKebabCase(label)} onChange={onChange} value={selectedValue} disabled={disabled}>
         {options.map(({ name, value }) => (
           <option key={value} value={value}>
             {name}

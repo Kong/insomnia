@@ -1,6 +1,22 @@
+/**
+ * Insomnia v5 Data Import/Export Utilities
+ *
+ * This module handles the conversion between Insomnia's internal data models and the v5 export format.
+ * It provides functions to import data from v5 YAML files and export current workspace data to v5 format.
+ *
+ * Key responsibilities:
+ * - Parse and validate v5 YAML files using Zod schemas
+ * - Convert between internal models and v5 export format
+ * - Handle different workspace scopes (collection, design, environment, mock-server)
+ * - Support legacy migration from older formats
+ *
+ */
+
 import { parse, stringify } from 'yaml';
 
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
+import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
+import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
 
 import * as models from '../models';
 import type { ApiSpec } from '../models/api-spec';
@@ -9,7 +25,7 @@ import { type Environment, maskVaultEnvironmentData } from '../models/environmen
 import type { GrpcRequest } from '../models/grpc-request';
 import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
-import type { Request } from '../models/request';
+import type { Request, RequestBody, RequestHeader, RequestParameter } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { UnitTest } from '../models/unit-test';
@@ -30,12 +46,182 @@ import {
   WebsocketRequestSchema,
 } from './import-v5-parser';
 
+/**
+ * Type helper that adds the export type field to any BaseModel
+ * This is used to ensure all exported models have the correct _type field for v5 format
+ */
 type WithExportType<T extends models.BaseModel> = T & { _type: AllExportTypes };
 
-function filterEmptyValue(value: string | number | boolean | null | undefined) {
-  return value !== null && value !== undefined && !(typeof value === 'object' && Object.keys(value).length === 0);
+/**
+ * Maps request headers from internal format to v5 export format
+ * Filters out empty headers and ensures all required fields are present
+ *
+ * @param headers - Array of request headers from internal model
+ * @returns Array of headers in v5 export format, filtered to remove empty entries
+ */
+function mapHeaders(headers?: RequestHeader[]) {
+  if (!headers || headers.length === 0) {
+    return [];
+  }
+
+  return headers
+    .map(header => ({
+      name: header.name || '',
+      value: header.value || '',
+      description: header.description,
+      disabled: header.disabled,
+    }))
+    .filter(header => header.name || header.value);
 }
 
+/**
+ * Maps request parameters from internal format to v5 export format
+ * Filters out empty parameters and preserves all parameter metadata
+ *
+ * @param parameters - Array of request parameters from internal model
+ * @returns Array of parameters in v5 export format, filtered to remove empty entries
+ */
+function mapParameters(parameters?: RequestParameter[]) {
+  if (!parameters || parameters.length === 0) {
+    return [];
+  }
+
+  return parameters
+    .map(param => ({
+      name: param.name || '',
+      value: param.value || '',
+      description: param.description,
+      disabled: param.disabled,
+      type: param.type,
+      multiline: param.multiline,
+    }))
+    .filter(param => param.name || param.value);
+}
+
+/**
+ * Maps metadata from internal resource format to v5 export format
+ * Extracts common metadata fields that are shared across all resource types
+ *
+ * @param resource - The resource object to extract metadata from
+ * @returns Metadata object in v5 format, or undefined if resource is null/undefined
+ */
+function mapMeta(resource: Request | WebSocketRequest | SocketIORequest | GrpcRequest) {
+  if (!resource) {
+    return undefined;
+  }
+
+  return {
+    id: resource._id,
+    created: resource.created,
+    modified: resource.modified,
+    isPrivate: resource.isPrivate,
+    description: resource.description,
+    sortKey: resource.metaSortKey,
+  };
+}
+
+/**
+ * Maps metadata from RequestGroup to v5 export format
+ * Similar to mapMeta but specifically for request groups
+ *
+ * @param resource - The RequestGroup object to extract metadata from
+ * @returns Metadata object in v5 format, or undefined if resource is null/undefined
+ */
+function mapGroupMeta(resource: RequestGroup) {
+  if (!resource) {
+    return undefined;
+  }
+
+  return {
+    id: resource._id,
+    created: resource.created,
+    modified: resource.modified,
+    isPrivate: resource.isPrivate,
+    sortKey: resource.metaSortKey,
+    description: resource.description,
+  };
+}
+
+/**
+ * Maps metadata from Workspace to v5 export format
+ * Extracts workspace-specific metadata fields
+ *
+ * @param workspace - The Workspace object to extract metadata from
+ * @returns Metadata object in v5 format, or undefined if workspace is null/undefined
+ */
+function mapWorkspaceMeta(workspace: Workspace) {
+  if (!workspace) {
+    return undefined;
+  }
+
+  return {
+    id: workspace._id,
+    created: workspace.created,
+    modified: workspace.modified,
+    isPrivate: workspace.isPrivate,
+    description: workspace.description,
+  };
+}
+
+/**
+ * Maps request body from internal format to v5 export format
+ * Handles different body types including form data, raw text, and file uploads
+ *
+ * @param body - The request body object from internal model
+ * @returns Body object in v5 format with all body parameters mapped
+ */
+function mapBody(body?: RequestBody) {
+  return {
+    mimeType: body?.mimeType,
+    text: body?.text,
+    fileName: body?.fileName,
+    params: body?.params?.map(param => ({
+      name: param.name,
+      value: param.value,
+      description: param.description,
+      disabled: param.disabled,
+      multiline: param.multiline,
+      fileName: param.fileName,
+      type: param.type,
+    })),
+  };
+}
+
+/**
+ * Helper function to check if a value should be considered empty
+ * Used to filter out null, undefined, and empty objects from export data
+ * Special handling for folder structures to preserve empty folders
+ *
+ * @param value - The value to check
+ * @returns true if the value is not empty, false otherwise
+ */
+function filterEmptyValue(value: string | number | boolean | null | undefined) {
+  if (value === null || value === undefined) {
+    return false;
+  }
+
+  // Special case: preserve folder structures even if they appear empty
+  // This ensures empty folders are not removed during export
+  if (typeof value === 'object' && value !== null) {
+    // If it has a 'type' field (indicating it's a folder/workspace structure), preserve it
+    if ('type' in value && typeof (value as any).type === 'string') {
+      return true;
+    }
+    // Otherwise, check if it has any non-empty properties
+    return Object.keys(value).length > 0;
+  }
+
+  return true;
+}
+
+/**
+ * Recursively removes empty fields from an object or array
+ * This is used to clean up export data by removing null, undefined, and empty objects
+ * Special handling for folder structures to preserve empty children arrays
+ *
+ * @param data - The data structure to clean
+ * @returns Cleaned data with empty fields removed, or undefined if all fields are empty
+ */
 function removeEmptyFields(data: any): any {
   if (Array.isArray(data)) {
     const list = data.map(removeEmptyFields).filter(filterEmptyValue);
@@ -53,6 +239,13 @@ function removeEmptyFields(data: any): any {
   return filterEmptyValue(data) ? data : undefined;
 }
 
+/**
+ * Maps v5 metadata format to internal Insomnia metadata format
+ * Converts v5 meta objects to the format expected by internal models
+ *
+ * @param meta - The v5 metadata object
+ * @returns Internal metadata format with defaults applied
+ */
 function mapMetaToInsomniaMeta(meta: Meta): {
   _id: string;
   created: number;
@@ -71,6 +264,13 @@ function mapMetaToInsomniaMeta(meta: Meta): {
   };
 }
 
+/**
+ * Maps Insomnia v5 schema types to internal workspace scopes
+ * This is used to determine the correct scope when importing v5 files
+ *
+ * @param type - The schema type from the v5 file
+ * @returns The corresponding workspace scope
+ */
 export function insomniaSchemaTypeToScope(type: InsomniaFile['type']): WorkspaceScope {
   if (type === 'collection.insomnia.rest/5.0') {
     return 'collection';
@@ -214,7 +414,13 @@ function getMockRoutes(file: InsomniaFile): WithExportType<MockRoute>[] {
         name: mock.name || 'Imported Mock Route',
         parentId: file.server?.meta?.id || '__MOCK_SERVER_ID__',
         body: mock.body || '',
-        headers: mock.headers || [],
+        headers:
+          mock.headers?.map(header => ({
+            name: header.name || '',
+            value: header.value || '',
+            description: header.description,
+            disabled: header.disabled,
+          })) || [],
         method: mock.method || '',
         mimeType: mock.mimeType || '',
         statusCode: mock.statusCode,
@@ -282,7 +488,10 @@ function getCollection(
       parentId: string,
     ) {
       collection?.forEach(item => {
-        if ('children' in item && item.children) {
+        // Detect groups: items that are NOT requests, gRPC, or WebSocket
+        const isGroup = !('method' in item) && !('reflectionApi' in item) && !('url' in item);
+
+        if (isGroup) {
           const requestGroup: WithExportType<RequestGroup> = {
             ...mapMetaToInsomniaMeta(
               item.meta || {
@@ -293,7 +502,7 @@ function getCollection(
             _type: 'request_group',
             name: item.name || 'Imported Folder',
             parentId,
-            headers: item.headers?.map(({ name, value }) => ({ name: name || '', value: value || '' })) || [],
+            headers: mapHeaders(item.headers),
             preRequestScript: item.scripts?.preRequest || '',
             afterResponseScript: item.scripts?.afterResponse || '',
             authentication: item.authentication || {},
@@ -304,7 +513,10 @@ function getCollection(
 
           resources.push(requestGroup);
 
-          walkCollection(item.children, requestGroup._id);
+          // Process children if they exist
+          if (item.children && Array.isArray(item.children)) {
+            walkCollection(item.children, requestGroup._id);
+          }
         } else if ('method' in item && item.method) {
           const request: WithExportType<Request> = {
             ...mapMetaToInsomniaMeta(
@@ -318,9 +530,9 @@ function getCollection(
             parentId,
             url: item.url,
             method: item.method,
-            body: item.body || {},
-            parameters: item.parameters || [],
-            headers: item.headers || [],
+            body: mapBody(item.body),
+            parameters: mapParameters(item.parameters),
+            headers: mapHeaders(item.headers),
             authentication: item.authentication || {},
             preRequestScript: item.scripts?.preRequest || '',
             settingDisableRenderRequestBody: !item.settings.renderRequestBody,
@@ -348,14 +560,14 @@ function getCollection(
             parentId,
             url: item.url,
             protoMethodName: item.protoMethodName,
-            metadata: item.metadata || [],
+            metadata: mapHeaders(item.metadata),
             body: item.body || {},
             metaSortKey: item.meta?.sortKey ?? 0,
             reflectionApi: item.reflectionApi || {
-              apiKey: '',
               enabled: false,
-              module: '',
               url: '',
+              apiKey: '',
+              module: '',
             },
             protoFileId: item.protoFileId || '',
           };
@@ -378,8 +590,8 @@ function getCollection(
               url: data.url,
               authentication: data.authentication || {},
               metaSortKey: item.meta?.sortKey ?? 0,
-              headers: data.headers || [],
-              parameters: data.parameters || [],
+              headers: mapHeaders(data.headers),
+              parameters: mapParameters(data.parameters),
               settingEncodeUrl: data.settings.encodeUrl,
               settingFollowRedirects: data.settings.followRedirects,
               settingSendCookies: data.settings.cookies.send,
@@ -405,8 +617,8 @@ function getCollection(
                 url: data.url,
                 authentication: data.authentication || {},
                 metaSortKey: item.meta?.sortKey ?? 0,
-                headers: data.headers || [],
-                parameters: data.parameters || [],
+                headers: mapHeaders(data.headers),
+                parameters: mapParameters(data.parameters),
                 settingEncodeUrl: data.settings.encodeUrl,
                 settingSendCookies: data.settings.cookies.send,
                 settingStoreCookies: data.settings.cookies.store,
@@ -430,7 +642,9 @@ function getCollection(
 }
 
 function importData(rawData: string) {
-  const file = InsomniaFileSchema.parse(parse(rawData));
+  // Apply schema migration before parsing to handle older schema versions
+  const migratedData = migrateToLatestYaml(rawData);
+  const file = InsomniaFileSchema.parse(parse(migratedData));
 
   if (file.type === 'collection.insomnia.rest/5.0') {
     return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
@@ -453,6 +667,14 @@ function importData(rawData: string) {
   return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
 }
 
+/**
+ * Safely imports Insomnia v5 data with error handling
+ * This is the main entry point for importing v5 files - it catches any parsing errors
+ * and returns them in a structured format rather than throwing
+ *
+ * @param rawData - Raw YAML string data from the v5 file
+ * @returns Object containing either the parsed data or an error
+ */
 export function tryImportV5Data(rawData: string) {
   try {
     return { data: importData(rawData) };
@@ -462,6 +684,13 @@ export function tryImportV5Data(rawData: string) {
   }
 }
 
+/**
+ * Imports Insomnia v5 data, returning empty array on error
+ * Alternative to tryImportV5Data that always returns an array
+ *
+ * @param rawData - Raw YAML string data from the v5 file
+ * @returns Array of imported models, or empty array if import fails
+ */
 export function importInsomniaV5Data(rawData: string) {
   try {
     return importData(rawData);
@@ -471,6 +700,15 @@ export function importInsomniaV5Data(rawData: string) {
   }
 }
 
+/**
+ * Exports workspace data to Insomnia v5 format
+ * This is the main export function that converts internal models to v5 YAML format
+ *
+ * @param workspaceId - ID of the workspace to export
+ * @param includePrivateEnvironments - Whether to include private environment data
+ * @param requestIds - Optional array of specific request IDs to export (if not provided, exports all)
+ * @returns YAML string containing the exported workspace data
+ */
 export async function getInsomniaV5DataExport({
   workspaceId,
   includePrivateEnvironments,
@@ -486,9 +724,14 @@ export async function getInsomniaV5DataExport({
     if (!workspace) {
       throw new Error('Workspace not found');
     }
+
+    // Get all model types that can be exported
     const exportableTypes = Object.values(MODELS_BY_EXPORT_TYPE);
+
+    // Fetch all descendants of the workspace (requests, folders, environments, etc.)
     const workspaceDescendants = await database.getWithDescendants(workspace, exportableTypes);
 
+    // Filter to only include resources that are exportable
     const exportableResources = workspaceDescendants.filter(resource => {
       if (exportableTypes.includes(resource.type)) {
         return true;
@@ -497,14 +740,25 @@ export async function getInsomniaV5DataExport({
       return false;
     });
 
+    /**
+     * Recursively builds a collection structure from flat resource list
+     * This function converts the flat list of resources into a hierarchical structure
+     * that matches the v5 export format with proper parent-child relationships
+     *
+     * @param resources - Flat array of all resources in the workspace
+     * @param parentId - ID of the parent to build children for
+     * @returns Hierarchical collection structure in v5 format
+     */
     function getCollectionFromResources(
       resources: (Request | RequestGroup | WebSocketRequest | GrpcRequest | SocketIORequest)[],
       parentId: string,
     ): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] {
       const collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] = [];
 
+      // Filter resources based on requestIds filter and parent relationship
       resources
         .filter(resource => {
+          // Include all request groups, or filter by requestIds if specified
           if (!requestIds || requestIds.length === 0 || models.requestGroup.isRequestGroup(resource)) {
             return true;
           }
@@ -513,22 +767,16 @@ export async function getInsomniaV5DataExport({
         })
         .filter(resource => resource.parentId === parentId)
         .forEach(resource => {
+          // Convert HTTP requests to v5 format
           if (models.request.isRequest(resource)) {
             const request: Insomnia_Request = {
               url: resource.url,
               name: resource.name,
-              meta: {
-                id: resource._id,
-                created: resource.created,
-                modified: resource.modified,
-                isPrivate: resource.isPrivate,
-                description: resource.description,
-                sortKey: resource.metaSortKey,
-              },
+              meta: mapMeta(resource),
               method: resource.method,
-              body: resource.body,
-              parameters: resource.parameters,
-              headers: resource.headers,
+              body: mapBody(resource.body),
+              parameters: mapParameters(resource.parameters),
+              headers: mapHeaders(resource.headers),
               authentication: resource.authentication,
               scripts: getScriptFromResources(resource),
               settings: {
@@ -545,36 +793,24 @@ export async function getInsomniaV5DataExport({
             };
             collection.push(request);
           } else if (models.requestGroup.isRequestGroup(resource)) {
+            // Convert request groups (folders) to v5 format
             const requestGroup: Insomnia_RequestGroup = {
               name: resource.name,
-              meta: {
-                id: resource._id,
-                created: resource.created,
-                modified: resource.modified,
-                isPrivate: resource.isPrivate,
-                sortKey: resource.metaSortKey,
-                description: resource.description,
-              },
-              children: getCollectionFromResources(resources, resource._id),
+              meta: mapGroupMeta(resource),
+              children: getCollectionFromResources(resources, resource._id), // Recursively build children
               scripts: getScriptFromResources(resource),
               authentication: resource.authentication,
               environment: resource.environment,
               environmentPropertyOrder: resource.environmentPropertyOrder,
-              headers: resource.headers,
+              headers: mapHeaders(resource.headers),
             };
             collection.push(requestGroup);
           } else if (models.webSocketRequest.isWebSocketRequest(resource)) {
+            // Convert WebSocket requests to v5 format
             const webSocketRequest: Insomnia_WebsocketRequest = {
               url: resource.url,
               name: resource.name,
-              meta: {
-                id: resource._id,
-                created: resource.created,
-                modified: resource.modified,
-                isPrivate: resource.isPrivate,
-                description: resource.description,
-                sortKey: resource.metaSortKey,
-              },
+              meta: mapMeta(resource),
               settings: {
                 encodeUrl: resource.settingEncodeUrl,
                 followRedirects: resource.settingFollowRedirects,
@@ -584,8 +820,8 @@ export async function getInsomniaV5DataExport({
                 },
               },
               authentication: resource.authentication,
-              headers: resource.headers,
-              parameters: resource.parameters,
+              headers: mapHeaders(resource.headers),
+              parameters: mapParameters(resource.parameters),
               pathParameters: resource.pathParameters,
             };
             collection.push(webSocketRequest);
@@ -593,14 +829,7 @@ export async function getInsomniaV5DataExport({
             const socketIORequest: Insomnia_SocketIORequest = {
               url: resource.url,
               name: resource.name,
-              meta: {
-                id: resource._id,
-                created: resource.created,
-                modified: resource.modified,
-                isPrivate: resource.isPrivate,
-                description: resource.description,
-                sortKey: resource.metaSortKey,
-              },
+              meta: mapMeta(resource),
               settings: {
                 encodeUrl: resource.settingEncodeUrl,
                 cookies: {
@@ -609,8 +838,8 @@ export async function getInsomniaV5DataExport({
                 },
               },
               authentication: resource.authentication,
-              headers: resource.headers,
-              parameters: resource.parameters,
+              headers: mapHeaders(resource.headers),
+              parameters: mapParameters(resource.parameters),
               pathParameters: resource.pathParameters,
               eventListeners: resource.eventListeners,
             };
@@ -619,17 +848,10 @@ export async function getInsomniaV5DataExport({
             const grpcRequest: Insomnia_GRPCRequest = {
               url: resource.url,
               name: resource.name,
-              meta: {
-                id: resource._id,
-                created: resource.created,
-                modified: resource.modified,
-                isPrivate: resource.isPrivate,
-                sortKey: resource.metaSortKey,
-                description: resource.description,
-              },
+              meta: mapMeta(resource),
               body: resource.body,
-              metadata: resource.metadata,
-              protoFileId: resource.protoFileId,
+              metadata: mapHeaders(resource.metadata),
+              protoFileId: resource.protoFileId || '',
               protoMethodName: resource.protoMethodName,
               reflectionApi: resource.reflectionApi,
             };
@@ -665,6 +887,7 @@ export async function getInsomniaV5DataExport({
       includePrivateEnvironments: boolean,
     ): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['environments'] {
       const baseEnvironment = resources.find(environment => environment.parentId.startsWith('wrk_'));
+
       if (!baseEnvironment) {
         throw new Error('Base environment not found');
       }
@@ -710,8 +933,20 @@ export async function getInsomniaV5DataExport({
           isPrivate: resource.isPrivate,
         },
         cookies: resource.cookies.map(cookie => ({
-          ...cookie,
+          id: cookie.id,
+          key: cookie.key,
+          value: cookie.value,
           expires: cookie.expires ? new Date(cookie.expires) : null,
+          domain: cookie.domain,
+          path: cookie.path,
+          secure: cookie.secure,
+          httpOnly: cookie.httpOnly,
+          extensions: cookie.extensions,
+          creation: cookie.creation,
+          creationIndex: cookie.creationIndex,
+          hostOnly: cookie.hostOnly,
+          pathIsDefault: cookie.pathIsDefault,
+          lastAccessed: cookie.lastAccessed,
         })),
       }))[0];
     }
@@ -793,7 +1028,12 @@ export async function getInsomniaV5DataExport({
           isPrivate: resource.isPrivate,
         },
         body: resource.body,
-        headers: resource.headers,
+        headers: resource.headers.map(header => ({
+          name: header.name,
+          value: header.value,
+          description: header.description,
+          disabled: header.disabled,
+        })),
         method: resource.method,
         mimeType: resource.mimeType,
         statusCode: resource.statusCode,
@@ -804,14 +1044,9 @@ export async function getInsomniaV5DataExport({
     if (workspace.scope === 'collection') {
       const collection: InsomniaFile = {
         type: 'collection.insomnia.rest/5.0',
+        schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
-        meta: {
-          id: workspace._id,
-          created: workspace.created,
-          modified: workspace.modified,
-          isPrivate: workspace.isPrivate,
-          description: workspace.description,
-        },
+        meta: mapWorkspaceMeta(workspace),
         collection: getCollectionFromResources(
           exportableResources.filter(
             resource =>
@@ -830,18 +1065,15 @@ export async function getInsomniaV5DataExport({
         ),
       };
 
-      return stringify(removeEmptyFields(collection));
+      const parsedCollection = InsomniaFileSchema.parse(collection);
+
+      return stringify(removeEmptyFields(parsedCollection));
     } else if (workspace.scope === 'design') {
       const spec: InsomniaFile = {
         type: 'spec.insomnia.rest/5.0',
+        schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
-        meta: {
-          id: workspace._id,
-          created: workspace.created,
-          modified: workspace.modified,
-          isPrivate: workspace.isPrivate,
-          description: workspace.description,
-        },
+        meta: mapWorkspaceMeta(workspace),
         collection: getCollectionFromResources(
           exportableResources.filter(
             resource =>
@@ -865,38 +1097,32 @@ export async function getInsomniaV5DataExport({
         ),
       };
 
-      return stringify(removeEmptyFields(spec));
+      const parsedSpec = InsomniaFileSchema.parse(spec);
+
+      return stringify(removeEmptyFields(parsedSpec));
     } else if (workspace.scope === 'environment') {
       const environment: InsomniaFile = {
         type: 'environment.insomnia.rest/5.0',
+        schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
-        meta: {
-          id: workspace._id,
-          created: workspace.created,
-          modified: workspace.modified,
-          isPrivate: workspace.isPrivate,
-          description: workspace.description,
-        },
+        meta: mapWorkspaceMeta(workspace),
         environments: getEnvironmentsFromResources(
           exportableResources.filter(models.environment.isEnvironment),
           includePrivateEnvironments,
         ),
       };
 
-      return stringify(removeEmptyFields(environment));
+      const parsedEnvironment = InsomniaFileSchema.parse(environment);
+
+      return stringify(removeEmptyFields(parsedEnvironment));
     } else if (workspace.scope === 'mock-server') {
       const server = exportableResources.filter(models.mockServer.isMockServer)[0];
 
       const mockServer: InsomniaFile = {
         type: 'mock.insomnia.rest/5.0',
+        schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
-        meta: {
-          id: workspace._id,
-          created: workspace.created,
-          modified: workspace.modified,
-          isPrivate: workspace.isPrivate,
-          description: workspace.description,
-        },
+        meta: mapWorkspaceMeta(workspace),
         server: {
           meta: {
             id: server._id,
@@ -910,7 +1136,8 @@ export async function getInsomniaV5DataExport({
         routes: getRoutesFromResources(exportableResources.filter(models.mockRoute.isMockRoute)),
       };
 
-      return stringify(removeEmptyFields(mockServer), {});
+      const parsedMockServer = InsomniaFileSchema.parse(mockServer);
+      return stringify(removeEmptyFields(parsedMockServer), {});
     }
     throw new Error('Unknown workspace scope');
   } catch (err) {

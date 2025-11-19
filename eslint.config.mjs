@@ -43,6 +43,7 @@ export default tseslint.config(
       'unicorn/relative-url-style': 'error',
       'unicorn/switch-case-braces': 'error',
       'unicorn/throw-new-error': 'error',
+      'no-throw-literal': 'error',
       // 'unicorn/custom-error-definition': 'error', //TODO: Enable this rule
       // 'unicorn/expiring-todo-comments': 'error', //TODO: Enable this rule
       // 'unicorn/explicit-length-check': 'error', //TODO: Enable this rule

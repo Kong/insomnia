@@ -13,7 +13,8 @@ type StringId =
   | 'defaultProject'
   | 'localProject'
   | 'remoteProject'
-  | 'environment';
+  | 'environment'
+  | 'mcp';
 
 export const strings: Record<StringId, StringInfo> = {
   collection: {
@@ -55,5 +56,9 @@ export const strings: Record<StringId, StringInfo> = {
   environment: {
     singular: 'Environment',
     plural: 'Environments',
+  },
+  mcp: {
+    singular: 'MCP Client',
+    plural: 'MCP Clients',
   },
 };

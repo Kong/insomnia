@@ -1,0 +1,319 @@
+{
+  "collection": {
+    "_id": "wrk_c5d5b5167b9049af8b53c5b6f076349b",
+    "created": 1762508027498,
+    "modified": 1762508027498,
+    "isPrivate": false,
+    "description": "",
+    "metaSortKey": 0,
+    "type": "Workspace",
+    "name": "CLI Run Collection Report Generation",
+    "parentId": "",
+    "scope": "collection"
+  },
+  "environment": {
+    "_id": "env_1072af0c15764cd8875f645b0f2e5ad4",
+    "created": 1754293170062,
+    "modified": 1762509361180,
+    "isPrivate": true,
+    "description": "",
+    "metaSortKey": 1754293170062,
+    "type": "Environment",
+    "color": null,
+    "data": {
+      "pri-env-name": "env-value",
+      "track": 1762509003311,
+      "track-3": 1762508357019
+    },
+    "name": "New Environment",
+    "parentId": "env_6aec164bc7c64ffc96c62e06517c5ba6"
+  },
+  "proxy": {
+    "proxyEnabled": false,
+    "httpProxy": "",
+    "httpsProxy": "",
+    "noProxy": ""
+  },
+  "executions": [
+    {
+      "request": {
+        "_id": "req_ef809d54e6aa4d72a54593fdeaa14b93",
+        "created": 1754468596942,
+        "modified": 1762509338246,
+        "isPrivate": false,
+        "description": "",
+        "metaSortKey": -1754468596942,
+        "type": "Request",
+        "name": "Request With Auth - API Key",
+        "parentId": "wrk_c5d5b5167b9049af8b53c5b6f076349b",
+        "url": "http://localhost:4010/echo",
+        "method": "GET",
+        "body": {
+          "mimeType": "multipart/form-data"
+        },
+        "parameters": [],
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "multipart/form-data"
+          },
+          {
+            "name": "User-Agent",
+            "value": "insomnia/11.4.0"
+          }
+        ],
+        "authentication": {
+          "type": "apikey",
+          "key": "api-key",
+          "value": "api-key-value",
+          "disabled": false,
+          "addTo": "header"
+        },
+        "preRequestScript": "\ninsomnia.expect(200).to.eql(200);\n",
+        "settingDisableRenderRequestBody": false,
+        "settingEncodeUrl": true,
+        "settingFollowRedirects": "global",
+        "settingSendCookies": true,
+        "settingStoreCookies": true,
+        "settingRebuildPath": true,
+        "afterResponseScript": "\ninsomnia.test('Check if status is 200', () => {\n    insomnia.expect(insomnia.response.code).to.eql(200);\n});\n\n",
+        "pathParameters": []
+      },
+      "response": {
+        "status": "OK",
+        "code": 200,
+        "headers": {
+          "x-powered-by": "Express",
+          "content-type": "application/json; charset=utf-8",
+          "content-length": "263",
+          "etag": "W/\"107-4RvANbiPgVs3QIOYml7CD9b1VQY\"",
+          "date": "Mon, 10 Nov 2025 06:23:42 GMT",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=5"
+        },
+        "data": "{\"method\":\"GET\",\"headers\":{\"host\":\"localhost:4010\",\"content-type\":\"multipart/form-data; boundary=X-INSOMNIA-BOUNDARY\",\"user-agent\":\"insomnia/11.4.0\",\"api-key\":\"api-key-value\",\"accept\":\"*/*\",\"content-length\":\"25\"},\"data\":\"--X-INSOMNIA-BOUNDARY--\\r\\n\",\"cookies\":{}}",
+        "responseTime": 3.766
+      },
+      "tests": [
+        {
+          "testCase": "Check if status is 200",
+          "status": "passed",
+          "executionTime": 0.08066600000006474
+        }
+      ],
+      "iteration": 0
+    },
+    {
+      "request": {
+        "_id": "req_bb9e621055204a13bc9e301fe376748f",
+        "created": 1754297299654,
+        "modified": 1762509360358,
+        "isPrivate": false,
+        "description": "",
+        "metaSortKey": -1754297299654,
+        "type": "Request",
+        "name": "Request With Auth - Basic",
+        "parentId": "wrk_c5d5b5167b9049af8b53c5b6f076349b",
+        "url": "http://localhost:4010/echo",
+        "method": "POST",
+        "body": {
+          "mimeType": "multipart/form-data",
+          "params": [
+            {
+              "name": "key",
+              "value": "value",
+              "description": "",
+              "disabled": false
+            }
+          ]
+        },
+        "parameters": [
+          {
+            "name": "from-r1",
+            "value": "{% response 'body', 'req_a7eea21417aa4af2a1c906d5e562a325', 'b64::JC5kYXRh::46b', 'no-history', 60 %}",
+            "disabled": false
+          }
+        ],
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "multipart/form-data"
+          },
+          {
+            "name": "User-Agent",
+            "value": "insomnia/11.4.0"
+          }
+        ],
+        "authentication": {
+          "type": "basic",
+          "useISO88591": false,
+          "username": "username",
+          "password": "password",
+          "disabled": false
+        },
+        "preRequestScript": "insomnia.test('Check if track exists', () => {\n    insomnia.expect(insomnia.environment.get(\"track\")).to.not.null;\n});\n",
+        "settingDisableRenderRequestBody": false,
+        "settingEncodeUrl": true,
+        "settingFollowRedirects": "global",
+        "settingSendCookies": true,
+        "settingStoreCookies": true,
+        "settingRebuildPath": true,
+        "afterResponseScript": "",
+        "pathParameters": []
+      },
+      "response": {
+        "status": "OK",
+        "code": 200,
+        "headers": {
+          "x-powered-by": "Express",
+          "content-type": "application/json; charset=utf-8",
+          "content-length": "374",
+          "etag": "W/\"176-/xZqOqpzEjCbbk72Hk4zWm66rXM\"",
+          "date": "Mon, 10 Nov 2025 06:23:42 GMT",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=5"
+        },
+        "data": "{\"method\":\"POST\",\"headers\":{\"host\":\"localhost:4010\",\"content-type\":\"multipart/form-data; boundary=X-INSOMNIA-BOUNDARY\",\"user-agent\":\"insomnia/11.4.0\",\"authorization\":\"Basic dXNlcm5hbWU6cGFzc3dvcmQ=\",\"accept\":\"*/*\",\"content-length\":\"101\"},\"data\":\"--X-INSOMNIA-BOUNDARY\\r\\nContent-Disposition: form-data; name=\\\"key\\\"\\r\\n\\r\\nvalue\\r\\n--X-INSOMNIA-BOUNDARY--\\r\\n\",\"cookies\":{}}",
+        "responseTime": 0.426
+      },
+      "tests": [
+        {
+          "testCase": "Check if track exists",
+          "status": "passed",
+          "executionTime": 0.03374999999994088
+        }
+      ],
+      "iteration": 0
+    },
+    {
+      "request": {
+        "_id": "req_a7eea21417aa4af2a1c906d5e562a325",
+        "created": 1754293004564,
+        "modified": 1762509152390,
+        "isPrivate": false,
+        "description": "",
+        "metaSortKey": -1754293004564,
+        "type": "Request",
+        "name": "Request With Sensitive Headers",
+        "parentId": "wrk_c5d5b5167b9049af8b53c5b6f076349b",
+        "url": "http://localhost:4010/echo",
+        "method": "POST",
+        "body": {
+          "mimeType": "application/json",
+          "text": "{\n\t\"foo\": \"bar\"\n}"
+        },
+        "parameters": [
+          {
+            "name": "queryname",
+            "value": "queryvalue",
+            "disabled": false
+          }
+        ],
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "User-Agent",
+            "value": "insomnia/11.4.0"
+          },
+          {
+            "name": "X-Header",
+            "value": "foo"
+          },
+          {
+            "name": "Authorization",
+            "value": "<sensitive>"
+          },
+          {
+            "name": "Auth",
+            "value": "<sensitive>"
+          },
+          {
+            "name": "Cookie",
+            "value": "<sensitive>"
+          },
+          {
+            "name": "x-auth-token",
+            "value": "<sensitive>"
+          },
+          {
+            "name": "x-api-key",
+            "value": "<sensitive>"
+          }
+        ],
+        "authentication": {
+          "type": "digest",
+          "disabled": false,
+          "username": "",
+          "password": ""
+        },
+        "preRequestScript": "const track = +(new Date());\n\ninsomnia.environment.set(\"track\", track);\n\ninsomnia.test('Check if track exists', () => {\n    insomnia.expect(insomnia.environment.get(\"track\")).to.eql(track);\n});\n",
+        "settingDisableRenderRequestBody": false,
+        "settingEncodeUrl": true,
+        "settingFollowRedirects": "global",
+        "settingSendCookies": true,
+        "settingStoreCookies": true,
+        "settingRebuildPath": true,
+        "afterResponseScript": "\ninsomnia.test('Check if status is 200', () => {\n    insomnia.expect(insomnia.response.code).to.eql(200);\n});\n\ninsomnia.test('Check if track exists', () => {\n    insomnia.expect(insomnia.environment.get(\"track\")).to.not.null;\n});\n",
+        "pathParameters": []
+      },
+      "response": {
+        "status": "OK",
+        "code": 200,
+        "headers": {
+          "x-powered-by": "Express",
+          "content-type": "application/json; charset=utf-8",
+          "content-length": "348",
+          "etag": "W/\"15c-nysNeZeBrFfZqNEw3jU0n6zGw2w\"",
+          "date": "Mon, 10 Nov 2025 06:23:42 GMT",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=5"
+        },
+        "data": "{\"method\":\"POST\",\"headers\":{\"host\":\"localhost:4010\",\"auth\":\"<sensitive>\",\"authorization\":\"<sensitive>\",\"content-type\":\"application/json\",\"cookie\":\"<sensitive>\",\"user-agent\":\"insomnia/11.4.0\",\"x-api-key\":\"<sensitive>\",\"x-auth-token\":\"<sensitive>\",\"x-header\":\"foo\",\"accept\":\"*/*\",\"content-length\":\"17\"},\"data\":\"{\\n\\t\\\"foo\\\": \\\"bar\\\"\\n}\",\"cookies\":{}}",
+        "responseTime": 0.382
+      },
+      "tests": [
+        {
+          "testCase": "Check if track exists",
+          "status": "passed",
+          "executionTime": 0.023083999999926164
+        },
+        {
+          "testCase": "Check if status is 200",
+          "status": "passed",
+          "executionTime": 0.03708299999993869
+        },
+        {
+          "testCase": "Check if track exists",
+          "status": "passed",
+          "executionTime": 0.01999999999998181
+        }
+      ],
+      "iteration": 0
+    }
+  ],
+  "timing": {
+    "started": 1762755822497,
+    "completed": 1762755822776,
+    "responseAverage": 1.5246666666666666,
+    "responseMin": 0.382,
+    "responseMax": 3.766
+  },
+  "stats": {
+    "iterations": {
+      "total": 1,
+      "failed": 0
+    },
+    "requests": {
+      "total": 3,
+      "failed": 0
+    },
+    "tests": {
+      "total": 5,
+      "failed": 0
+    }
+  },
+  "error": null
+}

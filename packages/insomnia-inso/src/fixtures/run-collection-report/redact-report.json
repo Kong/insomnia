@@ -1,0 +1,319 @@
+{
+  "collection": {
+    "_id": "wrk_c5d5b5167b9049af8b53c5b6f076349b",
+    "created": 1762508027498,
+    "modified": 1762508027498,
+    "isPrivate": false,
+    "description": "",
+    "metaSortKey": 0,
+    "type": "Workspace",
+    "name": "CLI Run Collection Report Generation",
+    "parentId": "",
+    "scope": "collection"
+  },
+  "environment": {
+    "_id": "env_1072af0c15764cd8875f645b0f2e5ad4",
+    "created": 1754293170062,
+    "modified": 1762509361180,
+    "isPrivate": true,
+    "description": "",
+    "metaSortKey": 1754293170062,
+    "type": "Environment",
+    "color": null,
+    "name": "New Environment",
+    "parentId": "env_6aec164bc7c64ffc96c62e06517c5ba6",
+    "data": {
+      "pri-env-name": "<Redacted by Insomnia>",
+      "track": "<Redacted by Insomnia>",
+      "track-3": "<Redacted by Insomnia>"
+    }
+  },
+  "proxy": {
+    "proxyEnabled": false,
+    "httpProxy": "",
+    "httpsProxy": "",
+    "noProxy": ""
+  },
+  "executions": [
+    {
+      "request": {
+        "_id": "req_ef809d54e6aa4d72a54593fdeaa14b93",
+        "created": 1754468596942,
+        "modified": 1762509338246,
+        "isPrivate": false,
+        "description": "",
+        "metaSortKey": -1754468596942,
+        "type": "Request",
+        "name": "Request With Auth - API Key",
+        "parentId": "wrk_c5d5b5167b9049af8b53c5b6f076349b",
+        "url": "http://localhost:4010/echo",
+        "method": "GET",
+        "body": {
+          "mimeType": "multipart/form-data"
+        },
+        "parameters": [],
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "multipart/form-data"
+          },
+          {
+            "name": "User-Agent",
+            "value": "insomnia/11.4.0"
+          }
+        ],
+        "authentication": {
+          "type": "apikey",
+          "key": "<Redacted by Insomnia>",
+          "value": "<Redacted by Insomnia>",
+          "disabled": false,
+          "addTo": "<Redacted by Insomnia>"
+        },
+        "preRequestScript": "\ninsomnia.expect(200).to.eql(200);\n",
+        "settingDisableRenderRequestBody": false,
+        "settingEncodeUrl": true,
+        "settingFollowRedirects": "global",
+        "settingSendCookies": true,
+        "settingStoreCookies": true,
+        "settingRebuildPath": true,
+        "afterResponseScript": "\ninsomnia.test('Check if status is 200', () => {\n    insomnia.expect(insomnia.response.code).to.eql(200);\n});\n\n",
+        "pathParameters": []
+      },
+      "response": {
+        "status": "OK",
+        "code": 200,
+        "headers": {
+          "x-powered-by": "Express",
+          "content-type": "application/json; charset=utf-8",
+          "content-length": "263",
+          "etag": "W/\"107-4RvANbiPgVs3QIOYml7CD9b1VQY\"",
+          "date": "Mon, 10 Nov 2025 06:22:52 GMT",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=5"
+        },
+        "data": "{\"method\":\"GET\",\"headers\":{\"host\":\"localhost:4010\",\"content-type\":\"multipart/form-data; boundary=X-INSOMNIA-BOUNDARY\",\"user-agent\":\"insomnia/11.4.0\",\"api-key\":\"api-key-value\",\"accept\":\"*/*\",\"content-length\":\"25\"},\"data\":\"--X-INSOMNIA-BOUNDARY--\\r\\n\",\"cookies\":{}}",
+        "responseTime": 6.6080000000000005
+      },
+      "tests": [
+        {
+          "testCase": "Check if status is 200",
+          "status": "passed",
+          "executionTime": 0.10637500000007094
+        }
+      ],
+      "iteration": 0
+    },
+    {
+      "request": {
+        "_id": "req_bb9e621055204a13bc9e301fe376748f",
+        "created": 1754297299654,
+        "modified": 1762509360358,
+        "isPrivate": false,
+        "description": "",
+        "metaSortKey": -1754297299654,
+        "type": "Request",
+        "name": "Request With Auth - Basic",
+        "parentId": "wrk_c5d5b5167b9049af8b53c5b6f076349b",
+        "url": "http://localhost:4010/echo",
+        "method": "POST",
+        "body": {
+          "mimeType": "multipart/form-data",
+          "params": [
+            {
+              "name": "key",
+              "value": "value",
+              "description": "",
+              "disabled": false
+            }
+          ]
+        },
+        "parameters": [
+          {
+            "name": "from-r1",
+            "value": "{% response 'body', 'req_a7eea21417aa4af2a1c906d5e562a325', 'b64::JC5kYXRh::46b', 'no-history', 60 %}",
+            "disabled": false
+          }
+        ],
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "multipart/form-data"
+          },
+          {
+            "name": "User-Agent",
+            "value": "insomnia/11.4.0"
+          }
+        ],
+        "authentication": {
+          "type": "basic",
+          "useISO88591": "<Redacted by Insomnia>",
+          "username": "<Redacted by Insomnia>",
+          "password": "<Redacted by Insomnia>",
+          "disabled": false
+        },
+        "preRequestScript": "insomnia.test('Check if track exists', () => {\n    insomnia.expect(insomnia.environment.get(\"track\")).to.not.null;\n});\n",
+        "settingDisableRenderRequestBody": false,
+        "settingEncodeUrl": true,
+        "settingFollowRedirects": "global",
+        "settingSendCookies": true,
+        "settingStoreCookies": true,
+        "settingRebuildPath": true,
+        "afterResponseScript": "",
+        "pathParameters": []
+      },
+      "response": {
+        "status": "OK",
+        "code": 200,
+        "headers": {
+          "x-powered-by": "Express",
+          "content-type": "application/json; charset=utf-8",
+          "content-length": "374",
+          "etag": "W/\"176-/xZqOqpzEjCbbk72Hk4zWm66rXM\"",
+          "date": "Mon, 10 Nov 2025 06:22:52 GMT",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=5"
+        },
+        "data": "{\"method\":\"POST\",\"headers\":{\"host\":\"localhost:4010\",\"content-type\":\"multipart/form-data; boundary=X-INSOMNIA-BOUNDARY\",\"user-agent\":\"insomnia/11.4.0\",\"authorization\":\"Basic dXNlcm5hbWU6cGFzc3dvcmQ=\",\"accept\":\"*/*\",\"content-length\":\"101\"},\"data\":\"--X-INSOMNIA-BOUNDARY\\r\\nContent-Disposition: form-data; name=\\\"key\\\"\\r\\n\\r\\nvalue\\r\\n--X-INSOMNIA-BOUNDARY--\\r\\n\",\"cookies\":{}}",
+        "responseTime": 0.88
+      },
+      "tests": [
+        {
+          "testCase": "Check if track exists",
+          "status": "passed",
+          "executionTime": 0.035499999999956344
+        }
+      ],
+      "iteration": 0
+    },
+    {
+      "request": {
+        "_id": "req_a7eea21417aa4af2a1c906d5e562a325",
+        "created": 1754293004564,
+        "modified": 1762509152390,
+        "isPrivate": false,
+        "description": "",
+        "metaSortKey": -1754293004564,
+        "type": "Request",
+        "name": "Request With Sensitive Headers",
+        "parentId": "wrk_c5d5b5167b9049af8b53c5b6f076349b",
+        "url": "http://localhost:4010/echo",
+        "method": "POST",
+        "body": {
+          "mimeType": "application/json",
+          "text": "{\n\t\"foo\": \"bar\"\n}"
+        },
+        "parameters": [
+          {
+            "name": "queryname",
+            "value": "queryvalue",
+            "disabled": false
+          }
+        ],
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "User-Agent",
+            "value": "insomnia/11.4.0"
+          },
+          {
+            "name": "X-Header",
+            "value": "foo"
+          },
+          {
+            "name": "Authorization",
+            "value": "<Redacted by Insomnia>"
+          },
+          {
+            "name": "Auth",
+            "value": "<Redacted by Insomnia>"
+          },
+          {
+            "name": "Cookie",
+            "value": "<Redacted by Insomnia>"
+          },
+          {
+            "name": "x-auth-token",
+            "value": "<Redacted by Insomnia>"
+          },
+          {
+            "name": "x-api-key",
+            "value": "<Redacted by Insomnia>"
+          }
+        ],
+        "authentication": {
+          "type": "digest",
+          "disabled": false,
+          "username": "<Redacted by Insomnia>",
+          "password": "<Redacted by Insomnia>"
+        },
+        "preRequestScript": "const track = +(new Date());\n\ninsomnia.environment.set(\"track\", track);\n\ninsomnia.test('Check if track exists', () => {\n    insomnia.expect(insomnia.environment.get(\"track\")).to.eql(track);\n});\n",
+        "settingDisableRenderRequestBody": false,
+        "settingEncodeUrl": true,
+        "settingFollowRedirects": "global",
+        "settingSendCookies": true,
+        "settingStoreCookies": true,
+        "settingRebuildPath": true,
+        "afterResponseScript": "\ninsomnia.test('Check if status is 200', () => {\n    insomnia.expect(insomnia.response.code).to.eql(200);\n});\n\ninsomnia.test('Check if track exists', () => {\n    insomnia.expect(insomnia.environment.get(\"track\")).to.not.null;\n});\n",
+        "pathParameters": []
+      },
+      "response": {
+        "status": "OK",
+        "code": 200,
+        "headers": {
+          "x-powered-by": "Express",
+          "content-type": "application/json; charset=utf-8",
+          "content-length": "348",
+          "etag": "W/\"15c-nysNeZeBrFfZqNEw3jU0n6zGw2w\"",
+          "date": "Mon, 10 Nov 2025 06:22:52 GMT",
+          "connection": "keep-alive",
+          "keep-alive": "timeout=5"
+        },
+        "data": "{\"method\":\"POST\",\"headers\":{\"host\":\"localhost:4010\",\"auth\":\"<sensitive>\",\"authorization\":\"<sensitive>\",\"content-type\":\"application/json\",\"cookie\":\"<sensitive>\",\"user-agent\":\"insomnia/11.4.0\",\"x-api-key\":\"<sensitive>\",\"x-auth-token\":\"<sensitive>\",\"x-header\":\"foo\",\"accept\":\"*/*\",\"content-length\":\"17\"},\"data\":\"{\\n\\t\\\"foo\\\": \\\"bar\\\"\\n}\",\"cookies\":{}}",
+        "responseTime": 0.575
+      },
+      "tests": [
+        {
+          "testCase": "Check if track exists",
+          "status": "passed",
+          "executionTime": 0.027999999999792635
+        },
+        {
+          "testCase": "Check if status is 200",
+          "status": "passed",
+          "executionTime": 0.03275000000007822
+        },
+        {
+          "testCase": "Check if track exists",
+          "status": "passed",
+          "executionTime": 0.018499999999903594
+        }
+      ],
+      "iteration": 0
+    }
+  ],
+  "timing": {
+    "started": 1762755772438,
+    "completed": 1762755772769,
+    "responseAverage": 2.687666666666667,
+    "responseMin": 0.575,
+    "responseMax": 6.6080000000000005
+  },
+  "stats": {
+    "iterations": {
+      "total": 1,
+      "failed": 0
+    },
+    "requests": {
+      "total": 3,
+      "failed": 0
+    },
+    "tests": {
+      "total": 5,
+      "failed": 0
+    }
+  },
+  "error": null
+}

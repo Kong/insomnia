@@ -5,6 +5,7 @@ import {
   GridList,
   GridListItem,
   Heading,
+  Link,
   ListBox,
   ListBoxItem,
   Popover,
@@ -70,14 +71,22 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
     undef: true,
     // Prevent undefined usages
     node: true,
-    // Enable NodeJS globals
-    esversion: 8, // ES8 syntax (async/await, etc)
+    // https://jshint.com/docs/options/#esversion
+    esversion: 11,
   };
 
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="flex-shrink-0 overflow-hidden p-[--padding-sm]">
+      <div className="mb-4 w-full items-center gap-4 text-wrap rounded-lg border border-solid border-[rgba(var(--color-warning-rgb),1)] bg-[--color-bg] px-3 py-2 text-sm text-[rgba(var(--color-warning-rgb),1)] shadow-lg outline-none">
+        Some time in 2026, unit tests will be deprecated in favour of{' '}
+        <Link className="cursor-pointer text-[--color-surprise]" href="https://developer.konghq.com/insomnia/scripts/">
+          pre-request and after-response scripts.
+        </Link>{' '}
+        Exact timelines and how to migrate will be communicated well in advance. For now, we advise switching to scripts
+        where possible.
+      </div>
       <div className="flex w-full items-center gap-2" title={unitTest.name}>
         <Button
           className="flex aspect-square h-8 flex-shrink-0 flex-nowrap items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
@@ -180,7 +189,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
             >
               {request => (
                 <ListBoxItem
-                  className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                  className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                   aria-label={request.name}
                   textValue={request.name}
                   value={request}

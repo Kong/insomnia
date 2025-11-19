@@ -3,8 +3,11 @@ import querystring from 'node:querystring';
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { isMcpRequestId } from '~/models/mcp-request';
+import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
+
 import { version } from '../../../package.json';
-import { getOauthRedirectUrl, getOauthRelayUrl } from '../../common/constants';
+import { getOauthRedirectUrl } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
@@ -19,6 +22,7 @@ import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getAuthObjectOrNull, isAuthEnabled } from '../authentication';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import {
+  fetchMcpRequestData,
   fetchRequestData,
   fetchRequestGroupData,
   responseTransform,
@@ -53,6 +57,10 @@ export const getOAuth2Token = async (
   forceRefresh = false,
 ): Promise<OAuth2Token | undefined> => {
   try {
+    // If it's MCP Auth Flow, should leave it to be handled by the MCP auth provider
+    if (authentication.grantType === 'mcp_auth_flow') {
+      return undefined;
+    }
     const { oAuth2Token, closestAuthId } = await getExistingAccessTokenAndRefreshIfExpired(
       requestId,
       authentication,
@@ -147,14 +155,7 @@ export const getOAuth2Token = async (
       let redirectedTo: string | null = null;
       if (authentication.useDefaultBrowser) {
         const authCodeUrlStr = authCodeUrl.toString();
-
-        const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-          modulusLength: 3072,
-          publicKeyEncoding: { type: 'spki', format: 'pem' },
-          privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
-        });
-
-        const relayUrl = `${getOauthRelayUrl()}?authCodeUrl=${encodeURIComponent(authCodeUrlStr)}&publicKey=${encodeURIComponent(publicKey)}`;
+        const { relayUrl, decryptOAuthResult } = encryptOAuthUrl(authCodeUrlStr);
 
         uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
           status: 'getting_code',
@@ -166,30 +167,8 @@ export const getOAuth2Token = async (
         const result = await window.main.authorizeUserInDefaultBrowser({
           url: relayUrl,
         });
-        if ('redirectUrl' in result) {
-          redirectedTo = result.redirectUrl;
-        } else {
-          const { encryptedRedirectUrl, encryptedKey, iv } = result;
-          const aesKey = crypto.privateDecrypt(
-            {
-              key: privateKey,
-              padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-              oaepHash: 'sha256',
-            },
-            Buffer.from(encryptedKey, 'base64'),
-          );
-          const encryptedBuf = Buffer.from(encryptedRedirectUrl, 'base64');
-          const authTag = encryptedBuf.slice(encryptedBuf.length - 16);
-          const ciphertext = encryptedBuf.slice(0, encryptedBuf.length - 16);
-          // nosemgrep: javascript.node-crypto.security.gcm-no-tag-length.gcm-no-tag-length
-          const decipher = crypto.createDecipheriv('aes-256-gcm', aesKey, Buffer.from(iv, 'base64'), {
-            authTagLength: 16,
-          });
-          decipher.setAuthTag(authTag);
 
-          const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf-8');
-          redirectedTo = decrypted;
-        }
+        redirectedTo = decryptOAuthResult(result);
       } else {
         redirectedTo = await window.main.authorizeUserInWindow({
           url: authCodeUrl.toString(),
@@ -285,16 +264,21 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   authentication: AuthTypeOAuth2,
   forceRefresh: boolean,
 ): Promise<{ oAuth2Token: OAuth2Token | undefined; closestAuthId: string }> {
-  const activeRequest = await models.request.getById(requestId);
-  const requestGroups = (
-    await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
-  ).filter(isRequestGroup) as RequestGroup[];
-  const closestFolderAuth = [...requestGroups]
-    .reverse()
-    .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
-  const isRequestAuthEnabled =
-    getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);
-  const closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
+  let closestAuthId = requestId;
+
+  if (!isMcpRequestId(requestId)) {
+    const activeRequest = await models.request.getById(requestId);
+    const requestGroups = (
+      await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
+    ).filter(isRequestGroup) as RequestGroup[];
+    const closestFolderAuth = [...requestGroups]
+      .reverse()
+      .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
+    const isRequestAuthEnabled =
+      getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);
+    closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
+  }
+
   const token = await models.oAuth2Token.getByParentId(closestAuthId);
   if (!token) {
     return { oAuth2Token: undefined, closestAuthId };
@@ -424,10 +408,12 @@ const sendAccessTokenRequest = async (
 ) => {
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
   console.log(`[network] Sending with settings req=${requestOrGroupId}`);
-  // @TODO unpack oauth into regular timeline and remove oauth timeine dialog
+  // @TODO unpack oauth into regular timeline and remove oauth timeline dialog
   const initializedData = isRequestGroupId(requestOrGroupId)
     ? await fetchRequestGroupData(requestOrGroupId)
-    : await fetchRequestData(requestOrGroupId);
+    : isMcpRequestId(requestOrGroupId)
+      ? await fetchMcpRequestData(requestOrGroupId)
+      : await fetchRequestData(requestOrGroupId);
 
   const { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId } =
     initializedData;

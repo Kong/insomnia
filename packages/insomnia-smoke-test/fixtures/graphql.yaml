@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: Smoke GraphQL
 meta:
   id: wrk_a2f079716d184765a97bf7e323266231
@@ -15,13 +16,10 @@ collection:
     method: POST
     body:
       mimeType: application/graphql
-      text: '{"query":"query($vars: VarsInput) {\n\techoVars(vars: $vars)
-        {\n\t\tstringVar \n\t\tintVar\n\t}\n}",
-        "variables":{"vars":{"stringVar":"3","intVar": 3}} }'
+      text: '{"query":"query($vars: VarsInput) {\n\techoVars(vars: $vars) {\n\t\tstringVar \n\t\tintVar\n\t}\n}", "variables":{"vars":{"stringVar":"3","intVar": 3}} }'
     headers:
       - name: Content-Type
         value: application/json
-        id: pair_91da32f74847489ab06da669db0b425f
     settings:
       renderRequestBody: true
       encodeUrl: true
@@ -44,7 +42,6 @@ collection:
     headers:
       - name: Content-Type
         value: application/json
-        id: pair_91da32f74847489ab06da669db0b425f
     settings:
       renderRequestBody: true
       encodeUrl: true
@@ -63,12 +60,10 @@ collection:
     method: POST
     body:
       mimeType: application/graphql
-      text: '{"query": "query($inputVar: Int) { echoNum(intVar: $inputVar)}",
-        "variables": "{ \"inputVar\": {{ _.intVar }} }"}'
+      text: '{"query": "query($inputVar: Int) { echoNum(intVar: $inputVar)}", "variables": "{ \"inputVar\": {{ _.intVar }} }"}'
     headers:
       - name: Content-Type
         value: application/json
-        id: pair_91da32f74847489ab06da669db0b425f
     settings:
       renderRequestBody: true
       encodeUrl: true

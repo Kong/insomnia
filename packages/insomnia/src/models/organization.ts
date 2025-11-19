@@ -65,7 +65,7 @@ export type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | '
 export const formatCurrentPlanType = (type: PersonalPlanType) => {
   switch (type) {
     case 'free': {
-      return 'Hobby';
+      return 'Essentials';
     }
     case 'individual': {
       return 'Individual';
@@ -77,7 +77,7 @@ export const formatCurrentPlanType = (type: PersonalPlanType) => {
       return 'Enterprise';
     }
     case 'enterprise-member': {
-      return 'Enterprise Member';
+      return 'Enterprise';
     }
     default: {
       return 'Free';
@@ -94,4 +94,6 @@ export interface CurrentPlan {
   quantity: number;
   type: PersonalPlanType;
   planName: string;
+  status: 'trialing' | 'active';
+  trialingEnd: string;
 }
