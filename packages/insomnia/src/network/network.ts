@@ -489,7 +489,6 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     request,
     environment,
     timelinePath,
-    responseId,
     baseEnvironment,
     clientCertificates,
     cookieJar,
@@ -663,21 +662,8 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       timelinePath,
       serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
     );
-
-    const requestId = request._id;
     // stack trace is ignored as it is always from preload
     const errMessage = err.message ? err.message : err;
-    const responsePatch = {
-      _id: responseId,
-      parentId: requestId,
-      environemntId: environment._id,
-      globalEnvironmentId: globals?._id,
-      timelinePath,
-      statusMessage: 'Error',
-      error: errMessage,
-    };
-    const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
-    models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
     return { error: errMessage };
   }
 };
@@ -951,6 +937,7 @@ export async function sendCurlAndWriteTimeline(
   };
 }
 
+// Apply plugins to response
 export const responseTransform = async (
   patch: ResponsePatch,
   environmentId: string | null,

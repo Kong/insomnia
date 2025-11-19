@@ -16,6 +16,7 @@ import { startGRPCServer } from './grpc';
 import insomniaApi from './insomnia-api';
 import { mtlsRouter } from './mtls';
 import { oauthRoutes } from './oauth';
+import simpleCrud from './simple-crud';
 import { startSocketIOServer } from './socket-io';
 import { startWebSocketServer } from './websocket';
 
@@ -71,6 +72,7 @@ app.use('/protected', mtlsRouter);
 githubApi(app);
 gitlabApi(app);
 insomniaApi(app);
+simpleCrud(app);
 
 app.get('/delay/seconds/:duration', (req, res) => {
   const delaySec = Number.parseInt(req.params.duration || '2');
