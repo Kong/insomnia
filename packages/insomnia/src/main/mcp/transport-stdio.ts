@@ -13,7 +13,7 @@ export const createStdioTransport = async (
   context: ConnectionContext,
   options: OpenMcpStdioClientConnectionOptions,
 ) => {
-  const { responseId, environmentId: responseEnvironmentId, timelinePath, eventLogPath } = context;
+  const { responseId, environmentId, timelinePath, eventLogPath } = context;
   const { url, requestId, env } = options;
   if (!url) {
     throw new Error('Command is required for STDIO transport');
@@ -93,7 +93,7 @@ export const createStdioTransport = async (
       const responsePatch: Partial<McpResponse> = {
         _id: responseId,
         parentId: requestId,
-        environmentId: responseEnvironmentId,
+        environmentId,
         url,
         status: 'success',
         elapsedTime: performance.now() - start,

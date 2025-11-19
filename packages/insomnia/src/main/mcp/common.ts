@@ -107,7 +107,6 @@ export const createConnectionContext = async (
   const { requestId, workspaceId } = options;
   const connectionId = uuidV4();
 
-  console.debug('[debug] Create MCP connection context: ', requestId, connectionId);
   // Create response model and file streams
   const responseId = generateId(mcpResponsePrefix);
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
@@ -165,7 +164,6 @@ export const clearConnectionContext = async (context: ConnectionContext) => {
     await new Promise<void>(resolve => timelineStream.on('finish', () => resolve()));
   }
   timelineStream.end();
-  console.debug('[debug] Cleaned up MCP connection context: ', context.requestId, context.connectionId);
   // notify renderer process about state change
   updateMcpConnectionState(context, 'disconnected');
 };
@@ -200,14 +198,6 @@ export function updateMcpConnectionState(
 
   context.status = status;
   context.client = mcpClient;
-
-  console.debug(
-    '[debug] MCP connection state updated: ',
-    requestId,
-    status,
-    isActiveConnectionContext(context),
-    !activeConnectionContexts.get(requestId),
-  );
 
   // Only notify if this context is still the active connection
   if (isActiveConnectionContext(context)) {

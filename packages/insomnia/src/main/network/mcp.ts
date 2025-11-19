@@ -78,7 +78,6 @@ interface CommonMcpOptions {
 }
 
 const _handleCloseMcpConnection = (context: ConnectionContext) => {
-  console.debug('[debug] Close MCP connection: ', context.requestId, context.connectionId);
   const closeEvent: McpEventWithoutBase = {
     type: 'close',
     reason: 'Mcp connection closed',
@@ -284,8 +283,6 @@ const createTransportAndConnect = async (context: ConnectionContext, mcpClient: 
 };
 
 const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) => {
-  console.debug('[debug] Open MCP connection: ', options.requestId);
-
   const activeContext = getReadyActiveMcpConnectionContext(options.requestId);
   if (activeContext) {
     closeMcpConnection(activeContext);
