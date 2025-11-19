@@ -240,8 +240,6 @@ export const writeEventLogAndNotify = (
   const dataToWrite = newLine ? stringifiedData + '\n' : stringifiedData;
   // The write stream may be closed when closing the connection
   if (!eventLogStream.closed) {
-    console.log('eventLogStream write');
-
     eventLogStream.write(dataToWrite, () => {
       // notify all renderers of new event has been received
       if (responseId) {
