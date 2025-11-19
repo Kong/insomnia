@@ -89,9 +89,6 @@ const _handleCloseMcpConnection = (context: ConnectionContext) => {
     JSON.stringify({ value: 'Closed MCP connection', name: 'Text', timestamp: Date.now() }) + '\n',
   );
 
-  // notify renderer process about state change
-  updateMcpConnectionState(context, 'disconnected');
-
   clearConnectionContext(context);
 };
 
@@ -332,6 +329,7 @@ const performConnection = async (context: ConnectionContext) => {
       mcpClient.close();
       return;
     }
+    // Set the connected client in context after successful connection, to ensure it could be closed properly
     updateMcpConnectionState(context, 'connecting', mcpClient);
   } catch (error) {
     // Log error when connection fails with exception
@@ -411,38 +409,39 @@ const performConnection = async (context: ConnectionContext) => {
 const closeMcpConnection = async (options: CommonMcpOptions) => {
   const { requestId } = options;
   const context = activeConnectionContexts.get(requestId);
-
-  if (context) {
-    const { abortController } = context;
-    // Abort any ongoing connection attempt
-    abortController.abort();
-
-    // Clean up in-memory store
-    activeConnectionContexts.delete(requestId);
-
-    if (isContextReady(context)) {
-      const { client } = context;
-      // When client exists, it means the client connection has been established and could be closed gracefully
-      if (client) {
-        try {
-          // Only terminate session if transport is StreamableHTTPClientTransport
-          if ('terminateSession' in client.transport) {
-            await client.transport.terminateSession();
-          }
-        } catch (err) {
-          _handleMcpClientError(context, err as Error, 'Failed to terminate MCP session');
-        } finally {
-          // Alway close the connection even the transport terminate session fails
-          // This occurs when the server is not reachable, terminateSession failure will cause the connection to never close
-          await client.close();
-          // Execute clear resource subscription in main process rather than UI to make sure closeAllMcpConnections method will clear subscriptions
-          await models.mcpRequest.clearResourceSubscriptions(requestId);
-        }
-        trackSegmentEvent(SegmentEvent.mcpClientDisconnected);
-        return;
-      }
-    }
+  if (!context) {
+    return;
   }
+
+  const { abortController } = context;
+  // Abort any ongoing connection
+  abortController.abort();
+
+  if (!isContextReady(context)) {
+    return;
+  }
+
+  const { client } = context;
+  // When client exists, it means the client connection has been established and could be closed gracefully
+  if (!client) {
+    return;
+  }
+
+  try {
+    // Only terminate session if transport is StreamableHTTPClientTransport
+    if ('terminateSession' in client.transport) {
+      await client.transport.terminateSession();
+    }
+  } catch (err) {
+    _handleMcpClientError(context, err as Error, 'Failed to terminate MCP session');
+  } finally {
+    // Alway close the connection even the transport terminate session fails
+    // This occurs when the server is not reachable, terminateSession failure will cause the connection to never close
+    await client.close();
+    // Execute clear resource subscription in main process rather than UI to make sure closeAllMcpConnections method will clear subscriptions
+    await models.mcpRequest.clearResourceSubscriptions(requestId);
+  }
+  trackSegmentEvent(SegmentEvent.mcpClientDisconnected);
 };
 
 const closeAllMcpConnections = () => {

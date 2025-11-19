@@ -166,6 +166,11 @@ export const clearConnectionContext = async (context: ConnectionContext) => {
   timelineStream.end();
   // notify renderer process about state change
   updateMcpConnectionState(context, 'disconnected');
+
+  // Clear the context from active connections map when disconnected
+  if (activeConnectionContexts.get(context.requestId) === context) {
+    activeConnectionContexts.delete(context.requestId);
+  }
 };
 
 const mcpEventIdGenerator = () => `mcp-${uuidV4()}`;
