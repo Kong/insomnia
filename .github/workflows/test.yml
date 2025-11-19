@@ -59,7 +59,7 @@ jobs:
             const fs = require('fs');
             const path = require('path');
 
-            const MAX_CIRCULAR_REFERENCES = 223;
+            const MAX_CIRCULAR_REFERENCES = 172;
 
             // Function to generate markdown report
             function generateMarkdownReport(circularReferences, count) {
