@@ -486,8 +486,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           onCancel={() => setShowEnvVariableMissingModal(false)}
         >
           <div>
-            These environment variables have been defined, but have not been valued with in the currently active
-            environment:
+            These environment variables have been defined, but have not been assigned a value within the currently
+            active environment:
             <div className="flex max-h-80 flex-wrap gap-2 overflow-y-auto">
               {undefinedEnvironmentVariableList?.map(item => {
                 return (

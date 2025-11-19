@@ -342,7 +342,7 @@ export function transformToSdkProxyOptions(
     let sanitizedProxy = bestProxy;
     if (!bestProxy.includes('://')) {
       getExistingConsole().warn(`The protocol is missing for proxy, 'https:' is enabled for: ${bestProxy}`);
-      sanitizedProxy = 'https://' + bestProxy;
+      sanitizedProxy = `https://${bestProxy}`;
     }
 
     try {
@@ -360,7 +360,7 @@ export function transformToSdkProxyOptions(
         proxy.authenticate = true;
       }
     } catch (e) {
-      throw `Failed to parse proxy (${sanitizedProxy}): ${e.message}`;
+      throw new Error(`Failed to parse proxy (${sanitizedProxy}): ${e.message}`);
     }
   }
 

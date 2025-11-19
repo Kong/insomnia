@@ -12,8 +12,6 @@ resources:
     description: ""
     method: GET
     body: {}
-    parameters: []
-    headers: []
     authentication: {}
     metaSortKey: -1634914887774
     isPrivate: false
@@ -33,8 +31,6 @@ resources:
     description: ""
     method: GET
     body: {}
-    parameters: []
-    headers: []
     authentication: {}
     metaSortKey: -1634914887774
     isPrivate: false

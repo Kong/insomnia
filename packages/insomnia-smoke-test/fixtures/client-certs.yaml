@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: client-certs
 meta:
   id: wrk_a0d33d74a42e4a79b1acfd75f71da360

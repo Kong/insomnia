@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { app } from 'electron';
 
+import type { LLM_BACKENDS } from '~/common/constants';
 import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 import { ipcMainHandle } from '~/main/ipc/electron';
 
@@ -9,7 +10,7 @@ import * as models from '../models';
 
 const LLM_PLUGIN_NAME = 'insomnia-llm';
 
-export type LLMBackend = 'gguf' | 'claude' | 'openai' | 'gemini';
+export type LLMBackend = (typeof LLM_BACKENDS)[number];
 
 export interface LLMConfig {
   backend: LLMBackend;
@@ -116,16 +117,16 @@ export const getAIFeatureEnabled = async (feature: 'aiMockServers' | 'aiCommitMe
   return data?.value === 'true';
 };
 
-export const setAIFeatureEnabled = async (feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean): Promise<void> => {
+export const setAIFeatureEnabled = async (
+  feature: 'aiMockServers' | 'aiCommitMessages',
+  enabled: boolean,
+): Promise<void> => {
   await models.pluginData.upsertByKey(LLM_PLUGIN_NAME, `feature.${feature}`, String(enabled));
 
-  trackSegmentEvent(
-    enabled ? SegmentEvent.aiFeatureEnabled : SegmentEvent.aiFeatureDisabled,
-    {
-      feature: feature,
-      set_for: "user",
-    }
-  );
+  trackSegmentEvent(enabled ? SegmentEvent.aiFeatureEnabled : SegmentEvent.aiFeatureDisabled, {
+    feature: feature,
+    set_for: 'user',
+  });
 };
 
 export interface LLMConfigServiceAPI {
@@ -150,6 +151,10 @@ export const registerLLMConfigServiceAPI = () => {
   );
   ipcMainHandle('llm.getAllConfigurations', async () => getAllConfigurations());
   ipcMainHandle('llm.getCurrentConfig', async () => getCurrentConfig());
-  ipcMainHandle('llm.getAIFeatureEnabled', async (_, feature: 'aiMockServers' | 'aiCommitMessages') => getAIFeatureEnabled(feature));
-  ipcMainHandle('llm.setAIFeatureEnabled', async (_, feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean) => setAIFeatureEnabled(feature, enabled));
+  ipcMainHandle('llm.getAIFeatureEnabled', async (_, feature: 'aiMockServers' | 'aiCommitMessages') =>
+    getAIFeatureEnabled(feature),
+  );
+  ipcMainHandle('llm.setAIFeatureEnabled', async (_, feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean) =>
+    setAIFeatureEnabled(feature, enabled),
+  );
 };

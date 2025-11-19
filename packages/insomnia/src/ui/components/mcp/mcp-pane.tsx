@@ -28,7 +28,7 @@ import {
   METHOD_LIST_TOOLS,
 } from '~/common/mcp-utils';
 import { fuzzyMatchAll } from '~/common/misc';
-import type { McpEvent, McpMessageEvent } from '~/main/network/mcp';
+import type { McpEvent, McpMessageEvent } from '~/main/mcp/types';
 import type { McpRequest, McpServerPrimitiveTypes } from '~/models/mcp-request';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -50,6 +50,7 @@ import {
   type ResourceTemplateItem,
   type ToolItem,
 } from '~/ui/components/mcp/types';
+import { MCPCertificatesModal } from '~/ui/components/modals/mcp-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
@@ -72,6 +73,7 @@ export const McpPane = () => {
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
   const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
+  const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
   const [allExpanded, setAllExpanded] = useState(true);
   const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:mcp-list-filter`);
   const { settings } = useRootLoaderData()!;
@@ -81,7 +83,7 @@ export const McpPane = () => {
   const [primitiveNextCursor, setPrimitiveNextCursor] = useState<Partial<Record<McpServerPrimitiveTypes, string>>>({});
   const requestMetaPatcher = useRequestMetaPatcher();
   const [requestPaneActiveTab, setRequestPaneActiveTab] = useState<RequestPaneTabs>('params');
-  const patchRootsRequest = useRequestPatcher();
+  const patchRequest = useRequestPatcher();
   const requestId = activeRequest._id;
   const { activeEnvironment } = useWorkspaceLoaderData()!;
   const readyState = useMcpReadyState({ requestId });
@@ -228,14 +230,14 @@ export const McpPane = () => {
     if (isSubscribed) {
       try {
         await window.main.mcp.primitive.unsubscribeResource({ uri: item.uri, requestId: requestId });
-        patchRootsRequest(requestId, { subscribeResources: subscribeResources.filter(r => r !== item.name) });
+        patchRequest(requestId, { subscribeResources: subscribeResources.filter(r => r !== item.name) });
       } catch (error) {
         console.error(`Failed to unsubscribe resource ${item.name}: ${error}`);
       }
     } else {
       try {
         await window.main.mcp.primitive.subscribeResource({ uri: item.uri, requestId: requestId });
-        patchRootsRequest(requestId, { subscribeResources: [...subscribeResources, item.name] });
+        patchRequest(requestId, { subscribeResources: [...subscribeResources, item.name] });
       } catch (error) {
         console.error(`Failed to subscribe resource ${item.name}: ${error}`);
       }
@@ -245,7 +247,7 @@ export const McpPane = () => {
   useEffect(() => {
     const [, type, name] = activeRequestMeta?.activeMcpPrimitive?.match(/^([^_]+)_(.+)$/) || [];
     const primitiveItem = visibleCollection.find(i => i.itemLevel === 1 && i.type === type && i.name === name);
-    primitiveItem && setSelectedPrimitiveItem(primitiveItem as PrimitiveSubItem);
+    setSelectedPrimitiveItem(primitiveItem ? (primitiveItem as PrimitiveSubItem) : null);
   }, [activeRequest._id, activeRequestMeta?.activeMcpPrimitive, visibleCollection]);
 
   const virtualizer = useVirtualizer<HTMLDivElement, Element>({
@@ -401,6 +403,13 @@ export const McpPane = () => {
                 onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
               />
             </div>
+            <Button
+              onPress={() => setCertificatesModalOpen(true)}
+              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+            >
+              <Icon icon="file-contract" className="w-5 flex-shrink-0" />
+              <span className="truncate">Manage Certificates</span>
+            </Button>
           </div>
 
           <div className="flex flex-1 flex-col overflow-hidden">
@@ -506,6 +515,7 @@ export const McpPane = () => {
             </div>
           </div>
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
+          {isCertificatesModalOpen && <MCPCertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
         </div>
       </Panel>
       <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
@@ -523,7 +533,9 @@ export const McpPane = () => {
               onTabChange={setRequestPaneActiveTab}
             />
           </Panel>
-          <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
+          <PanelResizeHandle
+            className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'h-[1px] w-full bg-[--hl-md]'}
+          />
           <Panel id="mcp-response-pane" order={2} minSize={10} className="pane-two theme--pane">
             <ErrorBoundary showAlert>
               <RealtimeResponsePane />

@@ -1,4 +1,4 @@
-import React, { type FC, useCallback } from 'react';
+import { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
 import type { RequestParameter } from '~/models/request';
@@ -88,7 +88,7 @@ export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false }) =
       valuePlaceholder="value"
       descriptionPlaceholder="description"
       pairs={activeRequest.parameters}
-      onChange={onChangeParameter}
+      onChange={pairs => onChangeParameter(pairs as RequestParameter[])}
       isDisabled={disabled}
     />
   );

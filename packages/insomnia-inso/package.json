@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-inso",
-  "version": "12.0.0-beta.0",
+  "version": "12.1.0-beta.0",
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Insomnia - The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
@@ -32,6 +32,7 @@
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "test:unit": "cross-env NO_COLOR=1 vitest run --exclude '**/cli.test.ts'",
+    "test:unit:color": "vitest run --exclude '**/cli.test.ts'",
     "test:bundle": "vitest cli.test.ts -t \"inso dev bundle\"",
     "test:binary": "vitest cli.test.ts -t \"inso packaged binary\"",
     "type-check": "tsc --noEmit --project tsconfig.json",
@@ -65,6 +66,6 @@
     "yaml": "^2.7.1"
   },
   "optionalDependencies": {
-    "@kong/insomnia-plugin-external-vault": "0.1.1-dev.0.20250902151320"
+    "@kong/insomnia-plugin-external-vault": "0.1.3"
   }
 }

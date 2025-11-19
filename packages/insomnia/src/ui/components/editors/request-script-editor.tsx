@@ -142,7 +142,8 @@ const lintOptions = {
   undef: true,
   // Prevent undefined usages
   node: true,
-  esversion: 8, // ES8 syntax (async/await, etc)
+  // https://jshint.com/docs/options/#esversion
+  esversion: 11,
 };
 
 // TODO: We probably don't want to expose every property like .toObject() so we need a way to filter those out

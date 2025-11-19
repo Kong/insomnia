@@ -1,9 +1,12 @@
 import fs from 'node:fs';
 
-import { CallToolResultSchema } from '@modelcontextprotocol/sdk/types.js';
-import React, { useCallback, useRef } from 'react';
-import { Button } from 'react-aria-components';
+import { CallToolResultSchema, ElicitRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { type RJSFSchema, type UiSchema } from '@rjsf/utils';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Button, Toolbar } from 'react-aria-components';
 import { useParams } from 'react-router';
+
+import { InsomniaRjsfForm, type InsomniaRjsfFormHandle } from '~/ui/components/rjsf';
 
 import {
   getPreviewModeName,
@@ -13,7 +16,7 @@ import {
   PREVIEW_MODES,
 } from '../../../common/constants';
 import { METHOD_CALL_TOOL } from '../../../common/mcp-utils';
-import type { McpEvent } from '../../../main/network/mcp';
+import type { McpEvent } from '../../../main/mcp/types';
 import * as models from '../../../models';
 import {
   type McpRequestLoaderData,
@@ -28,17 +31,28 @@ interface Props {
   event: McpEvent;
 }
 
+const uiSchema: UiSchema = {
+  'ui:submitButtonOptions': {
+    norender: true,
+  },
+};
+
 export const MessageEventView = ({ event }: Props) => {
   const { activeRequestMeta, activeResponse } = useRequestLoaderData() as McpRequestLoaderData;
-  const { requestId } = useParams() as { requestId: string };
-  const editorRef = useRef<CodeEditorHandle>(null);
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
   const filter = activeRequestMeta.responseFilter || '';
+  const [formData, setFormData] = useState({});
+  const [isServerRequestResponded, setIsServerRequestResponded] = useState(true);
+  const rjsfFormRef = useRef<InsomniaRjsfFormHandle>(null);
+  const editorRef = useRef<CodeEditorHandle>(null);
+  const { requestId } = useParams() as { requestId: string };
 
   const isErrorEvent = event.type === 'error';
   const isCallToolEvent = event.type === 'message' && event.method === METHOD_CALL_TOOL;
   const eventData = isErrorEvent ? event.error : 'data' in event ? event.data : '';
   const raw = JSON.stringify(eventData);
+  const isElicitationRequest = ElicitRequestSchema.safeParse(eventData).success;
+  const [viewMode, setViewMode] = useState<'raw' | 'form'>('raw');
 
   const handleDownloadResponseBody = useCallback(async () => {
     const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
@@ -90,6 +104,19 @@ export const MessageEventView = ({ event }: Props) => {
     patchRequestMeta(requestId, { responseFilterHistory });
   };
 
+  const getElicitationFormSchema = () => {
+    if (ElicitRequestSchema.safeParse(eventData).success) {
+      const parsedElicitRequest = ElicitRequestSchema.parse(eventData);
+      const requestSchema = parsedElicitRequest.params.requestedSchema;
+      return requestSchema;
+    }
+    return {};
+  };
+
+  const handleRjsfFormChange = (formData: any) => {
+    setFormData(formData);
+  };
+
   let pretty = raw;
   try {
     const parsed = JSON.parse(raw);
@@ -122,11 +149,33 @@ export const MessageEventView = ({ event }: Props) => {
     // Can't parse as JSON.
   }
   const previewMode = ('previewMode' in activeRequestMeta && activeRequestMeta.previewMode) || PREVIEW_MODE_SOURCE;
+
+  useEffect(() => {
+    const checkRequestCompleted = async () => {
+      // check if the server request has been responded
+      const hasRequestResponded = await window.main.mcp.client.hasRequestResponded({
+        requestId,
+        serverRequestId: eventData?.id,
+      });
+      if (hasRequestResponded) {
+        setIsServerRequestResponded(true);
+        setViewMode('raw');
+      } else {
+        setIsServerRequestResponded(false);
+        setViewMode('form');
+      }
+    };
+    if (isElicitationRequest) {
+      checkRequestCompleted();
+    }
+  }, [requestId, eventData?.id, isElicitationRequest]);
+
   return (
     <div className="flex h-full flex-col">
-      <div className="box-border flex h-8 flex-row border-b border-gray-300 p-2">
+      <div className="box-border flex h-8 flex-row border-b border-gray-300">
         <Dropdown
           aria-label="Websocket Preview Mode Dropdown"
+          className="p-2"
           triggerButton={
             <Button className="tall">
               {getPreviewModeName(previewMode)}
@@ -142,6 +191,7 @@ export const MessageEventView = ({ event }: Props) => {
                   label={getPreviewModeName(mode, true)}
                   onClick={() => {
                     patchRequestMeta(requestId, { previewMode: mode });
+                    setViewMode('raw');
                     editorRef.current?.setValue(mode === PREVIEW_MODE_FRIENDLY ? pretty : raw);
                   }}
                 />
@@ -157,22 +207,89 @@ export const MessageEventView = ({ event }: Props) => {
             </DropdownItem>
           </DropdownSection>
         </Dropdown>
+        {isElicitationRequest && !isServerRequestResponded && (
+          <Button
+            className={`mx-2 mt-2 px-2 text-[--color-font] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] ${
+              viewMode === 'form' ? 'bg-[--hl-xs] text-[--color-font]' : ''
+            }`}
+            onPress={() => setViewMode('form')}
+          >
+            Elicitation Form
+          </Button>
+        )}
       </div>
-      <div className="flex-grow p-4">
-        <CodeEditor
-          id="mcp-data-preview"
-          hideLineNumbers
-          mode={previewMode === PREVIEW_MODE_RAW ? 'text/plain' : 'text/json'}
-          defaultValue={previewMode === PREVIEW_MODE_FRIENDLY ? pretty : raw}
-          uniquenessKey={event._id}
-          ref={editorRef}
-          filter={filter}
-          updateFilter={handleSetFilter}
-          filterHistory={filterHistory}
-          readOnly
-          autoPrettify
-        />
-      </div>
+      {viewMode === 'raw' ? (
+        <div className="h-full flex-grow p-4">
+          <CodeEditor
+            id="mcp-data-preview"
+            hideLineNumbers
+            mode={previewMode === PREVIEW_MODE_RAW ? 'text/plain' : 'text/json'}
+            defaultValue={previewMode === PREVIEW_MODE_FRIENDLY ? pretty : raw}
+            uniquenessKey={event._id}
+            ref={editorRef}
+            filter={filter}
+            updateFilter={handleSetFilter}
+            filterHistory={filterHistory}
+            readOnly
+            autoPrettify
+          />
+        </div>
+      ) : (
+        <div className="flex flex-grow flex-col overflow-hidden">
+          <div className="h-[calc(100%-var(--line-height-sm))] overflow-auto bg-inherit px-5 py-1">
+            <InsomniaRjsfForm
+              formData={formData}
+              onChange={handleRjsfFormChange}
+              schema={getElicitationFormSchema() as RJSFSchema}
+              uiSchema={uiSchema}
+              ref={rjsfFormRef}
+              showErrorList={false}
+              focusOnFirstError
+            />
+          </div>
+          <Toolbar className="content-box sticky bottom-0 z-10 flex h-[var(--line-height-sm)] flex-shrink-0 gap-3 border-b border-[var(--hl-md)] bg-[var(--color-bg)] px-5 py-2 text-[var(--font-size-sm)]">
+            <Button
+              onPress={() => {
+                if (rjsfFormRef.current?.validate()) {
+                  window.main.mcp.client.responseElicitationRequest({
+                    requestId,
+                    serverRequestId: eventData?.id,
+                    type: 'submit',
+                    content: formData,
+                  });
+                }
+              }}
+              className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
+            >
+              Submit
+            </Button>
+            <Button
+              onPress={() =>
+                window.main.mcp.client.responseElicitationRequest({
+                  requestId,
+                  serverRequestId: eventData?.id,
+                  type: 'decline',
+                })
+              }
+              className="rounded-[var(--radius-md)] border border-solid border-[var(--hl-lg)] bg-[var(--color-bg)] px-[var(--padding-md)] text-center"
+            >
+              Decline
+            </Button>
+            <Button
+              onPress={() =>
+                window.main.mcp.client.responseElicitationRequest({
+                  requestId,
+                  serverRequestId: eventData?.id,
+                  type: 'cancel',
+                })
+              }
+              className="rounded-[var(--radius-md)] border border-solid border-[var(--hl-lg)] bg-[var(--color-bg)] px-[var(--padding-md)] text-center"
+            >
+              Cancel
+            </Button>
+          </Toolbar>
+        </div>
+      )}
     </div>
   );
 };

@@ -5,6 +5,8 @@ import type { CurrentPlan, UserProfileResponse } from '~/models/organization';
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { Avatar } from '~/ui/components/avatar';
 import { Icon } from '~/ui/components/icon';
+import { showModal } from '~/ui/components/modals';
+import { LogoutModal } from '~/ui/components/modals/logout-modal';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 interface UserButtonProps {
@@ -29,7 +31,11 @@ export const HeaderUserButton = ({ user, isMinimal = false }: UserButtonProps) =
           className="focus:outline-none"
           onAction={action => {
             if (action === 'logout') {
-              logoutFetcher.submit();
+              showModal(LogoutModal, {
+                onConfirm: async (clearCredentials: boolean) => {
+                  await logoutFetcher.submit({ clearCredentials });
+                },
+              });
             }
 
             if (action === 'my-profile') {

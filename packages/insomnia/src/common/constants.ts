@@ -77,6 +77,8 @@ export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 24;
 
 export const ACCEPTED_NODE_CA_FILE_EXTS = ['.pem', '.crt', '.cer', '.p12'];
 
+export const LLM_BACKENDS = ['gguf', 'claude', 'openai', 'gemini'] as const;
+
 // Available editor key map
 export enum EditorKeyMap {
   default = 'default',
@@ -549,4 +551,5 @@ export const INSOMNIA_FETCH_TIME_OUT = 30_000;
 export const REALTIME_EVENTS_CHANNELS = {
   READY_STATE: 'readyState',
   NEW_EVENT: 'newEventReceived',
+  MCP_NOTIFICATION: 'mcpNotification',
 };

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import {
   href,
+  isRouteErrorResponse,
   Links,
   matchPath,
   Meta,
@@ -12,10 +13,10 @@ import {
   Scripts,
   ScrollRestoration,
   useNavigate,
+  useNavigation,
   useParams,
   useRouteLoaderData,
 } from 'react-router';
-import { isRouteErrorResponse, useNavigation } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import * as models from '~/models';
@@ -115,9 +116,11 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
           our Github Issues
         </a>
       </p>
-      <div className="p-6 text-[--color-font]">
-        <code className="break-words p-2">{errorMessage}</code>
-      </div>
+      {errorMessage && (
+        <div className="p-6 text-[--color-font]">
+          <code className="break-words p-2">{errorMessage}</code>
+        </div>
+      )}
       <div className="flex items-center gap-2">
         <Button
           className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-base font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
