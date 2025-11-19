@@ -202,6 +202,7 @@ export interface BaseRenderContext {
   getEnvironmentId: () => string | undefined;
   getGlobalEnvironmentId: () => string | undefined;
   getProjectId: () => string | undefined;
+  getUsedKeys?: () => string[] | undefined; // ['_.foo', '_.foo.bar'] array of used env var key paths
   [key: string]: any;
 }
 

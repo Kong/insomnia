@@ -1,5 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { Fragment, useMemo, useRef, useState } from 'react';
+import React, { Fragment, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -26,7 +26,7 @@ import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$org
 import { useEnvironmentUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.update';
 import { invariant } from '~/utils/invariant';
 
-import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
+import { docsTemplateTags } from '../../../common/documentation';
 import {
   type Environment,
   type EnvironmentKvPairData,
@@ -36,7 +36,6 @@ import {
 } from '../../../models/environment';
 import { isRemoteProject } from '../../../models/project';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { responseTagRegex } from '../../../templating/utils';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import { EditableInput } from '../editable-input';
 import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../editors/environment-editor';
@@ -73,12 +72,6 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
   const selectedEnvironment = [baseEnvironment, ...subEnvironments].find(env => env._id === selectedEnvironmentId);
-  const hasResponseTagEnvironmentVariable = useMemo(() => {
-    if (selectedEnvironment) {
-      return responseTagRegex.test(JSON.stringify(selectedEnvironment.data));
-    }
-    return false;
-  }, [selectedEnvironment]);
   // Do not allowed to switch to json environment if contains secret item
   const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(
     d => d.type === EnvironmentKvPairDataType.SECRET,
@@ -542,22 +535,10 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                 </div>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <div className="flex flex-col gap-1">
-                  {/* Warning message when user uses response tag in environment variable and suggest to user after-response script INS-4243 */}
-                  {hasResponseTagEnvironmentVariable && (
-                    <p className="warning text-sm italic">
-                      <Icon icon="exclamation-circle" />
-                      <a href={docsAfterResponseScript}>
-                        {' '}
-                        We suggest to save your response into an environment variable using after-response script.
-                      </a>
-                    </p>
-                  )}
-                  <p className="text-sm italic">
-                    * Environment data can be used for <a href={docsTemplateTags}>Nunjucks Templating</a> in your
-                    requests.
-                  </p>
-                </div>
+                <p className="text-sm italic">
+                  * Environment data can be used for <a href={docsTemplateTags}>Nunjucks Templating</a> in your
+                  requests.
+                </p>
                 <Button
                   onPress={close}
                   className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"

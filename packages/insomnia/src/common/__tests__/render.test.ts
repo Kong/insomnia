@@ -1,14 +1,24 @@
+import os from 'node:os';
+
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import * as models from '../../models';
-import { environmentModelSchema, requestGroupModelSchema } from '../../models/__schemas__/model-schemas';
+import {
+  cookieJarModelSchema,
+  environmentModelSchema,
+  requestGroupModelSchema,
+  requestModelSchema,
+} from '../../models/__schemas__/model-schemas';
 import type { Environment } from '../../models/environment';
 import type { Workspace } from '../../models/workspace';
+import { searchObjectForTemplateTags } from '../../templating/utils';
 import * as renderUtils from '../render';
 
 const envBuilder = createBuilder(environmentModelSchema);
 const reqGroupBuilder = createBuilder(requestGroupModelSchema);
+const requestBuilder = createBuilder(requestModelSchema);
+const cookieJarBuilder = createBuilder(cookieJarModelSchema);
 
 describe('render tests', () => {
   beforeEach(async () => {
@@ -20,31 +30,40 @@ describe('render tests', () => {
 
   describe('render()', () => {
     it('renders hello world', async () => {
-      const rendered = await renderUtils.render('Hello {{ msg }}!', {
-        msg: 'World',
+      const rendered = await renderUtils.render({
+        obj: 'Hello {{ msg }}!',
+        context: {
+          msg: 'World',
+        },
       });
       expect(rendered).toBe('Hello World!');
     });
 
     it('renders custom tag: uuid', async () => {
-      const rendered = await renderUtils.render('Hello {% uuid %}!');
+      const rendered = await renderUtils.render({ obj: 'Hello {% uuid %}!' });
       expect(rendered).toMatch(/Hello [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}!/);
     });
 
     it('renders nested object', async () => {
-      const rendered = await renderUtils.render('Hello {{ users[0].name }}!', {
-        users: [
-          {
-            name: 'FooBar',
-          },
-        ],
+      const rendered = await renderUtils.render({
+        obj: 'Hello {{ users[0].name }}!',
+        context: {
+          users: [
+            {
+              name: 'FooBar',
+            },
+          ],
+        },
       });
       expect(rendered).toBe('Hello FooBar!');
     });
 
     it('returns invalid template', async () => {
-      const rendered = await renderUtils.render('Hello {{ msg }!', {
-        msg: 'World',
+      const rendered = await renderUtils.render({
+        obj: 'Hello {{ msg }!',
+        context: {
+          msg: 'World',
+        },
       });
       expect(rendered).toBe('Hello {{ msg }!');
     });
@@ -71,7 +90,7 @@ describe('render tests', () => {
       });
       // In runtime, this context is used to render, which re-evaluates the expression for replaced in the rootEnvironment by using the built context
       // Regression test from issue 1917 - https://github.com/Kong/insomnia/issues/1917
-      const renderExpression = await renderUtils.render(rootEnvironment.data.replaced, context);
+      const renderExpression = await renderUtils.render({ obj: rootEnvironment.data.replaced, context });
       expect(renderExpression).toBe('cat');
     });
   });
@@ -98,7 +117,6 @@ describe('render tests', () => {
 
     it('rendered recursive should not infinite loop', async () => {
       const ancestors = [reqGroupBuilder.environment({ recursive: '{{ recursive }}/hello' }).build()];
-
       const context = await renderUtils.buildRenderContext({ ancestors });
       // This is longer than 3 because it multiplies every time (1 -> 2 -> 4 -> 8)
       expect(context).toEqual({
@@ -267,8 +285,8 @@ describe('render tests', () => {
           .build(),
       ];
       const context = await renderUtils.buildRenderContext({ ancestors });
-      expect(await renderUtils.render('{{ urls.admin }}/foo', context)).toBe('https://parent.com/admin/foo');
-      expect(await renderUtils.render('{{ urls.test }}/foo', context)).toBe('https://parent.com/test/foo');
+      expect(await renderUtils.render({ obj: '{{ urls.admin }}/foo', context })).toBe('https://parent.com/admin/foo');
+      expect(await renderUtils.render({ obj: '{{ urls.test }}/foo', context })).toBe('https://parent.com/test/foo');
     });
 
     it('renders child environment variables', async () => {
@@ -499,17 +517,17 @@ describe('render tests', () => {
 
   describe('render()', () => {
     it('correctly renders simple Object', async () => {
-      const newObj = await renderUtils.render(
-        {
+      const newObj = await renderUtils.render({
+        obj: {
           foo: '{{ foo }}',
           bar: 'bar',
           baz: '{{ bad }}',
         },
-        {
+        context: {
           foo: 'bar',
           bad: 'hi',
         },
-      );
+      });
       expect(newObj).toEqual({
         foo: 'bar',
         bar: 'bar',
@@ -531,8 +549,11 @@ describe('render tests', () => {
           arr: [1, 2, '{{ foo }}'],
         },
       };
-      const newObj = await renderUtils.render(obj, {
-        foo: 'bar',
+      const newObj = await renderUtils.render({
+        obj,
+        context: {
+          foo: 'bar',
+        },
       });
       expect(newObj).toEqual({
         foo: 'bar',
@@ -554,16 +575,16 @@ describe('render tests', () => {
 
     it('fails on bad template', async () => {
       try {
-        await renderUtils.render(
-          {
+        await renderUtils.render({
+          obj: {
             foo: '{{ foo }',
             bar: 'bar',
             baz: '{{ bad }}',
           },
-          {
+          context: {
             foo: 'bar',
           },
-        );
+        });
         fail('Render should have failed');
       } catch (err) {
         expect(err.message).toContain('Failed to render environment variables');
@@ -575,11 +596,15 @@ describe('render tests', () => {
       const context = {
         foo: 'bar',
       };
-      const resultOnlyVars = await renderUtils.render(template, context, null, 'keep');
+      const resultOnlyVars = await renderUtils.render({
+        obj: template,
+        context,
+        errorMode: 'keep',
+      });
       expect(resultOnlyVars).toBe('{{ foo }} {% invalid "hi" %}');
 
       try {
-        await renderUtils.render(template, context, null);
+        await renderUtils.render({ obj: template, context });
         fail('Render should not have succeeded');
       } catch (err) {
         expect(err.message).toBe('unknown block tag: invalid');
@@ -596,7 +621,7 @@ describe('render tests', () => {
       };
 
       try {
-        await renderUtils.render(template);
+        await renderUtils.render({ obj: template });
         fail('Should have failed to render');
       } catch (err) {
         expect(err.path).toBe('foo[0].bar');
@@ -613,7 +638,7 @@ describe('render tests', () => {
       };
 
       try {
-        await renderUtils.render(template);
+        await renderUtils.render({ obj: template });
         fail('Should have failed to render');
       } catch (err) {
         expect(err.path).toBe('_bar.baz');
@@ -735,6 +760,120 @@ describe('render tests', () => {
           },
         }),
       );
+    });
+  });
+  describe('On-demand rendering customized tag for requests', () => {
+    const rootEnvironment = envBuilder
+      .data({
+        foo: 'bar',
+        base: true,
+      })
+      .build();
+    const subEnvironment = envBuilder
+      .data({
+        foo: 'bar-sub',
+        faker: "{% faker 'randomPhoneNumber' %}",
+      })
+      .build();
+    const commonBaseContext = {
+      getMeta: () => ({
+        requestId: 'request-id-ut',
+        workspaceId: 'workspace-id-ut',
+      }),
+      getKeysContext: () => ({
+        keyContext: {},
+      }),
+      getPurpose: () => undefined,
+      getExtraInfo: () => undefined,
+      getEnvironmentId: () => undefined,
+      getGlobalEnvironmentId: () => undefined,
+      getProjectId: () => undefined,
+      getSettings: () => {},
+    };
+    it('Unused tag in environments should not be rendered', async () => {
+      const requestObj = requestBuilder
+        .name('Request')
+        .url('https://insomnia.rest')
+        .description('Description')
+        .body({
+          text: 'Body',
+        })
+        .build();
+      const requestUsedContextKeys = searchObjectForTemplateTags(requestObj);
+      expect(requestUsedContextKeys).toEqual([]);
+      const renderContext = await renderUtils.buildRenderContext({
+        rootEnvironment: rootEnvironment,
+        subEnvironment: subEnvironment,
+        ancestors: [],
+        baseContext: {
+          ...commonBaseContext,
+          getUsedKeys: () => requestUsedContextKeys,
+        },
+      });
+      expect(renderContext.faker).toEqual(subEnvironment.data.faker);
+      expect(renderContext.foo).toEqual(subEnvironment.data.foo);
+    });
+    it('Used tag in environments should be rendered', async () => {
+      const requestObj = requestBuilder
+        .name('Request')
+        .url('https://{{ _.url }} - {{ uuid }}')
+        .description('Description')
+        .body({
+          text: JSON.stringify({
+            os: '{{ _.nested.level1.level2.level3.os[0] }}',
+          }),
+        })
+        .build();
+      const rootGlobalEnvironment = envBuilder
+        .data({
+          url: "{% base64 'encode', 'normal', 'test' %}",
+          uuid: "{% uuid 'v4' %}",
+          nested: {
+            cookieValue: "{% os 'platform', '' %}",
+            level1: {
+              uuid_unused: "{% uuid 'v4' %}",
+              level2: {
+                level3: {
+                  os: ["{% os 'arch', '' %}"],
+                },
+              },
+            },
+          },
+        })
+        .build();
+      const reqCookeJar = cookieJarBuilder
+        .cookies([
+          {
+            domain: 'domain.com',
+            expires: '2038-01-18T19:14:00.000Z',
+            httpOnly: false,
+            id: '1f254c7d-5e65-46c6-85de-5cd10b8bf648',
+            key: 'foo',
+            path: '/',
+            secure: false,
+            value: '{{ _.nested.cookieValue }}',
+          },
+        ])
+        .build();
+      const requestUsedContextKeys = searchObjectForTemplateTags({
+        _req: requestObj,
+        _cookieJar: reqCookeJar,
+      });
+      const renderContext = await renderUtils.buildRenderContext({
+        rootEnvironment: rootEnvironment,
+        subEnvironment: subEnvironment,
+        rootGlobalEnvironment: rootGlobalEnvironment,
+        ancestors: [],
+        baseContext: {
+          ...commonBaseContext,
+          getUsedKeys: () => requestUsedContextKeys,
+        },
+      });
+      expect(renderContext.url).not.toEqual(rootGlobalEnvironment.data.url);
+      expect(renderContext.uuid).not.toEqual(rootGlobalEnvironment.data.uuid);
+      expect(renderContext.nested.level1.uuid_unused).toEqual(rootGlobalEnvironment.data.nested.level1.uuid_unused);
+      expect(renderContext.nested.level1.level2.level3.os[0]).toEqual(os.arch());
+      expect(renderContext.nested.cookieValue).toEqual(os.platform());
     });
   });
 });

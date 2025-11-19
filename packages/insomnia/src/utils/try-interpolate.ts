@@ -20,7 +20,7 @@ export const tryToInterpolateRequestOrShowRenderErrorModal = async ({
 }): Promise<any> => {
   try {
     const renderContext = await getRenderContext({ request, environment: environmentId, purpose: 'send' });
-    return await render(payload, renderContext);
+    return await render({ obj: payload, context: renderContext });
   } catch (error) {
     if (error instanceof RenderError) {
       showModal(RequestRenderErrorModal, { request, error });

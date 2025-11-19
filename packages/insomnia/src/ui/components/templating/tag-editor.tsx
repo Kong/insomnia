@@ -8,7 +8,6 @@ import * as reactUse from 'react-use';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../../common/database';
-import { docsAfterResponseScript } from '../../../common/documentation';
 import { delay, fnOrString } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
 import * as models from '../../../models';
@@ -27,7 +26,6 @@ import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { FileInputButton } from '../base/file-input-button';
 import { HelpTooltip } from '../help-tooltip';
-import { Icon } from '../icon';
 import { ArgConfigSubForm, couldRenderForm } from './tag-editor-arg-sub-form';
 
 interface Props {
@@ -302,16 +300,6 @@ export const TagEditor: FC<Props> = props => {
             <option value="custom">-- Custom --</option>
           </select>
         </label>
-        {/* Warning message when user uses response tag in environment variable and suggest to user after-response script INS-4243 */}
-        {activeTagDefinition?.name === 'response' && props.editorId?.includes('environment') && (
-          <p className="warning mt-2 text-sm">
-            <Icon icon="exclamation-circle" />
-            <a href={docsAfterResponseScript}>
-              {' '}
-              We suggest to save your response into an environment variable using after-response script.
-            </a>
-          </p>
-        )}
       </div>
       {activeTagDefinition?.args.map((argDefinition: NunjucksParsedTagArg, index) => {
         // Decide whether or not to show it

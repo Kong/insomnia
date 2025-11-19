@@ -1,7 +1,17 @@
 import type { Schema } from '@develohpanda/fluent-builder';
 import clone from 'clone';
 
-import { type AllTypes, type BaseModel, environment, grpcRequest, request, requestGroup, workspace } from '..';
+import {
+  type AllTypes,
+  type BaseModel,
+  cookieJar,
+  environment,
+  grpcRequest,
+  request,
+  requestGroup,
+  workspace,
+} from '..';
+import type { CookieJar } from '../cookie-jar';
 import type { Environment } from '../environment';
 import type { GrpcRequest } from '../grpc-request';
 import type { Request } from '../request';
@@ -63,4 +73,11 @@ export const environmentModelSchema: Schema<Environment> = {
   type: () => environment.type,
   environmentType: () => undefined,
   kvPairData: () => undefined,
+};
+
+export const cookieJarModelSchema: Schema<CookieJar> = {
+  ...baseModelSchema,
+  ...toSchema(cookieJar.init()),
+  type: () => cookieJar.type,
+  cookies: () => [],
 };

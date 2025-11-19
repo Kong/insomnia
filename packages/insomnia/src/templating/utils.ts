@@ -4,6 +4,7 @@ import { userSession } from '../models';
 import { decryptSecretValue, vaultEnvironmentMaskValue } from '../models/environment';
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
+import { extractUndefinedVariableKey } from './render-error';
 import objectPath from './third_party/objectPath';
 
 /**
@@ -290,4 +291,30 @@ export const responseTagRegex = new RegExp('{% *response *.* %}');
 
 export function sanitizeStrForWin32(str: string) {
   return str.replace(/\\/g, '\\\\\\\\');
+}
+
+export function searchObjectForTemplateTags<T extends Record<string, any>>(obj: T) {
+  const rootKeys = Object.keys(obj);
+  const stack = rootKeys.map(key => ({ path: key, value: obj[key] }));
+  const result: string[] = [];
+  while (stack.length) {
+    const { path, value } = stack.pop()!;
+    const valueType = Object.prototype.toString.call(value);
+    if (valueType === '[object Object]') {
+      const subKeys = Object.keys(value);
+      for (const subKey of subKeys) {
+        stack.push({ path: `${path}.${subKey}`, value: value[subKey] });
+      }
+    } else if (valueType === '[object Array]') {
+      for (const [i, element] of value.entries()) {
+        stack.push({ path: `${path}[${i}]`, value: element });
+      }
+    } else if (valueType === '[object String]') {
+      if (value.includes('{{') && value.includes('}}')) {
+        const variables = extractUndefinedVariableKey(value, {});
+        result.push(...variables);
+      }
+    }
+  }
+  return [...new Set(result)];
 }
