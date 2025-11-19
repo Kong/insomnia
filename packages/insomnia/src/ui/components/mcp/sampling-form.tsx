@@ -1,6 +1,6 @@
 import type { CreateMessageRequest, CreateMessageResult } from '@modelcontextprotocol/sdk/types.js';
 import type { RJSFSchema, UiSchema } from '@rjsf/utils/lib/types.js';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button, Toolbar } from 'react-aria-components';
 
 import type { MultiTurnMessage } from '~/plugins/types';
