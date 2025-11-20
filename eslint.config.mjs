@@ -1,4 +1,5 @@
 import eslint from '@eslint/js';
+import { defineConfig } from 'eslint/config';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import playwright from 'eslint-plugin-playwright';
 import reactPlugin from 'eslint-plugin-react';
@@ -7,7 +8,7 @@ import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
-export default tseslint.config(
+export default defineConfig([
   eslint.configs.recommended,
   tseslint.configs.strict,
   tseslint.configs.stylistic,
@@ -44,19 +45,15 @@ export default tseslint.config(
       'playwright/no-wait-for-timeout': 'error',
     },
   },
+  reactHooksPlugin.configs.flat.recommended,
   {
-    files: ['packages/insomnia/src/**/*.{ts,tsx}'],
-    plugins: { 'react-hooks': reactHooksPlugin },
     rules: {
-      'react-hooks/exhaustive-deps': [
-        'error',
-        {
-          // From react-use https://github.com/streamich/react-use/issues/1703#issuecomment-770972824
-          additionalHooks:
-            '^use(Async|AsyncFn|AsyncRetry|Debounce|UpdateEffect|IsomorphicLayoutEffect|DeepCompareEffect|ShallowCompareEffect)$',
-        },
-      ],
-      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/refs': 'off', //TODO: delete me
+      'react-hooks/set-state-in-effect': 'off', //TODO: delete me
+      'react-hooks/immutability': 'off', //TODO: delete me
+      'react-hooks/preserve-manual-memoization': 'off', //TODO: delete me
+      'react-hooks/incompatible-library': 'off', //TODO(use react-aria virtualizer): delete me
+      'react-hooks/purity': 'off', //TODO(bingbing): delete me
     },
   },
   {
@@ -165,4 +162,4 @@ export default tseslint.config(
       '**/.react-router/*',
     ],
   },
-);
+]);
