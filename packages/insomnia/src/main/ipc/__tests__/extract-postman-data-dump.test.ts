@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import extractPostmanDataDumpHandler from '../extractPostmanDataDump';
+import extractPostmanDataDumpHandler from '../extract-postman-data-dump';
 
 describe('Postman data dump extract', async () => {
   it('should extract collections and envs from postman data dump', async () => {

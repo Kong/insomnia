@@ -17,8 +17,8 @@ import {
   migrateProjectsIntoOrganization,
   shouldMigrateProjectUnderOrganization,
 } from '../sync/vcs/migrate-projects-into-organization';
-import { insomniaFetch } from '../ui/insomniaFetch';
 import { invariant } from '../utils/invariant';
+import { insomniaFetch } from './insomnia-fetch';
 
 // Create an in-memory storage to store the storage rules
 const inMemoryStorageRuleCache: Map<string, StorageRules> = new Map<string, StorageRules>();

@@ -5,7 +5,7 @@ import * as reactUse from 'react-use';
 import { isScratchpadOrganizationId } from '../../../models/organization';
 import type { BaseTab } from '../../components/tabs/tab';
 import type { OrganizationTabs } from '../../components/tabs/tab-list';
-import uiEventBus from '../../eventBus';
+import uiEventBus from '../../event-bus';
 
 interface UpdateInsomniaTabParams {
   organizationId: string;

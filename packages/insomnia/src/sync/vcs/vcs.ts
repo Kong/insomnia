@@ -11,7 +11,7 @@ import * as session from '../../account/session';
 import type { Operation } from '../../common/database';
 import { generateId } from '../../common/misc';
 import type { BaseModel } from '../../models';
-import { insomniaFetch } from '../../ui/insomniaFetch';
+import { insomniaFetch } from '../../ui/insomnia-fetch';
 import Store from '../store';
 import type { BaseDriver } from '../store/drivers/base';
 import compress from '../store/hooks/compress';

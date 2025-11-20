@@ -28,7 +28,7 @@ import { useCollaboratorsSearchLoaderFetcher } from '~/routes/organization.$orga
 import { SegmentEvent } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 import { useIsLightTheme } from '~/ui/hooks/theme';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { startInvite } from './encryption';
 import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
