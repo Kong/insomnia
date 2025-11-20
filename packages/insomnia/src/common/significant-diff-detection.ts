@@ -177,7 +177,7 @@ export function hasSignificantChanges(
     // Compare cleaned structures
     return !deepEqual(cleanedOriginal, cleanedModified);
   } catch (err) {
-    console.warn('Parse error: ', err);
+    console.warn('Parse error:', err);
     return originalContent !== modifiedContent;
   }
 }

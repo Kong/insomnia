@@ -98,7 +98,7 @@ app.on('ready', async () => {
       const names = await Promise.all(extensions.map(extension => installExtension(extension)));
       console.log(`[electron-extensions] Added DevTools Extension${extensionsPlural}: ${names.join(', ')}`);
     } catch (err) {
-      console.log('[electron-extensions] An error occurred: ', err);
+      console.log('[electron-extensions] An error occurred:', err);
     }
   }
 
@@ -200,7 +200,7 @@ const _launchApp = async () => {
     console.log('[main] Check args and create windows', args);
     if (args.length) {
       window = windowUtils.createWindowsAndReturnMain();
-      window.webContents.send('shell:open', args.join());
+      window.webContents.send('shell:open', args.join(','));
     }
   });
   // Disable deep linking in playwright e2e tests in order to run multiple tests in parallel
@@ -221,7 +221,7 @@ const _launchApp = async () => {
           }
           window.focus();
         }
-        const lastArg = args.slice(-1).join();
+        const lastArg = args.slice(-1).join(',');
         console.log('[main] Open Deep Link URL sent from second instance', lastArg);
         window.webContents.send('shell:open', lastArg);
       });

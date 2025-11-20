@@ -255,7 +255,7 @@ export const CodeEditor = memo(
                   const results = JSONPath({ json: codeObj, path: filter.trim() });
                   jsonString = JSON.stringify(results);
                 } catch (err) {
-                  console.log('[jsonpath] Error: ', err);
+                  console.log('[jsonpath] Error:', err);
                   jsonString = '[]';
                 }
               }

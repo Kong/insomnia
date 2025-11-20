@@ -12,7 +12,7 @@ import * as models from '../models';
 export async function backupIfNewerVersionAvailable() {
   try {
     const settings = await models.settings.get();
-    console.log('[main] Checking for newer version than ', version);
+    console.log('[main] Checking for newer version than', version);
     const url = getUpdateUrl(settings.updateChannel);
     if (!url) {
       console.log('[main] Update URL not found, skipping backup check');

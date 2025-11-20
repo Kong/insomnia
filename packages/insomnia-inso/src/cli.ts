@@ -345,7 +345,7 @@ export const go = (args?: string[]) => {
     const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
 
     const options = {
-      ...(__configFile?.options || {}),
+      ...__configFile?.options,
       ...commandOptions,
       configFileContent: __configFile,
     };
