@@ -196,5 +196,5 @@ const isMain = require.main === module;
 if (isMain) {
   const mode = process.env.NODE_ENV === 'development' ? 'development' : 'production';
   const autoRestart = process.argv.includes('--autoRestart');
-  await build({ mode, autoRestart });
+  build({ mode, autoRestart });
 }
