@@ -3,7 +3,7 @@ import * as srp from '@getinsomnia/srp-js';
 import { userSession as sessionModel } from '../models';
 import type { UserSession } from '../models/user-session';
 import { base64encode, saveVaultKeyIfNecessary } from '../utils/vault';
-import { insomniaFetch } from './insomniaFetch';
+import { insomniaFetch } from './insomnia-fetch';
 
 const { Buffer, Client, generateAES256Key, getRandomHex, params, srpGenKey } = srp;
 interface FetchError {

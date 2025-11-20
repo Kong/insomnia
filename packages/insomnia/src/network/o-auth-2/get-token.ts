@@ -16,7 +16,7 @@ import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParamete
 import type { Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId, type RequestGroup } from '../../models/request-group';
 import type { Response } from '../../models/response';
-import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../ui/eventBus';
+import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../ui/event-bus';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getAuthObjectOrNull, isAuthEnabled } from '../authentication';
