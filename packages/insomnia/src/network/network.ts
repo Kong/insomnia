@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import nodePath from 'node:path';
+import path from 'node:path';
 
 import clone from 'clone';
 import orderedJSON from 'json-order';
@@ -659,6 +660,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       parentFolders: output.parentFolders,
     };
   } catch (err) {
+    await fs.promises.mkdir(nodePath.dirname(timelinePath), { recursive: true });
     await fs.promises.appendFile(
       timelinePath,
       serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
@@ -1101,6 +1103,7 @@ async function _applyResponsePluginHooks(
 }
 export const defaultSendActionRuntime = {
   appendTimeline: async (timelinePath: string, logs: string[]) => {
+    await fs.promises.mkdir(path.dirname(timelinePath), { recursive: true });
     await fs.promises.appendFile(timelinePath, logs.join('\n'));
   },
 };

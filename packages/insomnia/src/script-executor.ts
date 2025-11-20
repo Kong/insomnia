@@ -1,4 +1,5 @@
-import { appendFile } from 'node:fs/promises';
+import { appendFile, mkdir } from 'node:fs/promises';
+import path from 'node:path';
 
 import * as _ from 'es-toolkit/compat';
 
@@ -66,7 +67,7 @@ export const runScript = async ({
   const updatedSettings = mergeSettings(context.settings, mutatedContextObject.request);
   const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
   const updatedCookieJar = mergeCookieJar(context.cookieJar, mutatedContextObject.cookieJar);
-
+  await mkdir(path.dirname(context.timelinePath), { recursive: true });
   await appendFile(context.timelinePath, scriptConsole.dumpLogs());
 
   // console.log('mutatedInsomniaObject', mutatedContextObject);
