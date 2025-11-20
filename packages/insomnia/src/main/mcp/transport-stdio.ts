@@ -52,7 +52,7 @@ export const createStdioTransport = async (
       timestamp: Date.now(),
     });
   }
-  initialTimelines.map(t => writeTimeline(context, JSON.stringify(t) + '\n'));
+  initialTimelines.map(t => writeTimeline(context, JSON.stringify(t)));
 
   const start = performance.now();
   const transport = new StdioClientTransport({
@@ -75,7 +75,7 @@ export const createStdioTransport = async (
         value: stderrData,
         name: 'HeaderIn',
         timestamp: Date.now(),
-      }) + '\n',
+      }),
     );
   });
   // Wrap the original send method to log outgoing requests for stdio transport
@@ -87,7 +87,7 @@ export const createStdioTransport = async (
       // Add process started timeline (similar to HTTP response timeline)
       writeTimeline(
         context,
-        JSON.stringify({ value: 'Process started and ready', name: 'Text', timestamp: Date.now() }) + '\n',
+        JSON.stringify({ value: 'Process started and ready', name: 'Text', timestamp: Date.now() }),
       );
 
       const responsePatch: Partial<McpResponse> = {

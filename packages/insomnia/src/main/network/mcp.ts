@@ -84,10 +84,7 @@ const _handleCloseMcpConnection = (context: ConnectionContext) => {
   };
   writeEventLogAndNotify(context, closeEvent);
 
-  writeTimeline(
-    context,
-    JSON.stringify({ value: 'Closed MCP connection', name: 'Text', timestamp: Date.now() }) + '\n',
-  );
+  writeTimeline(context, JSON.stringify({ value: 'Closed MCP connection', name: 'Text', timestamp: Date.now() }));
 
   clearConnectionContext(context);
 };

@@ -103,7 +103,7 @@ const wrappedFetch = async (
       { value: `Preparing request to ${url.toString()}`, name: 'Text', timestamp: Date.now() },
       { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
     ];
-    initialTimelines.map(t => writeTimeline(context, JSON.stringify(t) + '\n'));
+    initialTimelines.map(t => writeTimeline(context, JSON.stringify(t)));
   }
   const requestHeaders: { name: string; value: string }[] = [...reqHeader.entries()].map(([name, value]) => ({
     name,
@@ -120,7 +120,7 @@ const wrappedFetch = async (
     `${requestMethodLine}\n${headersOut}`,
     response,
   );
-  timeline.map(t => writeTimeline(context, JSON.stringify(t) + '\n'));
+  timeline.map(t => writeTimeline(context, JSON.stringify(t)));
 
   if (isMcpInitializeRequest) {
     // Create response model only for initialize response
