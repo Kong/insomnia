@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import type { BaseModel } from '../models';
 import * as models from '../models';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
@@ -138,10 +139,16 @@ export async function getSendRequestCallbackMemDb(
     const bodyBuffer = (await getBodyBuffer(res)) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
 
-    const testResults = [
-      ...(mutatedContext.requestTestResults || []),
-      ...(postMutatedContext.requestTestResults || []),
-    ];
+    const preTestResults: RequestTestResult[] = (mutatedContext.requestTestResults || []).map(result => ({
+      ...result,
+      category: 'pre-request',
+    }));
+    const postTestResults: RequestTestResult[] = (postMutatedContext?.requestTestResults || []).map(result => ({
+      ...result,
+      category: 'after-response',
+    }));
+
+    const testResults = [...preTestResults, ...postTestResults];
     return {
       status,
       statusMessage,
