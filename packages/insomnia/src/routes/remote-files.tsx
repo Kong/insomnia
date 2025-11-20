@@ -4,7 +4,7 @@ import { database } from '~/common/database';
 import { project, userSession } from '~/models';
 import { type Organization } from '~/models/organization';
 import { type Project } from '~/models/project';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/remote-files';

@@ -1,12 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { type BaseModel } from '../models';
+import type { BaseModel } from '../models';
 import * as models from '../models';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
 import { getBodyBuffer } from '../models/response';
 import type { Settings } from '../models/settings';
 import {
+  defaultSendActionRuntime,
   fetchRequestData,
   responseTransform,
   sendCurlAndWriteTimeline,
@@ -14,12 +15,15 @@ import {
   tryToExecutePreRequestScript,
   tryToInterpolateRequest,
 } from '../network/network';
-import { defaultSendActionRuntime } from '../network/network';
 import { database } from './database';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
-type SettingsOverride = Pick<Settings, 'validateSSL' | 'dataFolders'>;
+interface SettingsOverride {
+  validateSSL?: Settings['validateSSL'];
+  dataFolders?: Settings['dataFolders'];
+  timeout?: Settings['timeout'];
+}
 const wrapAroundIterationOverIterationData = (
   list?: UserUploadEnvironment[],
   currentIteration?: number,
@@ -89,6 +93,7 @@ export async function getSendRequestCallbackMemDb(
       environment: mutatedContext.environment,
       purpose: 'send',
       extraInfo: undefined,
+      transientVariables: mutatedContext.transientVariables || transientVariables,
       baseEnvironment: mutatedContext.baseEnvironment,
       userUploadEnvironment: mutatedContext.userUploadEnvironment,
       ignoreUndefinedEnvVariable,
@@ -105,6 +110,11 @@ export async function getSendRequestCallbackMemDb(
       requestData.responseId,
     );
     const res = await responseTransform(response, environmentId, renderedRequest, renderedResult.context);
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
     const postMutatedContext = await tryToExecuteAfterResponseScript({
       ...requestData,
       ...mutatedContext,
@@ -112,21 +122,12 @@ export async function getSendRequestCallbackMemDb(
       transientVariables: mutatedContext.transientVariables || transientVariables,
       response,
     });
-    // TODO: figure out how to handle this error
     if ('error' in postMutatedContext) {
       console.error(
         '[network] An error occurred while running after-response script for request named:',
         renderedRequest.name,
       );
-      throw {
-        error: postMutatedContext.error,
-        response: await responseTransform(
-          response,
-          requestData.activeEnvironmentId,
-          renderedRequest,
-          renderedResult.context,
-        ),
-      };
+      throw new Error(postMutatedContext.error);
     }
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
 

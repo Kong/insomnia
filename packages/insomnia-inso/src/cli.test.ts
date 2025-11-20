@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { beforeAll, describe, expect, it } from 'vitest';
+
 // Tests both bundle and packaged versions of the CLI with the same commands and expectations.
 // Intended to be coarse grained (only checks for success or failure) smoke test to ensure packaging worked as expected.
 
@@ -47,6 +48,8 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-smoke-test/fixtures/simple.yaml -e production --requestNamePattern "example http" wrk_dc393c',
   // after-response script and test
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/after-response.yml wrk_616795 --verbose',
+  // transient variables
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/transient-variables.yml wrk_3d6697b --verbose',
   // select request by id
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/three-requests.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -i req_6063adcdab5b409e9b4f00f47322df4a wrk_c992d40',
   // setNextRequest runs the next request then ends
@@ -55,6 +58,8 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/with-missing-env-vars.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 --env-var firstkey=first --env-var secondkey=second wrk_c992d40',
   // globals file path env overrides
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/with-missing-env-vars.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 --globals packages/insomnia-inso/src/examples/global-environment.yml wrk_c992d40',
+  // with timeout success
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/timeout-test.yml -i req_two_seconds --requestTimeout 3000 wrk_timeout_test',
 ];
 
 const shouldReturnErrorCode = [
@@ -66,6 +71,8 @@ const shouldReturnErrorCode = [
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/insomnia-v5/with-tests.yaml -e env_env_7c2769 uts_1c6207',
   // after-response script and test
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/after-response-failed-test.yml wrk_616795 --verbose',
+  // with timeout failure
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/timeout-test.yml -i req_two_seconds --requestTimeout 1000 wrk_timeout_test',
 ];
 beforeAll(async () => {
   // ensure the test server is running

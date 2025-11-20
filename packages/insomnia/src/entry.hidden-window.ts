@@ -38,9 +38,14 @@ window.bridge.onmessage(
       const result = await window.bridge.Promise.race([timeoutPromise, runScript(data)]);
       callback(result);
     } catch (err) {
-      const errMessage = err.message ? `Error from Pre-request or after-response script:\n${err.message};` : err;
-      const errStack = err.stack ? `Stack: ${err.stack};` : '';
-      const fullErrMessage = `${errMessage}\n${errStack}`;
+      const errMessage = err.message
+        ? `Error from Pre-request or after-response script:
+      
+${err.message}`
+        : err;
+      const fullErrMessage = `${errMessage}
+
+${err.stack ? `Stack: ${err.stack}` : ''}`;
       Sentry.captureException(errMessage, {
         tags: {
           source: 'hidden-window',

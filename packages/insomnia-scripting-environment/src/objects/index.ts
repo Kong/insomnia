@@ -7,7 +7,7 @@ export * from './urls';
 export * from './cookies';
 export * from './console';
 export * from './request-info';
-export * from './async_objects';
+export * from './async-objects';
 export * from './test';
 export * from './execution';
 export * from './proxy-configs';
