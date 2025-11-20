@@ -6,7 +6,7 @@ import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';

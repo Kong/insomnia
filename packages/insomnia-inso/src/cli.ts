@@ -16,7 +16,7 @@ import type { Environment, UserUploadEnvironment } from 'insomnia/src/models/env
 import { init } from 'insomnia/src/models/environment';
 import type { Request } from 'insomnia/src/models/request';
 import type { RequestGroup } from 'insomnia/src/models/request-group';
-import { insomniaFetch } from 'insomnia/src/ui/insomniaFetch';
+import { insomniaFetch } from 'insomnia/src/ui/insomnia-fetch';
 import { deserializeNDJSON } from 'insomnia/src/utils/ndjson';
 import { configureFetch } from 'insomnia-core/insomnia-api';
 import { generate, runTestsCli } from 'insomnia-testing';
