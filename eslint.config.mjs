@@ -7,7 +7,6 @@ import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
-
 export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.strict,
@@ -21,36 +20,14 @@ export default tseslint.config(
           case: 'kebabCase',
         },
       ],
-      'unicorn/error-message': 'error',
-      'unicorn/new-for-builtins': 'error',
-      'unicorn/no-abusive-eslint-disable': 'error',
       'unicorn/no-for-loop': 'error',
-      'unicorn/no-invalid-remove-event-listener': 'error',
-      'unicorn/no-new-buffer': 'error',
-      'unicorn/no-static-only-class': 'error',
-      'unicorn/no-thenable': 'error',
-      'unicorn/no-typeof-undefined': 'error',
-      'unicorn/no-unnecessary-polyfills': 'error',
-      'unicorn/no-unnecessary-slice-end': 'error',
-      'unicorn/no-useless-spread': 'error',
-      'unicorn/prefer-array-flat-map': 'error',
-      'unicorn/prefer-array-flat': 'error',
-      'unicorn/prefer-array-index-of': 'error',
-      'unicorn/prefer-includes': 'error',
-      'unicorn/prefer-node-protocol': 'error',
-      'unicorn/prefer-object-from-entries': 'error',
-      'unicorn/prefer-string-slice': 'error',
-      'unicorn/prefer-string-starts-ends-with': 'error',
-      'unicorn/relative-url-style': 'error',
+      'unicorn/prefer-top-level-await': 'off', // no top level await in our build targets yet
       'unicorn/switch-case-braces': 'error',
-      'unicorn/throw-new-error': 'error',
-      'no-throw-literal': 'error',
-      // 'unicorn/custom-error-definition': 'error', //TODO: Enable this rule
-      // 'unicorn/expiring-todo-comments': 'error', //TODO: Enable this rule
-      // 'unicorn/explicit-length-check': 'error', //TODO: Enable this rule
-      // 'unicorn/no-negated-condition': 'error', //TODO: Enable this rule
-      // 'unicorn/no-null': 'error', // TODO: Enable this rule
-      // 'unicorn/prefer-add-event-listener': 'error', //TODO: Enable this rule
+      'unicorn/no-array-method-this-argument': 'off',
+      'unicorn/text-encoding-identifier-case': 'off', // TODO: delete me
+      'unicorn/prefer-add-event-listener': 'off', // TODO: delete me
+      'unicorn/no-object-as-default-parameter': 'off', // TODO: delete me
+      'unicorn/prefer-array-some': 'off', // TODO: delete me
     },
   },
   {
@@ -82,66 +59,77 @@ export default tseslint.config(
     },
   },
   {
+    files: ['packages/insomnia/src/**/*.{ts,tsx}'],
+    ...reactPlugin.configs.flat.recommended,
+    ...reactPlugin.configs.flat['jsx-runtime'],
+    languageOptions: {
+      ...reactPlugin.configs.flat.recommended.languageOptions,
+      globals: {
+        ...globals.browser,
+      },
+    },
     settings: {
       react: {
         version: 'detect',
       },
     },
-    plugins: {
-      'react': reactPlugin,
-      'simple-import-sort': simpleImportSortPlugin,
-    },
     rules: {
-      'default-case': 'error',
-      'default-case-last': 'error',
-      'eol-last': ['error', 'always'],
-      'eqeqeq': ['error', 'smart'],
-      'no-async-promise-executor': 'off',
-      'no-else-return': 'error',
-      'no-empty': ['error', { allowEmptyCatch: true }],
-      'no-var': 'error',
-      'no-trailing-spaces': 'error',
-      'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0 }],
-      'no-inner-declarations': 'off',
-      'no-useless-escape': 'off', // TODO: Enable this rule
-      'object-curly-spacing': ['error', 'always'],
-      'space-before-function-paren': ['error', { anonymous: 'ignore', named: 'ignore', asyncArrow: 'always' }],
-      'space-unary-ops': 'error',
-      'react/no-unescaped-entities': 'off', // TODO: Enable this rule
       'react/jsx-first-prop-new-line': ['error', 'multiline'],
       'react/jsx-max-props-per-line': ['error', { maximum: 1, when: 'multiline' }],
-      'react/jsx-uses-react': 'error',
-      'react/jsx-uses-vars': 'error',
       'react/jsx-indent-props': ['error', 2],
-      'react/prop-types': 'off',
       'react/function-component-definition': [
         'error',
         {
-          namedComponents: 'arrow-function',
+          namedComponents: ['arrow-function', 'function-declaration'],
           unnamedComponents: 'arrow-function',
         },
       ],
       'react/jsx-closing-bracket-location': ['error', 'line-aligned'],
       'react/prefer-stateless-function': 'error',
       'react/jsx-key': ['error', { checkFragmentShorthand: true }],
-      'react/no-array-index-key': 'error',
       'react/self-closing-comp': 'error',
-
+      'react/react-in-jsx-scope': 'off',
+      'react/no-unescaped-entities': 'off',
+      'react/prop-types': 'off',
+      'react/no-array-index-key': 'error',
+    },
+  },
+  {
+    plugins: {
+      'simple-import-sort': simpleImportSortPlugin,
+    },
+    rules: {
+      'simple-import-sort/imports': 'error',
+    },
+  },
+  {
+    rules: {
+      'default-case': 'error',
+      'default-case-last': 'error',
+      'eqeqeq': ['error', 'smart'],
+      'no-async-promise-executor': 'off',
+      'no-else-return': 'error',
+      'no-empty': ['error', { allowEmptyCatch: true }],
+      'no-var': 'error',
+      'no-inner-declarations': 'off',
+      'no-useless-escape': 'off', // TODO: delete me
+    },
+  },
+  {
+    rules: {
       '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
       '@typescript-eslint/consistent-type-imports': 'error',
-      '@typescript-eslint/no-empty-interface': ['error', { allowSingleExtends: true }],
-      '@typescript-eslint/no-empty-object-type': 'off', // TODO: Enable this rule
+      '@typescript-eslint/no-empty-object-type': 'off', // TODO: delete me
       '@typescript-eslint/no-empty-function': 'off',
       '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
       '@typescript-eslint/no-redeclare': 'error',
       '@typescript-eslint/no-require-imports': 'off',
-      '@typescript-eslint/no-unused-expressions': 'off', // TODO: Enable this rule
-      '@typescript-eslint/no-unused-vars': 'off', // TODO: Enable this rule
+      '@typescript-eslint/no-unused-expressions': 'off', // TODO: delete me
+      '@typescript-eslint/no-unused-vars': 'off', // TODO: delete me
 
-      'simple-import-sort/imports': 'error',
-      '@typescript-eslint/no-use-before-define': 'off', // TODO: Enable this rule
-      '@typescript-eslint/no-explicit-any': 'off', // TODO: Enable this rule
+      '@typescript-eslint/no-use-before-define': 'off', // TODO: delete me
+      '@typescript-eslint/no-explicit-any': 'off', // TODO: delete me
       '@typescript-eslint/no-dynamic-delete': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-invalid-void-type': 'off',
