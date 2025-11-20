@@ -16,7 +16,7 @@ import * as models from '../../../models';
 import { workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';
 import { NeDBClient } from '../ne-db-client';
-import { assertAsyncError, setupDateMocks } from './util';
+import { assertAsyncError } from './util';
 
 const workspaceBuilder = createBuilder(workspaceModelSchema);
 
@@ -28,7 +28,7 @@ describe('NeDBClient', () => {
 
   beforeEach(async () => {
     workspaceBuilder.reset();
-    setupDateMocks();
+    vi.useFakeTimers();
     await db.init({ inMemoryOnly: true }, true);
 
     // Create test project

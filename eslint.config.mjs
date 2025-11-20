@@ -27,6 +27,7 @@ export default defineConfig([
       'unicorn/switch-case-braces': 'error', // more explicit braces
       'unicorn/no-array-method-this-argument': 'off', //our nedb implementation uses this
       'unicorn/prefer-dom-node-text-content': 'off', // we use this in an e2e test
+      'unicorn/prefer-response-static-json': 'off', // unsafe in our templating worker
 
       'unicorn/text-encoding-identifier-case': 'off', // TODO: delete me
       'unicorn/prefer-add-event-listener': 'off', // TODO: delete me
