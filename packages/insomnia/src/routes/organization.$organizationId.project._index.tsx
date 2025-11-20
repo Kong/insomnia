@@ -653,7 +653,6 @@ const Component = () => {
     });
   };
 
-
   const canCreateMockServer = activeProject?._id;
   const isGitSyncEnabled = features.gitSync.enabled;
 
@@ -675,12 +674,16 @@ const Component = () => {
       icon: 'file',
       action: createNewDocument,
     },
-    ...(canCreateMockServer ? [{
-      id: 'new-mock-server',
-      name: 'Mock Server',
-      icon: 'server' as IconName,
-      action: createNewMockServer,
-    }] : []),
+    ...(canCreateMockServer
+      ? [
+          {
+            id: 'new-mock-server',
+            name: 'Mock Server',
+            icon: 'server' as IconName,
+            action: createNewMockServer,
+          },
+        ]
+      : []),
     {
       id: 'new-environment',
       name: 'Environment',
@@ -724,16 +727,20 @@ const Component = () => {
         run: createNewCollection,
       },
     },
-    ...(canCreateMockServer ? [{
-      id: 'mock-server',
-      label: `Mock (${mockServersCount})`,
-      icon: 'server' as IconName,
-      action: {
-        icon: 'plus' as IconName,
-        label: 'New Mock Server',
-        run: createNewMockServer,
-      },
-    }] : []),
+    ...(canCreateMockServer
+      ? [
+          {
+            id: 'mock-server',
+            label: `Mock (${mockServersCount})`,
+            icon: 'server' as IconName,
+            action: {
+              icon: 'plus' as IconName,
+              label: 'New Mock Server',
+              run: createNewMockServer,
+            },
+          },
+        ]
+      : []),
     {
       id: 'environment',
       label: `Environments (${environmentsCount})`,

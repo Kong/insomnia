@@ -20,6 +20,12 @@ export default tseslint.config(
       unicorn: eslintPluginUnicorn,
     },
     rules: {
+      'unicorn/filename-case': [
+        'error',
+        {
+          case: 'kebabCase',
+        },
+      ],
       'unicorn/error-message': 'error',
       'unicorn/new-for-builtins': 'error',
       'unicorn/no-abusive-eslint-disable': 'error',
