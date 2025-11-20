@@ -72,16 +72,18 @@ export const getUserProfile = async ({ sessionId }: { sessionId: string }) => {
 };
 
 // GET /v1/billing/current-plan
-type PaymentPeriod = 'month' | 'year';
 export type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
+type PaymentSchedules = 'month' | 'year';
 export interface CurrentPlan {
   isActive: boolean;
-  period: PaymentPeriod;
+  period: PaymentSchedules;
   planId: string;
   price: number;
   quantity: number;
   type: PersonalPlanType;
   planName: string;
+  status: 'trialing' | 'active';
+  trialingEnd: string;
 }
 
 export const getCurrentPlan = async ({ sessionId }: { sessionId: string }) => {

@@ -1,4 +1,4 @@
-import { getCurrentPlan, getUserProfile } from 'insomnia-core/insomnia-api';
+import { type CurrentPlan, getCurrentPlan, getUserProfile } from 'insomnia-core/insomnia-api';
 
 import { projectLock } from '~/common/project';
 

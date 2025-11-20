@@ -1,4 +1,3 @@
-import { type CurrentPlan } from 'insomnia-core/insomnia-api';
 import { z, type ZodError } from 'zod/v4';
 
 import { insecureReadFile } from '~/main/secure-read-file';

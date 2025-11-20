@@ -71,16 +71,3 @@ export const formatCurrentPlanType = (type: PersonalPlanType) => {
     }
   }
 };
-type PaymentSchedules = 'month' | 'year';
-
-export interface CurrentPlan {
-  isActive: boolean;
-  period: PaymentSchedules;
-  planId: string;
-  price: number;
-  quantity: number;
-  type: PersonalPlanType;
-  planName: string;
-  status: 'trialing' | 'active';
-  trialingEnd: string;
-}

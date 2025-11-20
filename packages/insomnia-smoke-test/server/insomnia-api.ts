@@ -2,9 +2,12 @@ import { randomUUID } from 'node:crypto';
 
 import type { Application } from 'express';
 import { json } from 'express';
+import { type CurrentPlan } from 'insomnia-core/insomnia-api';
 
-import type { CurrentPlan } from '../../insomnia/src/ui/organization-utils';
-import type { Collaborator, CollaboratorType } from '../../insomnia/src/ui/routes/$organizationId.collaborators';
+import type {
+  Collaborator,
+  CollaboratorType,
+} from '../../insomnia/src/routes/organization.$organizationId.collaborators';
 import { getRandomId, getTeamName, getUserEmail } from '../tests/smoke/test-utils';
 
 const currentPlan: CurrentPlan = {
