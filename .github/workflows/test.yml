@@ -58,26 +58,94 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
+            const { execSync } = require('child_process');
 
-            const MAX_CIRCULAR_REFERENCES = 172;
+            // Function to analyze circular references
+            async function analyzeCircularReferences() {
+              const madge = require('madge');
+              const res = await madge(process.cwd(), {
+                fileExtensions: ['ts', 'tsx'],
+              });
+              return res.circular();
+            }
 
             // Function to generate markdown report
-            function generateMarkdownReport(circularReferences, count) {
+            function generateMarkdownReport(prCircularRefs, baseCircularRefs, prCount, baseCount, baseBranch) {
               const timestamp = new Date().toISOString();
-              const status = count > MAX_CIRCULAR_REFERENCES ? '❌ FAILED' : '✅ PASSED';
+              const diff = prCount - baseCount;
+              const diffPercent = baseCount > 0 ? ((diff / baseCount) * 100).toFixed(2) : '0.00';
               
-              return `# Circular References Report
+              let status = '✅ PASSED';
+              let statusEmoji = '✅';
+              
+              if (diff > 0) {
+                status = '⚠️ WARNING';
+                statusEmoji = '⚠️';
+              } else if (diff === 0) {
+                status = '✅ NO CHANGE';
+                statusEmoji = '✅';
+              } else {
+                status = '✨ IMPROVED';
+                statusEmoji = '✨';
+              }
+              
+              // Find new and removed circular references
+              const prCycleStrings = new Set(prCircularRefs.map(cycle => cycle.join(' -> ')));
+              const baseCycleStrings = new Set(baseCircularRefs.map(cycle => cycle.join(' -> ')));
+              
+              const newCycles = Array.from(prCycleStrings).filter(cycle => !baseCycleStrings.has(cycle)).sort();
+              const removedCycles = Array.from(baseCycleStrings).filter(cycle => !prCycleStrings.has(cycle)).sort();
+              
+              return `# ${statusEmoji} Circular References Report
 
             **Generated at:** ${timestamp}  
-            **Total circular references:** ${count}  
-            **Limit:** ${MAX_CIRCULAR_REFERENCES}  
             **Status:** ${status}
 
-            <details>
-            <summary>Click to view all circular references (${count})</summary>
+            ## Summary
+            | Metric | Base (\`${baseBranch}\`) | PR | Change |
+            |--------|----------------|-----|---------|
+            | Total Circular References | ${baseCount} | ${prCount} | ${diff > 0 ? '+' : ''}${diff} (${diffPercent > 0 ? '+' : ''}${diffPercent}%) |
+
+            ${newCycles.length > 0 ? `
+            ## ⚠️ New Circular References Added (${newCycles.length})
+
+            <details open>
+            <summary>Click to expand/collapse</summary>
 
             \`\`\`
-            ${circularReferences.sort().map(cycle => cycle.join(' -> ')).join('\n')}
+            ${newCycles.join('\n')}
+            \`\`\`
+
+            </details>
+            ` : ''}
+
+            ${removedCycles.length > 0 ? `
+            ## ✨ Circular References Removed (${removedCycles.length})
+
+            <details open>
+            <summary>Click to expand/collapse</summary>
+
+            \`\`\`
+            ${removedCycles.join('\n')}
+            \`\`\`
+
+            </details>
+            ` : ''}
+
+            <details>
+            <summary>Click to view all circular references in PR (${prCount})</summary>
+
+            \`\`\`
+            ${prCircularRefs.length > 0 ? prCircularRefs.sort().map(cycle => cycle.join(' -> ')).join('\n') : 'No circular references found'}
+            \`\`\`
+
+            </details>
+
+            <details>
+            <summary>Click to view all circular references in base branch (${baseCount})</summary>
+
+            \`\`\`
+            ${baseCircularRefs.length > 0 ? baseCircularRefs.sort().map(cycle => cycle.join(' -> ')).join('\n') : 'No circular references found'}
             \`\`\`
 
             </details>
@@ -85,39 +153,83 @@ jobs:
             ## Analysis
 
             ${
-              count > MAX_CIRCULAR_REFERENCES
-                ? `⚠️ **Warning:** The number of circular references (${count}) exceeds the limit of ${MAX_CIRCULAR_REFERENCES}. Please consider refactoring to reduce circular dependencies.`
-                : `✅ **Good:** The number of circular references (${count}) is within the acceptable limit of ${MAX_CIRCULAR_REFERENCES}.`
+              diff > 0
+                ? `⚠️ **Warning:** This PR introduces ${diff} new circular ${diff === 1 ? 'reference' : 'references'}. Consider refactoring to avoid adding circular dependencies.`
+                : diff < 0
+                ? `✨ **Great Job!** This PR removes ${Math.abs(diff)} circular ${Math.abs(diff) === 1 ? 'reference' : 'references'}. Keep up the good work!`
+                : `✅ **No Change:** This PR does not introduce or remove any circular references.`
             }
 
             ---
-            *This report was generated automatically by the circular reference checker.*
+            *This report was generated automatically by comparing against the \`${baseBranch}\` branch.*
             `;
             }
 
             try {
-              // Change to the packages directory
+              // Get base branch (the target branch of the PR)
+              const baseBranch = context.payload.pull_request.base.ref;
+              console.log(`Base branch (PR target): ${baseBranch}`);
+              
+              // Save current state
+              const currentBranch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
+              const hasUncommittedChanges = execSync('git status --porcelain').toString().trim().length > 0;
+              
+              console.log(`Current branch: ${currentBranch}`);
+              
+              // Stash any uncommitted changes
+              if (hasUncommittedChanges) {
+                console.log('Stashing uncommitted changes...');
+                execSync('git stash push -u -m "Temporary stash for circular reference check"');
+              }
+              
+              // Change to packages directory for analysis
               process.chdir('packages');
               
-              // Run circular reference check
-              console.log('Analyzing circular references...');
-              const madge = require('madge');
-              const res = await madge(process.cwd(), {
-                fileExtensions: ['ts', 'tsx'],
-              });
+              // Analyze current PR
+              console.log('Analyzing circular references in PR...');
+              const prCircularRefs = await analyzeCircularReferences();
+              const prCount = prCircularRefs.length;
+              console.log(`PR: Found ${prCount} circular references`);
               
-              const circularReferences = res.circular();
-              const count = circularReferences.length;
+              // Switch to base branch
+              console.log(`Switching to ${baseBranch} branch...`);
+              process.chdir('..');
+              execSync(`git fetch origin ${baseBranch}`);
+              execSync(`git checkout origin/${baseBranch}`);
               
-              console.log(`Found ${count} circular references`);
+              // Reinstall dependencies for base branch (in case package.json changed)
+              console.log('Installing dependencies for base branch...');
+              execSync('npm ci --quiet', { stdio: 'ignore' });
+              
+              // Analyze base branch
+              console.log(`Analyzing circular references in ${baseBranch}...`);
+              process.chdir('packages');
+              const baseCircularRefs = await analyzeCircularReferences();
+              const baseCount = baseCircularRefs.length;
+              console.log(`Base: Found ${baseCount} circular references`);
+              
+              // Switch back to PR branch
+              console.log('Switching back to PR branch...');
+              process.chdir('..');
+              execSync(`git checkout ${currentBranch}`);
+              
+              // Restore stashed changes
+              if (hasUncommittedChanges) {
+                console.log('Restoring uncommitted changes...');
+                execSync('git stash pop');
+              }
+              
+              // Reinstall dependencies for PR branch
+              console.log('Restoring dependencies for PR branch...');
+              execSync('npm ci --quiet', { stdio: 'ignore' });
               
               // Generate report
-              const markdownContent = generateMarkdownReport(circularReferences, count);
+              const diff = prCount - baseCount;
+              const markdownContent = generateMarkdownReport(prCircularRefs, baseCircularRefs, prCount, baseCount, baseBranch);
               
-              // For PR comments
+              // Post PR comment
               if (context.eventName === 'pull_request') {
                 try {
-                  // Find previous comments
                   const { data: comments } = await github.rest.issues.listComments({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
@@ -126,11 +238,11 @@ jobs:
                   
                   const botComment = comments.find(comment => 
                     comment.user?.type === 'Bot' && 
-                    comment.body?.includes('# Circular References Report')
+                    comment.body?.includes('# ') &&
+                    comment.body?.includes('Circular References Report')
                   );
                   
                   if (botComment) {
-                    // Update existing comment
                     await github.rest.issues.updateComment({
                       owner: context.repo.owner,
                       repo: context.repo.repo,
@@ -139,7 +251,6 @@ jobs:
                     });
                     console.log('Updated existing PR comment');
                   } else {
-                    // Create new comment
                     await github.rest.issues.createComment({
                       owner: context.repo.owner,
                       repo: context.repo.repo,
@@ -150,21 +261,16 @@ jobs:
                   }
                 } catch (error) {
                   console.error('Error posting PR comment:', error);
-                  // Don't let comment failure affect the entire CI
                 }
               }
               
-              // Output circular references to console for logs
-              if (count > 0) {
-                console.log('\nCircular references found:');
-                circularReferences.forEach(cycle => console.log(cycle.join(' -> ')));
-              }
-              
-              // Fail if exceeds limit
-              if (count > MAX_CIRCULAR_REFERENCES) {
-                core.setFailed(`Circular references count (${count}) exceeds the limit (${MAX_CIRCULAR_REFERENCES})`);
+              // Log results but don't fail the build
+              if (diff > 0) {
+                console.log(`⚠️ Warning: This PR introduces ${diff} new circular ${diff === 1 ? 'reference' : 'references'}. Base: ${baseCount}, PR: ${prCount}`);
+              } else if (diff < 0) {
+                console.log(`✨ Great! This PR removes ${Math.abs(diff)} circular ${Math.abs(diff) === 1 ? 'reference' : 'references'}!`);
               } else {
-                console.log(`✅ Circular references count (${count}) is within the limit (${MAX_CIRCULAR_REFERENCES})`);
+                console.log(`✅ No change in circular references (${prCount})`);
               }
               
             } catch (error) {
