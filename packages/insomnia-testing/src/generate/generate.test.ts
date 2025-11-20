@@ -24,8 +24,8 @@ describe('fixtures', () => {
     it(`Generate ${input}`, async () => {
       expect(typeof input).toBe('string');
       expect(typeof output).toBe('string');
-      const inputContents = readFileSync(join(fixturesPath, input), 'utf8');
-      const outputContents = readFileSync(join(fixturesPath, output), 'utf8');
+      const inputContents = readFileSync(path.join(fixturesPath, input), 'utf8');
+      const outputContents = readFileSync(path.join(fixturesPath, output), 'utf8');
       expect(typeof inputContents).toBe('string');
       expect(typeof outputContents).toBe('string');
       const expected = generate(JSON.parse(inputContents));

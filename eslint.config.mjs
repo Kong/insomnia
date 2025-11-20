@@ -45,9 +45,12 @@ export default defineConfig([
       'playwright/no-wait-for-timeout': 'error',
     },
   },
-  reactHooksPlugin.configs.flat.recommended,
+
   {
+    files: ['packages/insomnia/src/**/*.{ts,tsx}'],
+    plugins: { 'react-hooks': reactHooksPlugin },
     rules: {
+      ...reactHooksPlugin.configs.recommended.rules,
       'react-hooks/refs': 'off', //TODO: delete me
       'react-hooks/set-state-in-effect': 'off', //TODO: delete me
       'react-hooks/immutability': 'off', //TODO: delete me

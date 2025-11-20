@@ -155,7 +155,8 @@ export const database = {
     if (process.type === 'renderer') {
       return _send<T>('findOne', ...arguments);
     }
-    const doc = await nedbBucket[type].findOneAsync<T>(query).toSorted(sort);
+    // eslint-disable-next-line unicorn/no-array-sort
+    const doc = await nedbBucket[type].findOneAsync<T>(query).sort(sort);
     if (doc === null) {
       return undefined;
     }
@@ -175,7 +176,8 @@ export const database = {
       console.warn(`[db] No collection for type "${type}"`);
       return [];
     }
-    const docs = await nedbBucket[type].findAsync<T>(query).toSorted(sort).limit(limit);
+    // eslint-disable-next-line unicorn/no-array-sort
+    const docs = await nedbBucket[type].findAsync<T>(query).sort(sort).limit(limit);
     // TODO: create a db init phase for migrations rather than doing it on every find.
     const migrated = [];
     for (const rawDoc of docs) {
