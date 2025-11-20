@@ -29,6 +29,7 @@ export interface CreateProjectData {
   token?: string;
   oauth2format?: OauthProviderName;
   connectRepositoryLater?: boolean;
+  ref?: string;
 }
 
 export const reportGitProjectCount = async (organizationId: string, sessionId: string, maxRetries = 3) => {
@@ -117,6 +118,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
           username: '',
           password: '',
         },
+        ref: newProjectData.ref || '',
       });
 
       if (errors) {

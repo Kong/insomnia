@@ -15,6 +15,7 @@ interface CloneGitRepoData {
     email: string;
   };
   credentials: GitCredentials;
+  ref: string;
 }
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
