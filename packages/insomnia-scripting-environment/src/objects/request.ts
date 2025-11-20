@@ -249,17 +249,19 @@ function requestOptionsToClassFields(options: RequestOptions) {
   if (options.header == null) {
     headers = new HeaderList(undefined, new Array<Header>());
   } else {
-    headers = Array.isArray(options.header) ? new HeaderList(undefined, options.header ? options.header.map(header => new Header(header)) : []) : new HeaderList(
-        undefined,
-        Object.entries(options.header).map(entry => new Header({ key: entry[0], value: entry[1] })),
-      );
+    headers = Array.isArray(options.header)
+      ? new HeaderList(undefined, options.header ? options.header.map(header => new Header(header)) : [])
+      : new HeaderList(
+          undefined,
+          Object.entries(options.header).map(entry => new Header({ key: entry[0], value: entry[1] })),
+        );
   }
 
   const body = options.body ? new RequestBody(options.body) : undefined;
   const auth = new RequestAuth(options.auth || { type: 'noauth' });
   const proxy = options.proxy ? new ProxyConfig(options.proxy) : undefined;
   const certificate = options.certificate ? new Certificate(options.certificate) : undefined;
-  const pathParameters = options.pathParameters ? options.pathParameters : new Array<RequestPathParameter>();
+  const pathParameters = options.pathParameters ?? new Array<RequestPathParameter>();
 
   return {
     name: options.name || '',

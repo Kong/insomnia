@@ -75,10 +75,10 @@ export class Header extends Property {
       this.key = obj.key;
       this.value = obj.value;
     } else {
-      this.id = opts.id ? opts.id : '';
-      this.key = opts.key ? opts.key : '';
-      this.name = name ? name : opts.name ? opts.name : '';
-      this.value = opts.value ? opts.value : '';
+      this.id = opts.id ?? '';
+      this.key = opts.key ?? '';
+      this.name = name ?? opts.name ?? '';
+      this.value = opts.value ?? '';
       this.disabled = opts ? opts.disabled : false;
     }
   }

@@ -139,9 +139,9 @@ export class ProxyConfig extends Property {
   }) {
     super();
 
-    this.id = def.id ? def.id : '';
-    this.name = def.name ? def.name : '';
-    this.disabled = def.disabled ? def.disabled : false;
+    this.id = def.id ?? '';
+    this.name = def.name ?? '';
+    this.disabled = def.disabled ?? false;
 
     this.host = def.host;
     this.match = def.match;

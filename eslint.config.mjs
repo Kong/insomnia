@@ -31,6 +31,7 @@ export default tseslint.config(
     },
   },
   {
+    ...playwright.configs['flat/recommended'],
     files: ['packages/insomnia-smoke-test/tests/**/*.ts'],
     plugins: { playwright: playwright },
     rules: {

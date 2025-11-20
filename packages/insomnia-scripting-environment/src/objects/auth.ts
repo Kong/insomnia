@@ -271,23 +271,22 @@ export class RequestAuth extends Property {
     const optsObj = options as AuthOptions;
     const optsEntries = Object.entries(optsObj).filter(optsObjEntry => optsObjEntry[0] !== 'type');
 
-    for (const authOpts of optsEntries
-      .map((optsEntry: [string, AuthOption[]]) => {
-        const optVars = optsEntry[1].map(opt => {
-          return new Variable({
-            key: opt.key,
-            value: opt.value,
-            type: opt.type,
-          });
+    for (const authOpts of optsEntries.map((optsEntry: [string, AuthOption[]]) => {
+      const optVars = optsEntry[1].map(opt => {
+        return new Variable({
+          key: opt.key,
+          value: opt.value,
+          type: opt.type,
         });
+      });
 
-        return {
-          type: optsEntry[0],
-          options: new VariableList(undefined, optVars),
-        };
-      })) {
-        this.authOptions.set(authOpts.type, authOpts.options);
-      }
+      return {
+        type: optsEntry[0],
+        options: new VariableList(undefined, optVars),
+      };
+    })) {
+      this.authOptions.set(authOpts.type, authOpts.options);
+    }
 
     this._parent = parent;
   }
@@ -321,7 +320,7 @@ export class RequestAuth extends Property {
   }
 
   update(options: VariableList<Variable> | Variable[] | AuthOptions, type?: AuthOptionTypes) {
-    const currentType = type ? type : this.type;
+    const currentType = type ?? this.type;
     const authOpts = rawOptionsToVariables(options, currentType);
 
     if (authOpts.length > 0 && authOpts[0]) {
