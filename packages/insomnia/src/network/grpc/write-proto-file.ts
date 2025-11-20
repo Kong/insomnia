@@ -64,7 +64,7 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
         filePath: path.join(
           ...ancestorDirectories
             .map(f => f.name)
-            .reverse()
+            .toReversed()
             .slice(1),
           protoFile.name,
         ),
@@ -86,7 +86,7 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
       filePath: path.join(
         ...ancestorDirectories
           .map(f => f.name)
-          .reverse()
+          .toReversed()
           .slice(1),
         protoFile.name,
       ),

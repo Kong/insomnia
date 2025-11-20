@@ -93,7 +93,8 @@ export const getOAuth2Token = async (
               },
             ]
           : []),
-      ]) p.value && implicitUrl.searchParams.append(p.name, p.value);
+      ])
+        p.value && implicitUrl.searchParams.append(p.name, p.value);
       const redirectedTo = await globalThis.main.authorizeUserInWindow({
         url: implicitUrl.toString(),
         urlSuccessRegex: /(access_token=|id_token=)/,
@@ -123,109 +124,110 @@ export const getOAuth2Token = async (
     invariant(authentication.accessTokenUrl, 'Missing access token URL');
     let params: RequestHeader[] = [];
     switch (authentication.grantType) {
-    case 'authorization_code': {
-      invariant(authentication.authorizationUrl, 'Invalid authorization URL');
+      case 'authorization_code': {
+        invariant(authentication.authorizationUrl, 'Invalid authorization URL');
 
-      // default to S256 if usePkce is true and pkceMethod is not defined
-      const pkceMethod =
-        authentication.usePkce && !authentication.pkceMethod ? PKCE_CHALLENGE_S256 : authentication.pkceMethod;
-      const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
-      const codeChallenge =
-        authentication.usePkce && pkceMethod === PKCE_CHALLENGE_S256
-          ? encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest())
-          : codeVerifier;
-      const authCodeUrl = new URL(authentication.authorizationUrl);
-      const responseType: OAuth2ResponseType = 'code';
-      const redirectUrl = authentication.useDefaultBrowser ? getOauthRedirectUrl() : authentication.redirectUrl;
-      for (const p of [
-        { name: 'response_type', value: responseType },
-        { name: 'client_id', value: authentication.clientId },
-        ...insertAuthKeyIf('redirect_uri', redirectUrl),
-        ...insertAuthKeyIf('scope', authentication.scope),
-        ...insertAuthKeyIf('state', authentication.state),
-        ...insertAuthKeyIf('audience', authentication.audience),
-        ...insertAuthKeyIf('resource', authentication.resource),
-        ...(codeChallenge
-          ? [
-              { name: 'code_challenge', value: codeChallenge },
-              { name: 'code_challenge_method', value: pkceMethod },
-            ]
-          : []),
-      ]) p.value && authCodeUrl.searchParams.append(p.name, p.value);
+        // default to S256 if usePkce is true and pkceMethod is not defined
+        const pkceMethod =
+          authentication.usePkce && !authentication.pkceMethod ? PKCE_CHALLENGE_S256 : authentication.pkceMethod;
+        const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
+        const codeChallenge =
+          authentication.usePkce && pkceMethod === PKCE_CHALLENGE_S256
+            ? encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest())
+            : codeVerifier;
+        const authCodeUrl = new URL(authentication.authorizationUrl);
+        const responseType: OAuth2ResponseType = 'code';
+        const redirectUrl = authentication.useDefaultBrowser ? getOauthRedirectUrl() : authentication.redirectUrl;
+        for (const p of [
+          { name: 'response_type', value: responseType },
+          { name: 'client_id', value: authentication.clientId },
+          ...insertAuthKeyIf('redirect_uri', redirectUrl),
+          ...insertAuthKeyIf('scope', authentication.scope),
+          ...insertAuthKeyIf('state', authentication.state),
+          ...insertAuthKeyIf('audience', authentication.audience),
+          ...insertAuthKeyIf('resource', authentication.resource),
+          ...(codeChallenge
+            ? [
+                { name: 'code_challenge', value: codeChallenge },
+                { name: 'code_challenge_method', value: pkceMethod },
+              ]
+            : []),
+        ])
+          p.value && authCodeUrl.searchParams.append(p.name, p.value);
 
-      let redirectedTo: string | null = null;
-      if (authentication.useDefaultBrowser) {
-        const authCodeUrlStr = authCodeUrl.toString();
-        const { relayUrl, decryptOAuthResult } = encryptOAuthUrl(authCodeUrlStr);
+        let redirectedTo: string | null = null;
+        if (authentication.useDefaultBrowser) {
+          const authCodeUrlStr = authCodeUrl.toString();
+          const { relayUrl, decryptOAuthResult } = encryptOAuthUrl(authCodeUrlStr);
 
-        uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
-          status: 'getting_code',
-          authCodeUrlStr: relayUrl,
-        });
-        // If the user has selected to use the default browser, we will open the
-        // authorization URL in the default browser and wait for the user to
-        // authorize the application.
-        const result = await globalThis.main.authorizeUserInDefaultBrowser({
-          url: relayUrl,
-        });
+          uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
+            status: 'getting_code',
+            authCodeUrlStr: relayUrl,
+          });
+          // If the user has selected to use the default browser, we will open the
+          // authorization URL in the default browser and wait for the user to
+          // authorize the application.
+          const result = await globalThis.main.authorizeUserInDefaultBrowser({
+            url: relayUrl,
+          });
 
-        redirectedTo = decryptOAuthResult(result);
-      } else {
-        redirectedTo = await globalThis.main.authorizeUserInWindow({
-          url: authCodeUrl.toString(),
-          urlSuccessRegex: authentication.redirectUrl
-            ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]code=)`, 'i')
-            : /([?&]code=)/i,
-          urlFailureRegex: authentication.redirectUrl
-            ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]error=)`, 'i')
-            : /([?&]error=)/i,
-          sessionId: getOAuthSession(),
-        });
+          redirectedTo = decryptOAuthResult(result);
+        } else {
+          redirectedTo = await globalThis.main.authorizeUserInWindow({
+            url: authCodeUrl.toString(),
+            urlSuccessRegex: authentication.redirectUrl
+              ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]code=)`, 'i')
+              : /([?&]code=)/i,
+            urlFailureRegex: authentication.redirectUrl
+              ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]error=)`, 'i')
+              : /([?&]error=)/i,
+            sessionId: getOAuthSession(),
+          });
+        }
+
+        console.log('[oauth2] Detected redirect ' + redirectedTo);
+        const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
+        if (redirectParams.error) {
+          const code = redirectParams.error;
+          const msg = redirectParams.error_description;
+          const uri = redirectParams.error_uri;
+          throw new Error(`OAuth 2.0 Error ${code}\n\n${msg}\n\n${uri}`);
+        }
+        console.log('[oauth2] Detected code ' + redirectParams.code);
+        params = [
+          { name: 'grant_type', value: GRANT_TYPE_AUTHORIZATION_CODE },
+          { name: 'code', value: redirectParams.code },
+          ...insertAuthKeyIf('redirect_uri', redirectUrl),
+          ...insertAuthKeyIf('state', authentication.state),
+          ...insertAuthKeyIf('audience', authentication.audience),
+          ...insertAuthKeyIf('resource', authentication.resource),
+          ...insertAuthKeyIf('code_verifier', codeVerifier),
+        ];
+
+        break;
       }
+      case 'password': {
+        params = [
+          { name: 'grant_type', value: 'password' },
+          ...insertAuthKeyIf('username', authentication.username),
+          ...insertAuthKeyIf('password', authentication.password),
+          ...insertAuthKeyIf('scope', authentication.scope),
+          ...insertAuthKeyIf('audience', authentication.audience),
+        ];
 
-      console.log('[oauth2] Detected redirect ' + redirectedTo);
-      const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
-      if (redirectParams.error) {
-        const code = redirectParams.error;
-        const msg = redirectParams.error_description;
-        const uri = redirectParams.error_uri;
-        throw new Error(`OAuth 2.0 Error ${code}\n\n${msg}\n\n${uri}`);
+        break;
       }
-      console.log('[oauth2] Detected code ' + redirectParams.code);
-      params = [
-        { name: 'grant_type', value: GRANT_TYPE_AUTHORIZATION_CODE },
-        { name: 'code', value: redirectParams.code },
-        ...insertAuthKeyIf('redirect_uri', redirectUrl),
-        ...insertAuthKeyIf('state', authentication.state),
-        ...insertAuthKeyIf('audience', authentication.audience),
-        ...insertAuthKeyIf('resource', authentication.resource),
-        ...insertAuthKeyIf('code_verifier', codeVerifier),
-      ];
-    
-    break;
-    }
-    case 'password': {
-      params = [
-        { name: 'grant_type', value: 'password' },
-        ...insertAuthKeyIf('username', authentication.username),
-        ...insertAuthKeyIf('password', authentication.password),
-        ...insertAuthKeyIf('scope', authentication.scope),
-        ...insertAuthKeyIf('audience', authentication.audience),
-      ];
-    
-    break;
-    }
-    case 'client_credentials': {
-      params = [
-        { name: 'grant_type', value: 'client_credentials' },
-        ...insertAuthKeyIf('scope', authentication.scope),
-        ...insertAuthKeyIf('audience', authentication.audience),
-        ...insertAuthKeyIf('resource', authentication.resource),
-      ];
-    
-    break;
-    }
-    // No default
+      case 'client_credentials': {
+        params = [
+          { name: 'grant_type', value: 'client_credentials' },
+          ...insertAuthKeyIf('scope', authentication.scope),
+          ...insertAuthKeyIf('audience', authentication.audience),
+          ...insertAuthKeyIf('resource', authentication.resource),
+        ];
+
+        break;
+      }
+      // No default
     }
     const headers = authentication.origin ? [{ name: 'Origin', value: authentication.origin }] : [];
     if (authentication.credentialsInBody) {
@@ -282,8 +284,8 @@ async function getExistingAccessTokenAndRefreshIfExpired(
     const requestGroups = (
       await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
     ).filter(isRequestGroup) as RequestGroup[];
-    const closestFolderAuth = [...requestGroups]
-      .reverse()
+    const closestFolderAuth = requestGroups
+      .toReversed()
       .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
     const isRequestAuthEnabled =
       getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);

@@ -353,7 +353,7 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
                 <GridList
                   aria-label="Branches list"
                   selectionMode="none"
-                  items={branches.sort(sortBranches).map(branch => ({
+                  items={branches.toSorted(sortBranches).map(branch => ({
                     id: branch,
                     key: branch,
                     name: branch,
@@ -386,7 +386,7 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
                   <GridList
                     aria-label="Remote Branches list"
                     selectionMode="none"
-                    items={remoteBranches.sort(sortBranches).map(branch => ({
+                    items={remoteBranches.toSorted(sortBranches).map(branch => ({
                       id: branch,
                       key: branch,
                       name: branch,

@@ -7,10 +7,10 @@ describe('init()', () => {
   it('initializes correctly', async () => {
     const result = plugin.init();
     expect(Object.keys(result)).toEqual(['app']);
-    expect(Object.keys(result.app).sort()).toEqual(
-      ['alert', 'clipboard', 'dialog', 'getPath', 'getInfo', 'prompt', 'showSaveDialog'].sort(),
+    expect(Object.keys(result.app).toSorted()).toEqual(
+      ['alert', 'clipboard', 'dialog', 'getPath', 'getInfo', 'prompt', 'showSaveDialog'].toSorted(),
     );
-    expect(Object.keys(result.app.clipboard).sort()).toEqual(['clear', 'readText', 'writeText'].sort());
+    expect(Object.keys(result.app.clipboard).toSorted()).toEqual(['clear', 'readText', 'writeText'].toSorted());
   });
 });
 

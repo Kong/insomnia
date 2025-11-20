@@ -75,7 +75,7 @@ export async function exportRequestsHAR(requests: BaseModel[], includePrivateDoc
     mapWorkspaceIdToEnvironmentId[workspace._id] = environmentId;
   }
 
-  requests = requests.sort((a: Record<string, any>, b: Record<string, any>) =>
+  requests = requests.toSorted((a: Record<string, any>, b: Record<string, any>) =>
     a.metaSortKey < b.metaSortKey ? -1 : 1,
   );
   const harRequests: ExportRequest[] = [];

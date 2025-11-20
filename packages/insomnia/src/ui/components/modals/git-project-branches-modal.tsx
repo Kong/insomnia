@@ -383,7 +383,7 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
                 <GridList
                   aria-label="Branches list"
                   selectionMode="none"
-                  items={fetchedBranches.sort(sortBranches).map(branch => ({
+                  items={fetchedBranches.toSorted(sortBranches).map(branch => ({
                     id: branch,
                     key: branch,
                     name: branch,
@@ -414,7 +414,7 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
                 <GridList
                   aria-label="Remote Branches list"
                   selectionMode="none"
-                  items={remoteOnlyBranches.sort(sortBranches).map(branch => ({
+                  items={remoteOnlyBranches.toSorted(sortBranches).map(branch => ({
                     id: branch,
                     key: branch,
                     name: branch,

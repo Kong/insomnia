@@ -156,7 +156,7 @@ export class Property extends PropertyBase {
 
     let context: object = {};
     // the searching priority of rendering is from left to right
-    for (const variable of variables.reverse()) context = { ...context, ...variable };
+    for (const variable of variables.toReversed()) context = { ...context, ...variable };
 
     return getInterpolator().render(content, context);
   }
@@ -173,7 +173,7 @@ export class Property extends PropertyBase {
 
       let context: object = {};
       // the searching priority of rendering is from left to right
-      for (const variable of variables.reverse()) {
+      for (const variable of variables.toReversed()) {
         context = { ...context, ...variable };
       }
 

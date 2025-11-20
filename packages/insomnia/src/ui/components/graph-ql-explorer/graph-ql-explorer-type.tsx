@@ -45,7 +45,7 @@ export const GraphQLExplorerType: FC<Props> = ({ schema, type, onNavigateType, o
 
   const title = getTitle();
 
-  const sortedFields = 'getFields' in type ? Object.values(type.getFields()).sort(ascendingNameSort) : [];
+  const sortedFields = 'getFields' in type ? Object.values(type.getFields()).toSorted(ascendingNameSort) : [];
 
   return (
     <div className="graphql-explorer__type">

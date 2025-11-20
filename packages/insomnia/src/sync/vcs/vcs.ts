@@ -1640,7 +1640,7 @@ export class VCS {
 /** Generate snapshot ID from hashing parent, backendProject, and state together */
 function _generateSnapshotID(parentId: string, backendProjectId: string, state: SnapshotState) {
   const hash = crypto.createHash('sha1').update(backendProjectId).update(parentId);
-  const newState = [...state].sort((a, b) => (a.blob > b.blob ? 1 : -1));
+  const newState = [...state].toSorted((a, b) => (a.blob > b.blob ? 1 : -1));
 
   for (const entry of newState) {
     hash.update(entry.blob);

@@ -33,7 +33,7 @@ describe('init()', () => {
   it('initializes correctly', async () => {
     const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
     expect(Object.keys(result)).toEqual(['request']);
-    expect(Object.keys(result.request).sort()).toEqual([
+    expect(Object.keys(result.request).toSorted()).toEqual([
       'addHeader',
       'addParameter',
       'getAuthentication',
@@ -72,7 +72,7 @@ describe('init()', () => {
   it('initializes correctly in read-only mode', async () => {
     const result = plugin.init(await models.request.getById('req_1'), CONTEXT, true);
     expect(Object.keys(result)).toEqual(['request']);
-    expect(Object.keys(result.request).sort()).toEqual([
+    expect(Object.keys(result.request).toSorted()).toEqual([
       'getAuthentication',
       'getBody',
       'getBodyText',

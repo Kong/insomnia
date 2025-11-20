@@ -404,7 +404,7 @@ export const go = (args?: string[]) => {
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first test failure', false)
     .option('--keepFile', 'do not delete the generated test file', false)
-    .option('--requestTimeout <duration>', 'milliseconds before request times out', undefined) // defaults to user settings
+    .option('--requestTimeout <duration>', 'milliseconds before request times out') // defaults to user settings
     .option('-k, --disableCertValidation', 'disable certificate validation for requests with SSL', false)
     .option('--httpsProxy <proxy>', 'URL for the proxy server for https requests.', proxySettings.httpsProxy)
     .option('--httpProxy <proxy>', 'URL for the proxy server for http requests.', proxySettings.httpProxy)
@@ -498,7 +498,7 @@ export const go = (args?: string[]) => {
             validateSSL: !options.disableCertValidation,
             ...proxyOptions,
             dataFolders: options.dataFolders,
-            ...(options.requestTimeout ? { timeout: parseInt(options.requestTimeout, 10) } : {}),
+            ...(options.requestTimeout ? { timeout: Number.parseInt(options.requestTimeout, 10) } : {}),
           });
           // Generate test file
           const testFileContents = generate(
@@ -506,7 +506,7 @@ export const go = (args?: string[]) => {
               name: suite.name,
               suites: [],
               tests: db.UnitTest.filter(test => test.parentId === suite._id)
-                .sort((a, b) => a.metaSortKey - b.metaSortKey)
+                .toSorted((a, b) => a.metaSortKey - b.metaSortKey)
                 .map(({ name, code, requestId }) => ({ name, code, defaultRequestId: requestId })),
             })),
           );
@@ -537,7 +537,7 @@ export const go = (args?: string[]) => {
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('-g, --globals <identifier>', 'global environment to use (filepath or id)', '')
     .option('--delay-request <duration>', 'milliseconds to delay between requests', '0')
-    .option('--requestTimeout <duration>', 'milliseconds before request times out', undefined) // defaults to user settings
+    .option('--requestTimeout <duration>', 'milliseconds before request times out') // defaults to user settings
     .option('--env-var <key=value>', 'override environment variables', collect, [])
     .option('-n, --iteration-count <count>', 'number of times to repeat', '1')
     .option('-d, --iteration-data <path/url>', 'file path or url (JSON or CSV)', '')
@@ -736,7 +736,7 @@ export const go = (args?: string[]) => {
           for (const [order, reqId] of options.item.entries()) {
             requestOrder.set(reqId, order + 1);
           }
-          requestsToRun = requestsToRun.sort(
+          requestsToRun = requestsToRun.toSorted(
             (a, b) =>
               (requestOrder.get(a._id) || requestsToRun.length) - (requestOrder.get(b._id) || requestsToRun.length),
           );
@@ -755,11 +755,11 @@ export const go = (args?: string[]) => {
               const allParentGroupSortKeys = getAllParentGroupSortKeys(request as BaseModel);
 
               return {
-                ancestors: allParentGroupSortKeys.reverse(),
+                ancestors: allParentGroupSortKeys.toReversed(),
                 request,
               };
             })
-            .sort((a, b) => {
+            .toSorted((a, b) => {
               let compareResult = 0;
 
               let i = 0,
@@ -835,7 +835,7 @@ export const go = (args?: string[]) => {
               validateSSL: !options.disableCertValidation,
               ...proxyOptions,
               dataFolders: options.dataFolders,
-              ...(options.requestTimeout ? { timeout: parseInt(options.requestTimeout, 10) } : {}),
+              ...(options.requestTimeout ? { timeout: Number.parseInt(options.requestTimeout, 10) } : {}),
             },
             iterationData,
             iterationCount,
@@ -943,7 +943,7 @@ export const go = (args?: string[]) => {
       if (isIdentifierAFile) {
         // try load as a file
         logger.trace(`Linting specification file from identifier: \`${identifierAsAbsPath}\``);
-        specContent = await fs.promises.readFile(identifierAsAbsPath, 'utf-8');
+        specContent = await fs.promises.readFile(identifierAsAbsPath, 'utf8');
         rulesetFileName = await getRuleSetFileFromFolderByFilename(identifierAsAbsPath);
         if (!specContent) {
           logger.fatal(`Specification content not found using path: ${identifier} in ${identifierAsAbsPath}`);
@@ -1054,7 +1054,9 @@ const getNextRequestOffset = (leftRequestsToRun: Request[], nextRequestIdOrName:
     return idMatchOffset;
   }
 
-  const nameMatchOffset = leftRequestsToRun.reverse().findIndex(req => req.name.trim() === nextRequestIdOrName.trim());
+  const nameMatchOffset = leftRequestsToRun
+    .toReversed()
+    .findIndex(req => req.name.trim() === nextRequestIdOrName.trim());
   if (nameMatchOffset !== -1) {
     return leftRequestsToRun.length - 1 - nameMatchOffset;
   }

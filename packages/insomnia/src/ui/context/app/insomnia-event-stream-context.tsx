@@ -172,89 +172,93 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               | FileChangedEvent
               | VaultKeyChangeEvent;
             switch (event.type) {
-            case 'PresentUserLeave': {
-              setPresence(prev =>
-                prev.filter(p => {
-                  const isSameUser = p.acct === event.acct;
-                  const isSameProjectFile = p.file === event.file && p.project === event.project;
+              case 'PresentUserLeave': {
+                setPresence(prev =>
+                  prev.filter(p => {
+                    const isSameUser = p.acct === event.acct;
+                    const isSameProjectFile = p.file === event.file && p.project === event.project;
 
-                  // Remove any presence events we have for the same user in this project/file
-                  if (isSameUser && isSameProjectFile) {
-                    return false;
+                    // Remove any presence events we have for the same user in this project/file
+                    if (isSameUser && isSameProjectFile) {
+                      return false;
+                    }
+
+                    return true;
+                  }),
+                );
+
+                break;
+              }
+              case 'PresentStateChanged': {
+                setPresence(prev => {
+                  if (!prev.find(p => p.avatar === event.avatar)) {
+                    // if this avatar is new, invalidate the cache
+                    globalThis.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
                   }
+                  return [...prev.filter(p => p.acct !== event.acct), event];
+                });
 
-                  return true;
-                }),
-              );
-            
-            break;
-            }
-            case 'PresentStateChanged': {
-              setPresence(prev => {
-                if (!prev.find(p => p.avatar === event.avatar)) {
-                  // if this avatar is new, invalidate the cache
+                break;
+              }
+              case 'OrganizationChanged': {
+                if (event.avatar) {
                   globalThis.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
                 }
-                return [...prev.filter(p => p.acct !== event.acct), event];
-              });
-            
-            break;
-            }
-            case 'OrganizationChanged': {
-              if (event.avatar) {
-                globalThis.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
+                syncOrganizationsSubmit();
+
+                break;
               }
-              syncOrganizationsSubmit();
-            
-            break;
-            }
-            default: { if (event.type === 'StorageRuleChanged' && event.team && event.team.includes('org_')) {
-              syncStorageRulesSubmit({
-                organizationId: event.team,
-              });
-            } else if (event.type === 'TeamProjectChanged' && event.team === organizationId) {
-              syncProjectsSubmit({
-                organizationId,
-              });
-            } else if (
-              event.type === 'FileDeleted' &&
-              event.team === organizationId &&
-              latestRemoteId.current &&
-              event.project === latestRemoteId.current &&
-              // we don't need to revalidate if the user is in workspace page
-              !latestWorkspaceId.current
-            ) {
-              if (!latestInSubmission.current) {
-                revalidate();
-              }
-            } else if (event.type === 'VaultKeyChanged') {
-              const accountId = userSession.accountId;
-              const organizations = JSON.parse(
-                localStorage.getItem(`${accountId}:organizations`) || '[]',
-              ) as Organization[];
-              clearVaultKeySubmit({
-                organizations: organizations?.map(org => org.id) || [],
-                sessionId: event.sessionId,
-              });
-            } else if (
-              (event.type === 'FileChanged' || event.type === 'BranchDeleted') &&
-              event.team === organizationId &&
-              latestRemoteId.current &&
-              event.project === latestRemoteId.current
-            ) {
-              // If the file changed is the current workspace, we need to sync it
-              if (isSameWorkspaceWithRemote(latestWorkspaceId.current, event.file)) {
-                syncDataSubmit({
-                  organizationId: organizationId,
-                  projectId: latestProjectId.current,
-                  workspaceId: latestWorkspaceId.current,
-                });
-              } else if (event.type === 'FileChanged' && !latestWorkspaceId.current && // FileChanged could be a new file has been added, we need to revalidate the workspace list
-                !latestInSubmission.current) {
-                  revalidate();
+              default: {
+                if (event.type === 'StorageRuleChanged' && event.team && event.team.includes('org_')) {
+                  syncStorageRulesSubmit({
+                    organizationId: event.team,
+                  });
+                } else if (event.type === 'TeamProjectChanged' && event.team === organizationId) {
+                  syncProjectsSubmit({
+                    organizationId,
+                  });
+                } else if (
+                  event.type === 'FileDeleted' &&
+                  event.team === organizationId &&
+                  latestRemoteId.current &&
+                  event.project === latestRemoteId.current &&
+                  // we don't need to revalidate if the user is in workspace page
+                  !latestWorkspaceId.current
+                ) {
+                  if (!latestInSubmission.current) {
+                    revalidate();
+                  }
+                } else if (event.type === 'VaultKeyChanged') {
+                  const accountId = userSession.accountId;
+                  const organizations = JSON.parse(
+                    localStorage.getItem(`${accountId}:organizations`) || '[]',
+                  ) as Organization[];
+                  clearVaultKeySubmit({
+                    organizations: organizations?.map(org => org.id) || [],
+                    sessionId: event.sessionId,
+                  });
+                } else if (
+                  (event.type === 'FileChanged' || event.type === 'BranchDeleted') &&
+                  event.team === organizationId &&
+                  latestRemoteId.current &&
+                  event.project === latestRemoteId.current
+                ) {
+                  // If the file changed is the current workspace, we need to sync it
+                  if (isSameWorkspaceWithRemote(latestWorkspaceId.current, event.file)) {
+                    syncDataSubmit({
+                      organizationId: organizationId,
+                      projectId: latestProjectId.current,
+                      workspaceId: latestWorkspaceId.current,
+                    });
+                  } else if (
+                    event.type === 'FileChanged' &&
+                    !latestWorkspaceId.current && // FileChanged could be a new file has been added, we need to revalidate the workspace list
+                    !latestInSubmission.current
+                  ) {
+                    revalidate();
+                  }
                 }
-            }
-            }
+              }
             }
           } catch (e) {
             console.log('[sse] Error parsing response from SSE', e);

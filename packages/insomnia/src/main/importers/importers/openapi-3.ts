@@ -131,7 +131,7 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
     return [];
   }
 
-  const servers = document.servers ? document.servers : [{ url: 'http://example.com/' }];
+  const servers = document.servers ?? [{ url: 'http://example.com/' }];
 
   const securityVariables = getSecurityEnvVariables(
     document.components?.securitySchemes as unknown as OpenAPIV3.SecuritySchemeObject,

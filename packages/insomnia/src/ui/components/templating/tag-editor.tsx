@@ -54,16 +54,14 @@ interface State {
 }
 const sortRequests = (_models: (Request | RequestGroup)[], parentId: string) => {
   let sortedModels: (Request | RequestGroup)[] = [];
-  for (const model of _models
-    .filter(model => model.parentId === parentId)
-    .sort(metaSortKeySort)) {
-      if (isRequest(model)) {
-        sortedModels.push(model);
-      }
-      if (isRequestGroup(model)) {
-        sortedModels = sortedModels.concat(sortRequests(_models, model._id));
-      }
+  for (const model of _models.filter(model => model.parentId === parentId).toSorted(metaSortKeySort)) {
+    if (isRequest(model)) {
+      sortedModels.push(model);
     }
+    if (isRequestGroup(model)) {
+      sortedModels = sortedModels.concat(sortRequests(_models, model._id));
+    }
+  }
   return sortedModels;
 };
 export const TagEditor: FC<Props> = props => {
@@ -256,19 +254,21 @@ export const TagEditor: FC<Props> = props => {
     // detects a string to replace with a link to settings
     const linkText = 'Insomnia Preferences → Security';
     previewElement = error.endsWith(linkText) ? (
-        <div className="danger min-h-[115px] rounded-md border border-solid border-[var(--hl-md)] bg-[var(--hl-xxs)] p-[var(--padding-sm)]">
-          {error.slice(0, error.length - linkText.length)}
-          <Link
-            className="cursor-pointer text-[--color-surprise]"
-            onPress={() => {
-              props.close();
-              showSettingsModal({ tab: 'general' });
-            }}
-          >
-            {linkText}
-          </Link>
-        </div>
-      ) : <textarea className="danger" value={error || 'Error'} readOnly rows={5} />;
+      <div className="danger min-h-[115px] rounded-md border border-solid border-[var(--hl-md)] bg-[var(--hl-xxs)] p-[var(--padding-sm)]">
+        {error.slice(0, error.length - linkText.length)}
+        <Link
+          className="cursor-pointer text-[--color-surprise]"
+          onPress={() => {
+            props.close();
+            showSettingsModal({ tab: 'general' });
+          }}
+        >
+          {linkText}
+        </Link>
+      </div>
+    ) : (
+      <textarea className="danger" value={error || 'Error'} readOnly rows={5} />
+    );
   } else if (rendering) {
     previewElement = <textarea value="rendering..." readOnly rows={5} />;
   } else {
@@ -339,129 +339,129 @@ export const TagEditor: FC<Props> = props => {
         let isVariableAllowed = argDefinition.type !== 'model';
         if (!isVariable) {
           switch (argDefinition.type) {
-          case 'string': {
-            const tagDefinitionName = activeTagDefinition.name;
-            const placeholder = typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
-            const encoding = argDefinition.encoding || 'utf8';
-            const needToRenderSubForm = argDefinition.requireSubForm && couldRenderForm(tagDefinitionName);
-            if (needToRenderSubForm) {
+            case 'string': {
+              const tagDefinitionName = activeTagDefinition.name;
+              const placeholder = typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
+              const encoding = argDefinition.encoding || 'utf8';
+              const needToRenderSubForm = argDefinition.requireSubForm && couldRenderForm(tagDefinitionName);
+              if (needToRenderSubForm) {
+                argInput = (
+                  <ArgConfigSubForm
+                    configValue={sanitizeStrForWin32(strValue)}
+                    onChange={(newConfigValue: string) => updateArg(newConfigValue, index)}
+                    activeTagData={activeTagData}
+                    activeTagDefinition={activeTagDefinition}
+                    docs={state.allDocs}
+                  />
+                );
+                isVariableAllowed = false;
+              } else {
+                argInput = (
+                  <input
+                    type="text"
+                    defaultValue={sanitizeStrForWin32(strValue)}
+                    placeholder={placeholder}
+                    onChange={handleChange}
+                    data-encoding={encoding}
+                  />
+                );
+              }
+
+              break;
+            }
+            case 'enum': {
               argInput = (
-                <ArgConfigSubForm
-                  configValue={sanitizeStrForWin32(strValue)}
-                  onChange={(newConfigValue: string) => updateArg(newConfigValue, index)}
-                  activeTagData={activeTagData}
-                  activeTagDefinition={activeTagDefinition}
-                  docs={state.allDocs}
+                <select value={strValue} onChange={handleChange}>
+                  {argDefinition.options?.find(o => o.value === strValue) ? null : (
+                    <option value="">-- Select Option --</option>
+                  )}
+                  {argDefinition.options?.map(option => (
+                    <option key={option.value.toString()} value={option.value + ''}>
+                      {option.description
+                        ? `${fnOrString(option.displayName, state.activeTagData?.args || [])} – ${option.description}`
+                        : fnOrString(option.displayName, state.activeTagData?.args || [])}
+                    </option>
+                  ))}
+                </select>
+              );
+
+              break;
+            }
+            case 'file': {
+              argInput = (
+                <FileInputButton
+                  showFileIcon
+                  showFileName
+                  className="btn btn--clicky btn--super-compact"
+                  onChange={path => updateArg(path, index)}
+                  path={sanitizeStrForWin32(strValue)}
+                  itemtypes={argDefinition.itemTypes}
+                  extensions={argDefinition.extensions}
                 />
               );
-              isVariableAllowed = false;
-            } else {
+
+              break;
+            }
+            case 'model': {
+              const modelName = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
+              let targetDoc = state.allDocs[modelName];
+              // hard coded here to filter cloud credential data by the provider
+              if (modelName === cloudCredentialModelType) {
+                const providerNameFromArgs = activeTagData.args[0].value;
+                targetDoc = targetDoc.filter(doc => (doc as CloudProviderCredential).provider === providerNameFromArgs);
+              }
+              argInput = state.loadingDocs ? (
+                <select disabled={state.loadingDocs}>
+                  <option>Loading...</option>
+                </select>
+              ) : (
+                <select value={typeof strValue === 'string' ? strValue : 'unknown'} onChange={handleChange}>
+                  <option value="n/a">-- Select Item --</option>
+                  {targetDoc.map((doc: any) => {
+                    let namePrefix: string | null = null;
+                    // Show parent folder with name if it's a request
+                    if (isRequest(doc)) {
+                      const requests = state.allDocs[models.request.type] || [];
+                      const request = requests.find(r => r._id === doc._id) as Request;
+                      const method = request && typeof request.method === 'string' ? request.method : 'GET';
+                      const parentId = request ? request.parentId : 'n/a';
+                      const allRequestGroups = state.allDocs[models.requestGroup.type] || [];
+                      const reqGroup = allRequestGroups.find(rg => rg._id === parentId) as RequestGroup | undefined;
+                      const folderName = reqGroup ? `[${typeof reqGroup.name === 'string' ? reqGroup.name : ''}] ` : '';
+                      namePrefix = `${folderName + method} `;
+                    }
+                    return (
+                      <option key={doc._id} value={doc._id}>
+                        {namePrefix}
+                        {typeof doc.name === 'string' ? doc.name : 'Unknown Request'}
+                      </option>
+                    );
+                  })}
+                </select>
+              );
+
+              break;
+            }
+            case 'boolean': {
+              argInput = <input type="checkbox" checked={strValue.toLowerCase() === 'true'} onChange={handleChange} />;
+
+              break;
+            }
+            case 'number': {
               argInput = (
                 <input
-                  type="text"
-                  defaultValue={sanitizeStrForWin32(strValue)}
-                  placeholder={placeholder}
+                  type="number"
+                  defaultValue={strValue || '0'}
+                  placeholder={typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : ''}
                   onChange={handleChange}
-                  data-encoding={encoding}
                 />
               );
+
+              break;
             }
-          
-          break;
-          }
-          case 'enum': {
-            argInput = (
-              <select value={strValue} onChange={handleChange}>
-                {argDefinition.options?.find(o => o.value === strValue) ? null : (
-                  <option value="">-- Select Option --</option>
-                )}
-                {argDefinition.options?.map(option => (
-                  <option key={option.value.toString()} value={option.value + ''}>
-                    {option.description
-                      ? `${fnOrString(option.displayName, state.activeTagData?.args || [])} – ${option.description}`
-                      : fnOrString(option.displayName, state.activeTagData?.args || [])}
-                  </option>
-                ))}
-              </select>
-            );
-          
-          break;
-          }
-          case 'file': {
-            argInput = (
-              <FileInputButton
-                showFileIcon
-                showFileName
-                className="btn btn--clicky btn--super-compact"
-                onChange={path => updateArg(path, index)}
-                path={sanitizeStrForWin32(strValue)}
-                itemtypes={argDefinition.itemTypes}
-                extensions={argDefinition.extensions}
-              />
-            );
-          
-          break;
-          }
-          case 'model': {
-            const modelName = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
-            let targetDoc = state.allDocs[modelName];
-            // hard coded here to filter cloud credential data by the provider
-            if (modelName === cloudCredentialModelType) {
-              const providerNameFromArgs = activeTagData.args[0].value;
-              targetDoc = targetDoc.filter(doc => (doc as CloudProviderCredential).provider === providerNameFromArgs);
+            default: {
+              return null;
             }
-            argInput = state.loadingDocs ? (
-              <select disabled={state.loadingDocs}>
-                <option>Loading...</option>
-              </select>
-            ) : (
-              <select value={typeof strValue === 'string' ? strValue : 'unknown'} onChange={handleChange}>
-                <option value="n/a">-- Select Item --</option>
-                {targetDoc.map((doc: any) => {
-                  let namePrefix: string | null = null;
-                  // Show parent folder with name if it's a request
-                  if (isRequest(doc)) {
-                    const requests = state.allDocs[models.request.type] || [];
-                    const request = requests.find(r => r._id === doc._id) as Request;
-                    const method = request && typeof request.method === 'string' ? request.method : 'GET';
-                    const parentId = request ? request.parentId : 'n/a';
-                    const allRequestGroups = state.allDocs[models.requestGroup.type] || [];
-                    const reqGroup = allRequestGroups.find(rg => rg._id === parentId) as RequestGroup | undefined;
-                    const folderName = reqGroup ? `[${typeof reqGroup.name === 'string' ? reqGroup.name : ''}] ` : '';
-                    namePrefix = `${folderName + method} `;
-                  }
-                  return (
-                    <option key={doc._id} value={doc._id}>
-                      {namePrefix}
-                      {typeof doc.name === 'string' ? doc.name : 'Unknown Request'}
-                    </option>
-                  );
-                })}
-              </select>
-            );
-          
-          break;
-          }
-          case 'boolean': {
-            argInput = <input type="checkbox" checked={strValue.toLowerCase() === 'true'} onChange={handleChange} />;
-          
-          break;
-          }
-          case 'number': {
-            argInput = (
-              <input
-                type="number"
-                defaultValue={strValue || '0'}
-                placeholder={typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : ''}
-                onChange={handleChange}
-              />
-            );
-          
-          break;
-          }
-          default: {
-            return null;
-          }
           }
         }
         const help =

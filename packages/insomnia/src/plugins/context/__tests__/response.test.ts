@@ -11,7 +11,7 @@ describe('init()', () => {
   it('initializes correctly', async () => {
     const result = plugin.init({});
     expect(Object.keys(result)).toEqual(['response']);
-    expect(Object.keys(result.response).sort()).toEqual([
+    expect(Object.keys(result.response).toSorted()).toEqual([
       'getBody',
       'getBodyStream',
       'getBytesRead',

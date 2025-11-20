@@ -129,7 +129,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
         ...(pluginNetwork.init() as Record<string, any>),
       };
       const requests = await models.request.findByParentId(requestGroup._id);
-      requests.sort((a, b) => a.metaSortKey - b.metaSortKey);
+      requests.toSorted((a, b) => a.metaSortKey - b.metaSortKey);
       await action(context, {
         requestGroup,
         requests,

@@ -232,7 +232,7 @@ export const sendActionImplementation = async (options: {
       requestData.settings.maxHistoryResponses,
     );
     await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
-    window.main.completeExecutionStep({ requestId });
+    globalThis.main.completeExecutionStep({ requestId });
     return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
 
@@ -274,7 +274,7 @@ export const sendActionImplementation = async (options: {
       requestData.settings.maxHistoryResponses,
     );
     await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
-    window.main.completeExecutionStep({ requestId });
+    globalThis.main.completeExecutionStep({ requestId });
     return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
 
@@ -313,7 +313,7 @@ export const sendActionImplementation = async (options: {
     const header = getContentDispositionHeader(responsePatch.headers || []);
     const name = header
       ? contentDisposition.parse(header.value).parameters.filename
-      : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${(responsePatch.contentType && mimeExtension(responsePatch.contentType)) || 'unknown'}`;
+      : `${requestData.request.name.replaceAll(/\s/g, '-').toLowerCase()}.${(responsePatch.contentType && mimeExtension(responsePatch.contentType)) || 'unknown'}`;
     writeToDownloadPath(
       path.join(requestMeta.downloadPath, name),
       responsePatch,
@@ -332,7 +332,7 @@ export const sendActionImplementation = async (options: {
   if (!filePath) {
     return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
-  window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
+  globalThis.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
   writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
   return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
 };

@@ -150,7 +150,7 @@ export const Runner: FC = () => {
   const [isRunning, setIsRunning] = useState(false);
 
   // For backward compatibility，the runnerId we use for testResult in database is no prefix with 'runner_'
-  const runnerId = targetFolderId ? targetFolderId : workspaceId;
+  const runnerId = targetFolderId ?? workspaceId;
 
   const { settings } = useRootLoaderData()!;
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -320,7 +320,7 @@ export const Runner: FC = () => {
   useEffect(() => {
     const readResults = async () => {
       const results = (await models.runnerTestResult.findByParentId(runnerId)) || [];
-      setTestHistory(results.reverse());
+      setTestHistory(results.toReversed());
     };
     readResults();
   }, [runnerId]);
@@ -391,7 +391,7 @@ export const Runner: FC = () => {
       const results = (await models.runnerTestResult.findByParentId(runnerId)) || [];
       // show execution result
       if (results.length > 0) {
-        setTestHistory(results.reverse());
+        setTestHistory(results.toReversed());
         const latestResult = results[0];
         setExecutionResult(latestResult);
         const { error } = getExecution(runnerId);
@@ -901,7 +901,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { requests, iterationCount, delay, userUploadEnvs, bail, targetFolderId, keepLog } =
     (await request.json()) as runCollectionActionParams;
 
-  const runnerId = targetFolderId ? targetFolderId : workspaceId;
+  const runnerId = targetFolderId ?? workspaceId;
 
   let testCtx: CollectionRunnerContext = {
     source: 'runner',

@@ -1950,7 +1950,7 @@ export class GitVCS {
 
   static sortBranches(branches: string[]) {
     const newBranches = [...branches];
-    newBranches.sort((a: string, b: string) => {
+    newBranches.toSorted((a: string, b: string) => {
       if (a === 'master') {
         return -1;
       } else if (b === 'master') {
@@ -2009,7 +2009,7 @@ export async function fetchRemoteBranches({ uri, credentials }: { uri: string; c
   const remoteBranches = remoteRefs
     .filter(b => b.ref !== 'HEAD')
     .map(b => b.ref.replace('refs/heads/', ''))
-    .sort((a, b) => {
+    .toSorted((a, b) => {
       if (a === defaultBranch) return -1;
       if (b === defaultBranch) return 1;
       return a.localeCompare(b);

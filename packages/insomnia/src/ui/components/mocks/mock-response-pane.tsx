@@ -269,7 +269,7 @@ const HistoryViewWrapperComponentFactory = ({
                 </div>
               </Fragment>
             ))
-            .reverse()}
+            .toReversed()}
         </div>
       </div>
       {logEntryId !== null && logs?.log.entries?.[logEntryId] && (

@@ -16,16 +16,16 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     invariant(project.remoteId, 'Project is not remote');
     const vcs = VCSInstance();
     const { syncItems } = await getSyncItems({ workspaceId });
-    const localBranches = (await vcs.getBranchNames()).sort();
+    const localBranches = (await vcs.getBranchNames()).toSorted();
     const currentBranch = await vcs.getCurrentBranchName();
-    const history = (await vcs.getHistory()).sort((a, b) => (b.created > a.created ? 1 : -1));
+    const history = (await vcs.getHistory()).toSorted((a, b) => (b.created > a.created ? 1 : -1));
     const historyCount = await vcs.getHistoryCount();
     const status = await vcs.status(syncItems);
 
     let remoteBranches: string[] = [];
     let compare = { ahead: 0, behind: 0 };
     try {
-      remoteBranches = (remoteBranchesCache[workspaceId] || (await vcs.getRemoteBranchNames())).sort();
+      remoteBranches = (remoteBranchesCache[workspaceId] || (await vcs.getRemoteBranchNames())).toSorted();
       compare = remoteCompareCache[workspaceId] || (await vcs.compareRemoteBranch());
       const remoteBackendProjects =
         remoteBackendProjectsCache[project.remoteId] ||
@@ -76,7 +76,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   try {
     const vcs = VCSInstance();
-    const remoteBranches = (await vcs.getRemoteBranchNames()).sort();
+    const remoteBranches = (await vcs.getRemoteBranchNames()).toSorted();
     const compare = await vcs.compareRemoteBranch();
     const remoteBackendProjects = await vcs.remoteBackendProjects({
       teamId: project.parentId,

@@ -182,7 +182,7 @@ export class MemClient {
     const entry = this._assertDir(basePath);
 
     const names = entry.children.map(c => c.name);
-    names.sort();
+    names.toSorted();
     return names;
   }
 

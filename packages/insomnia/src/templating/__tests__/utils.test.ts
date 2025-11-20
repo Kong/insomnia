@@ -47,7 +47,7 @@ describe('getKeys()', () => {
         ['x', 'y', 'z'],
       ],
     };
-    const keys = utils.getKeys(obj).sort((a, b) => (a.name > b.name ? 1 : -1));
+    const keys = utils.getKeys(obj).toSorted((a, b) => (a.name > b.name ? 1 : -1));
     expect(keys).toEqual([
       {
         name: 'array[0]',

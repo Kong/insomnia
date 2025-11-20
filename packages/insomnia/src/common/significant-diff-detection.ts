@@ -107,7 +107,7 @@ function sortObject<T>(obj: T): T {
 
   if (obj !== null && typeof obj === 'object') {
     const sortedEntries = Object.keys(obj)
-      .sort()
+      .toSorted()
       .map(key => [key, sortObject((obj as Record<string, unknown>)[key])]);
 
     return Object.fromEntries(sortedEntries) as T;
@@ -119,7 +119,7 @@ function sortObject<T>(obj: T): T {
 // Treat undefined, null, and missing key as equivalent
 function emptyKeyReplacer(_key: string, value: any) {
   if (value === null || value === '') {
-    return undefined;
+    return;
   }
   return value;
 }

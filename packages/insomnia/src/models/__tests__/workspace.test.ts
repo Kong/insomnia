@@ -31,7 +31,7 @@ describe('migrate()', () => {
     }
 
     expect(certs.length).toBe(2);
-    expect(certs.sort((c1, c2) => (c1._id > c2._id ? -1 : 1))).toEqual([
+    expect(certs.toSorted((c1, c2) => (c1._id > c2._id ? -1 : 1))).toEqual([
       {
         _id: 'crt_e3e96e5fdd6842298b66dee1f0940f3d',
         cert: 'cert',

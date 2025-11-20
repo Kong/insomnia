@@ -23,6 +23,6 @@ export const promptWorkspace = async (db: Database, ci: boolean): Promise<Worksp
     choices: db.Workspace.map(s => getDbChoice(generateIdIsh(s), s.name)),
   });
   logger.trace('Prompt for %s', entity);
-  const [idIsh] = (await prompt.run()).split(' - ').reverse();
+  const [idIsh] = (await prompt.run()).split(' - ').toReversed();
   return loadWorkspace(db, idIsh);
 };

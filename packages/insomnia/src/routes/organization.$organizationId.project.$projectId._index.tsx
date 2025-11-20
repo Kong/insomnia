@@ -225,7 +225,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
       gitRepository?.cachedGitLastCommitTime,
     ];
 
-    const lastModifiedTimestamp = lastModifiedFrom.filter(isNotNullOrUndefined).sort(descendingNumberSort)[0];
+    const lastModifiedTimestamp = lastModifiedFrom.filter(isNotNullOrUndefined).toSorted(descendingNumberSort)[0];
 
     const hasUnsavedChanges = Boolean(
       isDesign(workspace) &&
@@ -510,11 +510,14 @@ const Component = () => {
 
   const { userSession } = useRootLoaderData()!;
   const pullFileFetcher = useInsomniaSyncPullRemoteFileActionFetcher();
-  const loadingBackendProjects = new Set(useFetchers()
-    .filter(
-      fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
-    )
-    .map(f => f.formData?.get('backendProjectId')));
+  const loadingBackendProjects = new Set(
+    useFetchers()
+      .filter(
+        fetcher =>
+          fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
+      )
+      .map(f => f.formData?.get('backendProjectId')),
+  );
 
   const organizationData = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
@@ -570,7 +573,7 @@ const Component = () => {
       const result = fuzzyMatchAll(filterStr, props, { splitSpace: true, loose: true });
       return Boolean(result?.indexes);
     })
-    .sort((a, b) => sortMethodMap[workspaceListSortOrder as DashboardSortOrder](a, b));
+    .toSorted((a, b) => sortMethodMap[workspaceListSortOrder as DashboardSortOrder](a, b));
 
   const filesWithPresence = filteredFiles
     .map(file => {

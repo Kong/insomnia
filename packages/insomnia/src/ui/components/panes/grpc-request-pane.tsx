@@ -216,7 +216,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
   const messageTabs = [
     { id: 'body', name: 'Body', text: activeRequest.body.text },
     ...requestMessages
-      .sort((a, b) => a.created - b.created)
+      .toSorted((a, b) => a.created - b.created)
       .map((msg, index) => ({ ...msg, name: `Stream ${index + 1}` })),
   ];
 

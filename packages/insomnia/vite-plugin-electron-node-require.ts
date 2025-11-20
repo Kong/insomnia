@@ -22,7 +22,7 @@ export function electronNodeRequire(options: Options): Plugin {
       // Exclude the modules from Vite's dependency optimization (pre-bundling)
       conf.optimizeDeps = {
         ...conf.optimizeDeps,
-        exclude: [...(conf.optimizeDeps?.exclude ? conf.optimizeDeps.exclude : []), ...modules],
+        exclude: [...(conf.optimizeDeps?.exclude ?? []), ...modules],
       };
 
       // Create aliases for the modules so that we can resolve them with this plugin

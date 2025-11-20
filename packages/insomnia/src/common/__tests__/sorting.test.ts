@@ -27,7 +27,7 @@ describe('Sorting methods', () => {
       { _id: '', metaSortKey: -1000 },
       { _id: '', metaSortKey: -999 },
     ];
-    const sorted = unsorted.sort(sortMethodMap['type-manual']);
+    const sorted = unsorted.toSorted(sortMethodMap['type-manual']);
     expect(sorted).toEqual([
       { _id: '', metaSortKey: -1000 },
       { _id: '', metaSortKey: -999 },

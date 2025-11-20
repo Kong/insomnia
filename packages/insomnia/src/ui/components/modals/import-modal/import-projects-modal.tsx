@@ -564,7 +564,7 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
       }
 
       // Sort project items by name
-      projectItems.sort((a, b) => a.name.localeCompare(b.name));
+      projectItems.toSorted((a, b) => a.name.localeCompare(b.name));
       setProjectItems(projectItems);
 
       // Start import process for the projects

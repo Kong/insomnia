@@ -20,7 +20,7 @@ export const loadTestSuites = (db: Database, identifier: string): UnitTestSuite[
   const workspace = loadWorkspace(db, apiSpec?.parentId || identifier); // if identifier is for an apiSpec or a workspace, return all suites for that workspace
 
   if (workspace) {
-    return db.UnitTestSuite.filter(s => s.parentId === workspace._id).sort((a, b) => a.metaSortKey - b.metaSortKey);
+    return db.UnitTestSuite.filter(s => s.parentId === workspace._id).toSorted((a, b) => a.metaSortKey - b.metaSortKey);
   } // load particular suite
 
   const result = loadUnitTestSuite(db, identifier);
@@ -50,6 +50,6 @@ export const promptTestSuites = async (db: Database, ci: boolean): Promise<UnitT
     choices: choices.flat(),
   });
   logger.trace('Prompt for document or test suite');
-  const [idIsh] = (await prompt.run()).split(' - ').reverse();
+  const [idIsh] = (await prompt.run()).split(' - ').toReversed();
   return loadTestSuites(db, idIsh);
 };

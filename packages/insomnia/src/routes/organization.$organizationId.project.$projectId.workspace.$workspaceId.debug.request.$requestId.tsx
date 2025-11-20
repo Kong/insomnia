@@ -118,7 +118,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const filteredResponses = allResponses.filter(
     (r: Response | WebSocketResponse | SocketIOResponse) => r.environmentId === activeWorkspaceMeta.activeEnvironmentId,
   );
-  const responses = (filterResponsesByEnv ? filteredResponses : allResponses).sort((a: BaseModel, b: BaseModel) =>
+  const responses = (filterResponsesByEnv ? filteredResponses : allResponses).toSorted((a: BaseModel, b: BaseModel) =>
     a.created > b.created ? -1 : 1,
   );
 

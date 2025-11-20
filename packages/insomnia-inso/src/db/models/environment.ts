@@ -73,6 +73,6 @@ export const promptEnvironment = async (
     choices: subEnvironments.map(subEnv => getDbChoice(generateIdIsh(subEnv, 14), subEnv.name)),
   });
   logger.trace('Prompt for environment');
-  const [idIsh] = (await prompt.run()).split(' - ').reverse();
+  const [idIsh] = (await prompt.run()).split(' - ').toReversed();
   return loadEnvironment(db, workspaceId, idIsh);
 };

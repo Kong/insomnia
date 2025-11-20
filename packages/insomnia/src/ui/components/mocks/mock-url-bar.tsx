@@ -33,7 +33,7 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
     setCurrentTimeout(undefined);
     onSend(pathInput);
   };
-  reactUse.useInterval(send, currentInterval ? currentInterval : null);
+  reactUse.useInterval(send, currentInterval ?? null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);
   useDocBodyKeyboardShortcuts({
     request_send: () => {

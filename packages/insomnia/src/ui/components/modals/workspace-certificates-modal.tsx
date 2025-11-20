@@ -144,7 +144,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                           <Button className="flex h-full flex-shrink-0 items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-sm] px-2 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]">
                             {!pfxPath && <Icon icon="plus" />}
                             <span className="truncate" title={pfxPath}>
-                              {pfxPath ? pfxPath : 'Add PFX or PKCS12 file'}
+                              {pfxPath ?? 'Add PFX or PKCS12 file'}
                             </span>
                           </Button>
                         </FileTrigger>
@@ -172,7 +172,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                           >
                             {!certificatePath && <Icon icon="plus" />}
                             <span className="truncate" title={certificatePath}>
-                              {certificatePath ? certificatePath : 'Add certificate file'}
+                              {certificatePath ?? 'Add certificate file'}
                             </span>
                           </Button>
                         </FileTrigger>
@@ -198,7 +198,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                           >
                             {!keyPath && <Icon icon="plus" />}
                             <span className="truncate" title={keyPath}>
-                              {keyPath ? keyPath : 'Add key file'}
+                              {keyPath ?? 'Add key file'}
                             </span>
                           </Button>
                         </FileTrigger>
