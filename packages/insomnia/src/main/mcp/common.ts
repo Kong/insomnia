@@ -156,13 +156,7 @@ export const createConnectionContext = async (
 
 export const clearConnectionContext = async (context: ConnectionContext) => {
   const { eventLogStream, timelineStream } = context;
-  if (!eventLogStream.writableFinished) {
-    await new Promise<void>(resolve => eventLogStream.on('finish', () => resolve()));
-  }
   eventLogStream.end();
-  if (!timelineStream.writableFinished) {
-    await new Promise<void>(resolve => timelineStream.on('finish', () => resolve()));
-  }
   timelineStream.end();
   // notify renderer process about state change
   updateMcpConnectionState(context, 'disconnected');
@@ -243,8 +237,8 @@ export const writeEventLogAndNotify = (
   };
   const stringifiedData = JSON.stringify(eventData);
   const dataToWrite = newLine ? stringifiedData + '\n' : stringifiedData;
-  // The write stream may be closed when closing the connection
-  if (!eventLogStream.closed) {
+  // The write stream may be ended when closing the connection
+  if (!eventLogStream.writableEnded) {
     eventLogStream.write(dataToWrite, () => {
       // notify all renderers of new event has been received
       if (responseId) {
