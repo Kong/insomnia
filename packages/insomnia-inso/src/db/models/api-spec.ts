@@ -1,7 +1,7 @@
 // @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
 import { AutoComplete } from 'enquirer';
 
-import { logger } from '../../cli';
+import { logger } from '../../logger';
 import type { Database } from '../index';
 import type { ApiSpec } from './types';
 import { ensureSingleOrNone, generateIdIsh, getDbChoice, matchIdIsh } from './util';

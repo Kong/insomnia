@@ -5,7 +5,7 @@ import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
 import type { CloudProviderCredential } from 'insomnia/src/models/cloud-credential';
 import type { CookieJar } from 'insomnia/src/models/cookie-jar';
 
-import { logger } from '../cli';
+import { logger } from '../logger';
 import gitAdapter from './adapters/git-adapter';
 import insomniaExportAdapter from './adapters/insomnia-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
