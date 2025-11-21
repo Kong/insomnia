@@ -7,7 +7,7 @@ export const fakerFunctions = {
   randomUUID: () => faker.string.uuid(),
   randomAlphaNumeric: () => faker.string.alphanumeric(),
   randomBoolean: () => faker.datatype.boolean(),
-  randomInt: () => faker.number.int(),
+  randomInt: ({ min = 1, max = 100 }) => faker.number.int({ min, max }),
   randomColor: () => faker.color.human(),
   randomHexColor: () => faker.internet.color(),
   randomAbbreviation: () => faker.hacker.abbreviation(),

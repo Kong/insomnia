@@ -18,8 +18,12 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           options: Object.keys(fakerFunctions).map(key => ({ displayName: key, value: key })),
         },
       ],
-      run(_context, keys: keyof typeof fakerFunctions) {
-        return fakerFunctions[keys]();
+      run(_context, keys: keyof typeof fakerFunctions, argStr) {
+        let parsed = {};
+        try {
+          parsed = JSON.parse(argStr);
+        } catch (err) {}
+        return fakerFunctions[keys](parsed);
       },
     },
   },
