@@ -66,7 +66,7 @@ const Avatar = ({ src }: { src: string }) => {
 
 interface GitLabRepositoryFormProps {
   uri?: string;
-  onSubmit: (args: Partial<GitRepository>) => void;
+  onSubmit: (args: Partial<GitRepository & { ref?: string }>) => void;
   credentials: GitCredentials;
 }
 
@@ -83,6 +83,7 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
         event.preventDefault();
         onSubmit({
           uri: (new FormData(event.currentTarget).get('uri') as string) ?? '',
+          ref: (new FormData(event.currentTarget).get('branch') as string) ?? '',
           author: {
             name: credentials.author.name,
             email: credentials.author.email,
