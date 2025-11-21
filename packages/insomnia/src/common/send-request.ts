@@ -139,16 +139,10 @@ export async function getSendRequestCallbackMemDb(
     const bodyBuffer = (await getBodyBuffer(res)) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
 
-    const preTestResults: RequestTestResult[] = (mutatedContext.requestTestResults || []).map(result => ({
-      ...result,
-      category: 'pre-request',
-    }));
-    const postTestResults: RequestTestResult[] = (postMutatedContext?.requestTestResults || []).map(result => ({
-      ...result,
-      category: 'after-response',
-    }));
-
-    const testResults = [...preTestResults, ...postTestResults];
+    const testResults = [
+      ...(mutatedContext.requestTestResults || []),
+      ...(postMutatedContext.requestTestResults || []),
+    ];
     return {
       status,
       statusMessage,
