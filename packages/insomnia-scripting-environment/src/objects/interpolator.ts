@@ -38,7 +38,7 @@ class Interpolator {
         throw new Error(`replaceIn: no faker function is found: ${funcName}`);
       }
 
-      const generated = fakerFunctions[funcName]();
+      const generated = fakerFunctions[funcName]({});
       return segment.slice(0, tagStart) + generated;
     });
 
