@@ -1,6 +1,6 @@
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import type { CurlRequestOptions } from '../main/network/libcurl-promise';
-import { runScript as nodejsRunScript } from '../scriptExecutor';
+import { runScript as nodejsRunScript } from '../script-executor';
 
 const cancelRequestFunctionMap = new Map<string, () => void>();
 

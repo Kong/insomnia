@@ -1,7 +1,7 @@
 import { decryptRSAWithJWK, encryptRSAWithJWK } from '../../../../account/crypt';
 import { getCurrentSessionId, getPrivateKey } from '../../../../account/session';
 import { invariant } from '../../../../utils/invariant';
-import { insomniaFetch } from '../../../insomniaFetch';
+import { insomniaFetch } from '../../../insomnia-fetch';
 
 interface InviteInstruction {
   inviteKeys: InviteKey[];

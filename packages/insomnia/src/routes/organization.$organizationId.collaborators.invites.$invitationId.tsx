@@ -1,7 +1,7 @@
 import { href } from 'react-router';
 
 import * as models from '~/models';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 

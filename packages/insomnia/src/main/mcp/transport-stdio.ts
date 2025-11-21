@@ -1,5 +1,6 @@
-import { getDefaultEnvironment, StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { InitializeRequestSchema, type JSONRPCRequest } from '@modelcontextprotocol/sdk/types.js';
+import { shellPath } from 'shell-path';
 import { parse } from 'shell-quote';
 
 import { timelineFileStreams } from '~/main/mcp/common';
@@ -7,8 +8,7 @@ import type { OpenMcpStdioClientConnectionOptions } from '~/main/mcp/types';
 import * as models from '~/models';
 import { TRANSPORT_TYPES } from '~/models/mcp-request';
 import type { McpResponse } from '~/models/mcp-response';
-
-export const createStdioTransport = (
+export const createStdioTransport = async (
   options: OpenMcpStdioClientConnectionOptions,
   {
     responseId,
@@ -42,7 +42,14 @@ export const createStdioTransport = (
     name: 'HeaderOut',
     timestamp: Date.now(),
   });
-  const stringifiedEnv = Object.entries(env)
+  const pathEnv = (await shellPath()) || process.env.PATH || '';
+  // Filter out empty keys from env
+  const filteredEnv = Object.fromEntries(Object.entries(env).filter(([key]) => key.trim().length));
+  const finalEnv = {
+    PATH: pathEnv,
+    ...filteredEnv,
+  };
+  const stringifiedEnv = Object.entries(finalEnv)
     .map(([key, value]) => `${key}=${value}`)
     .join(' ')
     .trim();
@@ -59,10 +66,7 @@ export const createStdioTransport = (
   const transport = new StdioClientTransport({
     command,
     args,
-    env: {
-      ...getDefaultEnvironment(),
-      ...env,
-    },
+    env: finalEnv,
     stderr: 'pipe',
   });
 

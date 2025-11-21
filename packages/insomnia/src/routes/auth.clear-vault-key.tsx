@@ -3,7 +3,7 @@ import { href } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';
 import { removeAllSecrets } from '~/models/environment';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/auth.clear-vault-key';

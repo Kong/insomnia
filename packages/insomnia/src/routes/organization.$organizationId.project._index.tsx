@@ -80,7 +80,7 @@ import { TimeFromNow } from '~/ui/components/time-from-now';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 
@@ -666,7 +666,6 @@ const Component = () => {
     });
   };
 
-
   const canCreateMockServer = activeProject?._id;
   const isGitSyncEnabled = features.gitSync.enabled;
 
@@ -688,12 +687,16 @@ const Component = () => {
       icon: 'file',
       action: createNewDocument,
     },
-    ...(canCreateMockServer ? [{
-      id: 'new-mock-server',
-      name: 'Mock Server',
-      icon: 'server' as IconName,
-      action: createNewMockServer,
-    }] : []),
+    ...(canCreateMockServer
+      ? [
+          {
+            id: 'new-mock-server',
+            name: 'Mock Server',
+            icon: 'server' as IconName,
+            action: createNewMockServer,
+          },
+        ]
+      : []),
     {
       id: 'new-environment',
       name: 'Environment',
@@ -737,16 +740,20 @@ const Component = () => {
         run: createNewCollection,
       },
     },
-    ...(canCreateMockServer ? [{
-      id: 'mock-server',
-      label: `Mock (${mockServersCount})`,
-      icon: 'server' as IconName,
-      action: {
-        icon: 'plus' as IconName,
-        label: 'New Mock Server',
-        run: createNewMockServer,
-      },
-    }] : []),
+    ...(canCreateMockServer
+      ? [
+          {
+            id: 'mock-server',
+            label: `Mock (${mockServersCount})`,
+            icon: 'server' as IconName,
+            action: {
+              icon: 'plus' as IconName,
+              label: 'New Mock Server',
+              run: createNewMockServer,
+            },
+          },
+        ]
+      : []),
     {
       id: 'environment',
       label: `Environments (${environmentsCount})`,

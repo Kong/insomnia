@@ -1,10 +1,26 @@
+/**
+ * Git Service - Main Git Operations Handler
+ *
+ * This module provides the main Git service for Insomnia, handling all Git operations
+ * including cloning, pushing, pulling, branching, and merging. It integrates with
+ * isomorphic-git to provide Git functionality within the Electron app.
+ *
+ * Key responsibilities:
+ * - Repository management (clone, init, update, reset)
+ * - Branch operations (create, checkout, merge, delete)
+ * - Sync operations (push, pull, fetch)
+ * - OAuth integration with GitHub and GitLab
+ * - Legacy migration support
+ *
+ */
+
 import { createHash, randomBytes } from 'node:crypto';
 import path from 'node:path';
 
 import { shell } from 'electron';
 import { app, net } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
-import { Errors, type HeadStatus, type PromiseFsClient, type StageStatus, type WorkdirStatus } from 'isomorphic-git';
+import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
 
@@ -23,6 +39,7 @@ import {
 } from '../common/constants';
 import { database } from '../common/database';
 import { InsomniaFileSchema } from '../common/import-v5-parser';
+import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import * as models from '../models';
 import type { GitRepository } from '../models/git-repository';
@@ -38,6 +55,7 @@ import GitVCS, {
   type GitFileStatusSymbol,
   GitVCSOperationErrors,
   MergeConflictError,
+  type Status,
 } from '../sync/git/git-vcs';
 import { MemClient } from '../sync/git/mem-client';
 import { NeDBClient } from '../sync/git/ne-db-client';
@@ -70,11 +88,18 @@ type VCSAction =
   | 'setup'
   | 'clone';
 
-function getErrorMessage(error: unknown): string {
+/**
+ * Converts various error types into user-friendly error messages
+ * Handles network errors, Git-specific errors, and unknown errors
+ *
+ * @param error - The error object to convert
+ * @returns A user-friendly error message
+ */
+export function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     const message = error.message || '';
 
-    // Check for network-related errors
+    // Check for network-related errors.
     if (
       message.includes('net::ERR_UNEXPECTED') ||
       message.includes('net::ERR_INTERNET_DISCONNECTED') ||
@@ -100,7 +125,14 @@ export function vcsSegmentEventProperties(type: 'git', action: VCSAction, error?
   return { type, action, error };
 }
 
-function parseGitToHttpsURL(url: string) {
+/**
+ * Converts various Git URL formats to HTTPS URLs
+ * Handles SSH URLs, Git URLs, and self-hosted Git servers
+ *
+ * @param s - The Git URL to convert
+ * @returns The converted HTTPS URL
+ */
+export function parseGitToHttpsURL(url: string) {
   // try to convert any git URL to https URL
   let parsed = fromUrl(url)?.https({ noGitPlus: true }) || '';
 
@@ -147,6 +179,15 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   return gitRepository;
 }
 
+/**
+ * Creates a file system client for Git operations
+ * Returns different clients based on whether we're working with a workspace or project
+ *
+ * @param projectId - The project ID
+ * @param workspaceId - Optional workspace ID (if provided, uses workspace-specific client)
+ * @param gitRepositoryId - The Git repository ID
+ * @returns File system client configured for the appropriate context
+ */
 async function getGitFSClient({
   projectId,
   workspaceId,
@@ -156,12 +197,13 @@ async function getGitFSClient({
   workspaceId?: string;
   gitRepositoryId: string;
 }) {
+  // Base directory where Git data is stored
   const baseDir = path.join(
     process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
     `version-control/git/${gitRepositoryId}`,
   );
 
-  // Workspace FS Client
+  // Workspace FS Client - used when working with a specific workspace
   if (workspaceId) {
     // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
     const neDbClient = NeDBClient.createClient(workspaceId, projectId);
@@ -348,14 +390,14 @@ export interface GitChangesLoaderData {
     staged: {
       name: string;
       path: string;
-      status: [HeadStatus, WorkdirStatus, StageStatus];
+      status: Status;
       type: GitFileStatus;
       symbol: GitFileStatusSymbol;
     }[];
     unstaged: {
       name: string;
       path: string;
-      status: [HeadStatus, WorkdirStatus, StageStatus];
+      status: Status;
       type: GitFileStatus;
       symbol: GitFileStatusSymbol;
     }[];
@@ -375,7 +417,7 @@ export const gitChangesLoader = async ({
     const gitRepository = await getGitRepository({ projectId, workspaceId });
     const branch = await GitVCS.getCurrentBranch();
 
-    const { changes, hasUncommittedChanges } = await getGitChanges(GitVCS);
+    const { changes, hasUncommittedChanges } = await getGitChanges();
 
     await models.gitRepository.update(gitRepository, {
       hasUncommittedChanges,
@@ -475,20 +517,29 @@ async function containsLegacyInsomniaDir({ fsClient }: { fsClient: PromiseFsClie
  *
  * All entities are stored inside a subdirectory named after the model it represents (e.g., `Request`),
  * and each file is named with the database ID as its name, with the `.yaml` extension.
+ *
+ * This function migrates the legacy structure to the new v5 file format.
+ *
+ * @param fsClient - File system client for reading the repository
+ * @param projectId - The project ID to associate migrated workspaces with
+ * @returns Object containing changes made during migration or errors
  */
 async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: PromiseFsClient; projectId: string }) {
-  const changes: { path: string; status: [HeadStatus, WorkdirStatus, StageStatus] }[] = [];
+  const changes: { path: string; status: Status }[] = [];
   try {
+    // Check if the legacy .insomnia directory exists
     const legacyInsomniaFolderStat = await fsClient.promises.lstat(GIT_INSOMNIA_DIR_NAME);
 
     if (!legacyInsomniaFolderStat.isDirectory()) {
       return {};
     }
 
+    // Get all model type folders (Workspace, Request, etc.)
     const legacyInsomniaModelFolders = await fsClient.promises.readdir(GIT_INSOMNIA_DIR_NAME);
 
     const legacyInsomniaFiles: { filePath: string; type: string }[] = [];
 
+    // Recursively collect all YAML files from each model folder
     for (const folder of legacyInsomniaModelFolders) {
       const folderPath = path.join(GIT_INSOMNIA_DIR_NAME, folder);
       const folderStat = await fsClient.promises.lstat(folderPath);
@@ -509,28 +560,33 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
       return {};
     }
 
+    // Process each legacy file and migrate it to the database
     for (const legacyInsomniaFile of legacyInsomniaFiles) {
       const fileContents = await fsClient.promises.readFile(legacyInsomniaFile.filePath, 'utf8');
 
       const type = legacyInsomniaFile.type;
 
-      // Skip the file if there is a conflict marker
+      // Skip the file if there is a conflict marker (Git merge conflict)
       if (fileContents.split('\n').includes('=======')) {
         return {
           errors: [`File ${legacyInsomniaFile.filePath} contains a merge conflict`],
         };
       }
 
+      // Parse the YAML file to get the document
       const doc: models.BaseModel = YAML.parse(fileContents);
 
+      // Validate that the document ID matches the file path
       if (!legacyInsomniaFile.filePath.includes(doc._id)) {
         throw new Error(`Doc _id does not match file path [${doc._id} - ${legacyInsomniaFile.filePath}]`);
       }
 
+      // Validate that the document type matches the folder name
       if (type !== doc.type) {
         throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
       }
 
+      // Special handling for workspaces: ensure they're associated with the correct project
       if (isWorkspace(doc)) {
         console.log('[git] setting workspace parent to be that of the active project', {
           original: doc.parentId,
@@ -541,22 +597,27 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
         // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
         doc.parentId = projectId;
 
+        // Create workspace metadata and set the new Git file path
         const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
 
         const gitFilePath = `insomnia.${doc._id}.yaml`;
         await models.workspaceMeta.update(workspaceMeta, { gitFilePath });
 
+        // Track the change for Git staging
         changes.push({
           path: gitFilePath,
-          status: [0, 1, 0],
+          status: [0, 1, 0], // Added to working directory
         });
       }
 
+      // Update the document in the database
       await database.update(doc);
+
+      // Track the removal of the legacy file
       changes.push({
         path: legacyInsomniaFile.filePath,
         // It existed and was removed from the git repository
-        status: [1, 0, 1],
+        status: [1, 0, 1], // Deleted from working directory
       });
     }
 
@@ -688,7 +749,10 @@ export const initGitRepoCloneAction = async ({
   const files = await Promise.all(
     insomniaFiles.map(async file => {
       const fileContents = await inMemoryFsClient.promises.readFile(path.join(GIT_CLONE_DIR, file), 'utf8');
-      const insomniaFile = InsomniaFileSchema.parse(YAML.parse(fileContents));
+
+      // Apply schema migration before parsing to handle older schema versions
+      const migratedContents = migrateToLatestYaml(fileContents);
+      const insomniaFile = InsomniaFileSchema.parse(YAML.parse(migratedContents));
 
       return {
         scope: insomniaSchemaTypeToScope(insomniaFile.type),
@@ -783,6 +847,7 @@ export const cloneGitRepoAction = async ({
       const insomniaFilesIds = insomniaFiles.map(file => file.split('.')[1]);
 
       if (insomniaFilesIds.length > 0) {
+        // Check for existing workspaces with the same IDs (currently commented out)
         const existingWorkspaces = await database.find(models.workspace.type, {
           _id: { $in: insomniaFilesIds },
         });
@@ -1166,7 +1231,7 @@ export const updateGitRepoAction = async ({
     await GitVCS.setAuthor();
     await GitVCS.addRemote(uri);
 
-    const { hasUncommittedChanges } = await getGitChanges(GitVCS);
+    const { hasUncommittedChanges } = await getGitChanges();
     const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
 
     await models.gitRepository.update(gitRepository, {
@@ -1265,7 +1330,7 @@ export const multipleCommitToGitRepoAction = async ({
 
   for (const commit of commits) {
     // Get current git status
-    const { changes } = await getGitChanges(GitVCS);
+    const { changes } = await getGitChanges();
 
     // First, unstage everything to start with a clean slate for this commit
     if (changes.staged.length > 0) {
@@ -1276,7 +1341,7 @@ export const multipleCommitToGitRepoAction = async ({
     const filesToStageForCommit: { path: string; status: [any, any, any] }[] = [];
 
     // Refresh changes after unstaging everything
-    const { changes: currentChanges } = await getGitChanges(GitVCS);
+    const { changes: currentChanges } = await getGitChanges();
 
     for (const file of commit.files) {
       const fileChange = currentChanges.unstaged.find(c => c.path === file);
@@ -1442,7 +1507,7 @@ export const createNewGitBranchAction = async ({
       providerName,
     });
 
-    const { hasUncommittedChanges } = await getGitChanges(GitVCS);
+    const { hasUncommittedChanges } = await getGitChanges();
 
     let hasUnpushedChanges = false;
     try {
@@ -1497,7 +1562,7 @@ export const checkoutGitBranchAction = async ({
     const author = log[0] ? log[0].commit.author : null;
     const cachedGitLastCommitTime = author ? author.timestamp * 1000 : Date.now();
 
-    const { hasUncommittedChanges } = await getGitChanges(GitVCS);
+    const { hasUncommittedChanges } = await getGitChanges();
 
     let hasUnpushedChanges = false;
     try {
@@ -1527,6 +1592,23 @@ export const checkoutGitBranchAction = async ({
     }
 
     if (err instanceof Errors.CheckoutConflictError) {
+      try {
+        const { hasUncommittedChanges } = await getGitChanges();
+
+        if (!hasUncommittedChanges) {
+          // Retry checkout with force if there are no uncommitted changes
+          await GitVCS.checkout(branch, { force: true });
+          return {
+            success: true,
+          };
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : error.toString();
+        return {
+          errors: [errorMessage],
+        };
+      }
+
       return {
         errors: [`${err.message} - Please commit or discard your changes before switching branches.`],
       };
@@ -1848,9 +1930,8 @@ export interface GitChange {
   editable: boolean;
 }
 
-async function getGitChanges(vcs: typeof GitVCS) {
-  const changes = await vcs.status();
-
+async function getGitChanges() {
+  const changes = await GitVCS.status();
   return {
     changes,
     hasUncommittedChanges: changes.staged.length > 0 || changes.unstaged.length > 0,
@@ -1876,7 +1957,7 @@ export const discardChangesAction = async ({
 }> => {
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
-    const { changes } = await getGitChanges(GitVCS);
+    const { changes } = await getGitChanges();
 
     const files = changes.unstaged.filter(change => paths.includes(change.path));
 
@@ -1917,7 +1998,7 @@ export const gitStatusAction = async ({
 }): Promise<GitStatusResult> => {
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
-    const { hasUncommittedChanges, changes } = await getGitChanges(GitVCS);
+    const { hasUncommittedChanges, changes } = await getGitChanges();
     const localChanges = changes.staged.length + changes.unstaged.length;
 
     await models.gitRepository.update(gitRepository, {
@@ -1952,7 +2033,7 @@ export const stageChangesAction = async ({
 }> => {
   try {
     await getGitRepository({ workspaceId, projectId });
-    const { changes } = await getGitChanges(GitVCS);
+    const { changes } = await getGitChanges();
 
     const files = changes.unstaged.filter(change => paths.includes(change.path));
 
@@ -1979,7 +2060,7 @@ export const unstageChangesAction = async ({
 }> => {
   try {
     await getGitRepository({ workspaceId, projectId });
-    const { changes } = await getGitChanges(GitVCS);
+    const { changes } = await getGitChanges();
 
     const files = changes.staged.filter(change => paths.includes(change.path));
 

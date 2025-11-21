@@ -272,7 +272,7 @@ export class Variables {
    * @returns The value of the variable if found, otherwise undefined
    */
   get = (variableName: string) => {
-    let finalVal: boolean | number | string | object | undefined = undefined;
+    let finalVal: boolean | number | string | object | undefined;
     [
       this.localVars,
       mergeFolderLevelVars(this.folderLevelVars),
@@ -387,13 +387,13 @@ export class Vault extends Environment {
       // throw error on get or set method call if enableVaultInScripts is false
       get: (target, prop, receiver) => {
         if (!enableVaultInScripts) {
-          throw 'Vault is disabled in script';
+          throw new Error('Vault is disabled in script');
         }
         return Reflect.get(target, prop, receiver);
       },
       set: (target, prop, value, receiver) => {
         if (!enableVaultInScripts) {
-          throw 'Vault is disabled in script';
+          throw new Error('Vault is disabled in script');
         }
         return Reflect.set(target, prop, value, receiver);
       },
@@ -402,16 +402,16 @@ export class Vault extends Environment {
 
   /** @ignore */
   unset = () => {
-    throw 'Vault can not be unset in script';
+    throw new Error('Vault can not be unset in script');
   };
 
   /** @ignore */
   clear = () => {
-    throw 'Vault can not be cleared in script';
+    throw new Error('Vault can not be cleared in script');
   };
 
   /** @ignore */
   set = () => {
-    throw 'Vault can not be set in script';
+    throw new Error('Vault can not be set in script');
   };
 }

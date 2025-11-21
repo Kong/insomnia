@@ -5,6 +5,7 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
+import { docsMcpAuthentication } from '~/common/documentation';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
 import { useRealtimeConnectionNotifications } from '~/ui/hooks/use-realtime-connection-notifications';
 
@@ -235,6 +236,9 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
 
   const cookieHeaders = hideCookies ? [] : getSetCookieHeaders(response.headers);
 
+  // When it is an MCP auth error, show the docs link about MCP authentication and keep the events view to be visible for better context.
+  const isMCPAuthError = isMcpResponse(response) && response.error && response.errorType === 'auth';
+
   return (
     <Pane type="response">
       <PaneHeader className="row-spaced">
@@ -319,7 +323,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
         </TabList>
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="events">
           <PanelGroup direction="vertical" className="grid h-full w-full grid-rows-[repeat(auto-fit,minmax(0,1fr))]">
-            {response.error ? (
+            {response.error && !isMCPAuthError ? (
               <ResponseErrorViewer url={response.url} error={response.error} />
             ) : (
               <>
@@ -384,6 +388,9 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
                     />
                   )}
                 </Panel>
+                {isMCPAuthError ? (
+                  <ResponseErrorViewer url={response.url} error={response.error} docsLink={docsMcpAuthentication} />
+                ) : null}
                 {selectedEvent && (
                   <>
                     <PanelResizeHandle className={'h-[1px] w-full bg-[--hl-md]'} />

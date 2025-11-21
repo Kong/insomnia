@@ -13,7 +13,7 @@ import {
 import { type GitRepository, isGitCredentialsOAuth } from '../models/git-repository';
 import { EMPTY_GIT_PROJECT_ID, type Project } from '../models/project';
 import type { WorkspaceMeta } from '../models/workspace-meta';
-import { insomniaFetch } from '../ui/insomniaFetch';
+import { insomniaFetch } from '../ui/insomnia-fetch';
 import * as crypt from './crypt';
 
 type LoginCallback = (isLoggedIn: boolean) => void;

@@ -9,8 +9,9 @@ import { SettingsModal } from '../modals/settings-modal';
 interface Props {
   error: string;
   url: string;
+  docsLink?: string;
 }
-export const ResponseErrorViewer: FC<Props> = memo(({ error }) => {
+export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink }) => {
   let msg: React.ReactNode = null;
   const { settings } = useRootLoaderData()!;
   const { editorFontSize } = settings;
@@ -29,7 +30,7 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error }) => {
     );
   } else {
     msg = (
-      <Link button className="btn btn--clicky" href={docsBase}>
+      <Link button className="btn btn--clicky" href={docsLink || docsBase}>
         Documentation
       </Link>
     );

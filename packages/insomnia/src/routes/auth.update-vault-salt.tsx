@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs, href } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 export async function clientAction(_args: ActionFunctionArgs) {
