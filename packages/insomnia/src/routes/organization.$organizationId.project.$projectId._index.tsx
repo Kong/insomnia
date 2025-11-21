@@ -69,7 +69,6 @@ import { ProjectDropdown } from '~/ui/components/dropdowns/project-dropdown';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
-import { GitRepositoryCloneModal } from '~/ui/components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
@@ -636,8 +635,6 @@ const Component = () => {
           project.gitRepository?.hasUnpushedChanges,
       };
     });
-
-  const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -1330,10 +1327,6 @@ const Component = () => {
             )}
           </Panel>
         </PanelGroup>
-
-        {isGitRepositoryCloneModalOpen && (
-          <GitRepositoryCloneModal onHide={() => setIsGitRepositoryCloneModalOpen(false)} />
-        )}
         {isNewProjectModalOpen && (
           <ProjectModal
             isOpen={isNewProjectModalOpen}
