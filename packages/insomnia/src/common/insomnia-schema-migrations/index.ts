@@ -57,7 +57,11 @@ const migrations: Migration<any>[] = [
  * @param referenceContent - Optional reference content to normalize property order against
  * @returns Migrated and normalized YAML content
  */
-export function migrateToLatestYaml(yamlContent: string, referenceContent?: string): string {
+export function migrateToLatestYaml(yamlContent?: string, referenceContent?: string): string {
+  if (!yamlContent) {
+    return '';
+  }
+
   try {
     const parsed = parse(yamlContent);
     const version = getVersionFromParsed(parsed);

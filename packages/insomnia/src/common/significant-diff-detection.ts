@@ -116,12 +116,22 @@ function sortObject<T>(obj: T): T {
   return obj;
 }
 
+// Treat undefined, null, and missing key as equivalent
+function emptyKeyReplacer(_key: string, value: any) {
+  if (value === null || value === '') {
+    return undefined;
+  }
+  return value;
+}
+
 /**
  * Performs original deep equality check by comparing canonical (sorted) JSON strings.
  * Works best for JSON-compatible data (objects, arrays, primitives).
  */
 function deepEqual<T>(original: T, modified: T): boolean {
-  return JSON.stringify(sortObject(original)) === JSON.stringify(sortObject(modified));
+  return (
+    JSON.stringify(sortObject(original), emptyKeyReplacer) === JSON.stringify(sortObject(modified), emptyKeyReplacer)
+  );
 }
 
 /**
