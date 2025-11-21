@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import type { BaseModel } from '../models';
 import * as models from '../models';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
