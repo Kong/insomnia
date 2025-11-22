@@ -465,6 +465,34 @@ export const SocketIORequestSchema = z.object({
   eventListeners: SocketIOEventListenerSchema.array().optional(),
 });
 
+export const McpRequestSchema = z.object({
+  name: z.string().optional().default(''),
+  url: z.string().optional().default(''),
+  transportType: z.enum(['stdio', 'streamable-http']).optional().default('streamable-http'),
+  headers: HeadersSchema.optional(),
+  authentication: AuthenticationSchema.optional(),
+  meta: MetaSchema.optional(),
+  env: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string().optional().default(''),
+        value: z.string().optional().default(''),
+        type: z.literal('str'),
+        enabled: z.boolean().optional().default(true),
+      }),
+    )
+    .optional(),
+  roots: z
+    .array(
+      z.object({
+        name: z.string().optional(),
+        uri: z.string().optional().default(''),
+      }),
+    )
+    .optional(),
+});
+
 type Request = z.infer<typeof RequestSchema>;
 type GRPCRequest = z.infer<typeof GRPCRequestSchema>;
 type WebsocketRequest = z.infer<typeof WebsocketRequestSchema>;
@@ -578,12 +606,24 @@ const GlobalEnvironmentsSchema = z.object({
   environments: EnvironmentSchema.optional(),
 });
 
+export const McpClientSchema = z.object({
+  // Does not follow the insomnia.rest pattern to prevent crashes in older versions when syncing this file: INS-1762
+  type: z.literal('mcpClient.insomnia/5.0'),
+  schema_version: z.string().optional().default(INSOMNIA_SCHEMA_VERSION),
+  name: z.string().optional(),
+  meta: MetaSchema.optional(),
+  mcpRequest: McpRequestSchema.optional(),
+  environments: EnvironmentSchema.optional(),
+});
+
 export const InsomniaFileSchema = z.discriminatedUnion('type', [
   CollectionSchema,
   ApiSpecSchema,
   MockServerSchema,
   GlobalEnvironmentsSchema,
+  McpClientSchema,
 ]);
+export const InsomniaFileTypeValues = InsomniaFileSchema.options.map(option => option.shape.type.value);
 
 export type InsomniaFile = z.infer<typeof InsomniaFileSchema>;
 
