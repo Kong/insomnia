@@ -1,6 +1,7 @@
 import { z, type ZodError } from 'zod/v4';
 
 import { insecureReadFile } from '~/main/secure-read-file';
+import { isMcpRequest, type McpRequest } from '~/models/mcp-request';
 
 import { type InsomniaImporter } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
@@ -27,6 +28,7 @@ import { generateId } from './misc';
 
 export type AllExportTypes =
   | 'request'
+  | 'mcp_request'
   | 'grpc_request'
   | 'websocket_request'
   | 'websocket_payload'
@@ -117,6 +119,7 @@ export interface ScanResult {
   unitTests?: UnitTest[];
   unitTestSuites?: UnitTestSuite[];
   mockRoutes?: MockRoute[];
+  mcpRequests?: McpRequest[];
   type?: InsomniaImporter;
   oriFileName?: string;
   errors: string[];
@@ -133,6 +136,7 @@ let resourceCacheList: ResourceCacheType[] = [];
 // All models that can be exported should be listed here
 export const MODELS_BY_EXPORT_TYPE: Record<AllExportTypes, AllTypes> = {
   request: 'Request',
+  mcp_request: 'McpRequest',
   websocket_payload: 'WebSocketPayload',
   websocket_request: 'WebSocketRequest',
   socketio_payload: 'SocketIOPayload',
@@ -233,6 +237,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
       const workspaces = resources.filter(isWorkspace);
       const cookieJars = resources.filter(isCookieJar);
       const mockRoutes = resources.filter(isMockRoute);
+      const mcpRequests = resources.filter(isMcpRequest);
 
       return {
         type,
@@ -244,6 +249,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
         apiSpecs,
         cookieJars,
         mockRoutes,
+        mcpRequests,
         oriFileName,
         errors: [],
       };
