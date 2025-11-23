@@ -152,10 +152,11 @@ export const ProjectSettingsForm: FC<Props> = ({
 
   const showStorageRestrictionMessage =
     !storageRules.enableCloudSync || !storageRules.enableLocalVault || !storageRules.enableGitSync;
-  const insomniaFiles =
+  const allInsomniaFiles =
     initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data
-      ? initCloneGitRepositoryFetcher.data.files
-      : [];
+      ? initCloneGitRepositoryFetcher.data
+      : { files: [] };
+  const insomniaFiles = allInsomniaFiles.files;
 
   useEffect(() => {
     if (updateProjectFetcher.data && updateProjectFetcher.data.success && onSuccessUpdate) {

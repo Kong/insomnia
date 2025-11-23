@@ -26,6 +26,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   return {
     files: initCloneResult.files,
+    unsupportedFiles: initCloneResult.unsupportedFiles,
   };
 }
 

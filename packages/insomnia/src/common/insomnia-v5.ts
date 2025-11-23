@@ -644,27 +644,40 @@ function getCollection(
 function importData(rawData: string) {
   // Apply schema migration before parsing to handle older schema versions
   const migratedData = migrateToLatestYaml(rawData);
-  const file = InsomniaFileSchema.parse(parse(migratedData));
+  const fileSchemaParser = InsomniaFileSchema.safeParse(parse(migratedData));
 
-  if (file.type === 'collection.insomnia.rest/5.0') {
-    return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
-  }
+  if (fileSchemaParser.success) {
+    const file = fileSchemaParser.data;
+    const fileType = file.type;
+    switch (fileType) {
+      case 'collection.insomnia.rest/5.0': {
+        return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
+      }
 
-  if (file.type === 'spec.insomnia.rest/5.0') {
-    return [
-      getWorkspace(file),
-      ...getEnvironments(file),
-      ...getCookieJar(file),
-      ...getCollection(file),
-      ...getApiSpec(file),
-      ...getTestSuites(file),
-    ];
-  }
+      case 'spec.insomnia.rest/5.0': {
+        return [
+          getWorkspace(file),
+          ...getEnvironments(file),
+          ...getCookieJar(file),
+          ...getCollection(file),
+          ...getApiSpec(file),
+          ...getTestSuites(file),
+        ];
+      }
+      case 'environment.insomnia.rest/5.0': {
+        return [getWorkspace(file), ...getEnvironments(file)];
+      }
 
-  if (file.type === 'environment.insomnia.rest/5.0') {
-    return [getWorkspace(file), ...getEnvironments(file)];
+      case 'mock.insomnia.rest/5.0': {
+        return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
+      }
+      // in case new types are added but not implemented here yet
+      default: {
+        throw new Error(`No import handler found for type ${fileType}`);
+      }
+    }
   }
-  return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
+  throw new Error(`Unsupported Insomnia v5 file type ${fileSchemaParser.error?.toString()}`);
 }
 
 /**
