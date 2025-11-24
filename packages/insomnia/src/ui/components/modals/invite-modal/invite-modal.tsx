@@ -438,7 +438,7 @@ const MemberListItem: FC<{
           <div className="flex min-w-[88px] items-center justify-center">
             <Button
               aria-label="Manage collaborators"
-              className="pressed:bg-opacity-40 flex min-w-[70px] cursor-pointer items-center justify-center gap-2 rounded-sm bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 bg-clip-padding p-1 text-sm text-[--color-font-surprise] outline-none transition-all hover:bg-opacity-80 focus-visible:ring-2 focus-visible:ring-white/75"
+              className="flex min-w-[70px] cursor-pointer items-center justify-center gap-2 rounded-sm bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 bg-clip-padding p-1 text-sm text-[--color-font-surprise] outline-none transition-all hover:bg-opacity-80 focus-visible:ring-2 focus-visible:ring-white/75 data-[pressed]:bg-opacity-40"
               onPress={() => {
                 if (!permissionRef.current['own:organization']) {
                   showModal(AlertModal, {

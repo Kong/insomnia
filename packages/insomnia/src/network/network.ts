@@ -384,6 +384,10 @@ export const tryToExecutePreRequestScript = async (
     originalRequestGroups,
   });
 
+  const preTestResults: RequestTestResult[] = (mutatedContext.requestTestResults || []).map(result => ({
+    ...result,
+    category: 'pre-request',
+  }));
   return {
     request: mutatedContext.request,
     environment: mutatedContext.environment,
@@ -393,7 +397,7 @@ export const tryToExecutePreRequestScript = async (
     globals: mutatedContext.globals,
     baseGlobals: mutatedContext.baseGlobals,
     cookieJar: mutatedContext.cookieJar,
-    requestTestResults: mutatedContext.requestTestResults,
+    requestTestResults: preTestResults,
     userUploadEnvironment: mutatedContext.userUploadEnvironment,
     execution: mutatedContext.execution,
     transientVariables: mutatedContext.transientVariables,
@@ -483,7 +487,7 @@ export async function savePatchesMadeByScript(patches: {
   });
 }
 
-export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
+const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
   const {
     script,
     request,
@@ -757,7 +761,12 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
     });
   }
 
-  return postMutatedContext;
+  const postTestResults: RequestTestResult[] = (postMutatedContext?.requestTestResults || []).map(result => ({
+    ...result,
+    category: 'after-response',
+  }));
+
+  return { ...postMutatedContext, requestTestResults: postTestResults };
 }
 
 export const tryToInterpolateRequest = async ({

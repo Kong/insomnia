@@ -620,7 +620,7 @@ export const Runner: FC = () => {
                           <TooltipTrigger key={`parent-folder-${id}=${name}`}>
                             <Tooltip message={name}>
                               <i className="fa fa-folder fa-1x mr-0.3 h-4 text-[--color-font]" />
-                              <i className="fa fa-caret-right fa-1x mr-0.3 text-[--color-font]-50 h-4 opacity-50" />
+                              <i className="fa fa-caret-right fa-1x mr-0.3 h-4 opacity-50" />
                             </Tooltip>
                           </TooltipTrigger>
                         );

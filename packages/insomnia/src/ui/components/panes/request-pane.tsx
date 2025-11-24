@@ -202,7 +202,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                     <Button
                       isDisabled={!urlHasQueryParameters}
                       onPress={handleImportQueryFromUrl}
-                      className="asma-pressed:bg-[--hl-sm] flex h-full w-[14ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:ring-inset focus:ring-[--hl-md] aria-selected:bg-[--hl-xs] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                      className="flex h-full w-[14ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:ring-inset focus:ring-[--hl-md] aria-selected:bg-[--hl-xs] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm]"
                     >
                       Import from URL
                     </Button>

@@ -15,6 +15,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
   const [authCodeUrlStr, setAuthCodeUrlStr] = useState<string | undefined>();
   const [submitting, setSubmitting] = useState<boolean>(false);
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = window.main.on('show-oauth-authorization-modal', (_, authCodeUrlStr: string) => {
@@ -65,6 +66,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
     } else if (status === 'getting_code') {
       modalRef.current?.show();
       setSubmitting(false);
+      setError(null);
     }
   }, [status]);
 
@@ -84,7 +86,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
         {status === 'getting_code' && (
           <>
             <p className="text-[rgba(var(--color-font-rgb),0.8))] text-start">
-              See your browser to finish authorization, if the browser didn’t open automatically, copy and paste this
+              See your browser to finish authorization, if the browser didn't open automatically, copy and paste this
               URL into your browser to authorize.
             </p>
             <div className="form-control form-control--outlined no-pad-top flex">
@@ -110,29 +112,36 @@ export const OAuthAuthorizationStatusModal: FC = () => {
             </p>
             <form
               onSubmit={e => {
-                e.preventDefault();
-                const form = e.currentTarget;
-                const data = new FormData(form);
+                try {
+                  e.preventDefault();
+                  const form = e.currentTarget;
+                  const data = new FormData(form);
 
-                const url = data.get('url');
-                invariant(typeof url === 'string', 'Expected code to be a string');
-                if (url.length === 0) {
+                  const url = data.get('url');
+                  invariant(typeof url === 'string', 'Expected code to be a string');
+                  if (url.length === 0) {
+                    return;
+                  }
+                  setError(null);
+                  setSubmitting(true);
+                  const parsedUrl = new URL(url);
+                  const params = Object.fromEntries(parsedUrl.searchParams);
+                  const { encryptedUrl: encryptedRedirectUrl, encryptedKey, iv } = params;
+                  if (encryptedRedirectUrl && encryptedKey && iv) {
+                    return redirectToDefaultBrowserSubmit({
+                      encryptedRedirectUrl,
+                      encryptedKey,
+                      iv,
+                    });
+                  }
+                  return redirectToDefaultBrowserSubmit({
+                    redirectUrl: url,
+                  });
+                } catch (error) {
+                  setError(error instanceof Error ? error.message : String(error));
+                  setSubmitting(false);
                   return;
                 }
-                setSubmitting(true);
-                const parsedUrl = new URL(url);
-                const params = Object.fromEntries(parsedUrl.searchParams);
-                const { encryptedUrl: encryptedRedirectUrl, encryptedKey, iv } = params;
-                if (encryptedRedirectUrl && encryptedKey && iv) {
-                  return redirectToDefaultBrowserSubmit({
-                    encryptedRedirectUrl,
-                    encryptedKey,
-                    iv,
-                  });
-                }
-                return redirectToDefaultBrowserSubmit({
-                  redirectUrl: url,
-                });
               }}
             >
               <div className="form-control form-control--outlined no-pad-top" style={{ display: 'flex' }}>
@@ -151,6 +160,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
                   Proceed
                 </button>
               </div>
+              {error && <p className="text-danger">Error: {error}</p>}
             </form>
           </>
         )}
