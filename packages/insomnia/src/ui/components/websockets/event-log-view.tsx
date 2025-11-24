@@ -96,7 +96,7 @@ const getMessage = (event: EventTypes, isLoading: boolean): string | JSX.Element
             {isLoading && event.direction === 'OUTGOING' && event.data?.id && (
               <Button
                 aria-label="Cancel Request"
-                className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                 onPress={() => {
                   window.main.mcp.client.cancelRequest({
                     requestId: event.requestId,

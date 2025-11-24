@@ -33,9 +33,9 @@ export const MCPCertificatesModal = ({ onClose }: { onClose: () => void }) => {
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+      className="fixed left-0 top-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
-      <Modal className="flex w-full max-w-3xl flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]">
+      <Modal className="flex w-full max-w-3xl flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
         <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
           {({ close }) => (
             <div className="flex h-full flex-1 flex-col gap-4 overflow-hidden">
@@ -44,7 +44,7 @@ export const MCPCertificatesModal = ({ onClose }: { onClose: () => void }) => {
                   Manage Certificates
                 </Heading>
                 <Button
-                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-sm text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                   onPress={close}
                 >
                   <Icon icon="x" />
@@ -89,7 +89,7 @@ export const MCPCertificatesModal = ({ onClose }: { onClose: () => void }) => {
               <div className="flex items-center justify-end gap-2">
                 <Button
                   onPress={close}
-                  className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+                  className="rounded-sm border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:bg-opacity-90 hover:no-underline"
                 >
                   Done
                 </Button>

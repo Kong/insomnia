@@ -333,9 +333,9 @@ export const CACertificate = ({ caCertificate, tip }: { caCertificate?: CaCertif
       </p>
       <div className="flex flex-col gap-2">
         {caCertificate ? (
-          <div className="flex items-center justify-between gap-2 rounded-sm border border-solid border-[--hl-sm] p-4">
+          <div className="flex items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-sm) p-4">
             <Icon icon="file-contract" className="w-4" />
-            <div className="flex-1 truncate text-sm text-[--color-font]" title={caCertificate.path || ''}>
+            <div className="flex-1 truncate text-sm text-(--color-font)" title={caCertificate.path || ''}>
               {caCertificate?.path?.split('\\')?.pop()?.split('/')?.pop()}
             </div>
             <div className="flex h-6 items-center gap-2">
@@ -349,13 +349,13 @@ export const CACertificate = ({ caCertificate, tip }: { caCertificate?: CaCertif
                   });
                 }}
                 isSelected={!caCertificate.disabled}
-                className="flex h-full w-[12ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-[--hl-md] focus:ring-inset"
+                className="flex h-full w-[12ch] shrink-0 items-center justify-start gap-2 rounded-sm px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
               >
                 {({ isSelected }) => (
                   <Fragment>
                     <Icon
                       icon={isSelected ? 'toggle-on' : 'toggle-off'}
-                      className={`${isSelected ? 'text-[--color-success]' : ''}`}
+                      className={`${isSelected ? 'text-(--color-success)' : ''}`}
                     />
                     <span>{isSelected ? 'Enabled' : 'Disabled'}</span>
                   </Fragment>
@@ -370,7 +370,7 @@ export const CACertificate = ({ caCertificate, tip }: { caCertificate?: CaCertif
                     workspaceId,
                   });
                 }}
-                className="flex aspect-square h-full flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-[--hl-md] focus:ring-inset aria-pressed:bg-[--hl-sm]"
+                className="flex aspect-square h-full shrink-0 items-center justify-center rounded-sm text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               >
                 <Icon icon="trash" />
               </Button>
@@ -430,13 +430,13 @@ export const CertificatesModal = ({ onClose }: { onClose: () => void }) => {
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      className="fixed top-0 left-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
-        className="flex h-[calc(100%-var(--padding-xl))] w-full max-w-3xl flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
+        className="flex h-[calc(100%-var(--padding-xl))] w-full max-w-3xl flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
       >
         <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
           {({ close }) => (
@@ -446,7 +446,7 @@ export const CertificatesModal = ({ onClose }: { onClose: () => void }) => {
                   Manage Certificates
                 </Heading>
                 <Button
-                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-[--hl-md] focus:ring-inset aria-pressed:bg-[--hl-sm]"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-sm text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
                 >
                   <Icon icon="x" />
