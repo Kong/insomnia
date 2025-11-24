@@ -288,7 +288,12 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
   const connectionContext = await createConnectionContext(options, abortController);
   activeConnectionContexts.set(options.requestId, connectionContext);
 
-  await performConnection(connectionContext);
+  try {
+    await performConnection(connectionContext);
+  } catch (error) {
+    clearConnectionContext(connectionContext);
+    throw error;
+  }
 };
 
 const performConnection = async (context: ConnectionContext) => {

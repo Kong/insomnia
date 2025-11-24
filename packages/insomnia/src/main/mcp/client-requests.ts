@@ -88,7 +88,7 @@ export const readResource = async (options: CommonMcpOptions & ReadResourceReque
 export const subscribeResource = async (options: CommonMcpOptions & SubscribeRequest['params']) => {
   const { requestId, ...params } = options;
   const context = getReadyActiveMcpConnectionContext(requestId);
-  const mcpClient = getActiveMcpClient(requestId);
+  const mcpClient = context?.client;
   if (!context || !mcpClient) {
     return null;
   }
@@ -112,7 +112,7 @@ export const subscribeResource = async (options: CommonMcpOptions & SubscribeReq
 export const unsubscribeResource = async (options: CommonMcpOptions & UnsubscribeRequest['params']) => {
   const { requestId, ...params } = options;
   const context = getReadyActiveMcpConnectionContext(requestId);
-  const mcpClient = getActiveMcpClient(requestId);
+  const mcpClient = context?.client;
   if (!context || !mcpClient) {
     return null;
   }
