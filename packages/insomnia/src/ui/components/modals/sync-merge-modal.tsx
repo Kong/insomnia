@@ -30,16 +30,19 @@ function validateMergeResult(mergeResult: string) {
   if (mergeResult === '') {
     return undefined;
   }
-
-  // Apply schema migration and validate in one step
-  const migratedResult = migrateToLatestYaml(mergeResult);
-  const result = InsomniaFileSchema.safeParse(parse(migratedResult));
-
-  if (!result.success) {
-    return extractErrorMessages(result.error).join('\n');
+  let parsed = null;
+  try {
+    mergeResult = migrateToLatestYaml(mergeResult);
+    parsed = parse(mergeResult);
+  } catch (error) {
+    return error.message;
   }
-
-  return undefined; // No errors
+  try {
+    InsomniaFileSchema.parse(parsed);
+  } catch (error) {
+    return extractErrorMessages(error).join('\n');
+  }
+  return undefined;
 }
 
 type EditorType = 'diff' | 'merge';
@@ -122,10 +125,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
           const errMsgMap: Record<string, string> = {};
           conflicts.forEach(conflict => {
             if (conflict.mergeResult) {
-              const errorMsg = validateMergeResult(conflict.mergeResult);
-              if (errorMsg) {
-                errMsgMap[conflict.key] = errorMsg;
-              }
+              errMsgMap[conflict.key] = validateMergeResult(conflict.mergeResult);
             }
           });
           setErrMsgMapForConflictMergeResult(errMsgMap);
@@ -162,14 +162,11 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
         return updatedConflicts;
       });
 
-      const errorMsg = validateMergeResult(result);
-
-      if (errorMsg) {
-        setErrMsgMapForConflictMergeResult(prev => ({
-          ...prev,
-          [selectedConflictKey]: errorMsg,
-        }));
-      }
+      const errMsg = validateMergeResult(result);
+      setErrMsgMapForConflictMergeResult(prev => ({
+        ...prev,
+        [selectedConflictKey]: errMsg,
+      }));
     },
     [conflicts, selectedConflictKey],
   );
