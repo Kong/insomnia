@@ -438,7 +438,7 @@ export const CertificatesModal = ({ onClose }: { onClose: () => void }) => {
         }}
         className="flex h-[calc(100%-var(--padding-xl))] w-full max-w-3xl flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
       >
-        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
             <div className="flex h-full flex-1 flex-col gap-4 overflow-hidden">
               <div className="flex items-center justify-between gap-2">

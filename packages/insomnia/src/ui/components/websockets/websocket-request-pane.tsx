@@ -292,7 +292,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           aria-label="Request pane tabs"
         >
           <Tab
-            className="flex h-full shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="params"
           >
             <span>Params</span>
@@ -303,7 +303,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             )}
           </Tab>
           <Tab
-            className="flex h-full shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="content-type"
           >
             <span>Body</span>
@@ -312,7 +312,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             </span>
           </Tab>
           <Tab
-            className="flex h-full shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="auth"
           >
             <span>Auth</span>
@@ -323,7 +323,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             )}
           </Tab>
           <Tab
-            className="flex h-full shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="headers"
           >
             <span>Headers</span>
@@ -334,7 +334,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             )}
           </Tab>
           <Tab
-            className="flex h-full shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="docs"
           >
             Docs
@@ -355,12 +355,12 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             <Panel minSize={20}>
               <div className="flex h-full flex-col">
                 <div className="flex h-4 w-full items-center justify-between p-4">
-                  <Heading className="text-xs font-bold uppercase text-(--hl)">Query parameters</Heading>
+                  <Heading className="text-xs font-bold text-(--hl) uppercase">Query parameters</Heading>
                   <div className="flex items-center gap-2">
                     <Button
                       isDisabled={disabled || !urlHasQueryParameters}
                       onPress={handleImportQueryFromUrl}
-                      className="pressed:bg-[--hl-sm] flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:ring-inset focus:ring-(--hl-md) aria-selected:bg-(--hl-xs) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+                      className="flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset aria-selected:bg-(--hl-xs) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-pressed:bg-[--hl-sm]"
                     >
                       Import from URL
                     </Button>
@@ -372,7 +372,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                         });
                       }}
                       isSelected={settings.useBulkParametersEditor}
-                      className="flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md)"
+                      className="flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                     >
                       {({ isSelected }) => (
                         <Fragment>
@@ -394,13 +394,13 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             <PanelResizeHandle className="h-px w-full bg-(--hl-md)" />
             <Panel minSize={20}>
               <div className="flex h-full flex-col">
-                <Heading className="p-4 text-xs font-bold uppercase text-(--hl)">Path parameters</Heading>
+                <Heading className="p-4 text-xs font-bold text-(--hl) uppercase">Path parameters</Heading>
                 {pathParameters.length > 0 && (
-                  <div className="w-full overflow-y-auto pl-4 pr-[72.73px]">
+                  <div className="w-full overflow-y-auto pr-[72.73px] pl-4">
                     <div className="grid w-full shrink-0 grid-cols-2 gap-x-[20.8px] overflow-hidden rounded-xs">
                       {pathParameters.map(pathParameter => (
                         <Fragment key={pathParameter.name}>
-                          <span className="flex select-none items-center justify-end truncate rounded-xs border-b border-solid border-(--hl-md) p-2">
+                          <span className="flex items-center justify-end truncate rounded-xs border-b border-solid border-(--hl-md) p-2 select-none">
                             {pathParameter.name}
                           </span>
                           <div className="flex h-full items-center border-b border-solid border-(--hl-md) px-2">

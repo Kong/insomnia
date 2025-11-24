@@ -209,7 +209,7 @@ export const MessageEventView = ({ event }: Props) => {
         </Dropdown>
         {isElicitationRequest && !isServerRequestResponded && (
           <Button
-            className={`mx-2 mt-2 px-2 text-(--color-font) transition-colors duration-300 outline-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) ${
+            className={`mx-2 mt-2 px-2 text-(--color-font) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) ${
               viewMode === 'form' ? 'bg-(--hl-xs) text-(--color-font)' : ''
             }`}
             onPress={() => setViewMode('form')}

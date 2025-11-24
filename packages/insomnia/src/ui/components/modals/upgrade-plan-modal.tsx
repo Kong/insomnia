@@ -75,7 +75,7 @@ export const UpgradePlanModal = () => {
       onOpenChange={isOpen => {
         !isOpen && handleClose();
       }}
-      className="fixed left-0 top-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
@@ -93,7 +93,7 @@ export const UpgradePlanModal = () => {
                   Welcome to Insomnia, {firstName || email} 🎉
                 </Heading>
                 <Button
-                  className="ml-auto flex h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+                  className="ml-auto flex h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={() => close()}
                 >
                   <Icon icon="x" />
@@ -111,7 +111,7 @@ export const UpgradePlanModal = () => {
                       <Icon icon="check-circle" className="h-[16px] text-(--color-surprise)" />
                       <span className="font-semibold">User Governance</span>
                     </div>
-                    <span className="ml-[24px] mt-1 text-sm">
+                    <span className="mt-1 ml-[24px] text-sm">
                       SSO, SCIM, RBAC and Teams let you control who can access what
                     </span>
                   </li>
@@ -120,7 +120,7 @@ export const UpgradePlanModal = () => {
                       <Icon icon="check-circle" className="h-[16px] text-(--color-surprise)" />
                       <span className="font-semibold">Increased Storage & Security</span>
                     </div>
-                    <span className="ml-[24px] mt-1 text-sm">
+                    <span className="mt-1 ml-[24px] text-sm">
                       Mandate Git, Cloud or Local project storage, plus E2EE
                     </span>
                   </li>
@@ -129,7 +129,7 @@ export const UpgradePlanModal = () => {
                       <Icon icon="check-circle" className="h-[16px] text-(--color-surprise)" />
                       <span className="font-semibold">World Class Support</span>
                     </div>
-                    <span className="ml-[24px] mt-1 text-sm">
+                    <span className="mt-1 ml-[24px] text-sm">
                       A dedicated CSM that understands you, support access, and optional pro services to start quickly
                     </span>
                   </li>
