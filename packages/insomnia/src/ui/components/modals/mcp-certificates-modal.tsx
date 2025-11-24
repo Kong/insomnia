@@ -65,13 +65,13 @@ export const MCPCertificatesModal = ({ onClose }: { onClose: () => void }) => {
                         });
                       }}
                       isSelected={activeRequest.sslValidation}
-                      className="flex h-full w-[12ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
+                      className="flex h-full w-[12ch] shrink-0 items-center justify-start gap-2 rounded-sm px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md)"
                     >
                       {({ isSelected }) => (
                         <>
                           <Icon
                             icon={isSelected ? 'toggle-on' : 'toggle-off'}
-                            className={`${isSelected ? 'text-[--color-success]' : ''}`}
+                            className={`${isSelected ? 'text-(--color-success)' : ''}`}
                           />
                           <span>{isSelected ? 'Enabled' : 'Disabled'}</span>
                         </>
@@ -79,7 +79,7 @@ export const MCPCertificatesModal = ({ onClose }: { onClose: () => void }) => {
                     </ToggleButton>
                   </div>
 
-                  <p className="max-w-[80ch] text-sm text-[--hl]">
+                  <p className="max-w-[80ch] text-sm text-(--hl)">
                     When disabled, SSL/TLS certificates will not be validated. Disabling this allows connecting to
                     servers with self-signed, expired, or invalid certificates. It is recommended that you only disable
                     this when using trusted local development environments.

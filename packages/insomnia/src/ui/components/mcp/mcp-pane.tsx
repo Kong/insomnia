@@ -422,8 +422,8 @@ export const McpPane = () => {
                     icon="circle"
                     className={`${
                       {
-                        success: 'text-[--color-success]',
-                        warning: 'text-[--color-warning]',
+                        success: 'text-(--color-success)',
+                        warning: 'text-(--color-warning)',
                       }[caStatus]
                     } h-2 w-2`}
                   />
