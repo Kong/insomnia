@@ -187,7 +187,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                         onChange={e => setManualInputUrl(e.target.value)}
                       />{' '}
                       <button
-                        className="btn btn--super-compact btn--outlined gap-[--padding-xs flex items-center"
+                        className="btn btn--super-compact btn--outlined gap-[--padding-xs] flex items-center"
                         type="submit"
                         disabled={isAuthenticating}
                         onClick={exchangeAzureCode}

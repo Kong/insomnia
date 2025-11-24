@@ -270,19 +270,19 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
           aria-label="Request pane tabs"
         >
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full flex-shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-[--hl] transition-colors duration-300 outline-none select-none hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
             id="events"
           >
             Events
           </Tab>
           {isMcpResponse(response) && (
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full flex-shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-[--hl] transition-colors duration-300 outline-none select-none hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
               id="notifications"
             >
               Notifications
               {allNotifications.length > 0 && (
-                <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
                   {allNotifications.length}
                 </span>
               )}
@@ -290,12 +290,12 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
           )}
           {!hideHeaders && (
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full flex-shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-[--hl] transition-colors duration-300 outline-none select-none hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
               id="headers"
             >
               Headers
               {response.headers.length > 0 && (
-                <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
                   {response.headers.length}
                 </span>
               )}
@@ -303,19 +303,19 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
           )}
           {!hideCookies && (
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full flex-shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-[--hl] transition-colors duration-300 outline-none select-none hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
               id="cookies"
             >
               Cookies
               {cookieHeaders.length > 0 && (
-                <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
                   {cookieHeaders.length}
                 </span>
               )}
             </Tab>
           )}
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full flex-shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-[--hl] transition-colors duration-300 outline-none select-none hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
             id="timeline"
           >
             Console
@@ -357,17 +357,17 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
                     >
                       <Input
                         placeholder="Search"
-                        className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                        className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pr-7 pl-2 text-[--color-font] transition-colors focus:ring-1 focus:ring-[--hl-md] focus:outline-none"
                       />
-                      <div className="absolute right-0 top-0 flex h-full items-center px-2">
-                        <Button className="flex aspect-square w-5 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] group-data-[empty]:hidden">
+                      <div className="absolute top-0 right-0 flex h-full items-center px-2">
+                        <Button className="flex aspect-square w-5 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all group-data-[empty]:hidden hover:bg-[--hl-xs] focus:ring-[--hl-md] focus:ring-inset aria-pressed:bg-[--hl-sm]">
                           <Icon icon="close" />
                         </Button>
                       </div>
                     </SearchField>
                     <Button
                       aria-label="Create in collection"
-                      className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-[--hl-md] focus:ring-inset aria-pressed:bg-[--hl-sm]"
                       onPress={() => {
                         const lastEvent = events[0];
                         setClearEventsBefore(lastEvent.timestamp);

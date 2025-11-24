@@ -262,7 +262,7 @@ export const MockRouteRoute = () => {
             >
               Mock Headers{' '}
               {headersCount > 0 && (
-                <span className="color-inherit shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                <span className="color-inherit flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
                   {headersCount}
                 </span>
               )}
