@@ -1,3 +1,4 @@
+import { getExistingConsole } from './console';
 import { Property, PropertyList } from './properties';
 import type { Url } from './urls';
 import { UrlMatchPattern, UrlMatchPatternList } from './urls';
@@ -354,6 +355,7 @@ export function transformToSdkProxyOptions(
       if (proxy.username || proxy.password) {
         proxy.authenticate = true;
       }
+      getExistingConsole().warn(`Using proxy: ${sanitizedProxy}`);
     } catch (e) {
       throw new Error(`Failed to parse proxy (${protocol}//${proxyHost}): ${e.message}`);
     }
