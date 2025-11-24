@@ -231,14 +231,15 @@ export async function initInsomniaObject(rawObj: RequestContext, log: (...args: 
         pfx: { src: matchedCertificates[0].pfx || '' }, // PFX or PKCS12 Certificate
       };
 
+  const reqUrl = toUrlObject(rawObj.request.url);
   const proxy = transformToSdkProxyOptions(
+    reqUrl.protocol,
     rawObj.settings.httpProxy,
     rawObj.settings.httpsProxy,
     rawObj.settings.proxyEnabled,
     rawObj.settings.noProxy,
   );
 
-  const reqUrl = toUrlObject(rawObj.request.url);
   reqUrl.addQueryParams(
     rawObj.request.parameters.map(param => ({ key: param.name, value: param.value, disabled: param.disabled })),
   );

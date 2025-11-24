@@ -1,4 +1,3 @@
-import { getExistingConsole } from './console';
 import { Property, PropertyList } from './properties';
 import type { Url } from './urls';
 import { UrlMatchPattern, UrlMatchPatternList } from './urls';
@@ -317,13 +316,14 @@ export class ProxyConfigList<T extends ProxyConfig> extends PropertyList<T> {
 
 /** @ignore */
 export function transformToSdkProxyOptions(
+  protocol: string,
   httpProxy: string,
   httpsProxy: string,
   proxyEnabled: boolean,
   noProxy: string,
 ) {
-  const bestProxy = httpsProxy || httpProxy || '';
-  const enabledProxy = proxyEnabled && bestProxy.trim() !== '';
+  const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
+  const enabledProxy = proxyEnabled && (httpsProxy || httpProxy || '').trim() !== '';
   const bypassProxyList = noProxy ? noProxy.split(',').map(urlStr => urlStr.trim()) : [];
   const proxy: ProxyConfigOptions = {
     disabled: !enabledProxy,
@@ -338,15 +338,10 @@ export function transformToSdkProxyOptions(
     protocol: 'http',
   };
 
-  if (bestProxy !== '') {
-    let sanitizedProxy = bestProxy;
-    if (!bestProxy.includes('://')) {
-      getExistingConsole().warn(`The protocol is missing for proxy, 'https:' is enabled for: ${bestProxy}`);
-      sanitizedProxy = `https://${bestProxy}`;
-    }
-
+  if (proxyHost !== '') {
     try {
-      const sanitizedProxyUrlOptions = new URL(sanitizedProxy); // it should just work in node and browser
+      const sanitizedProxy = proxyHost.includes('://') ? proxyHost : `${protocol}//${proxyHost}`;
+      const sanitizedProxyUrlOptions = new URL(sanitizedProxy);
 
       if (sanitizedProxyUrlOptions.port !== '') {
         proxy.port = parseInt(sanitizedProxyUrlOptions.port, 10);
@@ -360,7 +355,7 @@ export function transformToSdkProxyOptions(
         proxy.authenticate = true;
       }
     } catch (e) {
-      throw new Error(`Failed to parse proxy (${sanitizedProxy}): ${e.message}`);
+      throw new Error(`Failed to parse proxy (${protocol}//${proxyHost}): ${e.message}`);
     }
   }
 
