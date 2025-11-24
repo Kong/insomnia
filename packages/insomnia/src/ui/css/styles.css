@@ -14,6 +14,7 @@
 @import './lib/codemirror/material.css';
 @import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css';
 @import './main.css';
+@import './token.css';
 
 @tailwind base;
 @tailwind components;

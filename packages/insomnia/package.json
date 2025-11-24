@@ -20,6 +20,7 @@
     "verify-bundle-plugins": "esr --cache ./scripts/verify-bundle-plugins.ts",
     "install-x64-native-dependencies": "esr --cache ./scripts/install-x64-native-dependencies.ts",
     "build": "react-router build && esr --cache ./scripts/build.ts --noErrorTruncation",
+    "build:design-token": "esr --cache ./scripts/build-token.ts",
     "build:react-router": "react-router build",
     "generate:schema": "esr ./src/schema.ts",
     "build:electron-entrypoints": "cross-env NODE_ENV=development esr esbuild.entrypoints.ts",
@@ -194,6 +195,7 @@
     "esbuild": "^0.25.10",
     "esbuild-runner": "^2.2.2",
     "openapi-types": "^12.1.3",
+    "style-dictionary": "^5.1.1",
     "type-fest": "^4.40.0",
     "typescript": "^5.8.3",
     "vite": "^7.1.3"
