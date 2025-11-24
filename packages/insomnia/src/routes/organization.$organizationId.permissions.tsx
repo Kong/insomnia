@@ -2,7 +2,7 @@ import { href, redirect, type ShouldRevalidateFunctionArgs } from 'react-router'
 
 import { userSession } from '~/models';
 import { isScratchpadOrganizationId, type Organization } from '~/models/organization';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.permissions';

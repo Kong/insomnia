@@ -1,15 +1,13 @@
-import React, { useEffect,useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
-import {
-  useMockRouteLoaderData,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 
 import { getMockServiceBinURL } from '../../../common/constants';
 import * as models from '../../../models';
-import { useTimeoutWhen } from '../../hooks/useTimeoutWhen';
+import { useTimeoutWhen } from '../../hooks/use-timeout-when';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -18,11 +16,7 @@ import { AlertModal } from '../modals/alert-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { PromptModal } from '../modals/prompt-modal';
 
-export const MockUrlBar = ({
-  onSend,
-}: {
-  onSend: (path: string) => void;
-}) => {
+export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
   const { mockServer, mockRoute } = useMockRouteLoaderData()!;
   const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
@@ -58,9 +52,7 @@ export const MockUrlBar = ({
         <span className={`http-method-${mockRoute.method} text-sm font-medium`}>{mockRoute.method}</span>
       </div>
       <div className="flex flex-1 items-center rounded-sm border border-[--hl-sm] bg-[--color-bg] px-3 py-1">
-        <span className="flex-1 text-[--color-font] font-mono text-sm">
-          {pathInput}
-        </span>
+        <span className="flex-1 font-mono text-sm text-[--color-font]">{pathInput}</span>
       </div>
 
       <Button

@@ -8,7 +8,7 @@ import {
 import { BrowserWindow, ipcMain } from 'electron';
 
 import { getOauthRedirectUrl } from '~/common/constants';
-import { authorizeUserInDefaultBrowser } from '~/main/authorizeUserInDefaultBrowser';
+import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import * as models from '~/models';
 import type { McpRequest } from '~/models/mcp-request';
 import type { RequestAuthentication } from '~/models/request';
