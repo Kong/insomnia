@@ -186,7 +186,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
           >
             Headers
             {activeResponse.headers.length > 0 && (
-              <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+              <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
                 {activeResponse.headers.length}
               </span>
             )}
@@ -197,7 +197,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
           >
             Cookies
             {cookieHeaders.length > 0 && (
-              <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+              <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
                 {cookieHeaders.length}
               </span>
             )}
