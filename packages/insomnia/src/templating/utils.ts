@@ -4,7 +4,7 @@ import { userSession } from '../models';
 import { decryptSecretValue, vaultEnvironmentMaskValue } from '../models/environment';
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
-import objectPath from './third_party/objectPath';
+import objectPath from './third_party/object-path';
 
 /**
  * Get list of paths to all primitive types in nested object

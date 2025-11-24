@@ -2,7 +2,7 @@ import { href } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import { userSession } from '~/models';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.collaborators-check-seats';

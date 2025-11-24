@@ -8,7 +8,7 @@ import { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequestId } from 
 import { isSocketIORequestId } from '../../models/socket-io-request';
 import { isWebSocketRequestId } from '../../models/websocket-request';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
-import uiEventBus from '../eventBus';
+import uiEventBus from '../event-bus';
 
 // this hook is use for control when to close connections(websocket & SSE & grpc stream & graphql subscription)
 export const useCloseConnection = ({ organizationId }: { organizationId: string }) => {

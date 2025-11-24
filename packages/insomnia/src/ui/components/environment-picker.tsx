@@ -20,7 +20,7 @@ import { useEnvironmentSetActiveGlobalActionFetcher } from '~/routes/organizatio
 import { fuzzyMatch } from '../../common/misc';
 import { isRemoteProject } from '../../models/project';
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import uiEventBus from '../eventBus';
+import uiEventBus from '../event-bus';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
 import { Icon } from './icon';
 

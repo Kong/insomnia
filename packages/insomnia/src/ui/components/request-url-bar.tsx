@@ -34,7 +34,7 @@ import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestPatcher } from '../hooks/use-request';
 import { useRequestMetaPatcher } from '../hooks/use-request';
-import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
+import { useTimeoutWhen } from '../hooks/use-timeout-when';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
@@ -486,8 +486,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           onCancel={() => setShowEnvVariableMissingModal(false)}
         >
           <div>
-            These environment variables have been defined, but have not been valued with in the currently active
-            environment:
+            These environment variables have been defined, but have not been assigned a value within the currently
+            active environment:
             <div className="flex max-h-80 flex-wrap gap-2 overflow-y-auto">
               {undefinedEnvironmentVariableList?.map(item => {
                 return (

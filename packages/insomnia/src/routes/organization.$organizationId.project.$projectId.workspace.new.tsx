@@ -17,7 +17,7 @@ import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initiali
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -355,8 +355,8 @@ async function createMockServer(
     window.main.trackSegmentEvent({
       event: SegmentEvent.mockCreate,
       properties: {
-        provider: modelConfig && modelConfig.backend || '',
-        model: modelConfig && modelConfig.model || '',
+        provider: (modelConfig && modelConfig.backend) || '',
+        model: (modelConfig && modelConfig.model) || '',
         hosting: workspaceData.mockServerType || '',
         generation: workspaceData.mockServerCreationType || '',
         generation_from: workspaceData.apiSpecContents ? 'design_doc' : workspaceData.mockServerSpecSource || '',

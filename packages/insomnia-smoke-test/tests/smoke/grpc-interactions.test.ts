@@ -28,7 +28,7 @@ test.describe('gRPC interactions', () => {
     await page.click('text=Send');
 
     // Check for the single Unary response
-    await page.click('text=Response 1');
+    await page.getByRole('tab', { name: 'Response 1', exact: true }).click();
     await expect.soft(statusTag).toContainText('0 OK');
     await expect.soft(responseBody).toContainText('Berkshire Valley Management Area Trail');
 
@@ -42,8 +42,8 @@ test.describe('gRPC interactions', () => {
     await streamMessage.click();
 
     // Check for the 3rd stream and response
-    await page.locator('text=Stream 3').click();
-    await page.locator('text=Response 3').click();
+    await page.getByRole('tab', { name: 'Stream 3', exact: true }).click();
+    await page.getByRole('tab', { name: 'Response 3', exact: true }).click();
 
     // Finish the stream
     await page.locator('text=Commit').click();
@@ -60,8 +60,8 @@ test.describe('gRPC interactions', () => {
 
     // Finish the stream and check response
     await page.locator('text=Commit').click();
-    await page.locator('text=Stream 3').click();
-    await page.locator('text=Response 1').click();
+    await page.getByRole('tab', { name: 'Stream 3', exact: true }).click();
+    await page.getByRole('tab', { name: 'Response 1', exact: true }).click();
     await expect.soft(statusTag).toContainText('0 OK');
     await expect.soft(responseBody).toContainText('point_count": 3');
 
@@ -72,6 +72,6 @@ test.describe('gRPC interactions', () => {
     // Check response
     await expect.soft(statusTag).toContainText('0 OK');
     await expect.soft(responseBody).toContainText('Patriots Path');
-    await page.locator('text=Response 64').click();
+    await page.getByRole('tab', { name: 'Response 64', exact: true }).click();
   });
 });

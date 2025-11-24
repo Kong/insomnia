@@ -14,7 +14,7 @@ import { useOrganizationSyncProjectsActionFetcher } from '~/routes/organization.
 import { useOrganizationSyncActionFetcher } from '~/routes/organization.sync';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { avatarImageCache } from '~/ui/hooks/image-cache';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];

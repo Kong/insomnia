@@ -123,6 +123,7 @@ collection:
         send: true
         store: true
   - name: New Request
+    url: http://localhost:4010/echo
     meta:
       id: req_845c9ad3b2934f2098cb77a5dce8b0f5
       created: 1745481338217

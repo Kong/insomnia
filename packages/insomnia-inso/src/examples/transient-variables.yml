@@ -1,0 +1,95 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Simple Crud
+meta:
+  id: wrk_3d6697ba0f6a43cdb9e7378d54d1a1cb
+  created: 1763445405875
+  modified: 1763445405875
+  description: ""
+collection:
+  - url: http://localhost:4010/simple-crud
+    name: Create Thing
+    meta:
+      id: req_a93f56d7079740ce89d9365a58d2d202
+      created: 1763445410113
+      modified: 1763445948725
+      isPrivate: false
+      description: ""
+      sortKey: -1763445410113
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"some": "thing"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/12.1.0-beta.0
+        description: ""
+        disabled: false
+    scripts:
+      afterResponse: |-
+        const jsonBody = insomnia.response.json();
+        insomnia.variables.set('thingId', jsonBody.id);
+
+        insomnia.test('got a 201', () => {
+          insomnia.expect(insomnia.response.code).to.eql(201);
+        });
+
+        insomnia.test('variable set', () => {
+        	insomnia.expect(insomnia.variables.get('thingId')).to.eql(jsonBody.id);
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:4010/simple-crud/{{thingId}}
+    name: Retrieve Thing
+    meta:
+      id: req_8aa3c21007f746e7b400d2e17a0a1aba
+      created: 1763445773731
+      modified: 1763445889533
+      isPrivate: false
+      description: ""
+      sortKey: -1763445410013
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/12.1.0-beta.0
+        description: ""
+        disabled: false
+    scripts:
+      afterResponse: |-
+        const jsonBody = insomnia.response.json();
+        insomnia.test('got the thing', () => {
+        	insomnia.expect(jsonBody.id).to.eql(insomnia.variables.get('thingId'))
+        	insomnia.expect(jsonBody.some).to.eql("thing");
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_217626d704282108ee9f812e810d658e53370cb1
+    created: 1763445405878
+    modified: 1763445982968
+environments:
+  name: Base Environment
+  meta:
+    id: env_217626d704282108ee9f812e810d658e53370cb1
+    created: 1763445405877
+    modified: 1763445982970
+    isPrivate: false

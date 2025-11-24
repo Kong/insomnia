@@ -370,7 +370,7 @@ export const RequestGroupSchema = z.object({
   meta: MetaGroupSchema.optional(),
   children: z.array(z.any()).optional(),
   scripts: ScriptsSchema.optional(),
-  authentication: AuthenticationSchema.optional(),
+  authentication: AuthenticationSchema.optional().nullable(),
   environment: JsonSchema.optional(),
   environmentPropertyOrder: JsonSchema.optional(),
   headers: HeadersSchema.optional(),
@@ -415,7 +415,7 @@ export const RequestSchema = z.object({
       store: true,
     },
   }),
-  pathParameters: RequestPathParametersSchema.optional(),
+  pathParameters: RequestPathParametersSchema.optional().nullable(),
 });
 
 export const WebsocketRequestSchema = z.object({
@@ -435,7 +435,7 @@ export const WebsocketRequestSchema = z.object({
   authentication: AuthenticationSchema.optional(),
   headers: HeadersSchema.optional(),
   parameters: RequestParametersSchema.optional(),
-  pathParameters: RequestPathParametersSchema.optional(),
+  pathParameters: RequestPathParametersSchema.optional().nullable(),
 });
 
 export const SocketIOEventListenerSchema = z.object({
