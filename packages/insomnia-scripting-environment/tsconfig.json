@@ -1,4 +1,5 @@
 {
+  "extends": ["../../tsconfig.strictness.json"],
   "compilerOptions": {
     /* Base Options: */
     "esModuleInterop": true,
@@ -10,31 +11,12 @@
     "moduleResolution": "node",
     "isolatedModules": true,
     "paths": {
-      "~/*": [
-        "../insomnia/src/*"
-      ],
+      "~/*": ["../insomnia/src/*"]
     },
-    /* Strictness */
-    "strict": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "useUnknownInCatchVariables": false,
-    "verbatimModuleSyntax": true,
     "jsx": "react",
     /* If your code runs in the DOM: */
-    "lib": [
-      "es2023",
-      "dom",
-      "dom.iterable"
-    ]
+    "lib": ["es2023", "dom", "dom.iterable"]
   },
-  "include": [
-    "../insomnia/types"
-  ],
-  "exclude": [
-    "**/__tests__",
-    "node_modules"
-  ]
+  "include": ["../insomnia/types"],
+  "exclude": ["**/__tests__", "node_modules"]
 }

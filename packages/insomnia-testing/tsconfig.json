@@ -1,4 +1,5 @@
 {
+  "extends": ["../../tsconfig.strictness.json"],
   "compilerOptions": {
     /* Base Options: */
     "esModuleInterop": true,
@@ -8,11 +9,6 @@
     "resolveJsonModule": true,
     "moduleDetection": "force",
     "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-    /* Strictness */
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
     /* If NOT transpiling with TypeScript: */
     "module": "preserve",
     "noEmit": true,
