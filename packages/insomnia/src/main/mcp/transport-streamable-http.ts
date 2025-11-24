@@ -283,10 +283,6 @@ const wrappedFetch = async (
           fetchFn: authFetchFn,
         });
       }
-      // Close the oauth authorization modal after authorization is complete
-      BrowserWindow.getAllWindows().forEach(window => {
-        window.webContents.send('hide-oauth-authorization-modal');
-      });
       if (authResult !== 'AUTHORIZED') {
         throw new UnauthorizedError();
       }
@@ -295,6 +291,10 @@ const wrappedFetch = async (
       // Wrap and throw MCPAuthError for better identification, some of the errors thrown by sdk are generic Error which is hard to identify
       throw new MCPAuthError(e.message || 'Authentication failed', { cause: e });
     } finally {
+      // Close the oauth authorization modal after authorization is complete
+      BrowserWindow.getAllWindows().forEach(window => {
+        window.webContents.send('hide-oauth-authorization-modal');
+      });
       unsubscribe();
     }
     return await wrappedFetch(url, init, options, calledByAuth);
