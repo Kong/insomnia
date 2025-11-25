@@ -9,7 +9,7 @@ export const deserializeNDJSON = (data: string): any[] => {
   if (data.startsWith('[')) {
     try {
       return JSON.parse(data);
-    } catch (e) {
+    } catch {
       return [];
     }
   }
@@ -19,7 +19,7 @@ export const deserializeNDJSON = (data: string): any[] => {
     .map((line: string) => {
       try {
         return JSON.parse(line);
-      } catch (e) {
+      } catch {
         return;
       }
     })

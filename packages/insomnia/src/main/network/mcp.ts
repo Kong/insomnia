@@ -100,7 +100,7 @@ const _handleMcpMessage = (context: ConnectionContext, message: JSONRPCMessage) 
     try {
       // Try to parse error message to JSON if possible
       errorMessage = JSON.parse(originErrorMessage);
-    } catch (error) {}
+    } catch {}
     messageEvent = {
       type: 'error',
       error: {

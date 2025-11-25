@@ -285,7 +285,9 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
               .split('const ')
               .filter(Boolean)
               .map(x => x.split(' ')[0]);
-            const numbers = variables.map(x => Number.parseInt(x.match(/(\d+)/)?.[0] || ''))?.filter(x => !isNaN(x));
+            const numbers = variables
+              .map(x => Number.parseInt(x.match(/(\d+)/)?.[0] || ''))
+              ?.filter(x => !Number.isNaN(x));
             const highestNumberedConstant = Math.max(...numbers);
             const variableName = 'response' + (highestNumberedConstant + 1);
             return [

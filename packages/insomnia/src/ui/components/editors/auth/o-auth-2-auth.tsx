@@ -383,7 +383,7 @@ const renderIdentityTokenExpiry = (token?: Pick<OAuth2Token, 'identityToken'>) =
 
   try {
     decodedString = window.atob(base64Url);
-  } catch (error) {
+  } catch {
     return;
   }
 

@@ -32,7 +32,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     return {
       isEligible: 'isEligible' in check ? check.isEligible : false,
     };
-  } catch (err) {
+  } catch {
     return {
       isEligible: false,
     };

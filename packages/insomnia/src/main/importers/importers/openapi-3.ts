@@ -109,7 +109,7 @@ const resolveVariables = (server: OpenAPIV3.ServerObject) => {
 const parseDocument = (rawData: string): OpenAPIV3.Document | null => {
   try {
     return (unthrowableParseJson(rawData) || YAML.parse(rawData)) as OpenAPIV3.Document;
-  } catch (err) {
+  } catch {
     return null;
   }
 };

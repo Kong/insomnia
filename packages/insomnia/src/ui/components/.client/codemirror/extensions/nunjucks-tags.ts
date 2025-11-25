@@ -197,8 +197,7 @@ async function _highlightNunjucksTags(
       el.addEventListener('dragstart', event => {
         // Setup the drag contents
         if (event.dataTransfer) {
-          const template = event.target as typeof el?.dataset.template || '';
-          event.dataTransfer.setData('text/plain', template);
+          event.dataTransfer.setData('text/plain', event.target as unknown as string);
           event.dataTransfer.effectAllowed = 'copyMove';
           event.dataTransfer.dropEffect = 'move';
         }

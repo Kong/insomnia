@@ -248,7 +248,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
 
     try {
       query = extractQueryStringFromUrl(activeRequest.url);
-    } catch (error) {
+    } catch {
       console.warn('Failed to parse url to import querystring');
       return;
     }

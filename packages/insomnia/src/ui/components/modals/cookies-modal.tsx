@@ -85,7 +85,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     for (const cookie of activeCookieJar?.cookies || []) {
       try {
         renderedCookies.push(await handleRender(cookie));
-      } catch (err) {
+      } catch {
         renderedCookies.push(cookie);
       }
     }

@@ -22,7 +22,7 @@ const pathToSwagger = (swagger: any, path: string[]) => {
   return path.reduce((acc, v: string) => {
     try {
       acc = acc[v];
-    } catch (e) {
+    } catch {
       return;
     }
     return acc;
@@ -106,7 +106,7 @@ export const convert: FilePathConverter = async importEntry => {
     if (!verifyWsdl(rawData)) {
       return null;
     }
-  } catch (error) {
+  } catch {
     return null;
   }
 
@@ -139,7 +139,7 @@ function verifyWsdl(fileContent: string) {
       mainWsdlDocument.documentElement?.namespaceURI === wsdlNamespaceUri &&
       mainWsdlDocument.documentElement.localName === 'definitions'
     );
-  } catch (error) {
+  } catch {
     return false;
   }
 }

@@ -140,7 +140,7 @@ export const convert: Converter = rawData => {
 
   try {
     data = JSON.parse(rawData) as Insomnia1Data;
-  } catch (error) {
+  } catch {
     return null;
   }
 

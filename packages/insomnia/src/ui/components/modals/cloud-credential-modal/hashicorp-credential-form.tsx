@@ -58,7 +58,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
     let isValid = true;
     try {
       new URL(address);
-    } catch (error) {
+    } catch {
       isValid = false;
     }
     setIsValidUrl(isValid);

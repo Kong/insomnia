@@ -97,7 +97,7 @@ const getChildValue = (theme: any, path: string[]) => {
   return path.reduce((acc, v: string) => {
     try {
       acc = acc[v];
-    } catch (e) {
+    } catch {
       return;
     }
     return acc;
@@ -206,7 +206,7 @@ function getThemeBlockCSS(block?: ThemeBlock) {
       const rgb = parsedColor.rgb();
       addVar(variable, rgb.string());
       addVar(`${variable}-rgb`, rgb.array().join(', '));
-    } catch (err) {
+    } catch {
       console.log('[theme] Failed to parse theme color', value);
     }
   };

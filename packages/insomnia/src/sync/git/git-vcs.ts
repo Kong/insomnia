@@ -912,7 +912,7 @@ export class GitVCS {
             ...entry,
             includesSignificantChanges,
           };
-        } catch (error) {
+        } catch {
           return {
             ...entry,
             includesSignificantChanges: hasChanges,

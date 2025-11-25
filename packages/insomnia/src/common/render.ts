@@ -581,7 +581,7 @@ export async function getRenderedRequestAndContext({
       o.query = o.query.replace(/#}/g, '# }');
       request.body.text = JSON.stringify(o);
     }
-  } catch (err) {}
+  } catch {}
 
   // Render description separately because it's lower priority
   const description = request.description;

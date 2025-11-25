@@ -143,7 +143,7 @@ export const oauthRoutes = async (port: number) => {
     try {
       const validated = await oidc.IdToken.validate(extractToken(authorizationHeader), client);
       res.status(200).json(validated);
-    } catch (err) {
+    } catch {
       res.status(500).header('Content-Type', 'text/plain').send('Invalid authorization header');
     }
   });

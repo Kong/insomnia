@@ -266,7 +266,7 @@ const getListFromFileOrUrl = (content: string, fileType?: string): Record<string
         );
       }
       throw new Error('Invalid JSON file uploaded, JSON file must be array of key-value pairs.');
-    } catch (error) {
+    } catch {
       throw new Error('Upload JSON file can not be parsed');
     }
   } else if (fileType === 'csv') {
@@ -605,7 +605,7 @@ export const go = (args?: string[]) => {
             }
             try {
               fs.accessSync(outputFilePath, fs.constants.W_OK);
-            } catch (err) {
+            } catch {
               logger.fatal(`Output file "${outputFilePath}" is not writable.`);
               return process.exit(1);
             }
@@ -934,7 +934,7 @@ export const go = (args?: string[]) => {
       let isIdentifierAFile = false;
       try {
         isIdentifierAFile = identifier && (await fs.promises.stat(identifierAsAbsPath)).isFile();
-      } catch (err) {}
+      } catch {}
       const pathToSearch = '';
       let specContent: string | undefined;
       let rulesetFileName: string | undefined;

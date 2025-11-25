@@ -240,7 +240,7 @@ export const GraphQLEditor: FC<Props> = ({
   let requestBody: GraphQLBody;
   try {
     requestBody = JSON.parse(request.body.text || '');
-  } catch (err) {
+  } catch {
     requestBody = { query: '' };
   }
 
@@ -249,7 +249,7 @@ export const GraphQLEditor: FC<Props> = ({
   let documentAST;
   try {
     documentAST = parse(requestBody.query || '');
-  } catch (error) {
+  } catch {
     documentAST = null;
   }
   const operations =

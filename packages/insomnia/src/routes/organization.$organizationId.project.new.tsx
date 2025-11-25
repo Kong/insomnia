@@ -49,7 +49,7 @@ export const reportGitProjectCount = async (organizationId: string, sessionId: s
         },
       });
       return;
-    } catch (err) {
+    } catch {
       if (attempt < maxRetries) {
         await new Promise(resolve => setTimeout(resolve, attempt * 1000));
       }

@@ -102,7 +102,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     }));
 
     url = href.replace(search, '').replace(/\/$/, '');
-  } catch (error) {}
+  } catch {}
 
   /// /////// Authentication //////////
   const [username, password] = getPairValue(pairsByName, '', ['u', 'user']).split(/:(.*)$/);

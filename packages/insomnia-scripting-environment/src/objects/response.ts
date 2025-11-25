@@ -202,7 +202,7 @@ export class Response extends Property {
 
         try {
           respBody = resp.body ? resp.json() : undefined;
-        } catch (e) {
+        } catch {
           respBody = resp.body;
         }
 
@@ -242,7 +242,7 @@ export class Response extends Property {
         let respBody: object | undefined | string;
         try {
           respBody = resp.body ? resp.json() : undefined;
-        } catch (e) {
+        } catch {
           respBody = resp.body;
         }
 
@@ -293,7 +293,7 @@ export class Response extends Property {
         let respBody: object | undefined;
         try {
           respBody = resp.body ? resp.json() : {};
-        } catch (e) {
+        } catch {
           respBody = {};
         }
 
@@ -311,7 +311,7 @@ export class Response extends Property {
         let respBody: object | undefined;
         try {
           respBody = resp.body ? resp.json() : {};
-        } catch (e) {
+        } catch {
           respBody = {};
         }
 

@@ -229,7 +229,7 @@ export class VCS {
           let previousBlobContent: BaseModel | null = null;
           try {
             previousBlobContent = await this.blobFromLastSnapshot(key);
-          } catch (e) {
+          } catch {
             // No previous blob found
           } finally {
             unstaged[key] = {
@@ -242,7 +242,7 @@ export class VCS {
           let previousBlobContent: BaseModel | null = null;
           try {
             previousBlobContent = (await this._getBlob(blobId)) || null;
-          } catch (e) {
+          } catch {
             // No previous blob found
           } finally {
             unstaged[key] = {
@@ -256,7 +256,7 @@ export class VCS {
           let previousBlobContent: BaseModel | null = null;
           try {
             previousBlobContent = 'blobContent' in stageEntry ? JSON.parse(stageEntry.blobContent) : {};
-          } catch (e) {
+          } catch {
             // No previous blob found
           } finally {
             unstaged[key] = {
@@ -818,7 +818,7 @@ export class VCS {
           try {
             mineBlobContent = conflict.mineBlob ? await this._getBlob(conflict.mineBlob) : null;
             theirsBlobContent = conflict.theirsBlob ? await this._getBlob(conflict.theirsBlob) : null;
-          } catch (e) {
+          } catch {
             // No previous blob found
           }
           return {

@@ -41,7 +41,7 @@ async function renameWithRetry(
         if (!stat.isFile()) {
           abortRetry = true; // if target is not a file, EPERM error may be raised and we should not attempt to retry
         }
-      } catch (error) {
+      } catch {
         // Ignore
       }
 

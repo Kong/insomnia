@@ -83,7 +83,7 @@ export const scanImportResources = async (data: {
           path: postmanArchiveFile,
         });
         postmanArchiveJsonData = JSON.parse(postmanArchiveFileContent);
-      } catch (err) {
+      } catch {
         return [
           {
             oriFileName: postmanArchiveFile,
@@ -104,7 +104,7 @@ export const scanImportResources = async (data: {
             jsonData._postman_variable_scope = 'environment';
             contentStr = JSON.stringify(jsonData);
           }
-        } catch (error) {
+        } catch {
           // It's not a valid JSON, shouldn't be a postman environment
         }
       }
