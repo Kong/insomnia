@@ -152,7 +152,7 @@ export const OrganizationMemberRolesSelector = (props: Props) => {
             disabledKeys={['owner']}
             aria-label="Select a role for the user"
             onAction={(key: Key) => {
-              handleRoleChange(availableRoles.filter(r => r.name === key)[0]);
+              handleRoleChange(availableRoles.find(r => r.name === key));
             }}
           >
             {item => (

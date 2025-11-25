@@ -1116,7 +1116,7 @@ export async function getInsomniaV5DataExport({
 
       return stringify(removeEmptyFields(parsedEnvironment));
     } else if (workspace.scope === 'mock-server') {
-      const server = exportableResources.filter(models.mockServer.isMockServer)[0];
+      const server = exportableResources.find(models.mockServer.isMockServer);
 
       const mockServer: InsomniaFile = {
         type: 'mock.insomnia.rest/5.0',

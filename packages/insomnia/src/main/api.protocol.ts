@@ -74,13 +74,13 @@ export async function registerInsomniaProtocols() {
               systemProxyStr = 'DIRECT';
             }
 
-            const proxies = systemProxyStr
+            const proxy = systemProxyStr
               .trim()
               .split(/\s*;\s*/g)
-              .filter(Boolean);
+              .find(Boolean);
 
             // only the first proxy specified will be used
-            const firstProxy = proxies[0];
+            const firstProxy = proxy;
             const parts = firstProxy.split(/\s+/);
 
             const proxyType = parts[0];
