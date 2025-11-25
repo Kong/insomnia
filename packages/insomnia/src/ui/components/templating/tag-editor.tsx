@@ -178,11 +178,11 @@ export const TagEditor: FC<Props> = props => {
   function handleChange(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
     let argIndex = -1;
     if (event.currentTarget.parentNode instanceof HTMLElement) {
-      const index = event.currentTarget.parentNode?.getAttribute('data-arg-index');
+      const index = event.currentTarget.parentNode?.dataset.argIndex;
       argIndex = typeof index === 'string' ? Number.parseInt(index, 10) : -1;
     }
     // Handle special types
-    if (event.currentTarget.getAttribute('data-encoding') === 'base64') {
+    if (event.currentTarget.dataset.encoding === 'base64') {
       return updateArg(templateUtils.encodeEncoding(event.currentTarget.value, 'base64'), argIndex);
     }
     // Handle normal types
