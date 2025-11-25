@@ -50,7 +50,6 @@ export default defineConfig([
       'unicorn/prefer-dom-node-dataset': 'off', // TODO: delete me
       'unicorn/prefer-global-this': 'off', // TODO: delete me
       'unicorn/prefer-logical-operator-over-ternary': 'off', // TODO: delete me
-      'unicorn/prefer-native-coercion-functions': 'off', // TODO: delete me
       'unicorn/prefer-negative-index': 'off', // TODO: delete me
       'unicorn/prefer-number-properties': 'off', // TODO: delete me
       'unicorn/prefer-optional-catch-binding': 'off', // TODO: delete me

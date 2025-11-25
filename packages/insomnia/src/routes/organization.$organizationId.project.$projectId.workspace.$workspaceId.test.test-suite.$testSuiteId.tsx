@@ -283,7 +283,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
             const value = editorRef.current?.getValue() || '';
             const variables = value
               .split('const ')
-              .filter(x => x)
+              .filter(Boolean)
               .map(x => x.split(' ')[0]);
             const numbers = variables.map(x => parseInt(x.match(/(\d+)/)?.[0] || ''))?.filter(x => !isNaN(x));
             const highestNumberedConstant = Math.max(...numbers);
