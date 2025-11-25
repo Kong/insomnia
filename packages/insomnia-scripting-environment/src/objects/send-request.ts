@@ -14,7 +14,7 @@ export async function sendRequest(
   request: string | Request | RequestOptions,
   cb: (error?: string, response?: Response) => void,
   settings: Settings,
-): Promise<Response | undefined> {
+): Promise<Response | void> {
   return new Promise(async (resolve, reject) => {
     try {
       const requestOptions = requestToCurlOptions(request, settings);

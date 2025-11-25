@@ -142,9 +142,9 @@ async function getNunjucks(ignoreUndefinedEnvVariable?: boolean): Promise<Nunjuc
   // Create Env with Extensions //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   const nunjucksEnvironment = nunjucks.configure(config) as NunjucksEnvironment;
-  nunjucksEnvironment.addGlobal('range');
-  nunjucksEnvironment.addGlobal('cycler');
-  nunjucksEnvironment.addGlobal('joiner');
+  nunjucksEnvironment.addGlobal('range', () => {});
+  nunjucksEnvironment.addGlobal('cycler', () => {});
+  nunjucksEnvironment.addGlobal('joiner', () => {});
   const bundlePluginTemplateTags = (await fetchFromTemplateWorkerDatabase(
     'plugin.getBundlePluginTemplateTags',
     {},
