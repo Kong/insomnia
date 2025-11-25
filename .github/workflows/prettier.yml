@@ -25,6 +25,8 @@ jobs:
           npx -y prettier --write .
 
       - name: Commit formatted code
+        env:
+          BRANCH: ${{ github.head_ref }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -32,7 +34,7 @@ jobs:
           # Only commit if there are changes
           if ! git diff --cached --quiet; then
             git commit -m "chore: auto-format with Prettier"
-            git push --set-upstream origin ${{ github.head_ref }}
+            git push --set-upstream origin "$BRANCH"
           else
             echo "No changes to commit"
           fi
