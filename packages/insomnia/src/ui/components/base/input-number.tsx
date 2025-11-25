@@ -19,11 +19,11 @@ export const InputNumber = ({ label, min, max, errorMessage, className, ...props
         <RaInput
           className={({ isFocused, isFocusVisible, isInvalid }) =>
             twMerge(
-              'h-[30px] w-full rounded-sm border border-solid bg-[--color-bg] p-2',
-              isFocused && 'border-[--hl-lg]',
-              isFocusVisible && 'ring-2 ring-[--hl-md] ring-offset-1',
+              'h-[30px] w-full rounded-sm border border-solid bg-(--color-bg) p-2',
+              isFocused && 'border-(--hl-lg)',
+              isFocusVisible && 'ring-2 ring-(--hl-md) ring-offset-1',
               isInvalid && 'border-red-500',
-              !isFocused && !isInvalid && 'border-[--hl-sm]',
+              !isFocused && !isInvalid && 'border-(--hl-sm)',
               className,
             )
           }

@@ -35,7 +35,7 @@ export const Select = <T extends object>({
         <>
           <Button
             className={twMerge(
-              'flex w-full gap-2 rounded-sm border border-solid px-2 py-1 text-[--color-font]',
+              'flex w-full gap-2 rounded-sm border border-solid px-2 py-1 text-(--color-font)',
               isDisabled && 'border-(--hl-xs)',
               isInvalid && 'border-(--color-danger)',
               !isDisabled && !isInvalid && 'border-(--hl-sm)',
