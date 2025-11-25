@@ -13,7 +13,7 @@ import {
 import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { getAppWebsiteBaseURL, isDevelopment } from '~/common/constants';
+import { getAppWebsiteBaseURL } from '~/common/constants';
 import { userSession } from '~/models';
 import { isOwnerOfOrganization, isPersonalOrganization, type Organization } from '~/models/organization';
 import { type CurrentPlan, type UserProfileResponse } from '~/models/organization';
