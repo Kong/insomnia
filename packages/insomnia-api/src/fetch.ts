@@ -16,7 +16,7 @@ let fetch: Fetch | null = null;
 let configured = false;
 export function configureFetch(_fetch: Fetch) {
   if (configured) {
-    throw new Error('Request adapter has already been configured.');
+    throw new Error('Fetch has already been configured and cannot be re-configured.');
   }
   fetch = _fetch;
   configured = true;
@@ -29,7 +29,7 @@ export interface APIError {
 
 export async function request<T = void>(options: FetchConfig): Promise<T> {
   if (!fetch) {
-    throw new Error('Request module has not been configured. Please call configureFetch() at application startup.');
+    throw new Error('Fetch has not been configured. Please call configureFetch() at application startup.');
   }
 
   return (fetch as Fetch<T>)(options);

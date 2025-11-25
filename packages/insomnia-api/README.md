@@ -4,18 +4,12 @@ This package contains the API functionality and types for the Insomnia applicati
 
 ## Usage
 
-Install
+### Install
 
-```sh
-npm install insomnia-api -w <workspace>
-```
+Uses npm workspace, so no need to install.
 
-Import
+### Import
 
 ```jsx
 import { getUserProfile, type UserProfileResponse } from 'insomnia-api';
 ```
-
-## Exports
-
-- insomnia-api - Exports the Insomnia API client and types.
