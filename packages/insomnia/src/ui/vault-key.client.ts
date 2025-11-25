@@ -1,5 +1,5 @@
 import * as srp from '@getinsomnia/srp-js';
-import { createVault, resetVault, verifyVaultA, verifyVaultM1 } from 'insomnia-core/insomnia-api';
+import { createVault, resetVault, verifyVaultA, verifyVaultM1 } from 'insomnia-api';
 
 import { userSession as sessionModel } from '../models';
 import type { UserSession } from '../models/user-session';

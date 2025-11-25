@@ -1,4 +1,4 @@
-import type { CurrentPlan } from 'insomnia-core/insomnia-api';
+import type { CurrentPlan } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { userSession } from '~/models';

@@ -18,7 +18,7 @@ import type { Request } from 'insomnia/src/models/request';
 import type { RequestGroup } from 'insomnia/src/models/request-group';
 import { insomniaFetch } from 'insomnia/src/ui/insomnia-fetch';
 import { deserializeNDJSON } from 'insomnia/src/utils/ndjson';
-import { configureFetch } from 'insomnia-core/insomnia-api';
+import { configureFetch } from 'insomnia-api';
 import { generate, runTestsCli } from 'insomnia-testing';
 import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';

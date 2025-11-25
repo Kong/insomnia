@@ -1,4 +1,4 @@
-import { type PersonalPlanType } from 'insomnia-core/insomnia-api';
+import { type PersonalPlanType } from 'insomnia-api';
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 
 import { getAppWebsiteBaseURL } from '../../../common/constants';

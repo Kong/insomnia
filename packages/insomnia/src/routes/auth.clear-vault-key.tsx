@@ -1,5 +1,5 @@
 import electron from 'electron';
-import { getVault } from 'insomnia-core/insomnia-api';
+import { getVault } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';

@@ -55,8 +55,8 @@ export default tseslint.config(
           patterns: [
             // Shouldn't import packages by relative path
             {
-              group: ['**/*/insomnia-core'],
-              message: "Please use 'insomnia-core' instead of relative paths",
+              group: ['**/*/insomnia-api'],
+              message: "Please use 'insomnia-api' instead of relative paths",
             },
           ],
         },

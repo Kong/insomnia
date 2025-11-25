@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import type { Application } from 'express';
 import { json } from 'express';
-import { type CurrentPlan } from 'insomnia-core/insomnia-api';
+import { type CurrentPlan } from 'insomnia-api';
 
 import type {
   Collaborator,

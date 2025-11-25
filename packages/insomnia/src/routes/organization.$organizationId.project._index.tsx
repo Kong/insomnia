@@ -1,5 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import { getLearningFeature as getLearningFeatureAPI, type LearningFeature } from 'insomnia-core/insomnia-api';
+import { getLearningFeature as getLearningFeatureAPI, type LearningFeature } from 'insomnia-api';
 import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,

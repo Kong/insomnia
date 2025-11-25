@@ -1,4 +1,4 @@
-import { getUserFiles, type RemoteFile } from 'insomnia-core/insomnia-api';
+import { getUserFiles, type RemoteFile } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';

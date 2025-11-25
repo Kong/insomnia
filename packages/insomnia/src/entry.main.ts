@@ -5,7 +5,7 @@ import path from 'node:path';
 import electron, { app, BrowserWindow, session } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
-import { configureFetch } from 'insomnia-core/insomnia-api';
+import { configureFetch } from 'insomnia-api';
 
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
 import { insomniaFetch } from '~/ui/insomnia-fetch';

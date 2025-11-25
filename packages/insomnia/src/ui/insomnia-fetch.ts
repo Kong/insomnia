@@ -1,4 +1,4 @@
-import type { FetchConfig } from 'insomnia-core/insomnia-api';
+import type { FetchConfig } from 'insomnia-api';
 
 import { getApiBaseURL, getClientString, INSOMNIA_FETCH_TIME_OUT, PLAYWRIGHT } from '../common/constants';
 import { generateId } from '../common/misc';

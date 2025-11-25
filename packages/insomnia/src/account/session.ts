@@ -1,4 +1,4 @@
-import { logout as logoutAPI, whoami } from 'insomnia-core/insomnia-api';
+import { logout as logoutAPI, whoami } from 'insomnia-api';
 
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
 import { database } from '../common/database';

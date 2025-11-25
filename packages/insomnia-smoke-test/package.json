@@ -33,7 +33,6 @@
     "graphql": "^16.10.0",
     "graphql-http": "^1.22.4",
     "http-errors": "^2.0.0",
-    "insomnia-core": "*",
     "oidc-provider": "^8.8.1",
     "socket.io": "^4.8.1",
     "statuses": "^2.0.1",

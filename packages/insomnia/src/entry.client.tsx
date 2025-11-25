@@ -1,7 +1,7 @@
 import './ui/renderer-listeners';
 import './ui/log';
 
-import { configureFetch } from 'insomnia-core/insomnia-api';
+import { configureFetch } from 'insomnia-api';
 import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';

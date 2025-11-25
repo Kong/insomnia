@@ -1,4 +1,4 @@
-import { type CurrentPlan, type UserProfileResponse } from 'insomnia-core/insomnia-api';
+import { type CurrentPlan, type UserProfileResponse } from 'insomnia-api';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';

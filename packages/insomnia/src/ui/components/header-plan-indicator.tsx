@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import type { CurrentPlan } from 'insomnia-core/insomnia-api';
+import type { CurrentPlan } from 'insomnia-api';
 import { useEffect, useRef, useState } from 'react';
 import { Button, Dialog, DialogTrigger, Link, Popover, Separator } from 'react-aria-components';
 

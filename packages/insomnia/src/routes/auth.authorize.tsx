@@ -1,4 +1,4 @@
-import { getVault } from 'insomnia-core/insomnia-api';
+import { getVault } from 'insomnia-api';
 import { Fragment } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { href, redirect, useFetchers, useNavigate } from 'react-router';

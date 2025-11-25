@@ -106,7 +106,6 @@
     "https-proxy-agent": "^7.0.5",
     "httpsnippet": "^2.0.0",
     "iconv-lite": "^0.6.3",
-    "insomnia-core": "*",
     "isbot": "^5",
     "isomorphic-git": "1.25.7",
     "js-yaml": "^4.1.0",

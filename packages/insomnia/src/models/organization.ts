@@ -1,4 +1,4 @@
-import { type PersonalPlanType } from 'insomnia-core/insomnia-api';
+import { type PersonalPlanType } from 'insomnia-api';
 
 interface Branding {
   logo_url: string;

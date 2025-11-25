@@ -1,4 +1,4 @@
-import { getVault } from 'insomnia-core/insomnia-api';
+import { getVault } from 'insomnia-api';
 import { type ActionFunctionArgs, href } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';

@@ -1,4 +1,4 @@
-import { type PersonalPlanType } from 'insomnia-core/insomnia-api';
+import { type PersonalPlanType } from 'insomnia-api';
 import { useParams } from 'react-router';
 
 import { formatCurrentPlanType } from '~/models/organization';

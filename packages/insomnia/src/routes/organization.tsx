@@ -1,4 +1,4 @@
-import { type CurrentPlan, type UserProfileResponse } from 'insomnia-core/insomnia-api';
+import { type CurrentPlan, type UserProfileResponse } from 'insomnia-api';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
