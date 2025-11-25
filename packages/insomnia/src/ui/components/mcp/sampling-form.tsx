@@ -58,7 +58,7 @@ export const SamplingForm = ({ requestId, serverRequestId, samplingData }: Sampl
   const isGenerating = generateSamplingResponseFetcher.state !== 'idle';
 
   return (
-    <div className="flex flex-grow flex-col overflow-hidden">
+    <div className="flex grow flex-col overflow-hidden">
       <div className="h-[calc(100%-var(--line-height-sm))] overflow-auto bg-inherit px-5 py-1">
         <InsomniaRjsfForm
           formData={formData}
@@ -70,7 +70,7 @@ export const SamplingForm = ({ requestId, serverRequestId, samplingData }: Sampl
           focusOnFirstError
         />
       </div>
-      <Toolbar className="content-box sticky bottom-0 z-10 flex h-[var(--line-height-sm)] flex-shrink-0 gap-3 border-b border-[var(--hl-md)] bg-[var(--color-bg)] px-5 py-2 text-[var(--font-size-sm)]">
+      <Toolbar className="content-box sticky bottom-0 z-10 flex h-(--line-height-sm) shrink-0 gap-3 border-b border-(--hl-md) bg-(--color-bg) px-5 py-2 text-(--font-size-sm)">
         {isMCPWithAIEnabled && (
           <Button
             onPress={() => {
@@ -96,7 +96,7 @@ export const SamplingForm = ({ requestId, serverRequestId, samplingData }: Sampl
                 serverRequestId,
               });
             }}
-            className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
+            className="rounded-sm bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise) hover:brightness-75"
           >
             <Icon
               icon={isGenerating ? 'spinner' : 'star'}
@@ -127,7 +127,7 @@ export const SamplingForm = ({ requestId, serverRequestId, samplingData }: Sampl
               });
             }
           }}
-          className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
+          className="rounded-sm bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise) hover:brightness-75"
         >
           Approve
         </Button>
@@ -140,7 +140,7 @@ export const SamplingForm = ({ requestId, serverRequestId, samplingData }: Sampl
               reason: 'User rejected the sampling request',
             })
           }
-          className="rounded-[var(--radius-md)] border border-solid border-[var(--hl-lg)] bg-[var(--color-bg)] px-[var(--padding-md)] text-center"
+          className="rounded-md border border-solid border-(--hl-lg) bg-(--color-bg) px-(--padding-md) text-center"
         >
           Reject
         </Button>

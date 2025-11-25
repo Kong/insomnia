@@ -199,7 +199,7 @@ export const MessageEventView = ({ event }: Props) => {
         )}
       </div>
       {viewMode === 'raw' && (
-        <div className="h-full flex-grow p-4">
+        <div className="h-full grow p-4">
           <CodeEditor
             id="mcp-data-preview"
             hideLineNumbers
