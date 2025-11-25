@@ -10,6 +10,6 @@ Uses npm workspace, so no need to install.
 
 ### Import
 
-```jsx
+```ts
 import { getUserProfile, type UserProfileResponse } from 'insomnia-api';
 ```

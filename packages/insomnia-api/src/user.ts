@@ -125,7 +125,7 @@ export const getLearningFeature = async (): Promise<LearningFeature> => {
     method: 'GET',
     path: '/insomnia-production-public-assets/inapp-learning.json',
     origin: 'https://storage.googleapis.com',
-    // It's not an insomnia API which shouldn't have a sessionId
+    // This is not an Insomnia API endpoint and does not require a sessionId
     sessionId: '',
   });
 };
