@@ -35,7 +35,7 @@ import { RenderedText } from '../rendered-text';
 
 // Use tough-cookie MAX_DATE value
 // https://github.com/salesforce/tough-cookie/blob/5ae97c6a28122f3fb309adcd8428274d9b2bd795/lib/cookie.js#L77
-const MAX_TIME = 2147483647000;
+const MAX_TIME = 2_147_483_647_000;
 const ItemsPerPage = 5;
 
 export function chunkArray<T>(array: T[], chunkSize: number = ItemsPerPage): T[][] {

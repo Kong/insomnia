@@ -131,8 +131,8 @@ collection: []
         _id: 'wrk_export_test',
         name: 'Export Test Workspace',
         parentId: 'proj_test',
-        created: 1234567890,
-        modified: 1234567890,
+        created: 1_234_567_890,
+        modified: 1_234_567_890,
         description: 'Test workspace for export',
         scope: 'collection',
       });

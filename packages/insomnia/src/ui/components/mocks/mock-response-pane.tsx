@@ -219,7 +219,7 @@ const HistoryViewWrapperComponentFactory = ({
   // chatgpt: answer my called
   useInterval(() => {
     fetchLogs();
-  }, 10000);
+  }, 10_000);
 
   useEffect(() => {
     fetchLogs();

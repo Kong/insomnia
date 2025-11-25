@@ -25,7 +25,7 @@ async function vcs(branch) {
 
 describe('VCS', () => {
   beforeEach(async () => {
-    let ts = 1000000000000;
+    let ts = 1_000_000_000_000;
     Date.now = vi.fn(() => ts++);
   });
 

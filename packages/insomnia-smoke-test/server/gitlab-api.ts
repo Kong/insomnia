@@ -23,7 +23,7 @@ export default (app: Application) => {
   app.post('/gitlab-api/oauth/token', (_req, res) => {
     res.status(200).send({
       access_token: '123456789',
-      created_at: 1652246628,
+      created_at: 1_652_246_628,
       expires_in: 6955,
       refresh_token: '1234567891',
       scope: 'api read_user write_repository read_repository email',

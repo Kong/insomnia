@@ -28,7 +28,7 @@ app.use((req, res, next) => {
 });
 const port = 4010;
 const httpsPort = 4011;
-const grpcPort = 50051;
+const grpcPort = 50_051;
 const rawParser = bodyParser.raw({
   inflate: true,
   type: '*/*',

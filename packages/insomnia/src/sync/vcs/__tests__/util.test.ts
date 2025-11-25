@@ -875,7 +875,7 @@ describe('util', () => {
     });
 
     it('works with strange types', () => {
-      const sDate1 = hash(new Date(1541178019555));
+      const sDate1 = hash(new Date(1_541_178_019_555));
       const sDate2 = hash('2018-11-02T17:00:19.555Z');
       expect(sDate1.hash).toBe(sDate2.hash);
       expect(sDate1.hash).toBe('ec0a18c47fb39de00204c57b5b492fd408394a01');

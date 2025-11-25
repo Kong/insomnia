@@ -41,7 +41,7 @@ import { queryXPath } from '~/utils/xpath/query';
 
 import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;
-const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
+const MAX_SIZE_FOR_LINTING = 1_000_000; // Around 1MB
 
 interface EditorState {
   scroll: CodeMirror.ScrollInfo;

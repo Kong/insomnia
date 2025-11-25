@@ -41,7 +41,6 @@ export default defineConfig([
       'unicorn/no-this-assignment': 'off', // TODO: delete me
       'unicorn/no-useless-switch-case': 'off', // TODO: delete me
       'unicorn/no-zero-fractions': 'off', // TODO: delete me
-      'unicorn/numeric-separators-style': 'off', // TODO: delete me
       'unicorn/prefer-add-event-listener': 'off', // TODO: delete me
       'unicorn/prefer-array-find': 'off', // TODO: delete me
       'unicorn/prefer-array-some': 'off', // TODO: delete me

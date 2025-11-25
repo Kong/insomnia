@@ -87,7 +87,7 @@ const user = {
 };
 
 const whoami = {
-  sessionExpiry: 4838400,
+  sessionExpiry: 4_838_400,
   publicKey: {
     alg: 'RSA-OAEP-256',
     e: 'AQAB',

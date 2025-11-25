@@ -4,7 +4,7 @@ export default (app: Application) => {
   app.get('/github-api/rest/user/repos', (_req, res) => {
     res.status(200).send([
       {
-        id: 123456,
+        id: 123_456,
         full_name: 'kong-test/sleepless',
         clone_url: 'https://github.com/kong-test/sleepless.git',
         permissions: {

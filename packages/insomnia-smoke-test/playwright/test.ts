@@ -172,7 +172,7 @@ export const test = baseTest.extend<{
       session: {
         id: 'sess_64a477e6b59d43a5a607f84b4f73e3ce',
         // Expire in 2077
-        sessionExpiry: new Date(2147483647000),
+        sessionExpiry: new Date(2_147_483_647_000),
         publicKey: {
           alg: 'RSA-OAEP-256',
           e: 'AQAB',

@@ -89,7 +89,7 @@ export const getOAuth2Token = async (
           ? [
               {
                 name: 'nonce',
-                value: Math.floor(Math.random() * 9999999999999) + 1 + '',
+                value: Math.floor(Math.random() * 9_999_999_999_999) + 1 + '',
               },
             ]
           : []),
