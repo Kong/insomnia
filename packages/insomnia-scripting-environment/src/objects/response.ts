@@ -97,7 +97,7 @@ export class Response extends Property {
     const mimeInfo = {
       mimeType: 'application/octet-stream',
       mimeFormat: '', // TODO: it's definition is unknown
-      charset: 'utf-8',
+      charset: 'utf8',
     };
 
     const contentType = this.headers.find(header => header.key === 'Content-Type');

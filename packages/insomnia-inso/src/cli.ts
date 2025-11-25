@@ -941,7 +941,7 @@ export const go = (args?: string[]) => {
       if (isIdentifierAFile) {
         // try load as a file
         logger.trace(`Linting specification file from identifier: \`${identifierAsAbsPath}\``);
-        specContent = await fs.promises.readFile(identifierAsAbsPath, 'utf-8');
+        specContent = await fs.promises.readFile(identifierAsAbsPath, 'utf8');
         rulesetFileName = await getRuleSetFileFromFolderByFilename(identifierAsAbsPath);
         if (!specContent) {
           logger.fatal(`Specification content not found using path: ${identifier} in ${identifierAsAbsPath}`);

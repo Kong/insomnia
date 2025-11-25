@@ -150,7 +150,7 @@ export const ResponseViewer = ({
     }
     // Show everything else as "source"
     const match = _getContentType().match(/charset=([\w-]+)/);
-    const charset = match && match.length >= 2 ? match[1] : 'utf-8';
+    const charset = match && match.length >= 2 ? match[1] : 'utf8';
     // Sometimes iconv conversion fails so fallback to regular buffer
     try {
       return iconv.decode(overSizedBody, charset);

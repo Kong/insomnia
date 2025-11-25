@@ -250,7 +250,7 @@ export async function installPluginToTmpDir(lookupName: string, allowScopedPacka
     await writeFile(
       path.resolve(tmpDir, 'package.json'),
       JSON.stringify({ license: 'ISC', workspaces: [] }, null, 2),
-      'utf-8',
+      'utf8',
     );
 
     console.log(`[plugins] Installing plugin into temp dir: ${tmpDir}`);

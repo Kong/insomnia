@@ -4,12 +4,12 @@ import { fuzzyMatch } from '../../common/misc';
 import { Icon } from './icon';
 
 const BUILT_IN_ENCODINGS = [
-  { key: 'UTF-8', label: 'UTF-8' },
+  { key: 'utf8', label: 'utf8' },
   { key: 'UTF-16LE', label: 'UTF-16 LE' },
   { key: 'UTF-16BE', label: 'UTF-16 BE' },
   { key: 'UTF-32LE', label: 'UTF-32 LE' },
   { key: 'UTF-32BE', label: 'UTF-32 BE' },
-  { key: 'ASCII', label: 'ASCII' },
+  { key: 'ascii', label: 'ascii' },
   { key: 'ISO-8859-1', label: 'Western European (Latin-1)' },
   { key: 'ISO-8859-2', label: 'Central European (Latin-2)' },
   { key: 'ISO-8859-3', label: 'South European (Latin-3)' },

@@ -113,7 +113,7 @@ function getInsomniaFileName(blob: void | Uint8Array | undefined): string {
   }
 
   try {
-    const parsed = parse(Buffer.from(blob).toString('utf-8'));
+    const parsed = parse(Buffer.from(blob).toString('utf8'));
     return parsed?.fileName || parsed?.name || '';
   } catch {
     // If the document couldn't be parsed as yaml return an empty string
@@ -397,13 +397,13 @@ export class GitVCS {
           }
         }
 
-        // Convert blobs from Uint8Array to UTF-8 strings, or null if not present
+        // Convert blobs from Uint8Array to utf8 strings, or null if not present
         const blobsAsStrings = [headBlob, workdirBlob, stageBlob].map(blob => {
           if (!blob) {
             return null;
           }
           try {
-            return Buffer.from(blob).toString('utf-8');
+            return Buffer.from(blob).toString('utf8');
           } catch {
             return null;
           }
@@ -703,9 +703,9 @@ export class GitVCS {
           result[2] as git.StageStatus,
         );
 
-        const headContent = headBlob ? Buffer.from(headBlob).toString('utf-8') : '';
-        const workdirContent = workdirBlob ? Buffer.from(workdirBlob).toString('utf-8') : '';
-        const stageContent = stageBlob ? Buffer.from(stageBlob).toString('utf-8') : '';
+        const headContent = headBlob ? Buffer.from(headBlob).toString('utf8') : '';
+        const workdirContent = workdirBlob ? Buffer.from(workdirBlob).toString('utf8') : '';
+        const stageContent = stageBlob ? Buffer.from(stageBlob).toString('utf8') : '';
 
         // Calculate staged and unstaged diffs separately using diffLines
         let stagedDiff: Change[] | undefined;

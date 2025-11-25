@@ -54,7 +54,7 @@ describe('test request and response objects', () => {
       key: 888,
     });
     expect(resp.contentInfo()).toEqual({
-      charset: 'utf-8',
+      charset: 'utf8',
       contentType: 'text/plain; charset=utf-8',
       fileExtension: 'txt',
       fileName: 'filename',

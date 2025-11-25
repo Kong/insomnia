@@ -62,7 +62,6 @@ export default defineConfig([
       'unicorn/prefer-switch': 'off', // TODO: delete me
       'unicorn/prefer-ternary': 'off', // TODO: delete me
       'unicorn/prefer-type-error': 'off', // TODO: delete me
-      'unicorn/text-encoding-identifier-case': 'off', // TODO: delete me
     },
   },
   {

@@ -35,7 +35,7 @@ export const encryptOAuthUrl = (authCodeUrlStr: string) => {
     });
     decipher.setAuthTag(authTag);
 
-    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf-8');
+    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
     return decrypted;
   };
 
