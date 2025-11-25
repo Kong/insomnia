@@ -104,15 +104,15 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
-        className="flex h-max max-h-[calc(100%-var(--padding-xl))] w-full max-w-3xl flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
+        className="flex h-max max-h-[calc(100%-var(--padding-xl))] w-full max-w-3xl flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
       >
-        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
             <Form
               validationBehavior="native"
@@ -131,24 +131,24 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                   {getWorkspaceLabel(workspace).singular} Settings{' '}
                 </Heading>
                 <Button
-                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className="flex w-full flex-1 basis-96 select-none flex-col gap-2 overflow-hidden overflow-y-auto rounded">
+              <div className="flex w-full flex-1 basis-96 flex-col gap-2 overflow-hidden overflow-y-auto rounded-sm select-none">
                 <TextField
                   name="name"
                   isRequired
                   isReadOnly={isScratchpadWorkspace}
                   defaultValue={activeWorkspaceName}
-                  className="group relative flex max-w-full flex-shrink-0 flex-col gap-2 overflow-hidden"
+                  className="group relative flex max-w-full shrink-0 flex-col gap-2 overflow-hidden"
                 >
-                  <Label className="text-sm text-[--hl]">Name</Label>
+                  <Label className="text-sm text-(--hl)">Name</Label>
                   <Input
                     placeholder="Awesome API"
-                    className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] p-2 text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                    className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) p-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                   />
                 </TextField>
                 {project && isGitProject(project) && gitRepoTreeFetcher.data && !isMcp(workspace) && (
@@ -167,20 +167,20 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                       return null;
                     }}
                     defaultValue={safeToUseInsomniaFileName(fileName || '')}
-                    className="group relative flex w-full max-w-full flex-shrink-0 flex-col gap-2 overflow-hidden"
+                    className="group relative flex w-full max-w-full shrink-0 flex-col gap-2 overflow-hidden"
                   >
                     <Label className="group relative flex flex-col gap-2 overflow-hidden">
-                      <span className="text-sm text-[--hl]">File name</span>
+                      <span className="text-sm text-(--hl)">File name</span>
 
-                      <div className="grid w-full overflow-hidden rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors [grid-template-areas:'input_extension'] [grid-template-columns:min-content_auto] focus:outline-none focus:ring-1 focus:ring-[--hl-md]">
+                      <div className="grid w-full grid-cols-[min-content_auto] overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
                         <Input
                           placeholder={workspace.name ? safeToUseInsomniaFileName(workspace.name) : 'name'}
-                          className="w-full min-w-[3ch] outline-none [grid-area:input] placeholder:italic focus:outline-none"
+                          className="w-full min-w-[3ch] outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
                         />
                         <span className="-z-10 w-min truncate opacity-0 [grid-area:input]">
                           {safeToUseInsomniaFileName(fileName || workspace.name || 'name')}
                         </span>
-                        <span className="text-[--hl] [grid-area:extension]">.yaml</span>
+                        <span className="text-(--hl) [grid-area:extension]">.yaml</span>
                       </div>
                     </Label>
                     <FieldError className="text-xs text-red-500" />
@@ -188,7 +188,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                 )}
                 {!isMockServer(workspace) && (
                   <>
-                    <Label className="text-sm text-[--hl]" aria-label="Description">
+                    <Label className="text-sm text-(--hl)" aria-label="Description">
                       Description
                     </Label>
                     <MarkdownEditor
@@ -234,12 +234,12 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                       }}
                       className="flex flex-col gap-2"
                     >
-                      <Label className="text-sm text-[--hl]">Mock server type</Label>
+                      <Label className="text-sm text-(--hl)">Mock server type</Label>
                       <div className="flex gap-2">
                         <Radio
                           value="cloud"
                           isDisabled={isCloudProjectDisabled}
-                          className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                          className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                         >
                           <div className="flex items-center gap-2">
                             <Icon icon="globe" />
@@ -250,7 +250,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                         <Radio
                           value="self-hosted"
                           isDisabled={isSelfHostedDisabled}
-                          className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                          className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                         >
                           <div className="flex items-center gap-2">
                             <Icon icon="server" />
@@ -279,11 +279,11 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                         defaultValue={mockServer?.url || ''}
                         className={`group relative flex flex-1 flex-col gap-2 ${mockServer?.useInsomniaCloud ? 'disabled' : ''}`}
                       >
-                        <Label className="text-sm text-[--hl]">Self-hosted mock server URL</Label>
+                        <Label className="text-sm text-(--hl)">Self-hosted mock server URL</Label>
                         <Input
                           disabled={mockServer?.useInsomniaCloud}
                           placeholder={mockServer?.useInsomniaCloud ? '' : 'https://example.com'}
-                          className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                         />
                       </TextField>
                     )}
@@ -293,7 +293,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
               <div className="flex items-center justify-end gap-2">
                 <Button
                   type="submit"
-                  className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+                  className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
                 >
                   Update
                 </Button>

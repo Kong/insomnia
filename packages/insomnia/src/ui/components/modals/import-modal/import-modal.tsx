@@ -26,7 +26,7 @@ export const Radio: FC<{
 }> = ({ name, value, onChange, children, checked, defaultChecked }) => {
   const id = useId();
   return (
-    <div className="has-[:checked]:bg-[--color-bg]">
+    <div className="has-checked:bg-(--color-bg)">
       <input
         id={id}
         type="radio"
@@ -41,7 +41,7 @@ export const Radio: FC<{
         className="absolute -m-px h-px w-px overflow-hidden whitespace-nowrap border-0 p-0"
       />
       <label
-        className="flex items-center gap-[var(--padding-sm)] rounded-[var(--radius-md)] p-[var(--padding-sm)]"
+        className="flex items-center gap-(--padding-sm) rounded-md p-(--padding-sm)"
         data-test-id={`import-from-${value}`}
         htmlFor={id}
       >
@@ -126,17 +126,17 @@ const FileField: FC = () => {
       <label
         {...dropProps}
         className={classNames(
-          'flex max-h-[50vh] flex-wrap items-center gap-[var(--padding-sm)] overflow-auto rounded-[var(--radius-md)] border border-solid bg-[color:var(--hl-xs)] p-[var(--padding-sm)]',
+          'flex max-h-[50vh] flex-wrap items-center gap-(--padding-sm) overflow-auto rounded-md border border-solid bg-(--hl-xs) p-(--padding-sm)',
           {
-            'border-[color:var(--color-surprise)]': isDropTarget,
-            'border-[color:var(--hl-md)]': !isDropTarget,
+            'border-(--color-surprise)': isDropTarget,
+            'border-(--hl-md)': !isDropTarget,
           },
         )}
         htmlFor={id}
       >
         <input type="hidden" name="filePaths" value={filePaths} />
         {filePathList.length ? (
-          <div className="flex w-full flex-col items-center justify-start gap-[var(--padding-sm)] text-ellipsis whitespace-nowrap rounded-[var(--radius-md)] bg-[color:var(--color-bg)] p-[var(--padding-md)]">
+          <div className="flex w-full flex-col items-center justify-start gap-(--padding-sm) text-ellipsis whitespace-nowrap rounded-md bg-(--color-bg) p-(--padding-md)">
             {entryList.map(({ name, type }) => (
               <div key={name}>
                 <Icon icon={type === ENTRY_TYPE.DIR ? 'folder' : 'file'} className="mr-1" />
@@ -145,12 +145,12 @@ const FileField: FC = () => {
             ))}
           </div>
         ) : (
-          <div className="flex w-full flex-col items-center justify-center gap-[var(--padding-sm)] p-[var(--padding-md)]">
+          <div className="flex w-full flex-col items-center justify-center gap-(--padding-sm) p-(--padding-md)">
             <div>
               <i className="fa fa-upload fa-xl" />
             </div>
             <div>
-              Drag and Drop or <span className="text-[color:var(--color-surprise)]">Choose Files</span> to import
+              Drag and Drop or <span className="text-(--color-surprise)">Choose Files</span> to import
             </div>
           </div>
         )}
@@ -315,10 +315,10 @@ const ScanResourcesForm = ({
           id={id}
           onSubmit={onSubmit}
           method="post"
-          className="flex flex-col gap-[var(--padding-sm)]"
+          className="flex flex-col gap-(--padding-sm)"
         >
-          <fieldset className="flex flex-col gap-[var(--padding-md)]">
-            <div className="flex rounded-[var(--radius-md)] border border-solid border-[color:var(--hl-md)] bg-[color:var(--hl-xs)] p-[var(--padding-xs)]">
+          <fieldset className="flex flex-col gap-(--padding-md)">
+            <div className="flex rounded-md border border-solid border-(--hl-md) bg-(--hl-xs) p-(--padding-xs)">
               <Radio onChange={() => setImportFrom('file')} name="source" value="file" checked={importFrom === 'file'}>
                 <i className="fa fa-plus" />
                 File
@@ -359,9 +359,9 @@ const ScanResourcesForm = ({
           </div>
         )}
       </div>
-      <div className="flex items-end justify-between gap-[var(--padding-sm)]">
+      <div className="flex items-end justify-between gap-(--padding-sm)">
         <SupportedFormats />
-        <Button variant="contained" bg="surprise" type="submit" form={id} className="btn h-10 gap-[var(--padding-sm)]">
+        <Button variant="contained" bg="surprise" type="submit" form={id} className="btn h-10 gap-(--padding-sm)">
           <i className="fa fa-file-import" /> Scan
           {loading && <Icon icon="spinner" className="ml-[4px] animate-spin" />}
         </Button>
@@ -385,7 +385,7 @@ const ImportResourcesForm = ({
 }) => {
   return (
     <Fragment>
-      <div className="flex max-h-[50vh] flex-col gap-[var(--padding-md)] overflow-auto">
+      <div className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto">
         <div className="overflow-y-auto">
           <ScanResultsTable scanResults={scanResults} />
         </div>
@@ -399,16 +399,16 @@ const ImportResourcesForm = ({
         </div>
       </div>
 
-      <div className="flex w-full items-end justify-between gap-[var(--padding-sm)]">
+      <div className="flex w-full items-end justify-between gap-(--padding-sm)">
         <div>
-          <div className="pb-[var(--padding-sm)]">{disclaimer}</div>
+          <div className="pb-(--padding-sm)">{disclaimer}</div>
         </div>
         <Button
           variant="contained"
           bg="surprise"
           disabled={disabled}
           onClick={onImport}
-          className="btn h-10 gap-[var(--padding-sm)]"
+          className="btn h-10 gap-(--padding-sm)"
         >
           {loading ? (
             <div>

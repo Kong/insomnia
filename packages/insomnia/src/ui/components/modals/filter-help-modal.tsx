@@ -76,32 +76,32 @@ export const FilterHelpModal: FC<FilterHelpModalOptions> = ({ isJSON }) => {
       <DialogTrigger>
         <Button
           key="help"
-          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
         >
           <i className="fa fa-question-circle" />
         </Button>
         <ModalOverlay
           isDismissable
-          className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+          className="fixed left-0 top-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
         >
-          <Modal className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]">
-            <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none data-[loading]:animate-pulse">
+          <Modal className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
+            <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden data-loading:animate-pulse">
               {({ close }) => (
                 <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-                  <div className="flex flex-shrink-0 items-center justify-between gap-2">
+                  <div className="flex shrink-0 items-center justify-between gap-2">
                     <Heading slot="title" className="flex items-center gap-2 text-2xl">
                       Response Filtering Help
                     </Heading>
 
                     <Button
-                      className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
                       onPress={close}
                     >
                       <Icon icon="x" />
                     </Button>
                   </div>
 
-                  <div className="h-full gap-2 divide-x divide-solid divide-[--hl-md] overflow-hidden [grid-template-columns:300px_1fr]">
+                  <div className="h-full gap-2 divide-x divide-solid divide-(--hl-md) overflow-hidden grid-cols-[300px_1fr]">
                     <div className="flex flex-1 flex-col gap-4 overflow-hidden">
                       {isJSON ? <JSONPathHelp /> : <XPathHelp />}
                     </div>

@@ -244,10 +244,10 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
         if (target.dropPosition === 'before' && target.key === baseEnvironment._id) {
           return <DropIndicator target={target} className="hidden" />;
         }
-        return <DropIndicator target={target} className="outline outline-1 outline-[--color-surprise]" />;
+        return <DropIndicator target={target} className="outline-(--color-surprise) outline-solid outline-1" />;
       }
 
-      return <DropIndicator target={target} className="outline outline-1 outline-[--color-surprise]" />;
+      return <DropIndicator target={target} className="outline-(--color-surprise) outline-solid outline-1" />;
     },
   });
 
@@ -257,15 +257,15 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+      className="h-(--visual-viewport-height) fixed left-0 top-0 z-10 flex w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
-        className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
+        className="border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font) flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid"
       >
-        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
+        <Dialog className="outline-hidden flex h-full flex-1 flex-col overflow-hidden">
           {({ close }) => (
             <div className="flex h-full flex-1 flex-col gap-4 overflow-hidden">
               <div className="flex items-center justify-between gap-2">
@@ -273,17 +273,17 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                   Manage Environments
                 </Heading>
                 <Button
-                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="rounded-xs text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) flex aspect-square h-6 shrink-0 items-center justify-center text-sm ring-1 ring-transparent transition-all focus:ring-inset"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className="flex w-full flex-1 basis-96 select-none divide-x divide-solid divide-[--hl-md] overflow-hidden overflow-y-auto rounded border border-solid border-[--hl-sm]">
+              <div className="divide-(--hl-md) border-(--hl-sm) flex w-full flex-1 basis-96 select-none divide-x divide-solid overflow-hidden overflow-y-auto rounded-sm border border-solid">
                 <GridList
                   aria-label="Environments"
                   items={[baseEnvironment, ...subEnvironments]}
-                  className="w-full max-w-xs flex-shrink-0 overflow-y-auto py-[--padding-xs] data-[empty]:py-0"
+                  className="py-(--padding-xs) data-empty:py-0 w-full max-w-xs shrink-0 overflow-y-auto"
                   disallowEmptySelection
                   selectionMode="single"
                   selectionBehavior="replace"
@@ -302,12 +302,12 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                         key={item._id}
                         id={item._id}
                         textValue={item.name}
-                        className="group select-none outline-none"
+                        className="outline-hidden group select-none"
                       >
                         <div
-                          className={`${item.parentId === workspaceId ? 'pl-4' : 'pl-8'} relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden pr-4 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:text-[--color-font]`}
+                          className={`${item.parentId === workspaceId ? 'pl-4' : 'pl-8'} h-(--line-height-xs) text-(--hl) outline-hidden group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font) relative flex w-full select-none items-center gap-2 overflow-hidden pr-4 transition-colors`}
                         >
-                          <span className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-[--color-surprise]" />
+                          <span className="group-aria-selected:bg-(--color-surprise) absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors" />
                           <Icon
                             icon={
                               item.isPrivate
@@ -327,7 +327,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                             value={item.name}
                             name="name"
                             ariaLabel="Environment name"
-                            className="flex-1 px-1 hover:!bg-transparent"
+                            className="hover:bg-transparent! flex-1 px-1"
                             onSubmit={name => {
                               name &&
                                 updateEnvironmentFetcher.submit({
@@ -345,7 +345,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                             <MenuTrigger>
                               <Button
                                 aria-label="Environment Actions"
-                                className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-hover:opacity-100 group-focus:opacity-100 data-[pressed]:bg-[--hl-sm] data-[pressed]:opacity-100"
+                                className="rounded-xs text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) data-pressed:bg-(--hl-sm) data-pressed:opacity-100 flex aspect-square h-6 items-center justify-center text-sm opacity-0 ring-1 ring-transparent transition-all hover:opacity-100 focus:opacity-100 focus:ring-inset group-hover:opacity-100 group-focus:opacity-100"
                               >
                                 <Icon icon="caret-down" />
                               </Button>
@@ -357,13 +357,13 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                                     environmentActionsList.find(({ id }) => key === id)?.action(item);
                                   }}
                                   items={environmentActionsList}
-                                  className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                                  className="border-(--hl-sm) bg-(--color-bg) focus:outline-hidden min-w-max select-none overflow-y-auto rounded-md border border-solid py-2 text-sm shadow-lg"
                                 >
                                   {item => (
                                     <MenuItem
                                       key={item.id}
                                       id={item.id}
-                                      className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                                      className="h-(--line-height-xs) px-(--padding-md) text-(--color-font) hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden flex w-full items-center gap-2 whitespace-nowrap bg-transparent transition-colors disabled:cursor-not-allowed aria-selected:font-bold"
                                       aria-label={item.name}
                                     >
                                       <Icon className="w-5" icon={item.icon} />
@@ -379,7 +379,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                               <Button
                                 aria-label="Create Environment"
                                 data-testid="CreateEnvironmentDropdown"
-                                className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] data-[pressed]:bg-[--hl-sm]"
+                                className="rounded-xs text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) data-pressed:bg-(--hl-sm) flex aspect-square h-6 items-center justify-center text-sm ring-1 ring-transparent transition-all focus:ring-inset"
                               >
                                 <Icon icon="plus-circle" />
                               </Button>
@@ -391,20 +391,20 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                                     createEnvironmentActionsList.find(({ id }) => key === id)?.action(item);
                                   }}
                                   items={createEnvironmentActionsList}
-                                  className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                                  className="border-(--hl-sm) bg-(--color-bg) focus:outline-hidden min-w-max select-none overflow-y-auto rounded-md border border-solid py-2 text-sm shadow-lg"
                                 >
                                   {item => (
                                     <MenuItem
                                       key={item.id}
                                       id={item.id}
-                                      className="flex w-full flex-col gap-1 whitespace-nowrap bg-transparent px-[--padding-md] py-2 text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                                      className="px-(--padding-md) text-(--color-font) hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden flex w-full flex-col gap-1 whitespace-nowrap bg-transparent py-2 transition-colors disabled:cursor-not-allowed aria-selected:font-bold"
                                       aria-label={item.name}
                                     >
                                       <div className="flex items-center gap-2">
                                         <Icon className="w-5" icon={item.icon} />
                                         <span>{item.name}</span>
                                       </div>
-                                      <Text slot="description" className="text-xs text-[--hl]">
+                                      <Text slot="description" className="text-(--hl) text-xs">
                                         {item.description}
                                       </Text>
                                     </MenuItem>
@@ -418,9 +418,9 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                     );
                   }}
                 </GridList>
-                <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
-                  <div className="flex w-full items-center justify-between gap-2 overflow-hidden px-[--padding-sm]">
-                    <Heading className="flex flex-grow items-center gap-2 overflow-hidden px-4 py-2 text-lg">
+                <div className="divide-(--hl-md) flex flex-1 flex-col divide-y divide-solid overflow-hidden">
+                  <div className="px-(--padding-sm) flex w-full items-center justify-between gap-2 overflow-hidden">
+                    <Heading className="flex grow items-center gap-2 overflow-hidden px-4 py-2 text-lg">
                       <Icon
                         style={{ color: selectedEnvironment?.color || '' }}
                         className="w-4"
@@ -454,7 +454,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                       />
                     </Heading>
                     {selectedEnvironment && selectedEnvironment.parentId !== workspaceId && (
-                      <Label className="ml-auto mr-2 flex flex-shrink-0 items-center gap-2 rounded-sm bg-[--hl-sm] px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] data-[pressed]:bg-[--hl-sm]">
+                      <Label className="rounded-xs bg-(--hl-sm) text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) data-pressed:bg-(--hl-sm) ml-auto mr-2 flex shrink-0 items-center gap-2 px-2 py-1 text-sm ring-1 ring-transparent transition-all focus:ring-inset">
                         <span>Color:</span>
                         <input
                           onChange={e => {
@@ -501,7 +501,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                           );
                         }}
                         isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
-                        className="flex w-[14ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-colors hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
+                        className="rounded-xs text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) flex w-[14ch] shrink-0 items-center justify-start gap-2 px-2 py-1 text-sm ring-1 ring-transparent transition-colors focus:ring-inset"
                         aria-label={
                           selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR ? 'Table Edit' : 'Raw Edit'
                         }
@@ -510,7 +510,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                           <Fragment>
                             <Icon
                               icon={!isSelected ? 'toggle-on' : 'toggle-off'}
-                              className={`${!isSelected ? 'text-[--color-success]' : ''}`}
+                              className={`${!isSelected ? 'text-(--color-success)' : ''}`}
                             />
                             <span>Table View</span>
                           </Fragment>
@@ -560,7 +560,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                 </div>
                 <Button
                   onPress={close}
-                  className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+                  className="rounded-xs border-(--hl-md) text-(--color-font) border border-solid px-3 py-2 transition-colors hover:no-underline"
                 >
                   Close
                 </Button>

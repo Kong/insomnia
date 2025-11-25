@@ -25,9 +25,9 @@ export interface UploadDataModalProps {
 }
 
 const rowHeaderStyle =
-  'sticky normal-case top-[-8px] p-2 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none';
+  'sticky normal-case top-[-8px] p-2 z-10 border-b border-(--hl-sm) bg-(--hl-xs) text-left text-xs font-semibold backdrop-blur-sm backdrop-filter focus:outline-hidden';
 const rowCellStyle =
-  'whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none';
+  'whitespace-nowrap text-sm font-medium border-b border-solid border-(--hl-sm) group-last-of-type:border-none focus:outline-hidden';
 const supportedFileTypes = ['application/json', 'text/csv'];
 
 export const genPreviewTableData = (uploadData: UploadDataType[]) => {
@@ -168,15 +168,15 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-start justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-start justify-center bg-black/30"
     >
       <Modal
-        className="m-24 flex max-h-[75%] w-full max-w-3xl flex-col overflow-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
+        className="m-24 flex max-h-[75%] w-full max-w-3xl flex-col overflow-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
       >
-        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
             <div className="flex flex-1 flex-col gap-4 overflow-hidden">
               <div className="flex items-center justify-between gap-2">
@@ -184,15 +184,15 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
                   {userUploadData.length > 0 ? 'Update Data' : 'Preview Data'}
                 </Heading>
                 <Button
-                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className="flex w-full shrink-0 grow basis-12 select-none flex-col gap-6 overflow-hidden overflow-y-auto rounded">
+              <div className="flex w-full shrink-0 grow basis-12 flex-col gap-6 overflow-hidden overflow-y-auto rounded-sm select-none">
                 <FileTrigger allowsMultiple={false} onSelect={handleFileSelect} acceptedFileTypes={['.csv', '.json']}>
-                  <Button className="flex flex-1 flex-shrink-0 items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-sm] px-2 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]">
+                  <Button className="flex flex-1 shrink-0 items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-sm) px-2 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)">
                     <Icon icon="upload" />
                     <span>{uploadData.length > 0 ? 'Change Data File' : 'Select Data File'}</span>
                   </Button>
@@ -237,7 +237,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
                             </Cell>
                             {uploadDataHeaders.map(rowKey => (
                               <Cell
-                                className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none"
+                                className="border-b border-solid border-(--hl-sm) text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden"
                                 key={rowKey}
                               >
                                 <span className="p-2">
@@ -257,7 +257,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
               <div className="mt-2 flex justify-end">
                 {userUploadData.length > 0 && (
                   <Button
-                    className="flex items-center gap-2 rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--hl] transition-colors hover:bg-opacity-90 hover:no-underline"
+                    className="flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--hl) transition-colors hover:no-underline"
                     onPress={handleClearData}
                   >
                     Remove Data
@@ -265,7 +265,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
                 )}
                 <Button
                   isDisabled={uploadData.length < 1}
-                  className="ml-4 flex items-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+                  className="ml-4 flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
                   onPress={handleUploadData}
                 >
                   Upload

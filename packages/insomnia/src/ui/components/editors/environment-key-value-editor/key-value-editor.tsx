@@ -120,7 +120,7 @@ export const EnvironmentKVEditor = ({
 
       return (
         <div
-          className="flex h-[--line-height-sm] bg-[--color-bg] outline-none"
+          className="flex h-(--line-height-sm) bg-(--color-bg) outline-hidden"
           style={{
             width: element?.clientWidth,
           }}
@@ -130,7 +130,7 @@ export const EnvironmentKVEditor = ({
       );
     },
     renderDropIndicator(target) {
-      return <DropIndicator target={target} className="!border-none outline outline-1 outline-[--color-surprise]" />;
+      return <DropIndicator target={target} className="border-none! outline-solid outline-1 outline-(--color-surprise)" />;
     },
   });
 
@@ -220,13 +220,13 @@ export const EnvironmentKVEditor = ({
         {!disabled && (
           <div
             slot="drag"
-            className={`${cellCommonStyle} flex w-6 flex-shrink-0 items-center justify-end border-l border-r-0`}
+            className={`${cellCommonStyle} flex w-6 shrink-0 items-center justify-end border-l border-r-0`}
             style={{ padding: 0 }}
           >
             <Icon icon="grip-vertical" className="mr-1 cursor-grab" />
           </div>
         )}
-        <div className={`${cellCommonStyle} relative flex h-full w-[30%] flex-grow pl-1`}>
+        <div className={`${cellCommonStyle} relative flex h-full w-[30%] grow pl-1`}>
           <OneLineEditor
             id={`environment-kv-editor-name-${id}`}
             placeholder={'Input Name'}
@@ -251,12 +251,12 @@ export const EnvironmentKVEditor = ({
           />
           {itemError && (
             <Tooltip message={itemError.error} delay={200}>
-              <i className="fa fa-exclamation-circle text-[--color-danger]" />
+              <i className="fa fa-exclamation-circle text-(--color-danger)" />
             </Tooltip>
           )}
           {hasItemWithSameNameAfter && (
             <Tooltip message={`Duplicate name: ${name}. Only the last item with same name will be used.`} delay={200}>
-              <i className="fa fa-exclamation-circle text-[--color-warning]" />
+              <i className="fa fa-exclamation-circle text-(--color-warning)" />
             </Tooltip>
           )}
         </div>
@@ -272,7 +272,7 @@ export const EnvironmentKVEditor = ({
           )}
           {type === EnvironmentKvPairDataType.JSON && (
             <ItemButton
-              className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+              className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
               tabIndex={-1}
               isDisabled={!enabled || disabled}
               onPress={() => {
@@ -322,7 +322,7 @@ export const EnvironmentKVEditor = ({
         <div className={`${cellCommonStyle} w-32`}>
           <MenuTrigger>
             <ItemButton
-              className="flex w-full flex-1 items-center justify-between rounded-sm px-[--padding-sm] py-1 text-sm font-bold text-[--color-font] hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
+              className="flex w-full flex-1 items-center justify-between rounded-xs px-(--padding-sm) py-1 text-sm font-bold text-(--color-font) hover:bg-(--hl-xs) aria-pressed:bg-(--hl-sm)"
               tabIndex={-1}
               aria-label="Type Selection"
               isDisabled={disabled}
@@ -332,7 +332,7 @@ export const EnvironmentKVEditor = ({
               </span>
               <Icon icon="caret-down" />
             </ItemButton>
-            <Popover className="border-solid border-[--hl-sm] bg-[--color-bg] shadow-lg">
+            <Popover className="border-solid border-(--hl-sm) bg-(--color-bg) shadow-lg">
               <Menu
                 aria-label="environment-kv-editor-type-selector"
                 selectionMode="single"
@@ -345,14 +345,14 @@ export const EnvironmentKVEditor = ({
                   <MenuItem
                     key={item.id}
                     id={item.id}
-                    className="react-aria-ListBoxItem flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent pl-[--padding-sm] pr-[--padding-xl] text-sm text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none aria-disabled:cursor-not-allowed aria-disabled:bg-transparent aria-disabled:text-[--hl-lg] aria-selected:font-bold"
+                    className="react-aria-ListBoxItem flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent pl-(--padding-sm) pr-(--padding-xl) text-sm text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden aria-disabled:cursor-not-allowed aria-disabled:bg-transparent aria-disabled:text-(--hl-lg) aria-selected:font-bold"
                     aria-label={item.name}
                     onAction={() => handleItemTypeChange(id, item.id)}
                   >
                     {({ isSelected }) => (
                       <>
                         <span>{item.name}</span>
-                        {isSelected && <Icon icon="check" className="justify-self-end text-[--color-success]" />}
+                        {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                       </>
                     )}
                   </MenuItem>
@@ -363,7 +363,7 @@ export const EnvironmentKVEditor = ({
         </div>
         <div className={`${cellCommonStyle} w-20`}>
           <ItemButton
-            className="flex aspect-square h-7 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
+            className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md)"
             tabIndex={-1}
             aria-label={enabled ? 'Disable Row' : 'Enable Row'}
             isDisabled={disabled}
@@ -372,7 +372,7 @@ export const EnvironmentKVEditor = ({
             <Icon icon={enabled ? 'check-square' : 'square'} />
           </ItemButton>
           <PromptButton
-            className="flex aspect-square h-7 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-50 aria-pressed:bg-[--hl-sm]"
+            className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
             fullWidth
             confirmMessage=""
             doneMessage=""
@@ -390,9 +390,9 @@ export const EnvironmentKVEditor = ({
 
   return (
     <div className="flex h-full min-w-max flex-col overflow-hidden">
-      <Toolbar className="content-box z-10 flex h-[var(--line-height-sm)] flex-shrink-0 bg-[var(--color-bg)] text-[var(--font-size-sm)]">
+      <Toolbar className="content-box z-10 flex h-(--line-height-sm) shrink-0 bg-(--color-bg) text-(--font-size-sm)">
         <Button
-          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
           aria-label="Add Row"
           isDisabled={disabled}
           onPress={() => {
@@ -407,7 +407,7 @@ export const EnvironmentKVEditor = ({
             onChange([]);
           }}
           ariaLabel="Delete All"
-          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
         >
           <Icon icon="trash-can" />
           <span>Delete all</span>
@@ -418,7 +418,7 @@ export const EnvironmentKVEditor = ({
         selectionMode="none"
         dragAndDropHooks={dragAndDropHooks}
         dependencies={[kvPairError, data, symmetricKey]}
-        className="h-full w-full overflow-y-auto p-[--padding-sm]"
+        className="h-full w-full overflow-y-auto p-(--padding-sm)"
         items={kvPairs}
       >
         {kvPair => {
@@ -429,7 +429,7 @@ export const EnvironmentKVEditor = ({
               id={id}
               textValue={`environment-item-${name || id}`}
               style={{ opacity: enabled ? '1' : '0.4' }}
-              className={'flex h-[--line-height-sm] w-full focus:outline-none'}
+              className={'flex h-(--line-height-sm) w-full focus:outline-hidden'}
             >
               {renderPairItem(kvPair)}
             </ListBoxItem>

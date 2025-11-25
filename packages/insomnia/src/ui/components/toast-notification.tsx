@@ -50,14 +50,14 @@ export const showToast = (content: RAToastContent, options?: { timeout?: number 
 };
 
 const IconBorderStyleMap: Record<Status, string> = {
-  info: 'border-[--color-bg]',
+  info: 'border-(--color-bg)',
   success: 'border-[rgba(var(--color-success-rgb),1)]',
   warning: 'border-[rgba(var(--color-warning-rgb),1)]',
   error: 'border-[rgba(var(--color-danger-rgb),1)]',
 };
 
 const StatusIconColorMap: Record<Status, string> = {
-  info: 'text-[--color-font]',
+  info: 'text-(--color-font)',
   success: 'text-[rgba(var(--color-success-rgb),1)]',
   warning: 'text-[rgba(var(--color-warning-rgb),1)]',
   error: 'text-[rgba(var(--color-danger-rgb),1)]',
@@ -72,18 +72,18 @@ const StatusIconMap: Record<Status, IconProp> = {
 
 // Render a <ToastRegion> in the root of your app.
 export const Toaster = () => (
-  <ToastRegion queue={queue} className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 rounded-lg outline-none">
+  <ToastRegion queue={queue} className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 rounded-lg outline-hidden">
     {({ toast }) => (
       <Toast
         toast={toast}
         style={{ viewTransitionName: toast.key }}
-        className={`flex items-center gap-4 rounded-lg border border-solid border-[--hl-sm] bg-[--color-bg] px-3 py-2 text-sm text-[--color-font] shadow-lg outline-none [view-transition-name:toast]`}
+        className={`flex items-center gap-4 rounded-lg border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg outline-hidden [view-transition-name:toast]`}
       >
         <ToastContent className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-center gap-2">
             {toast.content.icon && (
               <span
-                className={`relative flex size-6 shrink-0 items-center justify-center rounded-full border border-dashed border-[--hl-sm] bg-[--color-bg] text-[--color-font] ${IconBorderStyleMap[toast.content.status || 'info']}`}
+                className={`relative flex size-6 shrink-0 items-center justify-center rounded-full border border-dashed border-(--hl-sm) bg-(--color-bg) text-(--color-font) ${IconBorderStyleMap[toast.content.status || 'info']}`}
               >
                 <FontAwesomeIcon icon={toast.content.icon} className="size-5" />
                 {toast.content.status && toast.content.status !== 'info' && (
@@ -97,7 +97,7 @@ export const Toaster = () => (
             <div className="flex w-full flex-col gap-1">
               <Text slot="title" className="flex w-full items-center gap-1">
                 <span className="flex-1">{toast.content.title}</span>
-                {toast.content.time && <span className="text-xs text-[--hl]">{toast.content.time}</span>}
+                {toast.content.time && <span className="text-xs text-(--hl)">{toast.content.time}</span>}
               </Text>
               {toast.content.description && (
                 <Text slot="description" className="text-xs">

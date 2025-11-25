@@ -41,7 +41,7 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
   };
 
   return (
-    <div className="flex w-full items-center gap-3 border border-solid border-[--hl-sm] bg-[--hl-xs] px-2 py-1">
+    <div className="flex w-full items-center gap-3 border border-solid border-(--hl-sm) bg-(--hl-xs) px-2 py-1">
       <div
         className="w-[calc(100%-50px)] truncate"
         data-testid="VaultKeyDisplayPanel"
@@ -163,7 +163,7 @@ export const VaultKeyPanel = () => {
             aria-label="Generate Vault Key"
           >
             {isGenerating && (
-              <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-[--color-font]" />
+              <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-(--color-font)" />
             )}
             Generate Vault Key
             <HelpTooltip className="space-left">
@@ -176,7 +176,7 @@ export const VaultKeyPanel = () => {
       {vaultSaltExists && vaultKeyExists && vaultKeyValue !== '' && (
         <>
           <div className="form-row pad-top-sm flex-col">
-            <div className="mb-[var(--padding-xs)]">
+            <div className="mb-(--padding-xs)">
               <span className="font-semibold">Vault Key</span>
               <HelpTooltip className="space-left">The vault key will be needed when you login again.</HelpTooltip>
             </div>

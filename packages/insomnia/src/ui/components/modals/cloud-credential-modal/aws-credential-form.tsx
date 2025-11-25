@@ -58,7 +58,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
 
   return (
     <form
-      className="flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]"
+      className="flex shrink-0 flex-col gap-2 p-(--padding-sm)"
       onSubmit={e => {
         e.preventDefault();
         e.stopPropagation();
@@ -122,7 +122,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
           <Label className="col-span-4">Credential Name:</Label>
           <Input
             required
-            className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+            className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
             type="text"
             name="name"
             placeholder="Credential name"
@@ -178,13 +178,13 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
                 <div className="flex items-center gap-2">
                   <Input
                     required
-                    className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                    className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                     type={hideValueItemNames.includes('accessKeyId') ? 'password' : 'text'}
                     name="accessKeyId"
                     placeholder="Access Key Id"
                   />
                   <Button
-                    className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     onPress={() => showOrHideItemValue('accessKeyId')}
                   >
                     {hideValueItemNames.includes('accessKeyId') ? (
@@ -203,13 +203,13 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
                 <div className="flex items-center gap-2">
                   <Input
                     required
-                    className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                    className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                     type={hideValueItemNames.includes('secretAccessKey') ? 'password' : 'text'}
                     name="secretAccessKey"
                     placeholder="Secret Access Key"
                   />
                   <Button
-                    className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     onPress={() => showOrHideItemValue('secretAccessKey')}
                   >
                     {hideValueItemNames.includes('secretAccessKey') ? (
@@ -228,13 +228,13 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
                 <div className="flex items-center gap-2">
                   <Input
                     required
-                    className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                    className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                     type={hideValueItemNames.includes('sessionToken') ? 'password' : 'text'}
                     name="sessionToken"
                     placeholder="AWS Secret Token"
                   />
                   <Button
-                    className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     onPress={() => showOrHideItemValue('sessionToken')}
                   >
                     {hideValueItemNames.includes('sessionToken') ? (
@@ -303,7 +303,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
                 </Label>
                 <Input
                   required
-                  className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                  className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                   type="text"
                   name="section"
                   placeholder={
@@ -333,7 +333,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
             <Label className="col-span-4">Region:</Label>
             <Input
               required
-              className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+              className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
               type="text"
               name="region"
               placeholder="Region"
@@ -341,13 +341,13 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
           </TextField>
         </div>
         {errorMessage && <p className="notice error margin-top-sm no-margin-bottom">{errorMessage}</p>}
-        <div className="flex w-full flex-row items-center justify-end gap-[--padding-md] pt-[--padding-md]">
+        <div className="flex w-full flex-row items-center justify-end gap-(--padding-md) pt-(--padding-md)">
           <Button
-            className="rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-right text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+            className="rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-right text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
             type="submit"
             isDisabled={isLoading}
           >
-            {isLoading && <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-[--color-font]" />}
+            {isLoading && <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-(--color-font)" />}
             {isEdit ? 'Update' : 'Create'}
           </Button>
         </div>

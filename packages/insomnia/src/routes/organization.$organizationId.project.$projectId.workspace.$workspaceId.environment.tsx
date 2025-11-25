@@ -262,10 +262,10 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
         if (target.dropPosition === 'before' && target.key === baseEnvironment._id) {
           return <DropIndicator target={target} className="hidden" />;
         }
-        return <DropIndicator target={target} className="outline outline-1 outline-[--color-surprise]" />;
+        return <DropIndicator target={target} className="outline-solid outline-1 outline-(--color-surprise)" />;
       }
 
-      return <DropIndicator target={target} className="outline outline-1 outline-[--color-surprise]" />;
+      return <DropIndicator target={target} className="outline-solid outline-1 outline-(--color-surprise)" />;
     },
   });
 
@@ -314,31 +314,31 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
       ref={sidebarPanelRef}
       autoSaveId="insomnia-sidebar"
       id="wrapper"
-      className="new-sidebar h-full w-full text-[--color-font]"
+      className="new-sidebar h-full w-full text-(--color-font)"
       direction="horizontal"
     >
       <Panel
         id="sidebar"
-        className="sidebar theme--sidebar flex flex-col justify-between divide-y divide-solid divide-[--hl-md] overflow-hidden"
+        className="sidebar theme--sidebar flex flex-col justify-between divide-y divide-solid divide-(--hl-md) overflow-hidden"
         maxSize={40}
         minSize={10}
         collapsible
       >
         <div className="flex flex-col items-start">
           <Breadcrumbs
-            className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-[--padding-sm] font-bold`}
+            className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-(--padding-sm) font-bold`}
           >
-            <Breadcrumb className="flex h-full select-none items-center gap-2 text-[--color-font] outline-none data-[focused]:outline-none">
+            <Breadcrumb className="flex h-full select-none items-center gap-2 text-(--color-font) outline-hidden data-focused:outline-hidden">
               <NavLink
                 data-testid="project"
-                className="flex aspect-square h-7 flex-shrink-0 items-center justify-center gap-2 rounded-sm px-1 py-1 text-sm text-[--color-font] outline-none ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] data-[focused]:outline-none"
+                className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) outline-hidden ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
                 to={`/organization/${organizationId}/project/${activeProject._id}`}
               >
                 <Icon className="text-xs" icon="chevron-left" />
               </NavLink>
-              <span aria-hidden role="separator" className="h-4 text-[--hl-lg] outline outline-1" />
+              <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-solid outline-1" />
             </Breadcrumb>
-            <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-[--color-font] outline-none data-[focused]:outline-none">
+            <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-(--color-font) outline-hidden data-focused:outline-hidden">
               <WorkspaceDropdown />
             </Breadcrumb>
           </Breadcrumbs>
@@ -346,7 +346,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
         <GridList
           aria-label="Environments"
           items={[baseEnvironment, ...subEnvironments]}
-          className="w-full flex-1 flex-shrink-0 overflow-y-auto py-[--padding-xs] data-[empty]:py-0"
+          className="w-full flex-1 shrink-0 overflow-y-auto py-(--padding-xs) data-empty:py-0"
           disallowEmptySelection
           selectionMode="single"
           selectionBehavior="replace"
@@ -365,12 +365,12 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                 key={item._id}
                 id={item._id}
                 textValue={item.name}
-                className="group select-none outline-none"
+                className="group select-none outline-hidden"
               >
                 <div
-                  className={`${item.parentId === workspaceId ? 'pl-4' : 'pl-8'} relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden pr-4 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:text-[--color-font]`}
+                  className={`${item.parentId === workspaceId ? 'pl-4' : 'pl-8'} relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden pr-4 text-(--hl) outline-hidden transition-colors group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)`}
                 >
-                  <span className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-[--color-surprise]" />
+                  <span className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
                   <Icon
                     icon={
                       item.isPrivate
@@ -390,7 +390,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                     value={item.name}
                     name="name"
                     ariaLabel="Environment name"
-                    className="flex-1 px-1 hover:!bg-transparent"
+                    className="flex-1 px-1 hover:bg-transparent!"
                     onSubmit={name => {
                       name &&
                         updateEnvironmentFetcher.submit({
@@ -408,7 +408,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                     <MenuTrigger>
                       <Button
                         aria-label="Project Actions"
-                        className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-hover:opacity-100 group-focus:opacity-100 data-[pressed]:bg-[--hl-sm] data-[pressed]:opacity-100"
+                        className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-(--hl-md) group-hover:opacity-100 group-focus:opacity-100 data-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                       >
                         <Icon icon="caret-down" />
                       </Button>
@@ -420,13 +420,13 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                             environmentActionsList.find(({ id }) => key === id)?.action(item);
                           }}
                           items={environmentActionsList}
-                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
                         >
                           {item => (
                             <MenuItem
                               key={item.id}
                               id={item.id}
-                              className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
                             >
                               <Icon className="w-5" icon={item.icon} />
@@ -442,7 +442,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                       <Button
                         aria-label="Create Environment"
                         data-testid="CreateEnvironmentDropdown"
-                        className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] data-[pressed]:bg-[--hl-sm]"
+                        className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) data-pressed:bg-(--hl-sm)"
                       >
                         <Icon icon="plus-circle" />
                       </Button>
@@ -454,20 +454,20 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                             createEnvironmentActionsList.find(({ id }) => key === id)?.action(item);
                           }}
                           items={createEnvironmentActionsList}
-                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
                         >
                           {item => (
                             <MenuItem
                               key={item.id}
                               id={item.id}
-                              className="flex w-full flex-col gap-1 whitespace-nowrap bg-transparent px-[--padding-md] py-2 text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="flex w-full flex-col gap-1 whitespace-nowrap bg-transparent px-(--padding-md) py-2 text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
                             >
                               <div className="flex items-center gap-2">
                                 <Icon className="w-5" icon={item.icon} />
                                 <span>{item.name}</span>
                               </div>
-                              <Text slot="description" className="text-xs text-[--hl]">
+                              <Text slot="description" className="text-xs text-(--hl)">
                                 {item.description}
                               </Text>
                             </MenuItem>
@@ -483,12 +483,12 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
         </GridList>
         <WorkspaceSyncDropdown />
       </Panel>
-      <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
+      <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
       <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
         <OrganizationTabList />
-        <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
-          <div className="flex w-full flex-shrink-0 basis-[--line-height-sm] items-center justify-between gap-2 overflow-hidden p-[--padding-sm]">
-            <Heading className="flex flex-grow items-center gap-2 overflow-hidden px-4 py-2 text-lg">
+        <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
+          <div className="flex w-full shrink-0 basis-(--line-height-sm) items-center justify-between gap-2 overflow-hidden p-(--padding-sm)">
+            <Heading className="flex grow items-center gap-2 overflow-hidden px-4 py-2 text-lg">
               <Icon
                 className="w-4"
                 icon={
@@ -521,7 +521,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
               />
             </Heading>
             {selectedEnvironment && selectedEnvironment.parentId !== workspaceId && (
-              <Label className="ml-auto mr-2 flex flex-shrink-0 items-center gap-2 rounded-sm bg-[--hl-sm] px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] data-[pressed]:bg-[--hl-sm]">
+              <Label className="ml-auto mr-2 flex shrink-0 items-center gap-2 rounded-xs bg-(--hl-sm) px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) data-pressed:bg-(--hl-sm)">
                 <span>Color:</span>
                 <input
                   onChange={e => {
@@ -568,14 +568,14 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                   );
                 }}
                 isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
-                className="flex w-[14ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-colors hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
+                className="flex w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md)"
                 aria-label={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR ? 'Table Edit' : 'Raw Edit'}
               >
                 {({ isSelected }) => (
                   <Fragment>
                     <Icon
                       icon={!isSelected ? 'toggle-on' : 'toggle-off'}
-                      className={`${!isSelected ? 'text-[--color-success]' : ''}`}
+                      className={`${!isSelected ? 'text-(--color-success)' : ''}`}
                     />
                     <span>Table View</span>
                   </Fragment>

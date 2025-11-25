@@ -141,16 +141,16 @@ const InviteModal: FC<{
       isDismissable={false}
       isOpen={true}
       onOpenChange={setIsOpen}
-      className="theme--transparent-overlay fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-[--color-bg]"
+      className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-(--color-bg)"
     >
-      <Modal className="theme--dialog fixed top-[100px] h-fit w-full max-w-[900px] rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[32px] text-[--color-font]">
-        <Dialog className="relative outline-none">
+      <Modal className="theme--dialog fixed top-[100px] h-fit w-full max-w-[900px] rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
+        <Dialog className="relative outline-hidden">
           {({ close }) => (
             <>
               <Heading slot="title" className="mb-[24px] text-[22px] leading-[34px]">
                 Invite collaborators
               </Heading>
-              <Button onPress={close} className="fa fa-times absolute right-0 top-0 text-xl" />
+              <Button onPress={close} className="fa fa-times absolute top-0 right-0 text-xl" />
               {permissionRef.current?.['create:invitation'] && (
                 <>
                   <InviteForm
@@ -164,14 +164,14 @@ const InviteModal: FC<{
                     allRoles={allRoles}
                     checkSeatsResponseData={checkSeatsResponseData}
                   />
-                  <hr className="my-[24px] border" />
+                  <hr className="my-[24px]" />
                 </>
               )}
 
               <div className="mb-[16px] flex justify-between leading-[24px]">
                 <p>WHO HAS ACCESS ({total})</p>
                 <Group
-                  className="flex w-[50%] items-center gap-2 rounded bg-[--hl-xs] px-[8px] py-[4px]"
+                  className="flex w-[50%] items-center gap-2 rounded-sm bg-(--hl-xs) px-[8px] py-[4px]"
                   isDisabled={collaboratorsListLoader.state !== 'idle'}
                 >
                   <i className="fa fa-search" />
@@ -195,13 +195,13 @@ const InviteModal: FC<{
               </div>
               {collaboratorListError && (
                 <div className="flex h-[200px] items-center justify-center">
-                  <p className="text-[12px] text-[--color-danger] first-letter:capitalize">{collaboratorListError}</p>
+                  <p className="text-[12px] text-(--color-danger) first-letter:capitalize">{collaboratorListError}</p>
                 </div>
               )}
               {collaborators?.length === 0 && page === 0 ? (
                 !collaboratorListError && (
                   <div className="flex h-[200px] items-center justify-center">
-                    <p className="text-[14px] text-[--color-font]">
+                    <p className="text-[14px] text-(--color-font)">
                       {queryInputString
                         ? `No member or team found for the search: "${queryInputString}"`
                         : 'No members or teams'}
@@ -247,7 +247,7 @@ const InviteModal: FC<{
                   />
                   {error && (
                     <div className="mt-[16px] flex justify-center">
-                      <p className="text-[12px] text-[--color-danger]">{error}</p>
+                      <p className="text-[12px] text-(--color-danger)">{error}</p>
                     </div>
                   )}
                 </>
@@ -334,17 +334,17 @@ const MemberListItem: FC<{
     <ListBoxItem
       id={isAcceptedMember ? member.metadata.userId : member.id}
       textValue={textValue}
-      className="flex justify-between gap-[16px] rounded-sm px-2 leading-[36px] outline-none odd:bg-[--hl-xs]"
+      className="flex justify-between gap-[16px] rounded-xs px-2 leading-[36px] outline-hidden odd:bg-(--hl-xs)"
     >
       <div className="relative flex grow items-center gap-3 truncate">
         <div className="relative h-[24px] w-[24px]">
           <img
             src={member.picture}
             alt="member image"
-            className="absolute bottom-0 left-0 top-0 m-auto h-[24px] w-[24px] rounded-full"
+            className="absolute top-0 bottom-0 left-0 m-auto h-[24px] w-[24px] rounded-full"
           />
           {member.metadata.groupTotal !== undefined && (
-            <div className="absolute -bottom-1 -right-1 flex h-3 w-auto min-w-3 items-center justify-center rounded-full border border-white bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))] bg-opacity-100 p-1 text-[--color-font-danger]">
+            <div className="absolute -right-1 -bottom-1 flex h-3 w-auto min-w-3 items-center justify-center rounded-full border border-white bg-(--color-danger) p-1 text-(--color-font-danger)">
               <p className="text-[9px]">{member.metadata.groupTotal}</p>
             </div>
           )}
@@ -352,22 +352,22 @@ const MemberListItem: FC<{
         <div className="flex items-center gap-2">
           <span>{textValue}</span>
           {isGroup && (
-            <span className="inline-flex items-center rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-1.5 py-0.5 text-xs font-medium text-[--color-font-surprise] ring-1 ring-inset ring-[rgba(var(--color-surprise-rgb),1)]">
+            <span className="inline-flex items-center rounded-full bg-(--color-surprise) px-1.5 py-0.5 text-xs font-medium text-(--color-font-surprise) ring-1 ring-[rgba(var(--color-surprise-rgb),1)] ring-inset">
               Team
             </span>
           )}
           {isCurrentUser && (
-            <span className="inline-flex items-center rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-1.5 py-0.5 text-xs font-medium text-[--color-font-surprise] ring-1 ring-inset ring-[rgba(var(--color-surprise-rgb),1)]">
+            <span className="inline-flex items-center rounded-full bg-(--color-surprise) px-1.5 py-0.5 text-xs font-medium text-(--color-font-surprise) ring-1 ring-[rgba(var(--color-surprise-rgb),1)] ring-inset">
               You
             </span>
           )}
           {isPendingMember && !isPendingInvitationExpired && (
-            <span className="inline-flex items-center rounded-full bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-1.5 py-0.5 text-xs font-medium text-[--color-font-warning] ring-1 ring-inset ring-[rgba(var(--color-warning-rgb),1)]">
+            <span className="inline-flex items-center rounded-full bg-(--color-warning) px-1.5 py-0.5 text-xs font-medium text-(--color-font-warning) ring-1 ring-[rgba(var(--color-warning-rgb),1)] ring-inset">
               Invite sent
             </span>
           )}
           {isPendingMember && isPendingInvitationExpired && (
-            <span className="inline-flex items-center rounded-full bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-1.5 py-0.5 text-xs font-medium text-[--color-font-danger] ring-1 ring-inset ring-[rgba(var(--color-danger-rgb),1)]">
+            <span className="inline-flex items-center rounded-full bg-(--color-danger) px-1.5 py-0.5 text-xs font-medium text-(--color-font-danger) ring-1 ring-[rgba(var(--color-danger-rgb),1)] ring-inset">
               Expired
             </span>
           )}
@@ -395,7 +395,7 @@ const MemberListItem: FC<{
                 window.main.trackSegmentEvent({ event: SegmentEvent.inviteResent });
               }
             }}
-            className="flex min-w-[75px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
+            className="flex min-w-[75px] items-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
           >
             {reinviting ? <Icon icon="spinner" className="fa-spin fa-1x" /> : <Icon icon="paper-plane" />}
             Resend
@@ -438,7 +438,7 @@ const MemberListItem: FC<{
           <div className="flex min-w-[88px] items-center justify-center">
             <Button
               aria-label="Manage collaborators"
-              className="flex min-w-[70px] cursor-pointer items-center justify-center gap-2 rounded-sm bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 bg-clip-padding p-1 text-sm text-[--color-font-surprise] outline-none transition-all hover:bg-opacity-80 focus-visible:ring-2 focus-visible:ring-white/75 data-[pressed]:bg-opacity-40"
+              className="flex min-w-[70px] cursor-pointer items-center justify-center gap-2 rounded-xs bg-(--color-surprise) bg-clip-padding p-1 text-sm text-(--color-font-surprise) outline-hidden transition-all hover:bg-(--color-surprise)/80 focus-visible:ring-2 focus-visible:ring-white/75 data-pressed:bg-(--color-surprise)/40"
               onPress={() => {
                 if (!permissionRef.current['own:organization']) {
                   showModal(AlertModal, {
@@ -459,7 +459,7 @@ const MemberListItem: FC<{
         <PromptButton
           confirmMessage="Confirm"
           ariaLabel={isAcceptedMember || isGroup ? 'Remove' : 'Revoke'}
-          className="flex min-w-[85px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
+          className="flex min-w-[85px] items-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
           doneMessage={isFailed ? 'Failed' : isAcceptedMember || isGroup ? 'Removed' : 'Revoked'}
           disabled={memberRoleName === 'owner' || isCurrentUser}
           onClick={() => {
@@ -543,15 +543,15 @@ const PaginationBar = ({ isNextDisabled, isPrevDisabled, isHidden, onPrevPress, 
 
   return (
     <div className="flex flex-col items-end">
-      <div className="flex h-[50px] w-full flex-shrink-0 items-center justify-between">
+      <div className="flex h-[50px] w-full shrink-0 items-center justify-between">
         <Button
           isDisabled={isPrevDisabled}
           aria-label="previous page"
           className="flex h-[25px] items-center justify-center gap-[5px] p-1"
           onPress={onPrevPress}
         >
-          <Icon icon="arrow-left" className="text h-[12px] w-[12px] text-[--color-font] disabled:text-[#00000080]" />
-          <p className="m-0 text-[12px] font-normal capitalize leading-[15px] text-[--color-font] disabled:text-[#00000080]">
+          <Icon icon="arrow-left" className="text h-[12px] w-[12px] text-(--color-font) disabled:text-[#00000080]" />
+          <p className="m-0 text-[12px] leading-[15px] font-normal text-(--color-font) capitalize disabled:text-[#00000080]">
             Previous
           </p>
         </Button>
@@ -561,10 +561,10 @@ const PaginationBar = ({ isNextDisabled, isPrevDisabled, isHidden, onPrevPress, 
           className="flex h-[25px] items-center justify-center gap-[5px] p-1"
           onPress={onNextPress}
         >
-          <p className="m-0 text-[12px] font-normal capitalize leading-[15px] text-[--color-font] disabled:text-[#00000080]">
+          <p className="m-0 text-[12px] leading-[15px] font-normal text-(--color-font) capitalize disabled:text-[#00000080]">
             Next
           </p>
-          <Icon icon="arrow-right" className="h-[12px] w-[12px] text-[--color-font] disabled:text-[#00000080]" />
+          <Icon icon="arrow-right" className="h-[12px] w-[12px] text-(--color-font) disabled:text-[#00000080]" />
         </Button>
       </div>
     </div>

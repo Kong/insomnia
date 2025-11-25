@@ -23,10 +23,10 @@ import { Button } from '~/ui/components/themed-button';
 
 // Base input classes for consistency
 const baseInputClasses =
-  'w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 px-2 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]';
-const labelClasses = 'text-sm font-medium text-[--color-font] mb-1 block';
+  'w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 px-2 text-(--color-font) transition-colors placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)';
+const labelClasses = 'text-sm font-medium text-(--color-font) mb-1 block';
 const errorClasses = 'text-red-500 text-xs mt-1';
-const descriptionClasses = 'text-[--hl] text-xs mb-2';
+const descriptionClasses = 'text-(--hl) text-xs mb-2';
 
 // ===== WIDGETS =====
 
@@ -44,7 +44,7 @@ const CustomCheckboxWidget = (props: WidgetProps) => {
       isReadOnly={readonly}
       isRequired={required}
     >
-      <span className="text-sm text-[--color-font]">{schema?.description || label}</span>
+      <span className="text-sm text-(--color-font)">{schema?.description || label}</span>
     </Checkbox>
   );
 };
@@ -146,8 +146,8 @@ const BaseInputTemplate = (props: BaseInputTemplateProps) => {
     >
       <Input
         className={cn(`${baseInputClasses}`, {
-          '!border-[--color-danger]': isInvalid,
-          'border-[--hl-xs]': disabled,
+          'border-(--color-danger)!': isInvalid,
+          'border-(--hl-xs)': disabled,
         })}
         id={id}
         placeholder={placeholder}
@@ -173,7 +173,7 @@ const WrapIfAdditionalTemplate = (props: WrapIfAdditionalTemplateProps) => {
   return (
     <div className={cn('flex items-center gap-2', classNames)} style={style}>
       <TextField
-        className="flex-grow"
+        className="grow"
         aria-label="rjsf-input"
         onBlur={e => onKeyChange(e.currentTarget.value)}
         defaultValue={label}
@@ -181,8 +181,8 @@ const WrapIfAdditionalTemplate = (props: WrapIfAdditionalTemplateProps) => {
         <Label className={labelClasses}>{label}</Label>
         <Input className={cn(`${baseInputClasses}`, {})} id={id} />
       </TextField>
-      <div className="flex-grow">{children}</div>
-      <div className="flex-shrink-0 basis-[50px] self-end">
+      <div className="grow">{children}</div>
+      <div className="shrink-0 basis-[50px] self-end">
         <Button
           size="small"
           bg="default"
@@ -247,14 +247,14 @@ const FieldTemplate = (props: FieldTemplateProps) => {
             <label htmlFor={id} className={labelClasses}>
               {label}
               {required && <span className="ml-1 text-red-500">*</span>}
-              <span className="text-[--hl]">: {schema.type}</span>
+              <span className="text-(--hl)">: {schema.type}</span>
             </label>
             {displayDescription && <div className={descriptionClasses}>{description}</div>}
           </>
         )}
         {children}
         {rawErrors && <div className={errorClasses}>{errors}</div>}
-        {rawHelp && <div className="mt-1 text-xs text-[--hl]">{help}</div>}
+        {rawHelp && <div className="mt-1 text-xs text-(--hl)">{help}</div>}
       </WrapIfAdditionalTemplate>
     </div>
   );
@@ -271,15 +271,15 @@ const ObjectFieldTemplate = (props: ObjectFieldTemplateProps) => {
     <div>
       {title && (
         <label className={labelClasses}>
-          <span className="mb-2 font-medium text-[--color-font]">{title}</span>
+          <span className="mb-2 font-medium text-(--color-font)">{title}</span>
           {required && <span className="ml-1 text-red-500">*</span>}
-          <span className="text-[--hl]">: {schema.type}</span>
+          <span className="text-(--hl)">: {schema.type}</span>
         </label>
       )}
       {description && <div className={descriptionClasses}>{description}</div>}
       <div
         className={cn('space-y-4', {
-          'border-l border-solid border-[--hl-sm]': level > 1,
+          'border-l border-solid border-(--hl-sm)': level > 1,
           'pl-4': level > 1,
         })}
       >
@@ -304,22 +304,22 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   const { title, items, canAdd, onAddClick, disabled, readonly, required, schema } = props;
 
   return (
-    <div className="rounded-md bg-[--color-bg]">
+    <div className="rounded-md bg-(--color-bg)">
       {title && (
         <label className={labelClasses}>
-          <span className="mb-2 font-medium text-[--color-font]">{title}</span>
+          <span className="mb-2 font-medium text-(--color-font)">{title}</span>
           {required && <span className="ml-1 text-red-500">*</span>}
-          <span className="text-[--hl]">: {schema.type}</span>
+          <span className="text-(--hl)">: {schema.type}</span>
         </label>
       )}
       {schema.description && <div className={descriptionClasses}>{schema.description}</div>}
 
-      <div className="space-y-2 rounded border border-solid border-[--hl-sm] py-2">
+      <div className="space-y-2 rounded-sm border border-solid border-(--hl-sm) py-2">
         {items.map(item => (
           <div
             key={item.key}
-            className={cn('flex items-start gap-4 rounded px-4', {
-              'border-b border-solid border-[--hl-sm]': item.index < items.length - 1,
+            className={cn('flex items-start gap-4 rounded-sm px-4', {
+              'border-b border-solid border-(--hl-sm)': item.index < items.length - 1,
             })}
           >
             <div className="flex-1">{item.children}</div>

@@ -349,7 +349,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       }
     },
     renderDropIndicator(target) {
-      return <DropIndicator target={target} className="!border-none outline outline-1 outline-[--color-surprise]" />;
+      return <DropIndicator target={target} className="border-none! outline-solid outline-1 outline-(--color-surprise)" />;
     },
   });
 
@@ -358,11 +358,11 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   }
 
   return (
-    <div className="box-content flex bg-[--color-bg]" style={{ height: `${INSOMNIA_TAB_HEIGHT + 1}px` }}>
+    <div className="box-content flex bg-(--color-bg)" style={{ height: `${INSOMNIA_TAB_HEIGHT + 1}px` }}>
       <Button
         onPress={scrollLeft}
         isDisabled={leftScrollDisable}
-        className={`${leftScrollDisable && 'cursor-not-allowed'} border-b border-solid border-[--hl-sm]`}
+        className={`${leftScrollDisable && 'cursor-not-allowed'} border-b border-solid border-(--hl-sm)`}
       >
         <Icon icon="chevron-left" className={`w-[30px] ${isOverFlow ? 'block' : 'hidden'}`} />
       </Button>
@@ -389,30 +389,30 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       <Button
         onPress={scrollRight}
         isDisabled={rightScrollDisable}
-        className={`${rightScrollDisable && 'cursor-not-allowed'} border-b border-solid border-[--hl-sm]`}
+        className={`${rightScrollDisable && 'cursor-not-allowed'} border-b border-solid border-(--hl-sm)`}
       >
         <Icon icon="chevron-right" className={`w-[30px] ${isOverFlow ? 'block' : 'hidden'}`} />
       </Button>
-      <div className="flex flex-shrink-0 flex-grow items-center justify-start border-b border-solid border-[--hl-sm]">
+      <div className="flex shrink-0 grow items-center justify-start border-b border-solid border-(--hl-sm)">
         <MenuTrigger>
           <Button
             aria-label="Tab Plus"
-            className="mx-[10px] h-[20px] w-[20px] text-center hover:bg-[--hl-xs] data-[pressed]:bg-[--hl-sm]"
+            className="mx-[10px] h-[20px] w-[20px] text-center hover:bg-(--hl-xs) data-pressed:bg-(--hl-sm)"
           >
             <Icon icon="plus" className="cursor-pointer" />
           </Button>
           <Popover>
-            <Menu className="max-h-[85vh] max-w-lg select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none">
+            <Menu className="max-h-[85vh] max-w-lg select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden">
               {currentPage === 'debug' && (
                 <MenuItem
-                  className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold"
+                  className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold"
                   onAction={addRequest}
                 >
                   Add request to current collection
                 </MenuItem>
               )}
               <MenuItem
-                className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold"
+                className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold"
                 onAction={addRequestToCollection}
               >
                 Add request to other collection

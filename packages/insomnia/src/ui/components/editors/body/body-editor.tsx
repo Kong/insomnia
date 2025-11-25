@@ -173,7 +173,7 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
 
   return (
     <>
-      <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
+      <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
         <ContentTypeDropdown />
       </Toolbar>
       {renderBodyEditor()}

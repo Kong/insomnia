@@ -177,27 +177,27 @@ const FileField = ({
           onChange(rootFolder);
         }}
         className={classnames(
-          'flex max-h-[50vh] flex-wrap items-center gap-[var(--padding-sm)] overflow-auto rounded-[var(--radius-md)] border border-solid bg-[color:var(--hl-xs)] p-[var(--padding-sm)]',
+          'flex max-h-[50vh] flex-wrap items-center gap-(--padding-sm) overflow-auto rounded-md border border-solid bg-(--hl-xs) p-(--padding-sm)',
           {
-            'border-[color:var(--color-surprise)]': isDropTarget,
-            'border-[color:var(--hl-md)]': !isDropTarget,
+            'border-(--color-surprise)': isDropTarget,
+            'border-(--hl-md)': !isDropTarget,
           },
         )}
       >
         {rootFolder ? (
-          <div className="flex w-full flex-col items-center justify-start gap-[var(--padding-sm)] text-ellipsis whitespace-nowrap rounded-[var(--radius-md)] bg-[color:var(--color-bg)] p-[var(--padding-md)]">
+          <div className="flex w-full flex-col items-center justify-start gap-(--padding-sm) text-ellipsis whitespace-nowrap rounded-md bg-(--color-bg) p-(--padding-md)">
             <div>
               <Icon icon="folder" className="mr-1" />
               {rootFolder.name}
             </div>
           </div>
         ) : (
-          <div className="flex w-full flex-col items-center justify-center gap-[var(--padding-sm)] p-[var(--padding-md)]">
+          <div className="flex w-full flex-col items-center justify-center gap-(--padding-sm) p-(--padding-md)">
             <div>
               <i className="fa fa-upload fa-xl" />
             </div>
             <div>
-              Drag and Drop or <span className="text-[color:var(--color-surprise)]">Choose Folder</span> to import
+              Drag and Drop or <span className="text-(--color-surprise)">Choose Folder</span> to import
             </div>
           </div>
         )}
@@ -229,14 +229,14 @@ export const ImportProjectsResourceForm = ({
         Skip importing projects that already exist
       </Checkbox>
       <FileField rootFolder={rootFolder} onChange={setRootFolder} />
-      <div className="flex items-end justify-between gap-[var(--padding-sm)]">
+      <div className="flex items-end justify-between gap-(--padding-sm)">
         <SupportedFormats />
         <Button
           disabled={!rootFolder}
           onClick={() => rootFolder && onConfirm(rootFolder, skipExisting)}
           variant="contained"
           bg="surprise"
-          className="gap-[var(--padding-sm)]"
+          className="gap-(--padding-sm)"
         >
           <i className="fa fa-file-import" />
           Import
@@ -337,7 +337,7 @@ const ProjectItem = ({ project }: { project: ProjectImportItem }) => {
   );
 
   return (
-    <div className="rounded-[var(--radius-md)] border border-solid border-[color:var(--hl-md)]">
+    <div className="rounded-md border border-solid border-(--hl-md)">
       <div
         data-expandable={expendable}
         className="flex items-center justify-between p-3 data-[expandable=true]:cursor-pointer"
@@ -351,14 +351,14 @@ const ProjectItem = ({ project }: { project: ProjectImportItem }) => {
             className={classnames('ml-2 transition-transform duration-200', {
               'rotate-180': expanded,
               'rotate-0': !expanded,
-              'text-[color:var(--hl-xs)]': !expendable,
+              'text-(--hl-xs)': !expendable,
             })}
           />
         </div>
       </div>
 
       {expanded && project.status === ImportStatus.FAILED && (
-        <div className="text-danger border-t border-solid border-[color:var(--hl-md)] bg-[color:var(--hl-xs)] p-3">
+        <div className="text-danger border-t border-solid border-(--hl-md) bg-(--hl-xs) p-3">
           <div className="flex items-center gap-2">
             <i className="fa fa-exclamation-circle" />
             Import failed: {project.error || 'Unknown error'}
@@ -424,7 +424,7 @@ const ImportProjectsList = ({
             variant="contained"
             bg="surprise"
             onClick={() => onComplete([])}
-            className="h-10 gap-[var(--padding-sm)]"
+            className="h-10 gap-(--padding-sm)"
           >
             Confirm
           </Button>
@@ -444,11 +444,11 @@ const ImportProjectsList = ({
               <Label className="text-sm font-medium">
                 {completed < total ? `Processing folder #${completed + 1} of ${total}` : `Completed`}
               </Label>
-              <span className="text-sm font-medium text-[color:var(--color-surprise)]">{valueText}</span>
+              <span className="text-sm font-medium text-(--color-surprise)">{valueText}</span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-[color:var(--hl-xs)]">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-(--hl-xs)">
               <div
-                className="fill h-full rounded-full bg-[color:var(--color-surprise)] transition-all duration-300 ease-in-out"
+                className="fill h-full rounded-full bg-(--color-surprise) transition-all duration-300 ease-in-out"
                 style={{ width: percentage + '%' }}
               />
             </div>
@@ -462,7 +462,7 @@ const ImportProjectsList = ({
         ))}
       </div>
 
-      <div className="mt-4 flex justify-end gap-[var(--padding-md)]">
+      <div className="mt-4 flex justify-end gap-(--padding-md)">
         {uiStatus === 'importing' && !cancelled && (
           <Button
             variant="contained"
@@ -476,7 +476,7 @@ const ImportProjectsList = ({
                 onConfirm: onCancel,
               });
             }}
-            className="h-10 gap-[var(--padding-sm)]"
+            className="h-10 gap-(--padding-sm)"
           >
             Cancel
           </Button>
@@ -486,7 +486,7 @@ const ImportProjectsList = ({
           bg="surprise"
           disabled={uiStatus === 'importing'}
           onClick={() => onComplete(projectItems)}
-          className="h-10 gap-[var(--padding-sm)]"
+          className="h-10 gap-(--padding-sm)"
         >
           Confirm
         </Button>

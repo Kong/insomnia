@@ -162,30 +162,30 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
         !isOpen && onClose();
       }}
       isDismissable
-      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
-        className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
+        className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
       >
-        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
             <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-              <div className="flex flex-shrink-0 items-center justify-between gap-2">
+              <div className="flex shrink-0 items-center justify-between gap-2">
                 <Heading slot="title" className="text-2xl">
                   Commit changes
                 </Heading>
                 <Button
-                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className="grid h-full gap-2 divide-x divide-solid divide-[--hl-md] overflow-hidden [grid-template-columns:300px_1fr]">
-                <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+              <div className="grid h-full grid-cols-[300px_1fr] gap-2 divide-x divide-solid divide-(--hl-md) overflow-hidden">
+                <div className="flex flex-1 flex-col gap-4 overflow-hidden p-2">
                   <form
                     onSubmit={e => {
                       e.preventDefault();
@@ -205,23 +205,23 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                     }}
                     className="flex flex-col gap-2"
                   >
-                    <TextField className="flex flex-shrink-0 flex-col gap-2">
+                    <TextField className="flex shrink-0 flex-col gap-2">
                       <Label className="font-bold">Message</Label>
                       <TextArea
                         rows={3}
                         name="message"
-                        className="resize-none rounded-sm border border-solid border-[--hl-sm] p-2 placeholder:text-[--hl-md]"
+                        className="resize-none rounded-xs border border-solid border-(--hl-sm) p-2 placeholder:text-(--hl-md)"
                         placeholder="This is a helpful message that describes the changes made in this commit."
                         required
                       />
                     </TextField>
 
-                    <div className="flex flex-shrink-0 items-center justify-stretch gap-2">
+                    <div className="flex shrink-0 items-center justify-stretch gap-2">
                       <Button
                         type="submit"
                         isDisabled={createSnapshotFetcher.state !== 'idle'}
                         formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot`}
-                        className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                        className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                       >
                         <Icon
                           icon={createSnapshotFetcher.state !== 'idle' ? 'spinner' : 'check'}
@@ -234,7 +234,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                         isDisabled={createSnapshotFetcher.state !== 'idle'}
                         name="push"
                         value="true"
-                        className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                        className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                       >
                         <Icon
                           icon={createSnapshotFetcher.state !== 'idle' ? 'spinner' : 'cloud-arrow-up'}
@@ -244,7 +244,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                       </Button>
                     </div>
                     {createSnapshotFetcher.data?.error && (
-                      <p className="rounded-sm bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))] bg-opacity-20 p-2 text-sm text-[--color-font-danger]">
+                      <p className="rounded-xs bg-(--color-danger)/20 p-2 text-sm text-(--color-font-danger)">
                         <Icon icon="exclamation-triangle" /> {createSnapshotFetcher.data.error}
                       </p>
                     )}
@@ -252,10 +252,10 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
 
                   <div className="grid auto-rows-auto gap-2 overflow-y-auto">
                     <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
-                      <Heading className="group flex w-full flex-shrink-0 items-center justify-between gap-2 py-1 font-semibold">
+                      <Heading className="group flex w-full shrink-0 items-center justify-between gap-2 py-1 font-semibold">
                         <span className="flex-1">Staged changes</span>
                         <Button
-                          className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                          className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                           slot={null}
                           onPress={() => {
                             unstageChanges(stagedChanges.map(item => item.key));
@@ -263,11 +263,11 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                         >
                           <Icon icon="minus" />
                         </Button>
-                        <span className="rounded-full bg-[--hl-sm] px-1 text-xs text-[--hl]">
+                        <span className="rounded-full bg-(--hl-sm) px-1 text-xs text-(--hl)">
                           {stagedChanges.length}
                         </span>
                       </Heading>
-                      <div className="flex w-full flex-1 select-none overflow-y-auto">
+                      <div className="flex w-full flex-1 overflow-y-auto select-none">
                         <GridList
                           className="w-full"
                           items={stagedChanges.map(entry => ({
@@ -281,16 +281,16 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                             setSelectedItemId(key.toString());
                           }}
                           renderEmptyState={() => (
-                            <p className="p-2 text-sm text-[--hl]">Stage your changes to commit them.</p>
+                            <p className="p-2 text-sm text-(--hl)">Stage your changes to commit them.</p>
                           )}
                         >
                           {item => {
                             return (
-                              <GridListItem className="group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
+                              <GridListItem className="group flex w-full items-center justify-between overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
                                 <span className="truncate">{item.entry.name || item.entry.document?.type}</span>
                                 <div className="flex items-center gap-1">
                                   <Button
-                                    className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                                    className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                                     slot={null}
                                     onPress={() => {
                                       unstageChanges([item.entry.key]);
@@ -304,7 +304,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                                     </Button>
                                     <Tooltip
                                       offset={8}
-                                      className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                                      className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
                                     >
                                       {'added' in item.entry
                                         ? 'Untracked'
@@ -321,11 +321,11 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                       </div>
                     </div>
                     <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
-                      <Heading className="group flex w-full flex-shrink-0 items-center justify-between py-1 font-semibold">
+                      <Heading className="group flex w-full shrink-0 items-center justify-between py-1 font-semibold">
                         <span>Changes</span>
                         <div className="flex items-center gap-2">
                           <Button
-                            className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                            className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                             slot={null}
                             onPress={() => {
                               stageChanges(unstagedChanges.map(item => item.key));
@@ -333,12 +333,12 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                           >
                             <Icon icon="plus" />
                           </Button>
-                          <span className="rounded-full bg-[--hl-sm] px-1 text-xs text-[--hl]">
+                          <span className="rounded-full bg-(--hl-sm) px-1 text-xs text-(--hl)">
                             {unstagedChanges.length}
                           </span>
                         </div>
                       </Heading>
-                      <div className="flex w-full flex-1 select-none overflow-y-auto">
+                      <div className="flex w-full flex-1 overflow-y-auto select-none">
                         <GridList
                           className="w-full"
                           items={unstagedChanges.map(entry => ({
@@ -354,11 +354,11 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                         >
                           {item => {
                             return (
-                              <GridListItem className="group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
+                              <GridListItem className="group flex w-full items-center justify-between overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
                                 <span className="truncate">{item.entry.name || item.entry.document?.type}</span>
                                 <div className="flex items-center gap-1">
                                   <Button
-                                    className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                                    className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                                     slot={null}
                                     onPress={() => {
                                       stageChanges([item.entry.key]);
@@ -372,7 +372,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                                     </Button>
                                     <Tooltip
                                       offset={8}
-                                      className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                                      className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
                                     >
                                       {'added' in item.entry
                                         ? 'Untracked'
@@ -391,24 +391,24 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                   </div>
                 </div>
                 {previewDiffItem ? (
-                  <div className="flex h-full flex-col gap-2 overflow-y-auto p-2 pb-0">
+                  <div className="flex h-full flex-col gap-2 overflow-y-auto pb-0">
                     <Heading className="flex items-center gap-2 font-bold">
                       <Icon icon="code-compare" />
                       {previewDiffItemName}
                     </Heading>
                     {previewDiffItem && (
-                      <div className="flex-1 overflow-y-auto rounded-sm bg-[--hl-xs] p-2 text-[--color-font]">
+                      <div className="flex-1 overflow-y-auto rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
                         <DiffEditor original={diff.before} modified={diff.after} />
                       </div>
                     )}
                   </div>
                 ) : (
                   <div className="flex h-full flex-col items-center justify-center gap-4 p-2">
-                    <Heading className="flex items-center justify-center gap-2 text-4xl font-semibold text-[--hl-md]">
+                    <Heading className="flex items-center justify-center gap-2 text-4xl font-semibold text-(--hl-md)">
                       <Icon icon="code-compare" />
                       Diff view
                     </Heading>
-                    <p className="text-[--hl]">Select an item to compare</p>
+                    <p className="text-(--hl)">Select an item to compare</p>
                   </div>
                 )}
               </div>
