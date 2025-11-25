@@ -32,7 +32,7 @@ jobs:
           # Only commit if there are changes
           if ! git diff --cached --quiet; then
             git commit -m "chore: auto-format with Prettier"
-            git push origin ${{ github.head_ref }}
+            git push --set-upstream origin ${{ github.head_ref }}
           else
             echo "No changes to commit"
           fi
