@@ -400,7 +400,7 @@ export const convert: Converter = rawData => {
 
     if (op?.startsWith('$')) {
       // Handle the case where literal like -H $'Header: \'Some Quoted Thing\''
-      const str = op.slice(2, op.length - 1).replace(/\\'/g, "'");
+      const str = op.slice(2, -1).replace(/\\'/g, "'");
 
       currentCommand.push(str);
       continue;

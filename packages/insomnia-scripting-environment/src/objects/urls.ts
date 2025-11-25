@@ -340,7 +340,7 @@ export class Url extends PropertyBase {
       const urlInString = newUrlObject.toString();
       if (this.urlObject.pathname === '/' && urlInString === this.origin + '/') {
         // try to avoid replacing empty path with '/'
-        return urlInString.slice(0, urlInString.length - 1);
+        return urlInString.slice(0, -1);
       }
       return urlInString;
     }
@@ -354,7 +354,7 @@ export class Url extends PropertyBase {
       const urlInString = newUrlObject.toString();
       if (this.urlObject.pathname === '/' && urlInString === this.origin + '/') {
         // try to avoid replacing empty path with '/'
-        return urlInString.slice(0, urlInString.length - 1);
+        return urlInString.slice(0, -1);
       }
       return urlInString;
     }

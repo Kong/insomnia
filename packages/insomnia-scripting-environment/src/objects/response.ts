@@ -131,7 +131,7 @@ export class Response extends Property {
         if (dir.startsWith('filename')) {
           const fileName = (fileInfo.extension = dir.slice(dir.indexOf('=') + 1));
           fileInfo.name = fileName.slice(1, fileName.lastIndexOf('.')); // ignore '"' arounds the file name
-          fileInfo.extension = fileName.slice(fileName.lastIndexOf('.') + 1, fileName.length - 1);
+          fileInfo.extension = fileName.slice(fileName.lastIndexOf('.') + 1, -1);
         }
       });
     }
