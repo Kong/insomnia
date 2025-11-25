@@ -66,7 +66,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
 
   return (
     <form
-      className="flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]"
+      className="flex shrink-0 flex-col gap-2 p-(--padding-sm)"
       onSubmit={e => {
         e.preventDefault();
         e.stopPropagation();
@@ -119,7 +119,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
         <Label className="col-span-4">Credential Name:</Label>
         <Input
           required
-          className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+          className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
           type="text"
           name="name"
           placeholder="Credential name"
@@ -213,7 +213,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
             </Label>
             <Input
               required
-              className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+              className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
               type="text"
               name="serverAddress"
               onChange={e => validateServerAddress(e.target.value)}
@@ -234,13 +234,13 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
               <div className="flex items-center gap-2">
                 <Input
                   required
-                  className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                  className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                   type={hideValueItemNames.includes('access_token') ? 'password' : 'text'}
                   name="access_token"
                   placeholder="Authentication Token"
                 />
                 <Button
-                  className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={() => showOrHideItemValue('access_token')}
                 >
                   {hideValueItemNames.includes('access_token') ? (
@@ -258,7 +258,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
                 <Label className="col-span-4">Role Id:</Label>
                 <Input
                   required
-                  className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                  className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                   type="text"
                   name="role_id"
                   placeholder="Role Id"
@@ -272,13 +272,13 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
                 <div className="flex items-center gap-2">
                   <Input
                     required
-                    className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                    className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                     type={hideValueItemNames.includes('secret_id') ? 'password' : 'text'}
                     name="secret_id"
                     placeholder="Secret Id"
                   />
                   <Button
-                    className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     onPress={() => showOrHideItemValue('secret_id')}
                   >
                     {hideValueItemNames.includes('secret_id') ? (
@@ -305,7 +305,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
               <div className="flex items-center gap-2">
                 <Input
                   required
-                  className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                  className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                   type="text"
                   name="namespace"
                   placeholder="Namespace"
@@ -321,7 +321,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
             <Label className="col-span-4">Client Id:</Label>
             <Input
               required
-              className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+              className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
               type="text"
               name="client_id"
               placeholder="Client Id"
@@ -332,13 +332,13 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
             <div className="flex items-center gap-2">
               <Input
                 required
-                className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                 type={hideValueItemNames.includes('client_secret') ? 'password' : 'text'}
                 name="client_secret"
                 placeholder="Client Secret"
               />
               <Button
-                className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 onPress={() => showOrHideItemValue('client_secret')}
               >
                 {hideValueItemNames.includes('client_secret') ? (
@@ -352,13 +352,13 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
         </>
       )}
       {errorMessage && <p className="notice error margin-top-sm no-margin-bottom">{errorMessage}</p>}
-      <div className="flex w-full flex-row items-center justify-end gap-[--padding-md] pt-[--padding-md]">
+      <div className="flex w-full flex-row items-center justify-end gap-(--padding-md) pt-(--padding-md)">
         <Button
-          className="rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-right text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+          className="rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-right text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
           type="submit"
           isDisabled={isLoading || !isValidUrl}
         >
-          {isLoading && <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-[--color-font]" />}
+          {isLoading && <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-(--color-font)" />}
           {isEdit ? 'Update' : 'Create'}
         </Button>
       </div>

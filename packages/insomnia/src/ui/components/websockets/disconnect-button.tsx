@@ -73,7 +73,7 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
             <div className="flex w-[25px] justify-evenly">
               <div className="bg-success h-[10px] w-[10px] rounded-[50%]" />
             </div>
-            <div className="w-full pl-[--padding-xs] text-left">Disconnect this request</div>
+            <div className="w-full pl-(--padding-xs) text-left">Disconnect this request</div>
           </ItemContent>
         </DropdownItem>
         <DropdownItem aria-label="Disconnect all requests">
@@ -83,7 +83,7 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
               <div className="bg-success h-[5px] w-[5px] rounded-[50%]" />
               <div className="bg-success h-[5px] w-[5px] rounded-[50%]" />
             </div>
-            <div className="w-full pl-[--padding-xs] text-left">Disconnect all requests</div>
+            <div className="w-full pl-(--padding-xs) text-left">Disconnect all requests</div>
           </ItemContent>
         </DropdownItem>
       </OriginalDropdown>

@@ -135,19 +135,19 @@ export const OrganizationMemberRolesSelector = (props: Props) => {
         <Button
           isDisabled={isDisabled}
           aria-label="Menu"
-          className={`pressed:bg-opacity-40 flex w-full items-center gap-[8px] rounded-full bg-opacity-20 bg-clip-padding px-[8px] outline-none transition-colors hover:bg-opacity-30 disabled:opacity-40 ${className}`}
+          className={`flex w-full items-center gap-[8px] rounded-full bg-clip-padding px-[8px] outline-hidden transition-colors disabled:opacity-40 ${className}`}
         >
-          <p className="m-0 flex-1 text-center text-[12px] font-normal capitalize tracking-[-0.25px]">
+          <p className="m-0 flex-1 text-center text-[12px] font-normal tracking-[-0.25px] capitalize">
             {selectedRoles?.length ? selectedRoles[0] : 'Member'}
           </p>
           <i className="fa fa-caret-down" />
         </Button>
         <Popover
           placement="bottom end"
-          className="entering:animate-in entering:fade-in entering:zoom-in-95 exiting:animate-out exiting:fade-out exiting:zoom-out-95 w-56 min-w-[300px] origin-top-left overflow-auto rounded-md border border-solid border-white/20 bg-[--color-bg] p-1"
+          className="entering:animate-in entering:fade-in entering:zoom-in-95 exiting:animate-out exiting:fade-out exiting:zoom-out-95 w-56 min-w-[300px] origin-top-left overflow-auto rounded-md border border-solid border-white/20 bg-(--color-bg) p-1"
         >
           <Menu
-            className="outline-none"
+            className="outline-hidden"
             items={availableRoles.filter(r => r.name !== 'owner')}
             disabledKeys={['owner']}
             aria-label="Select a role for the user"
@@ -161,13 +161,13 @@ export const OrganizationMemberRolesSelector = (props: Props) => {
                 key={item.name}
                 aria-label="Select role"
                 className={({ isDisabled }) =>
-                  `group box-border flex w-full cursor-default flex-col rounded-md px-3 py-2 text-[--color-font] outline-none hover:bg-[--hl-xs] ${
+                  `group box-border flex w-full cursor-default flex-col rounded-md px-3 py-2 text-(--color-font) outline-hidden hover:bg-(--hl-xs) ${
                     isDisabled ? 'opacity-40' : 'cursor-pointer'
                   }`
                 }
               >
                 <div className="flex items-center gap-[5px]">
-                  <Text slot="label" className="text-[14px] font-[700] capitalize leading-[28px] tracking-[-0.25px]">
+                  <Text slot="label" className="text-[14px] leading-[28px] font-bold tracking-[-0.25px] capitalize">
                     {item.name}
                   </Text>
                   {selectedRoles?.length
@@ -176,7 +176,7 @@ export const OrganizationMemberRolesSelector = (props: Props) => {
                 </div>
                 <Text
                   slot="description"
-                  className="whitespace-pre-wrap text-[14px] font-normal leading-[18px] tracking-[-0.25px]"
+                  className="text-[14px] leading-[18px] font-normal tracking-[-0.25px] whitespace-pre-wrap"
                 >
                   {item.description}
                 </Text>

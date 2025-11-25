@@ -175,14 +175,14 @@ export const NewWorkspaceModal = ({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       isDismissable={createNewWorkspaceFetcher.state === 'idle' && gitRepoTreeFetcher.state === 'idle'}
-      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
-        className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] ${isGitProjectAndNotMcpWorkspace ? 'min-h-[420px]' : 'min-h-[220px]'}`}
+        className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) ${isGitProjectAndNotMcpWorkspace ? 'min-h-[420px]' : 'min-h-[220px]'}`}
       >
         <Dialog
           aria-label="Create or update dialog"
-          className="grid flex-1 gap-4 overflow-hidden outline-none [grid-template-rows:min-content_1fr_min-content]"
+          className="grid flex-1 grid-rows-[min-content_1fr_min-content] gap-4 overflow-hidden outline-hidden"
         >
           {({ close }) => (
             <Form
@@ -207,16 +207,16 @@ export const NewWorkspaceModal = ({
                 </Heading>
                 <Button
                   isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
-                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
 
-              <div className="flex flex-col justify-start gap-4 overflow-y-auto overflow-x-hidden px-10">
+              <div className="flex flex-col justify-start gap-4 overflow-x-hidden overflow-y-auto px-10">
                 {createNewWorkspaceFetcher.data?.error && (
-                  <div className="flex items-center gap-2 rounded-sm bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-[--color-font-danger]">
+                  <div className="flex items-center gap-2 rounded-xs bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-(--color-font-danger)">
                     <Icon icon="triangle-exclamation" />
                     <span>Error: {createNewWorkspaceFetcher.data?.error}</span>
                   </div>
@@ -229,10 +229,10 @@ export const NewWorkspaceModal = ({
                   onChange={name => setWorkspaceData({ ...workspaceData, name })}
                   className="group relative flex flex-col gap-2"
                 >
-                  <Label className="text-sm text-[--hl]">Name</Label>
+                  <Label className="text-sm text-(--hl)">Name</Label>
                   <Input
                     placeholder={`Enter a name for your ${titleByScope[workspaceData.scope]}...`}
-                    className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                    className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                   />
                   <FieldError className="text-xs text-red-500" />
                 </TextField>
@@ -254,27 +254,27 @@ export const NewWorkspaceModal = ({
                       className="group relative flex max-w-full flex-col gap-2 overflow-hidden"
                     >
                       <Label className="group relative flex flex-col gap-2 overflow-hidden">
-                        <span className="text-sm text-[--hl]">File name</span>
+                        <span className="text-sm text-(--hl)">File name</span>
 
-                        <div className="grid w-full overflow-hidden rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors [grid-template-areas:'input_extension'] [grid-template-columns:min-content_auto] focus:outline-none focus:ring-1 focus:ring-[--hl-md]">
+                        <div className="grid w-full grid-cols-[min-content_auto] overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
                           <Input
                             placeholder={workspaceData.name ? safeToUseInsomniaFileName(workspaceData.name) : 'name'}
-                            className="w-full min-w-[3ch] outline-none [grid-area:input] placeholder:italic focus:outline-none"
+                            className="w-full min-w-[3ch] outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
                           />
                           <span className="-z-10 w-min truncate opacity-0 [grid-area:input]">
                             {safeToUseInsomniaFileName(workspaceData.fileName || workspaceData.name || 'name')}
                           </span>
-                          <span className="text-[--hl] [grid-area:extension]">.yaml</span>
+                          <span className="text-(--hl) [grid-area:extension]">.yaml</span>
                         </div>
                       </Label>
                       <FieldError className="text-xs text-red-500" />
                     </TextField>
-                    <Label className="text-sm text-[--hl]">
+                    <Label className="text-sm text-(--hl)">
                       Folder where the file will be saved in the repository:
                     </Label>
 
                     <Tree
-                      className="grid max-h-52 min-h-24 gap-0 overflow-auto rounded-sm border border-solid border-[--hl-sm]"
+                      className="grid max-h-52 min-h-24 gap-0 overflow-auto rounded-xs border border-solid border-(--hl-sm)"
                       defaultSelectedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
                       disallowEmptySelection
                       defaultExpandedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
@@ -290,7 +290,7 @@ export const NewWorkspaceModal = ({
                       selectionMode="single"
                       items={gitRepoTreeFetcher.data?.repositoryTree ? [gitRepoTreeFetcher.data?.repositoryTree] : []}
                       renderEmptyState={() => (
-                        <div className="flex h-full items-center justify-center gap-2 p-2 text-sm text-[--hl]">
+                        <div className="flex h-full items-center justify-center gap-2 p-2 text-sm text-(--hl)">
                           <Icon icon="spinner" className="size-5 animate-spin" />
                           Loading files...
                         </div>
@@ -299,7 +299,7 @@ export const NewWorkspaceModal = ({
                       {function renderItem(item) {
                         return (
                           <TreeItem
-                            className="group flex flex-col rounded-sm border border-solid border-transparent px-2 py-1 pl-[--tree-item-level] outline-none transition-colors duration-300 odd:bg-[--hl-xxs] aria-disabled:text-[--hl] aria-selected:border-[--color-surprise] aria-selected:bg-[--hl-lg]"
+                            className="group flex flex-col rounded-xs border border-solid border-transparent px-2 py-1 pl-(--tree-item-level) outline-hidden transition-colors duration-300 odd:bg-(--hl-xxs) aria-disabled:text-(--hl) aria-selected:border-(--color-surprise) aria-selected:bg-(--hl-lg)"
                             style={{
                               // @ts-expect-error --tree-item-level is a custom property
                               '--tree-item-level': `${(item.type === 'root' ? 0 : item.id.split('/').length * 1) + 0.5}rem`,
@@ -310,7 +310,7 @@ export const NewWorkspaceModal = ({
                           >
                             <TreeItemContent>
                               {({ isExpanded }) => (
-                                <div className="flex items-center gap-2 data-[disabled=true]:text-[--hl]">
+                                <div className="flex items-center gap-2 data-[disabled=true]:text-(--hl)">
                                   {'children' in item ? (
                                     item.children.length ? (
                                       <Button slot="chevron">
@@ -347,12 +347,12 @@ export const NewWorkspaceModal = ({
                       }}
                       className="mb-2 flex flex-col gap-2"
                     >
-                      <Label className="text-sm text-[--hl]">How do you want to create your mock server?</Label>
+                      <Label className="text-sm text-(--hl)">How do you want to create your mock server?</Label>
                       <div className="flex gap-2">
                         <Radio
                           value="manual"
                           isDisabled={!!sourceApiSpec?.contents}
-                          className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                          className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                         >
                           <div className="flex items-center gap-2">
                             <Icon icon="wrench" />
@@ -367,7 +367,7 @@ export const NewWorkspaceModal = ({
                         <Radio
                           value="ai"
                           isDisabled={!isGenerateMockServersWithAIEnabled}
-                          className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                          className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                         >
                           <div className="flex items-center gap-2">
                             <Heading className="text-lg font-bold">
@@ -386,13 +386,13 @@ export const NewWorkspaceModal = ({
 
                     {workspaceData.mockServerCreationType === 'ai' && (
                       <div className="mb-4">
-                        <Label className="mb-2 block text-sm text-[--hl]">
+                        <Label className="mb-2 block text-sm text-(--hl)">
                           What should Insomnia generate your mock server from?
                         </Label>
                         {sourceApiSpec?.contents ? (
-                          <div className="flex items-center gap-2 rounded border border-[--hl-md] bg-[--hl-xs] p-3">
-                            <Icon icon="file-code" className="text-[--hl]" />
-                            <span className="text-sm text-[--color-font]">
+                          <div className="flex items-center gap-2 rounded-sm border border-(--hl-md) bg-(--hl-xs) p-3">
+                            <Icon icon="file-code" className="text-(--hl)" />
+                            <span className="text-sm text-(--color-font)">
                               Using {sourceApiSpec.fileName} OpenAPI specification
                             </span>
                           </div>
@@ -413,35 +413,35 @@ export const NewWorkspaceModal = ({
                               <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
                                 <Radio
                                   value="file"
-                                  className="flex-1 rounded border border-solid border-[--hl-md] p-3 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                                  className="flex-1 rounded-sm border border-solid border-(--hl-md) p-3 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                                 >
                                   <div className="flex items-center gap-2">
                                     <Icon icon="file" />
                                     <span className="font-medium">OpenAPI File</span>
                                   </div>
-                                  <p className="mt-1 text-sm text-[--hl]">
+                                  <p className="mt-1 text-sm text-(--hl)">
                                     Upload an OpenAPI specification (JSON or YAML)
                                   </p>
                                 </Radio>
                                 <Radio
                                   value="url"
-                                  className="flex-1 rounded border border-solid border-[--hl-md] p-3 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                                  className="flex-1 rounded-sm border border-solid border-(--hl-md) p-3 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                                 >
                                   <div className="flex items-center gap-2">
                                     <Icon icon="link" />
                                     <span className="font-medium">URL</span>
                                   </div>
-                                  <p className="mt-1 text-sm text-[--hl]">Provide a URL to API documentation</p>
+                                  <p className="mt-1 text-sm text-(--hl)">Provide a URL to API documentation</p>
                                 </Radio>
                                 <Radio
                                   value="text"
-                                  className="flex-1 rounded border border-solid border-[--hl-md] p-3 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                                  className="flex-1 rounded-sm border border-solid border-(--hl-md) p-3 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                                 >
                                   <div className="flex items-center gap-2">
                                     <Icon icon="file-text" />
                                     <span className="font-medium">Text</span>
                                   </div>
-                                  <p className="mt-1 text-sm text-[--hl]">Provide a description of the API endpoints</p>
+                                  <p className="mt-1 text-sm text-(--hl)">Provide a description of the API endpoints</p>
                                 </Radio>
                               </div>
                             </RadioGroup>
@@ -462,11 +462,11 @@ export const NewWorkspaceModal = ({
                                       });
                                     }
                                   }}
-                                  className="rounded border border-[--hl-md] bg-[--color-bg] px-4 py-2 text-[--color-font] hover:bg-[--hl-xs]"
+                                  className="rounded-sm border border-(--hl-md) bg-(--color-bg) px-4 py-2 text-(--color-font) hover:bg-(--hl-xs)"
                                 >
                                   Choose File
                                 </Button>
-                                <span className="flex-1 text-sm text-[--hl]">
+                                <span className="flex-1 text-sm text-(--hl)">
                                   {workspaceData.mockServerOASFilePath
                                     ? workspaceData.mockServerOASFilePath.split('/').pop()
                                     : 'No file selected'}
@@ -484,7 +484,7 @@ export const NewWorkspaceModal = ({
                                 <Input
                                   placeholder="https://api.example.com"
                                   aria-label="API documentation URL"
-                                  className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                                  className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                                 />
                               </TextField>
                             )}
@@ -499,7 +499,7 @@ export const NewWorkspaceModal = ({
                                 <textarea
                                   placeholder="Describe your API..."
                                   aria-label="API description text"
-                                  className="resize-vertical min-h-32 w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-2 pl-2 pr-2 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                                  className="resize-vertical min-h-32 w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-2 pr-2 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                                   value={workspaceData.mockServerSpecText || ''}
                                   onChange={e =>
                                     setWorkspaceData({ ...workspaceData, mockServerSpecText: e.target.value })
@@ -515,10 +515,10 @@ export const NewWorkspaceModal = ({
                     {workspaceData.mockServerCreationType === 'ai' && (
                       <div className="mb-4">
                         <div className="mb-3 flex items-center gap-2">
-                          <Label className="text-sm text-[--hl]">Should your mock server use dynamic responses?</Label>
+                          <Label className="text-sm text-(--hl)">Should your mock server use dynamic responses?</Label>
                           <div className="group relative">
-                            <Icon icon="info-circle" className="cursor-help text-[--hl]" />
-                            <div className="absolute left-1/2 top-full z-10 mt-2 hidden w-72 -translate-x-1/2 rounded-md border border-[--hl-sm] bg-[--color-bg] p-3 text-xs text-[--color-font] shadow-lg group-hover:block">
+                            <Icon icon="info-circle" className="cursor-help text-(--hl)" />
+                            <div className="absolute top-full left-1/2 z-10 mt-2 hidden w-72 -translate-x-1/2 rounded-md border border-(--hl-sm) bg-(--color-bg) p-3 text-xs text-(--color-font) shadow-lg group-hover:block">
                               Insomnia can generate a mock server that will use liquid templates in the mock response
                               bodies. These templates can be used to dynamically populate response data using request
                               data and/or faker functions.
@@ -539,13 +539,13 @@ export const NewWorkspaceModal = ({
                         >
                           <Radio
                             value="no"
-                            className="flex-1 rounded border border-solid border-[--hl-md] p-3 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                            className="flex-1 rounded-sm border border-solid border-(--hl-md) p-3 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                           >
                             <span className="font-medium">No</span>
                           </Radio>
                           <Radio
                             value="yes"
-                            className="flex-1 rounded border border-solid border-[--hl-md] p-3 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                            className="flex-1 rounded-sm border border-solid border-(--hl-md) p-3 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                           >
                             <span className="font-medium">Yes</span>
                           </Radio>
@@ -556,10 +556,10 @@ export const NewWorkspaceModal = ({
                     {workspaceData.mockServerCreationType === 'ai' && (
                       <div className="mb-4">
                         <div className="mb-3 flex items-center gap-2">
-                          <Label className="text-sm text-[--hl]">Do you want to provide any additional files?</Label>
+                          <Label className="text-sm text-(--hl)">Do you want to provide any additional files?</Label>
                           <div className="group relative">
-                            <Icon icon="info-circle" className="cursor-help text-[--hl]" />
-                            <div className="absolute left-1/2 top-full z-10 mt-2 hidden w-72 -translate-x-1/2 rounded-md border border-[--hl-sm] bg-[--color-bg] p-3 text-xs text-[--color-font] shadow-lg group-hover:block">
+                            <Icon icon="info-circle" className="cursor-help text-(--hl)" />
+                            <div className="absolute top-full left-1/2 z-10 mt-2 hidden w-72 -translate-x-1/2 rounded-md border border-(--hl-sm) bg-(--color-bg) p-3 text-xs text-(--color-font) shadow-lg group-hover:block">
                               Add files to include as additional context for the LLM when generating your mock server.
                               These files can contain example data, schemas, or other relevant information.
                             </div>
@@ -580,7 +580,7 @@ export const NewWorkspaceModal = ({
                                 setWorkspaceData({ ...workspaceData, mockServerAdditionalFiles: newFiles });
                               }
                             }}
-                            className="flex items-center gap-2 rounded border border-[--hl-md] bg-[--color-bg] px-4 py-2 text-[--color-font] hover:bg-[--hl-xs]"
+                            className="flex items-center gap-2 rounded-sm border border-(--hl-md) bg-(--color-bg) px-4 py-2 text-(--color-font) hover:bg-(--hl-xs)"
                           >
                             <Icon icon="plus" />
                             Add Files
@@ -589,14 +589,14 @@ export const NewWorkspaceModal = ({
                           {workspaceData.mockServerAdditionalFiles &&
                             workspaceData.mockServerAdditionalFiles.length > 0 && (
                               <div className="space-y-2">
-                                <p className="text-xs text-[--hl]">
+                                <p className="text-xs text-(--hl)">
                                   {workspaceData.mockServerAdditionalFiles.length} file(s) selected:
                                 </p>
                                 <div className="max-h-32 space-y-1 overflow-y-auto">
                                   {workspaceData.mockServerAdditionalFiles.map((filePath, index) => (
                                     <div
                                       key={filePath}
-                                      className="flex items-center justify-between rounded bg-[--hl-xs] p-2 text-sm"
+                                      className="flex items-center justify-between rounded-sm bg-(--hl-xs) p-2 text-sm"
                                     >
                                       <span className="flex-1 truncate">{filePath.split('/').pop()}</span>
                                       <Button
@@ -611,7 +611,7 @@ export const NewWorkspaceModal = ({
                                             mockServerAdditionalFiles: newFiles,
                                           });
                                         }}
-                                        className="ml-2 text-[--hl] hover:text-red-500"
+                                        className="ml-2 text-(--hl) hover:text-red-500"
                                       >
                                         <Icon icon="x" />
                                       </Button>
@@ -636,12 +636,12 @@ export const NewWorkspaceModal = ({
                       }}
                       className="mb-2 flex flex-col gap-2"
                     >
-                      <Label className="text-sm text-[--hl]">How do you want to host your mock server?</Label>
+                      <Label className="text-sm text-(--hl)">How do you want to host your mock server?</Label>
                       <div className="flex gap-2">
                         <Radio
                           value="cloud"
                           isDisabled={isCloudProjectDisabled || workspaceData.mockServerCreationType === 'ai'}
-                          className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                          className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                         >
                           <div className="flex items-center gap-2">
                             <Icon icon="globe" />
@@ -658,7 +658,7 @@ export const NewWorkspaceModal = ({
                         <Radio
                           value="self-hosted"
                           isDisabled={isSelfHostedDisabled}
-                          className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+                          className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                         >
                           <div className="flex items-center gap-2">
                             <Icon icon="server" />
@@ -686,11 +686,11 @@ export const NewWorkspaceModal = ({
                         onChange={url => setWorkspaceData({ ...workspaceData, mockServerUrl: url })}
                         className={`group relative flex flex-1 flex-col gap-2 ${workspaceData.mockServerType === 'cloud' ? 'disabled' : ''}`}
                       >
-                        <Label className="text-sm text-[--hl]">What is your self-hosted mock server URL?</Label>
+                        <Label className="text-sm text-(--hl)">What is your self-hosted mock server URL?</Label>
                         <Input
                           disabled={workspaceData.mockServerType === 'cloud'}
                           placeholder={workspaceData.mockServerType === 'cloud' ? '' : 'https://example.com'}
-                          className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                         />
                       </TextField>
                     )}
@@ -701,14 +701,14 @@ export const NewWorkspaceModal = ({
                 <Button
                   onPress={close}
                   isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
-                  className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+                  className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
-                  className="flex min-w-[10ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-center text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+                  className="flex min-w-[10ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-center text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
                 >
                   {createNewWorkspaceFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
                   <span>

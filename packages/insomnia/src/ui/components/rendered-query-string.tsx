@@ -148,12 +148,12 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
   const modifiedString = hasLink ? previewString.slice(0, previewString.length - linkText.length) : previewString;
 
   return (
-    <div className="relative flex h-full w-full justify-between gap-[var(--padding-sm)] overflow-auto">
+    <div className="relative flex h-full w-full justify-between gap-(--padding-sm) overflow-auto">
       <span className={classNames('my-auto', className)}>
         {modifiedString}
         {hasLink && (
           <Link
-            className="cursor-pointer text-[--color-surprise]"
+            className="cursor-pointer text-(--color-surprise)"
             onPress={() => showSettingsModal({ tab: 'general' })}
           >
             {linkText}

@@ -89,14 +89,14 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
         <TooltipTrigger>
           <Button
             onPress={() => setIsProjectSettingsModalOpen(true)}
-            className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-80 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+            className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-80 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-(--hl-md) group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
           >
             <Icon icon="triangle-exclamation" color="var(--color-warning)" />
           </Button>
           <Tooltip
             placement="top"
             offset={4}
-            className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+            className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
           >
             {`This project type is not allowed by the organization owner. You can manually convert it to use ${getProjectStorageTypeLabel(storageRules)}.`}
           </Tooltip>
@@ -110,7 +110,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
       <MenuTrigger>
         <Button
           aria-label="Project Actions"
-          className="hidden aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:flex data-[pressed]:opacity-100"
+          className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-(--hl-md) group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"
         >
           <Icon icon="caret-down" />
         </Button>
@@ -122,13 +122,13 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
               projectActionList.find(({ id }) => key === id)?.action(project._id, project.name);
             }}
             items={projectActionList}
-            className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+            className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
           >
             {item => (
               <MenuItem
                 key={item.id}
                 id={item.id}
-                className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                 aria-label={item.name}
               >
                 <Icon icon={item.icon} />

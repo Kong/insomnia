@@ -209,8 +209,8 @@ export const MessageEventView = ({ event }: Props) => {
         </Dropdown>
         {isElicitationRequest && !isServerRequestResponded && (
           <Button
-            className={`mx-2 mt-2 px-2 text-[--color-font] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] ${
-              viewMode === 'form' ? 'bg-[--hl-xs] text-[--color-font]' : ''
+            className={`mx-2 mt-2 px-2 text-(--color-font) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) ${
+              viewMode === 'form' ? 'bg-(--hl-xs) text-(--color-font)' : ''
             }`}
             onPress={() => setViewMode('form')}
           >
@@ -219,7 +219,7 @@ export const MessageEventView = ({ event }: Props) => {
         )}
       </div>
       {viewMode === 'raw' ? (
-        <div className="h-full flex-grow p-4">
+        <div className="h-full grow p-4">
           <CodeEditor
             id="mcp-data-preview"
             hideLineNumbers
@@ -235,7 +235,7 @@ export const MessageEventView = ({ event }: Props) => {
           />
         </div>
       ) : (
-        <div className="flex flex-grow flex-col overflow-hidden">
+        <div className="flex grow flex-col overflow-hidden">
           <div className="h-[calc(100%-var(--line-height-sm))] overflow-auto bg-inherit px-5 py-1">
             <InsomniaRjsfForm
               formData={formData}
@@ -247,7 +247,7 @@ export const MessageEventView = ({ event }: Props) => {
               focusOnFirstError
             />
           </div>
-          <Toolbar className="content-box sticky bottom-0 z-10 flex h-[var(--line-height-sm)] flex-shrink-0 gap-3 border-b border-[var(--hl-md)] bg-[var(--color-bg)] px-5 py-2 text-[var(--font-size-sm)]">
+          <Toolbar className="content-box sticky bottom-0 z-10 flex h-(--line-height-sm) shrink-0 gap-3 border-b border-(--hl-md) bg-(--color-bg) px-5 py-2 text-(--font-size-sm)">
             <Button
               onPress={() => {
                 if (rjsfFormRef.current?.validate()) {
@@ -259,7 +259,7 @@ export const MessageEventView = ({ event }: Props) => {
                   });
                 }
               }}
-              className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
+              className="rounded-sm bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise) hover:brightness-75"
             >
               Submit
             </Button>
@@ -271,7 +271,7 @@ export const MessageEventView = ({ event }: Props) => {
                   type: 'decline',
                 })
               }
-              className="rounded-[var(--radius-md)] border border-solid border-[var(--hl-lg)] bg-[var(--color-bg)] px-[var(--padding-md)] text-center"
+              className="rounded-md border border-solid border-(--hl-lg) bg-(--color-bg) px-(--padding-md) text-center"
             >
               Decline
             </Button>
@@ -283,7 +283,7 @@ export const MessageEventView = ({ event }: Props) => {
                   type: 'cancel',
                 })
               }
-              className="rounded-[var(--radius-md)] border border-solid border-[var(--hl-lg)] bg-[var(--color-bg)] px-[var(--padding-md)] text-center"
+              className="rounded-md border border-solid border-(--hl-lg) bg-(--color-bg) px-(--padding-md) text-center"
             >
               Cancel
             </Button>

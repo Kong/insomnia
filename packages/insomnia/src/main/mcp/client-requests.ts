@@ -11,11 +11,11 @@ import {
 
 import { METHOD_SUBSCRIBE_RESOURCE, METHOD_UNSUBSCRIBE_RESOURCE } from '~/common/mcp-utils';
 import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
-import { getMcpClient, mcpServerElicitationRequests, writeEventLogAndNotify } from '~/main/mcp/common';
+import { getActiveMcpClient, getReadyActiveMcpConnectionContext, writeEventLogAndNotify } from '~/main/mcp/common';
 import type { CommonMcpOptions, McpMessageEventWithoutBase } from '~/main/mcp/types';
 
 export const listTools = async (options: CommonMcpOptions) => {
-  const mcpClient = getMcpClient(options.requestId);
+  const mcpClient = getActiveMcpClient(options.requestId);
   if (mcpClient) {
     const tools = await mcpClient.listTools();
     return tools;
@@ -25,7 +25,7 @@ export const listTools = async (options: CommonMcpOptions) => {
 
 export const callTool = async (options: CommonMcpOptions & CallToolRequest['params']) => {
   const { requestId, ...params } = options;
-  const mcpClient = getMcpClient(requestId);
+  const mcpClient = getActiveMcpClient(requestId);
   if (mcpClient) {
     const response = await mcpClient.callTool(params, CompatibilityCallToolResultSchema);
     trackSegmentEvent(SegmentEvent.mcpToolCalled);
@@ -35,7 +35,7 @@ export const callTool = async (options: CommonMcpOptions & CallToolRequest['para
 };
 
 export const listPrompts = async (options: CommonMcpOptions & ListPromptsRequest['params']) => {
-  const mcpClient = getMcpClient(options.requestId);
+  const mcpClient = getActiveMcpClient(options.requestId);
   if (mcpClient) {
     const prompts = await mcpClient.listPrompts();
     return prompts;
@@ -45,7 +45,7 @@ export const listPrompts = async (options: CommonMcpOptions & ListPromptsRequest
 
 export const getPrompt = async (options: CommonMcpOptions & GetPromptRequest['params']) => {
   const { requestId, ...params } = options;
-  const mcpClient = getMcpClient(options.requestId);
+  const mcpClient = getActiveMcpClient(options.requestId);
   if (mcpClient) {
     const prompt = await mcpClient.getPrompt(params);
     trackSegmentEvent(SegmentEvent.mcpPromptCalled);
@@ -56,7 +56,7 @@ export const getPrompt = async (options: CommonMcpOptions & GetPromptRequest['pa
 
 export const listResources = async (options: CommonMcpOptions & ListResourcesRequest['params']) => {
   const { requestId, ...params } = options;
-  const mcpClient = getMcpClient(options.requestId);
+  const mcpClient = getActiveMcpClient(options.requestId);
   if (mcpClient) {
     const resources = await mcpClient.listResources(params);
     return resources;
@@ -66,7 +66,7 @@ export const listResources = async (options: CommonMcpOptions & ListResourcesReq
 
 export const listResourceTemplates = async (options: CommonMcpOptions & ListResourcesRequest['params']) => {
   const { requestId, ...params } = options;
-  const mcpClient = getMcpClient(requestId);
+  const mcpClient = getActiveMcpClient(requestId);
   if (mcpClient) {
     const resourceTemplates = await mcpClient.listResourceTemplates(params);
     return resourceTemplates;
@@ -76,7 +76,7 @@ export const listResourceTemplates = async (options: CommonMcpOptions & ListReso
 
 export const readResource = async (options: CommonMcpOptions & ReadResourceRequest['params']) => {
   const { requestId, ...params } = options;
-  const mcpClient = getMcpClient(requestId);
+  const mcpClient = getActiveMcpClient(requestId);
   if (mcpClient) {
     const resource = await mcpClient.readResource(params);
     trackSegmentEvent(SegmentEvent.mcpResourceRead);
@@ -87,50 +87,54 @@ export const readResource = async (options: CommonMcpOptions & ReadResourceReque
 
 export const subscribeResource = async (options: CommonMcpOptions & SubscribeRequest['params']) => {
   const { requestId, ...params } = options;
-  const mcpClient = getMcpClient(options.requestId);
-  if (mcpClient) {
-    const result = await mcpClient.subscribeResource(params);
-    // Subscribe resource do not have a formal response schema, so we log it manually
-    const messageEvent: Omit<McpMessageEventWithoutBase, 'data'> & { data: {} } = {
-      type: 'message',
-      method: METHOD_SUBSCRIBE_RESOURCE,
-      data: {
-        ...result,
-        // @ts-expect-error - workaround to add the json rpc request id to the logged data
-        id: mcpClient._requestMessageId - 1,
-      },
-      direction: 'INCOMING',
-    };
-    writeEventLogAndNotify(requestId, messageEvent);
-    return result;
+  const context = getReadyActiveMcpConnectionContext(requestId);
+  const mcpClient = context?.client;
+  if (!context || !mcpClient) {
+    return null;
   }
-  return null;
+
+  const result = await mcpClient.subscribeResource(params);
+  // Subscribe resource do not have a formal response schema, so we log it manually
+  const messageEvent: Omit<McpMessageEventWithoutBase, 'data'> & { data: {} } = {
+    type: 'message',
+    method: METHOD_SUBSCRIBE_RESOURCE,
+    data: {
+      ...result,
+      // @ts-expect-error - workaround to add the json rpc request id to the logged data
+      id: mcpClient._requestMessageId - 1,
+    },
+    direction: 'INCOMING',
+  };
+  writeEventLogAndNotify(context, messageEvent);
+  return result;
 };
 
 export const unsubscribeResource = async (options: CommonMcpOptions & UnsubscribeRequest['params']) => {
   const { requestId, ...params } = options;
-  const mcpClient = getMcpClient(options.requestId);
-  if (mcpClient) {
-    const result = await mcpClient.unsubscribeResource(params);
-    // Unsubscribe resource do not have a formal response schema, so we log it manually
-    const messageEvent: Omit<McpMessageEventWithoutBase, 'data'> & { data: {} } = {
-      type: 'message',
-      method: METHOD_UNSUBSCRIBE_RESOURCE,
-      data: {
-        ...result,
-        // @ts-expect-error - workaround to add the json rpc request id to the logged data
-        id: mcpClient._requestMessageId - 1,
-      },
-      direction: 'INCOMING',
-    };
-    writeEventLogAndNotify(requestId, messageEvent);
-    return result;
+  const context = getReadyActiveMcpConnectionContext(requestId);
+  const mcpClient = context?.client;
+  if (!context || !mcpClient) {
+    return null;
   }
-  return null;
+
+  const result = await mcpClient.unsubscribeResource(params);
+  // Unsubscribe resource do not have a formal response schema, so we log it manually
+  const messageEvent: Omit<McpMessageEventWithoutBase, 'data'> & { data: {} } = {
+    type: 'message',
+    method: METHOD_UNSUBSCRIBE_RESOURCE,
+    data: {
+      ...result,
+      // @ts-expect-error - workaround to add the json rpc request id to the logged data
+      id: mcpClient._requestMessageId - 1,
+    },
+    direction: 'INCOMING',
+  };
+  writeEventLogAndNotify(context, messageEvent);
+  return result;
 };
 
 export const sendRootListChangeNotification = async (options: CommonMcpOptions) => {
-  const mcpClient = getMcpClient(options.requestId);
+  const mcpClient = getActiveMcpClient(options.requestId);
   if (mcpClient) {
     const result = await mcpClient.sendRootsListChanged();
     return result;
@@ -145,10 +149,16 @@ export const responseElicitationRequest = (
     content?: Record<string, any>;
   },
 ) => {
-  const pendingServerRequestResolvers = mcpServerElicitationRequests.get(options.requestId);
-  if (pendingServerRequestResolvers) {
-    const serverRequestResolver = pendingServerRequestResolvers.get(options.serverRequestId);
-    switch (options.type) {
+  const { requestId, serverRequestId, type, content } = options;
+  const context = getReadyActiveMcpConnectionContext(requestId);
+  if (!context) {
+    return;
+  }
+
+  const { mcpServerElicitationRequests } = context;
+  if (mcpServerElicitationRequests) {
+    const serverRequestResolver = mcpServerElicitationRequests.get(serverRequestId);
+    switch (type) {
       case 'decline': {
         serverRequestResolver?.resolve({ action: 'decline' });
         break;
@@ -158,13 +168,13 @@ export const responseElicitationRequest = (
         break;
       }
       case 'submit': {
-        serverRequestResolver?.resolve({ action: 'accept', content: options.content });
+        serverRequestResolver?.resolve({ action: 'accept', content: content });
         break;
       }
       default: {
-        throw new Error(`Unknown server request response type: ${options.type}`);
+        throw new Error(`Unknown server request response type: ${type}`);
       }
     }
-    pendingServerRequestResolvers.delete(options.serverRequestId);
+    mcpServerElicitationRequests.delete(serverRequestId);
   }
 };

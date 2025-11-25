@@ -324,7 +324,7 @@ export const SyncDropdown: FC<Props> = () => {
   return (
     <Fragment>
       {operationError && (
-        <div className="flex gap-2 bg-[rgba(var(--color-danger-rgb),1)] px-2 py-1 text-xs text-[--color-font-danger]">
+        <div className="flex gap-2 bg-[rgba(var(--color-danger-rgb),1)] px-2 py-1 text-xs text-(--color-font-danger)">
           <div className="flex items-center gap-2">
             <Icon icon="triangle-exclamation" />
             <span>{operationError}</span>
@@ -340,18 +340,18 @@ export const SyncDropdown: FC<Props> = () => {
             isDisabled={isGitDropdownDisabled}
             data-testid="git-dropdown"
             aria-label="Git Sync"
-            className="flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-100 aria-pressed:bg-[--hl-sm]"
+            className="flex h-(--line-height-sm) w-full items-center gap-2 px-(--padding-md) text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) disabled:opacity-100 aria-pressed:bg-(--hl-sm)"
           >
             <Icon icon="earth-americas" className="size-4" />
-            <Separator orientation="vertical" className="h-4 border border-solid border-[--hl-sm] bg-[--color-bg]" />
+            <Separator orientation="vertical" className="h-4 border border-solid border-(--hl-sm) bg-(--color-bg)" />
             <div className="relative flex items-center">
               <Icon icon="code-branch" className="size-4" />
               {canCreateSnapshot && (
-                <div className="absolute -bottom-1 -right-1 size-[10px] rounded-full bg-[--color-surprise]" />
+                <div className="absolute -bottom-1 -right-1 size-[10px] rounded-full bg-(--color-surprise)" />
               )}
             </div>
             <span className="flex-1 truncate">{syncError ? 'Error syncing with Insomnia Cloud' : currentBranch}</span>
-            <div className="flex flex-shrink-0 items-center gap-1.5 text-xs text-[--color-font-secondary]">
+            <div className="flex shrink-0 items-center gap-1.5 text-xs text-(--color-font-secondary)">
               {isSyncing && <Icon icon="spinner" className="w-3 animate-spin" />}
               <div className="flex items-center gap-0.5 overflow-hidden">
                 <span>{pullCount}</span>
@@ -365,13 +365,13 @@ export const SyncDropdown: FC<Props> = () => {
           </Button>
           <Tooltip
             offset={8}
-            className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+            className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
           >
             <div className="flex flex-col gap-1">
               <div>Encrypted and synced securely to the cloud. Ideal for out of the box collaboration.</div>
               {canCreateSnapshot && (
                 <div className="flex items-center gap-2">
-                  <div className="size-[10px] rounded-full bg-[--color-surprise]" />
+                  <div className="size-[10px] rounded-full bg-(--color-surprise)" />
                   There are pending changes to commit.
                 </div>
               )}
@@ -389,7 +389,7 @@ export const SyncDropdown: FC<Props> = () => {
                 </div>
                 {pushToolTipMsg}
               </div>
-              <div className="text-[--color-warning]">{syncError ? `Error: ${syncError}` : ''}</div>
+              <div className="text-(--color-warning)">{syncError ? `Error: ${syncError}` : ''}</div>
             </div>
           </Tooltip>
         </TooltipTrigger>
@@ -403,31 +403,31 @@ export const SyncDropdown: FC<Props> = () => {
               const item = allSyncMenuActionList.find(item => item.id === key);
               item?.action();
             }}
-            className="max-h-[85vh] max-w-lg select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+            className="max-h-[85vh] max-w-lg select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
           >
             {syncError && (
-              <MenuSection className="border-b border-solid border-[--hl-sm]">
+              <MenuSection className="border-b border-solid border-(--hl-sm)">
                 <MenuItem
                   className={
-                    'flex w-full items-center gap-2 overflow-hidden whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold'
+                    'flex w-full items-center gap-2 overflow-hidden whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold'
                   }
                   aria-label={syncError}
                 >
-                  <Icon icon="exclamation-triangle" className="text-[--color-warning]" />
+                  <Icon icon="exclamation-triangle" className="text-(--color-warning)" />
                   <p className="whitespace-normal">{syncError}</p>
                 </MenuItem>
               </MenuSection>
             )}
             {!syncError && (
               <Fragment>
-                <MenuSection className="border-b border-solid border-[--hl-sm]">
+                <MenuSection className="border-b border-solid border-(--hl-sm)">
                   <Collection items={localBranchesActionList}>
                     {item => (
                       <MenuItem
-                        className={`flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold ${item.isActive ? 'font-bold' : ''}`}
+                        className={`flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold ${item.isActive ? 'font-bold' : ''}`}
                         aria-label={item.name}
                       >
-                        <Icon icon={item.icon} className={item.isActive ? 'text-[--color-success]' : ''} />
+                        <Icon icon={item.icon} className={item.isActive ? 'text-(--color-success)' : ''} />
                         <span className="truncate">{item.name}</span>
                       </MenuItem>
                     )}
@@ -438,7 +438,7 @@ export const SyncDropdown: FC<Props> = () => {
                     {item => (
                       <MenuItem
                         className={
-                          'flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
+                          'flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
                         }
                         aria-label={item.name}
                       >

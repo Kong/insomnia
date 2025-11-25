@@ -86,7 +86,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
           }}
         />
       </div>
-      <div className="flex-grow p-4">
+      <div className="grow p-4">
         <CodeEditor
           id="websocket-body-preview"
           hideLineNumbers

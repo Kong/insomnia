@@ -199,7 +199,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   <div className="form-control form-control--no-label width-auto">
                     <button
                       disabled={!workspaceToCopyTo}
-                      className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                      className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                       onClick={handleCopyToWorkspace}
                     >
                       Copy
@@ -208,7 +208,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   <div className="form-control form-control--no-label width-auto">
                     <button
                       disabled={!workspaceToCopyTo}
-                      className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                      className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                       onClick={handleMoveToWorkspace}
                     >
                       Move
@@ -423,7 +423,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   <div className="form-control form-control--no-label width-auto">
                     <button
                       disabled={!workspaceToCopyTo}
-                      className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                      className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                       onClick={handleCopyToWorkspace}
                     >
                       Copy
@@ -432,7 +432,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   <div className="form-control form-control--no-label width-auto">
                     <button
                       disabled={!workspaceToCopyTo}
-                      className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                      className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                       onClick={handleMoveToWorkspace}
                     >
                       Move

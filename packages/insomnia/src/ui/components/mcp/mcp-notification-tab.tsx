@@ -51,10 +51,10 @@ export const McpNotificationTab = ({ allEvents }: McpNotificationTabProps) => {
           >
             <Input
               placeholder="Search"
-              className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+              className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
             />
             <div className="absolute right-0 top-0 flex h-full items-center px-2">
-              <Button className="flex aspect-square w-5 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] group-data-[empty]:hidden">
+              <Button className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) group-data-empty:hidden">
                 <Icon icon="close" />
               </Button>
             </div>
@@ -71,9 +71,9 @@ export const McpNotificationTab = ({ allEvents }: McpNotificationTabProps) => {
       </Panel>
       {selectedEvent && (
         <>
-          <PanelResizeHandle className={'h-[1px] w-full bg-[--hl-md]'} />
+          <PanelResizeHandle className={'h-px w-full bg-(--hl-md)'} />
           <Panel minSize={10} defaultSize={50}>
-            <div className="h-full flex-1 border-t border-[var(--hl-md)]">
+            <div className="h-full flex-1 border-t border-(--hl-md)">
               <McpEventView event={selectedEvent} key={selectedEvent._id} />
             </div>
           </Panel>

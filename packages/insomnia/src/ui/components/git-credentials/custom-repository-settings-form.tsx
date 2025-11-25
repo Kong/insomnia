@@ -65,9 +65,9 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
         <Label className="text-start text-sm font-semibold">Git URI (http/https, including .git suffix)</Label>
         <Input
           placeholder="https://github.com/org/repo.git"
-          className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
         />
-        <FieldError className="text-xs text-[--color-danger]">
+        <FieldError className="text-xs text-(--color-danger)">
           {({ isInvalid }) =>
             isInvalid ? 'Please ensure the URL is valid. In most cases it should also end with a .git suffix.' : null
           }
@@ -83,9 +83,9 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
         <Label className="text-start text-sm font-semibold">Author Name</Label>
         <Input
           placeholder="Name"
-          className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
         />
-        <FieldError className="text-xs text-[--color-danger]" />
+        <FieldError className="text-xs text-(--color-danger)" />
       </TextField>
       <TextField
         name="authorEmail"
@@ -98,9 +98,9 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
         <Label className="text-start text-sm font-semibold">Author Email</Label>
         <Input
           placeholder="Email"
-          className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
         />
-        <FieldError className="text-xs text-[--color-danger]" />
+        <FieldError className="text-xs text-(--color-danger)" />
       </TextField>
       <TextField
         name="username"
@@ -113,9 +113,9 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
         <Label className="text-start text-sm font-semibold">Username</Label>
         <Input
           placeholder="MyUserName"
-          className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
         />
-        <FieldError className="text-xs text-[--color-danger]" />
+        <FieldError className="text-xs text-(--color-danger)" />
       </TextField>
       <TextField
         name="password"
@@ -144,9 +144,9 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
         </Label>
         <Input
           placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
-          className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
         />
-        <FieldError className="text-xs text-[--color-danger]" />
+        <FieldError className="text-xs text-(--color-danger)" />
       </TextField>
       <div className="col-span-2">
         <GitRemoteBranchSelect

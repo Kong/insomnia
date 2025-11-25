@@ -114,10 +114,10 @@ export const Plugins: FC = () => {
             }}
             className="group flex h-full items-center gap-2 p-0"
           >
-            <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+            <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
               <Icon
                 icon="check"
-                className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+                className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
               />
             </div>
             <span className="text-sm font-semibold">Allow elevated access for plugins</span>
@@ -160,7 +160,7 @@ export const Plugins: FC = () => {
                 <TextField
                   aria-label='"Plugin Name"'
                   isRequired
-                  className="group relative flex max-w-full flex-shrink-0 flex-grow flex-col gap-2 overflow-hidden"
+                  className="group relative flex max-w-full shrink-0 grow flex-col gap-2 overflow-hidden"
                   isDisabled={isInstallingFromNpm}
                   type="text"
                   value={npmPluginValue}
@@ -171,11 +171,11 @@ export const Plugins: FC = () => {
                   <Input
                     placeholder="e.g. insomnia-plugin-example"
                     autoFocus
-                    className="flex h-[--line-height-xs] w-full items-center rounded-[--radius-md] border border-solid border-[--hl-md] bg-[--hl-xxs] p-[--padding-sm] text-[--color-font] focus:border-[--hl-lg] focus:bg-transparent"
+                    className="flex h-(--line-height-xs) w-full items-center rounded-md border border-solid border-(--hl-md) bg-(--hl-xxs) p-(--padding-sm) text-(--color-font) focus:border-(--hl-lg) focus:bg-transparent"
                   />
                 </TextField>
                 <Button
-                  className="flex h-full w-[13ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                  className="flex h-full w-[13ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
                   isDisabled={isInstallingFromNpm}
                   type="submit"
                   onPress={async () => {
@@ -219,7 +219,7 @@ export const Plugins: FC = () => {
                 </Button>
               </div>
             </div>
-            <Label slot="description" className="p-0 text-sm text-[--hl]">
+            <Label slot="description" className="p-0 text-sm text-(--hl)">
               Plugin name must start with insomnia-plugin-
             </Label>
           </div>
@@ -249,7 +249,7 @@ export const Plugins: FC = () => {
               </Tooltip>
             </div>
             <Label className="p-0 text-sm font-semibold" slot="description">
-              <span className="text-[--hl]">Plugin installation trusted certificates file</span>
+              <span className="text-(--hl)">Plugin installation trusted certificates file</span>
             </Label>
           </div>
 
@@ -258,7 +258,7 @@ export const Plugins: FC = () => {
               <div className="flex w-full items-center justify-center">
                 <label
                   htmlFor="dropzone-file"
-                  className="flex h-20 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[--hl-md] bg-[--hl-xxs] hover:bg-transparent focus:border-[--hl-lg]"
+                  className="flex h-20 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-(--hl-md) bg-(--hl-xxs) hover:bg-transparent focus:border-(--hl-lg)"
                 >
                   <FileTrigger
                     allowsMultiple={false}
@@ -275,7 +275,7 @@ export const Plugins: FC = () => {
                     }}
                   >
                     <Button>
-                      <div className="pointer-events-none flex flex-col items-center justify-center p-8 text-[--hl-xl]">
+                      <div className="pointer-events-none flex flex-col items-center justify-center p-8 text-(--hl-xl)">
                         <Icon icon="upload" className="mb-2 h-5 w-5" />
                         <p className="text pointer-events-none mb-2 text-sm">
                           <span className="font-bold">Click to upload</span> or drag and drop
@@ -285,7 +285,7 @@ export const Plugins: FC = () => {
                   </FileTrigger>
                 </label>
               </div>
-              <Label slot="description" className="p-0 text-sm text-[--hl]">
+              <Label slot="description" className="p-0 text-sm text-(--hl)">
                 Supported Formats: ({ACCEPTED_NODE_CA_FILE_EXTS.join(', ')})
               </Label>
             </div>
@@ -297,15 +297,15 @@ export const Plugins: FC = () => {
                 <TextField
                   name="name"
                   isRequired
-                  className="group relative flex max-w-full flex-shrink-0 flex-grow flex-col gap-2 overflow-hidden"
+                  className="group relative flex max-w-full shrink-0 grow flex-col gap-2 overflow-hidden"
                 >
                   <Input
                     value={pluginNodeExtraCerts}
-                    className="flex h-[--line-height-xs] w-full items-center rounded-[--radius-md] border border-solid border-[--hl-md] bg-[--hl-xxs] p-[--padding-sm] text-[--color-font] focus:border-[--hl-lg] focus:bg-transparent"
+                    className="flex h-(--line-height-xs) w-full items-center rounded-md border border-solid border-(--hl-md) bg-(--hl-xxs) p-(--padding-sm) text-(--color-font) focus:border-(--hl-lg) focus:bg-transparent"
                   />
                 </TextField>
                 <Button
-                  className="flex h-[--line-height-xs] items-center justify-center rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex h-(--line-height-xs) items-center justify-center rounded-md border border-solid border-(--hl-lg) px-(--padding-md) text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={() => {
                     patchSettings({ pluginNodeExtraCerts: '' });
                   }}
@@ -326,7 +326,7 @@ export const Plugins: FC = () => {
             {plugins.length > 0 && (
               <div className="flex flex-1 items-center justify-end gap-2">
                 <Button
-                  className="flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-md border border-solid border-(--hl-lg) px-(--padding-md) py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   isDisabled={isRefreshingPlugins}
                   onPress={() => {
                     handleReloadPlugins();
@@ -336,7 +336,7 @@ export const Plugins: FC = () => {
                 </Button>
 
                 <Button
-                  className="flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-md border border-solid border-(--hl-lg) px-(--padding-md) py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={() => setShowCreatePluginModal(true)}
                   isDisabled={isRefreshingPlugins}
                 >
@@ -366,18 +366,18 @@ export const Plugins: FC = () => {
                       }}
                       className="group flex h-full items-center p-0"
                     >
-                      <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+                      <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
                         <Icon
                           icon={!isAllPluginsSelected ? 'minus' : 'check'}
-                          className="h-3 w-3 opacity-0 group-data-[indeterminate]:text-[--color-success] group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+                          className="h-3 w-3 opacity-0 group-data-indeterminate:text-(--color-success) group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
                         />
                       </div>
                     </Checkbox>
-                    <span className="text-xs font-bold uppercase text-[--hl-xl]">Name</span>
+                    <span className="text-xs font-bold text-(--hl-xl) uppercase">Name</span>
                   </div>
                   <div className="flex items-center gap-6">
-                    <span className="w-[10ch] text-center text-xs font-bold uppercase text-[--hl-xl]">Version</span>
-                    <span className="w-[10ch] text-center text-xs font-bold uppercase text-[--hl-xl]">Folder</span>
+                    <span className="w-[10ch] text-center text-xs font-bold text-(--hl-xl) uppercase">Version</span>
+                    <span className="w-[10ch] text-center text-xs font-bold text-(--hl-xl) uppercase">Folder</span>
                   </div>
                 </div>
                 <Separator className="mt-2" />
@@ -390,10 +390,10 @@ export const Plugins: FC = () => {
               className="flex flex-col"
               renderEmptyState={() => (
                 <div className="flex h-36 flex-col items-center">
-                  <h3 className="mt-2 font-semibold text-[--hl-xl]">No plugins</h3>
-                  <p className="mt-1 text-sm text-[--hl-xl]">Get started by creating a new project.</p>
+                  <h3 className="mt-2 font-semibold text-(--hl-xl)">No plugins</h3>
+                  <p className="mt-1 text-sm text-(--hl-xl)">Get started by creating a new project.</p>
                   <Button
-                    className="mt-4 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    className="mt-4 flex h-(--line-height-xs) items-center justify-center gap-2 rounded-md border border-solid border-(--hl-lg) px-(--padding-md) py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     onPress={() => setShowCreatePluginModal(true)}
                     isDisabled={isRefreshingPlugins}
                   >
@@ -412,7 +412,7 @@ export const Plugins: FC = () => {
                   <GridListItem
                     textValue={plugin.name}
                     id={plugin.name}
-                    className="flex h-[--line-height-sm] items-center gap-2 rounded-sm pl-2 odd:bg-[--hl-xxs]"
+                    className="flex h-(--line-height-sm) items-center gap-2 rounded-xs pl-2 odd:bg-(--hl-xxs)"
                     data-testid={plugin.name}
                   >
                     <div className="flex flex-1 items-center gap-3">
@@ -429,10 +429,10 @@ export const Plugins: FC = () => {
                           });
                         }}
                       >
-                        <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+                        <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
                           <Icon
                             icon="check"
-                            className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+                            className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
                           />
                         </div>
                       </Checkbox>
@@ -477,17 +477,17 @@ export const Plugins: FC = () => {
         </div>
 
         <div className="mt-2 flex w-full justify-center">
-          <span className="text-sm text-[--hl]">
+          <span className="text-sm text-(--hl)">
             Need more plugins?{' '}
             <Button
-              className="text-[var(--color-surprise)] underline"
+              className="text-(--color-surprise) underline"
               onPress={() => window.main.openInBrowser(PLUGIN_HUB_BASE)}
             >
               Browse Plugin Hub
             </Button>{' '}
             or{' '}
             <Button
-              className="text-[var(--color-surprise)] underline"
+              className="text-(--color-surprise) underline"
               onPress={() =>
                 window.shell.showItemInFolder(
                   path.resolve(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'),

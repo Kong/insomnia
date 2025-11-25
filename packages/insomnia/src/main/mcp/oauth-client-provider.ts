@@ -9,6 +9,7 @@ import { BrowserWindow, ipcMain } from 'electron';
 
 import { getOauthRedirectUrl } from '~/common/constants';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
+import type { ConnectionContext } from '~/main/mcp/common';
 import * as models from '~/models';
 import type { McpRequest } from '~/models/mcp-request';
 import type { RequestAuthentication } from '~/models/request';
@@ -30,7 +31,10 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
   private _codeVerifier?: string;
   private _resourceMetadataUrl?: URL;
   private _redirectEndListener: ((authorizationCode: string) => void) | null = null;
-  constructor(private mcpRequest: McpRequest) {}
+  constructor(
+    private mcpRequest: McpRequest,
+    private context: ConnectionContext,
+  ) {}
   get redirectUrl() {
     return getOauthRedirectUrl();
   }
@@ -151,6 +155,9 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     return this._resourceMetadataUrl;
   }
   async redirectToAuthorization(authorizationUrl: URL) {
+    if (this.context.abortController.signal.aborted) {
+      throw new Error('MCP Connection aborted');
+    }
     const { relayUrl, decryptOAuthResult } = encryptOAuthUrl(authorizationUrl.toString());
     BrowserWindow.getAllWindows().forEach(window => {
       window.webContents.send('show-oauth-authorization-modal', relayUrl);

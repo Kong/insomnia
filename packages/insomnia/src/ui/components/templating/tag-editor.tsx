@@ -258,10 +258,10 @@ export const TagEditor: FC<Props> = props => {
     const linkText = 'Insomnia Preferences → Security';
     if (error.endsWith(linkText)) {
       previewElement = (
-        <div className="danger min-h-[115px] rounded-md border border-solid border-[var(--hl-md)] bg-[var(--hl-xxs)] p-[var(--padding-sm)]">
+        <div className="danger min-h-[115px] rounded-md border border-solid border-(--hl-md) bg-(--hl-xxs) p-(--padding-sm)">
           {error.slice(0, error.length - linkText.length)}
           <Link
-            className="cursor-pointer text-[--color-surprise]"
+            className="cursor-pointer text-(--color-surprise)"
             onPress={() => {
               props.close();
               showSettingsModal({ tab: 'general' });

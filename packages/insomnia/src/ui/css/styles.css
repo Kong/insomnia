@@ -1,23 +1,83 @@
-@import '@fortawesome/fontawesome-svg-core/styles.css';
-@import 'codemirror/addon/dialog/dialog.css';
-@import 'codemirror/addon/fold/foldgutter.css';
-@import 'codemirror/addon/hint/show-hint.css';
-@import 'codemirror/addon/search/matchesonscrollbar.css';
-@import 'codemirror/addon/lint/lint.css';
-@import 'codemirror/lib/codemirror.css';
+/* Do not change the position of tailwindcss import to ensure css cascade layer order  */
+@import 'tailwindcss' source('../../../src');
+@import '@fortawesome/fontawesome-svg-core/styles.css' layer(base);
+@import 'codemirror/addon/dialog/dialog.css' layer(base);
+@import 'codemirror/addon/fold/foldgutter.css' layer(base);
+@import 'codemirror/addon/hint/show-hint.css' layer(base);
+@import 'codemirror/addon/search/matchesonscrollbar.css' layer(base);
+@import 'codemirror/addon/lint/lint.css' layer(base);
+@import 'codemirror/lib/codemirror.css' layer(base);
 /* used by merge-editor */
-@import 'codemirror/addon/merge/merge.css';
-@import 'codemirror/theme/base16-dark.css';
-@import './lib/codemirror/merge-dark.css';
+@import 'codemirror/addon/merge/merge.css' layer(base);
+@import 'codemirror/theme/base16-dark.css' layer(base);
+@import './lib/codemirror/merge-dark.css' layer(base);
 
-@import './lib/codemirror/codemirror.css';
-@import './lib/codemirror/material.css';
-@import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css';
-@import './main.css';
+@import './lib/codemirror/codemirror.css' layer(base);
+@import './lib/codemirror/material.css' layer(base);
+@import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css' layer(base);
+@import './main.css' layer(base);
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@plugin '@tailwindcss/typography';
+
+@theme {
+  --animate-text-slide-4: text-slide-4 7s cubic-bezier(0.83, 0, 0.17, 1) infinite;
+  --animate-up-loop: up-loop 1s linear infinite;
+  --animate-down-loop: down-loop 1s linear infinite;
+
+  @keyframes text-slide-4 {
+    0%,
+    20% {
+      transform: translateY(0%);
+    }
+    25%,
+    45% {
+      transform: translateY(-20%);
+    }
+    50%,
+    70% {
+      transform: translateY(-40%);
+    }
+    75%,
+    95% {
+      transform: translateY(-60%);
+    }
+    100% {
+      transform: translateY(-80%);
+    }
+  }
+  @keyframes up-loop {
+    0% {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+    }
+    80% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+  }
+  @keyframes down-loop {
+    0% {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+    }
+    80% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+  }
+}
 
 html {
   font-size: 11px;

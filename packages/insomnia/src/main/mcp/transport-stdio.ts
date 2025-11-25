@@ -3,25 +3,17 @@ import { InitializeRequestSchema, type JSONRPCRequest } from '@modelcontextproto
 import { shellPath } from 'shell-path';
 import { parse } from 'shell-quote';
 
-import { timelineFileStreams } from '~/main/mcp/common';
+import { type ConnectionContext, writeTimeline } from '~/main/mcp/common';
 import type { OpenMcpStdioClientConnectionOptions } from '~/main/mcp/types';
 import * as models from '~/models';
 import { TRANSPORT_TYPES } from '~/models/mcp-request';
 import type { McpResponse } from '~/models/mcp-response';
+
 export const createStdioTransport = async (
+  context: ConnectionContext,
   options: OpenMcpStdioClientConnectionOptions,
-  {
-    responseId,
-    responseEnvironmentId,
-    timelinePath,
-    eventLogPath,
-  }: {
-    responseId: string;
-    responseEnvironmentId: string | null;
-    timelinePath: string;
-    eventLogPath: string;
-  },
 ) => {
+  const { responseId, environmentId, timelinePath, eventLogPath } = context;
   const { url, requestId, env } = options;
   if (!url) {
     throw new Error('Command is required for STDIO transport');
@@ -60,7 +52,7 @@ export const createStdioTransport = async (
       timestamp: Date.now(),
     });
   }
-  initialTimelines.map(t => timelineFileStreams.get(requestId)?.write(JSON.stringify(t) + '\n'));
+  initialTimelines.map(t => writeTimeline(context, JSON.stringify(t)));
 
   const start = performance.now();
   const transport = new StdioClientTransport({
@@ -77,12 +69,13 @@ export const createStdioTransport = async (
     if (!stderrData) return; // Skip empty lines
 
     // Log stderr output to timeline with appropriate categorization
-    timelineFileStreams.get(requestId)?.write(
+    writeTimeline(
+      context,
       JSON.stringify({
         value: stderrData,
         name: 'HeaderIn',
         timestamp: Date.now(),
-      }) + '\n',
+      }),
     );
   });
   // Wrap the original send method to log outgoing requests for stdio transport
@@ -92,14 +85,15 @@ export const createStdioTransport = async (
     // Create response model for initialize message and add process status timeline
     if (isInitializedMessage) {
       // Add process started timeline (similar to HTTP response timeline)
-      timelineFileStreams
-        .get(requestId)
-        ?.write(JSON.stringify({ value: 'Process started and ready', name: 'Text', timestamp: Date.now() }) + '\n');
+      writeTimeline(
+        context,
+        JSON.stringify({ value: 'Process started and ready', name: 'Text', timestamp: Date.now() }),
+      );
 
       const responsePatch: Partial<McpResponse> = {
         _id: responseId,
         parentId: requestId,
-        environmentId: responseEnvironmentId,
+        environmentId,
         url,
         status: 'success',
         elapsedTime: performance.now() - start,

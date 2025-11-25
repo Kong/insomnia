@@ -31,6 +31,8 @@ export interface BaseMcpRequest {
   roots: Root[];
   subscribeResources: string[];
   connected: boolean;
+  // See: https://nodejs.org/api/tls.html#tlsconnectoptions-callback
+  sslValidation: boolean;
 }
 export type McpServerPrimitiveTypes = 'tools' | 'resources' | 'prompts' | 'resourceTemplates';
 
@@ -55,6 +57,7 @@ export function init(): BaseMcpRequest {
     roots: [],
     subscribeResources: [],
     connected: false,
+    sslValidation: true,
   };
 }
 

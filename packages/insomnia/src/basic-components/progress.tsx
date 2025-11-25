@@ -11,7 +11,7 @@ export const Progress = ({ className, percent, status }: Props) => {
     <div
       // FIXME: use css variables for colors
       className={classNames(
-        'h-[10px] flex-grow overflow-hidden rounded-full bg-[#f1e6ff]',
+        'h-[10px] grow overflow-hidden rounded-full bg-[#f1e6ff]',
         status === 'error' && 'bg-[#db110040]',
         status === 'success' && 'bg-[#00bf7340]',
         className,
@@ -19,9 +19,9 @@ export const Progress = ({ className, percent, status }: Props) => {
     >
       <div
         className={classNames(
-          'transition-width h-full rounded-full bg-[--color-surprise] duration-1000 ease-in-out',
-          status === 'error' && 'bg-[--color-danger]',
-          status === 'success' && 'bg-[--color-success]',
+          'transition-width h-full rounded-full bg-(--color-surprise) duration-1000 ease-in-out',
+          status === 'error' && 'bg-(--color-danger)',
+          status === 'success' && 'bg-(--color-success)',
         )}
         style={{
           width: `${percent}%`,

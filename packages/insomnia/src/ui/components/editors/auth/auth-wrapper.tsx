@@ -58,7 +58,7 @@ export const AuthWrapper: FC<{
   } else {
     authBody = (
       <div className="flex h-full w-full select-none items-center justify-center">
-        <p className="p-4 text-center text-sm text-[--hl]">
+        <p className="p-4 text-center text-sm text-(--hl)">
           <i
             className="fa fa-unlock-alt"
             style={{
@@ -76,7 +76,7 @@ export const AuthWrapper: FC<{
 
   return (
     <>
-      <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
+      <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
         <AuthDropdown
           authentication={authentication}
           authTypes={authTypes}

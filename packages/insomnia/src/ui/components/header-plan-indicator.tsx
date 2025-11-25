@@ -91,27 +91,27 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
 
   return (
     <DialogTrigger isOpen={open} onOpenChange={setOpen}>
-      <Button className="flex h-[30px] flex-shrink-0 items-center justify-center gap-2 rounded-md px-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm]">
+      <Button className="flex h-[30px] shrink-0 items-center justify-center gap-2 rounded-md px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:bg-(--hl-sm)">
         <span>{planName}</span>
         {isTrailing && (
-          <span className="flex h-[20px] items-center rounded bg-[--color-surprise] px-[4px] text-[--color-font-surprise]">
+          <span className="flex h-[20px] items-center rounded-sm bg-(--color-surprise) px-[4px] text-(--color-font-surprise)">
             Trial
           </span>
         )}
         <Icon className="w-4" icon={isMinimal ? 'caret-up' : 'caret-down'} />
       </Button>
       <Popover
-        className="max-h-[85vh] min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+        className="max-h-[85vh] min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
         placement="bottom end"
       >
-        <Dialog className="focus:outline-none">
-          <div className="mt-[8px] flex w-[250px] flex-col text-[--color-font]">
+        <Dialog className="focus:outline-hidden">
+          <div className="mt-[8px] flex w-[250px] flex-col text-(--color-font)">
             <div className="flex items-center justify-between px-[12px]">
               <div className="flex flex-col gap-1">
                 <span className="text[--color-font-surprise] flex items-center gap-[4px] font-semibold">
                   {planName}
                   {isTrailing && (
-                    <span className="flex h-[20px] items-center rounded bg-[--color-surprise] px-[4px] text-[--color-font-surprise]">
+                    <span className="flex h-[20px] items-center rounded-sm bg-(--color-surprise) px-[4px] text-(--color-font-surprise)">
                       Trial
                     </span>
                   )}
@@ -120,7 +120,7 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
               </div>
               {!isEnterpriseMember && (
                 <Link
-                  className="rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   href={
                     isEssential
                       ? getAppWebsiteBaseURL() + '/app/pricing?source=app_topbar'
@@ -132,7 +132,7 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
               )}
             </div>
 
-            <Separator className="mt-[12px] border border-solid border-[--hl-sm]" />
+            <Separator className="mt-[12px] border border-solid border-(--hl-sm)" />
 
             <div className="my-[8px] flex flex-col gap-[18px] px-[12px]">
               {!isEnterpriseMember && (
@@ -142,7 +142,7 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
                     <Tooltip position="bottom" message={userTip}>
                       <Icon
                         icon={userStatus === 'error' ? 'exclamation-triangle' : 'info-circle'}
-                        className={classNames('ml-2', userStatus === 'error' && 'text-[--color-danger]')}
+                        className={classNames('ml-2', userStatus === 'error' && 'text-(--color-danger)')}
                       />
                     </Tooltip>
                     <span className="ml-auto">
@@ -175,7 +175,7 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
                   <Tooltip position="bottom" message={mockTip}>
                     <Icon
                       icon={mockStatus === 'error' ? 'exclamation-triangle' : 'info-circle'}
-                      className={classNames('ml-2', mockStatus === 'error' && 'text-[--color-danger]')}
+                      className={classNames('ml-2', mockStatus === 'error' && 'text-(--color-danger)')}
                     />
                   </Tooltip>
                   <span className="ml-auto">
@@ -189,10 +189,10 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
 
             {!isEnterpriseMember && (
               <div className="my-[8px] px-[12px]">
-                <Icon icon="gear" className="text-[--color-font]" />
+                <Icon icon="gear" className="text-(--color-font)" />
                 <a
                   href={getAppWebsiteBaseURL() + '/app/home'}
-                  className="px-3 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="px-3 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 >
                   Manage
                 </a>
@@ -201,7 +201,7 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
             {canTrial && (
               <div className="my-[8px] px-[12px]">
                 <Button
-                  className="h-[22px] rounded bg-[--color-surprise] px-[12px] text-center text-sm text-[--color-font-surprise]"
+                  className="h-[22px] rounded-sm bg-(--color-surprise) px-[12px] text-center text-sm text-(--color-font-surprise)"
                   onPress={() => handleStartTrial()}
                 >
                   Free Enterprise Trial

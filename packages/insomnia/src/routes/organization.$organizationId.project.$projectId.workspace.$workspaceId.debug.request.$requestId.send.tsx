@@ -281,13 +281,8 @@ export const sendActionImplementation = async (options: {
 
   window.main.completeExecutionStep({ requestId });
 
-  const preTestResults = (mutatedContext.requestTestResults || []).map(
-    (result: RequestTestResult): RequestTestResult => ({ ...result, category: 'pre-request' }),
-  );
-  const postTestResults =
-    (postMutatedContext?.requestTestResults || []).map(
-      (result: RequestTestResult): RequestTestResult => ({ ...result, category: 'after-response' }),
-    ) || [];
+  const preTestResults = mutatedContext.requestTestResults || [];
+  const postTestResults = postMutatedContext?.requestTestResults || [];
   if (testResultCollector) {
     testResultCollector.results = [...testResultCollector.results, ...preTestResults, ...postTestResults];
     const timingSteps = await window.main.getExecution({ requestId });

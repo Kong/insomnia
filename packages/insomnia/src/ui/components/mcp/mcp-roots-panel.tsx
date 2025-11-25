@@ -47,10 +47,10 @@ export const McpRootsPanel = ({ request, readyState }: McpRootsPanelProps) => {
 
   return (
     <div className="flex-1 overflow-y-auto px-2">
-      <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center justify-between gap-2 px-2 py-2">
-        <Heading className="text-sm font-bold text-[--hl]">Configure Roots</Heading>
+      <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center justify-between gap-2 px-2 py-2">
+        <Heading className="text-sm font-bold text-(--hl)">Configure Roots</Heading>
         <Button
-          className="rounded bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise]"
+          className="rounded-sm bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise)"
           onClick={() => {
             window.main.mcp.notification.rootListChange({ requestId });
           }}
@@ -68,14 +68,14 @@ export const McpRootsPanel = ({ request, readyState }: McpRootsPanelProps) => {
               key={key}
               id={key}
               textValue={uri}
-              className="my-1 flex min-h-[30px] justify-between gap-2 rounded-sm p-2 outline-none odd:bg-[--hl-xs]"
+              className="my-1 flex min-h-[30px] justify-between gap-2 rounded-xs p-2 outline-hidden odd:bg-(--hl-xs)"
             >
-              <span className="flex min-w-[70%] flex-grow items-center break-all" data-testid="cookie-domain">
+              <span className="flex min-w-[70%] grow items-center break-all" data-testid="cookie-domain">
                 <span>{uri || ''}</span>
               </span>
               <div className="flex min-w-[10%] items-center justify-end gap-1">
                 <PromptButton
-                  className="flex min-w-[15px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
+                  className="flex min-w-[15px] items-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
                   confirmMessage=""
                   doneMessage=""
                   onClick={() => removeRoot(idx)}
@@ -94,7 +94,7 @@ export const McpRootsPanel = ({ request, readyState }: McpRootsPanelProps) => {
           value={rootUri}
           onChange={e => setRootUri(e.target.value)}
           type={'text'}
-          className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
         />
         <button className="btn btn--outlined btn--super-compact flex items-center gap-2" onClick={addRoot}>
           Add Root

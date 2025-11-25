@@ -1,6 +1,3 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import type { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import type { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
@@ -18,12 +15,10 @@ import {
   ServerNotificationSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import electron from 'electron';
-import { v4 as uuidV4 } from 'uuid';
 import type { ZodType } from 'zod';
 
 import { getAppVersion, getProductName, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { getMcpMethodFromMessage, METHOD_NOTIFICATION_CANCELLED } from '~/common/mcp-utils';
-import { generateId } from '~/common/misc';
 import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 import {
   callTool,
@@ -38,24 +33,25 @@ import {
   subscribeResource,
   unsubscribeResource,
 } from '~/main/mcp/client-requests';
-import { findPendingEvents } from '~/main/mcp/common';
+import {
+  activeConnectionContexts,
+  type ConnectionContext,
+  createConnectionContext,
+  findPendingEvents,
+  getReadyActiveMcpConnectionContext,
+  isContextReady,
+  writeTimeline,
+} from '~/main/mcp/common';
 import {
   cancelRequest,
   clearAbortControllerForMcpRequest,
-  clearMcpMaps,
-  eventLogFileStreams,
+  clearConnectionContext,
   findMany,
   findNotifications,
-  getMcpClient,
   getMcpReadyState,
   hasRequestResponded,
-  mcpConnections,
-  mcpServerElicitationRequests,
   parseAndLogMcpRequest,
-  pendingMcpRequestEventIds,
-  requestIdToResponseIdMap,
   setAbortControllerForMcpRequest,
-  timelineFileStreams,
   updateMcpConnectionState,
   writeEventLogAndNotify,
 } from '~/main/mcp/common';
@@ -71,8 +67,7 @@ import type {
   OpenMcpHTTPClientConnectionOptions,
 } from '~/main/mcp/types';
 import * as models from '~/models';
-import { TRANSPORT_TYPES, type TransportType } from '~/models/mcp-request';
-import { prefix as mcpResponsePrefix } from '~/models/mcp-response';
+import { TRANSPORT_TYPES } from '~/models/mcp-request';
 import { invariant } from '~/utils/invariant';
 
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
@@ -82,19 +77,19 @@ interface CommonMcpOptions {
   requestId: string;
 }
 
-const _handleCloseMcpConnection = (requestId: string) => {
+const _handleCloseMcpConnection = (context: ConnectionContext) => {
   const closeEvent: McpEventWithoutBase = {
     type: 'close',
     reason: 'Mcp connection closed',
   };
-  // clear in-memory store
-  clearMcpMaps(requestId, 'Closed MCP connection', closeEvent);
+  writeEventLogAndNotify(context, closeEvent);
 
-  // notify renderer process about state change
-  updateMcpConnectionState(requestId, { status: 'disconnected' });
+  writeTimeline(context, JSON.stringify({ value: 'Closed MCP connection', name: 'Text', timestamp: Date.now() }));
+
+  clearConnectionContext(context);
 };
 
-const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
+const _handleMcpMessage = (context: ConnectionContext, message: JSONRPCMessage) => {
   let messageEvent: McpEventWithoutBase | McpErrorEventWithoutBase | McpNotificationEventWithoutBase;
   let channel = REALTIME_EVENTS_CHANNELS.NEW_EVENT;
   if (JSONRPCErrorSchema.safeParse(message).success) {
@@ -131,7 +126,7 @@ const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
       // Write cancelled notification event to both event and notification channel
       // This is used to terminate pending server requests waiting for elicitation response
       writeEventLogAndNotify(
-        requestId,
+        context,
         {
           ...messageEvent,
           type: 'message',
@@ -154,10 +149,10 @@ const _handleMcpMessage = (message: JSONRPCMessage, requestId: string) => {
       direction: 'INCOMING',
     };
   }
-  writeEventLogAndNotify(requestId, messageEvent, { channel });
+  writeEventLogAndNotify(context, messageEvent, { channel });
 };
 
-const _handleTransportError = (message: JSONRPCRequest, requestId: string, error: Error) => {
+const _handleTransportError = (context: ConnectionContext, message: JSONRPCRequest, error: Error) => {
   const messageEvent: McpErrorEventWithoutBase = {
     type: 'error',
     message: error.name || 'Transport Error',
@@ -167,49 +162,43 @@ const _handleTransportError = (message: JSONRPCRequest, requestId: string, error
       ...(error.cause ? { cause: (error.cause as Error).message || String(error.cause) } : {}),
     },
   };
-  writeEventLogAndNotify(requestId, messageEvent);
-  console.error(`Transport error for ${requestId}`, error);
+  writeEventLogAndNotify(context, messageEvent);
+  console.error(`Transport error for ${context.requestId}`, error);
 };
 
-const _handleMcpClientError = (requestId: string, error: Error, prefix?: string) => {
+const _handleMcpClientError = (context: ConnectionContext, error: Error, prefix?: string) => {
   const errorMessage = error.message || '';
   const messageEvent: McpEventWithoutBase = {
     type: 'error',
     message: prefix || 'Unknown error',
     error: errorMessage,
   };
-  writeEventLogAndNotify(requestId, messageEvent);
-  console.error(`MCP client error for ${requestId}`, error);
+  writeEventLogAndNotify(context, messageEvent);
+  console.error(`MCP client error for ${context.requestId}`, error);
 };
 
-const createErrorResponse = async ({
-  requestId,
-  responseId,
-  environmentId,
-  timelinePath,
-  message,
-  transportType,
-  errorType,
-}: {
-  responseId: string;
-  requestId: string;
-  environmentId: string | null;
-  timelinePath: string;
-  message: string;
-  transportType: TransportType;
-  errorType?: string;
-}) => {
+const createErrorResponse = async (
+  context: ConnectionContext,
+  {
+    message,
+    errorType,
+  }: {
+    message: string;
+    errorType?: string;
+  },
+) => {
+  const { requestId, responseId, environmentId, timelinePath, options } = context;
   const settings = await models.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,
-    environmentId: environmentId,
+    environmentId,
     timelinePath,
     status: 'danger',
     statusMessage: 'Error',
     error: message,
     errorType,
-    transportType,
+    transportType: options.transportType,
   };
 
   const res = await models.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
@@ -222,47 +211,37 @@ export const isOpenMcpHTTPClientConnectionOptions = (
   return options.transportType === TRANSPORT_TYPES.HTTP;
 };
 
-const createTransportAndConnect = async (
-  mcpClient: Client,
-  connectionOptions: OpenMcpClientConnectionOptions,
-  options: {
-    responseId: string;
-    responseEnvironmentId: string | null;
-    timelinePath: string;
-    eventLogPath: string;
-  },
-) => {
+const createTransportAndConnect = async (context: ConnectionContext, mcpClient: Client) => {
   let transport: StdioClientTransport | StreamableHTTPClientTransport;
   // Wrap the transport to log messages and errors, must be called before connecting the transport
   const wrapTransport = () => {
     // Add message handler
-    transport.onmessage = message => _handleMcpMessage(message, connectionOptions.requestId);
+    transport.onmessage = message => _handleMcpMessage(context, message);
     const originalSend = transport.send.bind(transport);
     transport.send = (message: JSONRPCRequest) => {
       // Log outgoing request
-      parseAndLogMcpRequest(connectionOptions.requestId, message);
+      parseAndLogMcpRequest(context, message);
       return originalSend(message).catch(err => {
         // Capture transport send error and log as MCP error event
-        _handleTransportError(message, connectionOptions.requestId, err);
+        _handleTransportError(context, message, err);
         // Re-throw the error to propagate it to the client caller
         throw err;
       });
     };
   };
 
+  const { options: connectionOptions } = context;
+
   if (!isOpenMcpHTTPClientConnectionOptions(connectionOptions)) {
-    transport = await createStdioTransport(connectionOptions, options);
+    transport = await createStdioTransport(context, connectionOptions);
     wrapTransport();
     await mcpClient.connect(transport);
   } else {
     const mcpRequest = await models.mcpRequest.getById(connectionOptions.requestId);
     invariant(mcpRequest, 'MCP Request not found');
 
-    const authProvider = new McpOAuthClientProvider(mcpRequest);
-    transport = await createStreamableHTTPTransport(connectionOptions, {
-      ...options,
-      authProvider,
-    });
+    const authProvider = new McpOAuthClientProvider(mcpRequest, context);
+    transport = await createStreamableHTTPTransport(context, connectionOptions, authProvider);
     wrapTransport();
     // Use a longer timeout for initial connection to allow for auth flow to complete
     await mcpClient.connect(transport, { timeout: 3 * 60 * 1000 });
@@ -298,42 +277,32 @@ const createTransportAndConnect = async (
 };
 
 const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) => {
-  const { requestId, workspaceId } = options;
-
-  const currentConnectionState = mcpConnections.get(requestId);
-  if (currentConnectionState) {
-    if (currentConnectionState.status === 'connected') {
-      // close existing connection if any, avoid multiple connections with same requestId
-      await closeMcpConnection({ requestId });
-    } else if (currentConnectionState.status === 'connecting') {
-      // if connecting, should not attempt to create another connection
-      // TODO: should find a way to close the pending connection safely and create a new one instead
-      console.error(`MCP client is already connecting for requestId: ${requestId}`);
-      return;
-    }
+  const activeContext = getReadyActiveMcpConnectionContext(options.requestId);
+  if (activeContext) {
+    closeMcpConnection(activeContext);
   }
-  updateMcpConnectionState(requestId, { status: 'connecting', client: null });
 
-  // create response model and file streams
-  const responseId = generateId(mcpResponsePrefix);
-  const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
-  const eventLogPath = path.join(responsesDir, uuidV4() + '.response');
-  eventLogFileStreams.set(requestId, fs.createWriteStream(eventLogPath));
-  const timelinePath = path.join(responsesDir, responseId + '.timeline');
-  timelineFileStreams.set(requestId, fs.createWriteStream(timelinePath));
-  requestIdToResponseIdMap.set(options.requestId, responseId);
-  pendingMcpRequestEventIds.set(requestId, []);
+  const abortController = new AbortController();
+  activeConnectionContexts.set(options.requestId, { abortController });
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-  // fallback to base environment
-  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(workspaceId));
-  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
-  const responseEnvironmentId = environment ? environment._id : null;
+  const connectionContext = await createConnectionContext(options, abortController);
+  activeConnectionContexts.set(options.requestId, connectionContext);
 
-  // create MCP payload model if not exists
-  await models.mcpPayload.getOrCreateByParentIdAndUrl(requestId, options.url);
+  try {
+    await performConnection(connectionContext);
+  } catch (error) {
+    clearConnectionContext(connectionContext);
+    throw error;
+  }
+};
+
+const performConnection = async (context: ConnectionContext) => {
+  const { abortController, options, requestId, mcpServerElicitationRequests } = context;
+  // Check if the connection has been aborted before proceeding
+  if (abortController.signal.aborted) {
+    clearConnectionContext(context);
+    return;
+  }
 
   // create connection
   const mcpClient = new Client(
@@ -352,39 +321,32 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
         elicitation: {},
       },
     },
-  );
-  // const mcpStateChannel = getMcpStateChannel(requestId);
-  updateMcpConnectionState(requestId, {
-    status: 'connecting',
-    client: mcpClient as McpClient,
-  });
+  ) as McpClient;
 
   try {
-    await createTransportAndConnect(mcpClient, options, {
-      responseId,
-      responseEnvironmentId,
-      timelinePath,
-      eventLogPath,
-    });
-    mcpClient.onclose = () => _handleCloseMcpConnection(requestId);
+    updateMcpConnectionState(context, 'connecting');
+    await createTransportAndConnect(context, mcpClient);
+    mcpClient.onclose = () => _handleCloseMcpConnection(context);
+    if (abortController.signal.aborted) {
+      mcpClient.close();
+      return;
+    }
+    // Set the connected client in context after successful connection, to ensure it could be closed properly
+    updateMcpConnectionState(context, 'connecting', mcpClient);
   } catch (error) {
     // Log error when connection fails with exception
-    createErrorResponse({
-      requestId,
-      responseId,
-      environmentId: responseEnvironmentId,
-      timelinePath,
+    createErrorResponse(context, {
       message:
         error instanceof Error
           ? error.message + (error.cause ? `\ncause: ${(error.cause as Error).message || String(error.cause)}` : '')
           : 'Something went wrong',
       errorType: isMCPAuthError(error) ? 'auth' : '',
-      transportType: options.transportType,
     });
     console.error(`Failed to create ${options.transportType} transport: ${error}`);
-    _handleCloseMcpConnection(requestId);
+    _handleCloseMcpConnection(context);
     return;
   }
+
   // Add roots request handler to indicate the client supports it
   mcpClient.setRequestHandler(ListRootsRequestSchema, async () => {
     const mcpRequest = await models.mcpRequest.getById(requestId);
@@ -396,21 +358,16 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
   mcpClient.setRequestHandler(ElicitRequestSchema, async (_request, extra) => {
     return new Promise((resolve, reject) => {
       const serverRequestId = extra.requestId;
-      const pendingServerRequestResolvers = mcpServerElicitationRequests.get(requestId) || new Map();
-      if (!mcpServerElicitationRequests.has(requestId)) {
-        mcpServerElicitationRequests.set(requestId, pendingServerRequestResolvers);
-      }
-      pendingServerRequestResolvers.set(serverRequestId, { resolve, reject });
+      mcpServerElicitationRequests.set(serverRequestId, { resolve, reject });
     });
   });
 
   mcpClient.setNotificationHandler(CancelledNotificationSchema, notification => {
     const serverRequestId = notification.params.requestId;
     // handle server request cancellation
-    const pendingServerRequestResolvers = mcpServerElicitationRequests.get(requestId);
-    if (pendingServerRequestResolvers && pendingServerRequestResolvers.has(serverRequestId)) {
+    if (mcpServerElicitationRequests.has(serverRequestId)) {
       console.log('Received server request cancellation notification', serverRequestId);
-      pendingServerRequestResolvers.delete(serverRequestId);
+      mcpServerElicitationRequests.delete(serverRequestId);
     }
   });
   const originClientRequest = mcpClient.request.bind(mcpClient);
@@ -418,14 +375,14 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
     // @ts-expect-error - need to access private property _requestMessageId to get message id
     const messageId = mcpClient._requestMessageId.toString();
     // add abort controller for each MCP client request
-    const abortController = setAbortControllerForMcpRequest({ requestId, messageId: messageId });
+    const abortController = setAbortControllerForMcpRequest(context, { requestId, messageId });
     const optionsWithSignal = {
       ...options,
       signal: abortController.signal,
     };
     return originClientRequest(request, resultSchema, optionsWithSignal).finally(() => {
       // clear abort controller after request is completed
-      clearAbortControllerForMcpRequest({ requestId, messageId: messageId });
+      clearAbortControllerForMcpRequest(context, { requestId, messageId });
     });
   };
 
@@ -448,33 +405,49 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
     console.warn('Failed to fetch one or more primitive types from MCP server', error);
   }
   // notify connection ready after capabilities and primitives are fetched
-  updateMcpConnectionState(requestId, { status: 'connected', client: mcpClient as McpClient });
+  updateMcpConnectionState(context, 'connected', mcpClient);
 };
 
 const closeMcpConnection = async (options: CommonMcpOptions) => {
   const { requestId } = options;
-  const mcpClient = getMcpClient(requestId);
-  if (mcpClient) {
-    try {
-      // Only terminate session if transport is StreamableHTTPClientTransport
-      if ('terminateSession' in mcpClient.transport) {
-        await mcpClient.transport.terminateSession();
-      }
-    } catch (err) {
-      _handleMcpClientError(requestId, err as Error, 'Failed to terminate MCP session');
-    } finally {
-      // Alway close the connection even the transport terminate session fails
-      // This occurs when the server is not reachable, terminateSession failure will cause the connection to never close
-      mcpClient.close();
-      // Execute clear resource subscription in main process rather than UI to make sure closeAllMcpConnections method will clear subscriptions
-      await models.mcpRequest.clearResourceSubscriptions(requestId);
-    }
-    trackSegmentEvent(SegmentEvent.mcpClientDisconnected);
+  const context = activeConnectionContexts.get(requestId);
+  if (!context) {
+    return;
   }
+
+  const { abortController } = context;
+  // Abort any ongoing connection
+  abortController.abort();
+
+  if (!isContextReady(context)) {
+    return;
+  }
+
+  const { client } = context;
+  // When client exists, it means the client connection has been established and could be closed gracefully
+  if (!client) {
+    return;
+  }
+
+  try {
+    // Only terminate session if transport is StreamableHTTPClientTransport
+    if ('terminateSession' in client.transport) {
+      await client.transport.terminateSession();
+    }
+  } catch (err) {
+    _handleMcpClientError(context, err as Error, 'Failed to terminate MCP session');
+  } finally {
+    // Always close the connection even the transport terminate session fails
+    // This occurs when the server is not reachable, terminateSession failure will cause the connection to never close
+    await client.close();
+    // Execute clear resource subscription in main process rather than UI to make sure closeAllMcpConnections method will clear subscriptions
+    await models.mcpRequest.clearResourceSubscriptions(requestId);
+  }
+  trackSegmentEvent(SegmentEvent.mcpClientDisconnected);
 };
 
 const closeAllMcpConnections = () => {
-  for (const [requestId] of mcpConnections) {
+  for (const [requestId] of activeConnectionContexts) {
     closeMcpConnection({ requestId });
   }
 };

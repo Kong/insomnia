@@ -94,12 +94,12 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
 
   return (
     <div className="pointer-events-none absolute left-0 top-0 flex h-full w-full select-none items-center">
-      <div className="flex h-full w-full flex-1 flex-col items-center gap-2 divide-y divide-solid divide-[--hl-md] overflow-hidden overflow-y-auto p-[--padding-md] text-[--hl-lg]">
-        <Heading className="flex flex-1 flex-col items-center gap-2 p-[--padding-sm] font-bold">
+      <div className="flex h-full w-full flex-1 flex-col items-center gap-2 divide-y divide-solid divide-(--hl-md) overflow-hidden overflow-y-auto p-(--padding-md) text-(--hl-lg)">
+        <Heading className="flex flex-1 flex-col items-center gap-2 p-(--padding-sm) font-bold">
           <Icon icon="drafting-compass" className="w-20 flex-1" />
           <span>Enter your OpenAPI specification here</span>
         </Heading>
-        <div className="flex w-full flex-1 flex-col items-center justify-between p-[--padding-sm] pt-10">
+        <div className="flex w-full flex-1 flex-col items-center justify-between p-(--padding-sm) pt-10">
           <div className="flex items-center gap-2">
             <div className="flex flex-col items-center gap-6 truncate">
               <span>Or quick start:</span>
@@ -107,7 +107,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
                 <MenuTrigger>
                   <Button
                     aria-label="Start from a sample"
-                    className="pointer-events-auto flex aspect-square h-6 items-center justify-center gap-2 rounded-sm bg-[--hl-xs] p-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                    className="pointer-events-auto flex aspect-square h-6 items-center justify-center gap-2 rounded-xs bg-(--hl-xs) p-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-(--hl-md) group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                   >
                     <Icon icon="file" />
                     <span>Use example</span>
@@ -121,20 +121,20 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
                         exampleSpecs.find(({ id }) => key === id)?.action?.();
                       }}
                       items={exampleSpecs}
-                      className="min-w-max cursor-pointer select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-sm shadow-lg focus:outline-none"
+                      className="min-w-max cursor-pointer select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg focus:outline-hidden"
                     >
                       {item =>
                         item.id.startsWith('separator') ? (
                           <MenuItem
                             key={item.id}
                             id={item.id}
-                            className="pointer-events-none m-0 my-1 h-px w-full border-0 bg-[--hl-md] p-0"
+                            className="pointer-events-none m-0 my-1 h-px w-full border-0 bg-(--hl-md) p-0"
                           />
                         ) : (
                           <MenuItem
                             key={item.id}
                             id={item.id}
-                            className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                            className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                             aria-label={item.name}
                           >
                             {item.icon && <Icon icon={item.icon} />}
@@ -146,7 +146,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
                   </Popover>
                 </MenuTrigger>
                 <Button
-                  className="pointer-events-auto flex aspect-square h-6 items-center justify-center gap-2 rounded-sm bg-[--hl-xs] p-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                  className="pointer-events-auto flex aspect-square h-6 items-center justify-center gap-2 rounded-xs bg-(--hl-xs) p-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-(--hl-md) group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                   onPress={() => {
                     importActionsList.find(({ id }) => id === 'import-file')?.action();
                   }}
@@ -155,7 +155,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
                   Import file
                 </Button>
                 <Button
-                  className="pointer-events-auto flex aspect-square h-6 items-center justify-center gap-2 rounded-sm bg-[--hl-xs] p-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                  className="pointer-events-auto flex aspect-square h-6 items-center justify-center gap-2 rounded-xs bg-(--hl-xs) p-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-(--hl-md) group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                   onPress={() => {
                     importActionsList.find(({ id }) => id === 'import-url')?.action();
                   }}
@@ -169,7 +169,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
           <ul className="flex flex-col gap-2">
             <li>
               <a
-                className="pointer-events-auto flex items-center gap-2 text-sm font-bold transition-colors hover:text-[--hl] focus:text-[--hl]"
+                className="pointer-events-auto flex items-center gap-2 text-sm font-bold transition-colors hover:text-(--hl) focus:text-(--hl)"
                 href={documentationLinks.workingWithDesignDocs.url}
               >
                 <span className="truncate">{documentationLinks.workingWithDesignDocs.title}</span>
