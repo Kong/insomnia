@@ -220,7 +220,7 @@ const convertUnicode = (originalStr: string) => {
 
     try {
       cStr = m[0].slice(2); // Trim off start
-      c = String.fromCharCode(parseInt(cStr, 16));
+      c = String.fromCharCode(Number.parseInt(cStr, 16));
       if (c === '"') {
         // Escape it if it's double quotes
         c = `\\${c}`;

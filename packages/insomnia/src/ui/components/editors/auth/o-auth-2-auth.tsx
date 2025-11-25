@@ -371,7 +371,7 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
 export function convertEpochToMilliseconds(epoch: number) {
   epoch = Math.floor(epoch);
   const expDigitCount = epoch.toString().length;
-  return parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
+  return Number.parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
 }
 const renderIdentityTokenExpiry = (token?: Pick<OAuth2Token, 'identityToken'>) => {
   if (!token || !token.identityToken) {

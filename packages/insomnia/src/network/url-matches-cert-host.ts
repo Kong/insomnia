@@ -17,8 +17,8 @@ export function urlMatchesCertHost(certificateHost: string, requestUrl: string, 
   }
   const { hostname: cHostname, port: cPort } = certificateHostWithProtocol;
   // @ts-expect-error -- TSCONVERSION `parseInt(null)` returns `NaN`
-  const assumedPort = parseInt(port) || DEFAULT_PORT;
-  const assumedCPort = parseInt(cPort) || DEFAULT_PORT;
+  const assumedPort = Number.parseInt(port) || DEFAULT_PORT;
+  const assumedCPort = Number.parseInt(cPort) || DEFAULT_PORT;
   const cHostnameRegex = escapeRegex(cHostname || '').replace(/\\\*/g, '.*');
   const cPortRegex = escapeRegex(cPort || '').replace(/\\\*/g, '.*');
 

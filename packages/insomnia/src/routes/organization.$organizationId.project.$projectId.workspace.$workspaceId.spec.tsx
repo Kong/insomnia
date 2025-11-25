@@ -1004,7 +1004,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                     <ListBox
                       className="flex-1 overflow-y-auto select-none"
                       onAction={index => {
-                        const listIndex = parseInt(index.toString(), 10);
+                        const listIndex = Number.parseInt(index.toString(), 10);
                         const lintMessage = lintMessages[listIndex];
                         handleScrollToLintMessage(lintMessage);
                       }}

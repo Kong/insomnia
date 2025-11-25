@@ -508,7 +508,7 @@ export function _parseHeaders(buffer: Buffer): HeaderResult[] {
       const [version, code, ...other] = first.split(/ +/g);
       return {
         version,
-        code: parseInt(code, 10),
+        code: Number.parseInt(code, 10),
         reason: other.join(' '),
         headers,
       };

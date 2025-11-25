@@ -161,7 +161,7 @@ export const GGUF = ({
                     type="number"
                     value={modelParameters.temperature.toString()}
                     onChange={e => {
-                      const value = parseFloat(e.target.value);
+                      const value = Number.parseFloat(e.target.value);
                       if (!Number.isNaN(value) && value >= 0 && value <= 2) {
                         setModelParameters(prev => ({ ...prev, temperature: value }));
                       }
@@ -179,7 +179,7 @@ export const GGUF = ({
                     type="number"
                     value={modelParameters.topP.toString()}
                     onChange={e => {
-                      const value = parseFloat(e.target.value);
+                      const value = Number.parseFloat(e.target.value);
                       if (!Number.isNaN(value) && value >= 0 && value <= 1) {
                         setModelParameters(prev => ({ ...prev, topP: value }));
                       }
@@ -197,7 +197,7 @@ export const GGUF = ({
                     type="number"
                     value={modelParameters.topK.toString()}
                     onChange={e => {
-                      const value = parseInt(e.target.value, 10);
+                      const value = Number.parseInt(e.target.value, 10);
                       if (!Number.isNaN(value) && value >= 0 && value <= 100) {
                         setModelParameters(prev => ({ ...prev, topK: value }));
                       }
@@ -215,7 +215,7 @@ export const GGUF = ({
                     type="number"
                     value={modelParameters.repeatPenalty.toString()}
                     onChange={e => {
-                      const value = parseFloat(e.target.value);
+                      const value = Number.parseFloat(e.target.value);
                       if (!Number.isNaN(value) && value >= 0 && value <= 10) {
                         setModelParameters(prev => ({ ...prev, repeatPenalty: value }));
                       }

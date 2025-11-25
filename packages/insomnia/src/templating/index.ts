@@ -58,8 +58,8 @@ export function render(
         .replace(/^\s*Error:\s*/, '')
         .trim();
       const location = err.message.match(/\[Line (\d+), Column (\d+)*]/);
-      const line = location ? parseInt(location[1]) : 1;
-      const column = location ? parseInt(location[2]) : 1;
+      const line = location ? Number.parseInt(location[1]) : 1;
+      const column = location ? Number.parseInt(location[2]) : 1;
       const reason = err.message.includes('attempted to output null or undefined value') ? 'undefined' : 'error';
       const newError = new RenderError(sanitizedMsg);
       newError.path = path || '';

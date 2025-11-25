@@ -51,7 +51,6 @@ export default defineConfig([
       'unicorn/prefer-global-this': 'off', // TODO: delete me
       'unicorn/prefer-logical-operator-over-ternary': 'off', // TODO: delete me
       'unicorn/prefer-negative-index': 'off', // TODO: delete me
-      'unicorn/prefer-number-properties': 'off', // TODO: delete me
       'unicorn/prefer-optional-catch-binding': 'off', // TODO: delete me
       'unicorn/prefer-regexp-test': 'off', // TODO: delete me
       'unicorn/prefer-set-has': 'off', // TODO: delete me

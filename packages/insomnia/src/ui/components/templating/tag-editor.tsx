@@ -179,7 +179,7 @@ export const TagEditor: FC<Props> = props => {
     let argIndex = -1;
     if (event.currentTarget.parentNode instanceof HTMLElement) {
       const index = event.currentTarget.parentNode?.getAttribute('data-arg-index');
-      argIndex = typeof index === 'string' ? parseInt(index, 10) : -1;
+      argIndex = typeof index === 'string' ? Number.parseInt(index, 10) : -1;
     }
     // Handle special types
     if (event.currentTarget.getAttribute('data-encoding') === 'base64') {
@@ -187,7 +187,7 @@ export const TagEditor: FC<Props> = props => {
     }
     // Handle normal types
     if (event.currentTarget.type === 'number') {
-      return updateArg(parseFloat(event.currentTarget.value), argIndex);
+      return updateArg(Number.parseFloat(event.currentTarget.value), argIndex);
     } else if (event.currentTarget.type === 'checkbox') {
       return updateArg((event.currentTarget as HTMLInputElement).checked, argIndex);
     }

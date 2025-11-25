@@ -496,7 +496,7 @@ export const go = (args?: string[]) => {
             validateSSL: !options.disableCertValidation,
             ...proxyOptions,
             dataFolders: options.dataFolders,
-            ...(options.requestTimeout ? { timeout: parseInt(options.requestTimeout, 10) } : {}),
+            ...(options.requestTimeout ? { timeout: Number.parseInt(options.requestTimeout, 10) } : {}),
           });
           // Generate test file
           const testFileContents = generate(
@@ -792,7 +792,7 @@ export const go = (args?: string[]) => {
         }
 
         try {
-          const iterationCount = parseInt(options.iterationCount, 10);
+          const iterationCount = Number.parseInt(options.iterationCount, 10);
 
           const iterationData = await pathToIterationData(options.iterationData, options.envVar);
           const transientVariables: Environment = {
@@ -833,7 +833,7 @@ export const go = (args?: string[]) => {
               validateSSL: !options.disableCertValidation,
               ...proxyOptions,
               dataFolders: options.dataFolders,
-              ...(options.requestTimeout ? { timeout: parseInt(options.requestTimeout, 10) } : {}),
+              ...(options.requestTimeout ? { timeout: Number.parseInt(options.requestTimeout, 10) } : {}),
             },
             iterationData,
             iterationCount,
@@ -888,7 +888,7 @@ export const go = (args?: string[]) => {
                 }
               }
 
-              await new Promise(r => setTimeout(r, parseInt(options.delayRequest, 10)));
+              await new Promise(r => setTimeout(r, Number.parseInt(options.delayRequest, 10)));
 
               if (res.nextRequestIdOrName) {
                 const offset = getNextRequestOffset(requestsToRun.slice(reqIndex), res.nextRequestIdOrName);

@@ -62,7 +62,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           }
 
           if (kind === 'hex') {
-            const bytes = new Uint8Array(text.match(/.{1,2}/g).map((byte: string) => parseInt(byte, 16)));
+            const bytes = new Uint8Array(text.match(/.{1,2}/g).map((byte: string) => Number.parseInt(byte, 16)));
             return btoa(String.fromCharCode(...bytes));
           }
 

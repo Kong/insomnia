@@ -482,9 +482,9 @@ export const Runner: FC = () => {
                         disabled={isRunning}
                         onChange={e => {
                           try {
-                            if (parseInt(e.target.value, 10) > 0) {
+                            if (Number.parseInt(e.target.value, 10) > 0) {
                               updateRunnerState(organizationId, runnerId, {
-                                iterationCount: parseInt(e.target.value, 10),
+                                iterationCount: Number.parseInt(e.target.value, 10),
                               });
                             }
                           } catch {}
@@ -501,7 +501,7 @@ export const Runner: FC = () => {
                         name="Delay"
                         onChange={e => {
                           try {
-                            const delay = parseInt(e.target.value, 10);
+                            const delay = Number.parseInt(e.target.value, 10);
                             if (delay >= 0) {
                               updateRunnerState(organizationId, runnerId, { delay }); // also update the temp settings
                             }
