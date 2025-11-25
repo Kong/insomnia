@@ -1048,12 +1048,12 @@ export const go = (args?: string[]) => {
 
 const getNextRequestOffset = (leftRequestsToRun: Request[], nextRequestIdOrName: string) => {
   const idMatchOffset = leftRequestsToRun.findIndex(req => req._id.trim() === nextRequestIdOrName.trim());
-  if (idMatchOffset >= 0) {
+  if (idMatchOffset !== -1) {
     return idMatchOffset;
   }
 
   const nameMatchOffset = leftRequestsToRun.reverse().findIndex(req => req.name.trim() === nextRequestIdOrName.trim());
-  if (nameMatchOffset >= 0) {
+  if (nameMatchOffset !== -1) {
     return leftRequestsToRun.length - 1 - nameMatchOffset;
   }
 

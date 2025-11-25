@@ -422,8 +422,7 @@ export const Runner: FC = () => {
     let passedTestCount = 0;
     let totalTestCount = 0;
 
-    if (!isRunning) {
-      if (executionResult?.iterationResults) {
+    if (!isRunning && executionResult?.iterationResults) {
         for (const iteration of executionResult.iterationResults) {
           for (const requests of iteration) {
             for (const testCase of requests.results) {
@@ -435,7 +434,6 @@ export const Runner: FC = () => {
           }
         }
       }
-    }
 
     const testResultCountTagColor =
       totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-(--hl-sm)';

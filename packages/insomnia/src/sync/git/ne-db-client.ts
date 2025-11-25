@@ -278,7 +278,7 @@ export class NeDBClient {
 
   async rmdir() {
     // Dirs in NeDB can't be removed, so we'll just pretend like it succeeded
-    return Promise.resolve();
+    return;
   }
 
   async symlink() {

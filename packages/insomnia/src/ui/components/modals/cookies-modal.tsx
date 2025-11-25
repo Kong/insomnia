@@ -153,7 +153,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     const cookieJar = clone(activeCookieJar);
     const index = activeCookieJar.cookies.findIndex(c => c.id === cookie.id);
 
-    if (index < 0) {
+    if (index === -1) {
       console.warn(`Could not find cookie with id=${cookie.id} to edit`);
       return;
     }

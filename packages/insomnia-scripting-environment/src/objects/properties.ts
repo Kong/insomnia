@@ -411,7 +411,7 @@ export class PropertyList<T extends Property> {
     }
 
     const itemIdx = this.indexOf(item);
-    if (itemIdx >= 0) {
+    if (itemIdx !== -1) {
       this.list = [...this.list.splice(0, itemIdx), item, ...this.list.splice(itemIdx + 1)];
       return false;
     }

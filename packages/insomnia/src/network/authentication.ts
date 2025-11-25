@@ -119,11 +119,9 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
       throw new Error(`Unable to parse additional-claims: ${err}`);
     }
 
-    if (parsedAdditionalClaims) {
-      if (typeof parsedAdditionalClaims !== 'object') {
+    if (parsedAdditionalClaims && typeof parsedAdditionalClaims !== 'object') {
         throw new Error(`additional-claims must be an object received: '${typeof parsedAdditionalClaims}' instead`);
       }
-    }
     const generator = (await import('httplease-asap')).createAuthHeaderGenerator({
       privateKey,
       issuer,

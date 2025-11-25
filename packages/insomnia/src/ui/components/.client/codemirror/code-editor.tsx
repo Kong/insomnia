@@ -411,13 +411,11 @@ export const CodeEditor = memo(
             doc.scrollTo(0, scrollPosition);
           }
 
-          if (onPaste) {
-            if (change.origin === 'paste' && change.update) {
+          if (onPaste && change.origin === 'paste' && change.update) {
               const translatedText = onPaste(change.text.join('\n')).split('\n');
 
               change.update(change.from, change.to, translatedText);
             }
-          }
         });
 
         codeMirror.current.on('change', (doc: CodeMirror.Editor) => {

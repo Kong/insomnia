@@ -206,7 +206,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             title: 'Linting Error',
             message: `An error occurred while linting the OpenAPI specification: ${error}`,
           });
-          return Promise.reject(error);
+          throw error;
         }
         const lintResult = diagnostics?.map(({ severity, code, message, range }) => {
           return {
@@ -228,7 +228,7 @@ const Component = ({ params }: Route.ComponentProps) => {
           title: 'Linting Error',
           message: `An error occurred while linting the OpenAPI specification: ${error}`,
         });
-        return Promise.reject(error);
+        throw error;
       }
     });
   };

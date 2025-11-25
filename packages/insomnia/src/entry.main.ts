@@ -162,11 +162,9 @@ if (defaultProtocolSuccessful) {
   }
 }
 app.on('quit', () => {
-  if (isDevelopment()) {
-    // stop the inspector if active to unblock electron app exit in development mode
-    if (inspector.url()) {
-      inspector.close();
-    }
+  // stop the inspector if active to unblock electron app exit in development mode
+  if (isDevelopment() && inspector.url()) {
+    inspector.close();
   }
 });
 // Quit when all windows are closed (except on Mac).

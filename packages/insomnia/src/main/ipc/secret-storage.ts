@@ -36,7 +36,7 @@ const setSecret = async (key: string, secret: string) => {
     secretStorage.setItem(key, encrypted);
   } catch (error) {
     console.error(`Can not save secret ${error.toString()}`);
-    return Promise.reject(error);
+    throw error;
   }
 };
 
@@ -47,7 +47,7 @@ const getSecret = async (key: string) => {
     return encrypted === '' ? null : decryptString(encrypted);
   } catch (error) {
     console.error(`Can not get secret ${error.toString()}`);
-    return Promise.reject(null);
+    throw error;
   }
 };
 
@@ -57,7 +57,7 @@ const deleteSecret = async (key: string) => {
     secretStorage.deleteItem(key);
   } catch (error) {
     console.error(`Can not delete secret ${error.toString()}`);
-    return Promise.reject(error);
+    throw error;
   }
 };
 
