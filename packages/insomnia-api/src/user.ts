@@ -1,8 +1,8 @@
-import { request } from './fetch';
+import { fetch } from './fetch';
 
 // POST /auth/logout
 export const logout = ({ sessionId }: { sessionId: string }) => {
-  return request({
+  return fetch({
     method: 'POST',
     path: '/auth/logout',
     sessionId,
@@ -10,7 +10,7 @@ export const logout = ({ sessionId }: { sessionId: string }) => {
 };
 
 // GET /auth/whoami
-export interface WhoamiResponse {
+interface WhoamiResponse {
   sessionAge: number;
   sessionExpiry: number;
   accountId: string;
@@ -34,7 +34,7 @@ export interface WhoamiResponse {
 }
 
 export const whoami = async ({ sessionId }: { sessionId: string }): Promise<WhoamiResponse> => {
-  const response = await request<WhoamiResponse>({
+  const response = await fetch<WhoamiResponse>({
     method: 'GET',
     path: '/auth/whoami',
     sessionId,
@@ -49,7 +49,7 @@ export const whoami = async ({ sessionId }: { sessionId: string }): Promise<Whoa
 };
 
 // GET /v1/user/profile
-export interface UserProfileResponse {
+export interface UserProfile {
   id: string;
   email: string;
   name: string;
@@ -64,7 +64,7 @@ export interface UserProfileResponse {
 }
 
 export const getUserProfile = async ({ sessionId }: { sessionId: string }) => {
-  return request<UserProfileResponse>({
+  return fetch<UserProfile>({
     method: 'GET',
     path: '/v1/user/profile',
     sessionId,
@@ -87,7 +87,7 @@ export interface CurrentPlan {
 }
 
 export const getCurrentPlan = async ({ sessionId }: { sessionId: string }) => {
-  return request<CurrentPlan>({
+  return fetch<CurrentPlan>({
     method: 'GET',
     path: '/v1/billing/current-plan',
     sessionId,
@@ -104,7 +104,7 @@ export interface RemoteFile {
 }
 
 export const getUserFiles = async ({ sessionId }: { sessionId: string }) => {
-  return request<RemoteFile[]>({
+  return fetch<RemoteFile[]>({
     method: 'GET',
     path: '/v1/user/files',
     sessionId,
@@ -121,7 +121,7 @@ export interface LearningFeature {
 }
 
 export const getLearningFeature = async (): Promise<LearningFeature> => {
-  return request<LearningFeature>({
+  return fetch<LearningFeature>({
     method: 'GET',
     path: '/insomnia-production-public-assets/inapp-learning.json',
     origin: 'https://storage.googleapis.com',

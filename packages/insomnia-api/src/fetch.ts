@@ -11,23 +11,18 @@ export interface FetchConfig {
 
 export type Fetch<T = void> = (options: FetchConfig) => Promise<T>;
 
-let fetch: Fetch | null = null;
+let _fetch: Fetch | null = null;
 
 let configured = false;
-export function configureFetch(_fetch: Fetch) {
+export function configureFetch(fetch: Fetch) {
   if (configured) {
     throw new Error('Fetch has already been configured and cannot be re-configured.');
   }
-  fetch = _fetch;
+  _fetch = fetch;
   configured = true;
 }
 
-export interface APIError {
-  error: string;
-  message?: string;
-}
-
-export async function request<T = void>(options: FetchConfig): Promise<T> {
+export async function fetch<T = void>(options: FetchConfig): Promise<T> {
   if (!fetch) {
     throw new Error('Fetch has not been configured. Please call configureFetch() at application startup.');
   }
