@@ -9,23 +9,17 @@ export interface FetchConfig {
   timeout?: number;
 }
 
-export type Fetch<T = void> = (options: FetchConfig) => Promise<T>;
+export type Fetch = <T = void>(options: FetchConfig) => Promise<T>;
 
-let fetchFn: Fetch | null = null;
+export let fetch: Fetch = <T = void>(_options: FetchConfig): Promise<T> => {
+  throw new Error('Fetch has not been configured. Please call configureFetch() at application startup.');
+};
 
 let configured = false;
-export function configureFetch(fetch: Fetch) {
+export function configureFetch(_fetch: Fetch) {
   if (configured) {
     throw new Error('Fetch has already been configured and cannot be re-configured.');
   }
-  fetchFn = fetch;
+  fetch = _fetch;
   configured = true;
-}
-
-export async function fetch<T = void>(options: FetchConfig): Promise<T> {
-  if (!fetchFn) {
-    throw new Error('Fetch has not been configured. Please call configureFetch() at application startup.');
-  }
-
-  return (fetchFn as Fetch<T>)(options);
 }
