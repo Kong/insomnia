@@ -98,7 +98,7 @@ const getChildValue = (theme: any, path: string[]) => {
     try {
       acc = acc[v];
     } catch (e) {
-      return undefined;
+      return;
     }
     return acc;
   }, theme);

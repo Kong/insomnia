@@ -57,9 +57,6 @@ export const runScript = async ({
     evalInterceptor,
     _,
     proxiedSetTimeout,
-    undefined,
-    undefined,
-    undefined,
   );
   if (mutatedInsomniaObject == null || !(mutatedInsomniaObject instanceof InsomniaObject)) {
     throw new Error('insomnia object is invalid or script returns earlier than expected.');

@@ -296,7 +296,7 @@ export class PropertyList<T extends Property> {
     if (index <= this.list.length - 1) {
       return this.list[index];
     }
-    return undefined;
+    return;
   }
 
   indexOf(item: string | T) {
@@ -356,7 +356,7 @@ export class PropertyList<T extends Property> {
       }
     }
 
-    return undefined;
+    return;
   }
 
   populate(items: T[]) {

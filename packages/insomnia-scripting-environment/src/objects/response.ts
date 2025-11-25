@@ -198,7 +198,7 @@ export class Response extends Property {
         const resp: Response = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined | string = undefined;
+        let respBody: object | undefined | string;
 
         try {
           respBody = resp.body ? resp.json() : undefined;
@@ -239,7 +239,7 @@ export class Response extends Property {
         const resp = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined | string = undefined;
+        let respBody: object | undefined | string;
         try {
           respBody = resp.body ? resp.json() : undefined;
         } catch (e) {
@@ -290,7 +290,7 @@ export class Response extends Property {
         const resp: Response = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined = undefined;
+        let respBody: object | undefined;
         try {
           respBody = resp.body ? resp.json() : {};
         } catch (e) {
@@ -308,7 +308,7 @@ export class Response extends Property {
         const resp: Response = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined = undefined;
+        let respBody: object | undefined;
         try {
           respBody = resp.body ? resp.json() : {};
         } catch (e) {

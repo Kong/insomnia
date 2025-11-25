@@ -154,7 +154,7 @@ function useLocalStorage<T>(
   //   triggered the change
   useEffect(() => {
     if (!storageSync) {
-      return undefined;
+      return;
     }
 
     const onStorage = (e: StorageEvent): void => {

@@ -40,7 +40,6 @@ export default defineConfig([
       'unicorn/no-object-as-default-parameter': 'off', // TODO: delete me
       'unicorn/no-this-assignment': 'off', // TODO: delete me
       'unicorn/no-useless-switch-case': 'off', // TODO: delete me
-      'unicorn/no-useless-undefined': 'off', // TODO: delete me
       'unicorn/no-zero-fractions': 'off', // TODO: delete me
       'unicorn/numeric-separators-style': 'off', // TODO: delete me
       'unicorn/prefer-add-event-listener': 'off', // TODO: delete me

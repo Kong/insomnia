@@ -107,7 +107,7 @@ function mapParameters(parameters?: RequestParameter[]) {
  */
 function mapMeta(resource: Request | WebSocketRequest | SocketIORequest | GrpcRequest) {
   if (!resource) {
-    return undefined;
+    return;
   }
 
   return {
@@ -129,7 +129,7 @@ function mapMeta(resource: Request | WebSocketRequest | SocketIORequest | GrpcRe
  */
 function mapGroupMeta(resource: RequestGroup) {
   if (!resource) {
-    return undefined;
+    return;
   }
 
   return {
@@ -151,7 +151,7 @@ function mapGroupMeta(resource: RequestGroup) {
  */
 function mapWorkspaceMeta(workspace: Workspace) {
   if (!workspace) {
-    return undefined;
+    return;
   }
 
   return {
@@ -868,7 +868,7 @@ export async function getInsomniaV5DataExport({
       const hasAfterResponse = !!resource?.afterResponseScript;
 
       if (!hasPreRequest && !hasAfterResponse) {
-        return undefined;
+        return;
       }
 
       const scripts: { preRequest?: string; afterResponse?: string } = {};

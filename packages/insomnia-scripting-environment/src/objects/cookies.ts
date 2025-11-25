@@ -306,16 +306,16 @@ export class CookieJar {
   unset(url: string, name: string, cb: (error?: Error | null) => void) {
     const domainCookies = this.jar.get(url);
     if (!domainCookies) {
-      cb(undefined);
+      cb();
     } else {
       domainCookies.delete(name);
-      cb(undefined);
+      cb();
     }
   }
 
   clear(url: string, cb: (error?: Error | null) => void) {
     this.jar.delete(url);
-    cb(undefined);
+    cb();
   }
 
   toInsomniaCookieJar() {

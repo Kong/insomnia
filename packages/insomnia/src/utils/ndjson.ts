@@ -20,7 +20,7 @@ export const deserializeNDJSON = (data: string): any[] => {
       try {
         return JSON.parse(line);
       } catch (e) {
-        return undefined;
+        return;
       }
     })
     .filter(e => e !== undefined);

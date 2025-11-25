@@ -402,7 +402,7 @@ export const go = (args?: string[]) => {
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first test failure', false)
     .option('--keepFile', 'do not delete the generated test file', false)
-    .option('--requestTimeout <duration>', 'milliseconds before request times out', undefined) // defaults to user settings
+    .option('--requestTimeout <duration>', 'milliseconds before request times out') // defaults to user settings
     .option('-k, --disableCertValidation', 'disable certificate validation for requests with SSL', false)
     .option('--httpsProxy <proxy>', 'URL for the proxy server for https requests.', proxySettings.httpsProxy)
     .option('--httpProxy <proxy>', 'URL for the proxy server for http requests.', proxySettings.httpProxy)
@@ -535,7 +535,7 @@ export const go = (args?: string[]) => {
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('-g, --globals <identifier>', 'global environment to use (filepath or id)', '')
     .option('--delay-request <duration>', 'milliseconds to delay between requests', '0')
-    .option('--requestTimeout <duration>', 'milliseconds before request times out', undefined) // defaults to user settings
+    .option('--requestTimeout <duration>', 'milliseconds before request times out') // defaults to user settings
     .option('--env-var <key=value>', 'override environment variables', collect, [])
     .option('-n, --iteration-count <count>', 'number of times to repeat', '1')
     .option('-d, --iteration-data <path/url>', 'file path or url (JSON or CSV)', '')

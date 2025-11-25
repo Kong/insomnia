@@ -32,8 +32,8 @@ export async function sendRequest(
       return resolve(transformedOutput);
     } catch (e) {
       if (cb) {
-        cb(e, undefined);
-        resolve(undefined);
+        cb(e);
+        resolve();
       } else {
         reject(e);
       }

@@ -311,7 +311,7 @@ export const McpPane = () => {
         if (firstMatchEvent) {
           return 'result' in firstMatchEvent.data ? firstMatchEvent.data.result : undefined;
         }
-        return undefined;
+        return;
       };
       const activeResponseId = activeResponse?._id;
       if (activeResponseId) {

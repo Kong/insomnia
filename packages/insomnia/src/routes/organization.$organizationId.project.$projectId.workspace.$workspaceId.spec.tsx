@@ -241,7 +241,7 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   reactUse.useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
-    CodeMirror.registerHelper('lint', 'openapi', undefined);
+    CodeMirror.registerHelper('lint', 'openapi');
   });
 
   const onCodeEditorChange = useMemo(() => {

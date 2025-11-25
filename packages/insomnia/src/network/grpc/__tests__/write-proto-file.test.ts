@@ -21,7 +21,7 @@ describe('writeProtoFile', () => {
   const _configureSpies = (tmpDir: string, exists: boolean) => {
     existsSyncSpy.mockReturnValue(exists);
     tmpDirSpy.mockReturnValue(tmpDir);
-    writeFileSpy.mockResolvedValue(undefined);
+    writeFileSpy.mockResolvedValue();
   };
 
   const _restoreSpies = () => {

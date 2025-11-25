@@ -35,7 +35,7 @@ export const baseModelSchema: Schema<BaseModel> = {
 export const workspaceModelSchema: Schema<Workspace> = {
   ...baseModelSchema,
   ...toSchema(workspace.init()),
-  certificates: () => undefined,
+  certificates: () => {},
   type: () => workspace.type,
 };
 
@@ -61,6 +61,6 @@ export const environmentModelSchema: Schema<Environment> = {
   ...baseModelSchema,
   ...toSchema(environment.init()),
   type: () => environment.type,
-  environmentType: () => undefined,
-  kvPairData: () => undefined,
+  environmentType: () => {},
+  kvPairData: () => {},
 };

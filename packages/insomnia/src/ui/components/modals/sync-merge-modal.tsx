@@ -28,7 +28,7 @@ import { Icon } from '../icon';
 function validateMergeResult(mergeResult: string) {
   // Empty string means the file is deleted
   if (mergeResult === '') {
-    return undefined;
+    return;
   }
   let parsed = null;
   try {
@@ -42,7 +42,7 @@ function validateMergeResult(mergeResult: string) {
   } catch (error) {
     return extractErrorMessages(error).join('\n');
   }
-  return undefined;
+  return;
 }
 
 type EditorType = 'diff' | 'merge';

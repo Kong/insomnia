@@ -200,8 +200,8 @@ export const fetchRequestData = async (
 
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
-  let activeGlobalEnvironment: Environment | undefined = undefined;
-  let activeGlobalBaseEnvironment: Environment | undefined = undefined;
+  let activeGlobalEnvironment: Environment | undefined;
+  let activeGlobalBaseEnvironment: Environment | undefined;
   if (workspaceMeta?.activeGlobalEnvironmentId) {
     activeGlobalEnvironment = (await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId)) || undefined;
     const activeGlobalEnvironmentParentId = activeGlobalEnvironment?.parentId || '';
@@ -517,7 +517,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
     .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || isProject(doc))
     .reverse()
     .map(doc => doc.name);
-  let vault = undefined;
+  let vault;
   if (globals && vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
     // decrypt and set vault in insomnia sdk if necessary
     globals.data[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(

@@ -601,7 +601,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
     const { type, format, example, readOnly, default: defaultValue } = schema;
 
     if (readOnly) {
-      return undefined;
+      return;
     }
 
     if (example) {

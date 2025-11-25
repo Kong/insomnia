@@ -903,13 +903,13 @@ describe('util', () => {
     });
 
     it('fails on undefined', () => {
-      expect(() => hash(undefined)).toThrowError('Cannot hash undefined value');
+      expect(() => hash()).toThrowError('Cannot hash undefined value');
       expect(() => hash()).toThrowError('Cannot hash undefined value');
     });
   });
   describe('hashDocument()', () => {
     it('fails on undefined', () => {
-      expect(() => hashDocument(undefined)).toThrowError('Cannot hash undefined value');
+      expect(() => hashDocument()).toThrowError('Cannot hash undefined value');
       expect(() => hashDocument()).toThrowError('Cannot hash undefined value');
     });
 

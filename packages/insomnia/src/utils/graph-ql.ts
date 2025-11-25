@@ -36,5 +36,5 @@ export function getOperationType(request: Request) {
       }
     }
   }
-  return undefined;
+  return;
 }

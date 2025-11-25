@@ -91,7 +91,7 @@ function getClassFields(opts: RequestBodyOptions) {
       )
     : undefined;
 
-  let urlencoded = undefined;
+  let urlencoded;
   if (opts.urlencoded != null) {
     if (typeof opts.urlencoded === 'string') {
       const queryParamObj = QueryParam.parse(opts.urlencoded);

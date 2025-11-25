@@ -550,7 +550,7 @@ const parseRequestBody = ({ body, method }: { body: any; method: string }) => {
     return body.text || '';
   }
 
-  return undefined;
+  return;
 };
 const parseRequestBodyPath = async (body: any) => {
   const isMultipartForm = body.mimeType === CONTENT_TYPE_FORM_DATA;

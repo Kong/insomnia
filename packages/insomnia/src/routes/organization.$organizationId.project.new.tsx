@@ -86,7 +86,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
         return project._id;
       }
 
-      let credentials: GitCredentials | undefined = undefined;
+      let credentials: GitCredentials | undefined;
       if (newProjectData.oauth2format === 'custom') {
         credentials = {
           username: newProjectData.username || '',
