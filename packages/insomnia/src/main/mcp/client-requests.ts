@@ -225,7 +225,7 @@ export const responseSamplingRequest = (
           throw new Error(`Unknown server request response type: ${type}`);
         }
       }
-      pendingServerRequestResolvers.delete(options.serverRequestId);
+      mcpServerSamplingRequests.delete(serverRequestId);
     }
   }
 };
