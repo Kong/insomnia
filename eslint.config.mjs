@@ -44,7 +44,6 @@ export default defineConfig([
       'unicorn/prefer-add-event-listener': 'off', // TODO: delete me
       'unicorn/prefer-array-some': 'off', // TODO: delete me
       'unicorn/prefer-at': 'off', // TODO: delete me -
-      'unicorn/prefer-code-point': 'off', // TODO: delete me
       'unicorn/prefer-default-parameters': 'off', // TODO: delete me
       'unicorn/prefer-global-this': 'off', // TODO: delete me
       'unicorn/prefer-logical-operator-over-ternary': 'off', // TODO: delete me

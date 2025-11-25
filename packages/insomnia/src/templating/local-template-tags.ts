@@ -58,23 +58,23 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         invariant(kind === 'normal' || kind === 'url' || kind === 'hex', 'invalid kind');
         if (action === 'encode') {
           if (kind === 'normal') {
-            return btoa(new TextEncoder().encode(text).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+            return btoa(new TextEncoder().encode(text).reduce((data, byte) => data + String.fromCodePoint(byte), ''));
           }
 
           if (kind === 'hex') {
             const bytes = new Uint8Array(text.match(/.{1,2}/g).map((byte: string) => Number.parseInt(byte, 16)));
-            return btoa(String.fromCharCode(...bytes));
+            return btoa(String.fromCodePoint(...bytes));
           }
 
           if (kind === 'url') {
             const base64 = btoa(
-              new TextEncoder().encode(text).reduce((data, byte) => data + String.fromCharCode(byte), ''),
+              new TextEncoder().encode(text).reduce((data, byte) => data + String.fromCodePoint(byte), ''),
             );
             return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
           }
         }
         const binary = atob(text);
-        const bytes = new Uint8Array([...binary].map(char => char.charCodeAt(0)));
+        const bytes = new Uint8Array([...binary].map(char => char?.codePointAt(0) || 0));
 
         if (kind === 'hex') {
           return [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('');
@@ -251,7 +251,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         const hashArray = Array.from(new Uint8Array(buffer));
 
         if (encoding === 'base64') {
-          return btoa(String.fromCharCode.apply(null, hashArray));
+          return btoa(String.fromCodePoint.apply(null, hashArray));
         }
         // hex
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');

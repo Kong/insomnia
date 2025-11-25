@@ -382,8 +382,8 @@ export function containsOnlyDeprecationWarnings(output: string): boolean {
  */
 export function hasUnexpectedBinaryData(output: string): boolean {
   for (let i = 0; i < output.length; i++) {
-    const code = output.charCodeAt(i);
-    if (!(code === 0x09 || code === 0x0a || code === 0x0d || (code >= 0x20 && code <= 0x7e))) {
+    const code = output.codePointAt(i);
+    if (code && !(code === 0x09 || code === 0x0a || code === 0x0d || (code >= 0x20 && code <= 0x7e))) {
       return true;
     }
   }
