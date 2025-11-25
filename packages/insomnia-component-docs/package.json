@@ -16,17 +16,18 @@
     "@docusaurus/preset-classic": "3.9.2",
     "@docusaurus/theme-live-codeblock": "^3.9.2",
     "@mdx-js/react": "^3.0.0",
+    "@tailwindcss/postcss": "^4.1.17",
     "autoprefixer": "^10.4.21",
     "clsx": "^2.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^4.1.17"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "3.9.2",
     "@docusaurus/tsconfig": "3.9.2",
     "@docusaurus/types": "3.9.2",
-    "postcss": "^8.4.16",
+    "postcss": "^8.5.6",
     "typescript": "~5.6.2"
   },
   "engines": {
