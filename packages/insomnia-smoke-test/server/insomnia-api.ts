@@ -408,7 +408,7 @@ emailsAndGroupsToInvite.forEach((collaborator, index) => {
 
 collaboratorsList.total = collaboratorsList.collaborators.length + emailsAndGroupsToInvite.length;
 
-export default (app: Application) => {
+export default function setup(app: Application) {
   // User
   app.get('/v1/user/profile', (_req, res) => {
     console.log('GET *');
@@ -641,4 +641,4 @@ export default (app: Application) => {
       isAllowed: true,
     });
   });
-};
+}

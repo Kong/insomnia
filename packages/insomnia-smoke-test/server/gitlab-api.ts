@@ -1,6 +1,6 @@
 import type { Application } from 'express';
 
-export default (app: Application) => {
+export default function setup(app: Application) {
   app.post('/gitlab-api/api/graphql', (_req, res) => {
     res.status(200).send({
       data: {
@@ -36,4 +36,4 @@ export default (app: Application) => {
       access_token: '123456789',
     });
   });
-};
+}

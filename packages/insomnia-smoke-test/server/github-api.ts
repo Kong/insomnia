@@ -1,6 +1,6 @@
 import type { Application } from 'express';
 
-export default (app: Application) => {
+export default function setup(app: Application) {
   app.get('/github-api/rest/user/repos', (_req, res) => {
     res.status(200).send([
       {
@@ -45,4 +45,4 @@ export default (app: Application) => {
       access_token: '123456789',
     });
   });
-};
+}

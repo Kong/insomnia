@@ -30,7 +30,6 @@ export default defineConfig([
       'unicorn/prefer-response-static-json': 'off', // unsafe in our templating worker
 
       'unicorn/import-style': 'off', // TODO: delete me
-      'unicorn/no-anonymous-default-export': 'off', // TODO: delete me
       'unicorn/no-array-for-each': 'off', // TODO: delete me
       'unicorn/no-array-reverse': 'off', // TODO: delete me
       'unicorn/no-array-sort': 'off', // TODO: delete me
