@@ -12,6 +12,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           cache: npm
@@ -26,7 +28,7 @@ jobs:
 
       - name: Commit formatted code
         env:
-          BRANCH: ${{ github.head_ref }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -35,7 +37,7 @@ jobs:
           # Only commit if there are changes
           if ! git diff --cached --quiet; then
             git commit -m "chore: auto-format with Prettier"
-            git push --set-upstream origin "$BRANCH"
+            git push HEAD:"$BRANCH"
           else
             echo "No changes to commit"
           fi
