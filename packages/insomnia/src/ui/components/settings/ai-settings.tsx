@@ -168,16 +168,16 @@ export const AISettings = () => {
 
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-[--color-font]">
+              <span className="text-sm font-medium text-(--color-font)">
                 Allow MCP client to use the activated LLM service
               </span>
               {!isMcpClientEnabledByOrg ? (
-                <p className="text-xs text-[--color-danger]">
+                <p className="text-xs text-(--color-danger)">
                   Disabled by organization
                   {features.aiCommitMessages?.reason ? `: ${features.aiCommitMessages.reason}` : ''}
                 </p>
               ) : !hasActiveLLM ? (
-                <p className="text-xs text-[--hl]">Configure and activate an LLM to enable this feature</p>
+                <p className="text-xs text-(--hl)">Configure and activate an LLM to enable this feature</p>
               ) : null}
             </div>
             <Switch
@@ -186,8 +186,8 @@ export const AISettings = () => {
               isDisabled={!hasActiveLLM || !isCommitMessagesEnabledByOrg}
               className="group flex items-center gap-2"
             >
-              <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-[--hl-md] transition-colors group-data-[disabled]:cursor-not-allowed group-data-[selected]:bg-[--color-surprise] group-data-[disabled]:opacity-50">
-                <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-[selected]:translate-x-5" />
+              <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-selected:bg-(--color-surprise) group-data-disabled:opacity-50">
+                <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
               </div>
             </Switch>
           </div>
