@@ -11,14 +11,18 @@ interface Props {
 
 export const NoProjectView: FC<Props> = ({ storageRules, isGitSyncEnabled }) => {
   return (
-    <div className="flex h-full w-full flex-col items-center gap-3 pt-[15%] text-center">
-      <span className="text-xl font-semibold">Welcome to your organization!</span>
-      <span>Create a new project to get started</span>
-      <ProjectSettingsForm
-        storageRules={storageRules}
-        isGitSyncEnabled={isGitSyncEnabled}
-        defaultProjectName="My first project"
-      />
+    <div className="h-full overflow-y-auto pt-16">
+      <div className="max-h-full text-center">
+        <p className="mb-3 text-xl font-semibold">Welcome to your organization!</p>
+        <p className="mb-3">Create a new project to get started</p>
+        <div className="flex justify-center">
+          <ProjectSettingsForm
+            storageRules={storageRules}
+            isGitSyncEnabled={isGitSyncEnabled}
+            defaultProjectName="My first project"
+          />
+        </div>
+      </div>
     </div>
   );
 };

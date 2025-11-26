@@ -7,7 +7,7 @@ import type { StorageRules } from '~/models/organization';
 import type { GitRepository } from '../../../models/git-repository';
 import type { Project } from '../../../models/project';
 import { Icon } from '../icon';
-import { ProjectSettingsForm } from '../project/project-settings-form';
+import { ProjectSettingsForm, useActiveView } from '../project/project-settings-form';
 
 export const ProjectModal = ({
   isOpen,
@@ -33,7 +33,18 @@ export const ProjectModal = ({
     }
   }, [activeNavigation, isOpen, onOpenChange]);
 
-  const title = project ? 'Update project' : 'Create a new project';
+  const activeViewObj = useActiveView();
+
+  let title = '';
+  if (project) {
+    title = 'Project settings';
+  } else {
+    if (activeViewObj.activeView === 'git-results') {
+      title = 'Create Git Sync project';
+    } else {
+      title = 'Create project';
+    }
+  }
 
   return (
     <ModalOverlay
@@ -60,6 +71,7 @@ export const ProjectModal = ({
                   <Icon icon="x" />
                 </Button>
               </div>
+              {/* TODO: what's the difference between close and onOpenChange(false) */}
               <ProjectSettingsForm
                 storageRules={storageRules}
                 isGitSyncEnabled={isGitSyncEnabled}
@@ -67,6 +79,7 @@ export const ProjectModal = ({
                 gitRepository={gitRepository}
                 onCancel={close}
                 onSuccessUpdate={() => onOpenChange(false)}
+                activeViewObj={activeViewObj}
               />
             </>
           )}
