@@ -168,7 +168,7 @@ const routeChat: HandleCall<any, any> = (call: any) => {
       routeNotes[key] = [];
     }
     // Then add the new note to the list
-    routeNotes[key].push(JSON.parse(JSON.stringify(note)));
+    routeNotes[key].push(structuredClone(note));
   });
   call.on('end', function () {
     call.end();

@@ -412,10 +412,10 @@ export const CodeEditor = memo(
           }
 
           if (onPaste && change.origin === 'paste' && change.update) {
-              const translatedText = onPaste(change.text.join('\n')).split('\n');
+            const translatedText = onPaste(change.text.join('\n')).split('\n');
 
-              change.update(change.from, change.to, translatedText);
-            }
+            change.update(change.from, change.to, translatedText);
+          }
         });
 
         codeMirror.current.on('change', (doc: CodeMirror.Editor) => {
@@ -744,7 +744,7 @@ export const CodeEditor = memo(
             event.preventDefault();
             const pluginTemplateTags = (await getTemplateTags()).map(tag => ({
               // Skip unsupported objects like functions in template tag to send in IPC
-              templateTag: JSON.parse(JSON.stringify(tag.templateTag)),
+              templateTag: structuredClone(tag.templateTag),
             }));
             const target = event.target as HTMLElement;
             // right click on nunjucks tag
