@@ -9,7 +9,7 @@ describe('jsonPrettify()', () => {
   const basePath = path.join(__dirname, './fixtures');
   const files = fs.readdirSync(basePath);
   for (const file of files) {
-    if (!/-input\.json$/.test(file)) {
+    if (!file.match(/-input\.json$/)) {
       continue;
     }
 

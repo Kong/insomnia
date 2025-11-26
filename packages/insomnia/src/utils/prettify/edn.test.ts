@@ -9,7 +9,7 @@ describe('ednPrettify()', () => {
   const basePath = path.join(__dirname, './fixtures/edn');
   const files = fs.readdirSync(basePath);
   for (const file of files) {
-    if (!/-input\.edn$/.test(file)) {
+    if (!file.match(/-input\.edn$/)) {
       continue;
     }
 

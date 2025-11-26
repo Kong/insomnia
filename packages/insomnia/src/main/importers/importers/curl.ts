@@ -52,7 +52,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
       parseEntry = parseEntry.trim();
     }
 
-    if (typeof parseEntry === 'string' && /^-{1,2}[\w-]+/.test(parseEntry)) {
+    if (typeof parseEntry === 'string' && parseEntry.match(/^-{1,2}[\w-]+/)) {
       const isSingleDash = parseEntry[0] === '-' && parseEntry[1] !== '-';
       let name = parseEntry.replace(/^-{1,2}/, '');
 
@@ -361,7 +361,7 @@ const getPairValue = <T extends string | boolean>(parisByName: PairsByName, defa
 export const convert: Converter = rawData => {
   requestCount = 1;
 
-  if (!/^\s*curl /.test(rawData)) {
+  if (!rawData.match(/^\s*curl /)) {
     return null;
   }
 

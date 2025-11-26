@@ -15,7 +15,7 @@ CodeMirror.defineMode('openapi', function () {
         return 'comment';
       }
 
-      if (/^('([^']|\\.)*'?|"([^"]|\\.)*"?)/.test(stream.string)) {
+      if (stream.match(/^('([^']|\\.)*'?|"([^"]|\\.)*"?)/)) {
         return 'string';
       }
 
@@ -32,23 +32,23 @@ CodeMirror.defineMode('openapi', function () {
         state.pairStart = false;
 
         /* document start */
-        if (/---/.test(stream.string)) {
+        if (stream.match(/---/)) {
           return 'def';
         }
 
         /* document end */
-        if (/\.\.\./.test(stream.string)) {
+        if (stream.match(/\.\.\./)) {
           return 'def';
         }
 
         /* array list item */
-        if (/\s*-\s+/.test(stream.string)) {
+        if (stream.match(/\s*-\s+/)) {
           return 'meta';
         }
       }
 
       /* inline pairs/lists */
-      if (/^(\{|\}|\[|\])/.test(stream.string)) {
+      if (stream.match(/^(\{|\}|\[|\])/)) {
         if (ch === '{') {
           state.inlinePairs++;
         } else if (ch === '}') {
@@ -80,42 +80,39 @@ CodeMirror.defineMode('openapi', function () {
       /* start of value of a pair */
       if (state.pairStart) {
         /* block literals */
-        if (/^\s*(\||>)\s*/.test(stream.string)) {
+        if (stream.match(/^\s*(\||>)\s*/)) {
           state.literal = true;
           return 'meta';
         }
 
         /* references */
-        if (/^\s*(&|\*)[a-z0-9._-]+\b/i.test(stream.string)) {
+        if (stream.match(/^\s*(&|\*)[a-z0-9._-]+\b/i)) {
           return 'variable-2';
         }
 
         /* numbers */
-        if (state.inlinePairs === 0 && /^\s*-?[0-9.,]+\s?$/.test(stream.string)) {
+        if (state.inlinePairs === 0 && stream.match(/^\s*-?[0-9.,]+\s?$/)) {
           return 'number';
         }
 
-        if (state.inlinePairs > 0 && /^\s*-?[0-9.,]+\s?(?=(,|}))/.test(stream.string)) {
+        if (state.inlinePairs > 0 && stream.match(/^\s*-?[0-9.,]+\s?(?=(,|}))/)) {
           return 'number';
         }
 
         /* keywords */
-        if (keywordRegex.test(stream.string)) {
+        if (stream.match(keywordRegex)) {
           return 'keyword';
         }
       }
 
       /* pairs (associative arrays) -> key */
-      if (
-        !state.pair &&
-        /^\s*(?:[,[\]{}&*!|>'"%@`][^\s'":]|[^,[\]{}#&*!|>'"%@`])[^#]*?(?=\s*:($|\s))/.test(stream.string)
-      ) {
+      if (!state.pair && stream.match(/^\s*(?:[,[\]{}&*!|>'"%@`][^\s'":]|[^,[\]{}#&*!|>'"%@`])[^#]*?(?=\s*:($|\s))/)) {
         state.pair = true;
         state.keyCol = stream.indentation();
         return 'atom';
       }
 
-      if (state.pair && /^:\s*/.test(stream.string)) {
+      if (state.pair && stream.match(/^:\s*/)) {
         state.pairStart = true;
         return 'meta';
       }

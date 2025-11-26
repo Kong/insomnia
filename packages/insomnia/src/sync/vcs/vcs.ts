@@ -312,10 +312,10 @@ export class VCS {
   }
 
   static validateBranchName(branchName: string) {
-    if (!/^[a-zA-Z0-9._/-]{3,}$/.test(branchName)) {
+    if (!branchName.match(/^[a-zA-Z0-9._/-]{3,}$/)) {
       return 'Branch names must be at least 3 characters long and can only contain English letters, numbers, period (.), hyphen (-), underscore (_) and forward slash (/)';
     }
-    if (!/^[a-zA-Z0-9].*$/.test(branchName)) {
+    if (!branchName.match(/^[a-zA-Z0-9].*$/)) {
       return 'Branch names must start with a letter or number';
     }
     if (branchName.endsWith('/')) {

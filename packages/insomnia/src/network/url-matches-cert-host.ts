@@ -25,7 +25,7 @@ export function urlMatchesCertHost(certificateHost: string, requestUrl: string, 
   // Check ports
   if (needCheckPort) {
     if ((cPort + '').includes('*')) {
-      if (!new RegExp(`^${cPortRegex}$`).test(port || '')) {
+      if (!(port || '').match(`^${cPortRegex}$`)) {
         return false;
       }
     } else {
@@ -36,7 +36,7 @@ export function urlMatchesCertHost(certificateHost: string, requestUrl: string, 
   }
 
   // Check hostnames
-  if (!new RegExp(`^${cHostnameRegex}$`).test(hostname || '')) {
+  if (!(hostname || '').match(`^${cHostnameRegex}$`)) {
     return false;
   }
 

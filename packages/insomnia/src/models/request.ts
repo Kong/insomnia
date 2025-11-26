@@ -419,7 +419,7 @@ function migrateBody(request: Request) {
 
   // Second, convert all existing urlencoded bodies to new format
   const contentType = getContentTypeFromHeaders(request.headers) || '';
-  const wasFormUrlEncoded = !!/^application\/x-www-form-urlencoded/i.test(contentType);
+  const wasFormUrlEncoded = !!contentType.match(/^application\/x-www-form-urlencoded/i);
 
   if (wasFormUrlEncoded) {
     // Convert old-style form-encoded request bodies to new style

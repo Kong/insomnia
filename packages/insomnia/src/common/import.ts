@@ -71,12 +71,12 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     uri = uri.replace('https://github.com', 'https://raw.githubusercontent.com').replace('blob/', '');
   }
 
-  if (/^(http|https):\/\//.test(uri)) {
+  if (uri.match(/^(http|https):\/\//)) {
     const response = await fetch(uri);
     const content = await response.text();
 
     return content;
-  } else if (/^(file):\/\//.test(uri)) {
+  } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
     // allow reading the file as it is chosen by user
     return insecureReadFile(path);

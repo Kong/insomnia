@@ -381,27 +381,27 @@ async function replaceHintMatch(cm: CodeMirror.Editor, _self: any, data: any) {
   let prefix = '';
   let suffix = '';
 
-  if (data.type === TYPE_VARIABLE && !/{{[^}]*$/.test(prevChars)) {
+  if (data.type === TYPE_VARIABLE && !prevChars.match(/{{[^}]*$/)) {
     prefix = '{{ '; // If no closer before
-  } else if (data.type === TYPE_VARIABLE && /{{$/.test(prevChars)) {
+  } else if (data.type === TYPE_VARIABLE && prevChars.match(/{{$/)) {
     prefix = ' '; // If no space after opener
-  } else if (data.type === TYPE_TAG && /{%$/.test(prevChars)) {
+  } else if (data.type === TYPE_TAG && prevChars.match(/{%$/)) {
     prefix = ' '; // If no space after opener
-  } else if (data.type === TYPE_TAG && !/{%[^%]*$/.test(prevChars)) {
+  } else if (data.type === TYPE_TAG && !prevChars.match(/{%[^%]*$/)) {
     prefix = '{% '; // If no closer before
   }
 
-  if (data.type === TYPE_VARIABLE && !/^\s*}}/.test(nextChars)) {
+  if (data.type === TYPE_VARIABLE && !nextChars.match(/^\s*}}/)) {
     suffix = ' }}'; // If no closer after
-  } else if (data.type === TYPE_VARIABLE && nextChars.startsWith('}}')) {
+  } else if (data.type === TYPE_VARIABLE && nextChars.match(/^}}/)) {
     suffix = ' '; // If no space before closer
-  } else if (data.type === TYPE_TAG && nextChars.startsWith('%}')) {
+  } else if (data.type === TYPE_TAG && nextChars.match(/^%}/)) {
     suffix = ' '; // If no space before closer
-  } else if (data.type === TYPE_TAG && /^\s*}/.test(nextChars)) {
+  } else if (data.type === TYPE_TAG && nextChars.match(/^\s*}/)) {
     // Edge case because "%" doesn't auto-close tags so sometimes you end
     // up in the scenario of {% foo}
     suffix = ' %';
-  } else if (data.type === TYPE_TAG && !/^\s*%}/.test(nextChars)) {
+  } else if (data.type === TYPE_TAG && !nextChars.match(/^\s*%}/)) {
     suffix = ' %}'; // If no closer after
   }
 
