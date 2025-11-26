@@ -611,7 +611,6 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             break;
           }
 
-          case 'never':
           default: {
             shouldResend = false;
             break;
