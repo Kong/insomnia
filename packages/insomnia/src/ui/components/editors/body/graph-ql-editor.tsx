@@ -103,7 +103,8 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
   return JSON.stringify(content);
 }
 
-const isString = (value?: string): value is string => typeof value === 'string' || (value as unknown) instanceof String;
+const isString = (value?: string): value is string =>
+  typeof value === 'string' || typeof (value as unknown) === 'string';
 const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode =>
   def.kind === Kind.OPERATION_DEFINITION;
 

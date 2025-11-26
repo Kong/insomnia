@@ -121,7 +121,8 @@ function useLocalStorage<T>(
   );
   const setState = useCallback(
     (newValue: SetStateAction<T | undefined>): void => {
-      const value = newValue instanceof Function ? newValue(storageItem.current.parsed) : newValue;
+      // @ts-expect-error TS2345: Argument of type 'T | undefined' is not assignable to parameter of type 'unknown'.
+      const value = typeof newValue === 'function' ? newValue(storageItem.current.parsed) : newValue;
 
       // reasons for `localStorage` to throw an error:
       // - maximum quota is exceeded

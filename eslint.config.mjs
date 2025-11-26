@@ -32,7 +32,6 @@ export default defineConfig([
       'unicorn/no-array-for-each': 'off', // TODO: delete me
       'unicorn/no-array-reverse': 'off', // TODO: delete me
       'unicorn/no-array-sort': 'off', // TODO: delete me
-      'unicorn/no-instanceof-builtins': 'off', // TODO: delete me
       'unicorn/no-negated-condition': 'off', // TODO: delete me
       'unicorn/no-object-as-default-parameter': 'off', // TODO: delete me
       'unicorn/no-this-assignment': 'off', // TODO: delete me
