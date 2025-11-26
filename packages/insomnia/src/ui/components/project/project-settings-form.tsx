@@ -269,7 +269,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 
       {activeView === 'project' && (
         <>
-          <div className="mt-4 flex w-full flex-col justify-start gap-8 overflow-y-auto pb-2 text-left">
+          <div className="mt-4 flex w-full flex-col justify-start gap-8 pb-2 text-left">
             <TextField
               autoFocus
               name="name"
