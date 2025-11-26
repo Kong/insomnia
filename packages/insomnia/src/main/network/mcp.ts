@@ -252,7 +252,10 @@ const createTransportAndConnect = async (context: ConnectionContext, mcpClient: 
 
   let authType = 'none';
   if ('type' in mcpRequest.authentication) {
-    authType = mcpRequest.authentication.type === 'oauth2' ? 'oauth2-' + mcpRequest.authentication.grantType : mcpRequest.authentication.type;
+    authType =
+      mcpRequest.authentication.type === 'oauth2'
+        ? 'oauth2-' + mcpRequest.authentication.grantType
+        : mcpRequest.authentication.type;
   }
   const authDisabled = 'disabled' in mcpRequest.authentication && mcpRequest.authentication.disabled;
   const isFirstConnection = !mcpRequest.connected;
@@ -389,8 +392,7 @@ const performConnection = async (context: ConnectionContext) => {
     primitivePromises.push(mcpClient.listTools());
   }
   if (serverCapabilities?.resources) {
-    primitivePromises.push(mcpClient.listResources());
-    primitivePromises.push(mcpClient.listResourceTemplates());
+    primitivePromises.push(mcpClient.listResources(), mcpClient.listResourceTemplates());
   }
   if (serverCapabilities?.prompts) {
     primitivePromises.push(mcpClient.listPrompts());

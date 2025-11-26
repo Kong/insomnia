@@ -135,8 +135,8 @@ export const McpPane = () => {
           ...(primitiveNextCursor.resources && { nextCursor: primitiveNextCursor.resources }),
         });
         const hide = collapsedPrimitives.includes('resources');
-        collection.push(...(resources.map(r => ({ ...r, type: 'resources', itemLevel: 1, hide })) as ResourceItem[]));
         collection.push(
+          ...(resources.map(r => ({ ...r, type: 'resources', itemLevel: 1, hide })) as ResourceItem[]),
           ...(resourceTemplates.map(rt => ({
             ...rt,
             type: 'resourceTemplates',

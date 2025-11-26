@@ -860,13 +860,15 @@ export async function sendCurlAndWriteTimeline(
     authentication,
     renderedRequest.settingEncodeUrl,
   );
-  timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
-  timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
-  timeline.push({
-    value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`,
-    name: 'Text',
-    timestamp: Date.now(),
-  });
+  timeline.push(
+    { value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() },
+    { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
+    {
+      value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`,
+      name: 'Text',
+      timestamp: Date.now(),
+    },
+  );
 
   if (!renderedRequest.settingSendCookies) {
     timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
