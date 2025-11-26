@@ -13,7 +13,7 @@ process.parentPort.on('message', async ({ data: { messages, systemPrompt, modelC
     console.log('[mcp-generate-sampling-response-process] Successfully generate sampling responses');
     process.parentPort.postMessage(response);
   } catch (error) {
-    const errorMessage = 'Failed to generate git commits: ' + error.message;
+    const errorMessage = 'Failed to generate mcp sampling response: ' + error.message;
     console.error('[mcp-generate-sampling-response-process]', errorMessage);
     process.parentPort.postMessage({ error: errorMessage });
   }

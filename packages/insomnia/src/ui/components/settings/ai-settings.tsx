@@ -168,9 +168,7 @@ export const AISettings = () => {
 
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-(--color-font)">
-                Allow MCP client to use the activated LLM service
-              </span>
+              <span className="text-sm font-medium text-(--color-font)">Allow MCP client to use the LLM service</span>
               {!isMcpClientEnabledByOrg ? (
                 <p className="text-xs text-(--color-danger)">
                   Disabled by organization
@@ -186,7 +184,7 @@ export const AISettings = () => {
               isDisabled={!hasActiveLLM || !isCommitMessagesEnabledByOrg}
               className="group flex items-center gap-2"
             >
-              <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-selected:bg-(--color-surprise) group-data-disabled:opacity-50">
+              <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-disabled:opacity-50 group-data-selected:bg-(--color-surprise)">
                 <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
               </div>
             </Switch>

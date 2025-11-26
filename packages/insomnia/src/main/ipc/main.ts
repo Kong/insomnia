@@ -504,7 +504,7 @@ export function registerMainHandlers() {
       const process = utilityProcess.fork(path.join(__dirname, 'main/mcp-generate-sampling-response.mjs'));
 
       process.on('exit', code => {
-        console.log('[git-commit-generation-process] exited with code:', code);
+        console.log('[mcp-generate-sampling-response-process] exited with code:', code);
         let errorMessage: string;
 
         const signals = os.constants.signals;
@@ -526,7 +526,7 @@ export function registerMainHandlers() {
       });
 
       process.on('message', msg => {
-        console.log('[git-commit-generation-process] received message');
+        console.log('[mcp-generate-sampling-response-process] received message');
         resolve({
           response: {
             content: msg,
@@ -537,7 +537,7 @@ export function registerMainHandlers() {
       });
 
       process.on('error', err => {
-        console.error('[git-commit-generation-process] error:', err);
+        console.error('[mcp-generate-sampling-response-process] error:', err);
         reject({ error: err.toString() });
       });
       const { systemPrompt, messages, modelConfig: modelConfigFromSamplingRequest } = input;
