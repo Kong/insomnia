@@ -35,6 +35,7 @@ import {
   useOrganizationPermissionsLoaderFetcher,
 } from '~/routes/organization.$organizationId.permissions';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
+import { useActiveView } from '~/ui/components/project/hooks';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
@@ -62,29 +63,10 @@ import { GitHubRepositorySetupFormGroup } from '../git-credentials/github-reposi
 import { GitLabRepositorySetupFormGroup } from '../git-credentials/gitlab-repository-settings-form';
 import { Icon } from '../icon';
 import { InsomniaLogo } from '../insomnia-icon';
-import { useActiveView } from '~/ui/components/project/hooks';
-
-function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
-  if (storageType === 'git' && !isGitProject(project)) {
-    return true;
-  }
-
-  if (storageType === 'local' && (isRemoteProject(project) || isGitProject(project))) {
-    return true;
-  }
-
-  if (storageType === 'remote' && !isRemoteProject(project)) {
-    return true;
-  }
-
-  return false;
-}
 
 interface Props {
   storageRules: StorageRules;
   isGitSyncEnabled: boolean;
-  project?: Project;
-  gitRepository?: GitRepository;
   defaultProjectName?: string;
   onCancel?(): void;
   onSuccessUpdate?(): void;
@@ -94,8 +76,6 @@ interface Props {
 export const ProjectCreateForm: FC<Props> = ({
   storageRules,
   isGitSyncEnabled,
-  project,
-  gitRepository,
   defaultProjectName = 'My Project',
   onCancel,
   onSuccessUpdate,
@@ -116,7 +96,7 @@ export const ProjectCreateForm: FC<Props> = ({
   isGitSyncEnabled = features.gitSync.enabled;
 
   const [storageType, setStorageType] = useState<'local' | 'remote' | 'git'>(
-    getDefaultProjectStorageType(storageRules, project),
+    getDefaultProjectStorageType(storageRules),
   );
 
   let { activeView, setActiveView } = useActiveView();
@@ -141,23 +121,18 @@ export const ProjectCreateForm: FC<Props> = ({
     oauth2format?: OauthProviderName;
     connectRepositoryLater?: boolean;
   }>({
-    name: project?.name || defaultProjectName,
-    authorName: gitRepository?.author?.name || '',
-    authorEmail: gitRepository?.author?.email || '',
-    uri: gitRepository?.uri || '',
-    username: gitRepository?.credentials?.username || '',
-    password:
-      gitRepository?.credentials && 'password' in gitRepository.credentials ? gitRepository?.credentials?.password : '',
-    token: gitRepository?.credentials && 'token' in gitRepository.credentials ? gitRepository?.credentials?.token : '',
-    oauth2format:
-      gitRepository?.credentials && 'oauth2format' in gitRepository.credentials
-        ? (gitRepository?.credentials?.oauth2format ?? 'github')
-        : undefined,
+    name: defaultProjectName,
+    authorName: '',
+    authorEmail: '',
+    uri: '',
+    username: '',
+    password: '',
+    token: '',
+    oauth2format: undefined,
     connectRepositoryLater: false,
   });
 
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
-  const updateProjectFetcher = useProjectUpdateActionFetcher();
   const newProjectFetcher = useProjectNewActionFetcher();
 
   const showStorageRestrictionMessage =
@@ -168,22 +143,10 @@ export const ProjectCreateForm: FC<Props> = ({
       : [];
 
   useEffect(() => {
-    if (updateProjectFetcher.data && updateProjectFetcher.data.success && onSuccessUpdate) {
-      onSuccessUpdate();
-    }
-  }, [onSuccessUpdate, updateProjectFetcher.data]);
-
-  useEffect(() => {
     if (newProjectFetcher.state === 'idle' && newProjectFetcher.data && newProjectFetcher.data?.error) {
       setError(newProjectFetcher.data.error);
     }
   }, [newProjectFetcher.data, newProjectFetcher.state]);
-
-  useEffect(() => {
-    if (updateProjectFetcher.state === 'idle' && updateProjectFetcher.data && updateProjectFetcher.data?.error) {
-      setError(updateProjectFetcher.data.error);
-    }
-  }, [updateProjectFetcher.data, updateProjectFetcher.state]);
 
   const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository & { ref?: string }>) => {
     const { author, credentials, created, modified, isPrivate, needsFullClone, uriNeedsMigration, ...repoPatch } =
@@ -228,29 +191,13 @@ export const ProjectCreateForm: FC<Props> = ({
   };
 
   const onUpsertProject = () => {
-    if (project && activeView !== 'switch-storage-type' && isSwitchingStorageType(project, storageType)) {
-      setActiveView('switch-storage-type');
-      return;
-    }
-
-    if (project) {
-      updateProjectFetcher.submit({
-        organizationId,
-        projectId: project._id,
-        projectData: {
-          ...projectData,
-          storageType,
-        },
-      });
-    } else {
-      newProjectFetcher.submit({
-        organizationId,
-        projectData: {
-          ...projectData,
-          storageType,
-        },
-      });
-    }
+    newProjectFetcher.submit({
+      organizationId,
+      projectData: {
+        ...projectData,
+        storageType,
+      },
+    });
   };
 
   const organizationData = useOrganizationLoaderData();
@@ -260,13 +207,6 @@ export const ProjectCreateForm: FC<Props> = ({
     organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
 
   const isLightTheme = useIsLightTheme();
-
-  const projectInfoNotChangedWhenEditing =
-    project &&
-    project.name === projectData.name &&
-    ((isLocalProject(project) && storageType === 'local') ||
-      (isRemoteProject(project) && storageType === 'remote') ||
-      (isGitProject(project) && storageType === 'git'));
 
   return (
     <div className="flex w-full max-w-[600px] flex-col gap-4">
@@ -289,7 +229,7 @@ export const ProjectCreateForm: FC<Props> = ({
             >
               <Label className="text-sm text-[--hl]">Project name</Label>
               <Input
-                placeholder="My project"
+                placeholder={defaultProjectName}
                 className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
               />
             </TextField>
@@ -481,67 +421,31 @@ export const ProjectCreateForm: FC<Props> = ({
                 </Button>
               )}
               {(function () {
-                if (storageType !== 'git' || (project && isGitProject(project) && !(isEmptyGitProject(project) && !projectData.connectRepositoryLater))) {
+                if (storageType !== 'git') {
                   return (
                     <Button
                       onPress={onUpsertProject}
-                      isDisabled={(() => {
-                        if (updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') {
-                          return true;
-                        }
-                        // Disable update button when nothing changes
-                        if (projectInfoNotChangedWhenEditing) {
-                          return true;
-                        }
-                        return false;
-                      })()}
+                      isDisabled={newProjectFetcher.state !== 'idle'}
                       className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
                     >
-                      {(updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') && (
-                        <Icon icon="spinner" className="animate-spin" />
-                      )}
-                      <span>{project ? 'Update' : 'Create'}</span>
+                      {newProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
+                      <span>Create</span>
                     </Button>
                   );
-                } else {
-                  // The user selected git type
-                  if (!projectData.connectRepositoryLater) {
-                    return (
-                      <Button
-                        type="submit"
-                        form={selectedTab}
-                        className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-                      >
-                        Scan for files
-                      </Button>
-                    );
-                  }
+                }
+                // The user selected git type
+                if (!projectData.connectRepositoryLater) {
+                  return (
+                    <Button
+                      type="submit"
+                      form={selectedTab}
+                      className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                    >
+                      Scan for files
+                    </Button>
+                  );
                 }
               })()}
-              {storageType !== 'git' ? (
-                
-              ) : (
-                ''
-              )}
-              <div className="flex items-center gap-2">
-                {!projectData.connectRepositoryLater ? (
-                  
-                ) : project && projectData.connectRepositoryLater && !gitRepository ? (
-                  <Button
-                    onPress={onCancel}
-                    className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-                  >
-                    Close
-                  </Button>
-                ) : (
-                  <Button
-                    onPress={onUpsertProject}
-                    className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-                  >
-                    {project ? 'Update' : 'Create'}
-                  </Button>
-                )}
-              </div>
             </div>
           </div>
         </>
@@ -657,9 +561,9 @@ export const ProjectCreateForm: FC<Props> = ({
           )}
           <div className="flex items-center justify-end gap-2 pb-10">
             <Button
-              isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
+              isDisabled={newProjectFetcher.state !== 'idle'}
               onPress={() => {
-                setActiveView('git-clone');
+                setActiveView('git-results');
                 setError(null);
               }}
               className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
@@ -667,11 +571,11 @@ export const ProjectCreateForm: FC<Props> = ({
               Back
             </Button>
             <Button
-              isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
+              isDisabled={newProjectFetcher.state !== 'idle'}
               onPress={onUpsertProject}
               className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
             >
-              {updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle' ? (
+              {newProjectFetcher.state !== 'idle' ? (
                 <>
                   <Icon icon="spinner" className="animate-spin" />
                   <span>Cloning</span>
@@ -682,141 +586,6 @@ export const ProjectCreateForm: FC<Props> = ({
                 </>
               )}
             </Button>
-          </div>
-        </>
-      )}
-
-      {activeView === 'switch-storage-type' && (
-        <>
-          <div className="flex flex-col justify-start gap-2 overflow-y-auto px-10">
-            {storageType === 'git' && (
-              <div className="flex flex-col gap-4 text-[--color-font]">
-                <div className="flex flex-col gap-4">
-                  <p>
-                    {project && isRemoteProject(project)
-                      ? 'We will be converting your Cloud Sync project into a Git project, and permanently remove all cloud data for this project from the cloud.'
-                      : 'We will be converting your project into a Git project.'}
-                  </p>
-                  <ul className="flex flex-col gap-2 text-left">
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.
-                    </li>
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> Your collaborators can synchronize files using Git.
-                    </li>
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> The project will be stored locally also for every
-                      existing collaborator.
-                    </li>
-                  </ul>
-                  <p>You can synchronize a local project back to the cloud if you decide to do so.</p>
-                  {project && isRemoteProject(project) && (
-                    <p className="flex items-center gap-2">
-                      <Icon icon="triangle-exclamation" className="text-[--color-warning]" />
-                      Remember to pull your latest project updates before this operation
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-            {storageType === 'local' && (
-              <div className="flex flex-col gap-4 text-[--color-font]">
-                <div className="flex flex-col gap-4">
-                  <p>
-                    {project && isGitProject(project)
-                      ? 'We will be converting your Git project into a local project.'
-                      : 'We will be converting your Cloud Sync project into a local project, and permanently remove all cloud data for this project from the cloud.'}
-                  </p>
-                  {project && isGitProject(project) && (
-                    <ul className="flex flex-col gap-2 text-left">
-                      <li>
-                        <i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.
-                      </li>
-                      <li>
-                        <i className="fa fa-check text-emerald-600" /> You will not be able to synchronize this project
-                        using Git anymore.
-                      </li>
-                      <li>
-                        <i className="fa fa-check text-emerald-600" /> This action will not delete your remote
-                        repository.
-                      </li>
-                    </ul>
-                  )}
-                  {project && isRemoteProject(project) && (
-                    <>
-                      <ul className="flex flex-col gap-2 text-left">
-                        <li>
-                          <i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.
-                        </li>
-                        <li>
-                          <i className="fa fa-check text-emerald-600" /> Your collaborators will not be able to push and
-                          pull files anymore.
-                        </li>
-                        <li>
-                          <i className="fa fa-check text-emerald-600" /> The project will become local also for every
-                          existing collaborator.
-                        </li>
-                      </ul>
-                      <p>
-                        You can still use Git Sync for local projects without using the cloud, and you can synchronize a
-                        local project back to the cloud if you decide to do so.
-                      </p>
-                    </>
-                  )}
-                  <p className="flex items-center gap-2">
-                    <Icon icon="triangle-exclamation" className="text-[--color-warning]" />
-                    Remember to pull your latest project updates before this operation
-                  </p>
-                </div>
-              </div>
-            )}
-            {storageType === 'remote' && (
-              <div className="flex flex-col gap-4 text-[--color-font]">
-                <div className="flex flex-col gap-4">
-                  <p>
-                    We will be synchronizing your local project to Insomnia's Cloud in a secure encrypted format which
-                    will enable cloud collaboration.
-                  </p>
-                  <ul className="flex flex-col gap-2 text-left">
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> Your data in the cloud is encrypted and secure.
-                    </li>
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> You can now collaborate with any amount of users
-                      and use cloud features.
-                    </li>
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> Your project will be always available on any client
-                      after logging in.
-                    </li>
-                  </ul>
-                  <p>You can still use Git Sync for cloud projects.</p>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center justify-end gap-2 px-10 pb-10">
-            <div className="flex items-center gap-2">
-              <Button
-                onPress={() => {
-                  setError(null);
-                  setActiveView('project');
-                }}
-                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
-              >
-                Back
-              </Button>
-              <Button
-                onPress={onUpsertProject}
-                isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
-                className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-              >
-                {(updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') && (
-                  <Icon icon="spinner" className="animate-spin" />
-                )}
-                <span>Update</span>
-              </Button>
-            </div>
           </div>
         </>
       )}
