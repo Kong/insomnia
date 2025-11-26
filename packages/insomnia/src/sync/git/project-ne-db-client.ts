@@ -5,7 +5,6 @@ import YAML from 'yaml';
 
 import { database, database as db } from '../../common/database';
 import { extractErrorMessages } from '../../common/import';
-
 import type { InsomniaFile } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import * as models from '../../models';
