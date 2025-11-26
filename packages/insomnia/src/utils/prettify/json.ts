@@ -191,7 +191,7 @@ const repeatString = (str: string, count: number) => {
   if (count < 0) {
     return '';
   }
-  return new Array(count + 1).join(str);
+  return Array.from({ length: count + 1 }).join(str);
 };
 
 /**

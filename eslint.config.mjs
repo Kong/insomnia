@@ -36,7 +36,6 @@ export default defineConfig([
       'unicorn/no-array-sort': 'off', // TODO: delete me
       'unicorn/no-instanceof-builtins': 'off', // TODO: delete me
       'unicorn/no-negated-condition': 'off', // TODO: delete me
-      'unicorn/no-new-array': 'off', // TODO: delete me
       'unicorn/no-object-as-default-parameter': 'off', // TODO: delete me
       'unicorn/no-this-assignment': 'off', // TODO: delete me
       'unicorn/no-useless-switch-case': 'off', // TODO: delete me

@@ -87,7 +87,7 @@ export class RunCollectionResultReport {
   }
 
   private getStats() {
-    const iterationStatusArray = new Array(this.iterationCount).fill(true);
+    const iterationStatusArray = Array.from({ length: this.iterationCount }).fill(true);
     let failedRequests = 0;
     let totalTests = 0;
     let failedTests = 0;
