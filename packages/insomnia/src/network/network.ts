@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { join as pathJoin } from 'node:path';
+import nodePath from 'node:path';
 
 import clone from 'clone';
 import orderedJSON from 'json-order';
@@ -154,11 +154,11 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await models.caCertificate.findByParentId(workspaceId);
   const responseId = generateId('res');
-  const responsesDir = pathJoin(
+  const responsesDir = nodePath.join(
     (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
     'responses',
   );
-  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
   return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
@@ -220,12 +220,12 @@ export const fetchRequestData = async (
   const caCert = await models.caCertificate.findByParentId(workspaceId);
 
   const responseId = generateId('res');
-  const responsesDir = pathJoin(
+  const responsesDir = nodePath.join(
     process.env['INSOMNIA_DATA_PATH'] ||
       (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
     'responses',
   );
-  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
 
   return {
     request,
@@ -264,12 +264,12 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   invariant(settings, 'failed to create settings');
 
   const responseId = generateId('res');
-  const responsesDir = pathJoin(
+  const responsesDir = nodePath.join(
     process.env['INSOMNIA_DATA_PATH'] ||
       (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
     'responses',
   );
-  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
 
   return {
     environment,

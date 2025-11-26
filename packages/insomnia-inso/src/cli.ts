@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import path, { dirname } from 'node:path';
+import nodePath from 'node:path';
 
 import * as commander from 'commander';
 import type { logType } from 'consola';
@@ -122,13 +122,13 @@ export class InsoError extends Error {
 export function getAppDataDir(app: string): string {
   switch (process.platform) {
     case 'darwin': {
-      return path.join(homedir(), 'Library', 'Application Support', app);
+      return nodePath.join(homedir(), 'Library', 'Application Support', app);
     }
     case 'win32': {
-      return path.join(process.env.APPDATA || path.join(homedir(), 'AppData', 'Roaming'), app);
+      return nodePath.join(process.env.APPDATA || nodePath.join(homedir(), 'AppData', 'Roaming'), app);
     }
     case 'linux': {
-      return path.join(process.env.XDG_DATA_HOME || path.join(homedir(), '.config'), app);
+      return nodePath.join(process.env.XDG_DATA_HOME || nodePath.join(homedir(), '.config'), app);
     }
     default: {
       throw new Error('Unsupported platform');
@@ -152,12 +152,12 @@ export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string;
 
   if (workingDir) {
     if (fs.existsSync(workingDir) && !fs.statSync(workingDir).isDirectory()) {
-      return path.resolve(dirname(workingDir), file);
+      return nodePath.resolve(nodePath.dirname(workingDir), file);
     }
-    return path.resolve(workingDir, file);
+    return nodePath.resolve(workingDir, file);
   }
 
-  return path.resolve(process.cwd(), file);
+  return nodePath.resolve(process.cwd(), file);
 };
 export const logErrorAndExit = (err?: Error) => {
   if (err instanceof InsoError) {
@@ -182,7 +182,7 @@ const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
 
 const getWorkingDir = (options: { workingDir?: string }): string => {
   if (options.workingDir) {
-    return path.resolve(options.workingDir);
+    return nodePath.resolve(options.workingDir);
   }
 
   logger.warn('No working directory provided, using local app data directory.');

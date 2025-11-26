@@ -1,4 +1,4 @@
-import { resolve } from 'node:path';
+import nodePath from 'node:path';
 
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Button, Input, Text } from 'react-aria-components';
@@ -41,8 +41,8 @@ export const GGUF = ({
   });
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
-  const userDataPath = resolve(window.app.getPath('userData'));
-  const llmsFolder = resolve(userDataPath, LLMS_FOLDER_NAME);
+  const userDataPath = nodePath.resolve(window.app.getPath('userData'));
+  const llmsFolder = nodePath.resolve(userDataPath, LLMS_FOLDER_NAME);
   const [availableLLMs, setAvailableLLMs] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const refreshModelsDirectory = useCallback(() => {

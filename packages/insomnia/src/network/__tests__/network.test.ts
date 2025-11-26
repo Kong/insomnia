@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { join as pathJoin, resolve as pathResolve } from 'node:path';
+import nodePath from 'node:path';
 
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -316,11 +316,11 @@ describe('sendCurlAndWriteTimeline()', () => {
   it('sends a file', async () => {
     const workspace = await models.workspace.create();
     let settings = await models.settings.getOrCreate();
-    settings = await models.settings.update(settings, { dataFolders: [pathResolve(__dirname)] });
+    settings = await models.settings.update(settings, { dataFolders: [nodePath.resolve(__dirname)] });
     await models.cookieJar.create({
       parentId: workspace._id,
     });
-    const fileName = pathResolve(pathJoin(__dirname, './testfile.txt'));
+    const fileName = nodePath.resolve(nodePath.join(__dirname, './testfile.txt'));
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -387,7 +387,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     await models.cookieJar.create({
       parentId: workspace._id,
     });
-    const fileName = pathResolve(pathJoin(__dirname, './testfile.txt'));
+    const fileName = nodePath.resolve(nodePath.join(__dirname, './testfile.txt'));
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
