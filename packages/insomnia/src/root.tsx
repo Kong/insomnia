@@ -118,7 +118,9 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
       </p>
       {errorMessage && (
         <div className="p-6 text-(--color-font)">
-          <code className="p-2 wrap-break-word">{errorMessage}</code>
+          <pre className="p-2 wrap-break-word">
+            <code>{errorMessage}</code>
+          </pre>
         </div>
       )}
       <div className="flex items-center gap-2">
@@ -138,7 +140,9 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
         </Button>
       </div>
       <div className="overflow-y-auto p-6 text-(--color-font)">
-        <code className="p-2 break-all">{getErrorStack(error)}</code>
+        <pre className="p-2 break-all">
+          <code>{getErrorStack(error)}</code>
+        </pre>
       </div>
     </div>
   );

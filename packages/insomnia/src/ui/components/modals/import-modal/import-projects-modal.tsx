@@ -398,7 +398,7 @@ const ImportProjectsList = ({
     return {
       total,
       completed,
-      progress: total > 0 ? ((completed / total) * 100) | 0 : 0,
+      progress: total > 0 ? Math.trunc((completed / total) * 100) : 0,
     };
   }, [projectItems]);
 

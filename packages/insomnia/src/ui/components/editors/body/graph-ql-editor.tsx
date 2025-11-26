@@ -359,7 +359,7 @@ export const GraphQLEditor: FC<Props> = ({
       // default to first operation when none selected
       let operationName = operations[0] || '';
       if (operations.length && state.body.operationName) {
-        const operationsChanged = state.operations.join() !== operations.join();
+        const operationsChanged = state.operations.join(',') !== operations.join(',');
         const operationNameWasChanged = !operations.includes(state.body.operationName);
         if (operationsChanged && operationNameWasChanged) {
           // preserve selection during name change or fallback to first operation

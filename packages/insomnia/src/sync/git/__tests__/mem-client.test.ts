@@ -4,13 +4,13 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GIT_CLONE_DIR } from '../git-vcs';
 import { MemClient } from '../mem-client';
-import { assertAsyncError, setupDateMocks } from './util';
+import { assertAsyncError } from './util';
 
 describe('MemClient', () => {
   afterAll(() => {
     vi.restoreAllMocks();
   });
-  beforeEach(setupDateMocks);
+
   const fooTxt = 'foo.txt';
   const barTxt = 'bar.txt';
   describe('readfile()', () => {
@@ -209,6 +209,8 @@ describe('MemClient', () => {
 
   describe('stat()', () => {
     it('stats root dir', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(1000000000000);
       const fsClient = new MemClient();
       const stat = await fsClient.stat(GIT_CLONE_DIR);
       expect(stat).toEqual({
@@ -228,9 +230,12 @@ describe('MemClient', () => {
     });
 
     it('stats file', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(1000000000001);
       const fsClient = new MemClient();
       await fsClient.writeFile(fooTxt, 'xxx');
       const stat = await fsClient.stat(fooTxt);
+
       expect(stat).toEqual({
         ctimeMs: 1000000000001,
         mtimeMs: 1000000000001,

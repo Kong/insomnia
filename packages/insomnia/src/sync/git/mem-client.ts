@@ -39,7 +39,7 @@ type FSEntry = FSDir | FSFile | FSLink;
  */
 export class MemClient {
   __fs: FSEntry;
-  __ino: 0;
+  __ino = 0;
 
   static createClient(): PromiseFsClient {
     return {
@@ -48,7 +48,6 @@ export class MemClient {
   }
 
   constructor() {
-    this.__ino = 0;
     this.__fs = {
       type: 'dir',
       path: path.normalize('/'),

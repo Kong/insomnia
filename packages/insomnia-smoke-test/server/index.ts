@@ -22,6 +22,10 @@ import { startWebSocketServer } from './websocket';
 
 const app = express();
 app.use(cookieParser());
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} ${new Date().toISOString()}`);
+  next();
+});
 const port = 4010;
 const httpsPort = 4011;
 const grpcPort = 50051;

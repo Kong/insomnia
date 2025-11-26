@@ -132,7 +132,7 @@ const recordRoute: HandleCall<any, any> = (call: any, callback: any) => {
       point_count: pointCount,
       feature_count: featureCount,
       // Cast the distance to an integer
-      distance: distance | 0,
+      distance: Math.trunc(distance),
       // End the timer
       elapsed_time: process.hrtime(startTime)[0],
     });

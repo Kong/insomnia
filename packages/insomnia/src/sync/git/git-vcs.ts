@@ -1923,7 +1923,7 @@ export class GitVCS {
         const statusMatrix = await git.statusMatrix({ ...this._baseOpts });
         const row = statusMatrix.find(([filepath]) => filepath === change.path);
         if (row) {
-          const [, , , stageStatusCode] = row;
+          const stageStatusCode = row[3];
           if (stageStatusCode !== 0) {
             // 2. Get staged blob content
             const index = await git.listFiles({ ...this._baseOpts });

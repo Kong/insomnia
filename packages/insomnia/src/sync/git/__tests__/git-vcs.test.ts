@@ -5,7 +5,6 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR } from '../git-vcs';
 import { MemClient } from '../mem-client';
-import { setupDateMocks } from './util';
 
 describe('Git-VCS', () => {
   const fooTxt = 'foo.txt';
@@ -14,8 +13,6 @@ describe('Git-VCS', () => {
   afterAll(() => {
     vi.restoreAllMocks();
   });
-
-  beforeEach(setupDateMocks);
 
   describe('common operations', () => {
     it('stage and unstage file', async () => {
@@ -139,6 +136,9 @@ describe('Git-VCS', () => {
     });
 
     it('commit file', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2001-09-10'));
+      vi.stubEnv('TZ', 'UTC');
       const fsClient = MemClient.createClient();
       await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
       await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'foo');
@@ -201,23 +201,23 @@ describe('Git-VCS', () => {
             author: {
               email: 'karen@example.com',
               name: 'Karen Brown',
-              timestamp: 1000000000,
+              timestamp: 1000080000,
               timezoneOffset: 0,
             },
             committer: {
               email: 'karen@example.com',
               name: 'Karen Brown',
-              timestamp: 1000000000,
+              timestamp: 1000080000,
               timezoneOffset: 0,
             },
             message: 'First commit!\n',
             parent: [],
             tree: '14819d8019f05edb70a29850deb09a4314ad0afc',
           },
-          oid: '76f804a23eef9f52017bf93f4bc0bfde45ec8a93',
+          oid: '56eeab0bb61c367de6f62ade2893cf074480991c',
           payload: `tree 14819d8019f05edb70a29850deb09a4314ad0afc
-author Karen Brown <karen@example.com> 1000000000 +0000
-committer Karen Brown <karen@example.com> 1000000000 +0000
+author Karen Brown <karen@example.com> 1000080000 +0000
+committer Karen Brown <karen@example.com> 1000080000 +0000
 
 First commit!
 `,

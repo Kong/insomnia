@@ -308,7 +308,7 @@ export const Runner: FC = () => {
   const onToggleSelection = () => {
     if (selectedKeys === 'all' || Array.from(selectedKeys).length === Array.from(reqList).length) {
       // unselect all
-      updateRunnerState(organizationId, runnerId, { selectedKeys: new Set([]) });
+      updateRunnerState(organizationId, runnerId, { selectedKeys: new Set() });
     } else {
       // select all
       const allKeys = reqList.map(item => item.id);

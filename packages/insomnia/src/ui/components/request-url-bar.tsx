@@ -478,7 +478,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
               ? '1 environment variable is missing'
               : `${undefinedEnvironmentVariableList?.length} environment variables are missing`
           }
-          okText="Execute anyways"
+          okText="Execute anyway"
           onOk={() => {
             setShowEnvVariableMissingModal(false);
             sendOrConnect(false, true);
