@@ -233,12 +233,16 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
       if (dropPosition === 'before') {
         const currentEnvIndex = subEnvironments.findIndex(evt => evt._id === targetEnv._id);
         const previousEnv = subEnvironments[currentEnvIndex - 1];
-        sourceEnv.metaSortKey = !previousEnv ? targetEnv.metaSortKey - 1 : (previousEnv.metaSortKey + targetEnv.metaSortKey) / 2;
+        sourceEnv.metaSortKey = !previousEnv
+          ? targetEnv.metaSortKey - 1
+          : (previousEnv.metaSortKey + targetEnv.metaSortKey) / 2;
       }
       if (dropPosition === 'after') {
         const currentEnvIndex = subEnvironments.findIndex(evt => evt._id === targetEnv._id);
         const nextEnv = subEnvironments[currentEnvIndex + 1];
-        sourceEnv.metaSortKey = !nextEnv ? targetEnv.metaSortKey + 1 : (nextEnv.metaSortKey + targetEnv.metaSortKey) / 2;
+        sourceEnv.metaSortKey = !nextEnv
+          ? targetEnv.metaSortKey + 1
+          : (nextEnv.metaSortKey + targetEnv.metaSortKey) / 2;
       }
 
       updateEnvironmentFetcher.submit({

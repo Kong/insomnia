@@ -431,7 +431,9 @@ const OAuth2TokenInput: FC<{
   const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const { _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const onChange = async ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => {
-    await (token ? models.oAuth2Token.update(token, { [property]: value }) : models.oAuth2Token.create({ [property]: value, parentId: _id }));
+    await (token
+      ? models.oAuth2Token.update(token, { [property]: value })
+      : models.oAuth2Token.create({ [property]: value, parentId: _id }));
   };
 
   const expiryLabel = useMemo(() => {

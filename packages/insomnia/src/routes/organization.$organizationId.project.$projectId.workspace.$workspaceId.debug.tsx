@@ -586,12 +586,18 @@ const Debug = () => {
           const beforeItem = targetItem;
           const afterItem = targetSiblingsCollections[targetIndexInSiblingsCollection + 1];
 
-          metaSortKey = beforeItem && afterItem ? beforeItem.doc.metaSortKey - (beforeItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2 : beforeItem.doc.metaSortKey + 100;
+          metaSortKey =
+            beforeItem && afterItem
+              ? beforeItem.doc.metaSortKey - (beforeItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2
+              : beforeItem.doc.metaSortKey + 100;
         } else {
           const beforeItem = targetSiblingsCollections[targetIndexInSiblingsCollection - 1];
           const afterItem = targetItem;
 
-          metaSortKey = beforeItem && afterItem ? afterItem.doc.metaSortKey - (afterItem.doc.metaSortKey - beforeItem.doc.metaSortKey) / 2 : afterItem.doc.metaSortKey - 100;
+          metaSortKey =
+            beforeItem && afterItem
+              ? afterItem.doc.metaSortKey - (afterItem.doc.metaSortKey - beforeItem.doc.metaSortKey) / 2
+              : afterItem.doc.metaSortKey - 100;
         }
       }
 

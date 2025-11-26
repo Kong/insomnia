@@ -247,10 +247,12 @@ function requestOptionsToClassFields(options: RequestOptions) {
 
   let headers: HeaderList<Header>;
   if (options.header != null) {
-    headers = Array.isArray(options.header) ? new HeaderList(undefined, options.header ? options.header.map(header => new Header(header)) : []) : new HeaderList(
-        undefined,
-        Object.entries(options.header).map(entry => new Header({ key: entry[0], value: entry[1] })),
-      );
+    headers = Array.isArray(options.header)
+      ? new HeaderList(undefined, options.header ? options.header.map(header => new Header(header)) : [])
+      : new HeaderList(
+          undefined,
+          Object.entries(options.header).map(entry => new Header({ key: entry[0], value: entry[1] })),
+        );
   } else {
     headers = new HeaderList(undefined, new Array<Header>());
   }

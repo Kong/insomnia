@@ -1879,7 +1879,9 @@ export class GitVCS {
 
   async stageChanges(changes: { path: string; status: Status }[]) {
     for (const change of changes) {
-      await (change.status[1] === 0 ? git.remove({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) }) : git.add({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) }));
+      await (change.status[1] === 0
+        ? git.remove({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) })
+        : git.add({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) }));
     }
   }
 

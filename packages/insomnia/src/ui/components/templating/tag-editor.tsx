@@ -257,19 +257,21 @@ export const TagEditor: FC<Props> = props => {
     // detects a string to replace with a link to settings
     const linkText = 'Insomnia Preferences → Security';
     previewElement = error.endsWith(linkText) ? (
-        <div className="danger min-h-[115px] rounded-md border border-solid border-(--hl-md) bg-(--hl-xxs) p-(--padding-sm)">
-          {error.slice(0, error.length - linkText.length)}
-          <Link
-            className="cursor-pointer text-(--color-surprise)"
-            onPress={() => {
-              props.close();
-              showSettingsModal({ tab: 'general' });
-            }}
-          >
-            {linkText}
-          </Link>
-        </div>
-      ) : <textarea className="danger" value={error || 'Error'} readOnly rows={5} />;
+      <div className="danger min-h-[115px] rounded-md border border-solid border-(--hl-md) bg-(--hl-xxs) p-(--padding-sm)">
+        {error.slice(0, error.length - linkText.length)}
+        <Link
+          className="cursor-pointer text-(--color-surprise)"
+          onPress={() => {
+            props.close();
+            showSettingsModal({ tab: 'general' });
+          }}
+        >
+          {linkText}
+        </Link>
+      </div>
+    ) : (
+      <textarea className="danger" value={error || 'Error'} readOnly rows={5} />
+    );
   } else if (rendering) {
     previewElement = <textarea value="rendering..." readOnly rows={5} />;
   } else {

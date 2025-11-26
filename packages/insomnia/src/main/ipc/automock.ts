@@ -69,7 +69,9 @@ function mockTypeFields(type: Type, stackDepth: StackDepth): object {
     const resolvedField = field.resolve();
 
     if (resolvedField.parent !== resolvedField.resolvedType) {
-      data[resolvedField.name] = resolvedField.repeated ? [mockField(resolvedField, stackDepth)] : mockField(resolvedField, stackDepth);
+      data[resolvedField.name] = resolvedField.repeated
+        ? [mockField(resolvedField, stackDepth)]
+        : mockField(resolvedField, stackDepth);
     }
 
     return data;
@@ -125,7 +127,9 @@ function mockMapField(field: MapField, stackDepth: StackDepth): any {
     const resolvedType = field.resolvedType;
 
     if (resolvedType instanceof Type) {
-      mockPropertyValue = resolvedType.oneofs ? pickOneOf(resolvedType.oneofsArray, stackDepth) : mockTypeFields(resolvedType, stackDepth);
+      mockPropertyValue = resolvedType.oneofs
+        ? pickOneOf(resolvedType.oneofsArray, stackDepth)
+        : mockTypeFields(resolvedType, stackDepth);
     } else if (resolvedType instanceof Enum) {
       mockPropertyValue = mockEnum(resolvedType);
     } else if (resolvedType === null) {

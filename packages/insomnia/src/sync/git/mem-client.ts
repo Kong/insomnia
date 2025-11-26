@@ -68,7 +68,7 @@ export class MemClient {
         return toPrint;
       }
 
-      const indent = Array.from({length: (dir.match(/\//g) || []).length}).join('|   ');
+      const indent = Array.from({ length: (dir.match(/\//g) || []).length }).join('|   ');
 
       if (entry.type === 'dir') {
         if (entry.path !== baseDir) {

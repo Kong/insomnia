@@ -109,25 +109,31 @@ export const Button: React.FC<ButtonProps> = ({
     }
 
     if (variant === 'outlined') {
-      buttonStyles = bg === 'default' ? {
-          ...buttonStyles,
-          borderColor: 'var(--hl-lg)',
-        } : {
-          ...buttonStyles,
-          borderColor: 'inherit',
-        };
+      buttonStyles =
+        bg === 'default'
+          ? {
+              ...buttonStyles,
+              borderColor: 'var(--hl-lg)',
+            }
+          : {
+              ...buttonStyles,
+              borderColor: 'inherit',
+            };
     }
 
     if (variant === 'contained') {
-      buttonStyles = bg === 'default' ? {
-          ...buttonStyles,
-          backgroundColor: 'var(--hl-xs)',
-          color: `var(--color-font-${bg})`,
-        } : {
-          ...buttonStyles,
-          background: `var(--color-${bg})`,
-          color: `var(--color-font-${bg})`,
-        };
+      buttonStyles =
+        bg === 'default'
+          ? {
+              ...buttonStyles,
+              backgroundColor: 'var(--hl-xs)',
+              color: `var(--color-font-${bg})`,
+            }
+          : {
+              ...buttonStyles,
+              background: `var(--color-${bg})`,
+              color: `var(--color-font-${bg})`,
+            };
     }
 
     return buttonStyles;

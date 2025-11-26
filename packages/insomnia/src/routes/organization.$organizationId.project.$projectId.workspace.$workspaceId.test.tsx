@@ -219,12 +219,16 @@ const Component = () => {
       if (dropPosition === 'before') {
         const currentTestSuiteIndex = unitTestSuites.findIndex(testSuite => testSuite._id === targetTestSuite._id);
         const previousTestSuite = unitTestSuites[currentTestSuiteIndex - 1];
-        sourceTestSuite.metaSortKey = !previousTestSuite ? targetTestSuite.metaSortKey - 1 : (previousTestSuite.metaSortKey + targetTestSuite.metaSortKey) / 2;
+        sourceTestSuite.metaSortKey = !previousTestSuite
+          ? targetTestSuite.metaSortKey - 1
+          : (previousTestSuite.metaSortKey + targetTestSuite.metaSortKey) / 2;
       }
       if (dropPosition === 'after') {
         const currentTestSuiteIndex = unitTestSuites.findIndex(testSuite => testSuite._id === targetTestSuite._id);
         const nextEnv = unitTestSuites[currentTestSuiteIndex + 1];
-        sourceTestSuite.metaSortKey = !nextEnv ? targetTestSuite.metaSortKey + 1 : (nextEnv.metaSortKey + targetTestSuite.metaSortKey) / 2;
+        sourceTestSuite.metaSortKey = !nextEnv
+          ? targetTestSuite.metaSortKey + 1
+          : (nextEnv.metaSortKey + targetTestSuite.metaSortKey) / 2;
       }
 
       updateTestSuiteFetcher.submit({

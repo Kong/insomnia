@@ -138,11 +138,13 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
 
   const upsertPayloadWithValue = async (value: string) => {
     const payload = await models.webSocketPayload.getByParentId(request._id);
-    await (payload ? models.webSocketPayload.update(payload, { value }) : models.webSocketPayload.create({
-        parentId: request._id,
-        value,
-        mode: previewMode,
-      }));
+    await (payload
+      ? models.webSocketPayload.update(payload, { value })
+      : models.webSocketPayload.create({
+          parentId: request._id,
+          value,
+          mode: previewMode,
+        }));
   };
 
   return (
@@ -227,11 +229,13 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   const upsertPayloadWithMode = async (mode: string) => {
     // @TODO: multiple payloads
     const payload = await models.webSocketPayload.getByParentId(requestId);
-    await (payload ? models.webSocketPayload.update(payload, { mode }) : models.webSocketPayload.create({
-        parentId: requestId,
-        value: '',
-        mode,
-      }));
+    await (payload
+      ? models.webSocketPayload.update(payload, { mode })
+      : models.webSocketPayload.create({
+          parentId: requestId,
+          value: '',
+          mode,
+        }));
   };
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
 

@@ -423,17 +423,17 @@ export const Runner: FC = () => {
     let totalTestCount = 0;
 
     if (!isRunning && executionResult?.iterationResults) {
-        for (const iteration of executionResult.iterationResults) {
-          for (const requests of iteration) {
-            for (const testCase of requests.results) {
-              if (testCase.status === 'passed') {
-                passedTestCount++;
-              }
-              totalTestCount++;
+      for (const iteration of executionResult.iterationResults) {
+        for (const requests of iteration) {
+          for (const testCase of requests.results) {
+            if (testCase.status === 'passed') {
+              passedTestCount++;
             }
+            totalTestCount++;
           }
         }
       }
+    }
 
     const testResultCountTagColor =
       totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-(--hl-sm)';
