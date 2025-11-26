@@ -32,8 +32,7 @@ interface IStrictNullSearchParams extends Omit<ISearchParams, 'value'> {
 type ProcessDeconstructFuncReturnType<T> = T extends { strictNullHandling: true }
   ? IStrictNullSearchParams[]
   : ISearchParams[];
-export const getJoiner = (url: string) => {
-  url = url || '';
+export const getJoiner = (url = '') => {
   return !url.includes('?') ? '?' : '&';
 };
 

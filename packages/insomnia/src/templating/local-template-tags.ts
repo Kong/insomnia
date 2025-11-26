@@ -52,8 +52,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           placeholder: 'My text',
         },
       ],
-      run(_context, action: 'encode' | 'decode', kind: 'normal' | 'url' | 'hex', text) {
-        text = text || '';
+      run(_context, action: 'encode' | 'decode', kind: 'normal' | 'url' | 'hex', text = '') {
         invariant(action === 'encode' || action === 'decode', 'invalid action');
         invariant(kind === 'normal' || kind === 'url' || kind === 'hex', 'invalid kind');
         if (action === 'encode') {
