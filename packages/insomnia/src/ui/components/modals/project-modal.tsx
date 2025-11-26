@@ -3,11 +3,13 @@ import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-compone
 import { useNavigation } from 'react-router';
 
 import type { StorageRules } from '~/models/organization';
+import { useActiveView } from '~/ui/components/project/hooks';
 
 import type { GitRepository } from '../../../models/git-repository';
 import type { Project } from '../../../models/project';
 import { Icon } from '../icon';
-import { ProjectSettingsForm, useActiveView } from '../project/project-settings-form';
+import { ProjectCreateForm } from '../project/project-create-form';
+import { ProjectSettingsForm } from '../project/project-settings-form';
 
 export const ProjectModal = ({
   isOpen,
@@ -72,15 +74,27 @@ export const ProjectModal = ({
                 </Button>
               </div>
               {/* TODO: what's the difference between close and onOpenChange(false) */}
-              <ProjectSettingsForm
-                storageRules={storageRules}
-                isGitSyncEnabled={isGitSyncEnabled}
-                project={project}
-                gitRepository={gitRepository}
-                onCancel={close}
-                onSuccessUpdate={() => onOpenChange(false)}
-                activeViewObj={activeViewObj}
-              />
+              {project ? (
+                <ProjectSettingsForm
+                  storageRules={storageRules}
+                  isGitSyncEnabled={isGitSyncEnabled}
+                  project={project}
+                  gitRepository={gitRepository}
+                  onCancel={close}
+                  onSuccessUpdate={() => onOpenChange(false)}
+                  activeViewObj={activeViewObj}
+                />
+              ) : (
+                <ProjectCreateForm
+                  storageRules={storageRules}
+                  isGitSyncEnabled={isGitSyncEnabled}
+                  project={project}
+                  gitRepository={gitRepository}
+                  onCancel={close}
+                  onSuccessUpdate={() => onOpenChange(false)}
+                  activeViewObj={activeViewObj}
+                />
+              )}
             </>
           )}
         </Dialog>

@@ -62,6 +62,7 @@ import { GitHubRepositorySetupFormGroup } from '../git-credentials/github-reposi
 import { GitLabRepositorySetupFormGroup } from '../git-credentials/gitlab-repository-settings-form';
 import { Icon } from '../icon';
 import { InsomniaLogo } from '../insomnia-icon';
+import { useActiveView } from '~/ui/components/project/hooks';
 
 function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
   if (storageType === 'git' && !isGitProject(project)) {
@@ -90,7 +91,7 @@ interface Props {
   activeViewObj?: ReturnType<typeof useActiveView>;
 }
 
-export const ProjectSettingsForm: FC<Props> = ({
+export const ProjectCreateForm: FC<Props> = ({
   storageRules,
   isGitSyncEnabled,
   project,
@@ -822,8 +823,3 @@ export const ProjectSettingsForm: FC<Props> = ({
     </div>
   );
 };
-
-export function useActiveView() {
-  const [activeView, setActiveView] = useState<'project' | 'git-results'>('project');
-  return { activeView, setActiveView };
-}

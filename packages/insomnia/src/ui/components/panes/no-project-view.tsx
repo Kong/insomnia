@@ -2,7 +2,7 @@ import React, { type FC } from 'react';
 
 import type { StorageRules } from '~/models/organization';
 
-import { ProjectSettingsForm } from '../project/project-settings-form';
+import { ProjectCreateForm } from '../project/project-create-form';
 
 interface Props {
   storageRules: StorageRules;
@@ -16,7 +16,7 @@ export const NoProjectView: FC<Props> = ({ storageRules, isGitSyncEnabled }) => 
         <p className="mb-3 text-xl font-semibold">Welcome to your organization!</p>
         <p className="mb-3">Create a new project to get started</p>
         <div className="flex justify-center">
-          <ProjectSettingsForm
+          <ProjectCreateForm
             storageRules={storageRules}
             isGitSyncEnabled={isGitSyncEnabled}
             defaultProjectName="My first project"

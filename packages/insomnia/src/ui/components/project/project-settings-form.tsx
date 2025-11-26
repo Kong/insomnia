@@ -35,6 +35,7 @@ import {
   useOrganizationPermissionsLoaderFetcher,
 } from '~/routes/organization.$organizationId.permissions';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
+import { useActiveView } from '~/ui/components/project/hooks';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
@@ -85,6 +86,7 @@ interface Props {
   defaultProjectName?: string;
   onCancel?(): void;
   onSuccessUpdate?(): void;
+  activeViewObj?: ReturnType<typeof useActiveView>;
 }
 
 export const ProjectSettingsForm: FC<Props> = ({
@@ -95,6 +97,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   defaultProjectName = 'My Project',
   onCancel,
   onSuccessUpdate,
+  activeViewObj,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
@@ -112,9 +115,13 @@ export const ProjectSettingsForm: FC<Props> = ({
   const [storageType, setStorageType] = useState<'local' | 'remote' | 'git'>(
     getDefaultProjectStorageType(storageRules, project),
   );
-  const [activeView, setActiveView] = useState<'project' | 'git-clone' | 'git-results' | 'switch-storage-type'>(
-    'project',
-  );
+
+  let { activeView, setActiveView } = useActiveView();
+  if (activeViewObj) {
+    activeView = activeViewObj.activeView;
+    setActiveView = activeViewObj.setActiveView;
+  }
+
   const [selectedTab, setTab] = useState<OauthProviderName>('github');
 
   const [error, setError] = useState<string | null>(null);
