@@ -54,8 +54,6 @@ export default defineConfig([
       'unicorn/prefer-string-replace-all': 'off', // TODO: delete me
       'unicorn/prefer-structured-clone': 'off', // TODO: delete me
       'unicorn/prefer-switch': 'off', // TODO: delete me
-      'unicorn/prefer-ternary': 'off', // TODO: delete me
-      'unicorn/prefer-type-error': 'off', // TODO: delete me
     },
   },
   {

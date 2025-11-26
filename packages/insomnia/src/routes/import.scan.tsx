@@ -44,7 +44,7 @@ export const scanImportResources = async (data: {
     try {
       filePaths = typeof data.filePaths === 'string' ? JSON.parse(data.filePaths) : data.filePaths;
       if (!Array.isArray(filePaths)) {
-        throw new Error('filePaths is not an array');
+        throw new TypeError('filePaths is not an array');
       }
       filePaths = filePaths.filter(filePath => typeof filePath === 'string' && filePath);
       if (filePaths.length === 0) {

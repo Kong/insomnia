@@ -252,11 +252,7 @@ const createTransportAndConnect = async (context: ConnectionContext, mcpClient: 
 
   let authType = 'none';
   if ('type' in mcpRequest.authentication) {
-    if (mcpRequest.authentication.type === 'oauth2') {
-      authType = 'oauth2-' + mcpRequest.authentication.grantType;
-    } else {
-      authType = mcpRequest.authentication.type;
-    }
+    authType = mcpRequest.authentication.type === 'oauth2' ? 'oauth2-' + mcpRequest.authentication.grantType : mcpRequest.authentication.type;
   }
   const authDisabled = 'disabled' in mcpRequest.authentication && mcpRequest.authentication.disabled;
   const isFirstConnection = !mcpRequest.connected;

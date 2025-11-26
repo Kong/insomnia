@@ -167,11 +167,7 @@ export const _buildBearerHeader = (accessToken: string, prefix?: string) => {
     value: '',
   };
 
-  if (prefix === 'NO_PREFIX') {
-    header.value = accessToken;
-  } else {
-    header.value = `${prefix || 'Bearer'} ${accessToken}`;
-  }
+  header.value = prefix === 'NO_PREFIX' ? accessToken : `${prefix || 'Bearer'} ${accessToken}`;
 
   return header;
 };

@@ -250,7 +250,7 @@ function registerROPC(oidc: Provider) {
       }
 
       if (typeof params.username !== 'string' || typeof params.password !== 'string') {
-        throw new Error('invalid credentials provided');
+        throw new TypeError('invalid credentials provided');
       }
 
       const account = await ctx.oidc.provider.Account.findAccount(ctx, params.username);

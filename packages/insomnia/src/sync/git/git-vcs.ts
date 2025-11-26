@@ -248,7 +248,7 @@ export class GitVCS {
     const branch = await git.currentBranch({ ...this._baseOpts });
 
     if (typeof branch !== 'string') {
-      throw new Error('No active branch');
+      throw new TypeError('No active branch');
     }
 
     return branch;
@@ -1879,11 +1879,7 @@ export class GitVCS {
 
   async stageChanges(changes: { path: string; status: Status }[]) {
     for (const change of changes) {
-      if (change.status[1] === 0) {
-        await git.remove({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) });
-      } else {
-        await git.add({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) });
-      }
+      await (change.status[1] === 0 ? git.remove({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) }) : git.add({ ...this._baseOpts, filepath: convertToPosixSep(path.join('.', change.path)) }));
     }
   }
 

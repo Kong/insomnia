@@ -75,10 +75,7 @@ export async function insomniaFetch<T = void>({
     }
     return isJson ? response.json() : (response.text() as Promise<T>);
   } catch (err) {
-    if (err.name === 'AbortError') {
-      throw new Error('insomniaFetch timed out');
-    } else {
-      throw err;
-    }
+    const error = err.name === 'AbortError' ? new Error('insomniaFetch timed out') : err;
+    throw error;
   }
 }

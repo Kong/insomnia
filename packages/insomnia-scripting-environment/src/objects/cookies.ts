@@ -197,11 +197,7 @@ export class CookieObject extends CookieList {
       ? cookieJar.cookies.map((cookie: InsomniaCookie): Cookie => {
           let expires: string | Date | null = null;
           if (cookie.expires || cookie.expires === 0) {
-            if (typeof cookie.expires === 'number') {
-              expires = new Date(cookie.expires);
-            } else {
-              expires = cookie.expires;
-            }
+            expires = typeof cookie.expires === 'number' ? new Date(cookie.expires) : cookie.expires;
           }
 
           return new Cookie({

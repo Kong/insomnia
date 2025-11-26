@@ -149,7 +149,7 @@ export class Property extends PropertyBase {
 
   static replaceSubstitutions(content: string, ...variables: object[]): string {
     if (!Array.isArray(variables) || typeof content !== 'string') {
-      throw new Error(
+      throw new TypeError(
         "replaceSubstitutions: the first param's type is not string or other parameters are not an array",
       );
     }
@@ -163,7 +163,7 @@ export class Property extends PropertyBase {
 
   static replaceSubstitutionsIn(obj: object, ...variables: object[]): object {
     if (!Array.isArray(variables) || typeof obj !== 'object') {
-      throw new Error(
+      throw new TypeError(
         "replaceSubstitutions: the first param's type is not object or other parameters are not an array",
       );
     }

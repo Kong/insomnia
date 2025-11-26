@@ -583,13 +583,10 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         switch (resendBehavior) {
           case 'no-history': {
-            if (!response) {
-              shouldResend = true;
-            } else {
-              // if either global environment or collection environment changed, resend the request
-              shouldResend =
-                response.environmentId !== environmentId || response.globalEnvironmentId !== globalEnvironmentId;
-            }
+            // if either global environment or collection environment changed, resend the request
+            shouldResend = !response
+              ? true
+              : response.environmentId !== environmentId || response.globalEnvironmentId !== globalEnvironmentId;
             break;
           }
 
@@ -666,7 +663,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         if (field === 'raw' && bodyBuffer !== null) {
           // Sometimes iconv conversion fails so fallback to regular buffer
           if (typeof bodyBuffer === 'string') {
-            throw new Error(bodyBuffer);
+            throw new TypeError(bodyBuffer);
           }
           try {
             return context.util.decode(bodyBuffer, charset);
@@ -691,7 +688,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           // Sometimes iconv conversion fails so fallback to regular buffer
           let body;
           if (typeof bodyBuffer === 'string') {
-            throw new Error(bodyBuffer);
+            throw new TypeError(bodyBuffer);
           }
           try {
             body = await context.util.decode(bodyBuffer, charset);

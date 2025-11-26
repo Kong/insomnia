@@ -111,13 +111,10 @@ export const convert: FilePathConverter = async importEntry => {
   }
 
   try {
-    let input;
-    if (importEntry.oriFilePath) {
-      // here we prioritize using the original file path because the apiconnect-wsdl library can recognize 'import', 'include' tags in a wsdl file and find the referenced xsd files automatically.
-      input = importEntry.oriFilePath;
-    } else {
-      input = `<?xml version="1.0" encoding="UTF-8" ?>${rawData}`;
-    }
+    // here we prioritize using the original file path because the apiconnect-wsdl library can recognize 'import', 'include' tags in a wsdl file and find the referenced xsd files automatically.
+    const input = importEntry.oriFilePath
+      ? importEntry.oriFilePath
+      : `<?xml version="1.0" encoding="UTF-8" ?>${rawData}`;
     const postmanData = await convertWsdlToPostman(input);
     postmanData.info.schema += 'collection.json';
     const postmanJson = JSON.stringify(postmanData);

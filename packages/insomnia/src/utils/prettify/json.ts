@@ -102,12 +102,8 @@ export const jsonPrettify = (json?: string | object, indentChars = '\t', replace
       const closeState = NUNJUCKS_CLOSE_STATES[nextTwo];
       if (closeState) {
         state = STATE_NONE;
-        if (closeState === STATE_IN_NUN_COM) {
-          // Put comments on their own lines
-          newJson += nextTwo + '\n' + repeatString(tab, indentLevel);
-        } else {
-          newJson += nextTwo;
-        }
+        // Put comments on their own lines
+        newJson += closeState === STATE_IN_NUN_COM ? nextTwo + '\n' + repeatString(tab, indentLevel) : nextTwo;
         i++;
         continue;
       } else {

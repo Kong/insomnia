@@ -30,16 +30,12 @@ export const importScannedResources = async ({
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found.');
 
-  if (typeof workspaceId === 'string' && workspaceId) {
-    await importResourcesToWorkspace({
+  await (typeof workspaceId === 'string' && workspaceId ? importResourcesToWorkspace({
       workspaceId: workspaceId,
-    });
-  } else {
-    await importResourcesToProject({
+    }) : importResourcesToProject({
       projectId: project._id,
       syncNewWorkspaceIfNeeded,
-    });
-  }
+    }));
 };
 
 export async function clientAction({ request }: Route.ClientActionArgs) {

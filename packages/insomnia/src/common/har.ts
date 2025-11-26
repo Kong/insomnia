@@ -148,15 +148,9 @@ export async function exportHar(exportRequests: ExportRequest[]) {
       continue;
     }
 
-    let response;
-    if (exportRequest.responseId) {
-      response = await models.response.getById(exportRequest.responseId);
-    } else {
-      response = await models.response.getLatestForRequestId(
-        exportRequest.requestId,
-        exportRequest.environmentId || null,
-      );
-    }
+    const response = await (exportRequest.responseId
+      ? models.response.getById(exportRequest.responseId)
+      : models.response.getLatestForRequestId(exportRequest.requestId, exportRequest.environmentId || null));
 
     const harResponse = await exportHarResponse(response);
 
@@ -246,11 +240,11 @@ export async function exportHarWithRequest(request: Request, environmentId?: str
     parseGraphQLReqeustBody(renderedRequest);
     return exportHarWithRenderedRequest(renderedRequest, addContentLength);
   } catch (err) {
-    if (err instanceof RenderError) {
-      throw new Error(`Failed to render "${request.name}:${err.path}"\n ${err.message}`);
-    } else {
-      throw new Error(`Failed to export request "${request.name}"\n ${err.message}`);
-    }
+    const error =
+      err instanceof RenderError
+        ? new Error(`Failed to render "${request.name}:${err.path}"\n ${err.message}`)
+        : new Error(`Failed to export request "${request.name}"\n ${err.message}`);
+    throw error;
   }
 }
 

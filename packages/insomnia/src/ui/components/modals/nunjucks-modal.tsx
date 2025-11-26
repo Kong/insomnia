@@ -68,8 +68,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
   const { template, isTag } = state;
   const title = isTag ? 'Tag' : 'Variable';
   let editor: JSX.Element | null = null;
-  if (isTag) {
-    editor = (
+  editor = isTag ? (
       <TagEditor
         onChange={handleTemplateChange}
         defaultValue={template}
@@ -77,10 +76,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
         editorId={state.editorId}
         close={() => modalRef.current?.hide()}
       />
-    );
-  } else {
-    editor = <VariableEditor onChange={handleTemplateChange} defaultValue={template} />;
-  }
+    ) : <VariableEditor onChange={handleTemplateChange} defaultValue={template} />;
 
   return (
     <Modal

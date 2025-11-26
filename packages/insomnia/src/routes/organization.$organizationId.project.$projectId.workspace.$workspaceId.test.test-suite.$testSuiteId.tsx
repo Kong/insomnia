@@ -404,20 +404,12 @@ const Component = () => {
       if (dropPosition === 'before') {
         const currentTestIndex = unitTests.findIndex(test => test._id === targetTest._id);
         const previousTest = unitTests[currentTestIndex - 1];
-        if (!previousTest) {
-          sourceTest.metaSortKey = targetTest.metaSortKey - 1;
-        } else {
-          sourceTest.metaSortKey = (previousTest.metaSortKey + targetTest.metaSortKey) / 2;
-        }
+        sourceTest.metaSortKey = !previousTest ? targetTest.metaSortKey - 1 : (previousTest.metaSortKey + targetTest.metaSortKey) / 2;
       }
       if (dropPosition === 'after') {
         const currentTestIndex = unitTests.findIndex(test => test._id === targetTest._id);
         const nextEnv = unitTests[currentTestIndex + 1];
-        if (!nextEnv) {
-          sourceTest.metaSortKey = targetTest.metaSortKey + 1;
-        } else {
-          sourceTest.metaSortKey = (nextEnv.metaSortKey + targetTest.metaSortKey) / 2;
-        }
+        sourceTest.metaSortKey = !nextEnv ? targetTest.metaSortKey + 1 : (nextEnv.metaSortKey + targetTest.metaSortKey) / 2;
       }
 
       updateUnitTestFetcher.submit({
