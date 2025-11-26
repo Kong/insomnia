@@ -75,7 +75,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   const previewMode = ('previewMode' in activeRequestMeta && activeRequestMeta.previewMode) || PREVIEW_MODE_SOURCE;
   return (
     <div className="flex h-full flex-col">
-      <div className="box-border flex h-8 flex-row border-b border-gray-300 p-2">
+      <div className="box-border flex h-8 items-center border-b border-(--hl-sm) p-2">
         <WebSocketPreviewModeDropdown
           download={handleDownloadResponseBody}
           copyToClipboard={handleCopyResponseToClipboard}

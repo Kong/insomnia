@@ -172,7 +172,7 @@ export const MessageEventView = ({ event }: Props) => {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="box-border flex h-8 flex-row border-b border-gray-300">
+      <div className="box-border flex h-8 flex-row items-center border-b border-(--hl-md)">
         <Dropdown
           aria-label="Websocket Preview Mode Dropdown"
           className="p-2"
