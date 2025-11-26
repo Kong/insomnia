@@ -1,8 +1,7 @@
-import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
-
 import * as session from '../account/session';
 import { getAppWebsiteBaseURL, getInsomniaPublicKey, getInsomniaSecretKey } from '../common/constants';
 import { invariant } from '../utils/invariant';
+import { keyPair, open } from '../utils/sealedbox';
 
 interface AuthBox {
   token: string;
