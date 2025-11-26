@@ -41,7 +41,6 @@ export default defineConfig([
       'unicorn/prefer-at': 'off', // TODO: delete me -
       'unicorn/prefer-global-this': 'off', // TODO: delete me
       'unicorn/prefer-logical-operator-over-ternary': 'off', // TODO: delete me
-      'unicorn/prefer-regexp-test': 'off', // TODO: delete me
       'unicorn/prefer-set-has': 'off', // TODO: delete me
       'unicorn/prefer-single-call': 'off', // TODO: delete me
       'unicorn/prefer-string-raw': 'off', // TODO: delete me

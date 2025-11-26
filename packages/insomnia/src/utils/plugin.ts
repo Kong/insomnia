@@ -63,15 +63,15 @@ export function validatePluginName(pluginName: string, allowScopedPackageNames =
     return 'Plugin name must not end with a dash';
   }
 
-  if (pluginNameWithoutPrefix.match(/--/)) {
+  if (/--/.test(pluginNameWithoutPrefix)) {
     return 'Plugin name must not contain consecutive dashes';
   }
 
-  if (pluginNameWithoutPrefix.match(/^\./)) {
+  if (/^\./.test(pluginNameWithoutPrefix)) {
     return 'Plugin name cannot start with a period';
   }
 
-  if (pluginNameWithoutPrefix.match(/^_/)) {
+  if (pluginNameWithoutPrefix.startsWith('_')) {
     return 'Plugin name cannot start with an underscore';
   }
 

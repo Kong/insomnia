@@ -44,13 +44,13 @@ export function authorizeUserInWindow({
     });
 
     function _parseUrl(currentUrl: string, source: string) {
-      if (currentUrl.match(urlSuccessRegex)) {
+      if (urlSuccessRegex.test(currentUrl)) {
         console.log(
           `[oauth2] ${source}: Matched success redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`,
         );
         finalUrl = currentUrl;
         child.close();
-      } else if (currentUrl.match(urlFailureRegex)) {
+      } else if (urlFailureRegex.test(currentUrl)) {
         console.log(`[oauth2] ${source}: Matched error redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`);
         finalUrl = currentUrl;
         child.close();

@@ -33,7 +33,7 @@ CodeMirror.defineExtension(
     this.on('change', (_cm: any, change: any) => {
       const origin = change.origin || 'unknown';
 
-      if (!origin.match(/^[+*]/)) {
+      if (!/^[+*]/.test(origin)) {
         // Refresh immediately on non-joinable events
         // (cut, paste, autocomplete; as opposed to +input, +delete)
         refreshFn();

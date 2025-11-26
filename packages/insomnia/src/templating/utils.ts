@@ -71,7 +71,7 @@ export function tokenizeTag(tagStr: string) {
     const c = argsStr.charAt(i) || ',';
 
     // Do nothing if we're still on a space or comma
-    if (currentArg === null && c.match(/[\s,]/)) {
+    if (currentArg === null && /[\s,]/.test(c)) {
       continue;
     }
 
@@ -126,12 +126,12 @@ export function tokenizeTag(tagStr: string) {
           type: 'boolean',
           value: currentArg.toLowerCase() === 'true',
         };
-      } else if (currentArg.match(/^\d*\.?\d*$/)) {
+      } else if (/^\d*\.?\d*$/.test(currentArg)) {
         arg = {
           type: 'number',
           value: currentArg,
         };
-      } else if (currentArg.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
+      } else if (/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(currentArg)) {
         arg = {
           type: 'variable',
           value: currentArg,

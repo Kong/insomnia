@@ -109,10 +109,10 @@ const ObjectPath = {
     return arr
       .map(function (value: string | number, key: number) {
         let property = value.toString();
-        if (!forceQuote && /^[A-z_]\w*$/.exec(property)) {
+        if (!forceQuote && /^[A-z_]\w*$/.test(property)) {
           // str with only A-z0-9_ chars will display `foo.bar`
           return key !== 0 ? '.' + property : property;
-        } else if (!forceQuote && /^\d+$/.exec(property)) {
+        } else if (!forceQuote && /^\d+$/.test(property)) {
           // str with only numbers will display `foo[0]`
           return '[' + property + ']';
         }

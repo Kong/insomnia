@@ -253,7 +253,7 @@ export async function render<T>(
   const undefinedEnvironmentVariables: string[] = [];
 
   async function next<T>(input: T, path: string, first = false) {
-    if (blacklistPathRegex && path.match(blacklistPathRegex)) {
+    if (blacklistPathRegex && blacklistPathRegex.test(path)) {
       return input;
     }
 

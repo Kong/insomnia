@@ -10,7 +10,7 @@ const fixtures = readdirSync(fixturesPath);
 
 describe('fixtures', () => {
   for (const input of fixtures) {
-    if (input.match(/\.output\.js$/)) {
+    if (/\.output\.js$/.test(input)) {
       continue;
     }
 
