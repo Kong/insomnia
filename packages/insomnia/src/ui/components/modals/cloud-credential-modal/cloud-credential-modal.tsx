@@ -107,7 +107,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      className="fixed left-0 top-0 z-9999 flex h-(--visual-viewport-height) w-full items-start justify-center bg-black/30"
+      className="fixed top-0 left-0 z-9999 flex h-(--visual-viewport-height) w-full items-start justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
@@ -125,7 +125,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                     : `Authenticate With ${providerDisplayName}`}
                 </Heading>
                 <Button
-                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   id="close-add-cloud-credential-modal"
                   onPress={close}
                 >
@@ -160,7 +160,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                 <div className="flex flex-col gap-(--padding-md) text-(--color-font)">
                   <p>A new page should have opened in your default web browser to authenticate with Azure.</p>
                   <div className="flex flex-col gap-3 rounded-md bg-(--hl-sm) p-(--padding-md)">
-                    <p className="text-[rgba(var(--color-font-rgb),0.8)] text-start">
+                    <p className="text-start text-[rgba(var(--color-font-rgb),0.8)]">
                       If you were not redirected, please copy and paste the following URL into your browser.
                     </p>
                     <div className="form-control form-control--outlined no-pad-top flex">
@@ -175,7 +175,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                         Copy
                       </button>
                     </div>
-                    <p className="text-[rgba(var(--color-font-rgb),0.8)] text-start">
+                    <p className="text-start text-[rgba(var(--color-font-rgb),0.8)]">
                       If your browser does not open the Insomnia app automatically you can manually paste the redirect
                       URL in Azure to here.
                     </p>
@@ -187,7 +187,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                         onChange={e => setManualInputUrl(e.target.value)}
                       />{' '}
                       <button
-                        className="btn btn--super-compact btn--outlined gap-(--padding-xs) flex items-center"
+                        className="btn btn--super-compact btn--outlined flex items-center gap-(--padding-xs)"
                         type="submit"
                         disabled={isAuthenticating}
                         onClick={exchangeAzureCode}

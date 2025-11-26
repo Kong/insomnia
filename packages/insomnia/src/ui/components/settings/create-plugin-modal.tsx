@@ -21,7 +21,7 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      className="fixed left-0 top-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
@@ -37,13 +37,13 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
                   New Plugin
                 </Heading>
                 <Button
-                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className="basis-28§ flex w-full flex-1 select-none flex-col gap-2 overflow-hidden overflow-y-auto rounded-sm">
+              <div className="basis-28§ flex w-full flex-1 flex-col gap-2 overflow-hidden overflow-y-auto rounded-sm select-none">
                 <TextField
                   isRequired
                   defaultValue="demo-example"
@@ -65,7 +65,7 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
                     <div
                       className={`flex shrink-0 items-center justify-center bg-(--hl-sm) p-3 ${error ? 'bg-[rgba(var(--color-danger-rgb),0.5)]' : ''}`}
                     >
-                      <p className="flex h-full items-center text-sm italic text-(--color-font)">insomnia-plugin-</p>
+                      <p className="flex h-full items-center text-sm text-(--color-font) italic">insomnia-plugin-</p>
                     </div>
                     <Input
                       aria-label="Plugin name"
@@ -82,7 +82,7 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
               </div>
               <div className="flex items-center justify-end">
                 <Button
-                  className="m-1 flex h-(--line-height-xs) items-center justify-center gap-2 rounded-md border border-solid border-(--hl-lg) px-(--padding-md) py-1 text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+                  className="m-1 flex h-(--line-height-xs) items-center justify-center gap-2 rounded-md border border-solid border-(--hl-lg) px-(--padding-md) py-1 text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   type="button"
                   data-testid="generate-plugin-button"
                   onPress={async () => {

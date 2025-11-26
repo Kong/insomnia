@@ -185,7 +185,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
           >
             {renderTabIcon(tab.type, tab.id)}
             <span
-              className={classNames('mx-[8px] overflow-hidden text-ellipsis text-nowrap', {
+              className={classNames('mx-[8px] overflow-hidden text-nowrap text-ellipsis', {
                 italic: tab.temporary,
               })}
             >
@@ -200,10 +200,10 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
               <Icon icon="close" />
             </Button>
             <span
-              className={`absolute bottom-0 left-0 right-0 block h-px bg-(--color-bg) ${isSelected ? 'opacity-100' : 'opacity-0'}`}
+              className={`absolute right-0 bottom-0 left-0 block h-px bg-(--color-bg) ${isSelected ? 'opacity-100' : 'opacity-0'}`}
             />
             <span
-              className={`absolute bottom-0 left-0 right-0 block h-px bg-(--hl-sm) ${!isSelected ? 'opacity-100' : 'opacity-0'}`}
+              className={`absolute right-0 bottom-0 left-0 block h-px bg-(--hl-sm) ${!isSelected ? 'opacity-100' : 'opacity-0'}`}
             />
           </div>
           <Button slot="drag" className="hidden" />

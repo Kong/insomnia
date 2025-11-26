@@ -130,7 +130,9 @@ export const EnvironmentKVEditor = ({
       );
     },
     renderDropIndicator(target) {
-      return <DropIndicator target={target} className="border-none! outline-solid outline-1 outline-(--color-surprise)" />;
+      return (
+        <DropIndicator target={target} className="border-none! outline-1 outline-(--color-surprise) outline-solid" />
+      );
     },
   });
 
@@ -220,7 +222,7 @@ export const EnvironmentKVEditor = ({
         {!disabled && (
           <div
             slot="drag"
-            className={`${cellCommonStyle} flex w-6 shrink-0 items-center justify-end border-l border-r-0`}
+            className={`${cellCommonStyle} flex w-6 shrink-0 items-center justify-end border-r-0 border-l`}
             style={{ padding: 0 }}
           >
             <Icon icon="grip-vertical" className="mr-1 cursor-grab" />
@@ -272,7 +274,7 @@ export const EnvironmentKVEditor = ({
           )}
           {type === EnvironmentKvPairDataType.JSON && (
             <ItemButton
-              className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+              className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               tabIndex={-1}
               isDisabled={!enabled || disabled}
               onPress={() => {
@@ -345,7 +347,7 @@ export const EnvironmentKVEditor = ({
                   <MenuItem
                     key={item.id}
                     id={item.id}
-                    className="react-aria-ListBoxItem flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent pl-(--padding-sm) pr-(--padding-xl) text-sm text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden aria-disabled:cursor-not-allowed aria-disabled:bg-transparent aria-disabled:text-(--hl-lg) aria-selected:font-bold"
+                    className="react-aria-ListBoxItem flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent pr-(--padding-xl) pl-(--padding-sm) text-sm whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden aria-disabled:cursor-not-allowed aria-disabled:bg-transparent aria-disabled:text-(--hl-lg) aria-selected:font-bold"
                     aria-label={item.name}
                     onAction={() => handleItemTypeChange(id, item.id)}
                   >
@@ -363,7 +365,7 @@ export const EnvironmentKVEditor = ({
         </div>
         <div className={`${cellCommonStyle} w-20`}>
           <ItemButton
-            className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md)"
+            className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
             tabIndex={-1}
             aria-label={enabled ? 'Disable Row' : 'Enable Row'}
             isDisabled={disabled}
@@ -372,7 +374,7 @@ export const EnvironmentKVEditor = ({
             <Icon icon={enabled ? 'check-square' : 'square'} />
           </ItemButton>
           <PromptButton
-            className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
+            className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
             fullWidth
             confirmMessage=""
             doneMessage=""
@@ -392,7 +394,7 @@ export const EnvironmentKVEditor = ({
     <div className="flex h-full min-w-max flex-col overflow-hidden">
       <Toolbar className="content-box z-10 flex h-(--line-height-sm) shrink-0 bg-(--color-bg) text-(--font-size-sm)">
         <Button
-          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           aria-label="Add Row"
           isDisabled={disabled}
           onPress={() => {
@@ -407,7 +409,7 @@ export const EnvironmentKVEditor = ({
             onChange([]);
           }}
           ariaLabel="Delete All"
-          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
           <Icon icon="trash-can" />
           <span>Delete all</span>

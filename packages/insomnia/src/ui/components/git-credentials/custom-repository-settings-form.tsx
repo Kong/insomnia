@@ -65,7 +65,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
         <Label className="text-start text-sm font-semibold">Git URI (http/https, including .git suffix)</Label>
         <Input
           placeholder="https://github.com/org/repo.git"
-          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
+          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
         />
         <FieldError className="text-xs text-(--color-danger)">
           {({ isInvalid }) =>
@@ -83,7 +83,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
         <Label className="text-start text-sm font-semibold">Author Name</Label>
         <Input
           placeholder="Name"
-          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
+          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
         />
         <FieldError className="text-xs text-(--color-danger)" />
       </TextField>
@@ -98,7 +98,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
         <Label className="text-start text-sm font-semibold">Author Email</Label>
         <Input
           placeholder="Email"
-          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
+          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
         />
         <FieldError className="text-xs text-(--color-danger)" />
       </TextField>
@@ -113,7 +113,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
         <Label className="text-start text-sm font-semibold">Username</Label>
         <Input
           placeholder="MyUserName"
-          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
+          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
         />
         <FieldError className="text-xs text-(--color-danger)" />
       </TextField>
@@ -144,7 +144,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
         </Label>
         <Input
           placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
-          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
+          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
         />
         <FieldError className="text-xs text-(--color-danger)" />
       </TextField>

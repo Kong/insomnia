@@ -28,7 +28,7 @@ export const FilePicker = (props: FilePickerProps) => {
   return (
     <>
       <Input
-        className="col-span-3 w-4/5 flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
+        className="col-span-3 w-4/5 flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
         placeholder={placeholder}
         aria-label={ariaLabel}
         name={name}

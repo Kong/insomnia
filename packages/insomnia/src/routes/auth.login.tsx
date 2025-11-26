@@ -101,7 +101,7 @@ const Component = () => {
           onPress={() => {
             login('google');
           }}
-          className="flex w-full items-center justify-center gap-(--padding-md) rounded-md border border-solid border-(--hl-md) text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex w-full items-center justify-center gap-(--padding-md) rounded-md border border-solid border-(--hl-md) text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
           <div className="flex h-[35px] w-[40px] items-center justify-center border-r border-solid border-(--hl-sm) bg-(--hl-xs)">
             <GoogleIcon width="1em" />
@@ -113,7 +113,7 @@ const Component = () => {
           onPress={() => {
             login('github');
           }}
-          className="flex w-full items-center justify-center gap-(--padding-md) rounded-md border border-solid border-(--hl-md) text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex w-full items-center justify-center gap-(--padding-md) rounded-md border border-solid border-(--hl-md) text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
           <div className="flex h-[35px] w-[40px] items-center justify-center border-r border-solid border-(--hl-sm) bg-(--hl-xs)">
             <Icon icon={['fab', 'github']} />
@@ -125,7 +125,7 @@ const Component = () => {
           onPress={() => {
             login('email');
           }}
-          className="flex w-full items-center justify-center gap-(--padding-md) rounded-md border border-solid border-(--hl-md) text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex w-full items-center justify-center gap-(--padding-md) rounded-md border border-solid border-(--hl-md) text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
           <div className="flex h-[35px] w-[40px] items-center justify-center border-r border-solid border-(--hl-sm) bg-(--hl-xs)">
             <Icon icon="envelope" />
@@ -137,7 +137,7 @@ const Component = () => {
           onPress={() => {
             login('sso');
           }}
-          className="flex w-full items-center justify-center gap-(--padding-md) rounded-md border border-solid border-(--hl-md) text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex w-full items-center justify-center gap-(--padding-md) rounded-md border border-solid border-(--hl-md) text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
           <div className="flex h-[35px] w-[40px] items-center justify-center border-r border-solid border-(--hl-sm) bg-(--hl-xs)">
             <Icon icon="key" />
@@ -166,7 +166,7 @@ const Component = () => {
             );
           }}
           aria-label="Use local Scratch Pad"
-          className="flex w-full items-center justify-center gap-(--padding-md) rounded-md border border-solid border-(--hl-md) text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex w-full items-center justify-center gap-(--padding-md) rounded-md border border-solid border-(--hl-md) text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
           <div className="flex h-[35px] w-[40px] items-center justify-center border-r border-solid border-(--hl-sm) bg-(--hl-xs)">
             <Icon icon="code" />

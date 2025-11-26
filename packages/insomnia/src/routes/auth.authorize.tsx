@@ -107,7 +107,7 @@ const Component = () => {
             and it uses a different email to your previous login your teams will not be migrated.
           </p>
           <div className="flex flex-col gap-3 rounded-md bg-(--hl-sm) p-(--padding-md)">
-            <p className="text-[rgba(var(--color-font-rgb),0.8)] text-start">
+            <p className="text-start text-[rgba(var(--color-font-rgb),0.8)]">
               If you were not redirected back here after creating an account, please copy and paste the following URL
               into your browser to complete login.
             </p>
@@ -126,7 +126,7 @@ const Component = () => {
                 Copy
               </button>
             </div>
-            <p className="text-[rgba(var(--color-font-rgb),0.8)] text-start">
+            <p className="text-start text-[rgba(var(--color-font-rgb),0.8)]">
               If your browser does not open the Insomnia app automatically you can manually add the generated token
               here.
             </p>

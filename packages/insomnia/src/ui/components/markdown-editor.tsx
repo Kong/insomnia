@@ -39,7 +39,7 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(
           aria-label="Request scripts tabs"
         >
           <Tab
-            className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer select-none items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
+            className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
             id="write"
           >
             <div className="flex flex-1 items-center gap-2">
@@ -47,7 +47,7 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(
             </div>
           </Tab>
           <Tab
-            className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer select-none items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
+            className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
             id="preview"
           >
             <div className="flex flex-1 items-center gap-2">

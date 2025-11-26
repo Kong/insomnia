@@ -262,10 +262,10 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
         if (target.dropPosition === 'before' && target.key === baseEnvironment._id) {
           return <DropIndicator target={target} className="hidden" />;
         }
-        return <DropIndicator target={target} className="outline-solid outline-1 outline-(--color-surprise)" />;
+        return <DropIndicator target={target} className="outline-1 outline-(--color-surprise) outline-solid" />;
       }
 
-      return <DropIndicator target={target} className="outline-solid outline-1 outline-(--color-surprise)" />;
+      return <DropIndicator target={target} className="outline-1 outline-(--color-surprise) outline-solid" />;
     },
   });
 
@@ -328,17 +328,17 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
           <Breadcrumbs
             className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-(--padding-sm) font-bold`}
           >
-            <Breadcrumb className="flex h-full select-none items-center gap-2 text-(--color-font) outline-hidden data-focused:outline-hidden">
+            <Breadcrumb className="flex h-full items-center gap-2 text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
               <NavLink
                 data-testid="project"
-                className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) outline-hidden ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
+                className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
                 to={`/organization/${organizationId}/project/${activeProject._id}`}
               >
                 <Icon className="text-xs" icon="chevron-left" />
               </NavLink>
-              <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-solid outline-1" />
+              <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-1 outline-solid" />
             </Breadcrumb>
-            <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-(--color-font) outline-hidden data-focused:outline-hidden">
+            <Breadcrumb className="flex h-full items-center gap-2 truncate text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
               <WorkspaceDropdown />
             </Breadcrumb>
           </Breadcrumbs>
@@ -365,12 +365,12 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                 key={item._id}
                 id={item._id}
                 textValue={item.name}
-                className="group select-none outline-hidden"
+                className="group outline-hidden select-none"
               >
                 <div
-                  className={`${item.parentId === workspaceId ? 'pl-4' : 'pl-8'} relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden pr-4 text-(--hl) outline-hidden transition-colors group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)`}
+                  className={`${item.parentId === workspaceId ? 'pl-4' : 'pl-8'} relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden pr-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)`}
                 >
-                  <span className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
+                  <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
                   <Icon
                     icon={
                       item.isPrivate
@@ -408,7 +408,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                     <MenuTrigger>
                       <Button
                         aria-label="Project Actions"
-                        className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-(--hl-md) group-hover:opacity-100 group-focus:opacity-100 data-pressed:bg-(--hl-sm) data-pressed:opacity-100"
+                        className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                       >
                         <Icon icon="caret-down" />
                       </Button>
@@ -420,13 +420,13 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                             environmentActionsList.find(({ id }) => key === id)?.action(item);
                           }}
                           items={environmentActionsList}
-                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
+                          className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
                         >
                           {item => (
                             <MenuItem
                               key={item.id}
                               id={item.id}
-                              className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
                             >
                               <Icon className="w-5" icon={item.icon} />
@@ -442,7 +442,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                       <Button
                         aria-label="Create Environment"
                         data-testid="CreateEnvironmentDropdown"
-                        className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) data-pressed:bg-(--hl-sm)"
+                        className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm)"
                       >
                         <Icon icon="plus-circle" />
                       </Button>
@@ -454,13 +454,13 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                             createEnvironmentActionsList.find(({ id }) => key === id)?.action(item);
                           }}
                           items={createEnvironmentActionsList}
-                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
+                          className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
                         >
                           {item => (
                             <MenuItem
                               key={item.id}
                               id={item.id}
-                              className="flex w-full flex-col gap-1 whitespace-nowrap bg-transparent px-(--padding-md) py-2 text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="flex w-full flex-col gap-1 bg-transparent px-(--padding-md) py-2 whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
                             >
                               <div className="flex items-center gap-2">
@@ -521,7 +521,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
               />
             </Heading>
             {selectedEnvironment && selectedEnvironment.parentId !== workspaceId && (
-              <Label className="ml-auto mr-2 flex shrink-0 items-center gap-2 rounded-xs bg-(--hl-sm) px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) data-pressed:bg-(--hl-sm)">
+              <Label className="mr-2 ml-auto flex shrink-0 items-center gap-2 rounded-xs bg-(--hl-sm) px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm)">
                 <span>Color:</span>
                 <input
                   onChange={e => {
@@ -568,7 +568,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                   );
                 }}
                 isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
-                className="flex w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md)"
+                className="flex w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                 aria-label={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR ? 'Table Edit' : 'Raw Edit'}
               >
                 {({ isSelected }) => (

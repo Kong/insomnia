@@ -13,21 +13,12 @@
     "sourceMap": true,
     /* import resolution */
     "baseUrl": ".",
-    "rootDirs": [
-      ".",
-      "./.react-router/types"
-    ],
+    "rootDirs": [".", "./.react-router/types"],
     "paths": {
-      "~/*": [
-        "./src/*"
-      ]
+      "~/*": ["./src/*"]
     },
     /* Runs in the DOM */
-    "lib": [
-      "ES2023",
-      "DOM.Iterable",
-      "DOM"
-    ],
+    "lib": ["ES2023", "DOM.Iterable", "DOM"],
     "jsx": "preserve",
     /* Strictness */
     "strict": true,
@@ -39,10 +30,7 @@
     "verbatimModuleSyntax": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": [
-    "**/*",
-    ".react-router/types/**/*"
-  ],
+  "include": ["**/*", ".react-router/types/**/*"],
   "exclude": [
     "./src/__mocks__/@getinsomnia/node-libcurl.ts",
     "**/__mocks__",
@@ -58,6 +46,6 @@
     "config",
     "node_modules",
     "src/coverage",
-    "svgr.config.js",
+    "svgr.config.js"
   ]
 }

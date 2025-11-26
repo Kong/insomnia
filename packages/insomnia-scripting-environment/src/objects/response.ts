@@ -60,7 +60,7 @@ export class Response extends Property {
     this.originalRequest = options.originalRequest;
     this.responseTime = options.responseTime;
     this.stream = options.stream;
-    this.status = options.reason || RESPONSE_CODE_REASONS[options.code]|| "";
+    this.status = options.reason || RESPONSE_CODE_REASONS[options.code] || '';
     this.bytesRead = options.bytesRead || 0;
   }
 

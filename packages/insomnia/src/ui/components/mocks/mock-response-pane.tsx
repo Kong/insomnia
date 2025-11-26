@@ -105,25 +105,25 @@ export const MockResponsePane = () => {
           aria-label="Request pane tabs"
         >
           <Tab
-            className="flex h-full shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="preview"
           >
             Preview
           </Tab>
           <Tab
-            className="flex h-full shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="headers"
           >
             Headers
           </Tab>
           <Tab
-            className="flex h-full shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="timeline"
           >
             Console
           </Tab>
           <Tab
-            className="flex h-full shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="history"
           >
             History
@@ -239,31 +239,31 @@ const HistoryViewWrapperComponentFactory = ({
               <Fragment key={row.startedDateTime}>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-hidden group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >
                   <div className="p-2">{row.request.method}</div>
                 </div>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-hidden group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >
                   <div className="p-2">{row.request.bodySize + row.request.headersSize}</div>
                 </div>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-hidden group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >
                   <div className="truncate p-2">{getTimeFromNow(row.startedDateTime, false)}</div>
                 </div>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-hidden group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >
                   <div className="truncate p-2">{row.clientIPAddress}</div>
                 </div>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-hidden group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >
                   <div className="truncate p-2">{row.request.url}</div>
                 </div>

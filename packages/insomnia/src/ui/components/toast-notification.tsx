@@ -72,7 +72,7 @@ const StatusIconMap: Record<Status, IconProp> = {
 
 // Render a <ToastRegion> in the root of your app.
 export const Toaster = () => (
-  <ToastRegion queue={queue} className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 rounded-lg outline-hidden">
+  <ToastRegion queue={queue} className="fixed right-4 bottom-4 z-50 flex flex-col gap-2 rounded-lg outline-hidden">
     {({ toast }) => (
       <Toast
         toast={toast}
@@ -89,7 +89,7 @@ export const Toaster = () => (
                 {toast.content.status && toast.content.status !== 'info' && (
                   <FontAwesomeIcon
                     icon={StatusIconMap[toast.content.status]}
-                    className={`absolute bottom-0 right-0 size-3 translate-x-1/2 translate-y-1/2 transform ${StatusIconColorMap[toast.content.status]}`}
+                    className={`absolute right-0 bottom-0 size-3 translate-x-1/2 translate-y-1/2 transform ${StatusIconColorMap[toast.content.status]}`}
                   />
                 )}
               </span>
