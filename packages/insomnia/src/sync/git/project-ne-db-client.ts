@@ -5,12 +5,13 @@ import YAML from 'yaml';
 
 import { database, database as db } from '../../common/database';
 import type { InsomniaFile } from '../../common/import-v5-parser';
-import { getInsomniaV5DataExport, importInsomniaV5Data } from '../../common/insomnia-v5';
+import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import * as models from '../../models';
 import { isMcp, isWorkspace, type Workspace } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import Stat from './stat';
 import { SystemError } from './system-error';
+import { extractErrorMessages } from '~/common/import';
 
 /**
  * A fs client to access workspace data stored in NeDB as files.
@@ -82,7 +83,12 @@ export class GitProjectNeDBClient {
     if (dataStr.split('\n').includes('=======')) {
       return;
     }
-    const dataToImport = importInsomniaV5Data(dataStr);
+    const { data: dataToImport, error } = tryImportV5Data(dataStr);
+    if (error) {
+      const errorMsg = extractErrorMessages(error);
+      console.warn(`[git] Skipping import of ${filePath} due to error: ${errorMsg}.  Fallback to default FS.`);
+      throw new Error(`Failed to import data from git file ${filePath}: ${errorMsg}`);
+    }
 
     const bufferId = await db.bufferChanges();
 
