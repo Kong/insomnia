@@ -15,7 +15,7 @@ export const LocalProjectBar: FC = () => {
         </Button>
         <Tooltip
           offset={8}
-          className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
+          className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
         >
           Stored locally only, with no cloud. Ideal when collaboration is not needed.
         </Tooltip>

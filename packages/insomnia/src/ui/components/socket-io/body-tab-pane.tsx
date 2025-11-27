@@ -117,7 +117,7 @@ export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: 
         <div className="flex items-center justify-between gap-2">
           <Button
             onPress={handleAddArg}
-            className="p-1 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md)"
+            className="p-1 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
           >
             + Arg
           </Button>
@@ -127,7 +127,7 @@ export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: 
             onSelectionChange={value => value && handleContentTypeChange(value.toString())}
             selectedKey={contentType}
           >
-            <Button className="flex min-w-[12ch] flex-1 items-center justify-between gap-2 rounded-xs px-4 py-1 text-sm font-bold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)">
+            <Button className="flex min-w-[12ch] flex-1 items-center justify-between gap-2 rounded-xs px-4 py-1 text-sm font-bold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
               <SelectValue<{ id: string; name: string }> className="flex items-center justify-center gap-2 truncate">
                 {({ selectedText }) => <div className="flex items-center gap-2 text-(--hl)">{selectedText}</div>}
               </SelectValue>
@@ -136,11 +136,11 @@ export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: 
             <Popover className="flex min-w-max flex-col overflow-y-hidden">
               <ListBox
                 items={contentTypes}
-                className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
+                className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
               >
                 {item => (
                   <ListBoxItem
-                    className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                    className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                     aria-label={item.name}
                     textValue={item.name}
                   >
@@ -165,7 +165,7 @@ export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: 
             <div className="mr-2 flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
               <Icon
                 icon={'check'}
-                className="h-3 w-3 opacity-0 group-data-selected:text-(--color-success) group-data-indeterminate:opacity-100 group-data-selected:opacity-100"
+                className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
               />
             </div>
             Ack
@@ -174,7 +174,7 @@ export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: 
             aria-label="Event Name"
             defaultValue={requestPayload?.eventName || ''}
             onChange={value => requestPayloadPatcher(request._id, { eventName: value })}
-            className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
+            className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
           >
             <Input type="text" placeholder="event name" />
           </TextField>
@@ -246,7 +246,7 @@ export const SocketIOBodyContent = ({
           >
             {arg => (
               <Tab
-                className="relative flex shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-6 py-2 text-(--hl) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+                className="relative flex shrink-0 cursor-pointer items-center justify-between gap-2 px-6 py-2 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                 id={arg.id}
               >
                 {({ isHovered }) => (
@@ -256,7 +256,7 @@ export const SocketIOBodyContent = ({
                         onPress={() => {
                           handleDelete?.(arg.id);
                         }}
-                        className={`absolute right-0 top-0 h-4 w-4 hover:bg-(--hl-lg) ${!isHovered && 'hidden'}`}
+                        className={`absolute top-0 right-0 h-4 w-4 hover:bg-(--hl-lg) ${!isHovered && 'hidden'}`}
                       >
                         <Icon icon="close" className="h-4 w-4 align-top" />
                       </Button>

@@ -94,7 +94,7 @@ const LocalBranchItem = ({
         {branch !== 'master' && (
           <PromptButton
             confirmMessage="Confirm"
-            className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+            className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             doneMessage="Deleted"
             disabled={isCurrent || branch === 'master'}
             onClick={() =>
@@ -114,7 +114,7 @@ const LocalBranchItem = ({
           </PromptButton>
         )}
         <Button
-          className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           isDisabled={isCurrent}
           onPress={() =>
             checkoutBranchFetcher.submit({
@@ -132,7 +132,7 @@ const LocalBranchItem = ({
           Checkout
         </Button>
         <PromptButton
-          className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           doneMessage="Merged"
           confirmMessage="Confirm"
           disabled={isCurrent}
@@ -209,7 +209,7 @@ const RemoteBranchItem = ({
         {branch !== 'master' && (
           <PromptButton
             confirmMessage="Confirm"
-            className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+            className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             doneMessage="Deleted"
             disabled={isCurrent || branch === 'master'}
             onClick={() =>
@@ -229,7 +229,7 @@ const RemoteBranchItem = ({
           </PromptButton>
         )}
         <Button
-          className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() =>
             pullBranchFetcher.submit({
               organizationId,
@@ -282,7 +282,7 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
         !isOpen && onClose();
       }}
       isDismissable
-      className="fixed left-0 top-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
@@ -298,7 +298,7 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
                   Branches
                 </Heading>
                 <Button
-                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
                 >
                   <Icon icon="x" />
@@ -321,13 +321,13 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
                   <div className="flex items-center gap-2">
                     <Input
                       required
-                      className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
+                      className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                       type="text"
                       name="branchName"
                       placeholder="Branch name"
                     />
                     <Button
-                      className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+                      className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                       isDisabled={createBranchFetcher.state !== 'idle'}
                       type="submit"
                     >
@@ -348,8 +348,8 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
                 </div>
               )}
 
-              <div className="flex max-h-96 flex-1 select-none flex-col divide-y divide-solid divide-(--hl-sm) overflow-hidden rounded-sm border border-solid border-(--hl-sm)">
-                <Heading className="p-2 text-sm font-semibold uppercase text-(--hl)">Local Branches</Heading>
+              <div className="flex max-h-96 flex-1 flex-col divide-y divide-solid divide-(--hl-sm) overflow-hidden rounded-sm border border-solid border-(--hl-sm) select-none">
+                <Heading className="p-2 text-sm font-semibold text-(--hl) uppercase">Local Branches</Heading>
                 <GridList
                   aria-label="Branches list"
                   selectionMode="none"
@@ -381,8 +381,8 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
               </div>
 
               {remoteBranches.length > 0 && (
-                <div className="flex max-h-96 flex-1 select-none flex-col divide-y divide-solid divide-(--hl-sm) overflow-hidden rounded-sm border border-solid border-(--hl-sm)">
-                  <Heading className="p-2 text-sm font-semibold uppercase text-(--hl)">Remote Branches</Heading>
+                <div className="flex max-h-96 flex-1 flex-col divide-y divide-solid divide-(--hl-sm) overflow-hidden rounded-sm border border-solid border-(--hl-sm) select-none">
+                  <Heading className="p-2 text-sm font-semibold text-(--hl) uppercase">Remote Branches</Heading>
                   <GridList
                     aria-label="Remote Branches list"
                     selectionMode="none"

@@ -74,7 +74,9 @@ export function useAIFeatureStatus(): AIFeatureStatus {
   const generateCommitMessagesWithAIAllowedByOrg = features.aiCommitMessages ? features.aiCommitMessages.enabled : true;
 
   return {
-    isGenerateMockServersWithAIEnabled: generateMockServersWithAIAllowedByOrg && generateMockServersWithAIEnabledByUser && hasActiveLLM,
-    isGenerateCommitMessagesWithAIEnabled: generateCommitMessagesWithAIAllowedByOrg && generateCommitMessagesWithAIEnabledByUser && hasActiveLLM,
+    isGenerateMockServersWithAIEnabled:
+      generateMockServersWithAIAllowedByOrg && generateMockServersWithAIEnabledByUser && hasActiveLLM,
+    isGenerateCommitMessagesWithAIEnabled:
+      generateCommitMessagesWithAIAllowedByOrg && generateCommitMessagesWithAIEnabledByUser && hasActiveLLM,
   };
 }

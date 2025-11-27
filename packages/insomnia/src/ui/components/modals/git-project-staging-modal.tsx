@@ -162,7 +162,7 @@ const CommitSection = (props: {
           return props.emptyState;
         }
 
-        return <p className="text-(--hl) p-2 text-sm">No files to commit. This commit will be omitted.</p>;
+        return <p className="p-2 text-sm text-(--hl)">No files to commit. This commit will be omitted.</p>;
       }}
       className="w-full"
       aria-label="Files to commit"
@@ -177,7 +177,7 @@ const CommitSection = (props: {
     >
       {item => {
         return (
-          <GridListItem className="text-(--hl) outline-hidden hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font) group flex w-full select-none items-center gap-2 overflow-hidden px-2 py-1 transition-colors">
+          <GridListItem className="group flex w-full items-center gap-2 overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
             <Button slot="drag" className="cursor-move">
               <Icon icon="grip-vertical" className="size-4" />
             </Button>
@@ -275,9 +275,9 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
         {commitsSections.items.map((commit, index) => (
           <div
             key={commit.key}
-            className="border-(--hl-sm) relative flex shrink-0 flex-col gap-2 rounded-md border border-solid p-2"
+            className="relative flex shrink-0 flex-col gap-2 rounded-md border border-solid border-(--hl-sm) p-2"
           >
-            <span className="bg-(--color-bg) text-(--hl) absolute -top-3 left-2 w-fit px-2">
+            <span className="absolute -top-3 left-2 w-fit bg-(--color-bg) px-2 text-(--hl)">
               {commit.value.id === DO_NOT_COMMIT_ID ? 'Do not commit' : `Commit ${index + 1}`}
             </span>
             {commit.value.id !== DO_NOT_COMMIT_ID && (
@@ -288,18 +288,18 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
                   commitsSections.update(commit.key, { ...commit.value, name: value });
                 }}
               >
-                <Label className="text-(--hl) font-bold">Message:</Label>
+                <Label className="font-bold text-(--hl)">Message:</Label>
                 <TextArea
                   rows={2}
                   name="message"
-                  className="rounded-xs border-(--hl-sm) placeholder:text-(--hl-md) resize-none border border-solid p-2"
+                  className="resize-none rounded-xs border border-solid border-(--hl-sm) p-2 placeholder:text-(--hl-md)"
                   placeholder="This is a helpful message that describes the changes made in this commit."
                 />
               </TextField>
             )}
             <div className="">
-              <span className="text-(--hl) font-bold">Files:</span>
-              <div className="rounded-xs border-(--hl-sm) border border-solid p-2">
+              <span className="font-bold text-(--hl)">Files:</span>
+              <div className="rounded-xs border border-solid border-(--hl-sm) p-2">
                 <CommitSection
                   id={commit.key.toString()}
                   files={commit.children || []}
@@ -307,9 +307,9 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
                   diffChanges={diffChanges}
                   emptyState={
                     commit.value.id !== DO_NOT_COMMIT_ID ? (
-                      <p className="text-(--hl) p-2 text-sm">No files to commit. This commit will be omitted.</p>
+                      <p className="p-2 text-sm text-(--hl)">No files to commit. This commit will be omitted.</p>
                     ) : (
-                      <p className="text-(--hl) p-2 text-sm">These files will not be committed.</p>
+                      <p className="p-2 text-sm text-(--hl)">These files will not be committed.</p>
                     )
                   }
                 />
@@ -324,7 +324,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           <Button
             type="submit"
             isDisabled={isCommitting || stagedCount === 0}
-            className="rounded-xs bg-(--hl-xxs) text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) flex h-8 flex-1 items-center justify-center gap-2 px-4 text-sm ring-1 ring-transparent transition-all focus:ring-inset"
+            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             {canCommitAndPull ? (
               <>
@@ -347,7 +347,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           <Button
             type="button"
             isDisabled={isCommitting}
-            className="rounded-xs bg-(--hl-xxs) text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) flex h-8 flex-1 items-center justify-center gap-2 px-4 text-sm ring-1 ring-transparent transition-all focus:ring-inset"
+            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             onPress={() => {
               setShowConfirmDiscardAndPullModal(true);
             }}
@@ -363,7 +363,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           <Button
             type="submit"
             isDisabled={committingAction === 'commit' && isCommitting}
-            className="rounded-xs bg-(--hl-xxs) text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) flex h-8 flex-1 items-center justify-center gap-2 px-4 text-sm ring-1 ring-transparent transition-all focus:ring-inset"
+            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             <Icon
               icon={committingAction === 'commit' && isCommitting ? 'spinner' : 'check'}
@@ -377,7 +377,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
             isDisabled={committingAction === 'commit-push' && isCommitting}
             name="push"
             value="true"
-            className="rounded-xs bg-(--hl-xxs) text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) flex h-8 flex-1 items-center justify-center gap-2 px-4 text-sm ring-1 ring-transparent transition-all focus:ring-inset"
+            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             <Icon
               icon={committingAction === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
@@ -484,7 +484,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           <TextArea
             rows={3}
             name="message"
-            className="rounded-xs border-(--hl-sm) placeholder:text-(--hl-md) resize-none border border-solid p-2"
+            className="resize-none rounded-xs border border-solid border-(--hl-sm) p-2 placeholder:text-(--hl-md)"
             placeholder="This is a helpful message that describes the changes made in this commit."
             required
             value={message}
@@ -496,7 +496,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             <Button
               type="submit"
               isDisabled={isCommitting || stagedCount === 0}
-              className="rounded-xs bg-(--hl-xxs) text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) flex h-8 flex-1 items-center justify-center gap-2 px-4 text-sm ring-1 ring-transparent transition-all focus:ring-inset"
+              className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             >
               {canCommitAndPull ? (
                 <>
@@ -519,7 +519,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             <Button
               type="button"
               isDisabled={isCommitting}
-              className="rounded-xs bg-(--hl-xxs) text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) flex h-8 flex-1 items-center justify-center gap-2 px-4 text-sm ring-1 ring-transparent transition-all focus:ring-inset"
+              className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               onPress={() => {
                 setShowConfirmDiscardAndPullModal(true);
               }}
@@ -535,7 +535,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             <Button
               type="submit"
               isDisabled={(committingAction === 'commit' && isCommitting) || stagedCount === 0}
-              className="rounded-xs bg-(--hl-xxs) text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) flex h-8 flex-1 items-center justify-center gap-2 px-4 text-sm ring-1 ring-transparent transition-all focus:ring-inset"
+              className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             >
               <Icon
                 icon={committingAction === 'commit' && isCommitting ? 'spinner' : 'check'}
@@ -549,7 +549,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               isDisabled={(committingAction === 'commit-push' && isCommitting) || stagedCount === 0}
               name="push"
               value="true"
-              className="rounded-xs bg-(--hl-xxs) text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) flex h-8 flex-1 items-center justify-center gap-2 px-4 text-sm ring-1 ring-transparent transition-all focus:ring-inset"
+              className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             >
               <Icon
                 icon={committingAction === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
@@ -560,7 +560,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           </div>
         )}
         {operationError && (
-          <p className="rounded-xs bg-(--color-danger)/20 text-(--color-font-danger) p-2 text-sm">
+          <p className="rounded-xs bg-(--color-danger)/20 p-2 text-sm text-(--color-font-danger)">
             <Icon icon="exclamation-triangle" /> {operationError}
           </p>
         )}
@@ -572,7 +572,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             <span className="flex-1">Staged changes</span>
             <TooltipTrigger>
               <Button
-                className="rounded-xs text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) flex aspect-square h-6 items-center justify-center text-base opacity-100 ring-1 ring-transparent transition-all focus:ring-inset disabled:text-[rgba(var(--color-font-rgb),0.5)]"
+                className="flex aspect-square h-6 items-center justify-center rounded-xs text-base text-(--color-font) opacity-100 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:text-[rgba(var(--color-font-rgb),0.5)] aria-pressed:bg-(--hl-sm)"
                 slot={null}
                 name="Unstage all changes"
                 isDisabled={changes.staged.length === 0}
@@ -584,16 +584,16 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               </Button>
               <Tooltip
                 offset={8}
-                className="border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid px-4 py-2 text-sm shadow-lg"
+                className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
               >
                 Unstage all changes
               </Tooltip>
             </TooltipTrigger>
-            <span className="bg-(--hl-sm) text-(--hl) flex size-6 items-center justify-center rounded-full px-1 text-sm">
+            <span className="flex size-6 items-center justify-center rounded-full bg-(--hl-sm) px-1 text-sm text-(--hl)">
               {changes.staged.length}
             </span>
           </Heading>
-          <div className="flex w-full flex-1 select-none overflow-y-auto">
+          <div className="flex w-full flex-1 overflow-y-auto select-none">
             <GridList
               className="w-full"
               aria-label="Staged changes"
@@ -608,18 +608,18 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                   staged: true,
                 });
               }}
-              renderEmptyState={() => <p className="text-(--hl) p-2 text-sm">Stage your changes to commit them.</p>}
+              renderEmptyState={() => <p className="p-2 text-sm text-(--hl)">Stage your changes to commit them.</p>}
             >
               {item => {
                 return (
-                  <GridListItem className="text-(--hl) outline-hidden hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font) group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 transition-colors">
+                  <GridListItem className="group flex w-full items-center justify-between overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
                     <span className={`truncate ${item.entry.type === GitFileType.Deleted ? 'line-through' : ''}`}>
                       {item.entry.path}
                     </span>
                     <div className="flex items-center gap-1">
                       <TooltipTrigger>
                         <Button
-                          className="rounded-xs text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-pressed:opacity-100 flex aspect-square h-6 items-center justify-center text-sm opacity-0 ring-1 ring-transparent transition-all hover:opacity-100 focus:opacity-100 focus:ring-inset group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100"
+                          className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                           slot={null}
                           name="Unstage change"
                           onPress={() => {
@@ -630,7 +630,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                         </Button>
                         <Tooltip
                           offset={8}
-                          className="border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid px-4 py-2 text-sm shadow-lg"
+                          className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
                         >
                           Unstage change
                         </Tooltip>
@@ -641,7 +641,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                         </Button>
                         <Tooltip
                           offset={8}
-                          className="border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid px-4 py-2 text-sm capitalize shadow-lg"
+                          className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) capitalize shadow-lg select-none focus:outline-hidden"
                         >
                           {item.entry.type}
                         </Tooltip>
@@ -659,7 +659,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             <div className="flex items-center gap-2">
               <TooltipTrigger>
                 <Button
-                  className="rounded-xs text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-pressed:opacity-100 flex aspect-square h-6 items-center justify-center text-base opacity-100 ring-1 ring-transparent transition-all focus:ring-inset disabled:text-[rgba(var(--color-font-rgb),0.5)] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100"
+                  className="flex aspect-square h-6 items-center justify-center rounded-xs text-base text-(--color-font) opacity-100 ring-1 ring-transparent transition-all group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:text-[rgba(var(--color-font-rgb),0.5)] aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                   slot={null}
                   name="Discard all changes"
                   isDisabled={changes.unstaged.length === 0}
@@ -676,14 +676,14 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                 </Button>
                 <Tooltip
                   offset={8}
-                  className="border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid px-4 py-2 text-sm shadow-lg"
+                  className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
                 >
                   Discard all changes
                 </Tooltip>
               </TooltipTrigger>
               <TooltipTrigger>
                 <Button
-                  className="rounded-xs text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-pressed:opacity-100 flex aspect-square h-6 items-center justify-center gap-2 px-2 text-base opacity-100 ring-1 ring-transparent transition-all focus:ring-inset disabled:text-[rgba(var(--color-font-rgb),0.5)]"
+                  className="flex aspect-square h-6 items-center justify-center gap-2 rounded-xs px-2 text-base text-(--color-font) opacity-100 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:text-[rgba(var(--color-font-rgb),0.5)] aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                   slot={null}
                   name="Stage all changes"
                   isDisabled={changes.unstaged.length === 0}
@@ -695,17 +695,17 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                 </Button>
                 <Tooltip
                   offset={8}
-                  className="border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid px-4 py-2 text-sm shadow-lg"
+                  className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
                 >
                   Stage all changes
                 </Tooltip>
               </TooltipTrigger>
-              <span className="bg-(--hl-sm) text-(--hl) flex size-6 items-center justify-center rounded-full px-1 text-sm">
+              <span className="flex size-6 items-center justify-center rounded-full bg-(--hl-sm) px-1 text-sm text-(--hl)">
                 {changes.unstaged.length}
               </span>
             </div>
           </Heading>
-          <div className="flex w-full flex-1 select-none overflow-y-auto">
+          <div className="flex w-full flex-1 overflow-y-auto select-none">
             <GridList
               aria-label="Unstaged changes"
               className="w-full"
@@ -724,14 +724,14 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             >
               {item => {
                 return (
-                  <GridListItem className="text-(--hl) outline-hidden hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font) group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 transition-colors">
+                  <GridListItem className="group flex w-full items-center justify-between overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
                     <span className={`truncate ${item.entry.type === GitFileType.Deleted ? 'line-through' : ''}`}>
                       {item.entry.path}
                     </span>
                     <div className="flex items-center gap-1">
                       <TooltipTrigger>
                         <Button
-                          className="rounded-xs text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-pressed:opacity-100 flex aspect-square h-6 items-center justify-center text-sm opacity-0 ring-1 ring-transparent transition-all hover:opacity-100 focus:opacity-100 focus:ring-inset group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100"
+                          className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                           slot={null}
                           name="Discard change"
                           onPress={() => {
@@ -752,14 +752,14 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                         </Button>
                         <Tooltip
                           offset={8}
-                          className="border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid px-4 py-2 text-sm shadow-lg"
+                          className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
                         >
                           Discard change
                         </Tooltip>
                       </TooltipTrigger>
                       <TooltipTrigger>
                         <Button
-                          className="rounded-xs text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-pressed:opacity-100 flex aspect-square h-6 items-center justify-center text-sm opacity-0 ring-1 ring-transparent transition-all hover:opacity-100 focus:opacity-100 focus:ring-inset group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100"
+                          className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                           slot={null}
                           name="Stage change"
                           onPress={() => {
@@ -770,7 +770,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                         </Button>
                         <Tooltip
                           offset={8}
-                          className="border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid px-4 py-2 text-sm shadow-lg"
+                          className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
                         >
                           Stage change
                         </Tooltip>
@@ -781,7 +781,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                         </Button>
                         <Tooltip
                           offset={8}
-                          className="border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid px-4 py-2 text-sm capitalize shadow-lg"
+                          className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) capitalize shadow-lg select-none focus:outline-hidden"
                         >
                           {item.entry.type}
                         </Tooltip>
@@ -901,17 +901,17 @@ export const GitProjectStagingModal: FC<{
           !isOpen && onClose();
         }}
         isDismissable
-        className="h-(--visual-viewport-height) fixed left-0 top-0 z-10 flex w-full items-center justify-center bg-black/30"
+        className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
       >
         <Modal
           onOpenChange={isOpen => {
             !isOpen && onClose();
           }}
-          className="border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font) flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid"
+          className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
         >
           <Dialog
             data-loading={gitChangesFetcher.state === 'loading' ? 'true' : undefined}
-            className="outline-hidden data-loading:animate-pulse flex h-full flex-1 flex-col overflow-hidden"
+            className="flex h-full flex-1 flex-col overflow-hidden outline-hidden data-loading:animate-pulse"
           >
             {({ close }) => (
               <div className="flex flex-1 flex-col gap-4 overflow-hidden">
@@ -922,24 +922,24 @@ export const GitProjectStagingModal: FC<{
                   </Heading>
 
                   <Button
-                    className="rounded-xs text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) flex aspect-square h-6 shrink-0 items-center justify-center text-sm ring-1 ring-transparent transition-all focus:ring-inset"
+                    className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     onPress={close}
                   >
                     <Icon icon="x" />
                   </Button>
                 </div>
                 {mode === StagingModalModes.commitAndPull && (
-                  <div className="'text-(--color-font-warning) border-(--hl-md) p-(--padding-sm) flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid bg-[rgba(var(--color-warning-rgb),0.5)]">
+                  <div className="'text-(--color-font-warning) flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-md) bg-[rgba(var(--color-warning-rgb),0.5)] p-(--padding-sm)">
                     <p className="text-base">
                       <Icon icon="exclamation-triangle" className="mr-2" />
                       You have uncommitted changes. Commit or discard them to proceed with pull.
                     </p>
                   </div>
                 )}
-                <div className="divide-(--hl-md) grid h-full grid-cols-[300px_1fr] gap-2 divide-x divide-solid overflow-hidden">
+                <div className="grid h-full grid-cols-[300px_1fr] gap-2 divide-x divide-solid divide-(--hl-md) overflow-hidden">
                   <div className="flex flex-1 flex-col gap-4 overflow-hidden p-2">
                     {isGenerateCommitMessagesWithAIEnabled && (
-                      <div className="border-(--hl-md) flex flex-col gap-3 rounded-sm border border-solid p-3">
+                      <div className="flex flex-col gap-3 rounded-sm border border-solid border-(--hl-md) p-3">
                         <h3 className="font-semibold">
                           <Badge icon="sparkles" color="surprise" label="AI" />
                           Smart commits
@@ -949,7 +949,7 @@ export const GitProjectStagingModal: FC<{
                         </div>
                         <Button
                           isDisabled={isGeneratingCommits}
-                          className="border-(--hl-md) flex h-8 items-center gap-2 self-start rounded-md border border-solid px-3 py-1 text-sm"
+                          className="flex h-8 items-center gap-2 self-start rounded-md border border-solid border-(--hl-md) px-3 py-1 text-sm"
                           onPress={handleGenerateCommits}
                         >
                           {commitGenerationCompleted ? (
@@ -966,7 +966,7 @@ export const GitProjectStagingModal: FC<{
                       </div>
                     )}
                     {!isGenerateCommitMessagesWithAIEnabled && (
-                      <p className="text-(--hl) text-xs">
+                      <p className="text-xs text-(--hl)">
                         Enable generating commit messages with AI in Insomnia Preferences → AI Settings to use this
                         feature.
                       </p>
@@ -975,7 +975,7 @@ export const GitProjectStagingModal: FC<{
                       generateCommitsFetcher.state === 'idle' &&
                       generateCommitsFetcher.data &&
                       'error' in generateCommitsFetcher.data && (
-                        <p className="rounded-xs bg-(--color-danger)/20 text-(--color-font-danger) flex items-center gap-2 p-2 text-sm">
+                        <p className="flex items-center gap-2 rounded-xs bg-(--color-danger)/20 p-2 text-sm text-(--color-font-danger)">
                           <Icon icon="exclamation-triangle" className="size-4" />
                           <span>{generateCommitsFetcher.data.error}</span>
                         </p>
@@ -1017,14 +1017,14 @@ export const GitProjectStagingModal: FC<{
                         {previewDiffItem.name}
                       </Heading>
                       {previewDiffItem && (
-                        <div className="rounded-xs bg-(--hl-xs) text-(--color-font) flex-1 overflow-hidden p-2">
+                        <div className="flex-1 overflow-hidden rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
                           <DiffEditor original={previewDiffItem.diff.before} modified={previewDiffItem.diff.after} />
                         </div>
                       )}
                     </div>
                   ) : (
                     <div className="flex h-full flex-col items-center justify-center gap-4 p-2">
-                      <Heading className="text-(--hl-md) flex items-center justify-center gap-2 text-4xl font-semibold">
+                      <Heading className="flex items-center justify-center gap-2 text-4xl font-semibold text-(--hl-md)">
                         <Icon icon="code-compare" />
                         Diff view
                       </Heading>
@@ -1097,15 +1097,15 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
         !isOpen && onClose?.();
       }}
       isDismissable
-      className="h-(--visual-viewport-height) fixed left-0 top-[50%] z-10 flex w-full translate-y-[-50%] items-center justify-center bg-black/30"
+      className="fixed top-[50%] left-0 z-10 flex h-(--visual-viewport-height) w-full translate-y-[-50%] items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose?.();
         }}
-        className="border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font) flex w-full max-w-2xl flex-col rounded-md border border-solid"
+        className="flex w-full max-w-2xl flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
       >
-        <Dialog className="outline-hidden data-loading:animate-pulse flex h-full flex-1 flex-col overflow-hidden">
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden data-loading:animate-pulse">
           {({ close }) => (
             <div className="flex flex-1 flex-col gap-4 overflow-hidden">
               <div className="flex shrink-0 items-center justify-between gap-2">
@@ -1114,7 +1114,7 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
                 </Heading>
 
                 <Button
-                  className="rounded-xs text-(--color-font) hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) flex aspect-square h-6 shrink-0 items-center justify-center text-sm ring-1 ring-transparent transition-all focus:ring-inset"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
                 >
                   <Icon icon="x" />
@@ -1123,13 +1123,13 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
               <div className="">{message}</div>
               <div className="flex h-10 shrink-0 items-center justify-end gap-2">
                 <Button
-                  className="bg-(--color-bg) hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) h-full gap-2 rounded-md px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all focus:ring-inset aria-pressed:opacity-80"
+                  className="h-full gap-2 rounded-md bg-(--color-bg) px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-pressed:opacity-80"
                   onPress={() => close?.()}
                 >
                   Cancel
                 </Button>
                 <Button
-                  className="border-(--hl-md) bg-(--color-surprise) text-(--color-font-surprise) hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) flex h-full items-center justify-center gap-2 rounded-md border border-solid px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all focus:ring-inset aria-pressed:opacity-80"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                   onPress={() => {
                     if (typeof onConfirm === 'function') {
                       onConfirm();

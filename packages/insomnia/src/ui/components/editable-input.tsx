@@ -61,7 +61,7 @@ export const EditableInput = ({
     <>
       <div
         ref={editableRef}
-        className={`items-center justify-center truncate rounded-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) data-pressed:bg-(--hl-sm) ${isEditable ? 'hidden' : ''} ${className || 'px-2'} `}
+        className={`items-center justify-center truncate rounded-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm) ${isEditable ? 'hidden' : ''} ${className || 'px-2'} `}
         onDoubleClick={onDoubleClick}
         data-editable
         aria-label={ariaLabel}

@@ -74,7 +74,7 @@ export const EncodingPicker = ({ encoding, onChange }: { encoding: string; onCha
       </Group>
       <Popover className="flex flex-col overflow-y-hidden">
         <ListBox
-          className="max-h-80 select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-1 text-sm shadow-lg focus:outline-hidden"
+          className="max-h-80 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-1 text-sm shadow-lg select-none focus:outline-hidden"
           items={BUILT_IN_ENCODINGS}
           aria-label="Encoding List"
           autoFocus
@@ -83,7 +83,7 @@ export const EncodingPicker = ({ encoding, onChange }: { encoding: string; onCha
             <ListBoxItem
               aria-label={item.label}
               textValue={item.label}
-              className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap rounded-sm bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold data-focused:bg-(--hl-xs)"
+              className="flex h-(--line-height-xs) w-full items-center gap-2 rounded-sm bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold data-focused:bg-(--hl-xs)"
             >
               {({ isSelected }) => (
                 <>

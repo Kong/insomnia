@@ -79,7 +79,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
 
   return (
     <div className="shrink-0 overflow-hidden p-(--padding-sm)">
-      <div className="mb-4 w-full items-center gap-4 text-wrap rounded-lg border border-solid border-[rgba(var(--color-warning-rgb),1)] bg-(--color-bg) px-3 py-2 text-sm text-[rgba(var(--color-warning-rgb),1)] shadow-lg outline-hidden">
+      <div className="mb-4 w-full items-center gap-4 rounded-lg border border-solid border-[rgba(var(--color-warning-rgb),1)] bg-(--color-bg) px-3 py-2 text-sm text-wrap text-[rgba(var(--color-warning-rgb),1)] shadow-lg outline-hidden">
         Some time in 2026, unit tests will be deprecated in favour of{' '}
         <Link className="cursor-pointer text-(--color-surprise)" href="https://developer.konghq.com/insomnia/scripts/">
           pre-request and after-response scripts.
@@ -89,7 +89,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
       </div>
       <div className="flex w-full items-center gap-2" title={unitTest.name}>
         <Button
-          className="flex aspect-square h-8 shrink-0 flex-nowrap items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex aspect-square h-8 shrink-0 flex-nowrap items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => setIsOpen(!isOpen)}
         >
           <Icon icon={isOpen ? 'chevron-down' : 'chevron-right'} />
@@ -134,7 +134,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
         >
           <Button
             aria-label="Select a request"
-            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             <SelectValue<Request> className="flex items-center justify-center gap-2 truncate">
               {({ isPlaceholder, selectedItem: request }) => {
@@ -185,11 +185,11 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
                 id: request._id,
                 key: request._id,
               }))}
-              className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
+              className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
             >
               {request => (
                 <ListBoxItem
-                  className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                  className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                   aria-label={request.name}
                   textValue={request.name}
                   value={request}
@@ -233,7 +233,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
           </Popover>
         </Select>
         <Button
-          className="flex aspect-square h-8 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex aspect-square h-8 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => {
             showModal(AskModal, {
               title: 'Delete Test',
@@ -258,7 +258,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
           <Icon icon="trash" />
         </Button>
         <Button
-          className="flex aspect-square h-8 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex aspect-square h-8 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => {
             runTestFetcher.submit({
               organizationId,
@@ -430,7 +430,9 @@ const Component = () => {
       });
     },
     renderDropIndicator(target) {
-      return <DropIndicator target={target} className="border-none! outline-solid outline-1 outline-(--color-surprise)" />;
+      return (
+        <DropIndicator target={target} className="border-none! outline-1 outline-(--color-surprise) outline-solid" />
+      );
     },
   });
 
@@ -458,7 +460,7 @@ const Component = () => {
         </Heading>
         <Button
           aria-label="New test"
-          className="flex items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() =>
             createUnitTestFetcher.submit({
               organizationId,
@@ -474,7 +476,7 @@ const Component = () => {
         </Button>
         <Button
           aria-label="Run all tests"
-          className={`flex items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) ${testsRunning ? 'animate-pulse' : ''}`}
+          className={`flex items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) ${testsRunning ? 'animate-pulse' : ''}`}
           onPress={() => {
             runAllTestsFetcher.submit({
               organizationId,
