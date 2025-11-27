@@ -1,0 +1,129 @@
+---
+id: tab
+sidebar_label: 'Tab'
+sidebar_position: 1
+---
+
+# Tabs
+
+A flexible Tabs component built on React Aria's `Tabs` component with consistent styling and accessibility features.
+
+## Props
+
+| Prop    | Type        | Default | Description                  |
+| ------- | ----------- | ------- | ---------------------------- |
+| `items` | `TabItem[]` | []      | Array of tab items to render |
+
+### TabItem
+
+| Property     | Type              | Required | Description                           |
+| ------------ | ----------------- | -------- | ------------------------------------- |
+| `id`         | `string`          | Yes      | Unique identifier for the tab         |
+| `title`      | `React.ReactNode` | Yes      | Tab label text or content             |
+| `content`    | `React.ReactNode` | Yes      | Content to display in the tab panel   |
+| `icon`       | `React.ReactNode` | No       | Optional icon to display before title |
+| `isDisabled` | `boolean`         | No       | Whether the tab is disabled           |
+
+Extends all [React Aria TabsProps](https://react-spectrum.adobe.com/react-aria/Tabs.html#tabs-1).
+
+## Usage Examples
+
+### Basic usage
+
+```tsx live
+<Tabs
+  items={[
+    { id: 'tab1', title: 'Tab 1', content: <div>Content for Tab 1</div> },
+    { id: 'tab2', title: 'Tab 2', content: <div>Content for Tab 2</div> },
+    { id: 'tab3', title: 'Tab 3', content: <div>Content for Tab 3</div> },
+  ]}
+/>
+```
+
+### Vertical Tabs
+
+```tsx live
+<Tabs
+  orientation="vertical"
+  items={[
+    { id: 'tab1', title: 'Tab 1', content: <div>Content for Tab 1</div> },
+    { id: 'tab2', title: 'Tab 2', content: <div>Content for Tab 2</div> },
+    { id: 'tab3', title: 'Tab 3', content: <div>Content for Tab 3</div> },
+  ]}
+/>
+```
+
+### Tab with icon
+
+```tsx live
+<Tabs
+  items={[
+    { id: 'tab1', title: 'Tab 1', content: <div>Content for Tab 1</div>, icon: <Icon icon="file" /> },
+    { id: 'tab2', title: 'Tab 2', content: <div>Content for Tab 2</div> },
+    { id: 'tab3', title: 'Tab 3', content: <div>Content for Tab 3</div> },
+  ]}
+/>
+```
+
+### Controlled tabs
+
+```tsx live
+function ControlledTabsExample() {
+  const [selectedTabId, setSelectedTabId] = useState('tab1');
+
+  return (
+    <>
+      current selected tab: {selectedTabId}
+      <Tabs
+        selectedKey={selectedTabId}
+        onSelectionChange={setSelectedTabId}
+        items={[
+          { id: 'tab1', title: 'Tab 1', content: <div>Content for Tab 1</div> },
+          { id: 'tab2', title: 'Tab 2', content: <div>Content for Tab 2</div> },
+          { id: 'tab3', title: 'Tab 3', content: <div>Content for Tab 3</div> },
+        ]}
+      />
+    </>
+  );
+}
+```
+
+### Disabled Tabs
+
+```tsx live
+<Tabs
+  isDisabled
+  orientation="vertical"
+  items={[
+    { id: 'tab1', title: 'Tab 1', content: <div>Content for Tab 1</div> },
+    { id: 'tab2', title: 'Tab 2', content: <div>Content for Tab 2</div> },
+    { id: 'tab3', title: 'Tab 3', content: <div>Content for Tab 3</div> },
+  ]}
+/>
+```
+
+### Disable Items
+
+```tsx live
+<Tabs
+  orientation="vertical"
+  items={[
+    { id: 'tab1', title: 'Tab 1', content: <div>Content for Tab 1</div> },
+    { id: 'tab2', title: 'Tab 2', isDisabled: true, content: <div>Content for Tab 2</div> },
+    { id: 'tab3', title: 'Tab 3', content: <div>Content for Tab 3</div> },
+  ]}
+/>
+```
+
+## Styling
+
+### CSS Variables
+
+The component uses the following CSS variables for theming:
+
+- `--color-bg`: Tabs background color
+- `--color-font`: Tabs text color
+- `--hl-xs`: Highlight for hover/selected
+- `--hl-sm`: Standard border color
+
+You can customize these variables in your CSS to theme the tabs appearance.

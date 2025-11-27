@@ -29,7 +29,7 @@ const Component = () => {
       <div className="relative flex h-full w-full bg-(--color-bg) text-center">
         <TrailLinesContainer>
           <div className="flex h-full min-h-[450px] flex-col items-center justify-center">
-            <div className="relative m-0 flex min-w-[400px] max-w-lg flex-col items-center justify-center gap-(--padding-sm) rounded-md bg-(--hl-sm) p-(--padding-lg) pt-[32px]">
+            <div className="relative m-0 flex max-w-lg min-w-[400px] flex-col items-center justify-center gap-(--padding-sm) rounded-md bg-(--hl-sm) p-(--padding-lg) pt-[32px]">
               <InsomniaLogo
                 width={64}
                 height={64}
@@ -51,7 +51,7 @@ const Component = () => {
             <TooltipTrigger>
               <Button
                 data-testid="settings-button"
-                className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+                className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 onPress={() => showSettingsModal()}
               >
                 <Icon icon="gear" /> Preferences
@@ -59,7 +59,7 @@ const Component = () => {
               <Tooltip
                 placement="top"
                 offset={8}
-                className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
+                className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
               >
                 Preferences
                 <Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
@@ -69,7 +69,7 @@ const Component = () => {
           <div className="divide flex items-center gap-2 divide-y-(--hl-sm)">
             <TooltipTrigger>
               <Button
-                className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs capitalize text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+                className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) capitalize ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 onPress={() => {
                   if (settings.proxyEnabled) {
                     showSettingsModal({
@@ -88,7 +88,7 @@ const Component = () => {
               <Tooltip
                 placement="top"
                 offset={8}
-                className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
+                className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
               >
                 {status === 'online'
                   ? 'You have connectivity to the Internet' +

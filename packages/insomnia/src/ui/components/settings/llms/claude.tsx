@@ -73,7 +73,7 @@ export const Claude = ({
         <div className="flex flex-row gap-2">
           <Input id={apiKeyId} type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} />
           <Button
-            className="border-md rounded-md border border-solid border-(--hl-md) px-4 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)"
+            className="border-md rounded-md border border-solid border-(--hl-md) px-4 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)"
             isDisabled={isLoadingModels}
             onPress={() => {
               fetchAnthropicAvailableModels();
@@ -108,7 +108,7 @@ export const Claude = ({
         <Button
           isDisabled={currentLLM?.backend !== 'claude'}
           onClick={deactivateCurrentLLM}
-          className="rounded-md border border-solid border-red-500 bg-(--color-bg) px-4 py-2 text-base text-red-500 ring-1 ring-transparent transition-all hover:border-red-600 hover:bg-(--hl-xs) focus:ring-inset focus:ring-red-300"
+          className="rounded-md border border-solid border-red-500 bg-(--color-bg) px-4 py-2 text-base text-red-500 ring-1 ring-transparent transition-all hover:border-red-600 hover:bg-(--hl-xs) focus:ring-red-300 focus:ring-inset"
         >
           Deactivate
         </Button>
@@ -117,7 +117,7 @@ export const Claude = ({
           onClick={() => {
             saveLLMSettings(true, 'claude', { model: selectedModel, apiKey });
           }}
-          className="border-md rounded-md border border-solid border-(--hl-md) px-4 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)"
+          className="border-md rounded-md border border-solid border-(--hl-md) px-4 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)"
         >
           Activate
         </Button>

@@ -185,7 +185,7 @@ const FileField = ({
         )}
       >
         {rootFolder ? (
-          <div className="flex w-full flex-col items-center justify-start gap-(--padding-sm) text-ellipsis whitespace-nowrap rounded-md bg-(--color-bg) p-(--padding-md)">
+          <div className="flex w-full flex-col items-center justify-start gap-(--padding-sm) rounded-md bg-(--color-bg) p-(--padding-md) text-ellipsis whitespace-nowrap">
             <div>
               <Icon icon="folder" className="mr-1" />
               {rootFolder.name}
@@ -420,12 +420,7 @@ const ImportProjectsList = ({
         </div>
 
         <div className="mt-4 flex justify-end">
-          <Button
-            variant="contained"
-            bg="surprise"
-            onClick={() => onComplete([])}
-            className="h-10 gap-(--padding-sm)"
-          >
+          <Button variant="contained" bg="surprise" onClick={() => onComplete([])} className="h-10 gap-(--padding-sm)">
             Confirm
           </Button>
         </div>

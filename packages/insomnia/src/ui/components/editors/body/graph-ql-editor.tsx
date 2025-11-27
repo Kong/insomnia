@@ -747,7 +747,7 @@ export const GraphQLEditor: FC<Props> = ({
         </Panel>
         <PanelResizeHandle className={'h-px w-full bg-(--hl-md)'} />
         <Panel id="GraphQL Variables editor" className="flex flex-col" minSize={20}>
-          <Heading className="flex h-(--line-height-sm) w-full shrink-0 select-none items-center border-b border-solid border-(--hl-md) px-2 text-(--hl)">
+          <Heading className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2 text-(--hl) select-none">
             Query Variables
             <HelpTooltip className="space-left">
               Variables to use in GraphQL query <br />
@@ -776,9 +776,9 @@ export const GraphQLEditor: FC<Props> = ({
           </div>
         </Panel>
       </PanelGroup>
-      <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 select-none items-center overflow-y-auto border-t border-solid border-(--hl-md)">
+      <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-y-auto border-t border-solid border-(--hl-md) select-none">
         <Button
-          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={beautifyRequestBody}
         >
           Prettify GraphQL
@@ -793,13 +793,13 @@ export const GraphQLEditor: FC<Props> = ({
         {schemaFetchError && (
           <Group className="flex h-full items-center">
             <TooltipTrigger>
-              <Button className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)">
+              <Button className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
                 <Icon icon="exclamation-triangle" className="text-(--color-warning)" />
                 <span>Error fetching Schema</span>
               </Button>
               <Tooltip
                 offset={8}
-                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
+                className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
               >
                 {schemaFetchError.message}
               </Tooltip>

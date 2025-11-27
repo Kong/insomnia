@@ -33,7 +33,7 @@ export const PasswordInput = (props: PasswordInputProps) => {
           placeholder={placeholder}
           type={isHidden ? 'password' : 'text'}
         />
-        <button className="h-f absolute right-0 top-1 m-0 flex px-(--padding-sm)" onClick={handleShowHidePassword}>
+        <button className="h-f absolute top-1 right-0 m-0 flex px-(--padding-sm)" onClick={handleShowHidePassword}>
           {isHidden ? <i className="fa fa-eye-slash" /> : <i className="fa fa-eye" />}
         </button>
       </div>

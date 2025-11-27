@@ -79,7 +79,6 @@ src/common/
   This is the single source of truth for the current schema version.
 
 - **insomnia-schema-migrations/index.ts**
-
   - Contains the migration registry (`migrations` array) with all available migrations
   - Imports migration functions from versioned files (e.g., `v5.1.ts`, `v5.2.ts`)
   - Exports migration utilities: `migrateToLatestYaml()`
@@ -87,7 +86,6 @@ src/common/
   - Optimized to avoid unnecessary processing when data is already at the latest version
 
 - **insomnia-schema-migrations/v5.x.ts**
-
   - Each file contains the migration function for a specific version (e.g., `v5.1.ts` for version 5.1)
   - Current implementation: `v5.1.ts` contains `cleanHeadersAndParameters()` function
 
@@ -102,11 +100,9 @@ src/common/
 ## How to Add a New Migration
 
 1. **Update the Schema Version**
-
    - Bump the version in `schema-version.ts` (e.g., from `'5.1'` to `'5.2'`).
 
 2. **Create a Migration File**
-
    - Create a new file in `insomnia-schema-migrations/` named after the new version, e.g., `v5.2.ts`.
    - Write your migration function in this file:
 
@@ -124,7 +120,6 @@ src/common/
    ```
 
 3. **Register the Migration**
-
    - In `insomnia-schema-migrations/index.ts`, import your migration function and add it to the `migrations` array:
 
    ```typescript
@@ -140,7 +135,6 @@ src/common/
    ```
 
 4. **Update Zod Schemas (if needed)**
-
    - If the schema structure changes, update the Zod schemas in `import-v5-parser.ts` to reflect the new structure.
    - Remember: Keep `type` field as `collection.insomnia.rest/5.0` for backward compatibility.
    - Update `schema_version` default to the new version.
@@ -201,17 +195,14 @@ export const CollectionSchema = z.object({
 The migration system is used in several key places:
 
 1. **Git Operations** (`git-vcs.ts`):
-
    - Applied to HEAD and STAGE blobs during diff operations
    - Ensures migrated data is displayed correctly in diff views
 
 2. **Git Service** (`git-service.ts`):
-
    - Applied during repository cloning operations
    - Ensures imported data is compatible with current schema
 
 3. **Merge Conflicts** (`sync-merge-modal.tsx`):
-
    - Applied to merge results before validation
    - Ensures merged data follows current schema
 

@@ -13,14 +13,14 @@
       "~/*": [
         "../insomnia/src/*"
       ],
+      "electron": [
+        "../insomnia/send-request/electron"
+      ]
     },
     /* Transpiling Options */
     "module": "ESNext",
     "sourceMap": true,
-    "lib": [
-      "ES2023",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2023", "DOM.Iterable"],
     /* Strictness */
     "strict": true,
     "noImplicitReturns": true,
@@ -29,13 +29,7 @@
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false
   },
-  "include": [
-    ".eslintrc.js",
-    "esbuild.ts",
-    "package.json",
-    "src",
-    "../insomnia/types",
-  ],
+  "include": [".eslintrc.js", "esbuild.ts", "package.json", "src", "../insomnia/types"],
   "exclude": [
     "**/*.test.ts",
     "**/__mocks__/*",

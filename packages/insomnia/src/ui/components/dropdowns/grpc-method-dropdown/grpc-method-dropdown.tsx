@@ -85,7 +85,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({ disabled, methods
       selectedKey={selectedPath}
       isDisabled={methods.length === 0}
     >
-      <Button className="flex h-full items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) disabled:cursor-not-allowed disabled:bg-(--hl-xs) aria-pressed:bg-(--hl-sm) data-pressed:bg-(--hl-xs)">
+      <Button className="flex h-full items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:cursor-not-allowed disabled:bg-(--hl-xs) aria-pressed:bg-(--hl-sm) data-pressed:bg-(--hl-xs)">
         <SelectValue<{
           id: string;
           fullPath: string;
@@ -107,10 +107,10 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({ disabled, methods
         </SelectValue>
         <Icon icon="caret-down" />
       </Button>
-      <Popover className="flex min-w-max max-w-xs flex-col overflow-y-hidden">
+      <Popover className="flex max-w-xs min-w-max flex-col overflow-y-hidden">
         <ListBox
           items={sections}
-          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
+          className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
         >
           {section => (
             <ListBoxSection key={section.id}>
@@ -122,7 +122,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({ disabled, methods
                 <ListBoxItem
                   id={grpcMethod.id}
                   key={grpcMethod.id}
-                  className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                  className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                   aria-label={grpcMethod.display_name}
                   textValue={grpcMethod.display_name}
                   value={grpcMethod}

@@ -30,7 +30,7 @@ export const General: FC = () => {
 
   return (
     <div className="relative p-4">
-      <h2 className="sticky left-0 top-0 z-10 bg-(--color-bg) pb-2 pt-2 text-lg font-bold">Application</h2>
+      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-2 pb-2 text-lg font-bold">Application</h2>
 
       <div className="">
         <div>
@@ -64,7 +64,7 @@ export const General: FC = () => {
         />
       </div>
 
-      <h2 className="sticky left-0 top-0 z-10 bg-(--color-bg) pb-2 pt-5 text-lg font-bold">Font</h2>
+      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Font</h2>
 
       <div className="row-fill row-fill--top">
         <div>
@@ -140,7 +140,7 @@ export const General: FC = () => {
         />
       </div>
 
-      <h2 className="sticky left-0 top-0 z-10 bg-(--color-bg) pb-2 pt-5 text-lg font-bold">Request / Response</h2>
+      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Request / Response</h2>
 
       <div className="row-fill row-fill--top">
         <div>
@@ -217,7 +217,7 @@ export const General: FC = () => {
         />
       </div>
 
-      <h2 className="sticky left-0 top-0 z-10 bg-(--color-bg) pb-2 pt-5 text-lg font-bold">Security</h2>
+      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Security</h2>
       <div className="form-row pad-top-sm">
         <BooleanSetting
           label="Clear OAuth 2 session on start"
@@ -251,7 +251,7 @@ export const General: FC = () => {
 
       {updatesSupported() && (
         <Fragment>
-          <h2 className="sticky left-0 top-0 z-10 bg-(--color-bg) pb-2 pt-5 text-lg font-bold">Software Updates</h2>
+          <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Software Updates</h2>
           <div className="flex w-full justify-between gap-2">
             <BooleanSetting
               label="Automatically download and install updates"
@@ -282,7 +282,7 @@ export const General: FC = () => {
         </>
       )}
 
-      <h2 className="sticky left-0 top-0 z-10 bg-(--color-bg) pb-2 pt-5 text-lg font-bold">Plugins</h2>
+      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Plugins</h2>
       <TextSetting
         label="Additional Plugin Path"
         setting="pluginPath"
@@ -292,7 +292,7 @@ export const General: FC = () => {
 
       {!isLoggedIn && (
         <>
-          <h2 className="sticky left-0 top-0 z-10 bg-(--color-bg) pb-2 pt-5 text-lg font-bold">Network Activity</h2>
+          <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Network Activity</h2>
           <BooleanSetting label="Send Anonymous Usage Statistics" setting="enableAnalytics" disabled={isLoggedIn} />
           <div className="py-2 pl-5 text-sm opacity-50">
             Help Kong improve its products by sending anonymous data about features and plugins used, hardware and

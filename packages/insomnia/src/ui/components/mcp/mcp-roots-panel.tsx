@@ -94,7 +94,7 @@ export const McpRootsPanel = ({ request, readyState }: McpRootsPanelProps) => {
           value={rootUri}
           onChange={e => setRootUri(e.target.value)}
           type={'text'}
-          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pl-2 pr-7 text-(--color-font) transition-colors focus:outline-hidden focus:ring-1 focus:ring-(--hl-md)"
+          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
         />
         <button className="btn btn--outlined btn--super-compact flex items-center gap-2" onClick={addRoot}>
           Add Root

@@ -428,17 +428,17 @@ const Component = ({ params }: Route.ComponentProps) => {
             <Breadcrumbs
               className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-(--padding-sm) font-bold`}
             >
-              <Breadcrumb className="flex h-full select-none items-center gap-2 text-(--color-font) outline-hidden data-focused:outline-hidden">
+              <Breadcrumb className="flex h-full items-center gap-2 text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
                 <NavLink
                   data-testid="project"
-                  className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) outline-hidden ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
+                  className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
                   to={`/organization/${organizationId}/project/${activeProject._id}`}
                 >
                   <Icon className="text-xs" icon="chevron-left" />
                 </NavLink>
-                <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-solid outline-1" />
+                <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-1 outline-solid" />
               </Breadcrumb>
-              <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-(--color-font) outline-hidden data-focused:outline-hidden">
+              <Breadcrumb className="flex h-full items-center gap-2 truncate text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
                 <WorkspaceDropdown />
               </Breadcrumb>
             </Breadcrumbs>
@@ -459,7 +459,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             </div>
             <Button
               onPress={() => setIsCookieModalOpen(true)}
-              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             >
               <Icon icon="cookie-bite" className="w-5 shrink-0" />
               <span className="truncate">
@@ -469,7 +469,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             </Button>
             <Button
               onPress={() => setCertificatesModalOpen(true)}
-              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             >
               <Icon icon="file-contract" className="w-5 shrink-0" />
               <span className="truncate">
@@ -482,13 +482,13 @@ const Component = ({ params }: Route.ComponentProps) => {
             </Button>
           </div>
           <div className="flex shrink-0 items-center gap-2 p-(--padding-sm)">
-            <Heading className="uppercase text-(--hl)">Spec</Heading>
+            <Heading className="text-(--hl) uppercase">Spec</Heading>
             <span className="flex-1" />
             {isGenerateMockServersWithAIEnabled && (
               <Button
                 onPress={() => setNewMockServerModalOpen(true)}
                 isDisabled={!apiSpec.contents}
-                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
               >
                 <Icon icon="server" className="w-5 shrink-0" />
                 <span className="truncate">Generate Mock</span>
@@ -497,7 +497,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             <ToggleButton
               aria-label="Toggle preview"
               isSelected={isSpecPaneOpen}
-              className="flex h-full items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+              className="flex h-full items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               onChange={setIsSpecPaneOpen}
             >
               {({ isSelected }) => (
@@ -510,7 +510,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             <MenuTrigger>
               <Button
                 aria-label="Spec actions"
-                className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+                className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               >
                 <Icon icon="gear" />
               </Button>
@@ -526,11 +526,11 @@ const Component = ({ params }: Route.ComponentProps) => {
                     }
                   }}
                   items={specActionList}
-                  className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
+                  className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
                 >
                   {item => (
                     <MenuItem
-                      className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-(--hl-md) aria-selected:font-bold"
+                      className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-(--hl-md) aria-selected:font-bold"
                       aria-label={item.name}
                     >
                       {item.icon}
@@ -546,7 +546,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             {info && (
               <div className="divide-y divide-solid divide-(--hl-md)">
                 <Button
-                  className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                  className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                   onPress={() => {
                     expandedKeys.includes('info')
                       ? setExpandedKeys(expandedKeys.filter(key => key !== 'info'))
@@ -560,25 +560,25 @@ const Component = ({ params }: Route.ComponentProps) => {
                 {expandedKeys.includes('info') && (
                   <ListBox onAction={key => navigateToPath(key.toString())}>
                     <ListBoxItem
-                      className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                      className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                       id="info.title"
                     >
                       <span className="truncate">Title: {info.title}</span>
                     </ListBoxItem>
                     <ListBoxItem
-                      className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                      className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                       id="info.description"
                     >
                       <span className="truncate">Description: {info.description}</span>
                     </ListBoxItem>
                     <ListBoxItem
-                      className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                      className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                       id="info.version"
                     >
                       <span className="truncate">Version: {info.version}</span>
                     </ListBoxItem>
                     <ListBoxItem
-                      className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                      className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                       id="info.license"
                     >
                       <span className="truncate">License: {info.license?.name}</span>
@@ -592,7 +592,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('servers')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'servers'))
@@ -613,7 +613,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                         id={`servers.${item.path}`}
                       >
                         {item.url}
@@ -628,7 +628,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('paths')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'paths'))
@@ -649,8 +649,8 @@ const Component = ({ params }: Route.ComponentProps) => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <GridListItem className="group select-none outline-hidden" id={`paths.${item.path}`}>
-                        <div className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
+                      <GridListItem className="group outline-hidden select-none" id={`paths.${item.path}`}>
+                        <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
                           <span className="truncate">{item.path}</span>
                           <span className="flex-1" />
                           {getMethodsFromOpenApiPathItem(item).map(method => (
@@ -674,7 +674,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('requestBodies')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'requestBodies'))
@@ -696,7 +696,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                         id={`components.requestBodies.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -711,7 +711,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('responses')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'responses'))
@@ -733,7 +733,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                         id={`components.responses.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -748,7 +748,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('parameters')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'parameters'))
@@ -770,7 +770,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                         id={`components.parameters.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -785,7 +785,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('headers')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'headers'))
@@ -807,7 +807,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                         id={`components.headers.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -822,7 +822,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('schemas')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'schemas'))
@@ -844,7 +844,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                         id={`components.schemas.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -859,7 +859,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               <div className="divide-y divide-solid divide-(--hl-md)">
                 <div>
                   <Button
-                    className="flex w-full select-none items-center justify-between gap-2 p-(--padding-sm) text-sm uppercase text-(--hl) hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
                     onPress={() => {
                       expandedKeys.includes('security')
                         ? setExpandedKeys(expandedKeys.filter(key => key !== 'security'))
@@ -881,7 +881,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                         id={`components.securitySchemes.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -948,20 +948,20 @@ const Component = ({ params }: Route.ComponentProps) => {
                 >
                   <div className="flex items-center gap-2 p-(--padding-sm)">
                     <TooltipTrigger>
-                      <Button className="flex cursor-pointer select-none items-center gap-2">
+                      <Button className="flex cursor-pointer items-center gap-2 select-none">
                         <Icon icon={rulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
                         Ruleset
                       </Button>
                       <Tooltip
                         placement="top end"
                         offset={8}
-                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg focus:outline-hidden"
+                        className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
                       >
                         <div>
                           {rulesetPath ? (
                             <Fragment>
                               <p>Using ruleset from</p>
-                              <code className="wrap-break-word p-0">{rulesetPath}</code>
+                              <code className="p-0 wrap-break-word">{rulesetPath}</code>
                             </Fragment>
                           ) : (
                             <Fragment>
@@ -976,19 +976,19 @@ const Component = ({ params }: Route.ComponentProps) => {
                       </Tooltip>
                     </TooltipTrigger>
                     {lintErrors.length > 0 && (
-                      <div className="flex select-none items-center gap-2">
+                      <div className="flex items-center gap-2 select-none">
                         <Icon icon="circle-xmark" className="text-(--color-danger)" />
                         {lintErrors.length}
                       </div>
                     )}
                     {lintWarnings.length > 0 && (
-                      <div className="flex select-none items-center gap-2">
+                      <div className="flex items-center gap-2 select-none">
                         <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
                         {lintWarnings.length}
                       </div>
                     )}
                     {apiSpec.contents && (
-                      <div className="flex select-none items-center gap-2">
+                      <div className="flex items-center gap-2 select-none">
                         {lintMessages.length === 0 && <Icon icon="check-square" className="text-(--color-success)" />}
                         {lintMessages.length === 0 ? 'No lint problems' : 'Lint problems detected'}
                       </div>
@@ -1002,7 +1002,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                   </div>
                   {isLintPaneOpen && (
                     <ListBox
-                      className="flex-1 select-none overflow-y-auto"
+                      className="flex-1 overflow-y-auto select-none"
                       onAction={index => {
                         const listIndex = parseInt(index.toString(), 10);
                         const lintMessage = lintMessages[listIndex];

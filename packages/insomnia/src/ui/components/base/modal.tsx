@@ -110,7 +110,7 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
           !isOpen && hide();
         }}
         isDismissable={keyboardClosable}
-        className="fixed left-0 top-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
+        className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
       >
         <RACModal ref={containerRef}>
           <Dialog aria-label="Modal" className={classes}>

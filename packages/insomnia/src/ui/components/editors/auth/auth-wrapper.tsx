@@ -57,7 +57,7 @@ export const AuthWrapper: FC<{
     authBody = <SingleTokenAuth disabled={disabled} />;
   } else {
     authBody = (
-      <div className="flex h-full w-full select-none items-center justify-center">
+      <div className="flex h-full w-full items-center justify-center select-none">
         <p className="p-4 text-center text-sm text-(--hl)">
           <i
             className="fa fa-unlock-alt"
