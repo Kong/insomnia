@@ -395,7 +395,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
                   <>
                     <PanelResizeHandle className={'h-px w-full bg-(--hl-md)'} />
                     <Panel minSize={10} defaultSize={isMcpResponse(response) ? 85 : 60}>
-                      <div className="h-full flex-1 border-t border-(--hl-md)">{getEventView(selectedEvent)}</div>
+                      <div className="h-full flex-1">{getEventView(selectedEvent)}</div>
                     </Panel>
                   </>
                 )}
