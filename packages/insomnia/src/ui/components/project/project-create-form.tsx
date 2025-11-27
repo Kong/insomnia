@@ -9,8 +9,6 @@ import {
   Heading,
   Input,
   Label,
-  Radio,
-  RadioGroup,
   Row,
   Tab,
   Table,
@@ -23,8 +21,6 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { getAppWebsiteBaseURL } from '~/common/constants';
-import { docsPricingLearnMoreLink } from '~/common/documentation';
 import { isGitCredentialsOAuth } from '~/models/git-repository';
 import { isOwnerOfOrganization, type StorageRules } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
@@ -41,28 +37,21 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
-import {
-  getDefaultProjectStorageType,
-  getProjectStorageTypeLabel,
-  isEmptyGitProject,
-  isGitProject,
-  isLocalProject,
-  isRemoteProject,
-  type Project,
-} from '../../../models/project';
+import { getDefaultProjectStorageType } from '../../../models/project';
 import {
   scopeToBgColorMap,
   scopeToIconMap,
   scopeToLabelMap,
   scopeToTextColorMap,
 } from '../../../routes/organization.$organizationId.project.$projectId._index';
-import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { ErrorBoundary } from '../error-boundary';
 import { CustomRepositorySettingsFormGroup } from '../git-credentials/custom-repository-settings-form';
 import { GitHubRepositorySetupFormGroup } from '../git-credentials/github-repository-settings-form';
 import { GitLabRepositorySetupFormGroup } from '../git-credentials/gitlab-repository-settings-form';
 import { Icon } from '../icon';
 import { InsomniaLogo } from '../insomnia-icon';
+import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
+import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 
 interface Props {
   storageRules: StorageRules;
@@ -227,117 +216,22 @@ export const ProjectCreateForm: FC<Props> = ({
               onChange={name => setProjectData({ ...projectData, name })}
               className="group relative flex flex-col gap-2 px-0.5"
             >
-              <Label className="text-sm text-(--hl)">Project name</Label>
+              <Label className="pt-0 text-sm text-(--color-font)">Project name</Label>
               <Input
                 placeholder={defaultProjectName}
                 className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
               />
             </TextField>
-            <RadioGroup
-              name="type"
-              className="flex flex-col gap-2 px-0.5"
-              onChange={value => {
-                error && setError(null);
-                setStorageType(value as 'local' | 'remote' | 'git');
-              }}
+            <ProjectTypeSelect
+              storageRules={storageRules}
               value={storageType}
-            >
-              <Label className="text-sm text-(--hl)">Project type</Label>
-              <div className="flex gap-2">
-                <Radio
-                  isDisabled={!storageRules.enableLocalVault}
-                  value="local"
-                  className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon icon="laptop" />
-                    <Heading className="text-lg font-bold">Local Vault</Heading>
-                  </div>
-                  <p className="pt-2">Stored locally only, with no cloud. Ideal when collaboration is not needed.</p>
-                </Radio>
-
-                <Radio
-                  isDisabled={!storageRules.enableCloudSync}
-                  value="remote"
-                  className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon icon="globe" />
-                    <Heading className="text-lg font-bold">Cloud Sync</Heading>
-                  </div>
-                  <p className="pt-2">
-                    Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
-                  </p>
-                </Radio>
-                <Radio
-                  isDisabled={!storageRules.enableGitSync}
-                  value="git"
-                  className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon icon={['fab', 'git-alt']} />
-                    <Heading className="text-lg font-bold">Git Sync</Heading>
-                  </div>
-                  <p className="pt-2">
-                    Stored locally and synced to a Git repository. Ideal for version control and collaboration.
-                  </p>
-                </Radio>
-              </div>
-              {storageType === 'git' && !isGitSyncEnabled && (
-                <div
-                  className={classNames('mt-3 flex items-start justify-start gap-5 rounded-md px-6 py-5', {
-                    'bg-[#292535]': !isLightTheme,
-                    'bg-[#EEEBFF]': isLightTheme,
-                  })}
-                >
-                  <Icon icon="circle-info" className="pt-1.5" />
-                  <div className="flex flex-col items-start justify-start gap-3.5">
-                    <Heading className="text-lg font-bold">
-                      Git Sync limited to organizations of 3 or fewer users
-                    </Heading>
-                    {isUserOwner ? (
-                      <>
-                        <p>
-                          Git Sync is included on your plan for up to 3 users. Since your team is larger, you’ll need to
-                          upgrade your plan to use it.{' '}
-                          <a href={docsPricingLearnMoreLink} className="underline">
-                            Learn more ↗
-                          </a>
-                        </p>
-                        <a
-                          href={getAppWebsiteBaseURL() + '/app/pricing?source=app_create_git_project'}
-                          className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
-                        >
-                          Upgrade
-                        </a>
-                      </>
-                    ) : (
-                      <>
-                        <p>
-                          Git Sync is included on your plan for up to 3 users. Because your team is larger, your admin
-                          will need to upgrade the plan for you to access it.
-                        </p>
-                        <a
-                          href={docsPricingLearnMoreLink}
-                          className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
-                        >
-                          Learn More ↗
-                        </a>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-            </RadioGroup>
-            {showStorageRestrictionMessage && (
-              <div className="flex items-center gap-2 rounded-xs bg-[rgba(var(--color-warning-rgb),0.5)] px-2 py-1 text-sm text-(--color-font-warning)">
-                <Icon icon="triangle-exclamation" />
-                <span>
-                  The organization owner mandates that projects must be created and stored using{' '}
-                  {getProjectStorageTypeLabel(storageRules)}.
-                </span>
-              </div>
-            )}
+              onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
+            />
+            <ProjectTypeWarning
+              isGitSyncEnabled={isGitSyncEnabled}
+              storageType={storageType}
+              storageRules={storageRules}
+            />
             {storageType === 'git' && (
               <>
                 <Label className="flex items-center gap-2">
@@ -586,7 +480,7 @@ export const ProjectCreateForm: FC<Props> = ({
               <Button
                 isDisabled={newProjectFetcher.state !== 'idle'}
                 onPress={onUpsertProject}
-                className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 {newProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
                 <span>
