@@ -77,8 +77,7 @@ export function useAIFeatureStatus(): AIFeatureStatus {
 
   const generateMockServersWithAIAllowedByOrg = features.aiMockServers ? features.aiMockServers.enabled : true;
   const generateCommitMessagesWithAIAllowedByOrg = features.aiCommitMessages ? features.aiCommitMessages.enabled : true;
-  // TODO : Replace with real organization feature flag when available
-  const mcpClientWithAIAllowedByOrg = true;
+  const mcpClientWithAIAllowedByOrg = features.aiMcpClient ? features.aiMcpClient.enabled : true;
 
   return {
     isGenerateMockServersWithAIEnabled:
