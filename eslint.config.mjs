@@ -62,7 +62,19 @@ export default defineConfig([
       'playwright/no-wait-for-timeout': 'error',
     },
   },
-
+  // Warn about node built-in modules in UI code
+  {
+    files: ['packages/insomnia/src/ui/**/*.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'warn',
+        {
+          paths: ['fs', 'path', 'events', 'http', 'https', 'os', 'crypto'],
+          patterns: ['node:*'],
+        },
+      ],
+    },
+  },
   {
     files: ['packages/insomnia/src/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooksPlugin },
