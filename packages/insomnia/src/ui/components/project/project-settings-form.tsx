@@ -28,7 +28,7 @@ import {
   useOrganizationPermissionsLoaderFetcher,
 } from '~/routes/organization.$organizationId.permissions';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
-import { useActiveView } from '~/ui/components/project/hooks';
+import { useActiveView } from '~/ui/components/project/utils';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';

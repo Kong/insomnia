@@ -3,7 +3,7 @@ import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-compone
 import { useNavigation } from 'react-router';
 
 import type { StorageRules } from '~/models/organization';
-import { useActiveView } from '~/ui/components/project/hooks';
+import { useActiveView } from '~/ui/components/project/utils';
 
 import type { GitRepository } from '../../../models/git-repository';
 import type { Project } from '../../../models/project';
@@ -55,7 +55,7 @@ export const ProjectModal = ({
       isDismissable
       className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
-      <Modal className="flex max-h-[90dvh] min-h-[420px] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)">
+      <Modal className="flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)">
         <Dialog
           aria-label="Create or update dialog"
           className="grid flex-1 grid-rows-[min-content_1fr_min-content] gap-4 px-10 pt-10 outline-hidden"
@@ -88,8 +88,6 @@ export const ProjectModal = ({
                 <ProjectCreateForm
                   storageRules={storageRules}
                   isGitSyncEnabled={isGitSyncEnabled}
-                  project={project}
-                  gitRepository={gitRepository}
                   onCancel={close}
                   onSuccessUpdate={() => onOpenChange(false)}
                   activeViewObj={activeViewObj}

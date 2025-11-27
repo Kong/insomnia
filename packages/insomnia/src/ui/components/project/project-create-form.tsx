@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import type { FC } from 'react';
 import React, { useEffect, useState } from 'react';
 import {
@@ -10,33 +9,23 @@ import {
   Input,
   Label,
   Row,
-  Tab,
   Table,
   TableBody,
   TableHeader,
-  TabList,
-  TabPanel,
-  Tabs,
   TextField,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { isGitCredentialsOAuth } from '~/models/git-repository';
-import { isOwnerOfOrganization, type StorageRules } from '~/models/organization';
-import { useRootLoaderData } from '~/root';
+import { type StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import {
   fallbackFeatures,
   useOrganizationPermissionsLoaderFetcher,
 } from '~/routes/organization.$organizationId.permissions';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
-import { useActiveView } from '~/ui/components/project/hooks';
-import { useIsLightTheme } from '~/ui/hooks/theme';
+import { useActiveView, type ProjectData } from '~/ui/components/project/utils';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
-
 import type { OauthProviderName } from '../../../models/git-credentials';
-import type { GitRepository } from '../../../models/git-repository';
 import { getDefaultProjectStorageType } from '../../../models/project';
 import {
   scopeToBgColorMap,
@@ -44,14 +33,11 @@ import {
   scopeToLabelMap,
   scopeToTextColorMap,
 } from '../../../routes/organization.$organizationId.project.$projectId._index';
-import { ErrorBoundary } from '../error-boundary';
-import { CustomRepositorySettingsFormGroup } from '../git-credentials/custom-repository-settings-form';
-import { GitHubRepositorySetupFormGroup } from '../git-credentials/github-repository-settings-form';
-import { GitLabRepositorySetupFormGroup } from '../git-credentials/gitlab-repository-settings-form';
 import { Icon } from '../icon';
 import { InsomniaLogo } from '../insomnia-icon';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
+import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 
 interface Props {
   storageRules: StorageRules;
@@ -98,18 +84,7 @@ export const ProjectCreateForm: FC<Props> = ({
 
   const [error, setError] = useState<string | null>(null);
 
-  const [projectData, setProjectData] = useState<{
-    name: string;
-    authorName?: string;
-    authorEmail?: string;
-    uri?: string;
-    ref?: string;
-    username?: string;
-    password?: string;
-    token?: string;
-    oauth2format?: OauthProviderName;
-    connectRepositoryLater?: boolean;
-  }>({
+  const [projectData, setProjectData] = useState<ProjectData>({
     name: defaultProjectName,
     authorName: '',
     authorEmail: '',
@@ -124,8 +99,6 @@ export const ProjectCreateForm: FC<Props> = ({
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
   const newProjectFetcher = useProjectNewActionFetcher();
 
-  const showStorageRestrictionMessage =
-    !storageRules.enableCloudSync || !storageRules.enableLocalVault || !storageRules.enableGitSync;
   const insomniaFiles =
     initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data
       ? initCloneGitRepositoryFetcher.data.files
@@ -137,48 +110,6 @@ export const ProjectCreateForm: FC<Props> = ({
     }
   }, [newProjectFetcher.data, newProjectFetcher.state]);
 
-  const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository & { ref?: string }>) => {
-    const { author, credentials, created, modified, isPrivate, needsFullClone, uriNeedsMigration, ...repoPatch } =
-      gitRepositoryPatch;
-
-    setProjectData({
-      ...projectData,
-      ...credentials,
-      authorName: author?.name || '',
-      authorEmail: author?.email || '',
-      uri: repoPatch.uri,
-      ref: repoPatch.ref,
-    });
-
-    initCloneGitRepositoryFetcher.submit({
-      ...repoPatch,
-      authorName: author?.name || '',
-      authorEmail: author?.email || '',
-      ...(credentials
-        ? isGitCredentialsOAuth(credentials)
-          ? {
-              credentials: {
-                token: credentials.token || '',
-                oauth2format: credentials.oauth2format || 'github',
-                username: credentials.username || '',
-              },
-            }
-          : {
-              credentials,
-            }
-        : {
-            credentials: {
-              password: '',
-              username: '',
-            },
-          }),
-      uri: repoPatch.uri || '',
-      organizationId,
-    });
-
-    setActiveView('git-results');
-  };
-
   const onUpsertProject = () => {
     newProjectFetcher.submit({
       organizationId,
@@ -188,14 +119,6 @@ export const ProjectCreateForm: FC<Props> = ({
       },
     });
   };
-
-  const organizationData = useOrganizationLoaderData();
-  const { userSession } = useRootLoaderData()!;
-  const organization = organizationData?.organizations.find(o => o.id === organizationId);
-  const isUserOwner =
-    organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
-
-  const isLightTheme = useIsLightTheme();
 
   return (
     <div className="flex w-full max-w-[600px] flex-col gap-4">
@@ -251,55 +174,17 @@ export const ProjectCreateForm: FC<Props> = ({
                   <span className="text-sm text-(--hl)">Connect repository later</span>
                 </Label>
                 {!projectData.connectRepositoryLater && (
-                  <ErrorBoundary>
-                    <Tabs
-                      selectedKey={selectedTab}
-                      onSelectionChange={key => {
-                        setTab(key as OauthProviderName);
-                      }}
-                      aria-label="Git repository settings tabs"
-                      className="mt-4 flex h-full w-full flex-col"
-                    >
-                      <TabList
-                        className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
-                        aria-label="Request pane tabs"
-                      >
-                        <Tab
-                          className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-                          id="github"
-                        >
-                          <div className="flex items-center gap-2">
-                            <i className="fa fa-github" /> GitHub
-                          </div>
-                        </Tab>
-                        <Tab
-                          className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-                          id="gitlab"
-                        >
-                          <div className="flex items-center gap-2">
-                            <i className="fa fa-gitlab" /> GitLab
-                          </div>
-                        </Tab>
-                        <Tab
-                          className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-                          id="custom"
-                        >
-                          <div className="flex items-center gap-2">
-                            <i className="fa fa-code-fork" /> Git
-                          </div>
-                        </Tab>
-                      </TabList>
-                      <TabPanel className="h-full w-full overflow-y-auto py-2" id="github">
-                        <GitHubRepositorySetupFormGroup onSubmit={onGitRepoFormSubmit} />
-                      </TabPanel>
-                      <TabPanel className="h-full w-full overflow-y-auto py-2" id="gitlab">
-                        <GitLabRepositorySetupFormGroup onSubmit={onGitRepoFormSubmit} />
-                      </TabPanel>
-                      <TabPanel className="h-full w-full overflow-y-auto py-2" id="custom">
-                        <CustomRepositorySettingsFormGroup onSubmit={onGitRepoFormSubmit} />
-                      </TabPanel>
-                    </Tabs>
-                  </ErrorBoundary>
+                  <GitRepoForm
+                    {...{
+                      setProjectData,
+                      projectData,
+                      initCloneGitRepositoryFetcher,
+                      organizationId,
+                      setActiveView,
+                      selectedTab,
+                      setTab,
+                    }}
+                  />
                 )}
               </>
             )}
