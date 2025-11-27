@@ -202,7 +202,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     };
   } else if (dataParameters.length !== 0) {
     body = {
-      text: dataParameters.map(parameter => `${parameter.name}${parameter.value}`).join('&'),
+      text: dataParameters.map(parameter => `${parameter.name}=${parameter.value}`).join('&'),
       mimeType: mimeType || '',
     };
   } else if (formDataParams.length) {
