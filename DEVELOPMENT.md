@@ -110,7 +110,7 @@ This is just a brief summary of Insomnia's current technical debt.
 - [ ] de-polymorph database
 - [ ] codemirror is unmaintained
 - [x] nedb is unmaintained
-- [ ] grpc state state should be in main rather than renderer
+- [ ] grpc state should be in main rather than renderer
 - [x] drag and drop is flakey
 - [ ] sync code is spaghetti
 - [ ] template rendering is spaghetti and has poor discoverability
