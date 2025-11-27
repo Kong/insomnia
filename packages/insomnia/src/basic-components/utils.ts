@@ -25,7 +25,7 @@ export function getBorderColorClasses(color: ButtonColor) {
   return {
     primary: '',
     danger: '',
-    default: 'border border-[--hl]',
+    default: 'border border-(--hl-md)',
   }[color];
 }
 
