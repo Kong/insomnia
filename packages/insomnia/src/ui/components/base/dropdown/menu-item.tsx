@@ -44,7 +44,7 @@ export const MenuItem = <T extends object>({ item, state, closeOnSelect }: Props
 
   return (
     <li
-      className={`m-0 flex min-w-60 items-center whitespace-nowrap text-left leading-10 text-(--color-font) ${isFocused ? 'bg-(--hl-sm)' : 'bg-transparent'} ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'} hover:bg-(--hl-xs) focus:outline-0`}
+      className={`m-0 flex min-w-60 items-center text-left leading-10 whitespace-nowrap text-(--color-font) ${isFocused ? 'bg-(--hl-sm)' : 'bg-transparent'} ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'} hover:bg-(--hl-xs) focus:outline-0`}
       {...menuItemProps}
       ref={ref}
     >

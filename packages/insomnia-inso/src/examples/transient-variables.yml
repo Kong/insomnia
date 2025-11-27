@@ -1,11 +1,11 @@
 type: collection.insomnia.rest/5.0
-schema_version: "5.1"
+schema_version: '5.1'
 name: Simple Crud
 meta:
   id: wrk_3d6697ba0f6a43cdb9e7378d54d1a1cb
   created: 1763445405875
   modified: 1763445405875
-  description: ""
+  description: ''
 collection:
   - url: http://localhost:4010/simple-crud
     name: Create Thing
@@ -14,7 +14,7 @@ collection:
       created: 1763445410113
       modified: 1763445948725
       isPrivate: false
-      description: ""
+      description: ''
       sortKey: -1763445410113
     method: POST
     body:
@@ -28,7 +28,7 @@ collection:
         value: application/json
       - name: User-Agent
         value: insomnia/12.1.0-beta.0
-        description: ""
+        description: ''
         disabled: false
     scripts:
       afterResponse: |-
@@ -57,13 +57,13 @@ collection:
       created: 1763445773731
       modified: 1763445889533
       isPrivate: false
-      description: ""
+      description: ''
       sortKey: -1763445410013
     method: GET
     headers:
       - name: User-Agent
         value: insomnia/12.1.0-beta.0
-        description: ""
+        description: ''
         disabled: false
     scripts:
       afterResponse: |-

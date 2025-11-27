@@ -248,7 +248,7 @@ const Component = () => {
       });
     },
     renderDropIndicator(target) {
-      return <DropIndicator target={target} className="outline-solid outline-1 outline-(--color-surprise)" />;
+      return <DropIndicator target={target} className="outline-1 outline-(--color-surprise) outline-solid" />;
     },
   });
 
@@ -307,17 +307,17 @@ const Component = () => {
                 <Breadcrumbs
                   className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-(--padding-sm) font-bold`}
                 >
-                  <Breadcrumb className="flex h-full select-none items-center gap-2 text-(--color-font) outline-hidden data-focused:outline-hidden">
+                  <Breadcrumb className="flex h-full items-center gap-2 text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
                     <NavLink
                       data-testid="project"
-                      className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) outline-hidden ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
+                      className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
                       to={`/organization/${organizationId}/project/${activeProject._id}`}
                     >
                       <Icon className="text-xs" icon="chevron-left" />
                     </NavLink>
-                    <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-solid outline-1" />
+                    <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-1 outline-solid" />
                   </Breadcrumb>
-                  <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-(--color-font) outline-hidden data-focused:outline-hidden">
+                  <Breadcrumb className="flex h-full items-center gap-2 truncate text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
                     <WorkspaceDropdown />
                   </Breadcrumb>
                 </Breadcrumbs>
@@ -333,7 +333,7 @@ const Component = () => {
                 </div>
                 <Button
                   onPress={() => setIsCookieModalOpen(true)}
-                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 >
                   <Icon icon="cookie-bite" className="w-5 shrink-0" />
                   <span className="truncate">
@@ -343,7 +343,7 @@ const Component = () => {
                 </Button>
                 <Button
                   onPress={() => setCertificatesModalOpen(true)}
-                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 >
                   <Icon icon="file-contract" className="w-5 shrink-0" />
                   <span className="truncate">
@@ -358,7 +358,7 @@ const Component = () => {
             </div>
             <div className="p-(--padding-sm)">
               <Button
-                className="flex items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+                className="flex items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 onPress={() => {
                   createUnitTestSuiteFetcher.submit({
                     organizationId,
@@ -399,13 +399,13 @@ const Component = () => {
                     key={item._id}
                     id={item._id}
                     textValue={item.name}
-                    className="group w-full select-none outline-hidden"
+                    className="group w-full outline-hidden select-none"
                   >
                     <div
-                      className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)"
+                      className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)"
                       title={item.name}
                     >
-                      <span className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
+                      <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
                       <Button slot="drag" className="hidden" />
                       <EditableInput
                         value={item.name}
@@ -426,7 +426,7 @@ const Component = () => {
                       <MenuTrigger>
                         <Button
                           aria-label="Unit Test Actions"
-                          className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-(--hl-md) group-hover:opacity-100 group-focus:opacity-100 data-pressed:bg-(--hl-sm) data-pressed:opacity-100"
+                          className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                         >
                           <Icon icon="caret-down" />
                         </Button>
@@ -438,13 +438,13 @@ const Component = () => {
                               testSuiteActionList.find(({ id }) => key === id)?.action(item._id, item.name);
                             }}
                             items={testSuiteActionList}
-                            className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
+                            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
                           >
                             {item => (
                               <MenuItem
                                 key={item.id}
                                 id={item.id}
-                                className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                                className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                                 aria-label={item.name}
                               >
                                 <Icon icon={item.icon} />

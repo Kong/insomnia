@@ -38,7 +38,7 @@ export const Radio: FC<{
         style={{
           clip: 'rect(0,0,0,0)',
         }}
-        className="absolute -m-px h-px w-px overflow-hidden whitespace-nowrap border-0 p-0"
+        className="absolute -m-px h-px w-px overflow-hidden border-0 p-0 whitespace-nowrap"
       />
       <label
         className="flex items-center gap-(--padding-sm) rounded-md p-(--padding-sm)"
@@ -136,7 +136,7 @@ const FileField: FC = () => {
       >
         <input type="hidden" name="filePaths" value={filePaths} />
         {filePathList.length ? (
-          <div className="flex w-full flex-col items-center justify-start gap-(--padding-sm) text-ellipsis whitespace-nowrap rounded-md bg-(--color-bg) p-(--padding-md)">
+          <div className="flex w-full flex-col items-center justify-start gap-(--padding-sm) rounded-md bg-(--color-bg) p-(--padding-md) text-ellipsis whitespace-nowrap">
             {entryList.map(({ name, type }) => (
               <div key={name}>
                 <Icon icon={type === ENTRY_TYPE.DIR ? 'folder' : 'file'} className="mr-1" />

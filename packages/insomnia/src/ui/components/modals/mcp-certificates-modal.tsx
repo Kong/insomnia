@@ -65,7 +65,7 @@ export const MCPCertificatesModal = ({ onClose }: { onClose: () => void }) => {
                         });
                       }}
                       isSelected={activeRequest.sslValidation}
-                      className="flex h-full w-[12ch] shrink-0 items-center justify-start gap-2 rounded-sm px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md)"
+                      className="flex h-full w-[12ch] shrink-0 items-center justify-start gap-2 rounded-sm px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                     >
                       {({ isSelected }) => (
                         <>

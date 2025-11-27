@@ -21,12 +21,12 @@ export const HeaderUserButton = ({ user, isMinimal = false }: UserButtonProps) =
     <MenuTrigger>
       <Button
         data-testid="user-dropdown"
-        className="flex shrink-0 items-center justify-center gap-2 rounded-md px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
+        className="flex shrink-0 items-center justify-center gap-2 rounded-md px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
       >
         <Avatar src={user.picture} alt={user.name} />
         <Icon className="w-4 pr-2" icon={isMinimal ? 'caret-up' : 'caret-down'} />
       </Button>
-      <Popover className="max-h-[85vh] min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden">
+      <Popover className="max-h-[85vh] min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden">
         <Menu
           className="focus:outline-hidden"
           onAction={action => {
@@ -49,7 +49,7 @@ export const HeaderUserButton = ({ user, isMinimal = false }: UserButtonProps) =
         >
           <MenuItem
             id="preferences"
-            className="text-md flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+            className="text-md flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
             aria-label="preferences"
           >
             <Icon icon="gear" />
@@ -57,7 +57,7 @@ export const HeaderUserButton = ({ user, isMinimal = false }: UserButtonProps) =
           </MenuItem>
           <MenuItem
             id="my-profile"
-            className="text-md flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+            className="text-md flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
             aria-label="My profile"
           >
             <Icon icon="user" />
@@ -65,7 +65,7 @@ export const HeaderUserButton = ({ user, isMinimal = false }: UserButtonProps) =
           </MenuItem>
           <MenuItem
             id="logout"
-            className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+            className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
             aria-label="logout"
           >
             <Icon icon="sign-out" />

@@ -43,7 +43,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
                     <i className="fa fa-spinner fa-spin fa-1x mr-2" />
                   )}
                 </span>
-                <span className="inline-block w-4/5 text-clip align-top">{record.stepName}</span>
+                <span className="inline-block w-4/5 align-top text-clip">{record.stepName}</span>
               </div>
               <div className="mr-1 w-1/4 text-right leading-8">
                 {record.duration !== undefined ? (

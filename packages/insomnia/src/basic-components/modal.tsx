@@ -27,7 +27,7 @@ export const Modal: React.FC<React.PropsWithChildren<Props>> = ({
         !isOpen && onClose?.();
       }}
       isDismissable
-      className="fixed left-0 top-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <RAModal
         onOpenChange={isOpen => {
@@ -51,7 +51,7 @@ export const Modal: React.FC<React.PropsWithChildren<Props>> = ({
                   )}
                   {closable && (
                     <Button
-                      className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+                      className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                       onPress={() => close()}
                     >
                       <Icon icon="x" />

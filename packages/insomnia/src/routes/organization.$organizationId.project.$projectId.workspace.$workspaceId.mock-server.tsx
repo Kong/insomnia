@@ -46,7 +46,7 @@ import { invariant } from '~/utils/invariant';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server';
 import {
   MockRouteResponse,
-  MockRouteRoute
+  MockRouteRoute,
 } from './organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 
 export interface MockServerLoaderData {
@@ -99,7 +99,7 @@ const Component = () => {
       id: 'edit-route',
       name: 'Edit',
       icon: 'edit',
-      action: (id) => {
+      action: id => {
         const currentRoute = mockRoutes.find(m => m._id === id);
         setMockRouteModalState({
           isOpen: true,
@@ -231,24 +231,24 @@ const Component = () => {
         <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
           <div className={`flex items-center gap-2 h-[${INSOMNIA_TAB_HEIGHT}px] px-(--padding-sm)`}>
             <Breadcrumbs className="m-0 flex w-full list-none items-center gap-2 p-0 font-bold">
-              <Breadcrumb className="flex h-full select-none items-center gap-2 text-(--color-font) outline-hidden data-focused:outline-hidden">
+              <Breadcrumb className="flex h-full items-center gap-2 text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
                 <NavLink
                   data-testid="project"
-                  className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) outline-hidden ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
+                  className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
                   to={`/organization/${organizationId}/project/${projectId}`}
                 >
                   <Icon className="text-xs" icon="chevron-left" />
                 </NavLink>
-                <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-solid outline-1" />
+                <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-1 outline-solid" />
               </Breadcrumb>
-              <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-(--color-font) outline-hidden data-focused:outline-hidden">
+              <Breadcrumb className="flex h-full items-center gap-2 truncate text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
                 <WorkspaceDropdown />
               </Breadcrumb>
             </Breadcrumbs>
           </div>
           <div className="p-(--padding-sm)">
             <Button
-              className="flex items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+              className="flex items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               onPress={() => {
                 setMockRouteModalState({
                   isOpen: true,
@@ -290,10 +290,10 @@ const Component = () => {
                   key={item._id}
                   id={item._id}
                   textValue={item.name}
-                  className="group w-full select-none outline-hidden"
+                  className="group w-full outline-hidden select-none"
                 >
-                  <div className="relative flex h-(--line-height-xs) w-full select-none items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
-                    <span className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
+                  <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
+                    <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
                     <span
                       className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${
                         {
@@ -314,7 +314,7 @@ const Component = () => {
                     <MenuTrigger>
                       <Button
                         aria-label="Mock Route Actions"
-                        className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-(--hl-md) group-hover:opacity-100 group-focus:opacity-100 data-pressed:bg-(--hl-sm) data-pressed:opacity-100"
+                        className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                       >
                         <Icon icon="caret-down" />
                       </Button>
@@ -326,13 +326,13 @@ const Component = () => {
                             mockRouteActionList.find(({ id }) => key === id)?.action(item._id, item.name);
                           }}
                           items={mockRouteActionList}
-                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
+                          className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
                         >
                           {item => (
                             <MenuItem
                               key={item.id}
                               id={item.id}
-                              className="flex h-(--line-height-xs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
                             >
                               <Icon icon={item.icon} />

@@ -138,7 +138,7 @@ export const CloudServiceCredentialList = () => {
         <MenuTrigger>
           <Button
             aria-label="Create Credential"
-            className="flex h-full items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 py-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
+            className="flex h-full items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 py-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             <Icon icon="plus-circle" /> Add Credential
           </Button>
@@ -148,13 +148,13 @@ export const CloudServiceCredentialList = () => {
               selectionMode="single"
               onAction={key => handleCreateCloudServiceCredential(key as CloudProviderName)}
               items={createCredentialItemList}
-              className="max-h-[85vh] min-w-max select-none overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg focus:outline-hidden"
+              className="max-h-[85vh] min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
             >
               {item => (
                 <MenuItem
                   key={item.id}
                   id={item.id}
-                  className="flex h-(--line-height-xxs) w-full items-center gap-2 whitespace-nowrap bg-transparent px-(--padding-md) text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                  className="flex h-(--line-height-xxs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                   aria-label={item.name}
                 >
                   {item.icon}
@@ -237,7 +237,7 @@ export const CloudServiceCredentialList = () => {
         </table>
       )}
       <div>
-        <h2 className="z-10 bg-(--color-bg) pb-2 pt-5 text-lg font-bold">Cloud Secret Config</h2>
+        <h2 className="z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Cloud Secret Config</h2>
         <div className="form-row items-end justify-between">
           <NumberSetting
             label="Secret Cache Duration(min)"

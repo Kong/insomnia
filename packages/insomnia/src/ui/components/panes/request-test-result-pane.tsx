@@ -102,7 +102,7 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
         <div key={key} data-testid="test-result-row">
           <div className="my-3 flex w-full text-base">
             <div className="m-auto mx-1 leading-4">
-              <span className="ml-2 mr-2">{statusTag}</span>
+              <span className="mr-2 ml-2">{statusTag}</span>
             </div>
             <div className="mr-2 leading-4">
               <div className="my-1 mr-2 w-auto text-nowrap">{message}</div>
