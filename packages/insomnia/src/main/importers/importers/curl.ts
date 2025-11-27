@@ -191,7 +191,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
 
   if (dataParameters.length !== 0 && bodyAsGET) {
     parameters.push(...dataParameters);
-  } else if (dataParameters && mimeType === 'application/x-www-form-urlencoded') {
+  } else if (dataParameters.length !== 0 && mimeType === 'application/x-www-form-urlencoded') {
     body = {
       mimeType,
       params: dataParameters.map(parameter => ({
@@ -202,7 +202,9 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     };
   } else if (dataParameters.length !== 0) {
     body = {
-      text: dataParameters.map(parameter => `${parameter.name}=${parameter.value}`).join('&'),
+      text: dataParameters
+        .map(parameter => (parameter.name ? `${parameter.name}=${parameter.value}` : parameter.value))
+        .join('&'),
       mimeType: mimeType || '',
     };
   } else if (formDataParams.length) {
