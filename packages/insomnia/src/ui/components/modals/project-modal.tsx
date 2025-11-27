@@ -82,7 +82,6 @@ export const ProjectModal = ({
                   gitRepository={gitRepository}
                   onCancel={close}
                   onSuccessUpdate={() => onOpenChange(false)}
-                  activeViewObj={activeViewObj}
                 />
               ) : (
                 <ProjectCreateForm

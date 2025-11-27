@@ -74,7 +74,6 @@ interface Props {
   defaultProjectName?: string;
   onCancel?(): void;
   onSuccessUpdate?(): void;
-  activeViewObj?: ReturnType<typeof useActiveView>;
 }
 
 export const ProjectSettingsForm: FC<Props> = ({
@@ -85,7 +84,6 @@ export const ProjectSettingsForm: FC<Props> = ({
   defaultProjectName = 'My Project',
   onCancel,
   onSuccessUpdate,
-  activeViewObj,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
@@ -104,11 +102,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     getDefaultProjectStorageType(storageRules, project),
   );
 
-  let { activeView, setActiveView } = useActiveView();
-  if (activeViewObj) {
-    activeView = activeViewObj.activeView;
-    setActiveView = activeViewObj.setActiveView;
-  }
+  const { activeView, setActiveView } = useActiveView();
 
   const [selectedTab, setTab] = useState<OauthProviderName>('github');
 
