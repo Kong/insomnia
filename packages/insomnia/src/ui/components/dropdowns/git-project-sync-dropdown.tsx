@@ -423,13 +423,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     action: () => void;
   }[] = [
     {
-      id: 'repository-settings',
-      label: 'Repository Settings',
-      isDisabled: false,
-      icon: 'wrench',
-      action: () => setIsGitRepoSettingsModalOpen(true),
-    },
-    {
       id: 'branches',
       label: 'Branches',
       isDisabled: false,
