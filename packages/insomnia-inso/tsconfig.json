@@ -10,8 +10,7 @@
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "paths": {
-      "~/*": ["../insomnia/src/*"],
-      "electron": ["../insomnia/send-request/electron"]
+      "~/*": ["../insomnia/src/*"]
     },
     /* Transpiling Options */
     "module": "ESNext",
