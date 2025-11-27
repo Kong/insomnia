@@ -100,16 +100,27 @@ const CustomDatePickerWidget = (props: WidgetProps) => {
 };
 // Textarea widget for string values
 const CustomTextAreaWidget = (props: WidgetProps) => {
-  const { value, onChange, disabled, readonly } = props;
+  const { value, onChange, disabled, readonly, rawErrors, id } = props;
 
   return (
-    <textarea
-      disabled={disabled}
-      className={cn(`${baseInputClasses}`)}
-      readOnly={readonly}
-      value={value || ''}
-      onChange={e => onChange(e.target.value)}
-    />
+    <>
+      {' '}
+      <textarea
+        id={id}
+        disabled={disabled}
+        className={cn(`${baseInputClasses}`)}
+        readOnly={readonly}
+        value={value || ''}
+        onChange={e => onChange(e.target.value)}
+      />
+      {rawErrors && rawErrors.length > 0 && (
+        <div className={errorClasses}>
+          {rawErrors.map(err => (
+            <div key={err}>{err}</div>
+          ))}
+        </div>
+      )}
+    </>
   );
 };
 

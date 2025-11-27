@@ -208,8 +208,7 @@ export type RendererOnChannels =
   | 'toggle-sidebar'
   | 'show-oauth-authorization-modal'
   | 'hide-oauth-authorization-modal'
-  | 'mcp-auth-confirmation'
-  | 'updaterStatus';
+  | 'mcp-auth-confirmation';
 
 export const ipcMainOn = (
   channel: MainOnChannels,

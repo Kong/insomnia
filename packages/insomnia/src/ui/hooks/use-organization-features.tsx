@@ -55,7 +55,7 @@ export function useAIFeatureStatus(): AIFeatureStatus {
   const { features } = useOrganizationPermissions();
   const [generateMockServersWithAIEnabledByUser, setGenerateMockServersWithAIEnabledByUser] = useState(false);
   const [generateCommitMessagesWithAIEnabledByUser, setGenerateCommitMessagesWithAIEnabledByUser] = useState(false);
-  const [mcpIntegrationWithAIEnabledByUser, setMCPIntegrationWithAIEnabledByUser] = useState(true);
+  const [mcpIntegrationWithAIEnabledByUser, setMCPIntegrationWithAIEnabledByUser] = useState(false);
   const [hasActiveLLM, setHasActiveLLM] = useState(false);
 
   const loadFeatureStatus = useCallback(async () => {

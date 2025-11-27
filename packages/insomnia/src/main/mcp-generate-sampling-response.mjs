@@ -10,7 +10,7 @@ process.parentPort.on('message', async ({ data: { messages, systemPrompt, modelC
   try {
     const { generateMcpSamplingResponse } = await import(aiPluginName);
     const response = await generateMcpSamplingResponse(messages, systemPrompt, modelConfig);
-    console.log('[mcp-generate-sampling-response-process] Successfully generate sampling responses');
+    console.log('[mcp-generate-sampling-response-process] Successfully generating sampling responses');
     process.parentPort.postMessage(response);
   } catch (error) {
     const errorMessage = 'Failed to generate mcp sampling response: ' + error.message;

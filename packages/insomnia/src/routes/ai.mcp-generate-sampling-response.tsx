@@ -4,7 +4,7 @@ import type { MultiTurnMessage } from '~/plugins/types';
 import { showToast } from '~/ui/components/toast-notification';
 import { createFetcherSubmitHook } from '~/utils/router';
 
-import type { Route } from './+types/ai.generate-commit-messages';
+import type { Route } from './+types/ai.mcp-generate-sampling-response';
 
 interface RequestData {
   messages: MultiTurnMessage[];

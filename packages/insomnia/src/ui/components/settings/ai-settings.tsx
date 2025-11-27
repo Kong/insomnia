@@ -22,8 +22,7 @@ export const AISettings = () => {
   // If the feature is undefined, default to disabled (org hasn't enabled it)
   const isMockServerEnabledByOrg = features.aiMockServers ? features.aiMockServers.enabled : false;
   const isCommitMessagesEnabledByOrg = features.aiCommitMessages ? features.aiCommitMessages.enabled : false;
-  // Todo integrate with backend
-  const isMcpClientEnabledByOrg = true;
+  const isMcpClientEnabledByOrg = features.aiMcpClient ? features.aiMcpClient.enabled : false;
 
   useEffect(() => {
     const loadConfigurations = async () => {
@@ -172,7 +171,7 @@ export const AISettings = () => {
               {!isMcpClientEnabledByOrg ? (
                 <p className="text-xs text-(--color-danger)">
                   Disabled by organization
-                  {features.aiCommitMessages?.reason ? `: ${features.aiCommitMessages.reason}` : ''}
+                  {features.aiMcpClient?.reason ? `: ${features.aiMcpClient.reason}` : ''}
                 </p>
               ) : !hasActiveLLM ? (
                 <p className="text-xs text-(--hl)">Configure and activate an LLM to enable this feature</p>
@@ -181,7 +180,7 @@ export const AISettings = () => {
             <Switch
               isSelected={mcpClientEnabled && isMcpClientEnabledByOrg}
               onChange={handleMcpClientToggle}
-              isDisabled={!hasActiveLLM || !isCommitMessagesEnabledByOrg}
+              isDisabled={!hasActiveLLM || !isMcpClientEnabledByOrg}
               className="group flex items-center gap-2"
             >
               <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-disabled:opacity-50 group-data-selected:bg-(--color-surprise)">
