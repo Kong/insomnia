@@ -1288,6 +1288,8 @@ const ScratchPadTutorialPanel = () => {
     dismissedAt: number;
   }>('scratchpad-sign-up-tip-dismissed', { dismissed: false, dismissedAt: 0 });
 
+  const [currentTime] = useState(() => Date.now());
+
   const handleDismiss = () => {
     setSignUpTipDismissedState({ dismissed: true, dismissedAt: Date.now() });
   };
@@ -1315,10 +1317,9 @@ const ScratchPadTutorialPanel = () => {
     }
 
     const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000;
-    const now = Date.now();
 
-    return now - signUpTipDismissedState.dismissedAt >= twoWeeksInMs;
-  }, [signUpTipDismissedState]);
+    return currentTime - signUpTipDismissedState.dismissedAt >= twoWeeksInMs;
+  }, [signUpTipDismissedState, currentTime]);
 
   return (
     <>

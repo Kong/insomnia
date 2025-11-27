@@ -109,7 +109,6 @@ export default defineConfig([
       'react-hooks/immutability': 'off', //TODO: delete me
       'react-hooks/preserve-manual-memoization': 'off', //TODO: delete me
       'react-hooks/incompatible-library': 'off', //TODO(use react-aria virtualizer): delete me
-      'react-hooks/purity': 'off', //TODO(bingbing): delete me
     },
   },
   {
