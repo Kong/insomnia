@@ -1,22 +1,32 @@
+import { useParams } from 'react-router';
+
 import { Banner } from '~/basic-components/banner';
 import { Button } from '~/basic-components/button';
 import { LearnMoreLink } from '~/basic-components/link';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { docsPricingLearnMoreLink } from '~/common/documentation';
-import type { StorageRules } from '~/models/organization';
+import { isOwnerOfOrganization, type StorageRules } from '~/models/organization';
 import { getProjectStorageTypeLabel } from '~/models/project';
+import { useRootLoaderData } from '~/root';
+import { useOrganizationLoaderData } from '~/routes/organization';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 
 interface Props {
   isGitSyncEnabled: boolean;
   storageType: 'local' | 'remote' | 'git';
   storageRules: StorageRules;
-  isUserOwner: boolean;
 }
-export const ProjectTypeWarning = ({ isGitSyncEnabled, storageType, storageRules, isUserOwner }: Props) => {
+export const ProjectTypeWarning = ({ isGitSyncEnabled, storageType, storageRules }: Props) => {
   const isLightTheme = useIsLightTheme();
   const showStorageRestrictionMessage =
     !storageRules.enableCloudSync || !storageRules.enableLocalVault || !storageRules.enableGitSync;
+  const organizationData = useOrganizationLoaderData();
+  const { userSession } = useRootLoaderData()!;
+  const { organizationId } = useParams() as { organizationId: string };
+  const organization = organizationData?.organizations.find(o => o.id === organizationId);
+  // TODO: extract to a hook later
+  const isUserOwner =
+    organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   return (
     <>
       {storageType === 'git' &&

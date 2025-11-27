@@ -21,10 +21,8 @@ import {
 import { useParams } from 'react-router';
 
 import { isGitCredentialsOAuth } from '~/models/git-repository';
-import { isOwnerOfOrganization, type StorageRules } from '~/models/organization';
-import { useRootLoaderData } from '~/root';
+import type { StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import {
   fallbackFeatures,
   useOrganizationPermissionsLoaderFetcher,
@@ -238,13 +236,6 @@ export const ProjectSettingsForm: FC<Props> = ({
     }
   };
 
-  const organizationData = useOrganizationLoaderData();
-  const { userSession } = useRootLoaderData()!;
-  const organization = organizationData?.organizations.find(o => o.id === organizationId);
-  const isUserOwner = Boolean(
-    organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId }),
-  );
-
   return (
     <div className="flex w-full max-w-[600px] flex-col gap-4">
       {error && (
@@ -279,7 +270,6 @@ export const ProjectSettingsForm: FC<Props> = ({
               isGitSyncEnabled={isGitSyncEnabled}
               storageType={storageType}
               storageRules={storageRules}
-              isUserOwner={isUserOwner}
             />
           </div>
           <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5 pb-10">
