@@ -9,6 +9,7 @@
     "module": "ES2022",
     "moduleResolution": "node",
     "isolatedModules": true,
+    "noEmit": true,
     "paths": {
       "~/*": ["../insomnia/src/*"]
     },

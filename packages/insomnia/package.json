@@ -33,7 +33,7 @@
     "start:electron": "cross-env NODE_ENV=development esr esbuild.entrypoints.ts && electron --inspect=5858 .",
     "start:electron:autoRestart": "cross-env NODE_ENV=development esr esbuild.entrypoints.ts --autoRestart",
     "test": "vitest run",
-    "type-check": "react-router typegen && tsc --noEmit --project tsconfig.json",
+    "type-check": "react-router typegen && tsc --project tsconfig.json",
     "type-check:watch": "npm run type-check -- --watch",
     "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/"
   },

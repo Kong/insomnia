@@ -8,6 +8,7 @@
     "resolveJsonModule": true,
     "moduleResolution": "bundler",
     "isolatedModules": true,
+    "noEmit": true,
     /* Transpiling Options */
     "module": "ESNext",
     "sourceMap": true,

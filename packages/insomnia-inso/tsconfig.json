@@ -9,6 +9,7 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "isolatedModules": true,
+    "noEmit": true,
     "paths": {
       "~/*": ["../insomnia/src/*"],
       "electron": ["../insomnia/send-request/electron"]
