@@ -11,27 +11,25 @@ describe('postman', () => {
     requests?: Request1[];
     version?: string;
   } = {}) =>
-    JSON.parse(
-      JSON.stringify({
-        info: {
-          name: 'Postman Schema',
-          schema: `https://schema.getpostman.com/json/collection/${version}/collection.json`,
+    structuredClone({
+      info: {
+        name: 'Postman Schema',
+        schema: `https://schema.getpostman.com/json/collection/${version}/collection.json`,
+      },
+      item: [
+        {
+          request: {},
+          name: 'Projects',
+          item: [
+            ...requests,
+            {
+              name: 'Request 1',
+              request: {},
+            },
+          ],
         },
-        item: [
-          {
-            request: {},
-            name: 'Projects',
-            item: [
-              ...requests,
-              {
-                name: 'Request 1',
-                request: {},
-              },
-            ],
-          },
-        ],
-      }),
-    ) as HttpsSchemaGetpostmanComJsonCollectionV210;
+      ],
+    }) as HttpsSchemaGetpostmanComJsonCollectionV210;
 
   describe('transformPostmanToNunjucksString', () => {
     it('should transform to nunjucks syntax', () => {

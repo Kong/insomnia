@@ -162,11 +162,9 @@ if (defaultProtocolSuccessful) {
   }
 }
 app.on('quit', () => {
-  if (isDevelopment()) {
-    // stop the inspector if active to unblock electron app exit in development mode
-    if (inspector.url()) {
-      inspector.close();
-    }
+  // stop the inspector if active to unblock electron app exit in development mode
+  if (isDevelopment() && inspector.url()) {
+    inspector.close();
   }
 });
 // Quit when all windows are closed (except on Mac).
@@ -182,7 +180,7 @@ app.on('activate', (_error, hasVisibleWindows) => {
     try {
       console.log('[main] creating new window for MacOS activate event');
       windowUtils.createWindow();
-    } catch (error) {
+    } catch {
       // This might happen if 'ready' hasn't fired yet. So we're just going
       // to silence these errors.
       console.log('[main] App not ready to "activate" yet');

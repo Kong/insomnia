@@ -47,7 +47,7 @@ export const setDefaults = (obj: ImportRequest | null) => {
 export const unthrowableParseJson = (rawData: string) => {
   try {
     return JSON.parse(rawData);
-  } catch (err) {
+  } catch {
     return null;
   }
 };

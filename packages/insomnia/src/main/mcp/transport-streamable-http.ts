@@ -48,7 +48,7 @@ export const createStreamableHTTPTransport = async (
     },
     fetch: (url, init) => wrappedFetch(url, init || {}, context, authProvider),
     reconnectionOptions: {
-      maxReconnectionDelay: 30000,
+      maxReconnectionDelay: 30_000,
       initialReconnectionDelay: 1000,
       reconnectionDelayGrowFactor: 1.5,
       maxRetries: 2,

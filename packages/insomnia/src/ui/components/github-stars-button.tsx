@@ -11,7 +11,7 @@ const LOCALSTORAGE_GITHUB_STARS_KEY = 'insomnia:github-stars';
 export const GitHubStarsButton = () => {
   const isMounted = reactUse.useMountedState();
   const localStorageStars = localStorage.getItem(LOCALSTORAGE_GITHUB_STARS_KEY);
-  const initialState = parseInt(localStorageStars || '30000', 10);
+  const initialState = Number.parseInt(localStorageStars || '30000', 10);
   const [starCount, setStarCount] = useState(initialState);
 
   useEffect(() => {

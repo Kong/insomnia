@@ -138,12 +138,11 @@ export const getMcpMethodFromMessage = (message: JSONRPCMessage): McpMessageEven
     }
   } else if (ServerRequestSchema.safeParse(message).success) {
     const requestMethod = ServerRequestSchema.parse(message).method;
-    if (requestMethod === METHOD_LIST_ROOTS || requestMethod === METHOD_ELICITATION_CREATE_MESSAGE) {
-      method = requestMethod;
-    } else {
-      // Do not support any server requests to client including ping, elicitation and sampling
-      method = `${unsupportedMethodPrefix}${requestMethod}`;
-    }
+    // Do not support any server requests to client including ping, elicitation and sampling
+    method =
+      requestMethod === METHOD_LIST_ROOTS || requestMethod === METHOD_ELICITATION_CREATE_MESSAGE
+        ? requestMethod
+        : `${unsupportedMethodPrefix}${requestMethod}`;
   }
   return method;
 };

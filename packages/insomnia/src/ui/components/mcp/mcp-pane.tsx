@@ -135,8 +135,8 @@ export const McpPane = () => {
           ...(primitiveNextCursor.resources && { nextCursor: primitiveNextCursor.resources }),
         });
         const hide = collapsedPrimitives.includes('resources');
-        collection.push(...(resources.map(r => ({ ...r, type: 'resources', itemLevel: 1, hide })) as ResourceItem[]));
         collection.push(
+          ...(resources.map(r => ({ ...r, type: 'resources', itemLevel: 1, hide })) as ResourceItem[]),
           ...(resourceTemplates.map(rt => ({
             ...rt,
             type: 'resourceTemplates',
@@ -268,11 +268,7 @@ export const McpPane = () => {
       return;
     }
 
-    if (layout && layout[0] > 0) {
-      layout[0] = 0;
-    } else {
-      layout[0] = DEFAULT_SIDEBAR_SIZE;
-    }
+    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
 
     sidebarPanelRef.current?.setLayout(layout);
   };
@@ -311,7 +307,7 @@ export const McpPane = () => {
         if (firstMatchEvent) {
           return 'result' in firstMatchEvent.data ? firstMatchEvent.data.result : undefined;
         }
-        return undefined;
+        return;
       };
       const activeResponseId = activeResponse?._id;
       if (activeResponseId) {

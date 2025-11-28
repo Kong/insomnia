@@ -31,7 +31,7 @@ export const FileEditor: FC<Props> = ({ onChange, path }) => {
   try {
     const bytes = fs.statSync(path).size;
     sizeDescription = misc.describeByteSize(bytes);
-  } catch (error) {
+  } catch {
     sizeDescription = '';
   }
 

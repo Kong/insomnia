@@ -11,7 +11,7 @@ const neDbAdapter: DbAdapter = async (dir, filterTypes) => {
   // Confirm if db files exist
   try {
     await stat(path.join(dir, 'insomnia.Workspace.db'));
-  } catch (err) {
+  } catch {
     return null;
   }
 

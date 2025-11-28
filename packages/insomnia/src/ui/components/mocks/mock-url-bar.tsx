@@ -23,7 +23,7 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
   const [pathInput, setPathInput] = useState<string>(mockRoute.name);
   const dropdownRef = useRef<DropdownHandle>(null);
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
-  const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
+  const [currentTimeout, setCurrentTimeout] = useState<number | undefined>();
 
   useEffect(() => {
     setPathInput(mockRoute.name);

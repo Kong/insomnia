@@ -100,7 +100,7 @@ describe('Plugin Installation', () => {
     });
 
     vi.mocked(safeTrim).mockImplementation(value => {
-      if (typeof value !== 'string') return undefined;
+      if (typeof value !== 'string') return;
       const trimmed = value.trim();
       return trimmed || undefined;
     });

@@ -69,16 +69,13 @@ export async function insomniaFetch<T = void>({
           if (typeof json?.message === 'string') {
             errMsg = json.message;
           }
-        } catch (err) {}
+        } catch {}
       }
       throw new ResponseFailError(errMsg, response);
     }
     return isJson ? response.json() : (response.text() as Promise<T>);
   } catch (err) {
-    if (err.name === 'AbortError') {
-      throw new Error('insomniaFetch timed out');
-    } else {
-      throw err;
-    }
+    const error = err.name === 'AbortError' ? new Error('insomniaFetch timed out') : err;
+    throw error;
   }
 }

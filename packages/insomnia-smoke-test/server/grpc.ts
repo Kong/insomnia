@@ -90,7 +90,7 @@ function getDistance(start: { latitude: number; longitude: number }, end: { lati
   function toRadians(num: number) {
     return (num * Math.PI) / 180;
   }
-  const R = 6371000; // earth radius in metres
+  const R = 6_371_000; // earth radius in metres
   const lat1 = toRadians(start.latitude / COORD_FACTOR);
   const lat2 = toRadians(end.latitude / COORD_FACTOR);
   const lon1 = toRadians(start.longitude / COORD_FACTOR);
@@ -168,7 +168,7 @@ const routeChat: HandleCall<any, any> = (call: any) => {
       routeNotes[key] = [];
     }
     // Then add the new note to the list
-    routeNotes[key].push(JSON.parse(JSON.stringify(note)));
+    routeNotes[key].push(structuredClone(note));
   });
   call.on('end', function () {
     call.end();

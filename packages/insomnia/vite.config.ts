@@ -63,9 +63,32 @@ export default defineConfig(({ mode }) => {
       }),
       reactRouter(),
       tailwindcss(),
+      DetectNodeBuiltinImports(),
     ],
     worker: {
       format: 'es',
     },
   };
 });
+
+function DetectNodeBuiltinImports() {
+  const builtins = new Set(builtinModules);
+
+  return {
+    name: 'detect-node-builtin-imports',
+
+    resolveId(source: string, importer: string | undefined) {
+      // Ignore node_modules and virtual imports
+      if (!importer) return null;
+      if (importer.includes('node_modules')) return null;
+
+      // If the import target is a Node builtin module
+      if (builtins.has(source) || builtins.has(source.replace('virtual:external:node:', ''))) {
+        const file = path.relative(process.cwd(), importer);
+        console.warn(`⚠️  File "${file}" imports Node builtin module "${source}"`);
+      }
+
+      return null; // Let Vite handle the actual resolution
+    },
+  };
+}

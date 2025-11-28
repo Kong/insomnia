@@ -39,7 +39,7 @@ describe('Request Model - Comprehensive Tests', () => {
         _id: `proj_test_${uuidv4()}`,
         name: 'Test Project',
       });
-    } catch (error) {
+    } catch {
       // Project might already exist, that's okay
     }
   });

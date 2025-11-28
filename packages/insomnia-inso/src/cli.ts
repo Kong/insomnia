@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import path, { dirname } from 'node:path';
+import nodePath from 'node:path';
 
 import * as commander from 'commander';
 import type { logType } from 'consola';
@@ -122,13 +122,13 @@ export class InsoError extends Error {
 export function getAppDataDir(app: string): string {
   switch (process.platform) {
     case 'darwin': {
-      return path.join(homedir(), 'Library', 'Application Support', app);
+      return nodePath.join(homedir(), 'Library', 'Application Support', app);
     }
     case 'win32': {
-      return path.join(process.env.APPDATA || path.join(homedir(), 'AppData', 'Roaming'), app);
+      return nodePath.join(process.env.APPDATA || nodePath.join(homedir(), 'AppData', 'Roaming'), app);
     }
     case 'linux': {
-      return path.join(process.env.XDG_DATA_HOME || path.join(homedir(), '.config'), app);
+      return nodePath.join(process.env.XDG_DATA_HOME || nodePath.join(homedir(), '.config'), app);
     }
     default: {
       throw new Error('Unsupported platform');
@@ -152,12 +152,12 @@ export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string;
 
   if (workingDir) {
     if (fs.existsSync(workingDir) && !fs.statSync(workingDir).isDirectory()) {
-      return path.resolve(dirname(workingDir), file);
+      return nodePath.resolve(nodePath.dirname(workingDir), file);
     }
-    return path.resolve(workingDir, file);
+    return nodePath.resolve(workingDir, file);
   }
 
-  return path.resolve(process.cwd(), file);
+  return nodePath.resolve(process.cwd(), file);
 };
 export const logErrorAndExit = (err?: Error) => {
   if (err instanceof InsoError) {
@@ -182,7 +182,7 @@ const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
 
 const getWorkingDir = (options: { workingDir?: string }): string => {
   if (options.workingDir) {
-    return path.resolve(options.workingDir);
+    return nodePath.resolve(options.workingDir);
   }
 
   logger.warn('No working directory provided, using local app data directory.');
@@ -266,7 +266,7 @@ const getListFromFileOrUrl = (content: string, fileType?: string): Record<string
         );
       }
       throw new Error('Invalid JSON file uploaded, JSON file must be array of key-value pairs.');
-    } catch (error) {
+    } catch {
       throw new Error('Upload JSON file can not be parsed');
     }
   } else if (fileType === 'csv') {
@@ -402,7 +402,7 @@ export const go = (args?: string[]) => {
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first test failure', false)
     .option('--keepFile', 'do not delete the generated test file', false)
-    .option('--requestTimeout <duration>', 'milliseconds before request times out', undefined) // defaults to user settings
+    .option('--requestTimeout <duration>', 'milliseconds before request times out') // defaults to user settings
     .option('-k, --disableCertValidation', 'disable certificate validation for requests with SSL', false)
     .option('--httpsProxy <proxy>', 'URL for the proxy server for https requests.', proxySettings.httpsProxy)
     .option('--httpProxy <proxy>', 'URL for the proxy server for http requests.', proxySettings.httpProxy)
@@ -496,7 +496,7 @@ export const go = (args?: string[]) => {
             validateSSL: !options.disableCertValidation,
             ...proxyOptions,
             dataFolders: options.dataFolders,
-            ...(options.requestTimeout ? { timeout: parseInt(options.requestTimeout, 10) } : {}),
+            ...(options.requestTimeout ? { timeout: Number.parseInt(options.requestTimeout, 10) } : {}),
           });
           // Generate test file
           const testFileContents = generate(
@@ -535,7 +535,7 @@ export const go = (args?: string[]) => {
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('-g, --globals <identifier>', 'global environment to use (filepath or id)', '')
     .option('--delay-request <duration>', 'milliseconds to delay between requests', '0')
-    .option('--requestTimeout <duration>', 'milliseconds before request times out', undefined) // defaults to user settings
+    .option('--requestTimeout <duration>', 'milliseconds before request times out') // defaults to user settings
     .option('--env-var <key=value>', 'override environment variables', collect, [])
     .option('-n, --iteration-count <count>', 'number of times to repeat', '1')
     .option('-d, --iteration-data <path/url>', 'file path or url (JSON or CSV)', '')
@@ -605,7 +605,7 @@ export const go = (args?: string[]) => {
             }
             try {
               fs.accessSync(outputFilePath, fs.constants.W_OK);
-            } catch (err) {
+            } catch {
               logger.fatal(`Output file "${outputFilePath}" is not writable.`);
               return process.exit(1);
             }
@@ -792,7 +792,7 @@ export const go = (args?: string[]) => {
         }
 
         try {
-          const iterationCount = parseInt(options.iterationCount, 10);
+          const iterationCount = Number.parseInt(options.iterationCount, 10);
 
           const iterationData = await pathToIterationData(options.iterationData, options.envVar);
           const transientVariables: Environment = {
@@ -833,7 +833,7 @@ export const go = (args?: string[]) => {
               validateSSL: !options.disableCertValidation,
               ...proxyOptions,
               dataFolders: options.dataFolders,
-              ...(options.requestTimeout ? { timeout: parseInt(options.requestTimeout, 10) } : {}),
+              ...(options.requestTimeout ? { timeout: Number.parseInt(options.requestTimeout, 10) } : {}),
             },
             iterationData,
             iterationCount,
@@ -888,7 +888,7 @@ export const go = (args?: string[]) => {
                 }
               }
 
-              await new Promise(r => setTimeout(r, parseInt(options.delayRequest, 10)));
+              await new Promise(r => setTimeout(r, Number.parseInt(options.delayRequest, 10)));
 
               if (res.nextRequestIdOrName) {
                 const offset = getNextRequestOffset(requestsToRun.slice(reqIndex), res.nextRequestIdOrName);
@@ -934,14 +934,14 @@ export const go = (args?: string[]) => {
       let isIdentifierAFile = false;
       try {
         isIdentifierAFile = identifier && (await fs.promises.stat(identifierAsAbsPath)).isFile();
-      } catch (err) {}
+      } catch {}
       const pathToSearch = '';
       let specContent: string | undefined;
       let rulesetFileName: string | undefined;
       if (isIdentifierAFile) {
         // try load as a file
         logger.trace(`Linting specification file from identifier: \`${identifierAsAbsPath}\``);
-        specContent = await fs.promises.readFile(identifierAsAbsPath, 'utf-8');
+        specContent = await fs.promises.readFile(identifierAsAbsPath, 'utf8');
         rulesetFileName = await getRuleSetFileFromFolderByFilename(identifierAsAbsPath);
         if (!specContent) {
           logger.fatal(`Specification content not found using path: ${identifier} in ${identifierAsAbsPath}`);
@@ -1048,12 +1048,12 @@ export const go = (args?: string[]) => {
 
 const getNextRequestOffset = (leftRequestsToRun: Request[], nextRequestIdOrName: string) => {
   const idMatchOffset = leftRequestsToRun.findIndex(req => req._id.trim() === nextRequestIdOrName.trim());
-  if (idMatchOffset >= 0) {
+  if (idMatchOffset !== -1) {
     return idMatchOffset;
   }
 
   const nameMatchOffset = leftRequestsToRun.reverse().findIndex(req => req.name.trim() === nextRequestIdOrName.trim());
-  if (nameMatchOffset >= 0) {
+  if (nameMatchOffset !== -1) {
     return leftRequestsToRun.length - 1 - nameMatchOffset;
   }
 

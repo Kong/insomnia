@@ -58,7 +58,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
     let isValid = true;
     try {
       new URL(address);
-    } catch (error) {
+    } catch {
       isValid = false;
     }
     setIsValidUrl(isValid);
@@ -89,29 +89,27 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
           name,
           provider: providerType,
         };
-        let newData;
-        if (type === HashiCorpCredentialType.cloudVaultSecrets) {
-          newData = {
-            ...commonData,
-            credentials: {
-              type: type as HashiCorpCredentialType.cloudVaultSecrets,
-              client_id,
-              client_secret,
-            },
-          };
-        } else {
-          newData = {
-            ...commonData,
-            credentials: {
-              type: type as HashiCorpCredentialType.onPrem | HashiCorpCredentialType.cloudVaultDedicated,
-              authMethod: authMethod as HashiCorpVaultAuthMethod,
-              serverAddress,
-              ...(authMethod === HashiCorpVaultAuthMethod.token && { access_token }),
-              ...(authMethod === HashiCorpVaultAuthMethod.appRole && { role_id, secret_id }),
-              ...(type === HashiCorpCredentialType.cloudVaultDedicated && { namespace }),
-            },
-          };
-        }
+        const newData =
+          type === HashiCorpCredentialType.cloudVaultSecrets
+            ? {
+                ...commonData,
+                credentials: {
+                  type: type as HashiCorpCredentialType.cloudVaultSecrets,
+                  client_id,
+                  client_secret,
+                },
+              }
+            : {
+                ...commonData,
+                credentials: {
+                  type: type as HashiCorpCredentialType.onPrem | HashiCorpCredentialType.cloudVaultDedicated,
+                  authMethod: authMethod as HashiCorpVaultAuthMethod,
+                  serverAddress,
+                  ...(authMethod === HashiCorpVaultAuthMethod.token && { access_token }),
+                  ...(authMethod === HashiCorpVaultAuthMethod.appRole && { role_id, secret_id }),
+                  ...(type === HashiCorpCredentialType.cloudVaultDedicated && { namespace }),
+                },
+              };
         onSubmit(newData as HashiCorpCredential);
       }}
     >

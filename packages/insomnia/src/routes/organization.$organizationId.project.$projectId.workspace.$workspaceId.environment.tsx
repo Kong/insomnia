@@ -233,20 +233,16 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
       if (dropPosition === 'before') {
         const currentEnvIndex = subEnvironments.findIndex(evt => evt._id === targetEnv._id);
         const previousEnv = subEnvironments[currentEnvIndex - 1];
-        if (!previousEnv) {
-          sourceEnv.metaSortKey = targetEnv.metaSortKey - 1;
-        } else {
-          sourceEnv.metaSortKey = (previousEnv.metaSortKey + targetEnv.metaSortKey) / 2;
-        }
+        sourceEnv.metaSortKey = !previousEnv
+          ? targetEnv.metaSortKey - 1
+          : (previousEnv.metaSortKey + targetEnv.metaSortKey) / 2;
       }
       if (dropPosition === 'after') {
         const currentEnvIndex = subEnvironments.findIndex(evt => evt._id === targetEnv._id);
         const nextEnv = subEnvironments[currentEnvIndex + 1];
-        if (!nextEnv) {
-          sourceEnv.metaSortKey = targetEnv.metaSortKey + 1;
-        } else {
-          sourceEnv.metaSortKey = (nextEnv.metaSortKey + targetEnv.metaSortKey) / 2;
-        }
+        sourceEnv.metaSortKey = !nextEnv
+          ? targetEnv.metaSortKey + 1
+          : (nextEnv.metaSortKey + targetEnv.metaSortKey) / 2;
       }
 
       updateEnvironmentFetcher.submit({
@@ -278,11 +274,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
       return;
     }
 
-    if (layout && layout[0] > 0) {
-      layout[0] = 0;
-    } else {
-      layout[0] = DEFAULT_SIDEBAR_SIZE;
-    }
+    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
 
     sidebarPanelRef.current?.setLayout(layout);
   }

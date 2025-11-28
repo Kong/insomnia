@@ -397,11 +397,7 @@ const Debug = () => {
       return;
     }
 
-    if (layout && layout[0] > 0) {
-      layout[0] = 0;
-    } else {
-      layout[0] = DEFAULT_SIDEBAR_SIZE;
-    }
+    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
 
     sidebarPanelRef.current?.setLayout(layout);
   }
@@ -590,20 +586,18 @@ const Debug = () => {
           const beforeItem = targetItem;
           const afterItem = targetSiblingsCollections[targetIndexInSiblingsCollection + 1];
 
-          if (beforeItem && afterItem) {
-            metaSortKey = beforeItem.doc.metaSortKey - (beforeItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2;
-          } else {
-            metaSortKey = beforeItem.doc.metaSortKey + 100;
-          }
+          metaSortKey =
+            beforeItem && afterItem
+              ? beforeItem.doc.metaSortKey - (beforeItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2
+              : beforeItem.doc.metaSortKey + 100;
         } else {
           const beforeItem = targetSiblingsCollections[targetIndexInSiblingsCollection - 1];
           const afterItem = targetItem;
 
-          if (beforeItem && afterItem) {
-            metaSortKey = afterItem.doc.metaSortKey - (afterItem.doc.metaSortKey - beforeItem.doc.metaSortKey) / 2;
-          } else {
-            metaSortKey = afterItem.doc.metaSortKey - 100;
-          }
+          metaSortKey =
+            beforeItem && afterItem
+              ? afterItem.doc.metaSortKey - (afterItem.doc.metaSortKey - beforeItem.doc.metaSortKey) / 2
+              : afterItem.doc.metaSortKey - 100;
         }
       }
 

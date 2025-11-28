@@ -121,11 +121,7 @@ const Component = () => {
       return;
     }
 
-    if (layout && layout[0] > 0) {
-      layout[0] = 0;
-    } else {
-      layout[0] = DEFAULT_SIDEBAR_SIZE;
-    }
+    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
 
     sidebarPanelRef.current?.setLayout(layout);
   }
@@ -223,20 +219,16 @@ const Component = () => {
       if (dropPosition === 'before') {
         const currentTestSuiteIndex = unitTestSuites.findIndex(testSuite => testSuite._id === targetTestSuite._id);
         const previousTestSuite = unitTestSuites[currentTestSuiteIndex - 1];
-        if (!previousTestSuite) {
-          sourceTestSuite.metaSortKey = targetTestSuite.metaSortKey - 1;
-        } else {
-          sourceTestSuite.metaSortKey = (previousTestSuite.metaSortKey + targetTestSuite.metaSortKey) / 2;
-        }
+        sourceTestSuite.metaSortKey = !previousTestSuite
+          ? targetTestSuite.metaSortKey - 1
+          : (previousTestSuite.metaSortKey + targetTestSuite.metaSortKey) / 2;
       }
       if (dropPosition === 'after') {
         const currentTestSuiteIndex = unitTestSuites.findIndex(testSuite => testSuite._id === targetTestSuite._id);
         const nextEnv = unitTestSuites[currentTestSuiteIndex + 1];
-        if (!nextEnv) {
-          sourceTestSuite.metaSortKey = targetTestSuite.metaSortKey + 1;
-        } else {
-          sourceTestSuite.metaSortKey = (nextEnv.metaSortKey + targetTestSuite.metaSortKey) / 2;
-        }
+        sourceTestSuite.metaSortKey = !nextEnv
+          ? targetTestSuite.metaSortKey + 1
+          : (nextEnv.metaSortKey + targetTestSuite.metaSortKey) / 2;
       }
 
       updateTestSuiteFetcher.submit({

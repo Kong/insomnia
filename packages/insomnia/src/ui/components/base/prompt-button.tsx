@@ -96,7 +96,7 @@ export const PromptButton = <T,>({
               }, 1000);
             });
         } else {
-          throw new Error('onClick must return a Promise when referToOnClickReturnValue is true');
+          throw new TypeError('onClick must return a Promise when referToOnClickReturnValue is true');
         }
       }
     }

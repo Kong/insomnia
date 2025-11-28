@@ -227,7 +227,7 @@ export class Url extends PropertyBase {
       }
       this.origin = urlString;
     } else {
-      throw new Error(`url is invalid: ${urlOptions} `); // TODO:
+      throw new TypeError(`url is invalid: ${urlOptions} `); // TODO:
     }
   }
 
@@ -273,7 +273,7 @@ export class Url extends PropertyBase {
         this.queryParams = [...this.queryParams, new QueryParam({ ...pair })];
       });
     } else {
-      throw new Error(`addQueryParams: invalid params: ${JSON.stringify(params)}`);
+      throw new TypeError(`addQueryParams: invalid params: ${JSON.stringify(params)}`);
     }
   }
 
@@ -327,7 +327,7 @@ export class Url extends PropertyBase {
         return !shouldDelete;
       });
     } else {
-      throw new Error(
+      throw new TypeError(
         'removeQueryParams: failed to remove query params: unknown params type, only supports QueryParam[], string[] or string',
       );
     }
@@ -340,7 +340,7 @@ export class Url extends PropertyBase {
       const urlInString = newUrlObject.toString();
       if (this.urlObject.pathname === '/' && urlInString === this.origin + '/') {
         // try to avoid replacing empty path with '/'
-        return urlInString.slice(0, urlInString.length - 1);
+        return urlInString.slice(0, -1);
       }
       return urlInString;
     }
@@ -354,7 +354,7 @@ export class Url extends PropertyBase {
       const urlInString = newUrlObject.toString();
       if (this.urlObject.pathname === '/' && urlInString === this.origin + '/') {
         // try to avoid replacing empty path with '/'
-        return urlInString.slice(0, urlInString.length - 1);
+        return urlInString.slice(0, -1);
       }
       return urlInString;
     }
@@ -413,7 +413,7 @@ export class UrlMatchPattern extends Property {
     }
 
     const protocolEndPos = this.pattern.indexOf('://');
-    if (protocolEndPos < 0) {
+    if (protocolEndPos === -1) {
       return [];
     }
 
@@ -448,13 +448,13 @@ export class UrlMatchPattern extends Property {
     const hashBegPos = urlStr.indexOf('?', protocolEndPos);
 
     let hostEndPos = urlStr.length;
-    if (portBegPos >= 0) {
+    if (portBegPos !== -1) {
       hostEndPos = portBegPos;
-    } else if (pathBegPos >= 0) {
+    } else if (pathBegPos !== -1) {
       hostEndPos = pathBegPos;
-    } else if (queryBegPos >= 0) {
+    } else if (queryBegPos !== -1) {
       hostEndPos = queryBegPos;
-    } else if (hashBegPos >= 0) {
+    } else if (hashBegPos !== -1) {
       hostEndPos = hashBegPos;
     }
 
@@ -484,16 +484,16 @@ export class UrlMatchPattern extends Property {
     const protocolEndPos = urlStr.indexOf('://') + 3;
     const hostBegPos = protocolEndPos;
     const pathBegPos = urlStr.indexOf('/', hostBegPos);
-    if (pathBegPos < 0) {
+    if (pathBegPos === -1) {
       return '';
     }
 
     const queryBegPos = urlStr.indexOf('?');
     const hashBegPos = urlStr.indexOf('#');
     let pathEndPos = urlStr.length;
-    if (queryBegPos >= 0) {
+    if (queryBegPos !== -1) {
       pathEndPos = queryBegPos;
-    } else if (hashBegPos >= 0) {
+    } else if (hashBegPos !== -1) {
       pathEndPos = hashBegPos;
     }
 
@@ -533,11 +533,11 @@ export class UrlMatchPattern extends Property {
     const queryBegPos = urlStr.indexOf('?');
     const hashBegPos = urlStr.indexOf('#');
 
-    if (pathBegPos >= 0) {
+    if (pathBegPos !== -1) {
       portEndPos = pathBegPos;
-    } else if (queryBegPos >= 0) {
+    } else if (queryBegPos !== -1) {
       portEndPos = queryBegPos;
-    } else if (hashBegPos >= 0) {
+    } else if (hashBegPos !== -1) {
       portEndPos = hashBegPos;
     }
 
