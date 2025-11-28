@@ -1,17 +1,15 @@
 import type { FC } from 'react';
-
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
-import { isGitCredentialsOAuth } from '~/models/git-repository';
-import type { GitRepository } from '../../../models/git-repository';
-import type { OauthProviderName } from '../../../models/git-credentials';
 
+import { isGitCredentialsOAuth } from '~/models/git-repository';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 
+import type { OauthProviderName } from '../../../models/git-credentials';
+import type { GitRepository } from '../../../models/git-repository';
 import { ErrorBoundary } from '../error-boundary';
 import { CustomRepositorySettingsFormGroup } from '../git-credentials/custom-repository-settings-form';
 import { GitHubRepositorySetupFormGroup } from '../git-credentials/github-repository-settings-form';
 import { GitLabRepositorySetupFormGroup } from '../git-credentials/gitlab-repository-settings-form';
-
 import type { ActiveView, ProjectData } from './utils';
 
 interface Props {

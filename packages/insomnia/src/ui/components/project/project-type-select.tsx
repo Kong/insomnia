@@ -56,6 +56,8 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
     },
   ];
 
+  const currentType = typeList.find(item => item.type === value);
+
   const handleChange = (v: string) => {
     setListOpen(false);
     onChange(v);
@@ -66,7 +68,7 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
       <Label aria-label="Project Type" className="text-sm text-(--color-font)">
         Type
       </Label>
-      {listOpen ? (
+      {listOpen || !currentType ? (
         <RadioGroup
           aria-label="Project Type Radio"
           className="flex flex-col px-0.5"
@@ -98,8 +100,8 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
           onClick={() => setListOpen(true)}
         >
           <div>
-            <Icon className="mr-2" icon={['fab', 'git-alt']} />
-            Git Sync
+            <Icon className="mr-2" icon={currentType?.icon} />
+            {currentType?.name}
           </div>
           <div>Change</div>
         </div>
