@@ -76,7 +76,7 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
     if (filePath && activeResponse.bodyBuffer) {
       await window.main.writeFile({
         path: filePath,
-        content: activeResponse.bodyBuffer.toString('utf8') || '',
+        content: headers + '\n' + activeResponse.bodyBuffer.toString('utf8') || '',
       });
     }
   }, [activeRequest, activeResponse]);
