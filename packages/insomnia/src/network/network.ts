@@ -429,9 +429,16 @@ export async function savePatchesMadeByScript(patches: {
 
   // persist updated cookieJar if needed
   if (mutatedContext.cookieJar) {
-    // merge cookies from response to the cookiejar, or cookies from response will not be persisted
+    // merge response cookies with cookieJar, deduplicating by domain/path/key (response cookies take precedence)
+    const uniqueCookies = new Map<string, Cookie>();
+    for (const cookie of [...(responseCookies || []), ...mutatedContext.cookieJar.cookies]) {
+      const key = `${cookie.domain}|${cookie.path}|${cookie.key}`;
+      if (!uniqueCookies.has(key)) {
+        uniqueCookies.set(key, cookie);
+      }
+    }
     await models.cookieJar.update(mutatedContext.cookieJar, {
-      cookies: [...(responseCookies || []), ...mutatedContext.cookieJar.cookies],
+      cookies: Array.from(uniqueCookies.values()),
     });
   }
   // when base environment is activated, `mutatedContext.environment` points to it

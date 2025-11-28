@@ -13,7 +13,7 @@ import { DEFAULT_BOUNDARY } from '../../main/network/multipart';
 import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';
 import * as models from '../../models';
 import * as networkUtils from '../network';
-import { getSetCookiesFromResponseHeaders } from '../network';
+import { getSetCookiesFromResponseHeaders, savePatchesMadeByScript } from '../network';
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) =>
   (await getRenderedRequestAndContext(args)).request;
@@ -1125,5 +1125,29 @@ describe('getOrInheritHeaders', () => {
       ],
     };
     expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([]);
+  });
+});
+
+describe('savePatchesMadeByScript', () => {
+  it('should deduplicate cookies by domain/path/key when merging', async () => {
+    const workspace = await models.workspace.create();
+    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
+
+    const existingCookie = { key: 'session', value: 'old', domain: 'example.com', path: '/' };
+    const responseCookie = { key: 'session', value: 'new', domain: 'example.com', path: '/' };
+
+    await savePatchesMadeByScript({
+      mutatedContext: { cookieJar: { ...cookieJar, cookies: [existingCookie] }, parentFolders: [] },
+      environment: { _id: 'env_1' },
+      baseEnvironment: { _id: 'env_1' },
+      activeGlobalEnvironment: undefined,
+      activeGlobalBaseEnvironment: undefined,
+      originalRequestGroups: [],
+      responseCookies: [responseCookie],
+    } as any);
+
+    const updatedJar = await models.cookieJar.getById(cookieJar._id);
+    expect(updatedJar?.cookies).toHaveLength(1);
+    expect(updatedJar?.cookies[0].value).toBe('new');
   });
 });
