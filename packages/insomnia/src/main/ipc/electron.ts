@@ -106,6 +106,7 @@ export type HandleChannels =
   | 'mcp.primitive.subscribeResource'
   | 'mcp.primitive.unsubscribeResource'
   | 'mcp.readyState'
+  | 'multipartBufferToArray'
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
   | 'openPath'

@@ -19,6 +19,7 @@ import iconv from 'iconv-lite';
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
+import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
 import { insecureReadFile, insecureReadFileWithEncoding, secureReadFile } from '~/main/secure-read-file';
 import type { GenerateCommitsFromDiffFunction, MockRouteData, ModelConfig } from '~/plugins/types';
 
@@ -97,6 +98,7 @@ export interface RendererToMainBridgeAPI {
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
   parseImport: typeof convert;
+  multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
   secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
@@ -182,6 +184,9 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
     return models.caCertificate.create(options);
+  });
+  ipcMainHandle('multipartBufferToArray', async (_, options) => {
+    return multipartBufferToArray(options);
   });
   ipcMainOn('loginStateChange', async () => {
     BrowserWindow.getAllWindows().forEach(w => {

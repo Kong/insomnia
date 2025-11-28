@@ -181,6 +181,7 @@ const main: Window['main'] = {
   onDefaultBrowserOAuthRedirect: options => ipcRenderer.invoke('onDefaultBrowserOAuthRedirect', options),
   cancelAuthorizationInDefaultBrowser: options => ipcRenderer.invoke('cancelAuthorizationInDefaultBrowser', options),
   setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
+  multipartBufferToArray: options => ipcRenderer.invoke('multipartBufferToArray', options),
   installPlugin: (lookupName: string, allowScopedPackageNames = false) =>
     ipcRenderer.invoke('installPlugin', lookupName, allowScopedPackageNames),
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
