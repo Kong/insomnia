@@ -1,5 +1,3 @@
-import { URL } from 'node:url';
-
 import React, { type FC, Fragment, useMemo } from 'react';
 
 import type { ResponseHeader } from '../../../models/response';
