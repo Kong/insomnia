@@ -15,18 +15,6 @@ export default defineConfig([
   eslintPluginUnicorn.configs.unopinionated,
   {
     rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            // Shouldn't import packages by relative path
-            {
-              group: ['**/*/insomnia-api/**'],
-              message: "Please use 'insomnia-api' instead of relative paths",
-            },
-          ],
-        },
-      ],
       'unicorn/filename-case': [
         'error',
         {
@@ -129,6 +117,22 @@ export default defineConfig([
     },
     rules: {
       'simple-import-sort/imports': 'error',
+    },
+  },
+  {
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            // Shouldn't import packages by relative path
+            {
+              group: ['**/*/insomnia-api/**'],
+              message: "Please use 'insomnia-api' instead of relative paths",
+            },
+          ],
+        },
+      ],
     },
   },
   {
