@@ -24,7 +24,6 @@ import { Divider } from '~/basic-components/divider';
 import { isGitCredentialsOAuth } from '~/models/git-repository';
 import type { StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import {
   fallbackFeatures,
   useOrganizationPermissionsLoaderFetcher,
@@ -272,7 +271,7 @@ export const ProjectSettingsForm: FC<Props> = ({
           {storageType === 'git' && (
             <>
               <Divider />
-              <GitConnectionInfo gitRepository={gitRepository} branch={''} />
+              <GitConnectionInfo gitRepository={gitRepository} />
             </>
           )}
           <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5 pb-10">

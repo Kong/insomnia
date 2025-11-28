@@ -3,7 +3,7 @@ import { getDefaultOAuthProvider } from '~/ui/components/modals/git-repository-s
 
 import { GitProviderTag } from './git-provider-tag';
 
-export const GitConnectionInfo = ({ gitRepository, branch }: { gitRepository?: GitRepository; branch: string }) => {
+export const GitConnectionInfo = ({ gitRepository }: { gitRepository?: GitRepository }) => {
   if (!gitRepository) {
     return null;
   }
@@ -21,10 +21,11 @@ export const GitConnectionInfo = ({ gitRepository, branch }: { gitRepository?: G
           <div className="w-[110px] font-semibold">Repo URL</div>
           <div>{repoUrl}</div>
         </div>
-        <div className="flex">
+        {/* TODO: get repo branch */}
+        {/* <div className="flex">
           <div className="w-[110px] font-semibold">Base Branch</div>
           <div>{branch}</div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
