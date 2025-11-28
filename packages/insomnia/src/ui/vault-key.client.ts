@@ -35,11 +35,9 @@ export const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
       )
       .toString('hex');
     // send or reset saltAuth & verifier to server
-    if (type === 'create') {
-      await createVault({ sessionId, salt: vaultSalt, verifier });
-    } else {
-      await resetVault({ sessionId, salt: vaultSalt, verifier });
-    }
+    await (type === 'create'
+      ? createVault({ sessionId, salt: vaultSalt, verifier })
+      : resetVault({ sessionId, salt: vaultSalt, verifier }));
 
     // save encrypted vault key and vault salt to session
     await sessionModel.patch({ vaultSalt: vaultSalt });

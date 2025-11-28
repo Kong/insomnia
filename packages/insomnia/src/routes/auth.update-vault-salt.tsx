@@ -16,7 +16,7 @@ export async function clientAction(_args: ActionFunctionArgs) {
   } catch (error) {
     console.error(`failed to get vault salt ${error.toString()}`);
   }
-  return undefined;
+  return;
 }
 
 export const useUpdateVaultSaltFetcher = createFetcherSubmitHook(
