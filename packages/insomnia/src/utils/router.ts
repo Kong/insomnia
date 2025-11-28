@@ -119,7 +119,7 @@ export const getInitialEntry = async () => {
         if (lastVisitedOrganizationId && organizations.find(o => o.id === lastVisitedOrganizationId)) {
           organizationId = lastVisitedOrganizationId;
         }
-      } catch (e) {}
+      } catch {}
 
       return {
         pathname: await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true }),
@@ -139,7 +139,7 @@ export const getInitialEntry = async () => {
       projectId: SCRATCHPAD_PROJECT_ID,
       workspaceId: SCRATCHPAD_WORKSPACE_ID,
     });
-  } catch (e) {
+  } catch {
     return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
       organizationId: SCRATCHPAD_ORGANIZATION_ID,
       projectId: SCRATCHPAD_PROJECT_ID,

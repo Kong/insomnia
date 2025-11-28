@@ -68,8 +68,7 @@ describe('projectLock', () => {
       });
 
       const fastFunction = projectLock.wrapWithLock(async (id: string) => {
-        executionOrder.push(`start-${id}`);
-        executionOrder.push(`end-${id}`);
+        executionOrder.push(`start-${id}`, `end-${id}`);
         return id;
       });
 

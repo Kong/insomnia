@@ -119,7 +119,7 @@ export class InsomniaObject {
   };
 
   get settings() {
-    return undefined;
+    return;
   }
 
   toObject = () => {

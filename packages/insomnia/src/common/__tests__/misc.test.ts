@@ -157,7 +157,7 @@ describe('fuzzyMatch()', () => {
   });
 
   it('can get a negative fuzzy match on a single field', () => {
-    expect(fuzzyMatch('foo', undefined)).toBeNull();
+    expect(fuzzyMatch('foo')).toBeNull();
     expect(fuzzyMatch('foo', 'bar')).toBeNull();
   });
 });
@@ -238,7 +238,7 @@ describe('isNotNullOrUndefined', () => {
     expect(isNotNullOrUndefined('')).toBe(true);
     expect(isNotNullOrUndefined(false)).toBe(true);
     expect(isNotNullOrUndefined(null)).toBe(false);
-    expect(isNotNullOrUndefined(undefined)).toBe(false);
+    expect(isNotNullOrUndefined()).toBe(false);
   });
 });
 

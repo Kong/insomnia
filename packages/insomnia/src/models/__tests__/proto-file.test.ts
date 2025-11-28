@@ -13,7 +13,7 @@ describe('init()', () => {
 
 describe('create()', () => {
   it('creates a valid protofile', async () => {
-    Date.now = vi.fn().mockReturnValue(1478795580200);
+    Date.now = vi.fn().mockReturnValue(1_478_795_580_200);
     const request = await models.protoFile.create({
       name: 'My File',
       parentId: 'fld_124',
@@ -21,8 +21,8 @@ describe('create()', () => {
     });
     const expected = {
       _id: 'pf_cc1dd2ca4275747aa88199e8efd42403',
-      created: 1478795580200,
-      modified: 1478795580200,
+      created: 1_478_795_580_200,
+      modified: 1_478_795_580_200,
       parentId: 'fld_124',
       type: 'ProtoFile',
       name: 'My File',
@@ -33,7 +33,7 @@ describe('create()', () => {
   });
 
   it('fails when missing parentId', async () => {
-    Date.now = vi.fn().mockReturnValue(1478795580200);
+    Date.now = vi.fn().mockReturnValue(1_478_795_580_200);
     expect(() =>
       models.protoFile.create({
         name: 'no parentId',

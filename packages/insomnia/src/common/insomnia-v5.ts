@@ -17,6 +17,7 @@ import { parse, stringify } from 'yaml';
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
+import { invariant } from '~/utils/invariant';
 
 import * as models from '../models';
 import type { ApiSpec } from '../models/api-spec';
@@ -107,7 +108,7 @@ function mapParameters(parameters?: RequestParameter[]) {
  */
 function mapMeta(resource: Request | WebSocketRequest | SocketIORequest | GrpcRequest) {
   if (!resource) {
-    return undefined;
+    return;
   }
 
   return {
@@ -129,7 +130,7 @@ function mapMeta(resource: Request | WebSocketRequest | SocketIORequest | GrpcRe
  */
 function mapGroupMeta(resource: RequestGroup) {
   if (!resource) {
-    return undefined;
+    return;
   }
 
   return {
@@ -151,7 +152,7 @@ function mapGroupMeta(resource: RequestGroup) {
  */
 function mapWorkspaceMeta(workspace: Workspace) {
   if (!workspace) {
-    return undefined;
+    return;
   }
 
   return {
@@ -868,7 +869,7 @@ export async function getInsomniaV5DataExport({
       const hasAfterResponse = !!resource?.afterResponseScript;
 
       if (!hasPreRequest && !hasAfterResponse) {
-        return undefined;
+        return;
       }
 
       const scripts: { preRequest?: string; afterResponse?: string } = {};
@@ -995,7 +996,7 @@ export async function getInsomniaV5DataExport({
 
       try {
         contents = JSON.parse(spec.contents);
-      } catch (err) {
+      } catch {
         // @TODO For some reason switching a spec from JSON to YAML doesn't update it's content type so we need to handle both here
         // This must be fixed in the apiSpec model
         try {
@@ -1116,8 +1117,8 @@ export async function getInsomniaV5DataExport({
 
       return stringify(removeEmptyFields(parsedEnvironment));
     } else if (workspace.scope === 'mock-server') {
-      const server = exportableResources.filter(models.mockServer.isMockServer)[0];
-
+      const server = exportableResources.find(models.mockServer.isMockServer);
+      invariant(server, 'Mock Server not found');
       const mockServer: InsomniaFile = {
         type: 'mock.insomnia.rest/5.0',
         schema_version: INSOMNIA_SCHEMA_VERSION,

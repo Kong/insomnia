@@ -180,7 +180,7 @@ export const McpRequestPane: FC<Props> = ({
           };
         });
       }
-    } catch (err) {}
+    } catch {}
   };
 
   const sendButtonText = useMemo(() => {

@@ -77,8 +77,8 @@ test.describe('runner features tests', () => {
       const countParts = testResultCounts[0].split('/');
       expect.soft(countParts.length).toBe(2);
 
-      const summarizedPassedCount = parseInt(countParts[0], 10);
-      const summarizedTotalCount = parseInt(countParts[1], 10);
+      const summarizedPassedCount = Number.parseInt(countParts[0], 10);
+      const summarizedTotalCount = Number.parseInt(countParts[1], 10);
       expect.soft(summarizedPassedCount).toEqual(expectedPassed);
       expect.soft(summarizedTotalCount).toEqual(expectedTotal);
     };

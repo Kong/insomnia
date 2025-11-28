@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { join as pathJoin } from 'node:path';
+import nodePath from 'node:path';
 
 import clone from 'clone';
 import orderedJSON from 'json-order';
@@ -154,11 +154,11 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await models.caCertificate.findByParentId(workspaceId);
   const responseId = generateId('res');
-  const responsesDir = pathJoin(
+  const responsesDir = nodePath.join(
     (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
     'responses',
   );
-  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
   return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
@@ -200,8 +200,8 @@ export const fetchRequestData = async (
 
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
-  let activeGlobalEnvironment: Environment | undefined = undefined;
-  let activeGlobalBaseEnvironment: Environment | undefined = undefined;
+  let activeGlobalEnvironment: Environment | undefined;
+  let activeGlobalBaseEnvironment: Environment | undefined;
   if (workspaceMeta?.activeGlobalEnvironmentId) {
     activeGlobalEnvironment = (await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId)) || undefined;
     const activeGlobalEnvironmentParentId = activeGlobalEnvironment?.parentId || '';
@@ -220,12 +220,12 @@ export const fetchRequestData = async (
   const caCert = await models.caCertificate.findByParentId(workspaceId);
 
   const responseId = generateId('res');
-  const responsesDir = pathJoin(
+  const responsesDir = nodePath.join(
     process.env['INSOMNIA_DATA_PATH'] ||
       (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
     'responses',
   );
-  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
 
   return {
     request,
@@ -264,12 +264,12 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   invariant(settings, 'failed to create settings');
 
   const responseId = generateId('res');
-  const responsesDir = pathJoin(
+  const responsesDir = nodePath.join(
     process.env['INSOMNIA_DATA_PATH'] ||
       (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
     'responses',
   );
-  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
 
   return {
     environment,
@@ -517,7 +517,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
     .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || isProject(doc))
     .reverse()
     .map(doc => doc.name);
-  let vault = undefined;
+  let vault;
   if (globals && vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
     // decrypt and set vault in insomnia sdk if necessary
     globals.data[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(
@@ -860,13 +860,15 @@ export async function sendCurlAndWriteTimeline(
     authentication,
     renderedRequest.settingEncodeUrl,
   );
-  timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
-  timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
-  timeline.push({
-    value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`,
-    name: 'Text',
-    timestamp: Date.now(),
-  });
+  timeline.push(
+    { value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() },
+    { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
+    {
+      value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`,
+      name: 'Text',
+      timestamp: Date.now(),
+    },
+  );
 
   if (!renderedRequest.settingSendCookies) {
     timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });

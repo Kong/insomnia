@@ -135,8 +135,8 @@ async function _highlightNunjucksTags(
       const el = document.createElement('span');
       el.className = `nunjucks-tag ${tok.type}`;
       el.setAttribute('draggable', 'true');
-      el.setAttribute('data-error', 'off');
-      el.setAttribute('data-template', tok.string);
+      el.dataset.error = 'off';
+      el.dataset.template = tok.string;
       el.innerHTML = '<label></label>' + tok.string;
       const mark = this.markText(start, end, {
         // @ts-expect-error not a known property of TextMarkerOptions
@@ -197,8 +197,7 @@ async function _highlightNunjucksTags(
       el.addEventListener('dragstart', event => {
         // Setup the drag contents
         if (event.dataTransfer) {
-          const template = (event.target as typeof el)?.getAttribute('data-template') || '';
-          event.dataTransfer.setData('text/plain', template);
+          event.dataTransfer.setData('text/plain', event.target as unknown as string);
           event.dataTransfer.effectAllowed = 'copyMove';
           event.dataTransfer.dropEffect = 'move';
         }
@@ -330,10 +329,10 @@ async function _updateElementText(
   }
 
   el.title = title;
-  el.setAttribute('data-ignore', dataIgnore);
+  el.dataset.ignore = dataIgnore;
 
   if (dataError === 'on') {
-    el.setAttribute('data-error', dataError);
+    el.dataset.error = dataError;
     el.innerHTML = '<label><i class="fa fa-exclamation-triangle"></i></label>' + cleanedStr;
   } else {
     el.innerHTML = '<label></label>' + innerHTML;

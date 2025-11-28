@@ -99,7 +99,7 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
         client_secret_expires_at: this.mcpRequest.authentication.clientSecretExpiresAt,
       };
     }
-    return undefined;
+    return;
   }
   async saveClientInformation(clientInformation: OAuthClientInformationFull) {
     const parsedClientInformation = OAuthClientInformationSchema.parse(clientInformation);

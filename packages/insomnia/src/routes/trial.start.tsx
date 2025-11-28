@@ -28,7 +28,7 @@ export async function clientAction(_args: Route.ClientActionArgs) {
       await syncCurrentPlan(sessionId, accountId);
     }
     return result;
-  } catch (err) {
+  } catch {
     return {
       success: false,
     };

@@ -27,15 +27,15 @@ export const encryptOAuthUrl = (authCodeUrlStr: string) => {
       Buffer.from(encryptedKey, 'base64'),
     );
     const encryptedBuf = Buffer.from(encryptedRedirectUrl, 'base64');
-    const authTag = encryptedBuf.slice(encryptedBuf.length - 16);
-    const ciphertext = encryptedBuf.slice(0, encryptedBuf.length - 16);
+    const authTag = encryptedBuf.slice(-16);
+    const ciphertext = encryptedBuf.slice(0, -16);
     // nosemgrep: javascript.node-crypto.security.gcm-no-tag-length.gcm-no-tag-length
     const decipher = crypto.createDecipheriv('aes-256-gcm', aesKey, Buffer.from(iv, 'base64'), {
       authTagLength: 16,
     });
     decipher.setAuthTag(authTag);
 
-    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf-8');
+    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
     return decrypted;
   };
 

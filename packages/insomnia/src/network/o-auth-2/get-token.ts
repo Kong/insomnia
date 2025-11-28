@@ -89,7 +89,7 @@ export const getOAuth2Token = async (
           ? [
               {
                 name: 'nonce',
-                value: Math.floor(Math.random() * 9999999999999) + 1 + '',
+                value: Math.floor(Math.random() * 9_999_999_999_999) + 1 + '',
               },
             ]
           : []),
@@ -479,13 +479,13 @@ export const encodePKCE = (buffer: Buffer) => {
 const tryToParse = (body: string): Record<string, any> | null => {
   try {
     return JSON.parse(body);
-  } catch (err) {}
+  } catch {}
 
   try {
     // NOTE: parse does not return a JS Object, so
     //   we cannot use hasOwnProperty on it
     return querystring.parse(body);
-  } catch (err) {}
+  } catch {}
   return null;
 };
 

@@ -119,7 +119,7 @@ function sortObject<T>(obj: T): T {
 // Treat undefined, null, and missing key as equivalent
 function emptyKeyReplacer(_key: string, value: any) {
   if (value === null || value === '') {
-    return undefined;
+    return;
   }
   return value;
 }

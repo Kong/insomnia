@@ -37,19 +37,11 @@ function getDiff(previewDiffItem?: StageEntry) {
   let after = '{}';
 
   if (previewDiffItem && 'previousBlobContent' in previewDiffItem && previewDiffItem.previousBlobContent) {
-    if (previewDiffItem.previousBlobContent === 'null') {
-      before = '';
-    } else {
-      before = previewDiffItem.previousBlobContent || '{}';
-    }
+    before = previewDiffItem.previousBlobContent === 'null' ? '' : previewDiffItem.previousBlobContent || '{}';
   }
 
   if (previewDiffItem && 'blobContent' in previewDiffItem && previewDiffItem.blobContent) {
-    if (previewDiffItem.blobContent === 'null') {
-      after = '';
-    } else {
-      after = previewDiffItem.blobContent || '{}';
-    }
+    after = previewDiffItem.blobContent === 'null' ? '' : previewDiffItem.blobContent || '{}';
   }
 
   try {

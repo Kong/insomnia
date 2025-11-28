@@ -49,7 +49,7 @@ export const reportGitProjectCount = async (organizationId: string, sessionId: s
         },
       });
       return;
-    } catch (err) {
+    } catch {
       if (attempt < maxRetries) {
         await new Promise(resolve => setTimeout(resolve, attempt * 1000));
       }
@@ -86,7 +86,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
         return project._id;
       }
 
-      let credentials: GitCredentials | undefined = undefined;
+      let credentials: GitCredentials | undefined;
       if (newProjectData.oauth2format === 'custom') {
         credentials = {
           username: newProjectData.username || '',

@@ -330,7 +330,9 @@ export const MockRouteRoute = () => {
                       id="mock-response-status-code-editor"
                       type="number"
                       defaultValue={mockRoute.statusCode}
-                      onChange={e => patchMockRoute(mockRoute._id, { statusCode: parseInt(e.currentTarget.value, 10) })}
+                      onChange={e =>
+                        patchMockRoute(mockRoute._id, { statusCode: Number.parseInt(e.currentTarget.value, 10) })
+                      }
                       onBlur={onBlurTriggerUpsert}
                       placeholder="200"
                     />

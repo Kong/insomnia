@@ -1,4 +1,4 @@
-import * as path from 'node:path';
+import nodePath from 'node:path';
 
 import React, { type FC, useEffect, useState } from 'react';
 import {
@@ -403,7 +403,7 @@ export const Plugins: FC = () => {
               )}
             >
               {plugin => {
-                const link = path.resolve(
+                const link = nodePath.resolve(
                   plugin.name.startsWith('insomnia-plugin-') ? PLUGIN_HUB_BASE : NPM_PACKAGE_BASE,
                   plugin.name,
                 );
@@ -490,7 +490,7 @@ export const Plugins: FC = () => {
               className="text-(--color-surprise) underline"
               onPress={() =>
                 window.shell.showItemInFolder(
-                  path.resolve(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'),
+                  nodePath.resolve(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'),
                 )
               }
             >

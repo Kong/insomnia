@@ -508,7 +508,7 @@ export function _parseHeaders(buffer: Buffer): HeaderResult[] {
       const [version, code, ...other] = first.split(/ +/g);
       return {
         version,
-        code: parseInt(code, 10),
+        code: Number.parseInt(code, 10),
         reason: other.join(' '),
         headers,
       };
@@ -550,7 +550,7 @@ const parseRequestBody = ({ body, method }: { body: any; method: string }) => {
     return body.text || '';
   }
 
-  return undefined;
+  return;
 };
 const parseRequestBodyPath = async (body: any) => {
   const isMultipartForm = body.mimeType === CONTENT_TYPE_FORM_DATA;

@@ -221,12 +221,12 @@ export const KeyValueEditor: FC<Props> = ({
   */
   const onKeyDownOuter = useCallback<React.KeyboardEventHandler>(event => {
     if (event.key === ' ') {
-      event.key = '\u00a0';
+      event.key = '\u00A0';
     }
   }, []);
 
   const onKeyDownInner = useCallback<React.KeyboardEventHandler>(event => {
-    if (event.key === '\u00a0') {
+    if (event.key === '\u00A0') {
       event.key = ' ';
     }
   }, []);

@@ -27,7 +27,7 @@ export default async function extractPostmanDataDumpHandler(_event: unknown, dat
   let archiveJsonData;
   try {
     archiveJsonData = JSON.parse(archiveJsonFile.data.toString());
-  } catch (err) {
+  } catch {
     return {
       err: 'Failed to parse archive.json file',
     };
@@ -64,7 +64,7 @@ export default async function extractPostmanDataDumpHandler(_event: unknown, dat
           });
         }
       });
-  } catch (err) {
+  } catch {
     return {
       err: 'Failed to parse collection or environment files',
     };

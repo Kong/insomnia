@@ -9,12 +9,7 @@ import { createFetcherSubmitHook } from '~/utils/router';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
 
 const getCollectionItem = async (id: string) => {
-  let item;
-  if (isRequestGroupId(id)) {
-    item = await models.requestGroup.getById(id);
-  } else {
-    item = await getById(id);
-  }
+  const item = await (isRequestGroupId(id) ? models.requestGroup.getById(id) : getById(id));
 
   invariant(item, 'Item not found');
 
@@ -37,11 +32,9 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   const parentId = dropPosition === 'after' && isRequestGroup(targetItem) ? targetItem._id : targetItem.parentId;
 
-  if (isRequestGroup(item)) {
-    await models.requestGroup.update(item, { parentId, metaSortKey });
-  } else {
-    await update(item, { parentId, metaSortKey });
-  }
+  await (isRequestGroup(item)
+    ? models.requestGroup.update(item, { parentId, metaSortKey })
+    : update(item, { parentId, metaSortKey }));
 
   return null;
 }

@@ -52,7 +52,7 @@ export function projectRoutableFSClient(
       let insomniaFiles = [];
       try {
         insomniaFiles = await insomniaFS.promises.readdir(filePath, ...args);
-      } catch (err) {
+      } catch {
         // console.log('[routablefs] Failed to execute', method, filePath, { args }, err);
       }
 
@@ -78,7 +78,7 @@ export function projectRoutableFSClient(
           writeFileMap[filePath.split(path.win32.sep).join(path.posix.sep)] = args[0].toString();
         }
         return result;
-      } catch (err) {
+      } catch {
         const result = await defaultFS.promises[method]!(filePath, ...args);
 
         return result;

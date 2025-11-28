@@ -200,7 +200,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
     const allConfigs: PluginConfigMap = settings.pluginConfig;
     const extraPaths = settings.pluginPath
       .split(':')
-      .filter(p => p)
+      .filter(Boolean)
       .map(p => {
         // Ensure proper resolution of paths and avoid path traversal
         if (p.indexOf('~/') === 0) {
