@@ -3,19 +3,19 @@ import { settings } from '../models';
 
 export const base64encode = (input: string | JsonWebKey) => {
   const inputStr = typeof input === 'string' ? input : JSON.stringify(input);
-  return Buffer.from(inputStr, 'utf-8').toString('base64');
+  return Buffer.from(inputStr, 'utf8').toString('base64');
 };
 
 export function base64decode(base64Str: string, toObject: true): object;
 export function base64decode(base64Str: string, toObject: false): string;
 export function base64decode(base64Str: string, toObject: boolean): string | object {
   try {
-    const decodedStr = Buffer.from(base64Str, 'base64').toString('utf-8');
+    const decodedStr = Buffer.from(base64Str, 'base64').toString('utf8');
     if (toObject) {
       return JSON.parse(decodedStr);
     }
     return decodedStr;
-  } catch (error) {
+  } catch {
     console.error(`failed to base64 decode string ${base64Str}`);
   }
   return base64Str;

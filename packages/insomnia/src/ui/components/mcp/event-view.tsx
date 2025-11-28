@@ -134,7 +134,7 @@ export const MessageEventView = ({ event }: Props) => {
               try {
                 const callToolResultContentTextParsed = JSON.parse(callToolResultContentText);
                 callToolResultContent.text = callToolResultContentTextParsed;
-              } catch (err) {}
+              } catch {}
             }
             parsed.result.content[idx] = callToolResultContent;
           });

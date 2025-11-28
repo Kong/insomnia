@@ -86,7 +86,7 @@ const ObjectPath = {
               .slice(i + 2, closing)
               .replace(regex[quote], quote)
               .replace(/\\+/g, function (backslash) {
-                return new Array(Math.ceil(backslash.length / 2) + 1).join('\\');
+                return Array.from({ length: Math.ceil(backslash.length / 2) + 1 }).join('\\');
               }),
           );
           i = str.slice(closing + 2, closing + 3) === '.' ? closing + 3 : closing + 2;

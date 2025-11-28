@@ -201,13 +201,13 @@ describe('Git-VCS', () => {
             author: {
               email: 'karen@example.com',
               name: 'Karen Brown',
-              timestamp: 1000080000,
+              timestamp: 1_000_080_000,
               timezoneOffset: 0,
             },
             committer: {
               email: 'karen@example.com',
               name: 'Karen Brown',
-              timestamp: 1000080000,
+              timestamp: 1_000_080_000,
               timezoneOffset: 0,
             },
             message: 'First commit!\n',

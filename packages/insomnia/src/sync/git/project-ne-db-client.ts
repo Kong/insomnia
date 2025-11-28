@@ -58,7 +58,7 @@ export class GitProjectNeDBClient {
         return raw.toString(options.encoding);
       }
       return raw;
-    } catch (err) {
+    } catch {
       throw this._errMissing(filePath);
     }
   }
@@ -176,14 +176,14 @@ export class GitProjectNeDBClient {
     let dir: string[] | null = null;
     try {
       fileBuff = await this.readFile(filePath);
-    } catch (err) {
+    } catch {
       // console.log('[nedb] Failed to read file', err);
     }
 
     if (fileBuff === null) {
       try {
         dir = await this.readdir(filePath);
-      } catch (err) {
+      } catch {
         // console.log('[nedb] Failed to read dir', err);
       }
     }

@@ -325,8 +325,8 @@ interface LearningFeature {
 const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   let learningFeature = fallbackLearningFeature;
   const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
-  const lastFetched = lastFetchedString ? parseInt(lastFetchedString, 10) : 0;
-  const oneDay = 86400000;
+  const lastFetched = lastFetchedString ? Number.parseInt(lastFetchedString, 10) : 0;
+  const oneDay = 86_400_000;
   const hasOneDayPassedSinceLastFetch = Date.now() - lastFetched > oneDay;
   const wasDismissed = window.localStorage.getItem('learning-feature-dismissed');
   const wasNotDismissedAndOneDayHasPassed = !wasDismissed && hasOneDayPassedSinceLastFetch;

@@ -274,7 +274,7 @@ export async function generateKeyPairJWK() {
   console.log('[crypt] Using Forge RSA Generation');
   const pair = forge.pki.rsa.generateKeyPair({
     bits: 2048,
-    e: 0x10001,
+    e: 0x1_00_01,
   });
   const privateKey = {
     alg: 'RSA-OAEP-256',

@@ -422,16 +422,14 @@ export const Runner: FC = () => {
     let passedTestCount = 0;
     let totalTestCount = 0;
 
-    if (!isRunning) {
-      if (executionResult?.iterationResults) {
-        for (const iteration of executionResult.iterationResults) {
-          for (const requests of iteration) {
-            for (const testCase of requests.results) {
-              if (testCase.status === 'passed') {
-                passedTestCount++;
-              }
-              totalTestCount++;
+    if (!isRunning && executionResult?.iterationResults) {
+      for (const iteration of executionResult.iterationResults) {
+        for (const requests of iteration) {
+          for (const testCase of requests.results) {
+            if (testCase.status === 'passed') {
+              passedTestCount++;
             }
+            totalTestCount++;
           }
         }
       }
@@ -484,9 +482,9 @@ export const Runner: FC = () => {
                         disabled={isRunning}
                         onChange={e => {
                           try {
-                            if (parseInt(e.target.value, 10) > 0) {
+                            if (Number.parseInt(e.target.value, 10) > 0) {
                               updateRunnerState(organizationId, runnerId, {
-                                iterationCount: parseInt(e.target.value, 10),
+                                iterationCount: Number.parseInt(e.target.value, 10),
                               });
                             }
                           } catch {}
@@ -503,7 +501,7 @@ export const Runner: FC = () => {
                         name="Delay"
                         onChange={e => {
                           try {
-                            const delay = parseInt(e.target.value, 10);
+                            const delay = Number.parseInt(e.target.value, 10);
                             if (delay >= 0) {
                               updateRunnerState(organizationId, runnerId, { delay }); // also update the temp settings
                             }

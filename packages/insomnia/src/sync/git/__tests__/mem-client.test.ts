@@ -210,12 +210,12 @@ describe('MemClient', () => {
   describe('stat()', () => {
     it('stats root dir', async () => {
       vi.useFakeTimers();
-      vi.setSystemTime(1000000000000);
+      vi.setSystemTime(1_000_000_000_000);
       const fsClient = new MemClient();
       const stat = await fsClient.stat(GIT_CLONE_DIR);
       expect(stat).toEqual({
-        ctimeMs: 1000000000000,
-        mtimeMs: 1000000000000,
+        ctimeMs: 1_000_000_000_000,
+        mtimeMs: 1_000_000_000_000,
         dev: 1,
         gid: 1,
         ino: 0,
@@ -231,14 +231,14 @@ describe('MemClient', () => {
 
     it('stats file', async () => {
       vi.useFakeTimers();
-      vi.setSystemTime(1000000000001);
+      vi.setSystemTime(1_000_000_000_001);
       const fsClient = new MemClient();
       await fsClient.writeFile(fooTxt, 'xxx');
       const stat = await fsClient.stat(fooTxt);
 
       expect(stat).toEqual({
-        ctimeMs: 1000000000001,
-        mtimeMs: 1000000000001,
+        ctimeMs: 1_000_000_000_001,
+        mtimeMs: 1_000_000_000_001,
         dev: 1,
         gid: 1,
         ino: 0,

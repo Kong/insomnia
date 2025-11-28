@@ -208,7 +208,7 @@ describe('getAuthObjectOrNull', () => {
     expect(expected).toBeNull();
   });
   it('returns null if authentication is undefined', async () => {
-    const expected = await getAuthObjectOrNull(undefined);
+    const expected = await getAuthObjectOrNull();
     expect(expected).toBeNull();
   });
   it('returns null if authentication is empty object', async () => {

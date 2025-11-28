@@ -264,7 +264,7 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('insecureReadFileWithEncoding', async (_, options: { path: string; encoding: string }) => {
     try {
-      const contentBuffer = await insecureReadFileWithEncoding(options.path, undefined);
+      const contentBuffer = await insecureReadFileWithEncoding(options.path);
       if (typeof contentBuffer === 'string') {
         return { content: contentBuffer, encoding: 'utf8' };
       }

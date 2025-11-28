@@ -127,7 +127,7 @@ export const NewWorkspaceModal = ({
     }
     setProgressMessage(0);
 
-    return undefined;
+    return;
   }, [createNewWorkspaceFetcher.state, scope, progressMessages.length]);
 
   useEffect(() => {

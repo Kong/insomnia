@@ -169,7 +169,7 @@ const getCertificates = async ({
         ?.write(
           JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      pemCertificates.push(fs.readFileSync(cert, 'utf-8'));
+      pemCertificates.push(fs.readFileSync(cert, 'utf8'));
     }
 
     if (key) {
@@ -178,7 +178,7 @@ const getCertificates = async ({
         ?.write(
           JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      pemCertificateKeys.push(fs.readFileSync(key, 'utf-8'));
+      pemCertificateKeys.push(fs.readFileSync(key, 'utf8'));
     }
 
     if (pfx) {
@@ -187,7 +187,7 @@ const getCertificates = async ({
         ?.write(
           JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      pfxCertificates.push(fs.readFileSync(pfx, 'utf-8'));
+      pfxCertificates.push(fs.readFileSync(pfx, 'utf8'));
     }
   });
 

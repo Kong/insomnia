@@ -26,7 +26,7 @@ export function getOperationType(request: Request) {
     try {
       requestBody = JSON.parse(request.body.text || '');
       documentAST = parse(requestBody?.query || '');
-    } catch (error) {
+    } catch {
       documentAST = null;
     }
     if (documentAST) {
@@ -36,5 +36,5 @@ export function getOperationType(request: Request) {
       }
     }
   }
-  return undefined;
+  return;
 }

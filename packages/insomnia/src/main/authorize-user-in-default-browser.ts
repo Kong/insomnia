@@ -33,7 +33,7 @@ export function onDefaultBrowserOAuthRedirect(param: DefaultBrowserRedirectParam
       pendingOAuthResolver(param);
       clearPendingResolverAndRejector();
     }
-  } catch (e) {}
+  } catch {}
 }
 
 export function cancelAuthorizationInDefaultBrowser(reason = '') {
@@ -42,5 +42,5 @@ export function cancelAuthorizationInDefaultBrowser(reason = '') {
       pendingOAuthRejector(new Error(reason));
       clearPendingResolverAndRejector();
     }
-  } catch (e) {}
+  } catch {}
 }

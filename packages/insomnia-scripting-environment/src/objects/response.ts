@@ -97,7 +97,7 @@ export class Response extends Property {
     const mimeInfo = {
       mimeType: 'application/octet-stream',
       mimeFormat: '', // TODO: it's definition is unknown
-      charset: 'utf-8',
+      charset: 'utf8',
     };
 
     const contentType = this.headers.find(header => header.key === 'Content-Type');
@@ -131,7 +131,7 @@ export class Response extends Property {
         if (dir.startsWith('filename')) {
           const fileName = (fileInfo.extension = dir.slice(dir.indexOf('=') + 1));
           fileInfo.name = fileName.slice(1, fileName.lastIndexOf('.')); // ignore '"' arounds the file name
-          fileInfo.extension = fileName.slice(fileName.lastIndexOf('.') + 1, fileName.length - 1);
+          fileInfo.extension = fileName.slice(fileName.lastIndexOf('.') + 1, -1);
         }
       });
     }
@@ -198,11 +198,11 @@ export class Response extends Property {
         const resp: Response = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined | string = undefined;
+        let respBody: object | undefined | string;
 
         try {
           respBody = resp.body ? resp.json() : undefined;
-        } catch (e) {
+        } catch {
           respBody = resp.body;
         }
 
@@ -239,10 +239,10 @@ export class Response extends Property {
         const resp = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined | string = undefined;
+        let respBody: object | undefined | string;
         try {
           respBody = resp.body ? resp.json() : undefined;
-        } catch (e) {
+        } catch {
           respBody = resp.body;
         }
 
@@ -290,10 +290,10 @@ export class Response extends Property {
         const resp: Response = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined = undefined;
+        let respBody: object | undefined;
         try {
           respBody = resp.body ? resp.json() : {};
-        } catch (e) {
+        } catch {
           respBody = {};
         }
 
@@ -308,10 +308,10 @@ export class Response extends Property {
         const resp: Response = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined = undefined;
+        let respBody: object | undefined;
         try {
           respBody = resp.body ? resp.json() : {};
-        } catch (e) {
+        } catch {
           respBody = {};
         }
 

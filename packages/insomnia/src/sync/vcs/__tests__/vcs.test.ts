@@ -25,7 +25,7 @@ async function vcs(branch) {
 
 describe('VCS', () => {
   beforeEach(async () => {
-    let ts = 1000000000000;
+    let ts = 1_000_000_000_000;
     Date.now = vi.fn(() => ts++);
   });
 
@@ -532,7 +532,7 @@ describe('VCS', () => {
       try {
         // @ts-expect-error intentionally invalid
         await v.removeBranch();
-      } catch (err) {
+      } catch {
         didError = true;
       }
 
@@ -545,7 +545,7 @@ describe('VCS', () => {
 
       try {
         await v.removeBranch('master');
-      } catch (err) {
+      } catch {
         didError = true;
       }
 

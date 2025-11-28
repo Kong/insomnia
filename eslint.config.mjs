@@ -29,47 +29,23 @@ export default defineConfig([
       'unicorn/prefer-dom-node-text-content': 'off', // we use this in an e2e test
       'unicorn/prefer-response-static-json': 'off', // unsafe in our templating worker
 
-      'unicorn/text-encoding-identifier-case': 'off', // TODO: delete me
-      'unicorn/prefer-add-event-listener': 'off', // TODO: delete me
+      'unicorn/no-array-for-each': 'off', // TODO: delete me
+      'unicorn/no-array-reverse': 'off', // TODO: delete me
+      'unicorn/no-array-sort': 'off', // TODO: delete me
+      'unicorn/no-negated-condition': 'off', // TODO: delete me
       'unicorn/no-object-as-default-parameter': 'off', // TODO: delete me
+      'unicorn/no-this-assignment': 'off', // TODO: delete me
+      'unicorn/no-zero-fractions': 'off', // TODO: delete me
+      'unicorn/prefer-add-event-listener': 'off', // TODO: delete me
       'unicorn/prefer-array-some': 'off', // TODO: delete me
+      'unicorn/prefer-at': 'off', // TODO: delete me -
       'unicorn/prefer-global-this': 'off', // TODO: delete me
       'unicorn/prefer-logical-operator-over-ternary': 'off', // TODO: delete me
-      'unicorn/prefer-string-replace-all': 'off', // TODO: delete me
       'unicorn/prefer-regexp-test': 'off', // TODO: delete me
-      'unicorn/no-array-sort': 'off', // TODO: delete me
-      'unicorn/prefer-single-call': 'off', // TODO: delete me
-      'unicorn/prefer-ternary': 'off', // TODO: delete me
-      'unicorn/no-array-for-each': 'off', // TODO: delete me
-      'unicorn/import-style': 'off', // TODO: delete me
-      'unicorn/prefer-number-properties': 'off', // TODO: delete me
-      'unicorn/no-negated-condition': 'off', // TODO: delete me
-      'unicorn/prefer-optional-catch-binding': 'off', // TODO: delete me
-      'unicorn/prefer-at': 'off', // TODO: delete me
-      'unicorn/prefer-string-raw': 'off', // TODO: delete me
-      'unicorn/prefer-code-point': 'off', // TODO: delete me
-      'unicorn/no-new-array': 'off', // TODO: delete me
-      'unicorn/prefer-native-coercion-functions': 'off', // TODO: delete me
-      'unicorn/prefer-switch': 'off', // TODO: delete me
-      'unicorn/no-lonely-if': 'off', // TODO: delete me
-      'unicorn/no-array-reverse': 'off', // TODO: delete me
-      'unicorn/no-useless-undefined': 'off', // TODO: delete me
-      'unicorn/prefer-structured-clone': 'off', // TODO: delete me
-      'unicorn/escape-case': 'off', // TODO: delete me
-      'unicorn/no-useless-promise-resolve-reject': 'off', // TODO: delete me
       'unicorn/prefer-set-has': 'off', // TODO: delete me
-      'unicorn/prefer-negative-index': 'off', // TODO: delete me
-      'unicorn/no-anonymous-default-export': 'off', // TODO: delete me
-      'unicorn/prefer-default-parameters': 'off', // TODO: delete me
-      'unicorn/no-instanceof-builtins': 'off', // TODO: delete me
-      'unicorn/no-zero-fractions': 'off', // TODO: delete me
-      'unicorn/no-useless-switch-case': 'off', // TODO: delete me
-      'unicorn/prefer-type-error': 'off', // TODO: delete me
-      'unicorn/consistent-existence-index-check': 'off', // TODO: delete me
-      'unicorn/no-this-assignment': 'off', // TODO: delete me
-      'unicorn/numeric-separators-style': 'off', // TODO: delete me
-      'unicorn/prefer-array-find': 'off', // TODO: delete me
-      'unicorn/prefer-dom-node-dataset': 'off', // TODO: delete me
+      'unicorn/prefer-string-raw': 'off', // TODO: delete me
+      'unicorn/prefer-string-replace-all': 'off', // TODO: delete me
+      'unicorn/prefer-switch': 'off', // TODO: delete me
     },
   },
   {

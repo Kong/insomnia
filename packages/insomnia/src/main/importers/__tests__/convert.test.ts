@@ -38,7 +38,7 @@ describe('test dotInKeyNameInvariant', () => {
     },
   ].forEach(testCase => {
     it(`check: ${testCase.input}`, () => {
-      let e: Error | undefined = undefined;
+      let e: Error | undefined;
 
       try {
         dotInKeyNameInvariant(testCase.input);

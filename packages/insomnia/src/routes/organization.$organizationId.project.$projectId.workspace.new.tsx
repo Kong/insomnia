@@ -378,7 +378,7 @@ async function createMockServer(
         ),
         status: 'success',
       },
-      { timeout: 10000 },
+      { timeout: 10_000 },
     );
 
     return undefined;
