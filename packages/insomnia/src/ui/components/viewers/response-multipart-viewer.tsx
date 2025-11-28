@@ -1,4 +1,3 @@
-import path from 'node:path';
 import { PassThrough } from 'node:stream';
 
 import { format } from 'date-fns';
@@ -95,7 +94,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
     const options: SaveDialogOptions = {
       title: 'Save as File',
       buttonLabel: 'Save',
-      defaultPath: path.join(dir, filename),
+      defaultPath: window.path.join(dir, filename),
       filters: [
         // @ts-expect-error https://github.com/electron/electron/pull/29322
         {
@@ -110,7 +109,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
     }
 
     // Remember last exported path
-    window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
+    window.localStorage.setItem('insomnia.lastExportPath', window.path.dirname(filename));
 
     try {
       await window.main.writeFile({

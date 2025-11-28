@@ -7,6 +7,7 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
 
+import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 
@@ -75,6 +76,7 @@ app.on('ready', async () => {
   registerElectronHandlers();
   // @TODO - Maybe move the register stuff in the registerMainHandlers function
   registerMainHandlers();
+  registerPathHandlers();
   registergRPCHandlers();
   registerGitServiceAPI();
   registerLLMConfigServiceAPI();

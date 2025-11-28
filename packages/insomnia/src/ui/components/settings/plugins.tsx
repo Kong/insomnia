@@ -1,5 +1,3 @@
-import nodePath from 'node:path';
-
 import React, { type FC, useEffect, useState } from 'react';
 import {
   Button,
@@ -403,10 +401,9 @@ export const Plugins: FC = () => {
               )}
             >
               {plugin => {
-                const link = nodePath.resolve(
-                  plugin.name.startsWith('insomnia-plugin-') ? PLUGIN_HUB_BASE : NPM_PACKAGE_BASE,
-                  plugin.name,
-                );
+                const link = plugin.name.startsWith('insomnia-plugin-')
+                  ? PLUGIN_HUB_BASE
+                  : NPM_PACKAGE_BASE + '/' + plugin.name;
 
                 return (
                   <GridListItem
@@ -490,7 +487,7 @@ export const Plugins: FC = () => {
               className="text-(--color-surprise) underline"
               onPress={() =>
                 window.shell.showItemInFolder(
-                  nodePath.resolve(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'),
+                  window.path.resolve(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'),
                 )
               }
             >

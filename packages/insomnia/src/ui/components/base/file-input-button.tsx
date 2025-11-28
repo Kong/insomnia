@@ -1,5 +1,3 @@
-import nodePath from 'node:path';
-
 import React, { type HTMLAttributes, useCallback } from 'react';
 
 import { selectFileOrFolder } from '../../../common/select-file-or-folder';
@@ -18,7 +16,7 @@ interface Props extends Omit<HTMLAttributes<HTMLButtonElement>, 'onChange'> {
 export const FileInputButton = (props: Props) => {
   const { showFileName, showFileIcon, path, name, onChange, itemtypes, extensions, disabled, ...extraProps } = props;
   // NOTE: Basename fails if path is not a string, so let's make sure it is
-  const fileName = typeof path === 'string' ? nodePath.basename(path) : null;
+  const fileName = typeof path === 'string' ? window.path.basename(path) : null;
   const _handleChooseFile = useCallback(async () => {
     const { canceled, filePath } = await selectFileOrFolder({
       itemTypes: itemtypes,
