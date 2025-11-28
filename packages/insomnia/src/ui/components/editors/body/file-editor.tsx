@@ -1,8 +1,5 @@
-import fs from 'node:fs';
-
 import React, { type FC, useCallback } from 'react';
 
-import * as misc from '../../../../common/misc';
 import { FileInputButton } from '../../base/file-input-button';
 import { PromptButton } from '../../base/prompt-button';
 
@@ -26,14 +23,6 @@ export const FileEditor: FC<Props> = ({ onChange, path }) => {
   // Replace home path with ~/ to make the path shorter
   const homeDirectory = window.app.getPath('home');
   const pathDescription = path.replace(homeDirectory, '~');
-  let sizeDescription = '';
-
-  try {
-    const bytes = fs.statSync(path).size;
-    sizeDescription = misc.describeByteSize(bytes);
-  } catch {
-    sizeDescription = '';
-  }
 
   return (
     <div className="text-center">
@@ -43,8 +32,7 @@ export const FileEditor: FC<Props> = ({ onChange, path }) => {
           <code className="txt-sm block">
             <span className="force-wrap selectable" title={path}>
               {pathDescription}
-            </span>{' '}
-            <span className="no-wrap">({sizeDescription})</span>
+            </span>
           </code>
         ) : (
           <code className="super-faint txt-sm block">No file selected</code>

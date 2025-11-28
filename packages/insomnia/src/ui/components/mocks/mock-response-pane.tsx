@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import type * as Har from 'har-format';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
@@ -334,17 +332,19 @@ const PreviewModeDropdown = ({
             icon="save"
             label="Export raw response"
             onClick={async () => {
-              const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
               const { canceled, filePath } = await window.dialog.showSaveDialog({
                 title: 'Save Full Response',
                 buttonLabel: 'Save',
                 defaultPath: `response-${Date.now()}.txt`,
               });
 
-              if (canceled || !filePath || !bodyBuffer) {
+              if (canceled || !filePath || !activeResponse.bodyBuffer) {
                 return;
               }
-              fs.promises.writeFile(filePath, bodyBuffer.toString('utf8'));
+              await window.main.writeFile({
+                path: filePath,
+                content: activeResponse.bodyBuffer?.toString('utf8') || '',
+              });
             }}
           />
         </DropdownItem>
@@ -364,7 +364,10 @@ const PreviewModeDropdown = ({
                 if (canceled || !filePath || !bodyBuffer) {
                   return;
                 }
-                fs.promises.writeFile(filePath, jsonPrettify(bodyBuffer.toString('utf8')));
+                await window.main.writeFile({
+                  path: filePath,
+                  content: jsonPrettify(activeResponse.bodyBuffer?.toString('utf8')) || '',
+                });
               }}
             />
           )}
@@ -389,7 +392,10 @@ const PreviewModeDropdown = ({
                 .map(v => v.value)
                 .join('');
 
-              fs.promises.writeFile(filePath, headers);
+              await window.main.writeFile({
+                path: filePath,
+                content: headers,
+              });
             }}
           />
         </DropdownItem>
@@ -411,7 +417,10 @@ const PreviewModeDropdown = ({
               const data = await exportHarCurrentRequest(activeRequest, activeResponse);
               const har = JSON.stringify(data, null, '\t');
 
-              fs.promises.writeFile(filePath, har);
+              await window.main.writeFile({
+                path: filePath,
+                content: har,
+              });
             }}
           />
         </DropdownItem>

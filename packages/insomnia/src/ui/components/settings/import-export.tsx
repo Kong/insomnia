@@ -1,4 +1,3 @@
-import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { format } from 'date-fns';
@@ -132,7 +131,10 @@ const showSaveExportedFolderDialog = async () => {
 async function writeExportedFileToFileSystem(filename: string, data: string) {
   // Remember last exported path
   window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
-  await writeFile(filename, data);
+  await window.main.writeFile({
+    path: filename,
+    content: data,
+  });
 }
 
 export const exportProjectToFile = (activeProjectName: string, workspacesForActiveProject: Workspace[]) => {
@@ -197,7 +199,6 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
 
             const projectName = activeProjectName.replace(/ /g, '-');
             const insomniaProjectExportFolder = path.join(dirPath, `insomnia-export.${projectName}.${Date.now()}`);
-            await mkdir(insomniaProjectExportFolder);
 
             for (const workspace of workspacesForActiveProject) {
               const workspaceName = workspace.name.replace(/ /g, '-');
@@ -405,7 +406,6 @@ export async function exportAllData({ dirPath }: { dirPath: string }): Promise<v
   }
 
   const insomniaExportFolder = path.join(dirPath, `insomnia-export.${Date.now()}`);
-  await mkdir(insomniaExportFolder);
 
   for (const workspace of workspacesWithoutMcp) {
     await exportWorkspaceData({

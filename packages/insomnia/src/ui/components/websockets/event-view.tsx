@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import React, { type FC, useCallback, useRef } from 'react';
 import { useParams } from 'react-router';
 
@@ -11,7 +9,6 @@ import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent, WebSocketMessageEvent } from '../../../main/network/websocket';
 import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import { showError } from '../modals';
 import { WebSocketPreviewModeDropdown } from './websocket-preview-dropdown';
 
 interface Props<T> {
@@ -42,20 +39,10 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
     if (canceled || !outputPath) {
       return;
     }
-
-    const to = fs.createWriteStream(outputPath);
-
-    to.on('error', err => {
-      showError({
-        title: 'Save Failed',
-        message: 'Failed to save response body',
-        error: err,
-      });
+    await window.main.writeFile({
+      path: outputPath,
+      content: raw,
     });
-
-    to.write(raw);
-
-    to.end();
   }, [raw]);
 
   const handleCopyResponseToClipboard = useCallback(() => {

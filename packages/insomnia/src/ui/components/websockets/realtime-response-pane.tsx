@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import classnames from 'classnames';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
@@ -206,18 +204,10 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      try {
-        await fs.promises.stat(response.timelinePath);
-      } catch (err) {
-        if (err.code === 'ENOENT') {
-          return setTimeline([]);
-        }
-      }
-
-      // allow to read the file as it is chosen by user
       const content = await window.main.secureReadFile({
         path: response.timelinePath,
       });
+
       const timelineParsed = deserializeNDJSON(content);
       if (isMounted) {
         setTimeline(timelineParsed);

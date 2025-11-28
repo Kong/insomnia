@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import { extension as mimeExtension } from 'mime-types';
 import React, { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
@@ -67,55 +65,25 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
 
   const { isExecuting, steps } = useExecutionState({ requestId: activeRequest._id });
 
-  const handleDownloadResponseBody = useCallback(
-    async (prettify: boolean) => {
-      if (!activeResponse || !activeRequest) {
-        console.warn('Nothing to download');
-        return;
-      }
+  const handleDownloadResponseBody = useCallback(async () => {
+    if (!activeResponse || !activeRequest) {
+      console.warn('Nothing to download');
+      return;
+    }
 
-      const { contentType } = activeResponse;
-      const extension = mimeExtension(contentType) || 'unknown';
-      const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
-        title: 'Save Response Body',
-        buttonLabel: 'Save',
-        defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
-      });
+    const { contentType } = activeResponse;
+    const extension = mimeExtension(contentType) || 'unknown';
+    const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
+      title: 'Save Response Body',
+      buttonLabel: 'Save',
+      defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
+    });
 
-      if (canceled) {
-        return;
-      }
-
-      const readStream = models.response.getBodyStream(activeResponse);
-      const dataBuffers: any[] = [];
-
-      if (readStream && outputPath && typeof readStream !== 'string') {
-        readStream.on('data', data => {
-          dataBuffers.push(data);
-        });
-        readStream.on('end', () => {
-          const to = fs.createWriteStream(outputPath);
-          const finalBuffer = Buffer.concat(dataBuffers);
-          to.on('error', err => {
-            showError({
-              title: 'Save Failed',
-              message: 'Failed to save response body',
-              error: err,
-            });
-          });
-
-          if (prettify && contentType.includes('json')) {
-            to.write(jsonPrettify(finalBuffer.toString('utf8')));
-          } else {
-            to.write(finalBuffer);
-          }
-
-          to.end();
-        });
-      }
-    },
-    [activeRequest, activeResponse],
-  );
+    if (canceled) {
+      return;
+    }
+    await window.main.writeFile({ path: outputPath, content: activeResponse.bodyBuffer?.toString('utf8') || '' });
+  }, [activeRequest, activeResponse]);
 
   const { passedTestCount, totalTestCount } = useMemo(() => {
     let passedTestCount = 0;

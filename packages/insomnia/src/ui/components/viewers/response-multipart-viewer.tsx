@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import path from 'node:path';
 import { PassThrough } from 'node:stream';
 
@@ -113,9 +112,11 @@ export const ResponseMultipartViewer: FC<Props> = ({
     // Remember last exported path
     window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
 
-    // Save the file
     try {
-      await fs.promises.writeFile(filePath, selectedPart.value);
+      await window.main.writeFile({
+        path: filePath,
+        content: selectedPart.value.toString('utf8'),
+      });
     } catch (err) {
       console.warn('Failed to save multipart to file', err);
     }

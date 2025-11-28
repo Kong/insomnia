@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import { CallToolResultSchema, ElicitRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { type RJSFSchema, type UiSchema } from '@rjsf/utils';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -23,7 +21,6 @@ import {
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { CodeEditor, type CodeEditorHandle } from '../../components/.client/codemirror/code-editor';
-import { showError } from '../../components/modals';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
@@ -63,20 +60,10 @@ export const MessageEventView = ({ event }: Props) => {
     if (canceled || !outputPath) {
       return;
     }
-
-    const to = fs.createWriteStream(outputPath);
-
-    to.on('error', err => {
-      showError({
-        title: 'Save Failed',
-        message: 'Failed to save response body',
-        error: err,
-      });
+    await window.main.writeFile({
+      path: outputPath,
+      content: raw,
     });
-
-    to.write(raw);
-
-    to.end();
   }, [raw]);
 
   const handleCopyResponseToClipboard = useCallback(() => {
