@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-
 import type { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import type { GraphQLHintOptions } from 'codemirror-graphql/hint';
 import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
@@ -432,7 +430,7 @@ export const GraphQLEditor: FC<Props> = ({
     }
     try {
       const filePath = filePaths[0]; // showOpenDialog is single select
-      const file = readFileSync(filePath);
+      const file = await window.main.insecureReadFile({ path: filePath });
       const content = JSON.parse(file.toString());
       if (!content.data) {
         throw new Error('JSON file should have a data field with the introspection results');
