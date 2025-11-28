@@ -3,6 +3,7 @@ import React, { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
 import { useRootLoaderData } from '~/root';
+import { jsonPrettify } from '~/utils/prettify/json';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -12,14 +13,12 @@ import {
   type RequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { MockResponseExtractor } from '../editors/mock-response-extractor';
 import { ErrorBoundary } from '../error-boundary';
-import { showError } from '../modals';
 import { ResponseTimer } from '../response-timer';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
@@ -65,25 +64,35 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
 
   const { isExecuting, steps } = useExecutionState({ requestId: activeRequest._id });
 
-  const handleDownloadResponseBody = useCallback(async () => {
-    if (!activeResponse || !activeRequest) {
-      console.warn('Nothing to download');
-      return;
-    }
+  const handleDownloadResponseBody = useCallback(
+    async (prettify: boolean) => {
+      if (!activeResponse || !activeRequest) {
+        console.warn('Nothing to download');
+        return;
+      }
 
-    const { contentType } = activeResponse;
-    const extension = mimeExtension(contentType) || 'unknown';
-    const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
-      title: 'Save Response Body',
-      buttonLabel: 'Save',
-      defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
-    });
+      const { contentType } = activeResponse;
+      const extension = mimeExtension(contentType) || 'unknown';
+      const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
+        title: 'Save Response Body',
+        buttonLabel: 'Save',
+        defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
+      });
 
-    if (canceled) {
-      return;
-    }
-    await window.main.writeFile({ path: outputPath, content: activeResponse.bodyBuffer?.toString('utf8') || '' });
-  }, [activeRequest, activeResponse]);
+      if (canceled) {
+        return;
+      }
+      if (prettify && contentType.includes('json')) {
+        await window.main.writeFile({
+          path: outputPath,
+          content: jsonPrettify(activeResponse.bodyBuffer?.toString('utf8')) || '',
+        });
+        return;
+      }
+      await window.main.writeFile({ path: outputPath, content: activeResponse.bodyBuffer?.toString('utf8') || '' });
+    },
+    [activeRequest, activeResponse],
+  );
 
   const { passedTestCount, totalTestCount } = useMemo(() => {
     let passedTestCount = 0;

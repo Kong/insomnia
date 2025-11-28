@@ -57,7 +57,7 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
 
       return Boolean(fuzzyMatch(resultFilter, result.testCase, { splitSpace: false, loose: true })?.indexes);
     })
-    .map((result, i: number) => {
+    .map(result => {
       const statusText = {
         passed: 'PASS',
         failed: 'FAIL',
