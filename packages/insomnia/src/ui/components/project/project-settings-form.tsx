@@ -89,14 +89,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   onSuccessUpdate,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
-  const gitRepoDataFetcher = useGitProjectRepoFetcher();
-  useEffect(() => {
-    if (gitRepository?.uri && gitRepository?._id && gitRepoDataFetcher.state === 'idle' && !gitRepoDataFetcher.data) {
-      gitRepoDataFetcher.load({
-        projectId: project?._id || '',
-      });
-    }
-  }, [gitRepoDataFetcher, gitRepository?.uri, gitRepository?._id, organizationId, project?._id]);
+
   const permissionsFetcher = useOrganizationPermissionsLoaderFetcher({ key: `permissions:${organizationId}` });
   const permissionsFetcherLoad = permissionsFetcher.load;
   useEffect(() => {
@@ -279,7 +272,7 @@ export const ProjectSettingsForm: FC<Props> = ({
           {storageType === 'git' && (
             <>
               <Divider />
-              <GitConnectionInfo gitRepository={gitRepository} branch={gitRepoDataFetcher.data?.branch || ''} />
+              <GitConnectionInfo gitRepository={gitRepository} branch={''} />
             </>
           )}
           <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5 pb-10">
