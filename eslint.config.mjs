@@ -1,3 +1,5 @@
+import { builtinModules } from 'node:module';
+
 import eslint from '@eslint/js';
 import { defineConfig } from 'eslint/config';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
@@ -8,10 +10,13 @@ import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+
 export default defineConfig([
+  // https://typescript-eslint.io/getting-started#additional-configs
   eslint.configs.recommended,
   tseslint.configs.strict,
   tseslint.configs.stylistic,
+  // Unicorn section
   eslintPluginUnicorn.configs.unopinionated,
   {
     rules: {
@@ -48,6 +53,7 @@ export default defineConfig([
       'unicorn/prefer-switch': 'off', // TODO: delete me
     },
   },
+  // Playwright section
   {
     ...playwright.configs['flat/recommended'],
     files: ['packages/insomnia-smoke-test/tests/**/*.ts'],
@@ -62,19 +68,22 @@ export default defineConfig([
       'playwright/no-wait-for-timeout': 'error',
     },
   },
-  // Warn about node built-in modules in UI code
+  // nodeIntegration: false section
   {
-    files: ['packages/insomnia/src/ui/**/*.tsx'],
+    files: [
+      'packages/insomnia/src/ui/**/*.{ts,tsx}',
+      // TODO: 'packages/insomnia/src/common/**/*.{ts,tsx}',
+    ],
     rules: {
       'no-restricted-imports': [
-        'warn',
+        'error',
         {
-          paths: ['fs', 'path', 'events', 'http', 'https', 'os', 'crypto'],
-          patterns: ['node:*'],
+          paths: builtinModules.map(m => `node:${m}`),
         },
       ],
     },
   },
+  // React hooks section
   {
     files: ['packages/insomnia/src/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooksPlugin },
@@ -87,6 +96,7 @@ export default defineConfig([
       'react-hooks/incompatible-library': 'off', //TODO(use react-aria virtualizer): delete me
     },
   },
+  // React section
   {
     files: ['packages/insomnia/src/**/*.{ts,tsx}'],
     ...reactPlugin.configs.flat.recommended,
@@ -123,6 +133,7 @@ export default defineConfig([
       'react/no-array-index-key': 'error',
     },
   },
+  // simple-import-sort section
   {
     plugins: {
       'simple-import-sort': simpleImportSortPlugin,
@@ -131,6 +142,7 @@ export default defineConfig([
       'simple-import-sort/imports': 'error',
     },
   },
+  // General ESLint rules
   {
     rules: {
       'no-restricted-imports': [
@@ -160,6 +172,7 @@ export default defineConfig([
       'no-useless-escape': 'off', // TODO: delete me
     },
   },
+  // TypeScript ESLint rules
   {
     rules: {
       '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],
