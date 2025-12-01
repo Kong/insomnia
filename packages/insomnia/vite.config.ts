@@ -70,7 +70,7 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
-
+let totalWarnings = 0;
 function DetectNodeBuiltinImports() {
   const builtins = new Set(builtinModules);
 
@@ -85,7 +85,8 @@ function DetectNodeBuiltinImports() {
       // If the import target is a Node builtin module
       if (builtins.has(source) || builtins.has(source.replace('virtual:external:node:', ''))) {
         const file = path.relative(process.cwd(), importer);
-        console.warn(`⚠️  File "${file}" imports Node builtin module "${source}"`);
+        totalWarnings += 1;
+        console.warn(`⚠️  ${totalWarnings} File "${file}" imports Node builtin module "${source}"`);
       }
 
       return null; // Let Vite handle the actual resolution
