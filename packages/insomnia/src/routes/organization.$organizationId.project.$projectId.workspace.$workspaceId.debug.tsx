@@ -134,6 +134,8 @@ import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/utils/gr
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
+import { TestAiResponsePane } from '~/ui/components/panes/test-ai-response-pane';
+import { runEval } from '~/ui/components/eval/eval';
 
 export interface GrpcMessage {
   id: string;
@@ -813,6 +815,15 @@ const Debug = () => {
     };
   }, [settings.forceVerticalLayout, direction]);
 
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const handleSend = async () => {
+    setLoading(true);
+    const reports = await runEval();
+    setReports(reports);
+    setLoading(false);
+  };
+
   return (
     <PanelGroup
       ref={sidebarPanelRef}
@@ -1244,7 +1255,7 @@ const Debug = () => {
                           //     setPasteCurlModalOpen(true);
                           //   }}
                           // />
-                          <EvalRequestPane />
+                          <EvalRequestPane onSend={handleSend} />
                         )}
                         {Boolean(!requestId && !requestGroupId) && <PlaceholderRequestPane />}
                         {isRequestSettingsModalOpen && activeRequest && (
@@ -1267,8 +1278,15 @@ const Debug = () => {
                             <GrpcResponsePane grpcState={grpcState} />
                           )}
                           {isRealtimeRequest && <RealtimeResponsePane requestId={activeRequest._id} />}
-                          {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
+                          {/* {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
                             <ResponsePane activeRequestId={activeRequest._id} />
+                          )} */}
+                          {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
+                            <TestAiResponsePane
+                              activeRequestId={activeRequest._id}
+                              reports={reports}
+                              loading={loading}
+                            />
                           )}
                         </ErrorBoundary>
                       </Panel>

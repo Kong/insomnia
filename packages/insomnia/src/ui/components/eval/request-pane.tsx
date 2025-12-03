@@ -4,7 +4,7 @@ import { evalFormData } from '~/ui/components/eval/eval';
 import { Pane, PaneHeader } from '~/ui/components/panes/pane';
 import { RequestUrlBar } from '~/ui/components/request-url-bar';
 
-export const EvalRequestPane = () => {
+export const EvalRequestPane = ({ onSend }: any) => {
   const tabs: TabItem[] = [
     {
       id: 'data-source-config',
@@ -14,24 +14,16 @@ export const EvalRequestPane = () => {
           <CodeEditor
             id="data-source-config-editor"
             defaultValue={evalFormData.data_source_config}
-            onChange={() => {}}
+            onChange={value => {
+              try {
+                const parsedValue = JSON.parse(value);
+                window.testai_TEST_DATA = parsedValue;
+              } catch (e) {
+                console.error('Invalid JSON in Data Source Config:', e);
+              }
+            }}
             onBlur={() => {}}
             placeholder="enter data source config"
-          />
-        </div>
-      ),
-    },
-    {
-      id: 'testing-criteria',
-      title: 'Testing Criteria',
-      content: (
-        <div className="mb-4 h-full overflow-hidden">
-          <CodeEditor
-            id="testing-criteria-editor"
-            defaultValue={evalFormData.testing_criteria}
-            onChange={() => {}}
-            onBlur={() => {}}
-            placeholder="enter testing criteria"
           />
         </div>
       ),
@@ -44,7 +36,14 @@ export const EvalRequestPane = () => {
           <CodeEditor
             id="test-data-editor"
             defaultValue={evalFormData.test_data}
-            onChange={() => {}}
+            onChange={value => {
+              try {
+                const parsedValue = JSON.parse(value);
+                window.testai_TEST_DATA = parsedValue;
+              } catch (e) {
+                console.error('Invalid JSON in Test Data:', e);
+              }
+            }}
             onBlur={() => {}}
             placeholder="enter test data"
           />
@@ -59,9 +58,38 @@ export const EvalRequestPane = () => {
           <CodeEditor
             id="prompt-editor"
             defaultValue={evalFormData.prompt}
-            onChange={() => {}}
+            onChange={value => {
+              try {
+                const parsedValue = JSON.parse(value);
+                window.testai_PROMPT = parsedValue;
+              } catch (e) {
+                console.error('Invalid JSON in Prompt:', e);
+              }
+            }}
             onBlur={() => {}}
             placeholder="enter prompt"
+          />
+        </div>
+      ),
+    },
+    {
+      id: 'testing-criteria',
+      title: 'Testing Criteria',
+      content: (
+        <div className="mb-4 h-full overflow-hidden">
+          <CodeEditor
+            id="testing-criteria-editor"
+            defaultValue={evalFormData.testing_criteria}
+            onChange={value => {
+              try {
+                const parsedValue = JSON.parse(value);
+                window.testai_TESTING_CRITERIA = parsedValue;
+              } catch (e) {
+                console.error('Invalid JSON in Testing Criteria:', e);
+              }
+            }}
+            onBlur={() => {}}
+            placeholder="enter testing criteria"
           />
         </div>
       ),
@@ -76,6 +104,7 @@ export const EvalRequestPane = () => {
           nunjucksPowerUserMode={true}
           onPaste={() => {}}
           handleAutocompleteUrls={() => Promise.resolve([])}
+          onSend={onSend}
         />
       </PaneHeader>
       <Tabs items={tabs} />

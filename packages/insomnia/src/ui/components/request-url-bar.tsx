@@ -51,6 +51,7 @@ interface Props {
   nunjucksPowerUserMode: boolean;
   uniquenessKey: string;
   onPaste: (text: string) => void;
+  onSend?: () => void;
 }
 
 export interface RequestUrlBarHandle {
@@ -59,7 +60,7 @@ export interface RequestUrlBarHandle {
 }
 
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
-  ({ handleAutocompleteUrls, uniquenessKey, onPaste }, ref) => {
+  ({ handleAutocompleteUrls, uniquenessKey, onPaste, onSend }, ref) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const { userSession } = useRootLoaderData()!;
     const { vaultKey } = userSession;
@@ -355,7 +356,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             ) : (
               <>
                 <button
-                  onClick={runEval}
+                  onClick={onSend}
                   className={`bg-(--color-surprise) px-(--padding-md) text-(--color-font-surprise) ${borderRadius}`}
                   type="button"
                 >
