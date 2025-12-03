@@ -69,6 +69,7 @@ import { useRootLoaderData } from '~/root';
 import {
   type Child,
   useWorkspaceLoaderData,
+  useWorkspaceLoaderFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useDebugReorderActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
@@ -273,6 +274,8 @@ const Debug = () => {
   } = useWorkspaceLoaderData()!;
 
   const requestData = useRequestLoaderData();
+  const workspaceFetcher = useWorkspaceLoaderFetcher();
+
   const { activeRequest } = requestData || {};
 
   const deleteRequestFetcher = useRequestDeleteActionFetcher();
@@ -333,6 +336,7 @@ const Debug = () => {
   const reloadRequests = (requestIds: string[]) => {
     setGrpcStates(state => state.map(s => (requestIds.includes(s.requestId) ? { ...s, methods: [] } : s)));
   };
+
   useEffect(
     () =>
       window.main.on('grpc.start', (_, id) => {
@@ -387,6 +391,19 @@ const Debug = () => {
       }),
     [],
   );
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('reload-from-mcp', () => {
+      workspaceFetcher.load({
+        organizationId,
+        projectId,
+        workspaceId,
+      });
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [organizationId, projectId, workspaceFetcher, workspaceId]);
 
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
 

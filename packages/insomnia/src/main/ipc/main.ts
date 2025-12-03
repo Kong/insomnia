@@ -247,6 +247,9 @@ export function registerMainHandlers() {
         name: req.url,
         parentId: workspaceId || 'wrk_scratchpad',
       });
+      for (const window of BrowserWindow.getAllWindows()) {
+        window.webContents.send('reload-from-mcp');
+      }
     }
   });
 
