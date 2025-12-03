@@ -235,11 +235,17 @@ export function registerMainHandlers() {
     console.log('[api-process] converted to resources:', resources);
     if (resources && !('convertErrorMessage' in resources) && resources.length > 0) {
       const req = resources[0] as unknown as Partial<Request>;
+      let url = '';
+      for (const window of BrowserWindow.getAllWindows()) {
+        url = window.webContents.getURL();
+      }
+      const workspaceId = url.match(/wrk_[a-zA-Z0-9]+/)?.[0];
+      console.log('[api-process] got workspace:', workspaceId);
       await models.request.create({
         ...req,
         _id: undefined,
         name: req.url,
-        parentId: 'wrk_scratchpad',
+        parentId: workspaceId || 'wrk_scratchpad',
       });
     }
   });

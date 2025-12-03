@@ -10,7 +10,6 @@ app.use(express.text()); // if you want raw text body
 
 app.post('/upload', (req, res) => {
   const content = req.body; // the raw POST body
-  const filename = req.query.filename || 'output.txt'; // ?filename=myfile.txt
   process.parentPort.postMessage({ body: content });
   res.send('Received: ' + content);
 });
