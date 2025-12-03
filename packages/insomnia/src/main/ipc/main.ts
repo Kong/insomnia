@@ -238,7 +238,7 @@ export function registerMainHandlers() {
       await models.request.create({
         ...req,
         _id: undefined,
-        name: 'Cool stuff',
+        name: req.url,
         parentId: 'wrk_scratchpad',
       });
     }
