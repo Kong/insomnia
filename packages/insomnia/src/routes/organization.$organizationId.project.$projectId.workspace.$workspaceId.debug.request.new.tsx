@@ -49,6 +49,16 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       })
     )._id;
   }
+  if (requestType === ('Eval' as CreateRequestType)) {
+    activeRequestId = (
+      await models.request.create({
+        parentId: parentId || workspaceId,
+        method: METHOD_GET,
+        name: 'New Eval',
+        headers: defaultHeaders,
+      })
+    )._id;
+  }
   if (requestType === 'gRPC') {
     activeRequestId = (
       await models.grpcRequest.create({

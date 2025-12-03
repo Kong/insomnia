@@ -91,6 +91,7 @@ import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-
 import { EditableInput } from '~/ui/components/editable-input';
 import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
+import { EvalRequestPane } from '~/ui/components/eval/request-pane';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { McpPane } from '~/ui/components/mcp/mcp-pane';
@@ -680,6 +681,16 @@ const Debug = () => {
             }),
         },
         {
+          id: 'Eval',
+          name: 'Eval AI Response',
+          icon: 'plus-circle',
+          action: () =>
+            createRequest({
+              requestType: 'Eval' as CreateRequestType,
+              parentId: workspaceId,
+            }),
+        },
+        {
           id: 'HTTP',
           name: 'HTTP Request',
           icon: 'plus-circle',
@@ -1225,14 +1236,15 @@ const Debug = () => {
                         {isWebSocketRequestId(requestId) && <WebSocketRequestPane environment={activeEnvironment} />}
                         {isSocketIORequestId(requestId) && <SocketIORequestPane environment={activeEnvironment} />}
                         {isRequestId(requestId) && (
-                          <RequestPane
-                            environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                            settings={settings}
-                            onPaste={text => {
-                              setPastedCurl(text);
-                              setPasteCurlModalOpen(true);
-                            }}
-                          />
+                          // <RequestPane
+                          //   environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                          //   settings={settings}
+                          //   onPaste={text => {
+                          //     setPastedCurl(text);
+                          //     setPasteCurlModalOpen(true);
+                          //   }}
+                          // />
+                          <EvalRequestPane />
                         )}
                         {Boolean(!requestId && !requestGroupId) && <PlaceholderRequestPane />}
                         {isRequestSettingsModalOpen && activeRequest && (
@@ -1478,7 +1490,7 @@ const CollectionGridListItem = ({
               }[item.doc.method] || 'bg-(--hl-md) text-(--color-font)'
             }`}
           >
-            {getMethodShortHand(item.doc)}
+            Eval
           </span>
         )}
         {isWebSocketRequest(item.doc) && (

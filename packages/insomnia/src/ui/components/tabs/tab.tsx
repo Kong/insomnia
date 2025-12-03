@@ -103,7 +103,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
           aria-label="Tab Tag"
           className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${REQUEST_METHOD_STYLE_MAP[tab?.method || tab?.tag || '']}`}
         >
-          {tab.tag}
+          Eval
         </span>
       );
     }

@@ -1246,7 +1246,7 @@ const Component = () => {
                                   className={item.loading ? 'animate-spin' : ''}
                                 />
                               </div>
-                              <span>{item.label}</span>
+                              <span>{item.name === 'TEST AI' ? 'AI Evals' : item.label}</span>
                             </div>
                             <span className="flex-1" />
                             {item.presence.length > 0 && (

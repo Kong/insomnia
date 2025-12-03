@@ -13,6 +13,7 @@ import {
   useDebugRequestSendActionFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+import { runEval } from '~/ui/components/eval/eval';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
@@ -302,7 +303,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       },
     });
 
-    const buttonText = isRealtimeRequest ? 'Connect' : downloadPath ? 'Download' : 'Send';
+    const buttonText = 'Run Eval';
     const borderRadius = isRealtimeRequest ? 'rounded-xs' : 'rounded-l-sm';
     const { url, method } = activeRequest;
     const isEventStreamOpen = useReadyState({ requestId: activeRequest._id, protocol: 'curl' });
@@ -310,13 +311,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const isCancellable = currentInterval || currentTimeout || isEventStreamOpen || isGraphQLSubscriptionOpen;
     return (
       <div className="flex w-full items-stretch justify-between self-stretch">
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <MethodDropdown
             ref={methodDropdownRef}
             onChange={method => patchRequest(requestId, { method })}
             method={method}
           />
-        </div>
+        </div> */}
         <div className="flex flex-1 items-center p-1">
           <OneLineEditor
             id="request-url-bar"
@@ -354,13 +355,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             ) : (
               <>
                 <button
-                  onClick={() => sendOrConnect()}
+                  onClick={runEval}
                   className={`bg-(--color-surprise) px-(--padding-md) text-(--color-font-surprise) ${borderRadius}`}
                   type="button"
                 >
                   {buttonText}
                 </button>
-                {isRealtimeRequest ? null : (
+                {/* {isRealtimeRequest ? null : (
                   <Dropdown
                     key="dropdown"
                     className="flex"
@@ -466,7 +467,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                       </DropdownItem>
                     </DropdownSection>
                   </Dropdown>
-                )}
+                )} */}
               </>
             )}
           </div>
