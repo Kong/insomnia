@@ -231,22 +231,29 @@ export function registerMainHandlers() {
   });
   apiProcess.on('message', async msg => {
     console.log('[api-process] received message:', msg);
-    const resources = await convert(msg.body);
-    console.log('[api-process] converted to resources:', resources);
-    if (resources && !('convertErrorMessage' in resources) && resources.length > 0) {
-      const req = resources[0] as unknown as Partial<Request>;
-      let url = '';
-      for (const window of BrowserWindow.getAllWindows()) {
-        url = window.webContents.getURL();
+    if (!msg.curlRequests || !Array.isArray(msg.curlRequests)) {
+      console.warn('[api-process] invalid message format, missing curlRequests array');
+      return;
+    }
+    for (const request of msg.curlRequests) {
+      const resources = await convert(request);
+      console.log('[api-process] converted to resources:', resources);
+      if (resources && !('convertErrorMessage' in resources) && resources.length > 0) {
+        const req = resources[0] as unknown as Partial<Request>;
+        let url = '';
+        for (const window of BrowserWindow.getAllWindows()) {
+          url = window.webContents.getURL();
+        }
+
+        const workspaceId = url.match(/wrk_[a-zA-Z0-9]+/)?.[0];
+        console.log('[api-process] got workspace:', workspaceId);
+        await models.request.create({
+          ...req,
+          _id: undefined,
+          name: req.url,
+          parentId: workspaceId || 'wrk_scratchpad',
+        });
       }
-      const workspaceId = url.match(/wrk_[a-zA-Z0-9]+/)?.[0];
-      console.log('[api-process] got workspace:', workspaceId);
-      await models.request.create({
-        ...req,
-        _id: undefined,
-        name: req.url,
-        parentId: workspaceId || 'wrk_scratchpad',
-      });
       for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send('reload-from-mcp');
       }

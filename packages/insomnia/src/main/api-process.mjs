@@ -5,13 +5,22 @@ import fs from 'node:fs';
 import express from 'express';
 
 const app = express();
-app.use(express.text()); // if you want raw text body
-// app.use(express.json());     // use this instead if sending JSON
+app.use(express.json()); // use this instead if sending JSON
+app.use(express.text({ type: 'text/plain' }));
 
 app.post('/upload', (req, res) => {
-  const content = req.body; // the raw POST body
-  process.parentPort.postMessage({ body: content });
+  const content = req.body;
+  if (!content) {
+    res.status(400).send('No content received');
+    return;
+  }
+  process.parentPort.postMessage({ curlRequests: [content] });
   res.send('Received: ' + content);
 });
 
+app.post('/upload-array', (req, res) => {
+  const content = req.body;
+  res.send('Received: ' + JSON.stringify(content));
+  process.parentPort.postMessage({ curlRequests: content.list });
+});
 app.listen(8080, () => console.log('Server running on http://localhost:8080'));
