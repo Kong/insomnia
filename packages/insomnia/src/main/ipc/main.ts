@@ -239,7 +239,7 @@ export function registerMainHandlers() {
         ...req,
         _id: undefined,
         name: 'Cool stuff',
-        parentId: 'wrk_45aab38748f743bfa29ea7d491cbd8c8',
+        parentId: 'wrk_scratchpad',
       });
     }
   });
