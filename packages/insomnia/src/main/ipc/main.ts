@@ -17,9 +17,10 @@ import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
-import { convert } from '~/main/importers/convert';
+import { convert } from '~/main/importers/importers/curl';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { insecureReadFile, insecureReadFileWithEncoding, secureReadFile } from '~/main/secure-read-file';
+import type { Request } from '~/models/request';
 import type { GenerateCommitsFromDiffFunction, MockRouteData, ModelConfig } from '~/plugins/types';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
@@ -223,6 +224,29 @@ export function registerMainHandlers() {
     }
   });
 
+  const apiProcess = utilityProcess.fork(path.join(__dirname, 'main/api-process.mjs'));
+
+  apiProcess.on('exit', code => {
+    console.log('[api-process] exited with code:', code);
+  });
+  apiProcess.on('message', async msg => {
+    console.log('[api-process] received message:', msg);
+    const resources = await convert(msg.body);
+    console.log('[api-process] converted to resources:', resources);
+    if (resources && !('convertErrorMessage' in resources) && resources.length > 0) {
+      const req = resources[0] as unknown as Partial<Request>;
+      await models.request.create({
+        ...req,
+        _id: undefined,
+        name: 'Cool stuff',
+        parentId: 'wrk_45aab38748f743bfa29ea7d491cbd8c8',
+      });
+    }
+  });
+
+  apiProcess.on('error', err => {
+    console.error('[api-process] error:', err);
+  });
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;
     return new Promise((resolve, reject) => {

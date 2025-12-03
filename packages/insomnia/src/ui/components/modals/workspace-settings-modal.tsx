@@ -128,7 +128,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
             >
               <div className="flex items-center justify-between gap-2">
                 <Heading slot="title" className="flex items-center gap-2 text-2xl">
-                  {getWorkspaceLabel(workspace).singular} Settings{' '}
+                  {getWorkspaceLabel(workspace).singular} Settings {workspace._id}
                 </Heading>
                 <Button
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
