@@ -20,6 +20,7 @@ import {
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import * as models from '~/models';
+import type { Request } from '~/models/request';
 import type { Settings } from '~/models/settings';
 import type { UserSession } from '~/models/user-session';
 import { executePluginMainAction, reloadPlugins } from '~/plugins';
@@ -31,6 +32,7 @@ import { useLogoutFetcher } from '~/routes/auth.logout';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 import { useGithubCompleteSignInFetcher } from '~/routes/git-credentials.github.complete-sign-in';
 import { useGitLabCompleteSignInFetcher } from '~/routes/git-credentials.gitlab.complete-sign-in';
+import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -321,6 +323,9 @@ const Root = () => {
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
   const navigate = useNavigate();
 
+  const createRequestFetcher = useRequestNewActionFetcher();
+  const createRequestFetcherSubmit = createRequestFetcher.submit;
+
   useEffect(() => {
     return window.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {
       // Get the url without params
@@ -359,6 +364,32 @@ const Root = () => {
         });
 
         return setImportUri(params.uri);
+      }
+      if (urlWithoutParams === 'insomnia://app/importFromCurl') {
+        try {
+          const { data } = await window.main.parseImport(
+            {
+              contentStr: params.curl,
+            },
+            {
+              importerId: 'curl',
+            },
+          );
+          const { resources } = data;
+          const importedRequest = resources[0];
+
+          createRequestFetcherSubmit({
+            organizationId: 'org_scratchpad',
+            projectId: 'proj_scratchpad',
+            workspaceId: 'wrk_scratchpad',
+            requestType: 'From Curl',
+            parentId: 'wrk_scratchpad',
+            req: importedRequest as Request,
+          });
+        } catch (error) {
+          console.log('[importer] error', error);
+        }
+        return;
       }
       if (urlWithoutParams === 'insomnia://plugins/install') {
         if (!params.name || params.name.trim() === '') {
@@ -556,6 +587,7 @@ const Root = () => {
     logoutSubmit,
     navigate,
     redirectToDefaultBrowserSubmit,
+    createRequestFetcherSubmit,
   ]);
 
   return (
