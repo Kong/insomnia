@@ -81,7 +81,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
       gitRepository?.cachedGitLastCommitTime,
     ];
 
-    const lastModifiedTimestamp = lastModifiedFrom.filter(isNotNullOrUndefined).sort(descendingNumberSort)[0];
+    const lastModifiedTimestamp = lastModifiedFrom.filter(isNotNullOrUndefined).toSorted(descendingNumberSort)[0];
 
     const hasUnsavedChanges = Boolean(
       isDesign(workspace) &&

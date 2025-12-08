@@ -60,7 +60,7 @@ export class ProtoDirectoryLoader {
     // Loop and read all entries
     let filesFound = false;
 
-    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+    for (const entry of entries.toSorted((a, b) => a.name.localeCompare(b.name))) {
       const fullEntryPath = path.resolve(dirPath, entry.name);
       const result = await (entry.isDirectory()
         ? this._parseDir(fullEntryPath, newDirId)

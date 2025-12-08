@@ -37,7 +37,7 @@ export function sortOrganizations(accountId: string, organizations: Organization
           accountId,
         }),
     )
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .toSorted((a, b) => a.name.localeCompare(b.name));
   const notMyOrgs = organizations
     .filter(
       organization =>
@@ -46,7 +46,7 @@ export function sortOrganizations(accountId: string, organizations: Organization
           accountId,
         }),
     )
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .toSorted((a, b) => a.name.localeCompare(b.name));
   return [...(home ? [home] : []), ...myOrgs, ...notMyOrgs];
 }
 

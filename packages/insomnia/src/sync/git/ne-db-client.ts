@@ -218,7 +218,7 @@ export class NeDBClient {
     }
 
     const ids = docs.map(d => `${d._id}.yml`);
-    return [...ids, ...otherFolders].sort();
+    return [...ids, ...otherFolders].toSorted();
   }
 
   async mkdir() {

@@ -320,7 +320,7 @@ export const Runner: FC = () => {
   useEffect(() => {
     const readResults = async () => {
       const results = (await models.runnerTestResult.findByParentId(runnerId)) || [];
-      setTestHistory(results.reverse());
+      setTestHistory(results.toReversed());
     };
     readResults();
   }, [runnerId]);
@@ -390,7 +390,7 @@ export const Runner: FC = () => {
       const results = (await models.runnerTestResult.findByParentId(runnerId)) || [];
       // show execution result
       if (results.length > 0) {
-        setTestHistory(results.reverse());
+        setTestHistory(results.toReversed());
         const latestResult = results[0];
         setExecutionResult(latestResult);
         const { error } = getExecution(runnerId);

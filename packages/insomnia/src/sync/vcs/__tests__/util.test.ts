@@ -97,7 +97,7 @@ describe('util', () => {
     it('generates from simple states', async () => {
       const snapshot = newSnapshot(1, [newStateEntry('doc_1', 'blob_1'), newStateEntry('doc_2', 'blob_2')]);
       const map = generateSnapshotStateMap(snapshot);
-      expect(Object.keys(map).sort()).toEqual(['doc_1', 'doc_2']);
+      expect(Object.keys(map).toSorted()).toEqual(['doc_1', 'doc_2']);
     });
 
     it('works with duplicates', async () => {
@@ -108,7 +108,7 @@ describe('util', () => {
         newStateEntry('doc_2', 'blob_2'),
       ]);
       const map = generateSnapshotStateMap(snapshot);
-      expect(Object.keys(map).sort()).toEqual(['doc_1', 'doc_2']);
+      expect(Object.keys(map).toSorted()).toEqual(['doc_1', 'doc_2']);
     });
 
     it('works with null snapshots', async () => {
@@ -121,7 +121,7 @@ describe('util', () => {
     it('generates from simple candidates', async () => {
       const candidates = [newCandidate('doc_2', 2), newCandidate('doc_1', 1), newCandidate('doc_2', 2)];
       const map = generateCandidateMap(candidates);
-      expect(Object.keys(map).sort()).toEqual(['doc_1', 'doc_2']);
+      expect(Object.keys(map).toSorted()).toEqual(['doc_1', 'doc_2']);
     });
   });
 
@@ -135,7 +135,7 @@ describe('util', () => {
       );
       const map3 = generateSnapshotStateMap(newSnapshot(1, []));
       const keys = combinedMapKeys(map1, map2, map3);
-      expect(keys.sort()).toEqual(['doc_1', 'doc_2', 'doc_4']);
+      expect(keys.toSorted()).toEqual(['doc_1', 'doc_2', 'doc_4']);
     });
   });
 

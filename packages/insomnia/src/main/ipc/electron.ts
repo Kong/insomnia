@@ -281,7 +281,9 @@ export function registerElectronHandlers() {
             ];
         const localTemplate: MenuItemConstructorOptions[] = [...localTemplateTags, ...pluginTemplateTags]
           // sort alphabetically
-          .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
+          .toSorted((a, b) =>
+            fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)),
+          )
           .map(l => {
             const actions = l.templateTag.args?.[0];
             const needsEnterprisePlan = l.templateTag.needsEnterprisePlan || false;

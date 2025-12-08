@@ -98,7 +98,7 @@ export async function getTagDefinitions() {
   return Object.keys(env.extensions)
     .map(k => env.extensions[k])
     .filter(ext => !ext.isDeprecated())
-    .sort((a, b) => (a.getPriority() > b.getPriority() ? 1 : -1))
+    .toSorted((a, b) => (a.getPriority() > b.getPriority() ? 1 : -1))
     .map(ext => ({
       name: ext.getTag() || '',
       displayName: ext.getName() || '',

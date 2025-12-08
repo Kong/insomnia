@@ -79,7 +79,7 @@ export const getOrInheritAuthentication = ({
   }
   const hasParentFolders = requestGroups.length > 0;
   const closestParentFolderWithAuth = [...requestGroups]
-    .reverse()
+    .toReversed()
     .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
   const closestAuth = getAuthObjectOrNull(closestParentFolderWithAuth?.authentication);
   const shouldCheckFolderAuth = hasParentFolders && closestAuth;
@@ -100,7 +100,7 @@ export function getOrInheritHeaders({
   const httpHeaders = new Map<string, string>();
   const originalCaseMap = new Map<string, string>();
   // parent folders, then child folders, then request
-  const headerContexts = [...requestGroups.reverse(), request];
+  const headerContexts = [...requestGroups.toReversed(), request];
   const headers = headerContexts.flatMap(({ headers }) => headers || []);
   headers.forEach(({ name, value, disabled }) => {
     if (disabled || !name.trim()) {
@@ -122,7 +122,7 @@ export function getOrInheritHeaders({
     httpHeaders.set(normalizedCase, value);
   });
   return Array.from(httpHeaders.entries())
-    .sort(ascendingFirstIndexStringSort)
+    .toSorted(ascendingFirstIndexStringSort)
     .map(([name, value]) => ({ name: originalCaseMap.get(name)!, value }));
 }
 // (only used for getOAuth2 token) Intended to gather all required database objects and initialize ids
@@ -304,7 +304,7 @@ export const tryToExecutePreRequestScript = async (
 ) => {
   const requestGroups = ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
   const folderScripts = requestGroups
-    .reverse()
+    .toReversed()
     .filter(group => group?.preRequestScript)
     .map(
       (group, i) => `const fn${i} = async ()=>{
@@ -515,7 +515,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
   // location is the complete path of a request, including project, collection and folder(if have).
   const requestLocation = ancestors
     .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || isProject(doc))
-    .reverse()
+    .toReversed()
     .map(doc => doc.name);
   let vault;
   if (globals && vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
@@ -711,7 +711,7 @@ type RequestAndContextAndOptionalResponse = RequestContextForScript & {
 export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
   const requestGroups = context.ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
   const folderScripts = requestGroups
-    .reverse()
+    .toReversed()
     .filter(group => group?.afterResponseScript)
     .map(
       (group, i) => `const fn${i} = async ()=>{

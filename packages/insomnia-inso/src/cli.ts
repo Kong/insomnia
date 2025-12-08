@@ -758,7 +758,7 @@ export const go = (args?: string[]) => {
               const allParentGroupSortKeys = getAllParentGroupSortKeys(request as BaseModel);
 
               return {
-                ancestors: allParentGroupSortKeys.reverse(),
+                ancestors: allParentGroupSortKeys.toReversed(),
                 request,
               };
             })
@@ -1057,7 +1057,9 @@ const getNextRequestOffset = (leftRequestsToRun: Request[], nextRequestIdOrName:
     return idMatchOffset;
   }
 
-  const nameMatchOffset = leftRequestsToRun.reverse().findIndex(req => req.name.trim() === nextRequestIdOrName.trim());
+  const nameMatchOffset = leftRequestsToRun
+    .toReversed()
+    .findIndex(req => req.name.trim() === nextRequestIdOrName.trim());
   if (nameMatchOffset !== -1) {
     return leftRequestsToRun.length - 1 - nameMatchOffset;
   }

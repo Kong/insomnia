@@ -13,7 +13,14 @@ describe('init()', () => {
     const result = plugin.init({
       name: PLUGIN,
     });
-    expect(Object.keys(result.store).sort()).toEqual(['all', 'clear', 'getItem', 'hasItem', 'removeItem', 'setItem']);
+    expect(Object.keys(result.store).toSorted()).toEqual([
+      'all',
+      'clear',
+      'getItem',
+      'hasItem',
+      'removeItem',
+      'setItem',
+    ]);
   });
 });
 

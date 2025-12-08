@@ -42,7 +42,7 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {
         isMounted && setError(e.message);
       }
       const context = await handleGetRenderContext();
-      isMounted && setOptions(context.keys.sort((a, b) => (a.name < b.name ? -1 : 1)));
+      isMounted && setOptions(context.keys.toSorted((a, b) => (a.name < b.name ? -1 : 1)));
     };
     syncInterpolation();
     return () => {

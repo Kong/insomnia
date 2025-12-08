@@ -50,6 +50,6 @@ export const promptTestSuites = async (db: Database, ci: boolean): Promise<UnitT
     choices: choices.flat(),
   });
   logger.trace('Prompt for document or test suite');
-  const [idIsh] = (await prompt.run()).split(' - ').reverse();
+  const [idIsh] = (await prompt.run()).split(' - ').toReversed();
   return loadTestSuites(db, idIsh);
 };

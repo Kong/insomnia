@@ -85,7 +85,7 @@ export async function buildRenderContext({
     envObjects.push(ordered);
   }
 
-  for (const doc of (ancestors || []).reverse()) {
+  for (const doc of (ancestors || []).toReversed()) {
     const ancestor: any = doc;
     const { environment, environmentPropertyOrder } = ancestor;
 
@@ -688,7 +688,7 @@ function _nunjucksSortValue(v: string) {
 }
 
 function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): string[] {
-  return Object.keys(finalRenderContext).sort((k1, k2) => {
+  return Object.keys(finalRenderContext).toSorted((k1, k2) => {
     const k1Sort = _nunjucksSortValue(finalRenderContext[k1]);
 
     const k2Sort = _nunjucksSortValue(finalRenderContext[k2]);

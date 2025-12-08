@@ -27,6 +27,6 @@ export const promptApiSpec = async (db: Database, ci: boolean): Promise<ApiSpec 
     choices: db.ApiSpec.map(s => getDbChoice(generateIdIsh(s), s.fileName)),
   });
   logger.trace('Prompt for %s', entity);
-  const [idIsh] = (await prompt.run()).split(' - ').reverse();
+  const [idIsh] = (await prompt.run()).split(' - ').toReversed();
   return loadApiSpec(db, idIsh);
 };

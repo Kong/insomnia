@@ -4,7 +4,7 @@ export function deterministicStringify(value: any) {
   if (t === '[object Object]') {
     const pairs: string[] = [];
 
-    for (const key of Object.keys(value).sort()) {
+    for (const key of Object.keys(value).toSorted()) {
       const k = deterministicStringify(key);
       const v = deterministicStringify(value[key]);
 

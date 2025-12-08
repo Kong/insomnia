@@ -56,7 +56,7 @@ const sortRequests = (_models: (Request | RequestGroup)[], parentId: string) => 
   let sortedModels: (Request | RequestGroup)[] = [];
   _models
     .filter(model => model.parentId === parentId)
-    .sort(metaSortKeySort)
+    .toSorted(metaSortKeySort)
     .forEach(model => {
       if (isRequest(model)) {
         sortedModels.push(model);

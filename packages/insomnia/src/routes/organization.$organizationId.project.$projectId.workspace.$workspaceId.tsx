@@ -88,7 +88,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   const baseEnvironment = await models.environment.getByParentId(workspaceId);
   invariant(baseEnvironment, 'Base environment not found');
 
-  const subEnvironments = (await models.environment.findByParentId(baseEnvironment._id)).sort(
+  const subEnvironments = (await models.environment.findByParentId(baseEnvironment._id)).toSorted(
     (e1, e2) => e1.metaSortKey - e2.metaSortKey,
   );
 
@@ -195,7 +195,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     // parentIsCollapsed is always false if filter is set.
     // so child.collapsed is always false and child.hidden is definitely determined by filter
     const childrenWithChildren: Child[] = await Promise.all(
-      levelReqs.sort(sortFunction).map(async (doc): Promise<Child> => {
+      levelReqs.toSorted(sortFunction).map(async (doc): Promise<Child> => {
         const hidden = parentIsCollapsed;
 
         const pinned = (!isRequestGroup(doc) && grpcAndRequestMetas.find(m => m.parentId === doc._id)?.pinned) || false;

@@ -127,7 +127,7 @@ export class ParentFolders {
    * @returns The value associated with the specified key if found, otherwise `undefined`.
    */
   findValue = (valueKey: string) => {
-    const targetEnv = [...this.folders].reverse().find(folder => folder.environment.has(valueKey));
+    const targetEnv = [...this.folders].toReversed().find(folder => folder.environment.has(valueKey));
     return targetEnv !== undefined ? targetEnv.environment.get(valueKey) : undefined;
   };
 

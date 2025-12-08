@@ -47,7 +47,7 @@ export const OpenAI = ({
         if (data?.data?.length) {
           const gptModels = (data.data as OpenAIModelData[])
             .filter(model => model.id.includes('gpt') && model.object === 'model')
-            .sort((a, b) => b.id.localeCompare(a.id));
+            .toSorted((a, b) => b.id.localeCompare(a.id));
           setAvailableModels(gptModels);
           if (configuredLLMs.length === 1 && configuredLLMs[0].apiKey !== realApiKey) {
             saveLLMSettings(false, 'openai', { apiKey: realApiKey });

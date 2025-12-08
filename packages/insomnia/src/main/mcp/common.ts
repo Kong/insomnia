@@ -339,7 +339,7 @@ const getAllEvents = async (options: { responseId: string }): Promise<McpEvent[]
       // Parse the message
       .map(e => JSON.parse(e))
       // Reverse the list of messages so that we get the latest message first
-      .reverse() || []
+      .toReversed() || []
   );
 };
 
