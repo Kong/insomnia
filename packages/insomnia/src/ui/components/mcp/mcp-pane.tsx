@@ -41,6 +41,7 @@ import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown'
 import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
+import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { McpRequestPane, type RequestPaneTabs } from '~/ui/components/mcp/mcp-request-pane';
 import {
   type PrimitiveSubItem,
@@ -51,6 +52,7 @@ import {
   type ToolItem,
 } from '~/ui/components/mcp/types';
 import { MCPCertificatesModal } from '~/ui/components/modals/mcp-certificates-modal';
+import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
@@ -360,6 +362,12 @@ export const McpPane = () => {
       setMcpServerData(emptyServerData);
     }
   }, [activeResponse?._id, readyState]);
+
+  useDocBodyKeyboardShortcuts({
+    sidebar_toggle: toggleSidebar,
+    environment_showEditor: () => setEnvironmentModalOpen(true),
+    environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
+  });
 
   const caStatus =
     activeRequest.sslValidation === false
