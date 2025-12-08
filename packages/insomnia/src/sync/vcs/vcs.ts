@@ -22,7 +22,7 @@ import type {
   Head,
   MergeConflict,
   Snapshot,
-  SnapshotState,
+  SnapshotStateEntry,
   Stage,
   StageEntry,
   StatusCandidate,
@@ -475,7 +475,7 @@ export class VCS {
       throw new Error(`Failed to find commit by id ${snapshotId}`);
     }
 
-    const currentState: SnapshotState = candidates.map(candidate => ({
+    const currentState: SnapshotStateEntry[] = candidates.map(candidate => ({
       key: candidate.key,
       blob: hashDocument(candidate.document).hash,
       name: candidate.name,
@@ -577,7 +577,7 @@ export class VCS {
       throw new Error('Commit must have a message');
     }
 
-    const newState: SnapshotState = [];
+    const newState: SnapshotStateEntry[] = [];
 
     // Add everything from the old state
     for (const entry of parent ? parent.state : []) {
@@ -860,7 +860,7 @@ export class VCS {
     };
   }
 
-  async _createSnapshotFromState(branch: Branch, state: SnapshotState, name: string) {
+  async _createSnapshotFromState(branch: Branch, state: SnapshotStateEntry[], name: string) {
     const parentId = branch.snapshots.length ? branch.snapshots[branch.snapshots.length - 1] : EMPTY_HASH;
 
     // Create the snapshot
@@ -1634,9 +1634,9 @@ export class VCS {
 }
 
 /** Generate snapshot ID from hashing parent, backendProject, and state together */
-function _generateSnapshotID(parentId: string, backendProjectId: string, state: SnapshotState) {
+function _generateSnapshotID(parentId: string, backendProjectId: string, state: SnapshotStateEntry[]) {
   const hash = crypto.createHash('sha1').update(backendProjectId).update(parentId);
-  const newState = [...state].sort((a, b) => (a.blob > b.blob ? 1 : -1));
+  const newState = state.toSorted((a, b) => (a.blob > b.blob ? 1 : -1));
 
   for (const entry of newState) {
     hash.update(entry.blob);

@@ -42,7 +42,7 @@ describe('store.*', () => {
     await p.store.setItem('b', 'bbb');
     await p.store.setItem('c', 'ccc');
     const all = await p.store.all();
-    expect(all.sort((a, b) => (a.key < b.key ? -1 : 1))).toEqual([
+    expect(all.toSorted((a, b) => (a.key < b.key ? -1 : 1))).toEqual([
       {
         key: 'a',
         value: 'aaa',

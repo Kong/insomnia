@@ -509,7 +509,7 @@ export const go = (args?: string[]) => {
               name: suite.name,
               suites: [],
               tests: db.UnitTest.filter(test => test.parentId === suite._id)
-                .sort((a, b) => a.metaSortKey - b.metaSortKey)
+                .toSorted((a, b) => a.metaSortKey - b.metaSortKey)
                 .map(({ name, code, requestId }) => ({ name, code, defaultRequestId: requestId })),
             })),
           );
@@ -739,7 +739,7 @@ export const go = (args?: string[]) => {
           options.item.forEach((reqId: string, order: number) => {
             requestOrder.set(reqId, order + 1);
           });
-          requestsToRun = requestsToRun.sort(
+          requestsToRun = requestsToRun.toSorted(
             (a, b) =>
               (requestOrder.get(a._id) || requestsToRun.length) - (requestOrder.get(b._id) || requestsToRun.length),
           );
@@ -762,7 +762,7 @@ export const go = (args?: string[]) => {
                 request,
               };
             })
-            .sort((a, b) => {
+            .toSorted((a, b) => {
               let compareResult = 0;
 
               let i = 0,

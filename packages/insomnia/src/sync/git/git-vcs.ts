@@ -2007,7 +2007,7 @@ export async function fetchRemoteBranches({ uri, credentials }: { uri: string; c
   const remoteBranches = remoteRefs
     .filter(b => b.ref !== 'HEAD')
     .map(b => b.ref.replace('refs/heads/', ''))
-    .sort((a, b) => {
+    .toSorted((a, b) => {
       if (a === defaultBranch) return -1;
       if (b === defaultBranch) return 1;
       return a.localeCompare(b);

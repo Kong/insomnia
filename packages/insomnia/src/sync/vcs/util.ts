@@ -12,7 +12,6 @@ import type {
   DocumentKey,
   MergeConflict,
   Snapshot,
-  SnapshotState,
   SnapshotStateEntry,
   SnapshotStateMap,
   StageEntry,
@@ -28,7 +27,7 @@ export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotSta
   return generateStateMap(snapshot.state);
 }
 
-export function generateStateMap(state: SnapshotState | null): SnapshotStateMap {
+export function generateStateMap(state: SnapshotStateEntry[] | null): SnapshotStateMap {
   if (!state) {
     return {};
   }
@@ -65,18 +64,18 @@ export function combinedMapKeys<T extends SnapshotStateMap | StatusCandidateMap>
 }
 
 export function threeWayMerge(
-  root: SnapshotState,
-  trunk: SnapshotState,
-  other: SnapshotState,
+  root: SnapshotStateEntry[],
+  trunk: SnapshotStateEntry[],
+  other: SnapshotStateEntry[],
 ): {
-  state: SnapshotState;
+  state: SnapshotStateEntry[];
   conflicts: MergeConflict[];
 } {
   const stateRoot = generateStateMap(root);
   const stateTrunk = generateStateMap(trunk);
   const stateOther = generateStateMap(other);
   const allKeys = combinedMapKeys(stateRoot, stateTrunk, stateOther);
-  const newState: SnapshotState = [];
+  const newState: SnapshotStateEntry[] = [];
   const conflicts: MergeConflict[] = [];
 
   for (const key of allKeys) {
@@ -281,7 +280,7 @@ export interface StateDelta {
   remove: SnapshotStateEntry[];
 }
 
-export function stateDelta(base: SnapshotState, desired: SnapshotState) {
+export function stateDelta(base: SnapshotStateEntry[], desired: SnapshotStateEntry[]) {
   const result: StateDelta = {
     add: [],
     update: [],
@@ -313,7 +312,7 @@ export function stateDelta(base: SnapshotState, desired: SnapshotState) {
   return result;
 }
 
-export function getStagable(state: SnapshotState, candidates: StatusCandidate[]) {
+export function getStagable(state: SnapshotStateEntry[], candidates: StatusCandidate[]) {
   const stagable: StageEntry[] = [];
   const stateMap = generateStateMap(state);
   const candidateMap = generateCandidateMap(candidates);
@@ -384,7 +383,11 @@ export function getRootSnapshot(a: Branch | null, b: Branch | null): string | nu
   return rootSnapshotId || null;
 }
 
-export function preMergeCheck(trunkState: SnapshotState, otherState: SnapshotState, candidates: StatusCandidate[]) {
+export function preMergeCheck(
+  trunkState: SnapshotStateEntry[],
+  otherState: SnapshotStateEntry[],
+  candidates: StatusCandidate[],
+) {
   const conflicts: StatusCandidate[] = [];
   const dirty: StatusCandidate[] = [];
   const trunkMap = generateStateMap(trunkState);
@@ -463,7 +466,7 @@ export function hashDocument(doc?: BaseModel) {
   return hash(newDoc);
 }
 
-export function updateStateWithConflictResolutions(state: SnapshotState, conflicts: MergeConflict[]) {
+export function updateStateWithConflictResolutions(state: SnapshotStateEntry[], conflicts: MergeConflict[]) {
   const newStateMap = generateStateMap(state);
 
   for (const { choose, key, name } of conflicts) {

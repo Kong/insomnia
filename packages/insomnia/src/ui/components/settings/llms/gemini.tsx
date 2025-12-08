@@ -43,7 +43,7 @@ export const Gemini = ({
         if (data?.models?.length) {
           const geminiModels = (data.models as GeminiModelData[])
             .filter(model => model.supportedGenerationMethods.includes('generateContent'))
-            .sort((a, b) => b.name.localeCompare(a.name));
+            .toSorted((a, b) => b.name.localeCompare(a.name));
           setAvailableModels(geminiModels);
           if (configuredLLMs.length === 1 && configuredLLMs[0].apiKey !== realApiKey) {
             saveLLMSettings(false, 'gemini', { apiKey: realApiKey });

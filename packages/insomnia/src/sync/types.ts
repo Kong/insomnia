@@ -25,8 +25,6 @@ export interface SnapshotStateEntry {
   name: string;
 }
 
-export type SnapshotState = SnapshotStateEntry[];
-
 export type SnapshotStateMap = Record<DocumentKey, SnapshotStateEntry>;
 
 export type SnapshotId = string;
