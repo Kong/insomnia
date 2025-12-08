@@ -41,6 +41,7 @@ import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown'
 import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
+import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { McpRequestPane, type RequestPaneTabs } from '~/ui/components/mcp/mcp-request-pane';
 import {
   type PrimitiveSubItem,
@@ -360,6 +361,12 @@ export const McpPane = () => {
       setMcpServerData(emptyServerData);
     }
   }, [activeResponse?._id, readyState]);
+
+  useDocBodyKeyboardShortcuts({
+    sidebar_toggle: toggleSidebar,
+    environment_showEditor: () => setEnvironmentModalOpen(true),
+    environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
+  });
 
   const caStatus =
     activeRequest.sslValidation === false
