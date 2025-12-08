@@ -20,6 +20,7 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { Divider } from '~/basic-components/divider';
 import { isGitCredentialsOAuth } from '~/models/git-repository';
 import type { StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
@@ -28,9 +29,10 @@ import {
   useOrganizationPermissionsLoaderFetcher,
 } from '~/routes/organization.$organizationId.permissions';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
-import { useActiveView } from '~/ui/components/project/utils';
+import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
+import { useActiveView } from '~/ui/components/project/utils';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
@@ -266,6 +268,12 @@ export const ProjectSettingsForm: FC<Props> = ({
               storageRules={storageRules}
             />
           </div>
+          {storageType === 'git' && (
+            <>
+              <Divider />
+              <GitConnectionInfo gitRepository={gitRepository} />
+            </>
+          )}
           <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5 pb-10">
             <div className="flex items-center gap-2">
               {onCancel && (

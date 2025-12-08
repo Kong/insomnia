@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 
-export type ActiveView = 'project' | 'git-results';
+export type ActiveView = 'project' | 'git-results' | 'git-clone' | 'switch-storage-type';
 
 export function useActiveView() {
   const [activeView, setActiveView] = useState<ActiveView>('project');
