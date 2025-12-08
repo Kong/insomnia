@@ -52,7 +52,6 @@ import {
   type ToolItem,
 } from '~/ui/components/mcp/types';
 import { MCPCertificatesModal } from '~/ui/components/modals/mcp-certificates-modal';
-import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
