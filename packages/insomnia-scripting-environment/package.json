@@ -8,7 +8,7 @@
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "test": "vitest run",
-    "type-check": "tsc --noEmit --project tsconfig.json"
+    "type-check": "tsc --project tsconfig.json"
   },
   "repository": {
     "type": "git",

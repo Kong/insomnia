@@ -9,6 +9,7 @@
     "resolveJsonModule": true,
     "moduleResolution": "bundler",
     "isolatedModules": true,
+    "noEmit": true,
     "paths": {
       "~/*": ["../insomnia/src/*"]
     },
