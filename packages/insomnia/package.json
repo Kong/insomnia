@@ -178,6 +178,7 @@
     "@types/papaparse": "^5.3.15",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.6",
+    "@types/sha.js": "^2.4.4",
     "@types/shell-quote": "^1.7.5",
     "@types/swagger-ui-dist": "3.30.5",
     "@types/tough-cookie": "^4.0.5",
