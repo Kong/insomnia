@@ -85,7 +85,7 @@ import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 
-type ProjectScopeKeys = WorkspaceScope | 'unsynced';
+export type ProjectScopeKeys = WorkspaceScope | 'unsynced';
 export const scopeToLabelMap: Record<
   ProjectScopeKeys,
   'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client'

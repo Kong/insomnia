@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 
+// TODO: remove unused view value
 export type ActiveView = 'project' | 'git-results' | 'git-clone' | 'switch-storage-type';
 
 export function useActiveView() {
@@ -21,3 +22,5 @@ export interface ProjectData {
   oauth2format?: OauthProviderName;
   connectRepositoryLater?: boolean;
 }
+
+export type ProjectType = 'local' | 'remote' | 'git';

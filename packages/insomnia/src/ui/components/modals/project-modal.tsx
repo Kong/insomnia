@@ -53,7 +53,7 @@ export const ProjectModal = ({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       isDismissable
-      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
+      className="fixed top-0 right-0 bottom-0 left-0 z-10 flex items-start justify-center bg-black/30 pt-[15%]"
     >
       <Modal className="flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)">
         <Dialog

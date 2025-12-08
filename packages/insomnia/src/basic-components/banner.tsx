@@ -21,7 +21,7 @@ const bannerTypeToBgColor: Record<BannerProps['type'], string> = {
 export const Banner = ({ type, title, message, footer, className }: BannerProps) => {
   return (
     <div className={twMerge(`flex gap-4 rounded-sm p-4 leading-5 ${bannerTypeToBgColor[type]}`, className)}>
-      <Icon icon={bannerTypeToIconName[type]} />
+      <Icon icon={bannerTypeToIconName[type]} className="mt-1" />
       <div className="flex flex-col gap-3">
         {title && <div className="text-base font-semibold">{title}</div>}
         <div className="text-sm">{message}</div>

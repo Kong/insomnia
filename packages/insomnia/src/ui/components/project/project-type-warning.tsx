@@ -9,11 +9,12 @@ import { isOwnerOfOrganization, type StorageRules } from '~/models/organization'
 import { getProjectStorageTypeLabel } from '~/models/project';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
+import type { ProjectType } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 
 interface Props {
   isGitSyncEnabled: boolean;
-  storageType: 'local' | 'remote' | 'git';
+  storageType?: ProjectType;
   storageRules: StorageRules;
 }
 export const ProjectTypeWarning = ({ isGitSyncEnabled, storageType, storageRules }: Props) => {

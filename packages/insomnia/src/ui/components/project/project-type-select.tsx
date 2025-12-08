@@ -4,9 +4,10 @@ import { Label, Radio, RadioGroup } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
 import type { StorageRules } from '~/models/organization';
+import type { ProjectType } from '~/ui/components/project/utils';
 
 interface ProjectTypeItem {
-  type: 'local' | 'remote' | 'git';
+  type: ProjectType;
   icon: IconProp;
   name: string;
   description: string;
@@ -16,7 +17,7 @@ interface ProjectTypeItem {
 const TypeItem = ({ icon, name, description }: Omit<ProjectTypeItem, 'type' | 'isDisabled'>) => {
   return (
     <div className="flex gap-2 p-2">
-      <Icon icon={icon} />
+      <Icon icon={icon} className="mt-1" />
       <div>
         <div>{name}</div>
         <div className="text-sm text-(--hl)">{description}</div>
