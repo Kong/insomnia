@@ -98,12 +98,39 @@ invalid: [unclosed array
       expect(result.data).toEqual([]);
       expect(result.error).toBeDefined();
     });
+
+    it('handles unsupported or future schema gracefully', () => {
+      const futureSchemaData = `
+type: futureCollection.insomnia.rest/5.0
+name: Future Schema Collection
+meta:
+  id: wrk_test
+  created: 1234567890
+  modified: 1234567890
+`;
+      const result = tryImportV5Data(futureSchemaData);
+      expect(result.data).toEqual([]);
+      expect(result.error).toBeDefined();
+    });
   });
 
   describe('importInsomniaV5Data', () => {
     it('returns empty array on invalid data', () => {
       const invalidData = 'invalid yaml content';
       const result = importInsomniaV5Data(invalidData);
+      expect(result).toEqual([]);
+    });
+
+    it('returns empty array on unsupported or future data', () => {
+      const futureSchemaData = `
+type: futureCollection.insomnia.rest/5.0
+name: Future Schema Collection
+meta:
+  id: wrk_test
+  created: 1234567890
+  modified: 1234567890
+`;
+      const result = importInsomniaV5Data(futureSchemaData);
       expect(result).toEqual([]);
     });
 
