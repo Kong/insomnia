@@ -14,8 +14,18 @@ interface SearchableFields {
 }
 
 function isMatched(filter: string, doc: SearchableFields): boolean {
+  // FIX for Issue #9392: Defensive coding to prevent .trim() crashes.
+  // We ensure all fields are converted to Strings and nulls/undefined are removed.
+  const searchTargets = [
+    doc.name,
+    doc.description,
+    ...(isRequestGroup(doc) ? [] : [doc.url]),
+  ]
+    .filter(field => field !== null && field !== undefined) // Remove empty slots
+    .map(field => String(field)); // Force convert numbers/objects to string
+
   return Boolean(
-    fuzzyMatchAll(filter, [doc.name, doc.description, ...(isRequestGroup(doc) ? [] : [doc.url!])], {
+    fuzzyMatchAll(filter, searchTargets, {
       splitSpace: false,
       loose: true,
     })?.indexes,
