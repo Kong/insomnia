@@ -148,13 +148,11 @@ export default defineConfig([
       'no-restricted-imports': [
         'error',
         {
-          patterns: [
-            // Shouldn't import packages by relative path
-            ['insomnia-api', 'insomnia-storage'].map(pkg => ({
-              group: [`**/*/${pkg}/**`],
-              message: `Please use '${pkg}' instead of relative paths`,
-            })),
-          ],
+          // Shouldn't import packages by relative path
+          patterns: ['insomnia-api', 'insomnia-storage'].map(pkg => ({
+            group: [`**/*/${pkg}/**`],
+            message: `Please use '${pkg}' instead of relative paths`,
+          })),
         },
       ],
     },
