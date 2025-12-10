@@ -2,7 +2,7 @@ import fsPath from 'node:path';
 
 import electron from 'electron';
 import type { Database, DBItem } from 'insomnia-storage';
-import { NeDBClient, SQLiteClient } from 'insomnia-storage/node';
+import { NeDBClient } from 'insomnia-storage/node';
 
 const nedbMap = new Map<string, Database<DBItem>>();
 
@@ -27,13 +27,10 @@ export function databaseFactory<T extends DBItem>(type: string): Database<T> {
 
   const dbPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
 
-  // const db = new NeDBClient<T>({
-  //   filename: fsPath.join(dbPath, `insomnia.${type}.db`),
-  // });
-  const db = new SQLiteClient<T>({
-    filename: fsPath.join(dbPath, `insomnia.sqlite`),
-    tableName: type,
+  const db = new NeDBClient<T>({
+    filename: fsPath.join(dbPath, `insomnia.${type}.db`),
   });
+
   nedbMap.set(type, db);
   return db;
 }
