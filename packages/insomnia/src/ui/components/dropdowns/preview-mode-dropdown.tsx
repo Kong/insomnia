@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
 
@@ -46,11 +44,11 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
     if (!filePath) {
       return;
     }
-    const to = fs.createWriteStream(filePath);
-    to.on('error', err => {
-      console.warn('Failed to export har', err);
+
+    await window.main.writeFile({
+      path: filePath,
+      content: har,
     });
-    to.end(har);
   }, [activeRequest, activeResponse]);
 
   const exportDebugFile = useCallback(async () => {
@@ -74,14 +72,11 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
     if (canceled) {
       return;
     }
-    const readStream = models.response.getBodyStream(activeResponse);
 
-    if (readStream && filePath && typeof readStream !== 'string') {
-      const to = fs.createWriteStream(filePath);
-      to.write(headers);
-      readStream.pipe(to);
-      to.on('error', err => {
-        console.warn('Failed to save full response', err);
+    if (filePath && activeResponse.bodyBuffer) {
+      await window.main.writeFile({
+        path: filePath,
+        content: headers + '\n' + activeResponse.bodyBuffer.toString('utf8') || '',
       });
     }
   }, [activeRequest, activeResponse]);

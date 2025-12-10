@@ -1,10 +1,9 @@
-import fs from 'node:fs';
-
 import { extension as mimeExtension } from 'mime-types';
 import React, { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
 import { useRootLoaderData } from '~/root';
+import { jsonPrettify } from '~/utils/prettify/json';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -14,14 +13,12 @@ import {
   type RequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { MockResponseExtractor } from '../editors/mock-response-extractor';
 import { ErrorBoundary } from '../error-boundary';
-import { showError } from '../modals';
 import { ResponseTimer } from '../response-timer';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
@@ -85,34 +82,14 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
       if (canceled) {
         return;
       }
-
-      const readStream = models.response.getBodyStream(activeResponse);
-      const dataBuffers: any[] = [];
-
-      if (readStream && outputPath && typeof readStream !== 'string') {
-        readStream.on('data', data => {
-          dataBuffers.push(data);
+      if (prettify && contentType.includes('json')) {
+        await window.main.writeFile({
+          path: outputPath,
+          content: jsonPrettify(activeResponse.bodyBuffer?.toString('utf8')) || '',
         });
-        readStream.on('end', () => {
-          const to = fs.createWriteStream(outputPath);
-          const finalBuffer = Buffer.concat(dataBuffers);
-          to.on('error', err => {
-            showError({
-              title: 'Save Failed',
-              message: 'Failed to save response body',
-              error: err,
-            });
-          });
-
-          if (prettify && contentType.includes('json')) {
-            to.write(jsonPrettify(finalBuffer.toString('utf8')));
-          } else {
-            to.write(finalBuffer);
-          }
-
-          to.end();
-        });
+        return;
       }
+      await window.main.writeFile({ path: outputPath, content: activeResponse.bodyBuffer?.toString('utf8') || '' });
     },
     [activeRequest, activeResponse],
   );

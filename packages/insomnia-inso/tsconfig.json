@@ -7,14 +7,14 @@
     "allowJs": true,
     "checkJs": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "isolatedModules": true,
+    "noEmit": true,
     "paths": {
-      "~/*": ["../insomnia/src/*"],
-      "electron": ["../insomnia/send-request/electron"]
+      "~/*": ["../insomnia/src/*"]
     },
     /* Transpiling Options */
-    "module": "CommonJS",
+    "module": "ESNext",
     "sourceMap": true,
     "lib": ["ES2023", "DOM.Iterable"],
     /* Strictness */

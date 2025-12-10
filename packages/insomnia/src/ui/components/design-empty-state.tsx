@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises';
-
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC } from 'react';
 import { Button, Heading, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
@@ -60,7 +58,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
           return;
         }
 
-        const contents = String(await readFile(filePath));
+        const contents = String(await window.main.insecureReadFile({ path: filePath }));
         onImport(contents);
       },
     },

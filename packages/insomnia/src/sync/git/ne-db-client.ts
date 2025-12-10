@@ -232,14 +232,14 @@ export class NeDBClient {
 
     try {
       fileBuff = await this.readFile(filePath);
-    } catch (err) {
+    } catch {
       // console.log('[nedb] Failed to read file', err);
     }
 
     if (fileBuff === null) {
       try {
         dir = await this.readdir(filePath);
-      } catch (err) {
+      } catch {
         // console.log('[nedb] Failed to read dir', err);
       }
     }
@@ -278,7 +278,7 @@ export class NeDBClient {
 
   async rmdir() {
     // Dirs in NeDB can't be removed, so we'll just pretend like it succeeded
-    return Promise.resolve();
+    return;
   }
 
   async symlink() {

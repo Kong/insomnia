@@ -1,10 +1,10 @@
+import { getUserFiles, type RemoteFile } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { project, userSession } from '~/models';
 import { type Organization } from '~/models/organization';
 import { type Project } from '~/models/project';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/remote-files';
@@ -18,14 +18,6 @@ export interface CommandRemoteItem<TItem> {
   projectName: string;
   workspaceName?: string;
   item: TItem;
-}
-
-interface RemoteFile {
-  id: string;
-  name: string;
-  projectId: string;
-  teamProjectId: string;
-  organizationId: string;
 }
 
 export interface RemoteFilesLoaderResult {
@@ -42,11 +34,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
   }
 
   try {
-    const remoteFiles = await insomniaFetch<RemoteFile[]>({
-      method: 'GET',
-      path: '/v1/user/files',
-      sessionId,
-    });
+    const remoteFiles = await getUserFiles({ sessionId });
 
     const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
 

@@ -41,7 +41,7 @@ import { queryXPath } from '~/utils/xpath/query';
 
 import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;
-const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
+const MAX_SIZE_FOR_LINTING = 1_000_000; // Around 1MB
 
 interface EditorState {
   scroll: CodeMirror.ScrollInfo;
@@ -411,12 +411,10 @@ export const CodeEditor = memo(
             doc.scrollTo(0, scrollPosition);
           }
 
-          if (onPaste) {
-            if (change.origin === 'paste' && change.update) {
-              const translatedText = onPaste(change.text.join('\n')).split('\n');
+          if (onPaste && change.origin === 'paste' && change.update) {
+            const translatedText = onPaste(change.text.join('\n')).split('\n');
 
-              change.update(change.from, change.to, translatedText);
-            }
+            change.update(change.from, change.to, translatedText);
           }
         });
 
@@ -746,7 +744,7 @@ export const CodeEditor = memo(
             event.preventDefault();
             const pluginTemplateTags = (await getTemplateTags()).map(tag => ({
               // Skip unsupported objects like functions in template tag to send in IPC
-              templateTag: JSON.parse(JSON.stringify(tag.templateTag)),
+              templateTag: structuredClone(tag.templateTag),
             }));
             const target = event.target as HTMLElement;
             // right click on nunjucks tag

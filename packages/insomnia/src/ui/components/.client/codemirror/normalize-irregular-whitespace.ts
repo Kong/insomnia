@@ -6,7 +6,7 @@ const irregularWhitespaceCharacters = [
   '\u0085',
   '\u1680',
   '\u180E',
-  '\ufeff',
+  '\uFEFF',
   '\u2000',
   '\u2001',
   '\u2002',
@@ -22,7 +22,7 @@ const irregularWhitespaceCharacters = [
   '\u2028',
   '\u2029',
   '\u202F',
-  '\u205f',
+  '\u205F',
   '\u3000',
 ];
 

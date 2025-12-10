@@ -1,5 +1,3 @@
-import fs from 'node:fs/promises';
-
 import React from 'react';
 import {
   Button,
@@ -76,8 +74,7 @@ export const MockRouteModal = ({
     let body = '';
     if (responseData?.bodyPath) {
       try {
-        const bodyBuffer = await fs.readFile(responseData.bodyPath);
-        body = bodyBuffer.toString();
+        body = await window.main.secureReadFile({ path: responseData.bodyPath });
       } catch (error) {
         console.error('Failed to read response body:', error);
       }

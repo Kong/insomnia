@@ -1,5 +1,3 @@
-import { resolve } from 'node:path';
-
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Button, Input, Text } from 'react-aria-components';
 import z from 'zod/v4';
@@ -41,8 +39,8 @@ export const GGUF = ({
   });
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
-  const userDataPath = resolve(window.app.getPath('userData'));
-  const llmsFolder = resolve(userDataPath, LLMS_FOLDER_NAME);
+  const userDataPath = window.path.resolve(window.app.getPath('userData'));
+  const llmsFolder = window.path.resolve(userDataPath, LLMS_FOLDER_NAME);
   const [availableLLMs, setAvailableLLMs] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const refreshModelsDirectory = useCallback(() => {
@@ -161,7 +159,7 @@ export const GGUF = ({
                     type="number"
                     value={modelParameters.temperature.toString()}
                     onChange={e => {
-                      const value = parseFloat(e.target.value);
+                      const value = Number.parseFloat(e.target.value);
                       if (!Number.isNaN(value) && value >= 0 && value <= 2) {
                         setModelParameters(prev => ({ ...prev, temperature: value }));
                       }
@@ -179,7 +177,7 @@ export const GGUF = ({
                     type="number"
                     value={modelParameters.topP.toString()}
                     onChange={e => {
-                      const value = parseFloat(e.target.value);
+                      const value = Number.parseFloat(e.target.value);
                       if (!Number.isNaN(value) && value >= 0 && value <= 1) {
                         setModelParameters(prev => ({ ...prev, topP: value }));
                       }
@@ -197,7 +195,7 @@ export const GGUF = ({
                     type="number"
                     value={modelParameters.topK.toString()}
                     onChange={e => {
-                      const value = parseInt(e.target.value, 10);
+                      const value = Number.parseInt(e.target.value, 10);
                       if (!Number.isNaN(value) && value >= 0 && value <= 100) {
                         setModelParameters(prev => ({ ...prev, topK: value }));
                       }
@@ -215,7 +213,7 @@ export const GGUF = ({
                     type="number"
                     value={modelParameters.repeatPenalty.toString()}
                     onChange={e => {
-                      const value = parseFloat(e.target.value);
+                      const value = Number.parseFloat(e.target.value);
                       if (!Number.isNaN(value) && value >= 0 && value <= 10) {
                         setModelParameters(prev => ({ ...prev, repeatPenalty: value }));
                       }

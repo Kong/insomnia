@@ -1,31 +1,17 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { PassThrough } from 'node:stream';
-
 import { format } from 'date-fns';
 import type { SaveDialogOptions } from 'electron';
 import { extension as mimeExtension } from 'mime-types';
-import multiparty from 'multiparty';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 
+import type { Part } from '~/main/multipart-buffer-to-array';
+
 import { getContentTypeFromHeaders, PREVIEW_MODE_FRIENDLY } from '../../../common/constants';
-import type { ResponseHeader } from '../../../models/response';
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals/index';
 import { WrapperModal } from '../modals/wrapper-modal';
 import { ResponseHeadersViewer } from './response-headers-viewer';
 import { ResponseViewer } from './response-viewer';
-
-interface Part {
-  id: number;
-  title: string;
-  name: string;
-  bytes: number;
-  value: Buffer;
-  filename: string | null;
-  headers: ResponseHeader[];
-}
 
 interface Props {
   download: (...args: any[]) => any;
@@ -58,8 +44,11 @@ export const ResponseMultipartViewer: FC<Props> = ({
 
   useEffect(() => {
     const init = async () => {
+      if (!bodyBuffer || !contentType) {
+        return;
+      }
       try {
-        const parts = await multipartBufferToArray({ bodyBuffer, contentType });
+        const parts = await window.main.multipartBufferToArray({ bodyBuffer, contentType });
         setParts(parts);
         setSelectedPart(parts[0]);
       } catch (err) {
@@ -96,7 +85,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
     const options: SaveDialogOptions = {
       title: 'Save as File',
       buttonLabel: 'Save',
-      defaultPath: path.join(dir, filename),
+      defaultPath: window.path.join(dir, filename),
       filters: [
         // @ts-expect-error https://github.com/electron/electron/pull/29322
         {
@@ -111,11 +100,13 @@ export const ResponseMultipartViewer: FC<Props> = ({
     }
 
     // Remember last exported path
-    window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
+    window.localStorage.setItem('insomnia.lastExportPath', window.path.dirname(filename));
 
-    // Save the file
     try {
-      await fs.promises.writeFile(filePath, selectedPart.value);
+      await window.main.writeFile({
+        path: filePath,
+        content: selectedPart.value.toString('utf8'),
+      });
     } catch (err) {
       console.warn('Failed to save multipart to file', err);
     }
@@ -217,62 +208,3 @@ export const ResponseMultipartViewer: FC<Props> = ({
     </div>
   );
 };
-
-function multipartBufferToArray({
-  bodyBuffer,
-  contentType,
-}: {
-  bodyBuffer: Buffer | null;
-  contentType: string;
-}): Promise<Part[]> {
-  return new Promise((resolve, reject) => {
-    const parts: Part[] = [];
-
-    if (!bodyBuffer) {
-      return resolve(parts);
-    }
-
-    const fakeReq = new PassThrough();
-    // @ts-expect-error -- TSCONVERSION investigate `stream` types
-    fakeReq.headers = {
-      'content-type': contentType,
-    };
-    const form = new multiparty.Form();
-    let id = 0;
-    form.on('part', part => {
-      const dataBuffers: any[] = [];
-      part.on('data', data => {
-        dataBuffers.push(data);
-      });
-      part.on('error', err => {
-        reject(new Error(`Failed to parse part: ${err.message}`));
-      });
-      part.on('end', () => {
-        const title = part.filename ? `${part.name} (${part.filename})` : part.name;
-        parts.push({
-          id,
-          title,
-          value: dataBuffers ? Buffer.concat(dataBuffers) : Buffer.from(''),
-          name: part.name,
-          filename: part.filename || null,
-          bytes: part.byteCount,
-          headers: Object.keys(part.headers).map(name => ({
-            name,
-            value: part.headers[name],
-          })),
-        });
-        id += 1;
-      });
-    });
-    form.on('error', err => {
-      reject(err);
-    });
-    form.on('close', () => {
-      resolve(parts);
-    });
-    // @ts-expect-error -- TSCONVERSION
-    form.parse(fakeReq);
-    fakeReq.write(bodyBuffer);
-    fakeReq.end();
-  });
-}

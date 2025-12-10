@@ -32,8 +32,7 @@ interface IStrictNullSearchParams extends Omit<ISearchParams, 'value'> {
 type ProcessDeconstructFuncReturnType<T> = T extends { strictNullHandling: true }
   ? IStrictNullSearchParams[]
   : ISearchParams[];
-export const getJoiner = (url: string) => {
-  url = url || '';
+export const getJoiner = (url = '') => {
   return !url.includes('?') ? '?' : '&';
 };
 
@@ -168,7 +167,7 @@ export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
     let name = '';
     try {
       name = decodeURIComponent(encodedName || '');
-    } catch (error) {
+    } catch {
       // Just leave it
       name = encodedName;
     }
@@ -176,7 +175,7 @@ export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
     let value: ValueType = '';
     try {
       value = strictNullHandling && encodedValue === null ? null : decodeURIComponent(encodedValue || '');
-    } catch (error) {
+    } catch {
       // Just leave it
       value = encodedValue;
     }

@@ -2323,27 +2323,25 @@ async function completeSignInToGitHub({ code, state }: { code: string; state: st
     const userProfileEmail = user.email ?? '';
     const email = emails.find(e => e.primary)?.email ?? userProfileEmail ?? '';
 
-    if (existingGitHubCredentials) {
-      await models.gitCredentials.update(existingGitHubCredentials, {
-        token: data.access_token,
-        provider: 'githubapp',
-        author: {
-          email,
-          name: user.name ?? user.login ?? '',
-          avatarUrl: user.avatar_url,
-        },
-      });
-    } else {
-      await models.gitCredentials.create({
-        token: data.access_token,
-        provider: 'githubapp',
-        author: {
-          email,
-          name: user.name ?? user.login ?? '',
-          avatarUrl: user.avatar_url,
-        },
-      });
-    }
+    await (existingGitHubCredentials
+      ? models.gitCredentials.update(existingGitHubCredentials, {
+          token: data.access_token,
+          provider: 'githubapp',
+          author: {
+            email,
+            name: user.name ?? user.login ?? '',
+            avatarUrl: user.avatar_url,
+          },
+        })
+      : models.gitCredentials.create({
+          token: data.access_token,
+          provider: 'githubapp',
+          author: {
+            email,
+            name: user.name ?? user.login ?? '',
+            avatarUrl: user.avatar_url,
+          },
+        }));
 
     return {};
   } catch (error) {

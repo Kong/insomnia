@@ -9,7 +9,7 @@ import { GitRemoteBranchSelect } from './git-remote-branch-select';
 
 export interface Props {
   gitRepository?: Partial<GitRepository> | null;
-  onSubmit: (args: Partial<GitRepository>) => void;
+  onSubmit: (args: Partial<GitRepository & { ref?: string }>) => void;
 }
 
 export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gitRepository, onSubmit }) => {
@@ -41,6 +41,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
         const formData = new FormData(event.currentTarget);
         onSubmit({
           uri: (formData.get('uri') as string) || '',
+          ref: (formData.get('branch') as string) || '',
           credentials: {
             username: (formData.get('username') as string) || '',
             password: (formData.get('password') as string) || '',

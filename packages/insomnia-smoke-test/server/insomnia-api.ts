@@ -2,9 +2,12 @@ import { randomUUID } from 'node:crypto';
 
 import type { Application } from 'express';
 import { json } from 'express';
+import { type CurrentPlan } from 'insomnia-api';
 
-import type { CurrentPlan } from '../../insomnia/src/ui/organization-utils';
-import type { Collaborator, CollaboratorType } from '../../insomnia/src/ui/routes/$organizationId.collaborators';
+import type {
+  Collaborator,
+  CollaboratorType,
+} from '../../insomnia/src/routes/organization.$organizationId.collaborators';
 import { getRandomId, getTeamName, getUserEmail } from '../tests/smoke/test-utils';
 
 const currentPlan: CurrentPlan = {
@@ -87,7 +90,7 @@ const user = {
 };
 
 const whoami = {
-  sessionExpiry: 4838400,
+  sessionExpiry: 4_838_400,
   publicKey: {
     alg: 'RSA-OAEP-256',
     e: 'AQAB',
@@ -408,7 +411,7 @@ emailsAndGroupsToInvite.forEach((collaborator, index) => {
 
 collaboratorsList.total = collaboratorsList.collaborators.length + emailsAndGroupsToInvite.length;
 
-export default (app: Application) => {
+export default function setup(app: Application) {
   // User
   app.get('/v1/user/profile', (_req, res) => {
     console.log('GET *');
@@ -641,4 +644,4 @@ export default (app: Application) => {
       isAllowed: true,
     });
   });
-};
+}

@@ -43,7 +43,7 @@ async function validator(text: string): Promise<ValidationError[]> {
   if (renderedText) {
     try {
       jsonlint.parse(renderedText);
-    } catch (e) {}
+    } catch {}
   }
 
   return found;

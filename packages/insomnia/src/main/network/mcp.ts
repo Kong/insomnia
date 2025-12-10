@@ -100,7 +100,7 @@ const _handleMcpMessage = (context: ConnectionContext, message: JSONRPCMessage) 
     try {
       // Try to parse error message to JSON if possible
       errorMessage = JSON.parse(originErrorMessage);
-    } catch (error) {}
+    } catch {}
     messageEvent = {
       type: 'error',
       error: {
@@ -252,11 +252,10 @@ const createTransportAndConnect = async (context: ConnectionContext, mcpClient: 
 
   let authType = 'none';
   if ('type' in mcpRequest.authentication) {
-    if (mcpRequest.authentication.type === 'oauth2') {
-      authType = 'oauth2-' + mcpRequest.authentication.grantType;
-    } else {
-      authType = mcpRequest.authentication.type;
-    }
+    authType =
+      mcpRequest.authentication.type === 'oauth2'
+        ? 'oauth2-' + mcpRequest.authentication.grantType
+        : mcpRequest.authentication.type;
   }
   const authDisabled = 'disabled' in mcpRequest.authentication && mcpRequest.authentication.disabled;
   const isFirstConnection = !mcpRequest.connected;
@@ -393,8 +392,7 @@ const performConnection = async (context: ConnectionContext) => {
     primitivePromises.push(mcpClient.listTools());
   }
   if (serverCapabilities?.resources) {
-    primitivePromises.push(mcpClient.listResources());
-    primitivePromises.push(mcpClient.listResourceTemplates());
+    primitivePromises.push(mcpClient.listResources(), mcpClient.listResourceTemplates());
   }
   if (serverCapabilities?.prompts) {
     primitivePromises.push(mcpClient.listPrompts());

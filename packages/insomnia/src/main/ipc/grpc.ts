@@ -390,7 +390,7 @@ export const start = (event: IpcMainEvent, ipcParams: GrpcIpcRequestParams) => {
 
       if (!url) {
         event.reply('grpc.error', request._id, new Error('URL not specified'));
-        return undefined;
+        return;
       }
       // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
       const Client = makeGenericClientConstructor({});

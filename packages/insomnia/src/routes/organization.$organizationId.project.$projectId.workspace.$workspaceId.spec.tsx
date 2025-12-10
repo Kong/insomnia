@@ -206,7 +206,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             title: 'Linting Error',
             message: `An error occurred while linting the OpenAPI specification: ${error}`,
           });
-          return Promise.reject(error);
+          throw error;
         }
         const lintResult = diagnostics?.map(({ severity, code, message, range }) => {
           return {
@@ -228,7 +228,7 @@ const Component = ({ params }: Route.ComponentProps) => {
           title: 'Linting Error',
           message: `An error occurred while linting the OpenAPI specification: ${error}`,
         });
-        return Promise.reject(error);
+        throw error;
       }
     });
   };
@@ -241,7 +241,7 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   reactUse.useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
-    CodeMirror.registerHelper('lint', 'openapi', undefined);
+    CodeMirror.registerHelper('lint', 'openapi', () => {});
   });
 
   const onCodeEditorChange = useMemo(() => {
@@ -328,11 +328,7 @@ const Component = ({ params }: Route.ComponentProps) => {
       return;
     }
 
-    if (layout && layout[0] > 0) {
-      layout[0] = 0;
-    } else {
-      layout[0] = DEFAULT_SIDEBAR_SIZE;
-    }
+    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
 
     sidebarPanelRef.current?.setLayout(layout);
   }
@@ -1004,7 +1000,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                     <ListBox
                       className="flex-1 overflow-y-auto select-none"
                       onAction={index => {
-                        const listIndex = parseInt(index.toString(), 10);
+                        const listIndex = Number.parseInt(index.toString(), 10);
                         const lintMessage = lintMessages[listIndex];
                         handleScrollToLintMessage(lintMessage);
                       }}

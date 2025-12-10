@@ -2,7 +2,7 @@ import express from 'express';
 
 const db = new Map<string, any>();
 
-export default (app: express.Application) => {
+export default function setup(app: express.Application) {
   app.get('/simple-crud/:id', (req, res) => {
     const { id } = req.params;
     const item = db.get(id);
@@ -18,4 +18,4 @@ export default (app: express.Application) => {
     db.set(id, req.body);
     res.status(201).send({ id, ...req.body });
   });
-};
+}

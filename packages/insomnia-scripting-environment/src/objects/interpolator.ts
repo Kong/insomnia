@@ -23,7 +23,7 @@ class Interpolator {
 
     const translatedSegments = segments.map(segment => {
       const tagStart = segment.lastIndexOf('{{');
-      if (tagStart < 0) {
+      if (tagStart === -1) {
         return segment;
       }
 

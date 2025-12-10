@@ -1,7 +1,7 @@
+import { type CurrentPlan, type UserProfile } from 'insomnia-api';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
-import type { CurrentPlan, UserProfileResponse } from '~/models/organization';
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { Avatar } from '~/ui/components/avatar';
 import { Icon } from '~/ui/components/icon';
@@ -10,7 +10,7 @@ import { LogoutModal } from '~/ui/components/modals/logout-modal';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 interface UserButtonProps {
-  user: UserProfileResponse;
+  user: UserProfile;
   currentPlan?: CurrentPlan;
   isMinimal?: boolean;
 }

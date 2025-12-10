@@ -19,7 +19,7 @@ function parseNoProxyZone(zone: string) {
 function matchesHostname(hostname: string, noProxyZoneHostname: string) {
   const wildcardNeedle = noProxyZoneHostname.startsWith('.*.') ? noProxyZoneHostname.slice(2) : noProxyZoneHostname;
   const isMatchedAt = hostname.indexOf(wildcardNeedle);
-  return isMatchedAt > -1 && isMatchedAt === hostname.length - wildcardNeedle.length;
+  return isMatchedAt !== -1 && isMatchedAt === hostname.length - wildcardNeedle.length;
 }
 
 export function isUrlMatchedInNoProxyRule(url: string | undefined, noProxyRule: any) {

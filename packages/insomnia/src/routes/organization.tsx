@@ -1,3 +1,4 @@
+import { type CurrentPlan, type UserProfile } from 'insomnia-api';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -16,7 +17,6 @@ import * as reactUse from 'react-use';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { userSession } from '~/models';
 import { isOwnerOfOrganization, isPersonalOrganization, type Organization } from '~/models/organization';
-import { type CurrentPlan, type UserProfileResponse } from '~/models/organization';
 import type { Settings } from '~/models/settings';
 import { isScratchpad } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
@@ -49,7 +49,7 @@ import type { Route } from './+types/organization';
 
 export interface OrganizationLoaderData {
   organizations: Organization[];
-  user?: UserProfileResponse;
+  user?: UserProfile;
   currentPlan?: CurrentPlan;
 }
 
@@ -57,7 +57,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const { id, accountId } = await userSession.getOrCreate();
   if (id) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
-    const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as UserProfileResponse;
+    const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as UserProfile;
     const currentPlan = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan;
     return {
       organizations: sortOrganizations(accountId, organizations),
