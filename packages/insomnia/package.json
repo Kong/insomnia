@@ -184,7 +184,7 @@
     "@types/uuid": "^9.0.8",
     "@types/vkbeautify": "^0.99.4",
     "@types/ws": "^8.18.1",
-    "@vitejs/plugin-react": "5.0.1",
+    "@vitejs/plugin-react": "5.1.2",
     "cross-env": "^7.0.3",
     "electron": "38.4.0",
     "electron-builder": "26.0.20",
