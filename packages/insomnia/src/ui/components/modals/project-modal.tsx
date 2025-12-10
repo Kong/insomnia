@@ -41,11 +41,7 @@ export const ProjectModal = ({
   if (project) {
     title = 'Project settings';
   } else {
-    if (activeViewObj.activeView === 'git-results') {
-      title = 'Create Git Sync project';
-    } else {
-      title = 'Create project';
-    }
+    title = activeViewObj.activeView === 'git-results' ? 'Create Git Sync project' : 'Create project';
   }
 
   return (
