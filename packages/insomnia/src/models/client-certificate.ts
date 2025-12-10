@@ -1,4 +1,5 @@
 import { database as db } from '../common/database';
+import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export const name = 'Client Certificate';
@@ -24,6 +25,8 @@ interface BaseClientCertificate {
 }
 
 export type ClientCertificate = BaseModel & BaseClientCertificate;
+
+export const clientCertificateDbBucket = createDatabaseBucket<ClientCertificate>(type);
 
 export function init(): BaseClientCertificate {
   return {

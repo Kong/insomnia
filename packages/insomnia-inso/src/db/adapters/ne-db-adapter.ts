@@ -1,11 +1,13 @@
 import { stat } from 'node:fs/promises';
 import path from 'node:path';
 
-import NeDB from '@seald-io/nedb';
+import { database } from 'insomnia/src/common/database';
+
+import { configureModel } from '~/models/db';
 
 import type { Database, DbAdapter } from '../index';
 import { emptyDb } from '../index';
-import type { BaseModel } from '../models/types';
+import { genDatabaseFactory } from './database-factory';
 
 const neDbAdapter: DbAdapter = async (dir, filterTypes) => {
   // Confirm if db files exist
@@ -16,26 +18,16 @@ const neDbAdapter: DbAdapter = async (dir, filterTypes) => {
   }
 
   const db = emptyDb();
-  const types = filterTypes?.length ? filterTypes : (Object.keys(db) as (keyof Database)[]);
-  const promises = types.map(
-    t =>
-      new Promise((resolve, reject) => {
-        const filePath = path.join(dir, `insomnia.${t}.db`);
-        const collection = new NeDB({
-          autoload: true,
-          filename: filePath,
-          corruptAlertThreshold: 0.9,
-        });
-        collection.find({}, (err: Error, docs: BaseModel[]) => {
-          if (err) {
-            return reject(err);
-          }
 
-          (db[t] as {}[]).push(...docs);
-          resolve(null);
-        });
-      }),
-  );
+  const databaseFactory = genDatabaseFactory(dir);
+  configureModel(databaseFactory);
+  database.init();
+
+  const types = filterTypes?.length ? filterTypes : (Object.keys(db) as (keyof Database)[]);
+  const promises = types.map(async t => {
+    const docs = await database.find(t);
+    (db[t] as {}[]).push(...docs);
+  });
   await Promise.all(promises);
   return db;
 };

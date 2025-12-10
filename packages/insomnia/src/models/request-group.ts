@@ -1,4 +1,5 @@
 import { database as db } from '../common/database';
+import { createDatabaseBucket } from './db';
 import type { EnvironmentKvPairData, EnvironmentType } from './environment';
 import type { BaseModel } from './index';
 import type { RequestAuthentication, RequestHeader } from './request';
@@ -29,6 +30,8 @@ interface BaseRequestGroup {
 }
 
 export type RequestGroup = BaseModel & BaseRequestGroup;
+
+export const requestGroupDbBucket = createDatabaseBucket<RequestGroup>(type);
 
 export const isRequestGroup = (model: Pick<BaseModel, 'type'>): model is RequestGroup => model.type === type;
 

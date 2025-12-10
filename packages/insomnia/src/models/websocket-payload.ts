@@ -1,5 +1,6 @@
 import { database } from '../common/database';
 import type { BaseModel } from '.';
+import { createDatabaseBucket } from './db';
 
 export const name = 'WebSocket Payload';
 
@@ -18,6 +19,8 @@ export interface BaseWebSocketPayload {
 }
 
 export type WebSocketPayload = BaseModel & BaseWebSocketPayload & { type: typeof type };
+
+export const webSocketPayloadDbBucket = createDatabaseBucket<WebSocketPayload>(type);
 
 export const isWebSocketPayload = (model: Pick<BaseModel, 'type'>): model is WebSocketPayload => model.type === type;
 

@@ -1,6 +1,7 @@
 import type { TestResults } from 'insomnia-testing';
 
 import { database as db } from '../common/database';
+import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export const name = 'Unit Test Result';
@@ -18,6 +19,8 @@ export interface BaseUnitTestResult {
 }
 
 export type UnitTestResult = BaseModel & BaseUnitTestResult;
+
+export const unitTestResultDbBucket = createDatabaseBucket<UnitTestResult>(type);
 
 export const isUnitTestResult = (model: Pick<BaseModel, 'type'>): model is UnitTestResult => model.type === type;
 

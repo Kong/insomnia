@@ -1,4 +1,5 @@
 import { database as db } from '../common/database';
+import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 import type { RequestHeader } from './request';
 
@@ -24,6 +25,8 @@ interface BaseMockRoute {
 }
 
 export type MockRoute = BaseModel & BaseMockRoute;
+
+export const mockRouteDbBucket = createDatabaseBucket<MockRoute>(type);
 
 export function init(): BaseMockRoute {
   return {

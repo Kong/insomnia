@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import { v4 as uuidv4 } from 'uuid';
 
 import { database as db } from '../common/database';
+import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 export const name = 'Cookie Jar';
 
@@ -37,6 +38,8 @@ export interface BaseCookieJar {
 }
 
 export type CookieJar = BaseModel & BaseCookieJar;
+
+export const cookieJarDbBucket = createDatabaseBucket<CookieJar>(type);
 
 export const isCookieJar = (model: Pick<BaseModel, 'type'>): model is CookieJar => model.type === type;
 

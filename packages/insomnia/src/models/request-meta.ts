@@ -1,5 +1,6 @@
 import { PREVIEW_MODE_FRIENDLY, type PreviewMode } from '../common/constants';
 import { database as db } from '../common/database';
+import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export const name = 'Request Meta';
@@ -25,6 +26,8 @@ export interface BaseRequestMeta {
 }
 
 export type RequestMeta = BaseModel & BaseRequestMeta;
+
+export const requestMetaDbBucket = createDatabaseBucket<RequestMeta>(type);
 
 export const isRequestMeta = (model: Pick<BaseModel, 'type'>): model is RequestMeta => model.type === type;
 

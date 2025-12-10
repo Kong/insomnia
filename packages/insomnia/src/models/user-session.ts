@@ -1,5 +1,6 @@
 import type { AESMessage } from '../account/crypt';
 import { database as db } from '../common/database';
+import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export interface BaseUserSession {
@@ -25,6 +26,8 @@ export const type = 'UserSession';
 export const prefix = 'usr';
 export const canDuplicate = false;
 export const canSync = false;
+
+export const userSessionDbBucket = createDatabaseBucket<UserSession>(type);
 
 export function init(): BaseUserSession {
   return {

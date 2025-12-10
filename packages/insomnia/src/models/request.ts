@@ -20,6 +20,7 @@ import { database as db } from '../common/database';
 import type { OAuth1SignatureMethod } from '../network/o-auth-1/constants';
 import { getOperationType } from '../utils/graph-ql';
 import { deconstructQueryStringToParams } from '../utils/url/querystring';
+import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export const name = 'Request';
@@ -294,6 +295,8 @@ export interface BaseRequest {
 }
 
 export type Request = BaseModel & BaseRequest;
+
+export const requestDbBucket = createDatabaseBucket<Request>(type);
 
 export const isRequest = (model: Pick<BaseModel, 'type'>): model is Request => model.type === type;
 

@@ -3,6 +3,7 @@ import type { Root } from '@modelcontextprotocol/sdk/types.js';
 import { invariant } from '~/utils/invariant';
 
 import { database as db } from '../common/database';
+import { createDatabaseBucket } from './db';
 import { type EnvironmentKvPairData } from './environment';
 import type { BaseModel } from './index';
 import type { RequestAuthentication, RequestHeader } from './request';
@@ -39,6 +40,8 @@ export type McpServerPrimitiveTypes = 'tools' | 'resources' | 'prompts' | 'resou
 export const MCP_TRANSPORT_TYPES: TransportType[] = [TRANSPORT_TYPES.HTTP, TRANSPORT_TYPES.STDIO];
 
 export type McpRequest = BaseModel & BaseMcpRequest & { type: typeof type };
+
+export const mcpRequestDbBucket = createDatabaseBucket<McpRequest>(type);
 
 export const isMcpRequest = (model: Pick<BaseModel, 'type'>): model is McpRequest => model.type === type;
 

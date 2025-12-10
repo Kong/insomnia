@@ -7,6 +7,7 @@ import { JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
 import { base64decode, base64encode } from '../utils/vault';
+import { createDatabaseBucket } from './db';
 import { type BaseModel, project, workspace } from './index';
 import type { Project } from './project';
 import type { Workspace } from './workspace';
@@ -53,6 +54,9 @@ export interface EnvironmentKvPairData {
   enabled?: boolean;
 }
 export type Environment = BaseModel & BaseEnvironment;
+
+export const environmentDbBucket = createDatabaseBucket<Environment>(type);
+
 // This is a representation of the data taken from a csv or json file AKA iterationData
 export type UserUploadEnvironment = Pick<Environment, 'data' | 'dataPropertyOrder' | 'name'>;
 

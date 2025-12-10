@@ -1,0 +1,34 @@
+{
+  "private": true,
+  "name": "insomnia-storage",
+  "version": "12.1.0",
+  "description": "Insomnia core functionalities",
+  "author": "Kong <office@konghq.com>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kong/insomnia.git",
+    "directory": "packages/insomnia-storage"
+  },
+  "bugs": {
+    "url": "https://github.com/kong/insomnia/issues"
+  },
+  "homepage": "https://github.com/Kong/insomnia#readme",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./node": {
+      "import": "./src/node/index.ts",
+      "types": "./src/node/index.ts"
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx --cache",
+    "type-check": "tsc --noEmit --project tsconfig.json"
+  },
+  "dependencies": {
+    "@seald-io/nedb": "^4.1.1"
+  }
+}

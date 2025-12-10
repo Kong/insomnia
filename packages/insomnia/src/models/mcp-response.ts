@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
 import { database as db } from '../common/database';
+import { createDatabaseBucket } from './db';
 import * as requestOperations from './helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';
@@ -34,6 +35,8 @@ export interface BaseMcpResponse {
 }
 
 export type McpResponse = BaseModel & BaseMcpResponse;
+
+export const mcpResponseDbBucket = createDatabaseBucket<McpResponse>(type);
 
 export const isMcpResponse = (model: Pick<BaseModel, 'type'>): model is McpResponse => model.type === type;
 

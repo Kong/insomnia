@@ -1,4 +1,5 @@
 import { database as db } from '../common/database';
+import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export type CloudProviderName = 'aws' | 'azure' | 'gcp' | 'hashicorp';
@@ -120,6 +121,8 @@ export const type = 'CloudCredential';
 export const prefix = 'cloudCred';
 export const canDuplicate = false;
 export const canSync = false;
+
+export const cloudCredentialDbBucket = createDatabaseBucket<CloudProviderCredential>(type);
 
 export const isCloudCredential = (model: Pick<BaseModel, 'type'>): model is CloudProviderCredential =>
   model.type === type;

@@ -1,4 +1,5 @@
 import { database as db } from '../common/database';
+import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export type OAuth2Token = BaseModel & BaseOAuth2Token;
@@ -12,6 +13,8 @@ export const prefix = 'oa2';
 export const canDuplicate = false;
 
 export const canSync = false;
+
+export const oAuth2TokenDbBucket = createDatabaseBucket<OAuth2Token>(type);
 
 export interface BaseOAuth2Token {
   refreshToken: string;

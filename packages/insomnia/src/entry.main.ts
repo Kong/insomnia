@@ -7,8 +7,10 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
 
+import { databaseFactory } from '~/main/database';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
+import { configureModel } from '~/models/db';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { userDataFolder } from '../config/config.json';
@@ -51,6 +53,8 @@ registerInsomniaProtocols();
 
 // Force onlyResolveOnSuccess to true, will be removed after all usages are updated
 configureFetch(options => insomniaFetch({ ...options, onlyResolveOnSuccess: true }));
+
+configureModel(databaseFactory);
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {

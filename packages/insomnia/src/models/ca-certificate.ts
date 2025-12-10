@@ -1,4 +1,5 @@
 import { database as db } from '../common/database';
+import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export const name = 'CA Certificate';
@@ -20,6 +21,8 @@ interface BaseCaCertificate {
 }
 
 export type CaCertificate = BaseModel & BaseCaCertificate;
+
+export const caCertificateDbBucket = createDatabaseBucket<CaCertificate>(type);
 
 export function init(): BaseCaCertificate {
   return {

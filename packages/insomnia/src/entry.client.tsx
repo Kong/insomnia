@@ -6,10 +6,13 @@ import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
+import { configureModel } from '~/models/db';
+import { databaseFactory } from '~/ui/database';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
+import { database } from './common/database';
 import { settings } from './models';
 import { initNewOAuthSession } from './network/o-auth-2/get-token';
 import { init as initPlugins } from './plugins';
@@ -26,6 +29,10 @@ initializeSentry();
 
 // Force onlyResolveOnSuccess to true, will be removed after all usages are updated
 configureFetch(options => insomniaFetch({ ...options, onlyResolveOnSuccess: true }));
+
+configureModel(databaseFactory);
+
+await database.init();
 
 await initPlugins();
 

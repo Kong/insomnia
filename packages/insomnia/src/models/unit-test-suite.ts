@@ -1,4 +1,5 @@
 import { database as db } from '../common/database';
+import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export const name = 'Unit Test Suite';
@@ -16,6 +17,8 @@ export interface BaseUnitTestSuite {
 }
 
 export type UnitTestSuite = BaseModel & BaseUnitTestSuite;
+
+export const unitTestSuiteDbBucket = createDatabaseBucket<UnitTestSuite>(type);
 
 export const isUnitTestSuite = (model: Pick<BaseModel, 'type'>): model is UnitTestSuite => model.type === type;
 

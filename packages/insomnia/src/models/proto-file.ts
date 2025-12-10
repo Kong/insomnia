@@ -1,4 +1,5 @@
 import { database as db } from '../common/database';
+import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export const name = 'Proto File';
@@ -17,6 +18,8 @@ interface BaseProtoFile {
 }
 
 export type ProtoFile = BaseModel & BaseProtoFile;
+
+export const protoFileDbBucket = createDatabaseBucket<ProtoFile>(type);
 
 export const isProtoFile = (model: Pick<BaseModel, 'type'>): model is ProtoFile => model.type === type;
 
