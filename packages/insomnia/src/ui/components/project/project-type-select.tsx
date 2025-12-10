@@ -86,6 +86,7 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
               >
                 {({ isHovered, isSelected }) => (
                   <div
+                    aria-label={`Project Type: ${item.type}`}
                     className={`rounded-sm border ${isSelected ? 'border-(--color-surprise)' : 'border-transparent'} ${isHovered ? 'border-transparent bg-(--hl-xs)' : ''}`}
                   >
                     <TypeItem icon={item.icon} name={item.name} description={item.description} />
