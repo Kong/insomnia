@@ -103,17 +103,14 @@ const CustomTextAreaWidget = (props: WidgetProps) => {
   const { value, onChange, disabled, readonly, id } = props;
 
   return (
-    <>
-      {' '}
-      <textarea
-        id={id}
-        disabled={disabled}
-        className={cn(`${baseInputClasses}`)}
-        readOnly={readonly}
-        value={value || ''}
-        onChange={e => onChange(e.target.value)}
-      />
-    </>
+    <textarea
+      id={id}
+      disabled={disabled}
+      className={cn(`${baseInputClasses}`)}
+      readOnly={readonly}
+      value={value || ''}
+      onChange={e => onChange(e.target.value)}
+    />
   );
 };
 
