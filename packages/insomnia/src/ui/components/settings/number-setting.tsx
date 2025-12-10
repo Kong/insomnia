@@ -35,7 +35,11 @@ export const NumberSetting: FC<Props> = ({ help, label, max, min, setting, step 
 
   const handleOnChange = useCallback<ChangeEventHandler<HTMLInputElement>>(
     async ({ currentTarget: { value, min, max } }) => {
-      const updatedValue = snapNumberToLimits(parseInt(value, 10) || 0, parseInt(min, 10), parseInt(max, 10));
+      const updatedValue = snapNumberToLimits(
+        Number.parseInt(value, 10) || 0,
+        Number.parseInt(min, 10),
+        Number.parseInt(max, 10),
+      );
       patchSettings({ [setting]: updatedValue });
     },
     [patchSettings, setting],

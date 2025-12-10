@@ -239,11 +239,9 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                   projectId: latestProjectId.current,
                   workspaceId: latestWorkspaceId.current,
                 });
-              } else if (event.type === 'FileChanged' && !latestWorkspaceId.current) {
                 // FileChanged could be a new file has been added, we need to revalidate the workspace list
-                if (!latestInSubmission.current) {
-                  revalidate();
-                }
+              } else if (event.type === 'FileChanged' && !latestWorkspaceId.current && !latestInSubmission.current) {
+                revalidate();
               }
             }
           } catch (e) {

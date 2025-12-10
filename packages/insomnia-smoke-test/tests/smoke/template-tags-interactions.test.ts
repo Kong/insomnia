@@ -28,7 +28,10 @@ const templateTagTestCases: Record<string, TemplateTagTestCase[]> = {
   jsonPath: [{ tagPrefix: '{% jsonpath', expectedResult: 'bar' }],
   os: [{ tagPrefix: "{% os 'arch', '' %}", expectedResult: os.arch() }],
   timeStamp: [
-    { tagPrefix: "{% now 'millis', '' %}", expectedResult: result => !isNaN(Number(result)) && result.length === 13 },
+    {
+      tagPrefix: "{% now 'millis', '' %}",
+      expectedResult: result => !Number.isNaN(Number(result)) && result.length === 13,
+    },
   ],
   uuid: [{ tagPrefix: "{% uuid 'v4' %}", expectedResult: result => result.length === 36 }],
   request: [

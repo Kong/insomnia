@@ -56,7 +56,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: Dropdo
 
   const { menuTriggerProps, menuProps } = useMenuTrigger({ isDisabled }, state, triggerRef);
   return (
-    <div className={`dropdown relative inline-block ${className || ''}`} style={style} data-testid={dataTestId}>
+    <div className={`dropdown relative flex ${className || ''}`} style={style} data-testid={dataTestId}>
       <PressResponder {...menuTriggerProps} isPressed={state.isOpen} ref={triggerRef}>
         {triggerButton || (
           <Button>

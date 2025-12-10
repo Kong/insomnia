@@ -183,7 +183,6 @@ export const isDesignActivity = (activity?: string): activity is GlobalActivity 
       return true;
     }
 
-    case 'home':
     default: {
       return false;
     }
@@ -196,9 +195,6 @@ export const isCollectionActivity = (activity?: string): activity is GlobalActiv
       return true;
     }
 
-    case 'spec':
-    case 'unittest':
-    case 'home':
     default: {
       return false;
     }

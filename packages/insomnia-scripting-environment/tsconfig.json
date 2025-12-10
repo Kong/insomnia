@@ -7,12 +7,11 @@
     "allowJs": true,
     "resolveJsonModule": true,
     "module": "ES2022",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "isolatedModules": true,
+    "noEmit": true,
     "paths": {
-      "~/*": [
-        "../insomnia/src/*"
-      ],
+      "~/*": ["../insomnia/src/*"]
     },
     /* Strictness */
     "strict": true,
@@ -24,17 +23,8 @@
     "verbatimModuleSyntax": true,
     "jsx": "react",
     /* If your code runs in the DOM: */
-    "lib": [
-      "es2023",
-      "dom",
-      "dom.iterable"
-    ]
+    "lib": ["es2023", "dom", "dom.iterable"]
   },
-  "include": [
-    "../insomnia/types"
-  ],
-  "exclude": [
-    "**/__tests__",
-    "node_modules"
-  ]
+  "include": ["../insomnia/types"],
+  "exclude": ["**/__tests__", "node_modules"]
 }

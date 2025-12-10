@@ -37,8 +37,6 @@ beforeAll(() => {
   }
 });
 
-const deepClone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
-
 // -----------------------------
 // Factory helpers
 // (simple, local, no external deps)
@@ -409,7 +407,7 @@ describe('RequestCollectionSchema (recursive union)', () => {
   });
 
   it('rejects leaf nodes with forbidden props (e.g., children on Request)', () => {
-    const bad = deepClone(makeHttpRequest());
+    const bad = structuredClone(makeHttpRequest());
     // @ts-expect-error - children is not allowed on Request
     bad.children = [];
     expect(() => RequestCollectionSchema.parse([bad])).toThrow();

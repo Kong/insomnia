@@ -222,7 +222,6 @@ function getThemeClassName(theme: ThemeKeys) {
     case ThemeEnum.highlight: {
       return 'fill-hl text-danger';
     }
-    case ThemeEnum.default:
     default: {
       return 'fill-current text-current';
     }
@@ -247,7 +246,7 @@ export const SvgIcon = ({
   }
 
   return (
-    <div className={`inline-flex items-center whitespace-nowrap ${label ? 'mr-[var(--padding-xs)]' : ''}`}>
+    <div className={`inline-flex items-center whitespace-nowrap ${label ? 'mr-(--padding-xs)' : ''}`}>
       <IconComponent className={`${getThemeClassName(iconTheme)} ${className}`} style={style} />
       {label && <span>{label}</span>}
     </div>

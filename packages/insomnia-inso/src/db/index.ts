@@ -59,7 +59,7 @@ interface Options {
 export const isFile = async (path: string) => {
   try {
     return (await stat(path)).isFile();
-  } catch (error) {
+  } catch {
     return false;
   }
 };

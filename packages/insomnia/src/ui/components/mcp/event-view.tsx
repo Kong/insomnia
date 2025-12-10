@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import { CallToolResultSchema, ElicitRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { type RJSFSchema, type UiSchema } from '@rjsf/utils';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -23,7 +21,6 @@ import {
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { CodeEditor, type CodeEditorHandle } from '../../components/.client/codemirror/code-editor';
-import { showError } from '../../components/modals';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
@@ -63,20 +60,10 @@ export const MessageEventView = ({ event }: Props) => {
     if (canceled || !outputPath) {
       return;
     }
-
-    const to = fs.createWriteStream(outputPath);
-
-    to.on('error', err => {
-      showError({
-        title: 'Save Failed',
-        message: 'Failed to save response body',
-        error: err,
-      });
+    await window.main.writeFile({
+      path: outputPath,
+      content: raw,
     });
-
-    to.write(raw);
-
-    to.end();
   }, [raw]);
 
   const handleCopyResponseToClipboard = useCallback(() => {
@@ -134,7 +121,7 @@ export const MessageEventView = ({ event }: Props) => {
               try {
                 const callToolResultContentTextParsed = JSON.parse(callToolResultContentText);
                 callToolResultContent.text = callToolResultContentTextParsed;
-              } catch (err) {}
+              } catch {}
             }
             parsed.result.content[idx] = callToolResultContent;
           });
@@ -172,7 +159,7 @@ export const MessageEventView = ({ event }: Props) => {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="box-border flex h-8 flex-row border-b border-gray-300">
+      <div className="box-border flex h-8 flex-row items-center border-b border-(--hl-md)">
         <Dropdown
           aria-label="Websocket Preview Mode Dropdown"
           className="p-2"
@@ -209,8 +196,8 @@ export const MessageEventView = ({ event }: Props) => {
         </Dropdown>
         {isElicitationRequest && !isServerRequestResponded && (
           <Button
-            className={`mx-2 mt-2 px-2 text-[--color-font] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] ${
-              viewMode === 'form' ? 'bg-[--hl-xs] text-[--color-font]' : ''
+            className={`mx-2 mt-2 px-2 text-(--color-font) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) ${
+              viewMode === 'form' ? 'bg-(--hl-xs) text-(--color-font)' : ''
             }`}
             onPress={() => setViewMode('form')}
           >
@@ -219,7 +206,7 @@ export const MessageEventView = ({ event }: Props) => {
         )}
       </div>
       {viewMode === 'raw' ? (
-        <div className="h-full flex-grow p-4">
+        <div className="h-full grow p-4">
           <CodeEditor
             id="mcp-data-preview"
             hideLineNumbers
@@ -235,7 +222,7 @@ export const MessageEventView = ({ event }: Props) => {
           />
         </div>
       ) : (
-        <div className="flex flex-grow flex-col overflow-hidden">
+        <div className="flex grow flex-col overflow-hidden">
           <div className="h-[calc(100%-var(--line-height-sm))] overflow-auto bg-inherit px-5 py-1">
             <InsomniaRjsfForm
               formData={formData}
@@ -247,7 +234,7 @@ export const MessageEventView = ({ event }: Props) => {
               focusOnFirstError
             />
           </div>
-          <Toolbar className="content-box sticky bottom-0 z-10 flex h-[var(--line-height-sm)] flex-shrink-0 gap-3 border-b border-[var(--hl-md)] bg-[var(--color-bg)] px-5 py-2 text-[var(--font-size-sm)]">
+          <Toolbar className="content-box sticky bottom-0 z-10 flex h-(--line-height-sm) shrink-0 gap-3 border-b border-(--hl-md) bg-(--color-bg) px-5 py-2 text-(--font-size-sm)">
             <Button
               onPress={() => {
                 if (rjsfFormRef.current?.validate()) {
@@ -259,7 +246,7 @@ export const MessageEventView = ({ event }: Props) => {
                   });
                 }
               }}
-              className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
+              className="rounded-sm bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise) hover:brightness-75"
             >
               Submit
             </Button>
@@ -271,7 +258,7 @@ export const MessageEventView = ({ event }: Props) => {
                   type: 'decline',
                 })
               }
-              className="rounded-[var(--radius-md)] border border-solid border-[var(--hl-lg)] bg-[var(--color-bg)] px-[var(--padding-md)] text-center"
+              className="rounded-md border border-solid border-(--hl-lg) bg-(--color-bg) px-(--padding-md) text-center"
             >
               Decline
             </Button>
@@ -283,7 +270,7 @@ export const MessageEventView = ({ event }: Props) => {
                   type: 'cancel',
                 })
               }
-              className="rounded-[var(--radius-md)] border border-solid border-[var(--hl-lg)] bg-[var(--color-bg)] px-[var(--padding-md)] text-center"
+              className="rounded-md border border-solid border-(--hl-lg) bg-(--color-bg) px-(--padding-md) text-center"
             >
               Cancel
             </Button>

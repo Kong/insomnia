@@ -49,7 +49,7 @@ export const AzureKeyVaultForm = (props: AzureKeyVaultFormProps) => {
               }}
             />
             {!isValidIdentifier && (
-              <p className="notice error mt-[--padding-md] w-full" style={{ marginBottom: 0 }}>
+              <p className="notice error mt-(--padding-md) w-full" style={{ marginBottom: 0 }}>
                 Invalid Secret Identifier, please check and input again.
               </p>
             )}

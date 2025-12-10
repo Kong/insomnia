@@ -133,20 +133,19 @@ export const test = baseTest.extend<{
     } finally {
       // set testFailed to true if the test timed out or failed
       testFailed = testFailed || testInfo.status === 'timedOut' || testInfo.status === 'failed';
-      if (
+      const isTrace =
         traceMode === 'on' ||
         (traceMode === 'retain-on-failure' && testFailed) ||
-        (traceMode === 'on-first-retry' && testInfo.retry === 1)
-      ) {
-        // Use a different name rather than the default trace.zip to avoid overwriting the trace.
-        // Refer: https://github.com/microsoft/playwright/issues/35005
-        await appContext.tracing.stop({
-          path: path.join(testInfo.outputDir, `trace-${testInfo.title}-${testInfo.status}.zip`),
-        });
-      } else {
-        // Discard the trace if not needed
-        await appContext.tracing.stop();
-      }
+        (traceMode === 'on-first-retry' && testInfo.retry === 1);
+
+      // Use a different name rather than the default trace.zip to avoid overwriting the trace.
+      // Refer: https://github.com/microsoft/playwright/issues/35005
+      // Discard the trace if not needed
+      await (isTrace
+        ? appContext.tracing.stop({
+            path: path.join(testInfo.outputDir, `trace-${testInfo.title}-${testInfo.status}.zip`),
+          })
+        : appContext.tracing.stop());
     }
 
     await electronApp.close();
@@ -172,7 +171,7 @@ export const test = baseTest.extend<{
       session: {
         id: 'sess_64a477e6b59d43a5a607f84b4f73e3ce',
         // Expire in 2077
-        sessionExpiry: new Date(2147483647000),
+        sessionExpiry: new Date(2_147_483_647_000),
         publicKey: {
           alg: 'RSA-OAEP-256',
           e: 'AQAB',

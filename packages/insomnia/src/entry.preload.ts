@@ -181,6 +181,7 @@ const main: Window['main'] = {
   onDefaultBrowserOAuthRedirect: options => ipcRenderer.invoke('onDefaultBrowserOAuthRedirect', options),
   cancelAuthorizationInDefaultBrowser: options => ipcRenderer.invoke('cancelAuthorizationInDefaultBrowser', options),
   setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
+  multipartBufferToArray: options => ipcRenderer.invoke('multipartBufferToArray', options),
   installPlugin: (lookupName: string, allowScopedPackageNames = false) =>
     ipcRenderer.invoke('installPlugin', lookupName, allowScopedPackageNames),
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
@@ -263,7 +264,12 @@ ipcRenderer.on('hidden-browser-window-response-listener', event => {
   ports.set('hiddenWindowPort', port);
   ipcRenderer.invoke('main-window-script-port-ready');
 });
-
+const path: Window['path'] = {
+  dirname: (p: string) => ipcRenderer.sendSync('path.dirname', p),
+  basename: (p: string) => ipcRenderer.sendSync('path.basename', p),
+  join: (...paths: string[]) => ipcRenderer.sendSync('path.join', ...paths),
+  resolve: (...paths: string[]) => ipcRenderer.sendSync('path.resolve', ...paths),
+};
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),
   showSaveDialog: options => ipcRenderer.invoke('showSaveDialog', options),
@@ -291,6 +297,7 @@ if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('shell', shell);
   contextBridge.exposeInMainWorld('clipboard', clipboard);
   contextBridge.exposeInMainWorld('webUtils', webUtils);
+  contextBridge.exposeInMainWorld('path', path);
 } else {
   window.main = main;
   window.dialog = dialog;
@@ -298,4 +305,5 @@ if (process.contextIsolated) {
   window.shell = shell;
   window.clipboard = clipboard;
   window.webUtils = webUtils;
+  window.path = path;
 }

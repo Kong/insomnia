@@ -119,10 +119,8 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
       throw new Error(`Unable to parse additional-claims: ${err}`);
     }
 
-    if (parsedAdditionalClaims) {
-      if (typeof parsedAdditionalClaims !== 'object') {
-        throw new Error(`additional-claims must be an object received: '${typeof parsedAdditionalClaims}' instead`);
-      }
+    if (parsedAdditionalClaims && typeof parsedAdditionalClaims !== 'object') {
+      throw new Error(`additional-claims must be an object received: '${typeof parsedAdditionalClaims}' instead`);
     }
     const generator = (await import('httplease-asap')).createAuthHeaderGenerator({
       privateKey,
@@ -169,11 +167,7 @@ export const _buildBearerHeader = (accessToken: string, prefix?: string) => {
     value: '',
   };
 
-  if (prefix === 'NO_PREFIX') {
-    header.value = accessToken;
-  } else {
-    header.value = `${prefix || 'Bearer'} ${accessToken}`;
-  }
+  header.value = prefix === 'NO_PREFIX' ? accessToken : `${prefix || 'Bearer'} ${accessToken}`;
 
   return header;
 };

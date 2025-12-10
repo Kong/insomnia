@@ -14,7 +14,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     await syncOrganizations(sessionId, accountId);
 
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
-    invariant(organizations, 'Failed to fetch organizations.');
+    invariant(organizations.length, 'Failed to fetch organizations. Check your network connection and try again.');
 
     const personalOrganization = findPersonalOrganization(organizations, accountId);
     invariant(

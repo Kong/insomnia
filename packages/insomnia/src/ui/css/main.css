@@ -2,12 +2,14 @@
  * Insomnia Less!!! :)
  */
 /* Libs */
-@import 'lib/fontawesome/css/fontawesome.css';
-@import 'lib/fontawesome/css/solid.css';
-@import 'lib/fontawesome/css/brands.css';
-@import 'lib/fontawesome/css/v4-font-face.css';
-@import 'lib/fontawesome/css/v4-shims.css';
+@import './lib/fontawesome/css/fontawesome.css';
+@import './lib/fontawesome/css/solid.css';
+@import './lib/fontawesome/css/brands.css';
+@import './lib/fontawesome/css/v4-font-face.css';
+@import './lib/fontawesome/css/v4-shims.css';
 @import '../../../../../node_modules/swagger-ui-dist/swagger-ui.css';
+
+/* TODO: Remove custom reset and follow tailwindcss reset */
 /* Boilerplate */
 /* http://meyerweb.com/eric/tools/css/reset/
    v2.0 | 20110126
@@ -113,9 +115,6 @@ nav,
 section {
   display: block;
 }
-body {
-  line-height: normal;
-}
 ol,
 ul {
   list-style: none;
@@ -174,42 +173,10 @@ h5,
 h6 {
   line-height: var(--font-line-height-md);
 }
-h1 {
-  font-size: var(--font-size-xxxl);
-  font-weight: var(--font-weight-regular);
-}
-h2 {
-  font-size: var(--font-size-xxl);
-  font-weight: var(--font-weight-regular);
-}
-h3 {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-medium);
-}
-h4 {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-medium);
-}
-h5 {
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-medium);
-}
-h6 {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
-  text-transform: uppercase;
-}
 p {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-regular);
   line-height: var(--font-line-height-lg);
-}
-p,
-h1,
-h2,
-h3 {
-  margin-bottom: var(--padding-sm);
-  margin-top: var(--padding-md);
 }
 hr {
   width: 100%;

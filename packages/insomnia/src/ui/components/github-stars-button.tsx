@@ -11,7 +11,7 @@ const LOCALSTORAGE_GITHUB_STARS_KEY = 'insomnia:github-stars';
 export const GitHubStarsButton = () => {
   const isMounted = reactUse.useMountedState();
   const localStorageStars = localStorage.getItem(LOCALSTORAGE_GITHUB_STARS_KEY);
-  const initialState = parseInt(localStorageStars || '30000', 10);
+  const initialState = Number.parseInt(localStorageStars || '30000', 10);
   const [starCount, setStarCount] = useState(initialState);
 
   useEffect(() => {
@@ -72,11 +72,11 @@ export const GitHubStarsButton = () => {
   const shouldShowCount = !error;
 
   return (
-    <div className="flex select-none divide-x divide-solid divide-[--hl-md] rounded-lg border border-solid border-[--hl-md]">
+    <div className="flex divide-x divide-solid divide-(--hl-md) rounded-lg border border-solid border-(--hl-md) select-none">
       <Link onPress={starClick}>
         <a
           href="https://github.com/Kong/insomnia"
-          className="flex items-center justify-center gap-2 rounded-l-lg px-4 py-1 text-sm text-[--color-font] outline-none ring-transparent transition-all last-of-type:rounded-r-lg hover:bg-[--hl-xs] focus:ring-1 focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="flex items-center justify-center gap-2 rounded-l-lg px-4 py-1 text-sm text-(--color-font) ring-transparent outline-hidden transition-all last-of-type:rounded-r-lg hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
         >
           <Icon icon={['fab', 'github']} />
           Star
@@ -86,7 +86,7 @@ export const GitHubStarsButton = () => {
         <Link onPress={counterClick}>
           <a
             href="https://github.com/Kong/insomnia/stargazers"
-            className="flex items-center justify-center gap-2 rounded-r-lg px-4 py-1 text-sm text-[--color-font] outline-none ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-1 focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+            className="flex items-center justify-center gap-2 rounded-r-lg px-4 py-1 text-sm text-(--color-font) ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm)"
           >
             {starCount.toLocaleString()}
           </a>

@@ -62,7 +62,7 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
                 <Link
                   button
                   href={docsTemplateTags}
-                  className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                  className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                 >
                   Templating Documentation <i className="fa fa-external-link" />
                 </Link>

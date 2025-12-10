@@ -102,7 +102,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     }));
 
     url = href.replace(search, '').replace(/\/$/, '');
-  } catch (error) {}
+  } catch {}
 
   /// /////// Authentication //////////
   const [username, password] = getPairValue(pairsByName, '', ['u', 'user']).split(/:(.*)$/);
@@ -191,7 +191,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
 
   if (dataParameters.length !== 0 && bodyAsGET) {
     parameters.push(...dataParameters);
-  } else if (dataParameters && mimeType === 'application/x-www-form-urlencoded') {
+  } else if (dataParameters.length !== 0 && mimeType === 'application/x-www-form-urlencoded') {
     body = {
       mimeType,
       params: dataParameters.map(parameter => ({
@@ -202,7 +202,9 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     };
   } else if (dataParameters.length !== 0) {
     body = {
-      text: dataParameters.map(parameter => `${parameter.name}${parameter.value}`).join('&'),
+      text: dataParameters
+        .map(parameter => (parameter.name ? `${parameter.name}=${parameter.value}` : parameter.value))
+        .join('&'),
       mimeType: mimeType || '',
     };
   } else if (formDataParams.length) {
@@ -400,7 +402,7 @@ export const convert: Converter = rawData => {
 
     if (op?.startsWith('$')) {
       // Handle the case where literal like -H $'Header: \'Some Quoted Thing\''
-      const str = op.slice(2, op.length - 1).replace(/\\'/g, "'");
+      const str = op.slice(2, -1).replace(/\\'/g, "'");
 
       currentCommand.push(str);
       continue;

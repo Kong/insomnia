@@ -99,12 +99,12 @@ const GitHubRepositoryForm = ({ uri, credentials, onSubmit }: GitHubRepositoryFo
         });
       }}
     >
-      <div className="flex items-center justify-between rounded-sm border border-solid border-[--hl-sm] px-3 py-1">
+      <div className="flex items-center justify-between rounded-xs border border-solid border-(--hl-sm) px-3 py-1">
         <div className="flex items-center gap-3">
           <Avatar src={credentials.author.avatarUrl ?? ''} />
           <div className="flex flex-col items-start">
             <span className="font-semibold">{credentials.author.name}</span>
-            <span className="text-sm text-[--hl]">{credentials.author.email || 'Signed in'}</span>
+            <span className="text-sm text-(--hl)">{credentials.author.email || 'Signed in'}</span>
           </div>
         </div>
         <PromptButton
@@ -144,7 +144,7 @@ const GitHubSignInForm = () => {
   const completeSignInError = getErrorResult(completeSignInFetcher.data);
 
   return (
-    <div className="flex flex-col items-center justify-center border border-solid border-[--hl-sm] p-4">
+    <div className="flex flex-col items-center justify-center border border-solid border-(--hl-sm) p-4">
       <Button
         className="flex items-center gap-2 disabled:opacity-100"
         type="button"
@@ -193,7 +193,7 @@ const GitHubSignInForm = () => {
               <Button
                 type="submit"
                 name="add-token"
-                className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
               >
                 Authenticate
               </Button>
@@ -208,7 +208,7 @@ const GitHubSignInForm = () => {
             </p>
           )}
           {(initSignInError || completeSignInError) && (
-            <p className="margin-bottom-sm flex items-center rounded-sm border border-solid border-[--color-danger] bg-[--color-danger-bg] p-2 text-[--color-danger]">
+            <p className="margin-bottom-sm flex items-center rounded-xs border border-solid border-(--color-danger) bg-(--color-danger-bg) p-2 text-(--color-danger)">
               <Icon icon="exclamation-triangle" className="size-4" />
               <span>{initSignInError || completeSignInError}</span>
             </p>

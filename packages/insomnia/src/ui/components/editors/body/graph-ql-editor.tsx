@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-
 import type { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import type { GraphQLHintOptions } from 'codemirror-graphql/hint';
 import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
@@ -103,7 +101,8 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
   return JSON.stringify(content);
 }
 
-const isString = (value?: string): value is string => typeof value === 'string' || (value as unknown) instanceof String;
+const isString = (value?: string): value is string =>
+  typeof value === 'string' || typeof (value as unknown) === 'string';
 const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode =>
   def.kind === Kind.OPERATION_DEFINITION;
 
@@ -240,7 +239,7 @@ export const GraphQLEditor: FC<Props> = ({
   let requestBody: GraphQLBody;
   try {
     requestBody = JSON.parse(request.body.text || '');
-  } catch (err) {
+  } catch {
     requestBody = { query: '' };
   }
 
@@ -249,7 +248,7 @@ export const GraphQLEditor: FC<Props> = ({
   let documentAST;
   try {
     documentAST = parse(requestBody.query || '');
-  } catch (error) {
+  } catch {
     documentAST = null;
   }
   const operations =
@@ -359,7 +358,7 @@ export const GraphQLEditor: FC<Props> = ({
       // default to first operation when none selected
       let operationName = operations[0] || '';
       if (operations.length && state.body.operationName) {
-        const operationsChanged = state.operations.join() !== operations.join();
+        const operationsChanged = state.operations.join(',') !== operations.join(',');
         const operationNameWasChanged = !operations.includes(state.body.operationName);
         if (operationsChanged && operationNameWasChanged) {
           // preserve selection during name change or fallback to first operation
@@ -431,7 +430,7 @@ export const GraphQLEditor: FC<Props> = ({
     }
     try {
       const filePath = filePaths[0]; // showOpenDialog is single select
-      const file = readFileSync(filePath);
+      const file = await window.main.insecureReadFile({ path: filePath });
       const content = JSON.parse(file.toString());
       if (!content.data) {
         throw new Error('JSON file should have a data field with the introspection results');
@@ -613,13 +612,13 @@ export const GraphQLEditor: FC<Props> = ({
     <>
       <Toolbar
         aria-label="GraphQL toolbar"
-        className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2"
+        className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2"
       >
         <Dropdown
           aria-label="Operations Dropdown"
           isDisabled={!state.operations.length}
           triggerButton={
-            <Button className="btn btn--compact h-full bg-transparent p-[--padding-xs] text-[--hl]">
+            <Button className="btn btn--compact h-full bg-transparent p-(--padding-xs) text-(--hl)">
               {state.body.operationName || 'Operations'}
             </Button>
           }
@@ -633,7 +632,7 @@ export const GraphQLEditor: FC<Props> = ({
         <Dropdown
           aria-label="Schema Dropdown"
           triggerButton={
-            <Button className="btn btn--compact h-full bg-transparent p-[--padding-xs] text-[--hl]">
+            <Button className="btn btn--compact h-full bg-transparent p-(--padding-xs) text-(--hl)">
               <span>
                 schema <i className="fa fa-wrench" />
               </span>
@@ -745,9 +744,9 @@ export const GraphQLEditor: FC<Props> = ({
             lintOptions={graphqlOptions?.lintOptions}
           />
         </Panel>
-        <PanelResizeHandle className={'h-[1px] w-full bg-[--hl-md]'} />
+        <PanelResizeHandle className={'h-px w-full bg-(--hl-md)'} />
         <Panel id="GraphQL Variables editor" className="flex flex-col" minSize={20}>
-          <Heading className="flex h-[--line-height-sm] w-full flex-shrink-0 select-none items-center border-b border-solid border-[--hl-md] px-2 text-[--hl]">
+          <Heading className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2 text-(--hl) select-none">
             Query Variables
             <HelpTooltip className="space-left">
               Variables to use in GraphQL query <br />
@@ -776,16 +775,16 @@ export const GraphQLEditor: FC<Props> = ({
           </div>
         </Panel>
       </PanelGroup>
-      <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 select-none items-center overflow-y-auto border-t border-solid border-[--hl-md]">
+      <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-y-auto border-t border-solid border-(--hl-md) select-none">
         <Button
-          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={beautifyRequestBody}
         >
           Prettify GraphQL
         </Button>
         <span className="flex-1" />
         {!schemaFetchError && (
-          <div className="flex flex-shrink-0 items-center gap-2 px-2 text-sm">
+          <div className="flex shrink-0 items-center gap-2 px-2 text-sm">
             <Icon icon="info-circle" />
             {renderSchemaFetchMessage()}
           </div>
@@ -793,13 +792,13 @@ export const GraphQLEditor: FC<Props> = ({
         {schemaFetchError && (
           <Group className="flex h-full items-center">
             <TooltipTrigger>
-              <Button className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
-                <Icon icon="exclamation-triangle" className="text-[--color-warning]" />
+              <Button className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
+                <Icon icon="exclamation-triangle" className="text-(--color-warning)" />
                 <span>Error fetching Schema</span>
               </Button>
               <Tooltip
                 offset={8}
-                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
               >
                 {schemaFetchError.message}
               </Tooltip>

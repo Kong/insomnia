@@ -15,7 +15,7 @@ const gitAdapter: DbAdapter = async (dir, filterTypes) => {
   let files = null;
   try {
     files = await fs.promises.readdir(insomniaFolder);
-  } catch (error) {
+  } catch {
     if (files?.length === 0) {
       console.error(`.insomnia folder found at "${insomniaFolder}"
         but no files found inside. Ensure your workingDir is correct.`);

@@ -31,7 +31,7 @@ describe('deterministicStringify()', () => {
   });
 
   it('works with strange types', () => {
-    const sDate = deterministicStringify(new Date(1541178019555));
+    const sDate = deterministicStringify(new Date(1_541_178_019_555));
     expect(sDate).toBe('"2018-11-02T17:00:19.555Z"');
     const sNull = deterministicStringify(null);
     expect(sNull).toBe('null');

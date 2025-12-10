@@ -480,7 +480,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   return (
     <>
       {operationError && (
-        <div className="flex gap-2 bg-[rgba(var(--color-danger-rgb),1)] px-2 py-1 text-xs text-[--color-font-danger]">
+        <div className="flex gap-2 bg-[rgba(var(--color-danger-rgb),1)] px-2 py-1 text-xs text-(--color-font-danger)">
           <div className="flex items-center gap-2">
             <Icon icon="triangle-exclamation" />
             <span>{operationError}</span>
@@ -491,17 +491,17 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
         </div>
       )}
       {!isSynced ? (
-        <div className="flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-100 aria-pressed:bg-[--hl-sm]">
+        <div className="flex h-(--line-height-sm) w-full items-center gap-2 px-(--padding-md) text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-100 aria-pressed:bg-(--hl-sm)">
           <Icon icon={icon} className="size-4" />
-          <Separator orientation="vertical" className="h-4 border border-solid border-[--hl-sm] bg-[--color-bg]" />
+          <Separator orientation="vertical" className="h-4 border border-solid border-(--hl-sm) bg-(--color-bg)" />
           <div className="flex w-full items-center justify-between gap-2 truncate">
             <span className="truncate">Git is not connected</span>
             <Button
               onPress={() => setIsGitRepoSettingsModalOpen(true)}
-              className="flex h-[25px] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+              className="flex h-[25px] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
             >
               <Icon icon="plug" />
-              <span className="text-[--color-font-secondary]">Connect</span>
+              <span className="text-(--color-font-secondary)">Connect</span>
             </Button>
           </div>
         </div>
@@ -525,14 +525,14 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
               isDisabled={isGitSyncDropdownDisabled}
               data-testid="git-dropdown"
               aria-label="Git Sync"
-              className="flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-100 aria-pressed:bg-[--hl-sm]"
+              className="flex h-(--line-height-sm) w-full items-center gap-2 px-(--padding-md) text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-100 aria-pressed:bg-(--hl-sm)"
             >
               <Icon icon={icon} className="size-4" />
-              <Separator orientation="vertical" className="h-4 border border-solid border-[--hl-sm] bg-[--color-bg]" />
+              <Separator orientation="vertical" className="h-4 border border-solid border-(--hl-sm) bg-(--color-bg)" />
               <div className="relative flex items-center">
                 <Icon icon="code-branch" className="size-4" />
                 {pendingChangesCount > 0 && (
-                  <div className="absolute -bottom-2 -right-1 h-[12px] min-w-[12px] bg-[--color-surprise] px-[4px] text-center font-semibold text-[--color-font-surprise] [border-radius:20px] [font-size:6px] [line-height:12px]">
+                  <div className="absolute -right-1 -bottom-2 h-[12px] min-w-[12px] rounded-[20px] bg-(--color-surprise) px-[4px] text-center text-[6px] leading-[12px] font-semibold text-(--color-font-surprise)">
                     {pendingChangesCount}
                   </div>
                 )}
@@ -540,7 +540,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
               <span className="flex-1 truncate">
                 {isSynced ? currentBranch : gitRepoDataFetcher.state !== 'idle' ? 'Syncing...' : 'Not synced'}
               </span>
-              <div className="flex flex-shrink-0 items-center gap-1.5 text-xs text-[--color-font-secondary]">
+              <div className="flex shrink-0 items-center gap-1.5 text-xs text-(--color-font-secondary)">
                 {isSyncing && <Icon icon="spinner" className="w-3 animate-spin" />}
                 {isPulling && (
                   <div className="flex items-center gap-0.5 overflow-hidden">
@@ -556,7 +556,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
             </Button>
             <Tooltip
               offset={8}
-              className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+              className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
             >
               <div>
                 Connected to <span className="capitalize">{providerName}</span>
@@ -564,7 +564,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
               <span>{pendingChangesCount} pending changes</span>
             </Tooltip>
           </TooltipTrigger>
-          <Popover className="min-w-max max-w-lg overflow-hidden" placement="top end" offset={8}>
+          <Popover className="max-w-lg min-w-max overflow-hidden" placement="top end" offset={8}>
             <Menu
               aria-label="Git Sync Menu"
               selectionMode="single"
@@ -573,14 +573,14 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
                 const item = allSyncMenuActionList.find(item => item.id === key);
                 item?.action();
               }}
-              className="max-h-[85vh] max-w-lg select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+              className="max-h-[85vh] max-w-lg overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
             >
-              <MenuSection className="border-b border-solid border-[--hl-sm] pb-2 empty:border-none empty:pb-0">
+              <MenuSection className="border-b border-solid border-(--hl-sm) pb-2 empty:border-none empty:pb-0">
                 <Collection items={gitSyncActions}>
                   {item => (
                     <MenuItem
                       className={
-                        'flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
+                        'flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
                       }
                       aria-label={item.label}
                     >
@@ -590,14 +590,14 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
                   )}
                 </Collection>
               </MenuSection>
-              <MenuSection className="border-b border-solid border-[--hl-sm] pb-2 empty:border-none empty:pb-0">
+              <MenuSection className="border-b border-solid border-(--hl-sm) pb-2 empty:border-none empty:pb-0">
                 <Collection items={branchesActionList}>
                   {item => (
                     <MenuItem
-                      className={`flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold ${item.isActive ? 'font-bold' : ''}`}
+                      className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold ${item.isActive ? 'font-bold' : ''}`}
                       aria-label={item.label}
                     >
-                      <Icon icon={item.icon} className={item.isActive ? 'text-[--color-success]' : ''} />
+                      <Icon icon={item.icon} className={item.isActive ? 'text-(--color-success)' : ''} />
                       <span className="truncate">{item.label}</span>
                     </MenuItem>
                   )}
@@ -608,7 +608,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
                   {item => (
                     <MenuItem
                       className={
-                        'flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
+                        'flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
                       }
                       aria-label={item.label}
                     >

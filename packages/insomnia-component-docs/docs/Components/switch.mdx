@@ -1,0 +1,64 @@
+---
+id: switch
+sidebar_label: 'Switch'
+sidebar_position: 4
+---
+
+import { Switch } from 'insomnia/src/ui/components/base/switch';
+
+# Switch Component
+
+A toggle switch component built on top of React Aria Components, providing an accessible binary on/off control with smooth animations and visual feedback.
+
+## Props
+
+| Prop              | Type                            | Required | Description                                  |
+| ----------------- | ------------------------------- | -------- | -------------------------------------------- |
+| `isSelected`      | `boolean`                       | No       | Controlled selected state                    |
+| `defaultSelected` | `boolean`                       | No       | Default selected state for uncontrolled mode |
+| `onChange`        | `(isSelected: boolean) => void` | No       | Callback fired when the switch state changes |
+| `isDisabled`      | `boolean`                       | No       | Whether the switch is disabled               |
+
+## Usage Examples
+
+```tsx live
+<Switch />
+```
+
+### With Default State
+
+```tsx live
+<Switch defaultSelected={true} />
+```
+
+### Disabled State
+
+```tsx live
+<Switch isDisabled />
+```
+
+### Readonly
+
+```tsx live
+<Switch isDisabled />
+```
+
+## Styling
+
+### CSS Variables
+
+The component uses the following CSS variables for theming:
+
+- `--color-bg`: Switch background color (track and selected knob)
+- `--color-surprise`: Switch primary color (unselected knob, selected track)
+- `--hl`: Border color for track and disabled state
+
+You can customize these variables in your CSS to theme the switch appearance.
+
+## Differences from Checkbox
+
+While visually different, Switch and Checkbox serve similar purposes. Use Switch when:
+
+- The change takes effect immediately (no submit required)
+- Toggling between two distinct states (on/off, enabled/disabled)
+- The action is more about activation/deactivation than selection

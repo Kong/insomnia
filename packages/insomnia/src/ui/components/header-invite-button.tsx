@@ -41,7 +41,7 @@ export const HeaderInviteButton = ({
     hasPermissions ? (
       <div>
         You cannot invite anyone as there are no available licenses.{' '}
-        <Link href={`${getAppWebsiteBaseURL()}/app/home`} className="text-[var(--color-surprise)]">
+        <Link href={`${getAppWebsiteBaseURL()}/app/home`} className="text-(--color-surprise)">
           You can review your usage here.
         </Link>
       </div>
@@ -59,7 +59,7 @@ export const HeaderInviteButton = ({
     <Button
       isDisabled={Boolean(tip)}
       aria-label="Invite collaborators"
-      className={`${className} flex h-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80`}
+      className={`${className} flex h-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80`}
       onPress={() => {
         if (!hasPermissions) {
           setMissingOpen(true);
@@ -130,7 +130,7 @@ const MissingSomeoneModal = ({ isOpen, onClose }: any) => {
       >
         <Radio
           value="long-term"
-          className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+          className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
         >
           <div className="flex items-center gap-2">
             <Heading className="text-lg font-bold">To work together in Insomnia long-term</Heading>
@@ -138,7 +138,7 @@ const MissingSomeoneModal = ({ isOpen, onClose }: any) => {
         </Radio>
         <Radio
           value="one-time"
-          className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
+          className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
         >
           <div className="flex items-center gap-2">
             <Heading className="text-lg font-bold">Just to show them something</Heading>
@@ -147,7 +147,7 @@ const MissingSomeoneModal = ({ isOpen, onClose }: any) => {
       </RadioGroup>
       <div className="flex justify-end">
         <Button
-          className="mt-8 rounded-md bg-[--color-surprise] px-4 py-2 text-white hover:brightness-90 focus:brightness-90"
+          className="mt-8 rounded-md bg-(--color-surprise) px-4 py-2 text-white hover:brightness-90 focus:brightness-90"
           onPress={handleClose}
         >
           Close

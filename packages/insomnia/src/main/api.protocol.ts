@@ -74,16 +74,16 @@ export async function registerInsomniaProtocols() {
               systemProxyStr = 'DIRECT';
             }
 
-            const proxies = systemProxyStr
+            const proxy = systemProxyStr
               .trim()
               .split(/\s*;\s*/g)
-              .filter(Boolean);
+              .find(Boolean);
 
             // only the first proxy specified will be used
-            const firstProxy = proxies[0];
-            const parts = firstProxy.split(/\s+/);
+            const firstProxy = proxy;
+            const parts = firstProxy?.split(/\s+/);
 
-            const proxyType = parts[0];
+            const proxyType = parts?.[0];
 
             if (proxyType === 'DIRECT') {
               curl.setOpt(Curl.option.PROXY, '');
@@ -123,7 +123,7 @@ export async function registerInsomniaProtocols() {
               }
               if (unknownProxy) {
                 curl.setOpt(Curl.option.PROXY, '');
-              } else {
+              } else if (parts?.[1]) {
                 curl.setOpt(Curl.option.PROXYTYPE, curlOptProxyType);
                 curl.setOpt(Curl.option.PROXY, parts[1]);
               }

@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { dirname } from 'node:path';
+import nodePath from 'node:path';
 
 import type { Consola } from 'consola';
 import { pick } from 'es-toolkit';
@@ -87,7 +87,7 @@ export class RunCollectionResultReport {
   }
 
   private getStats() {
-    const iterationStatusArray = new Array(this.iterationCount).fill(true);
+    const iterationStatusArray = Array.from({ length: this.iterationCount }).fill(true);
     let failedRequests = 0;
     let totalTests = 0;
     let failedTests = 0;
@@ -275,7 +275,7 @@ export class RunCollectionResultReport {
     }
 
     const jsonReport = this.generateJSONReport();
-    await fs.promises.mkdir(dirname(this.options.outputFilePath), { recursive: true });
+    await fs.promises.mkdir(nodePath.dirname(this.options.outputFilePath), { recursive: true });
     await fs.promises.writeFile(this.options.outputFilePath, JSON.stringify(jsonReport, null, 2), 'utf8');
     this.logger.log('Result report saved to:', this.options.outputFilePath);
   };

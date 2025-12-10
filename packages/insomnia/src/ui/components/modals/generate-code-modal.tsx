@@ -50,11 +50,11 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
   let storedClient: HTTPSnippetClient | undefined;
   try {
     storedTarget = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target') || '') as HTTPSnippetTarget;
-  } catch (error) {}
+  } catch {}
 
   try {
     storedClient = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client') || '') as HTTPSnippetClient;
-  } catch (error) {}
+  } catch {}
   const [state, setState] = useState<State>({
     request: undefined,
     target: storedTarget,
@@ -134,7 +134,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           <Dropdown
             aria-label="Select a target"
             triggerButton={
-              <Button className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]">
+              <Button className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)">
                 {target ? target.title : 'n/a'}
                 <i className="fa fa-caret-down" />
               </Button>
@@ -158,7 +158,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           <Dropdown
             aria-label="Select a client"
             triggerButton={
-              <Button className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]">
+              <Button className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)">
                 {client ? client.title : 'n/a'}
                 <i className="fa fa-caret-down" />
               </Button>

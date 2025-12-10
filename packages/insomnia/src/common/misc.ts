@@ -258,7 +258,7 @@ export function unescapeForwardSlash(str: string): string {
     // Odd count: the last backslash escapes the slash; we remove that one
     if (bs.length % 2 === 1) {
       // Keep all but the last backslash, then append the unescaped forward slash
-      return bs.slice(0, bs.length - 1) + '/';
+      return bs.slice(0, -1) + '/';
     }
     // Even count: all backslashes are literal escapes; leave the sequence unchanged
     return match;

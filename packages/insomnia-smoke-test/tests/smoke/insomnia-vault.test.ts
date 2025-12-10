@@ -39,7 +39,7 @@ test.describe('Vault key actions', () => {
     // fill the input with aria label test with valid and invalid vault key
     await page.getByLabel('Vault Key Input').fill('invalidVaultKey');
     await page.getByRole('button', { name: 'Unlock' }).click();
-    await modal.getByText("M2 didn't Check").click();
+    await modal.getByText('Invalid vault key, please check and input again').click();
     // test reset vault key
     await page.getByRole('dialog').getByText('Reset Vault Key').dblclick();
     await expect.soft(modal).toBeVisible();

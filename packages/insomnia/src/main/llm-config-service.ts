@@ -58,7 +58,7 @@ export const getBackendConfig = async (backend: LLMBackend): Promise<Partial<LLM
       case 'topP':
       case 'topK':
       case 'repeatPenalty': {
-        config[field] = parseFloat(value);
+        config[field] = Number.parseFloat(value);
         break;
       }
       case 'seed': {

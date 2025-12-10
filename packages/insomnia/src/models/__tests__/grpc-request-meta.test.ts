@@ -13,15 +13,15 @@ describe('init()', () => {
 
 describe('create()', () => {
   it('creates a valid GrpcRequest', async () => {
-    Date.now = vi.fn().mockReturnValue(1478795580200);
+    Date.now = vi.fn().mockReturnValue(1_478_795_580_200);
     const request = await models.grpcRequestMeta.create({
       pinned: true,
       parentId: 'greq_124',
     });
     const expected = {
       _id: 'greqm_cc1dd2ca4275747aa88199e8efd42403',
-      created: 1478795580200,
-      modified: 1478795580200,
+      created: 1_478_795_580_200,
+      modified: 1_478_795_580_200,
       parentId: 'greq_124',
       pinned: true,
       type: 'GrpcRequestMeta',

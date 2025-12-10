@@ -42,7 +42,7 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
 
   return (
     <form
-      className="flex flex-shrink-0 flex-col gap-2"
+      className="flex shrink-0 flex-col gap-2"
       onSubmit={e => {
         e.preventDefault();
         e.stopPropagation();
@@ -63,7 +63,7 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
           <Label className="col-span-4">Credential Name:</Label>
           <Input
             required
-            className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+            className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
             type="text"
             name="name"
             placeholder="Credential name"
@@ -79,14 +79,14 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
         </div>
         <div className="mt-2 flex gap-3">
           <Input
-            className="col-span-3 w-4/5 flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+            className="col-span-3 w-4/5 flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
             placeholder="Service account key path"
             aria-label="Input Service Account Key Path"
             value={inputKeyPath}
             onChange={e => setInputKeyPath(e.target.value)}
           />
           <Button
-            className="flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] px-4 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]"
+            className="shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) px-4 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)"
             onPress={handleSelectFile}
           >
             <Icon icon="file" className="mr-2" />
@@ -94,13 +94,13 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
           </Button>
         </div>
         {errorMessage && <p className="notice error margin-top-sm no-margin-bottom">{errorMessage}</p>}
-        <div className="flex w-full flex-row items-center justify-end gap-[--padding-md] pt-[--padding-md]">
+        <div className="flex w-full flex-row items-center justify-end gap-(--padding-md) pt-(--padding-md)">
           <Button
-            className="rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-right text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+            className="rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-right text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
             type="submit"
             isDisabled={isLoading || !inputKeyPath}
           >
-            {isLoading && <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-[--color-font]" />}
+            {isLoading && <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-(--color-font)" />}
             {isEdit ? 'Update' : 'Create'}
           </Button>
         </div>

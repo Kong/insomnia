@@ -1,0 +1,102 @@
+@import 'tailwindcss';
+@source '../../../insomnia/src/**/*.{js,ts,jsx,tsx}';
+
+:root[data-theme='light'] {
+  --color-bg: rgb(250, 250, 250);
+  --color-bg-rgb: 250, 250, 250;
+  --color-success: rgb(80, 161, 79);
+  --color-success-rgb: 80, 161, 79;
+  --color-notice: rgb(193, 132, 1);
+  --color-notice-rgb: 193, 132, 1;
+  --color-warning: rgb(193, 132, 1);
+  --color-warning-rgb: 193, 132, 1;
+  --color-danger: rgb(228, 86, 73);
+  --color-danger-rgb: 228, 86, 73;
+  --color-surprise: rgb(166, 38, 164);
+  --color-surprise-rgb: 166, 38, 164;
+  --color-info: rgb(1, 132, 188);
+  --color-info-rgb: 1, 132, 188;
+  --color-font: rgb(119, 119, 119);
+  --color-font-rgb: 119, 119, 119;
+  --color-font-success: rgb(255, 255, 255);
+  --color-font-success-rgb: 255, 255, 255;
+  --color-font-notice: rgb(255, 255, 255);
+  --color-font-notice-rgb: 255, 255, 255;
+  --color-font-warning: rgb(255, 255, 255);
+  --color-font-warning-rgb: 255, 255, 255;
+  --color-font-danger: rgb(255, 255, 255);
+  --color-font-danger-rgb: 255, 255, 255;
+  --color-font-surprise: rgb(255, 255, 255);
+  --color-font-surprise-rgb: 255, 255, 255;
+  --color-font-info: rgb(255, 255, 255);
+  --color-font-info-rgb: 255, 255, 255;
+  --hl: rgb(114, 121, 133);
+  --hl-rgb: 114, 121, 133;
+  --hl-xxs: rgba(114, 121, 133, 0.05);
+  --hl-xxs-rgb: 114, 121, 133, 0.05;
+  --hl-xs: rgba(114, 121, 133, 0.1);
+  --hl-xs-rgb: 114, 121, 133, 0.1;
+  --hl-sm: rgba(114, 121, 133, 0.2);
+  --hl-sm-rgb: 114, 121, 133, 0.2;
+  --hl-md: rgba(114, 121, 133, 0.3);
+  --hl-md-rgb: 114, 121, 133, 0.3;
+  --hl-lg: rgba(114, 121, 133, 0.5);
+  --hl-lg-rgb: 114, 121, 133, 0.5;
+  --hl-xl: rgba(114, 121, 133, 0.8);
+  --hl-xl-rgb: 114, 121, 133, 0.8;
+}
+
+:root[data-theme='dark'] {
+  --color-bg: rgb(44, 44, 44);
+  --color-bg-rgb: 44, 44, 44;
+  --color-success: rgb(126, 207, 43);
+  --color-success-rgb: 126, 207, 43;
+  --color-notice: rgb(240, 225, 55);
+  --color-notice-rgb: 240, 225, 55;
+  --color-warning: rgb(255, 154, 31);
+  --color-warning-rgb: 255, 154, 31;
+  --color-danger: rgb(255, 86, 49);
+  --color-danger-rgb: 255, 86, 49;
+  --color-surprise: rgb(168, 150, 255);
+  --color-surprise-rgb: 168, 150, 255;
+  --color-info: rgb(70, 193, 230);
+  --color-info-rgb: 70, 193, 230;
+  --color-font: rgb(221, 221, 221);
+  --color-font-rgb: 221, 221, 221;
+  --color-font-success: rgb(255, 255, 255);
+  --color-font-success-rgb: 255, 255, 255;
+  --color-font-notice: rgb(255, 255, 255);
+  --color-font-notice-rgb: 255, 255, 255;
+  --color-font-warning: rgb(255, 255, 255);
+  --color-font-warning-rgb: 255, 255, 255;
+  --color-font-danger: rgb(255, 255, 255);
+  --color-font-danger-rgb: 255, 255, 255;
+  --color-font-surprise: rgb(255, 255, 255);
+  --color-font-surprise-rgb: 255, 255, 255;
+  --color-font-info: rgb(255, 255, 255);
+  --color-font-info-rgb: 255, 255, 255;
+  --hl: rgb(130, 130, 130);
+  --hl-rgb: 130, 130, 130;
+  --hl-xxs: rgba(130, 130, 130, 0.05);
+  --hl-xxs-rgb: 130, 130, 130, 0.05;
+  --hl-xs: rgba(130, 130, 130, 0.1);
+  --hl-xs-rgb: 130, 130, 130, 0.1;
+  --hl-sm: rgba(130, 130, 130, 0.25);
+  --hl-sm-rgb: 130, 130, 130, 0.25;
+  --hl-md: rgba(130, 130, 130, 0.35);
+  --hl-md-rgb: 130, 130, 130, 0.35;
+  --hl-lg: rgba(130, 130, 130, 0.5);
+  --hl-lg-rgb: 130, 130, 130, 0.5;
+  --hl-xl: rgba(130, 130, 130, 0.8);
+  --hl-xl-rgb: 130, 130, 130, 0.8;
+}
+
+.theme-code-block {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.theme-code-block pre {
+  margin-left: 1rem;
+  margin-right: 1rem;
+}

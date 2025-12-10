@@ -1,3 +1,5 @@
+import { type PersonalPlanType } from 'insomnia-api';
+
 interface Branding {
   logo_url: string;
 }
@@ -47,21 +49,6 @@ export interface OrganizationsResponse {
   organizations: Organization[];
 }
 
-export interface UserProfileResponse {
-  id: string;
-  email: string;
-  name: string;
-  picture: string;
-  bio: string;
-  github: string;
-  linkedin: string;
-  twitter: string;
-  identities: any;
-  given_name: string;
-  family_name: string;
-}
-
-export type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
 export const formatCurrentPlanType = (type: PersonalPlanType) => {
   switch (type) {
     case 'free': {
@@ -84,16 +71,3 @@ export const formatCurrentPlanType = (type: PersonalPlanType) => {
     }
   }
 };
-type PaymentSchedules = 'month' | 'year';
-
-export interface CurrentPlan {
-  isActive: boolean;
-  period: PaymentSchedules;
-  planId: string;
-  price: number;
-  quantity: number;
-  type: PersonalPlanType;
-  planName: string;
-  status: 'trialing' | 'active';
-  trialingEnd: string;
-}
