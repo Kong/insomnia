@@ -221,19 +221,11 @@ export const ProjectSettingsForm: FC<Props> = ({
           storageType,
         },
       });
-    } else {
-      newProjectFetcher.submit({
-        organizationId,
-        projectData: {
-          ...projectData,
-          storageType,
-        },
-      });
     }
   };
 
   return (
-    <div className="flex w-full max-w-[600px] flex-col gap-4">
+    <div className="flex w-full max-w-[600px] flex-col gap-8">
       {error && (
         <div className="flex items-center gap-2 rounded-xs bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-(--color-font-danger)">
           <Icon icon="triangle-exclamation" />
@@ -243,7 +235,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 
       {activeView === 'project' && (
         <>
-          <div className="mt-4 flex w-full flex-col justify-start gap-8 pb-2 text-left">
+          <div className="mt-4 flex w-full flex-col justify-start gap-8 text-left">
             <TextField
               autoFocus
               name="name"
@@ -284,13 +276,25 @@ export const ProjectSettingsForm: FC<Props> = ({
                   Cancel
                 </Button>
               )}
-              {storageType === 'git' && (
+              {storageType === 'git' && isSwitchingStorageType(project!, storageType) && (
                 <Button
                   isDisabled={!isGitSyncEnabled}
                   onPress={() => setActiveView('git-clone')}
                   className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                 >
                   Next
+                </Button>
+              )}
+              {storageType === 'git' && !isSwitchingStorageType(project!, storageType) && (
+                <Button
+                  onPress={onUpsertProject}
+                  isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
+                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                >
+                  {(updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') && (
+                    <Icon icon="spinner" className="animate-spin" />
+                  )}
+                  <span>Update</span>
                 </Button>
               )}
               {storageType !== 'git' && (
@@ -302,7 +306,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                   {(updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') && (
                     <Icon icon="spinner" className="animate-spin" />
                   )}
-                  <span>{project ? 'Update' : 'Create'}</span>
+                  <span>Update</span>
                 </Button>
               )}
             </div>

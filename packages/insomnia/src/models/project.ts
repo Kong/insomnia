@@ -155,22 +155,6 @@ export function getDefaultProjectStorageType(
   return 'local';
 }
 
-export function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
-  if (storageType === 'git' && !isGitProject(project)) {
-    return true;
-  }
-
-  if (storageType === 'local' && (isRemoteProject(project) || isGitProject(project))) {
-    return true;
-  }
-
-  if (storageType === 'remote' && !isRemoteProject(project)) {
-    return true;
-  }
-
-  return false;
-}
-
 export function getProjectStorageTypeLabel(storageRules: StorageRules): string {
   const storageTypes = {
     'Cloud Sync': storageRules.enableCloudSync,

@@ -12,7 +12,7 @@ export const GitConnectionInfo = ({ gitRepository }: { gitRepository?: GitReposi
   return (
     <div className="text-[12px]">
       <div className="mb-6 font-semibold text-(--hl)">Connection Info</div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-4">
         <div className="flex">
           <div className="w-[110px] font-semibold">Provider</div>
           <GitProviderTag provider={provider} />
