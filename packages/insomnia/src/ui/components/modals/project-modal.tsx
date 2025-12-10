@@ -84,7 +84,6 @@ export const ProjectModal = ({
                   storageRules={storageRules}
                   isGitSyncEnabled={isGitSyncEnabled}
                   onCancel={close}
-                  onSuccessUpdate={() => onOpenChange(false)}
                   activeViewObj={activeViewObj}
                 />
               )}

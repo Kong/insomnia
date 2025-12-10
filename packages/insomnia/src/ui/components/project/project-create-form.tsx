@@ -26,7 +26,6 @@ interface Props {
   isGitSyncEnabled: boolean;
   defaultProjectName?: string;
   onCancel?(): void;
-  onSuccessUpdate?(): void;
   activeViewObj?: ReturnType<typeof useActiveView>;
 }
 
@@ -35,7 +34,6 @@ export const ProjectCreateForm: FC<Props> = ({
   isGitSyncEnabled,
   defaultProjectName = 'My Project',
   onCancel,
-  onSuccessUpdate,
   activeViewObj,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
