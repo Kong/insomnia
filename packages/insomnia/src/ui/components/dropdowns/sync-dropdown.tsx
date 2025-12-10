@@ -27,7 +27,6 @@ import {
 import type { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { Icon } from '../icon';
-import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncHistoryModal } from '../modals/sync-history-modal';
 import { SyncStagingModal } from '../modals/sync-staging-modal';
@@ -48,7 +47,6 @@ export const SyncDropdown: FC<Props> = () => {
     workspaceId: string;
   };
 
-  const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
   const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
   const [isSyncStagingModalOpen, setIsSyncStagingModalOpen] = useState(false);
   const [isSyncBranchesModalOpen, setIsSyncBranchesModalOpen] = useState(false);
@@ -453,7 +451,6 @@ export const SyncDropdown: FC<Props> = () => {
           </Menu>
         </Popover>
       </MenuTrigger>
-      {isGitRepoSettingsModalOpen && <GitRepositorySettingsModal onHide={() => setIsGitRepoSettingsModalOpen(false)} />}
       {isSyncBranchesModalOpen && (
         <SyncBranchesModal
           branches={localBranches}

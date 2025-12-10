@@ -128,7 +128,7 @@ export const useInsomniaTab = ({
   const getCurrentTab = useCallback(
     (type: TabType | null) => {
       if (!type) {
-        return undefined;
+        return;
       }
       const currentOrgTabs = appTabsRef?.current?.[organizationId];
       if (type === 'request') {
@@ -157,7 +157,7 @@ export const useInsomniaTab = ({
       if (collectionTabTypes.includes(type)) {
         return currentOrgTabs?.tabList.find(tab => tab.id === workspaceId);
       }
-      return undefined;
+      return;
     },
     [
       activeMockRoute?._id,

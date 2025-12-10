@@ -591,7 +591,7 @@ describe('duplicate()', () => {
   afterEach(() => vi.restoreAllMocks());
 
   it('should overwrite appropriate fields on the parent when duplicating', async () => {
-    const date = 1478795580200;
+    const date = 1_478_795_580_200;
     Date.now = vi.fn().mockReturnValue(date);
     const workspace = await models.workspace.create({
       name: 'Test Workspace',

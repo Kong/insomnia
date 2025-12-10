@@ -77,7 +77,7 @@ test.describe('pre-request features tests', () => {
       customVerify: (bodyJson: any) => {
         const authzHeader = bodyJson.headers['authorization'];
         expect.soft(authzHeader != null).toBeTruthy();
-        const expectedEncCred = Buffer.from('myName:myPwd', 'utf-8').toString('base64');
+        const expectedEncCred = Buffer.from('myName:myPwd', 'utf8').toString('base64');
         expect.soft(bodyJson.headers['authorization']).toBe(`Basic ${expectedEncCred}`);
       },
     },

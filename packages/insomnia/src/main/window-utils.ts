@@ -657,23 +657,25 @@ export function createWindow(): ElectronBrowserWindow {
     ],
   };
   const template: MenuItemConstructorOptions[] = [];
-  template.push(applicationMenu);
-  template.push({
-    label: `${MNEMONIC_SYM}File`,
-    submenu: [
-      {
-        label: `${MNEMONIC_SYM}New Window`,
-        click: () => {
-          createWindow();
+  template.push(
+    applicationMenu,
+    {
+      label: `${MNEMONIC_SYM}File`,
+      submenu: [
+        {
+          label: `${MNEMONIC_SYM}New Window`,
+          click: () => {
+            createWindow();
+          },
         },
-      },
-    ],
-  });
-  template.push(editMenu);
-  template.push(viewMenu);
-  template.push(windowMenu);
-  template.push(toolsMenu);
-  template.push(helpMenu);
+      ],
+    },
+    editMenu,
+    viewMenu,
+    windowMenu,
+    toolsMenu,
+    helpMenu,
+  );
 
   if (isDevelopment() || process.env.INSOMNIA_FORCE_DEBUG) {
     template.push(developerMenu);

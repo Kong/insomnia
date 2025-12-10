@@ -68,7 +68,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
           } else {
             setInvalidFileReason('Invalid JSON file uploaded, JSON file must be array of key-value pairs.');
           }
-        } catch (error) {
+        } catch {
           setInvalidFileReason('Upload JSON file can not be parsed');
         }
       } else if (fileType === 'text/csv') {

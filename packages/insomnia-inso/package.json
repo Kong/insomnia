@@ -35,7 +35,7 @@
     "test:unit:color": "vitest run --exclude '**/cli.test.ts'",
     "test:bundle": "vitest cli.test.ts -t \"inso dev bundle\"",
     "test:binary": "vitest cli.test.ts -t \"inso packaged binary\"",
-    "type-check": "tsc --noEmit --project tsconfig.json",
+    "type-check": "tsc --project tsconfig.json",
     "build": "esr esbuild.ts",
     "build:production": "cross-env NODE_ENV=production esr esbuild.ts",
     "start": "ESBUILD_WATCH=true esr esbuild.ts",

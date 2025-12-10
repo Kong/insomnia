@@ -149,11 +149,10 @@ function _migrateScope(workspace: MigrationWorkspace) {
     return workspace as Workspace;
   }
   // designer and spec => design, unset => collection
-  if (workspace.scope === 'designer' || workspace.scope === 'spec') {
-    workspace.scope = WorkspaceScopeKeys.design;
-  } else {
-    workspace.scope = WorkspaceScopeKeys.collection;
-  }
+  workspace.scope =
+    workspace.scope === 'designer' || workspace.scope === 'spec'
+      ? WorkspaceScopeKeys.design
+      : WorkspaceScopeKeys.collection;
   return workspace as Workspace;
 }
 

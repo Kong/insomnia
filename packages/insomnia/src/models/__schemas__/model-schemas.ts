@@ -2,7 +2,7 @@ import type { Schema } from '@develohpanda/fluent-builder';
 import clone from 'clone';
 
 import { type AllTypes, type BaseModel, environment, grpcRequest, request, requestGroup, workspace } from '..';
-import type { Environment } from '../environment';
+import { type Environment, EnvironmentKvPairDataType, EnvironmentType } from '../environment';
 import type { GrpcRequest } from '../grpc-request';
 import type { Request } from '../request';
 import type { RequestGroup } from '../request-group';
@@ -35,7 +35,7 @@ export const baseModelSchema: Schema<BaseModel> = {
 export const workspaceModelSchema: Schema<Workspace> = {
   ...baseModelSchema,
   ...toSchema(workspace.init()),
-  certificates: () => undefined,
+  certificates: () => {},
   type: () => workspace.type,
 };
 
@@ -61,6 +61,14 @@ export const environmentModelSchema: Schema<Environment> = {
   ...baseModelSchema,
   ...toSchema(environment.init()),
   type: () => environment.type,
-  environmentType: () => undefined,
-  kvPairData: () => undefined,
+  environmentType: () => EnvironmentType.JSON,
+  kvPairData: () => [
+    {
+      id: '',
+      name: '',
+      value: '',
+      type: EnvironmentKvPairDataType.JSON,
+      enabled: true,
+    },
+  ],
 };

@@ -1,4 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import { getLearningFeature as getLearningFeatureAPI, type LearningFeature } from 'insomnia-api';
 import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -69,7 +70,6 @@ import { ProjectDropdown } from '~/ui/components/dropdowns/project-dropdown';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
-import { GitRepositoryCloneModal } from '~/ui/components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
@@ -80,7 +80,6 @@ import { TimeFromNow } from '~/ui/components/time-from-now';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 
@@ -314,30 +313,17 @@ async function getAllRemoteFiles({ projectId, organizationId }: { projectId: str
   return [];
 }
 
-interface LearningFeature {
-  active: boolean;
-  title: string;
-  message: string;
-  cta: string;
-  url: string;
-}
-
 const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   let learningFeature = fallbackLearningFeature;
   const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
-  const lastFetched = lastFetchedString ? parseInt(lastFetchedString, 10) : 0;
-  const oneDay = 86400000;
+  const lastFetched = lastFetchedString ? Number.parseInt(lastFetchedString, 10) : 0;
+  const oneDay = 86_400_000;
   const hasOneDayPassedSinceLastFetch = Date.now() - lastFetched > oneDay;
   const wasDismissed = window.localStorage.getItem('learning-feature-dismissed');
   const wasNotDismissedAndOneDayHasPassed = !wasDismissed && hasOneDayPassedSinceLastFetch;
   if (wasNotDismissedAndOneDayHasPassed) {
     try {
-      learningFeature = await insomniaFetch<LearningFeature>({
-        method: 'GET',
-        path: '/insomnia-production-public-assets/inapp-learning.json',
-        origin: 'https://storage.googleapis.com',
-        sessionId: '',
-      });
+      learningFeature = await getLearningFeatureAPI();
       window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
     } catch {
       console.log('[project] Could not fetch learning feature data.');
@@ -633,8 +619,6 @@ const Component = () => {
           project.gitRepository?.hasUnpushedChanges,
       };
     });
-
-  const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -1308,10 +1292,6 @@ const Component = () => {
             )}
           </Panel>
         </PanelGroup>
-
-        {isGitRepositoryCloneModalOpen && (
-          <GitRepositoryCloneModal onHide={() => setIsGitRepositoryCloneModalOpen(false)} />
-        )}
         {isNewProjectModalOpen && (
           <ProjectModal
             isOpen={isNewProjectModalOpen}

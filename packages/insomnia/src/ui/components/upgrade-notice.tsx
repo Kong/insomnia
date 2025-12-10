@@ -1,6 +1,5 @@
+import { type PersonalPlanType } from 'insomnia-api';
 import { Button, Heading } from 'react-aria-components';
-
-import type { PersonalPlanType } from '~/models/organization';
 
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { InsomniaLogo } from './insomnia-icon';

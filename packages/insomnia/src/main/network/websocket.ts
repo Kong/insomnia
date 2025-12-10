@@ -240,7 +240,7 @@ const openWebSocketConnection = async (
             JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) +
               '\n',
           );
-        pemCertificates.push(fs.readFileSync(cert, 'utf-8'));
+        pemCertificates.push(fs.readFileSync(cert, 'utf8'));
       }
 
       if (key) {
@@ -249,7 +249,7 @@ const openWebSocketConnection = async (
           ?.write(
             JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n',
           );
-        pemCertificateKeys.push({ pem: fs.readFileSync(key, 'utf-8'), passphrase: passphrase ?? undefined });
+        pemCertificateKeys.push({ pem: fs.readFileSync(key, 'utf8'), passphrase: passphrase ?? undefined });
       }
 
       if (pfx) {
@@ -258,7 +258,7 @@ const openWebSocketConnection = async (
           ?.write(
             JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n',
           );
-        pfxCertificates.push({ buf: fs.readFileSync(pfx, 'utf-8'), passphrase: passphrase ?? undefined });
+        pfxCertificates.push({ buf: fs.readFileSync(pfx, 'utf8'), passphrase: passphrase ?? undefined });
       }
     });
 

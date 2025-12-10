@@ -1,3 +1,5 @@
+import { builtinModules } from 'node:module';
+
 import eslint from '@eslint/js';
 import { defineConfig } from 'eslint/config';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
@@ -8,10 +10,13 @@ import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+
 export default defineConfig([
+  // https://typescript-eslint.io/getting-started#additional-configs
   eslint.configs.recommended,
   tseslint.configs.strict,
   tseslint.configs.stylistic,
+  // Unicorn section
   eslintPluginUnicorn.configs.unopinionated,
   {
     rules: {
@@ -29,49 +34,26 @@ export default defineConfig([
       'unicorn/prefer-dom-node-text-content': 'off', // we use this in an e2e test
       'unicorn/prefer-response-static-json': 'off', // unsafe in our templating worker
 
-      'unicorn/text-encoding-identifier-case': 'off', // TODO: delete me
-      'unicorn/prefer-add-event-listener': 'off', // TODO: delete me
+      'unicorn/no-array-for-each': 'off', // TODO: delete me
+      'unicorn/no-array-reverse': 'off', // TODO: delete me
+      'unicorn/no-array-sort': 'off', // TODO: delete me
+      'unicorn/no-negated-condition': 'off', // TODO: delete me
       'unicorn/no-object-as-default-parameter': 'off', // TODO: delete me
+      'unicorn/no-this-assignment': 'off', // TODO: delete me
+      'unicorn/no-zero-fractions': 'off', // TODO: delete me
+      'unicorn/prefer-add-event-listener': 'off', // TODO: delete me
       'unicorn/prefer-array-some': 'off', // TODO: delete me
+      'unicorn/prefer-at': 'off', // TODO: delete me -
       'unicorn/prefer-global-this': 'off', // TODO: delete me
       'unicorn/prefer-logical-operator-over-ternary': 'off', // TODO: delete me
-      'unicorn/prefer-string-replace-all': 'off', // TODO: delete me
       'unicorn/prefer-regexp-test': 'off', // TODO: delete me
-      'unicorn/no-array-sort': 'off', // TODO: delete me
-      'unicorn/prefer-single-call': 'off', // TODO: delete me
-      'unicorn/prefer-ternary': 'off', // TODO: delete me
-      'unicorn/no-array-for-each': 'off', // TODO: delete me
-      'unicorn/import-style': 'off', // TODO: delete me
-      'unicorn/prefer-number-properties': 'off', // TODO: delete me
-      'unicorn/no-negated-condition': 'off', // TODO: delete me
-      'unicorn/prefer-optional-catch-binding': 'off', // TODO: delete me
-      'unicorn/prefer-at': 'off', // TODO: delete me
-      'unicorn/prefer-string-raw': 'off', // TODO: delete me
-      'unicorn/prefer-code-point': 'off', // TODO: delete me
-      'unicorn/no-new-array': 'off', // TODO: delete me
-      'unicorn/prefer-native-coercion-functions': 'off', // TODO: delete me
-      'unicorn/prefer-switch': 'off', // TODO: delete me
-      'unicorn/no-lonely-if': 'off', // TODO: delete me
-      'unicorn/no-array-reverse': 'off', // TODO: delete me
-      'unicorn/no-useless-undefined': 'off', // TODO: delete me
-      'unicorn/prefer-structured-clone': 'off', // TODO: delete me
-      'unicorn/escape-case': 'off', // TODO: delete me
-      'unicorn/no-useless-promise-resolve-reject': 'off', // TODO: delete me
       'unicorn/prefer-set-has': 'off', // TODO: delete me
-      'unicorn/prefer-negative-index': 'off', // TODO: delete me
-      'unicorn/no-anonymous-default-export': 'off', // TODO: delete me
-      'unicorn/prefer-default-parameters': 'off', // TODO: delete me
-      'unicorn/no-instanceof-builtins': 'off', // TODO: delete me
-      'unicorn/no-zero-fractions': 'off', // TODO: delete me
-      'unicorn/no-useless-switch-case': 'off', // TODO: delete me
-      'unicorn/prefer-type-error': 'off', // TODO: delete me
-      'unicorn/consistent-existence-index-check': 'off', // TODO: delete me
-      'unicorn/no-this-assignment': 'off', // TODO: delete me
-      'unicorn/numeric-separators-style': 'off', // TODO: delete me
-      'unicorn/prefer-array-find': 'off', // TODO: delete me
-      'unicorn/prefer-dom-node-dataset': 'off', // TODO: delete me
+      'unicorn/prefer-string-raw': 'off', // TODO: delete me
+      'unicorn/prefer-string-replace-all': 'off', // TODO: delete me
+      'unicorn/prefer-switch': 'off', // TODO: delete me
     },
   },
+  // Playwright section
   {
     ...playwright.configs['flat/recommended'],
     files: ['packages/insomnia-smoke-test/tests/**/*.ts'],
@@ -86,7 +68,22 @@ export default defineConfig([
       'playwright/no-wait-for-timeout': 'error',
     },
   },
-
+  // nodeIntegration: false section
+  {
+    files: [
+      'packages/insomnia/src/ui/**/*.{ts,tsx}',
+      // TODO: 'packages/insomnia/src/common/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: builtinModules.map(m => `node:${m}`),
+        },
+      ],
+    },
+  },
+  // React hooks section
   {
     files: ['packages/insomnia/src/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooksPlugin },
@@ -99,6 +96,7 @@ export default defineConfig([
       'react-hooks/incompatible-library': 'off', //TODO(use react-aria virtualizer): delete me
     },
   },
+  // React section
   {
     files: ['packages/insomnia/src/**/*.{ts,tsx}'],
     ...reactPlugin.configs.flat.recommended,
@@ -135,12 +133,30 @@ export default defineConfig([
       'react/no-array-index-key': 'error',
     },
   },
+  // simple-import-sort section
   {
     plugins: {
       'simple-import-sort': simpleImportSortPlugin,
     },
     rules: {
       'simple-import-sort/imports': 'error',
+    },
+  },
+  // General ESLint rules
+  {
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            // Shouldn't import packages by relative path
+            {
+              group: ['**/*/insomnia-api/**'],
+              message: "Please use 'insomnia-api' instead of relative paths",
+            },
+          ],
+        },
+      ],
     },
   },
   {
@@ -156,6 +172,7 @@ export default defineConfig([
       'no-useless-escape': 'off', // TODO: delete me
     },
   },
+  // TypeScript ESLint rules
   {
     rules: {
       '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],

@@ -604,7 +604,7 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
           );
 
           let postmanArchiveFile: string | null = null;
-          if (archiveFileIndex >= 0) {
+          if (archiveFileIndex !== -1) {
             postmanArchiveFile = filePaths[archiveFileIndex];
             filePaths.splice(archiveFileIndex, 1);
           }

@@ -41,6 +41,7 @@ import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown'
 import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
+import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { McpRequestPane, type RequestPaneTabs } from '~/ui/components/mcp/mcp-request-pane';
 import {
   type PrimitiveSubItem,
@@ -135,8 +136,8 @@ export const McpPane = () => {
           ...(primitiveNextCursor.resources && { nextCursor: primitiveNextCursor.resources }),
         });
         const hide = collapsedPrimitives.includes('resources');
-        collection.push(...(resources.map(r => ({ ...r, type: 'resources', itemLevel: 1, hide })) as ResourceItem[]));
         collection.push(
+          ...(resources.map(r => ({ ...r, type: 'resources', itemLevel: 1, hide })) as ResourceItem[]),
           ...(resourceTemplates.map(rt => ({
             ...rt,
             type: 'resourceTemplates',
@@ -268,11 +269,7 @@ export const McpPane = () => {
       return;
     }
 
-    if (layout && layout[0] > 0) {
-      layout[0] = 0;
-    } else {
-      layout[0] = DEFAULT_SIDEBAR_SIZE;
-    }
+    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
 
     sidebarPanelRef.current?.setLayout(layout);
   };
@@ -311,7 +308,7 @@ export const McpPane = () => {
         if (firstMatchEvent) {
           return 'result' in firstMatchEvent.data ? firstMatchEvent.data.result : undefined;
         }
-        return undefined;
+        return;
       };
       const activeResponseId = activeResponse?._id;
       if (activeResponseId) {
@@ -364,6 +361,12 @@ export const McpPane = () => {
       setMcpServerData(emptyServerData);
     }
   }, [activeResponse?._id, readyState]);
+
+  useDocBodyKeyboardShortcuts({
+    sidebar_toggle: toggleSidebar,
+    environment_showEditor: () => setEnvironmentModalOpen(true),
+    environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
+  });
 
   const caStatus =
     activeRequest.sslValidation === false

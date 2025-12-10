@@ -141,7 +141,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     useImperativeHandle(ref, () => ({ focusInput, setUrl }), [focusInput, setUrl]);
 
     const [currentInterval, setCurrentInterval] = useState<number | null>(null);
-    const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
+    const [currentTimeout, setCurrentTimeout] = useState<number | undefined>();
     const connectRequestFetcher = useRequestConnectActionFetcher();
     const sendRequestFetcher = useDebugRequestSendActionFetcher();
 

@@ -1,5 +1,3 @@
-import crypto from 'node:crypto';
-
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 
@@ -59,9 +57,7 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
 
       return Boolean(fuzzyMatch(resultFilter, result.testCase, { splitSpace: false, loose: true })?.indexes);
     })
-    .map((result, i: number) => {
-      const key = crypto.createHash('sha1').update(`${result.testCase}"-${i}`).digest('hex');
-
+    .map(result => {
       const statusText = {
         passed: 'PASS',
         failed: 'FAIL',
@@ -99,7 +95,7 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
             : 'Unknown';
 
       return (
-        <div key={key} data-testid="test-result-row">
+        <div key={result.testCase} data-testid="test-result-row">
           <div className="my-3 flex w-full text-base">
             <div className="m-auto mx-1 leading-4">
               <span className="mr-2 ml-2">{statusTag}</span>

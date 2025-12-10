@@ -174,7 +174,7 @@ const defaultRegistry: HotKeyRegistry = {
  * Get a new copy of hotkey registry with default values.
  */
 export function newDefaultRegistry(): HotKeyRegistry {
-  return JSON.parse(JSON.stringify(defaultRegistry));
+  return structuredClone(defaultRegistry);
 }
 
 /**

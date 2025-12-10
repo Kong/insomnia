@@ -1,6 +1,3 @@
-import { mkdir, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-
 import { format } from 'date-fns';
 import { getProductName } from 'insomnia/src/common/constants';
 import { database } from 'insomnia/src/common/database';
@@ -108,7 +105,7 @@ const showSaveExportedFileDialog = async ({
   const options = {
     title: 'Export Insomnia Data',
     buttonLabel: 'Export',
-    defaultPath: `${path.join(dir, `${name}_${date}`)}.${selectedFormat}`,
+    defaultPath: `${window.path.join(dir, `${name}_${date}`)}.${selectedFormat}`,
   };
   const { filePath } = await window.dialog.showSaveDialog(options);
   return filePath || null;
@@ -131,8 +128,11 @@ const showSaveExportedFolderDialog = async () => {
 
 async function writeExportedFileToFileSystem(filename: string, data: string) {
   // Remember last exported path
-  window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
-  await writeFile(filename, data);
+  window.localStorage.setItem('insomnia.lastExportPath', window.path.dirname(filename));
+  await window.main.writeFile({
+    path: filename,
+    content: data,
+  });
 }
 
 export const exportProjectToFile = (activeProjectName: string, workspacesForActiveProject: Workspace[]) => {
@@ -196,12 +196,14 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             }
 
             const projectName = activeProjectName.replace(/ /g, '-');
-            const insomniaProjectExportFolder = path.join(dirPath, `insomnia-export.${projectName}.${Date.now()}`);
-            await mkdir(insomniaProjectExportFolder);
+            const insomniaProjectExportFolder = window.path.join(
+              dirPath,
+              `insomnia-export.${projectName}.${Date.now()}`,
+            );
 
             for (const workspace of workspacesForActiveProject) {
               const workspaceName = workspace.name.replace(/ /g, '-');
-              const fileName = path.join(insomniaProjectExportFolder, `${workspaceName}-${workspace._id}.yaml`);
+              const fileName = window.path.join(insomniaProjectExportFolder, `${workspaceName}-${workspace._id}.yaml`);
               const stringifiedExport = await getInsomniaV5DataExport({
                 workspaceId: workspace._id,
                 includePrivateEnvironments: shouldExportPrivateEnvironments,
@@ -379,7 +381,7 @@ export async function exportWorkspaceData({
 
   try {
     const workspaceName = workspace.name.replace(/ /g, '-');
-    const filePath = path.join(dirPath, `${workspaceName}-${workspace._id}.yaml`);
+    const filePath = window.path.join(dirPath, `${workspaceName}-${workspace._id}.yaml`);
     await writeExportedFileToFileSystem(filePath, insomniaExport);
   } catch (error) {
     console.error(error);
@@ -404,8 +406,7 @@ export async function exportAllData({ dirPath }: { dirPath: string }): Promise<v
     includePrivateEnvironments = await showExportPrivateEnvironmentsModal();
   }
 
-  const insomniaExportFolder = path.join(dirPath, `insomnia-export.${Date.now()}`);
-  await mkdir(insomniaExportFolder);
+  const insomniaExportFolder = window.path.join(dirPath, `insomnia-export.${Date.now()}`);
 
   for (const workspace of workspacesWithoutMcp) {
     await exportWorkspaceData({

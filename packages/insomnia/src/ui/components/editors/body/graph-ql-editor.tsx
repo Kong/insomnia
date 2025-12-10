@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-
 import type { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import type { GraphQLHintOptions } from 'codemirror-graphql/hint';
 import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
@@ -103,7 +101,8 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
   return JSON.stringify(content);
 }
 
-const isString = (value?: string): value is string => typeof value === 'string' || (value as unknown) instanceof String;
+const isString = (value?: string): value is string =>
+  typeof value === 'string' || typeof (value as unknown) === 'string';
 const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode =>
   def.kind === Kind.OPERATION_DEFINITION;
 
@@ -240,7 +239,7 @@ export const GraphQLEditor: FC<Props> = ({
   let requestBody: GraphQLBody;
   try {
     requestBody = JSON.parse(request.body.text || '');
-  } catch (err) {
+  } catch {
     requestBody = { query: '' };
   }
 
@@ -249,7 +248,7 @@ export const GraphQLEditor: FC<Props> = ({
   let documentAST;
   try {
     documentAST = parse(requestBody.query || '');
-  } catch (error) {
+  } catch {
     documentAST = null;
   }
   const operations =
@@ -431,7 +430,7 @@ export const GraphQLEditor: FC<Props> = ({
     }
     try {
       const filePath = filePaths[0]; // showOpenDialog is single select
-      const file = readFileSync(filePath);
+      const file = await window.main.insecureReadFile({ path: filePath });
       const content = JSON.parse(file.toString());
       if (!content.data) {
         throw new Error('JSON file should have a data field with the introspection results');
