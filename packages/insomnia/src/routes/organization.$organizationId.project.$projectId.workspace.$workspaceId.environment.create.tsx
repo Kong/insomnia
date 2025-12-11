@@ -2,6 +2,7 @@ import { href } from 'react-router';
 
 import * as models from '~/models';
 import { EnvironmentType } from '~/models/environment';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -20,6 +21,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     parentId: baseEnvironment._id,
     environmentType,
     isPrivate,
+  });
+
+  window.main.trackSegmentEvent({
+    event: SegmentEvent.environmentCreate,
+    properties: { type: isPrivate ? 'private' : 'global' },
   });
 
   return environment;
