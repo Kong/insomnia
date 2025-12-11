@@ -379,7 +379,12 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
                   )}
                 </Panel>
                 {isMCPAuthError ? (
-                  <ResponseErrorViewer url={response.url} error={response.error} docsLink={docsMcpAuthentication} />
+                  <ResponseErrorViewer
+                    url={response.url}
+                    error={response.error}
+                    docsLink={docsMcpAuthentication}
+                    isMcpResponse
+                  />
                 ) : null}
                 {selectedEvent && (
                   <>
