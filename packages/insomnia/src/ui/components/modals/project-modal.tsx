@@ -51,10 +51,10 @@ export const ProjectModal = ({
       isDismissable
       className="fixed top-0 right-0 bottom-0 left-0 z-10 flex items-start justify-center bg-black/30 pt-[70px]"
     >
-      <Modal className="flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)">
+      <Modal className="flex max-h-[calc(var(--visual-viewport-height)-140px)] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)">
         <Dialog
           aria-label="Create or update dialog"
-          className="grid flex-1 grid-rows-[min-content_1fr] gap-4 px-10 pt-10 outline-hidden"
+          className="grid flex-1 grid-rows-[min-content_1fr] gap-4 overflow-hidden p-10 outline-hidden"
         >
           {({ close }) => (
             <>

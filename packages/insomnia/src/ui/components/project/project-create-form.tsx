@@ -102,7 +102,7 @@ export const ProjectCreateForm: FC<Props> = ({
   };
 
   return (
-    <div className="flex w-full max-w-[600px] flex-col gap-4">
+    <div className="flex w-full flex-col gap-4 overflow-y-auto">
       {error && (
         <div className="flex items-center gap-2 rounded-xs bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-(--color-font-danger)">
           <Icon icon="triangle-exclamation" />
@@ -111,7 +111,7 @@ export const ProjectCreateForm: FC<Props> = ({
       )}
 
       <div className={classNames({ hidden: activeView !== 'project' })}>
-        <div className="mt-4 flex w-full flex-col justify-start gap-8 pb-2 text-left">
+        <div className="mt-4 flex w-full flex-col justify-start gap-4 pb-2 text-left">
           <TextField
             autoFocus
             name="name"
@@ -137,22 +137,20 @@ export const ProjectCreateForm: FC<Props> = ({
           />
           {storageType === 'git' && (
             <>
-              <Label className="flex items-center gap-2">
-                <Checkbox
-                  slot={null}
-                  isSelected={projectData.connectRepositoryLater}
-                  onChange={isSelected => setProjectData(prev => ({ ...prev, connectRepositoryLater: isSelected }))}
-                  className="group flex h-full items-center p-0"
-                >
-                  <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
-                    <Icon
-                      icon="check"
-                      className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
-                    />
-                  </div>
-                </Checkbox>
+              <Checkbox
+                slot={null}
+                isSelected={projectData.connectRepositoryLater}
+                onChange={isSelected => setProjectData(prev => ({ ...prev, connectRepositoryLater: isSelected }))}
+                className="group flex h-full items-center gap-2 p-0 pl-[1px]"
+              >
+                <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
+                  <Icon
+                    icon="check"
+                    className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
+                  />
+                </div>
                 <span className="text-sm text-(--hl)">Connect repository later</span>
-              </Label>
+              </Checkbox>
               {!projectData.connectRepositoryLater && (
                 <GitRepoForm
                   {...{
@@ -169,7 +167,7 @@ export const ProjectCreateForm: FC<Props> = ({
             </>
           )}
         </div>
-        <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5 pb-10">
+        <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5">
           <div className="flex items-center gap-2">
             {onCancel && (
               <Button
@@ -207,7 +205,7 @@ export const ProjectCreateForm: FC<Props> = ({
           insomniaFiles={insomniaFiles}
           repoURI={projectData.uri}
         />
-        <div className="mt-8 flex items-center justify-end gap-2 pb-10">
+        <div className="mt-8 flex items-center justify-end gap-2">
           <Button
             isDisabled={newProjectFetcher.state !== 'idle' || initCloneGitRepositoryFetcher.state !== 'idle'}
             onPress={() => {
