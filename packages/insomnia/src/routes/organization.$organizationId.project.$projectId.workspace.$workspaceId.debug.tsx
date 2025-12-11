@@ -71,17 +71,18 @@ import {
   useWorkspaceLoaderData,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useDebugReorderActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
+import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
+import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
-import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
-import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import Runner from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import Tutorial, {
   scratchPadTutorialList,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.tutorial.$panel';
 import { useToggleExpandAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.toggle-expand-all';
+import { SegmentEvent } from '~/ui/analytics';
 import { DropdownHint } from '~/ui/components/base/dropdown/dropdown-hint';
 import { DocumentTab } from '~/ui/components/document-tab';
 import { RequestActionsDropdown } from '~/ui/components/dropdowns/request-actions-dropdown';
@@ -882,7 +883,15 @@ const Debug = () => {
                 aria-label="Request filter"
                 className="group relative flex-1"
                 value={filter ?? ''}
-                onChange={setFilter}
+                onChange={value => {
+                  setFilter(value);
+
+                  if (value.trim() !== '') {
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.filterCreatedRequests,
+                    });
+                  }
+                }}
               >
                 <Input
                   placeholder="Filter"
@@ -1083,11 +1092,11 @@ const Debug = () => {
                         name="request name"
                         ariaLabel="request name"
                         className="flex-1 px-1"
-                        onSubmit={name => {
+                        onSubmit={newName => {
                           if (isRequestGroup(item.doc)) {
-                            patchGroup(item.doc._id, { name });
+                            patchGroup(item.doc._id, { name: newName });
                           } else {
-                            patchRequest(item.doc._id, { name });
+                            patchRequest(item.doc._id, { name: newName });
                           }
                         }}
                       />
@@ -1520,11 +1529,11 @@ const CollectionGridListItem = ({
           name="request name"
           ariaLabel={label}
           className="flex-1 hover:bg-transparent!"
-          onSubmit={name => {
+          onSubmit={newName => {
             if (isRequestGroup(item.doc)) {
-              patchGroup(item.doc._id, { name });
+              patchGroup(item.doc._id, { name: newName });
             } else {
-              patchRequest(item.doc._id, { name });
+              patchRequest(item.doc._id, { name: newName });
             }
           }}
         />
