@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import inspector from 'node:inspector';
+import { arch, release } from 'node:os';
 import path from 'node:path';
 
 import electron, { app, BrowserWindow, session } from 'electron';
@@ -299,6 +300,32 @@ async function _createModelInstances() {
   }
 }
 
+function getOperatingSystem(): string {
+  switch (process.platform) {
+    case 'darwin': {
+      return 'macOS';
+    }
+    case 'win32': {
+      return 'Windows';
+    }
+    case 'linux': {
+      return 'Linux';
+    }
+    case 'freebsd': {
+      return 'FreeBSD';
+    }
+    case 'openbsd': {
+      return 'OpenBSD';
+    }
+    case 'aix': {
+      return 'AIX';
+    }
+    default: {
+      return process.platform;
+    }
+  }
+}
+
 async function _trackStats() {
   // Handle the stats
   const oldStats = await models.stats.get();
@@ -321,12 +348,18 @@ async function _trackStats() {
     parentId: { $ne: null },
   });
 
+  const settings = await models.settings.get();
+
   trackSegmentEvent(SegmentEvent.appStarted, {
     localProjects,
     remoteProjects,
     createdRequests: stats.createdRequests,
     deletedRequests: stats.deletedRequests,
     executedRequests: stats.executedRequests,
+    themeName: settings.theme,
+    operatingSystem: getOperatingSystem(),
+    osVersion: release(),
+    architecture: arch(),
   });
 
   ipcMainOnce('halfSecondAfterAppStart', async () => {
