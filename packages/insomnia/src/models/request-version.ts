@@ -1,7 +1,8 @@
+import zlib from 'node:zlib';
+
 import deepEqual from 'deep-equal';
 
 import { database, database as db } from '../common/database';
-import { compressObject, decompressObject } from '../common/misc';
 import * as requestOperations from '../models/helpers/request-operations';
 import type { GrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
@@ -145,4 +146,18 @@ function _diffRequests(
 
 export function all() {
   return db.find<RequestVersion>(type);
+}
+
+export function compressObject(obj: any) {
+  const compressed = zlib.gzipSync(JSON.stringify(obj));
+  return compressed.toString('base64');
+}
+
+export function decompressObject<ObjectType>(input: string | null): ObjectType | null {
+  if (typeof input !== 'string') {
+    return null;
+  }
+
+  const jsonBuffer = zlib.gunzipSync(Buffer.from(input, 'base64'));
+  return JSON.parse(jsonBuffer.toString('utf8')) as ObjectType;
 }

@@ -1,5 +1,3 @@
-import zlib from 'node:zlib';
-
 import fuzzysort from 'fuzzysort';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -144,20 +142,6 @@ export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]
     return v;
   }
   return v(...args);
-}
-
-export function compressObject(obj: any) {
-  const compressed = zlib.gzipSync(JSON.stringify(obj));
-  return compressed.toString('base64');
-}
-
-export function decompressObject<ObjectType>(input: string | null): ObjectType | null {
-  if (typeof input !== 'string') {
-    return null;
-  }
-
-  const jsonBuffer = zlib.gunzipSync(Buffer.from(input, 'base64'));
-  return JSON.parse(jsonBuffer.toString('utf8')) as ObjectType;
 }
 
 /**

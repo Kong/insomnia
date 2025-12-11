@@ -68,21 +68,7 @@ export default defineConfig([
       'playwright/no-wait-for-timeout': 'error',
     },
   },
-  // nodeIntegration: false section
-  {
-    files: [
-      'packages/insomnia/src/ui/**/*.{ts,tsx}',
-      // TODO: 'packages/insomnia/src/common/**/*.{ts,tsx}',
-    ],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: builtinModules.map(m => `node:${m}`),
-        },
-      ],
-    },
-  },
+
   // React hooks section
   {
     files: ['packages/insomnia/src/**/*.{ts,tsx}'],
@@ -159,11 +145,21 @@ export default defineConfig([
       ],
     },
   },
+  // nodeIntegration: false section
+  {
+    files: ['packages/insomnia/src/ui/**/*.{ts,tsx}', 'packages/insomnia/src/common/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.ts', '**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: builtinModules.map(m => `node:${m}`),
+        },
+      ],
+    },
+  },
   {
     rules: {
-      'default-case': 'error',
-      'default-case-last': 'error',
-      'eqeqeq': ['error', 'smart'],
       'no-async-promise-executor': 'off',
       'no-else-return': 'error',
       'no-empty': ['error', { allowEmptyCatch: true }],

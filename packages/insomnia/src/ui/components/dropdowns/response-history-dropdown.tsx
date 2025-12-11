@@ -6,11 +6,10 @@ import { useParams } from 'react-router';
 import { useRequestResponseDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete';
 import { useRequestResponseDeleteAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete-all';
 
-import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
 import { isMcpResponse, type McpResponse } from '../../../models/mcp-response';
 import { isRequest, type Request } from '../../../models/request';
-import { type RequestVersion } from '../../../models/request-version';
+import { decompressObject, type RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
 import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socket-io-response';
 import type { WebSocketRequest } from '../../../models/websocket-request';

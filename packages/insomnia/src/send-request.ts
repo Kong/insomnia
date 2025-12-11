@@ -1,11 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import type { BaseModel } from '../models';
-import * as models from '../models';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
-import { getBodyBuffer } from '../models/response';
-import type { Settings } from '../models/settings';
+import { database } from './common/database';
+import type { BaseModel } from './models';
+import * as models from './models';
+import type { Environment, UserUploadEnvironment } from './models/environment';
+import { getBodyBuffer } from './models/response';
+import type { Settings } from './models/settings';
 import {
   defaultSendActionRuntime,
   fetchRequestData,
@@ -14,8 +15,7 @@ import {
   tryToExecuteAfterResponseScript,
   tryToExecutePreRequestScript,
   tryToInterpolateRequest,
-} from '../network/network';
-import { database } from './database';
+} from './network/network';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings

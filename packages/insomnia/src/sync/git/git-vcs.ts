@@ -9,10 +9,10 @@ import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import type { GitAuthor, GitCredentials, GitRemoteConfig } from '~/models/git-repository';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 
-import { hasSignificantChanges } from '../../common/significant-diff-detection';
 import { type MergeConflict, RESOLUTION_SOURCE } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
+import { hasSignificantChanges } from './significant-diff-detection';
 import { getAuthorFromGitRepository, gitCallbacks } from './utils';
 export const GitVCSOperationErrors = {
   UncommittedChangesError: 'UncommittedChangesError',
