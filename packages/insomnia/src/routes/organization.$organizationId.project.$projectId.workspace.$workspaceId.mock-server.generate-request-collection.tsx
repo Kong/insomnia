@@ -64,6 +64,9 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   window.main.trackSegmentEvent({
     event: SegmentEvent.generateCollectionFromMock,
+    properties: {
+      count_requests: mockRoutes.length,
+    },
   });
 
   return redirect(
