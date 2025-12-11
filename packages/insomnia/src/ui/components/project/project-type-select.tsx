@@ -66,7 +66,7 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
 
   return (
     <div className="flex flex-col gap-2">
-      <Label aria-label="Project Type" className="text-sm text-(--color-font)">
+      <Label aria-label="Project Type" className="p-0 text-sm text-(--color-font)">
         Type
       </Label>
       {listOpen || !currentType ? (
