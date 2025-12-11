@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { FC } from 'react';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, Input, Label, TextField } from 'react-aria-components';
 import { useParams } from 'react-router';
 
