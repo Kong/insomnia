@@ -296,7 +296,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               <GitConnectionInfo gitRepository={gitRepository} />
             </>
           )}
-          <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5 pb-10">
+          <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5">
             <div className="flex items-center gap-2">
               {onCancel && (
                 <Button
@@ -427,7 +427,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               </Tabs>
             </ErrorBoundary>
           )}
-          <div className="flex w-full items-center justify-end gap-2 pb-10">
+          <div className="flex w-full items-center justify-end gap-2">
             <div className="flex items-center gap-2">
               <Button
                 onPress={() => {
@@ -574,7 +574,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               </p>
             </div>
           )}
-          <div className="flex items-center justify-end gap-2 pb-10">
+          <div className="flex items-center justify-end gap-2">
             <Button
               isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
               onPress={() => {
