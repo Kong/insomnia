@@ -21,7 +21,7 @@ const neDbAdapter: DbAdapter = async (dir, filterTypes) => {
 
   const databaseFactory = genDatabaseFactory(dir);
   configureModel(databaseFactory);
-  database.init();
+  await database.init();
 
   const types = filterTypes?.length ? filterTypes : (Object.keys(db) as (keyof Database)[]);
   const promises = types.map(async t => {

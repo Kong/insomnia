@@ -87,7 +87,7 @@ export const database = {
 
   /** return count num of documents matching query */
   count: async function <T extends BaseModel>(type: AllTypes, query: Query<T> = {}) {
-    return nedbBucket[type].count(query);
+    return databaseBucket[type].count(query);
   },
 
   docCreate: async <T extends BaseModel>(type: AllTypes, ...patches: Partial<T>[]) => {
@@ -133,9 +133,9 @@ export const database = {
       // 1. Copy the doc
       const newDoc = { ...docToCopy, ...patch, ...overrides };
 
-      const createdDoc = (await nedbBucket[docToCopy.type].create(newDoc)) as T;
+      const createdDoc = (await databaseBucket[docToCopy.type].create(newDoc)) as T;
       // 2. Get all the children
-      for (const type of Object.keys(nedbBucket) as AllTypes[]) {
+      for (const type of Object.keys(databaseBucket) as AllTypes[]) {
         // Note: We never want to duplicate a response
         if (!models.canDuplicate(type)) {
           continue;
@@ -158,7 +158,7 @@ export const database = {
     query: Query<T> | string = {},
     sort: Record<string, any> = { created: 1 },
   ): Promise<T | undefined> {
-    const doc = await nedbBucket[type].findOne(query, sort);
+    const doc = await databaseBucket[type].findOne(query, sort);
     if (doc === null) {
       return undefined;
     }
@@ -171,11 +171,11 @@ export const database = {
     sort: Record<string, any> = { created: 1 },
     limit = 0,
   ): Promise<T[]> {
-    if (!nedbBucket[type]) {
+    if (!databaseBucket[type]) {
       console.warn(`[db] No collection for type "${type}"`);
       return [];
     }
-    const docs = await nedbBucket[type].find(query, sort, limit);
+    const docs = await databaseBucket[type].find(query, sort, limit);
     // TODO: create a db init phase for migrations rather than doing it on every find.
     const migrated = [];
     for (const rawDoc of docs) {
@@ -228,10 +228,10 @@ export const database = {
   ) => {
     if (forceReset) {
       changeListeners = [];
-      nedbBucket = {} as Record<AllTypes, Database>;
+      databaseBucket = {} as Record<AllTypes, Database>;
     }
 
-    nedbBucket = {
+    databaseBucket = {
       ApiSpec: apiSpecDbBucket,
       CaCertificate: caCertificateDbBucket,
       ClientCertificate: clientCertificateDbBucket,
@@ -284,7 +284,7 @@ export const database = {
 
   insert: async function <T extends BaseModel>(doc: T) {
     const docWithDefaults = await models.initModel<T>(doc.type, doc);
-    const newDoc = (await nedbBucket[doc.type].create(docWithDefaults)) as T;
+    const newDoc = (await databaseBucket[doc.type].create(docWithDefaults)) as T;
     notifyOfChange('insert', newDoc);
     return newDoc;
   },
@@ -303,7 +303,7 @@ export const database = {
 
     // Don't really need to wait for this to be over;
     types.map(t =>
-      nedbBucket[t].remove({
+      databaseBucket[t].remove({
         _id: {
           $in: docIds,
         },
@@ -324,7 +324,7 @@ export const database = {
 
       // Don't really need to wait for this to be over;
       types.map(t =>
-        nedbBucket[t].remove({
+        databaseBucket[t].remove({
           _id: {
             $in: docIds,
           },
@@ -338,13 +338,13 @@ export const database = {
 
   /** Removes entries without removing their children */
   unsafeRemove: async function <T extends BaseModel>(doc: T) {
-    nedbBucket[doc.type].remove({ _id: doc._id });
+    databaseBucket[doc.type].remove({ _id: doc._id });
     notifyOfChange('remove', doc);
   },
 
   update: async function <T extends BaseModel>(doc: T, patches: Partial<T>[] = []) {
     const docWithDefaults = await models.initModel<T>(doc.type, doc);
-    await nedbBucket[doc.type].update(docWithDefaults._id, docWithDefaults);
+    await databaseBucket[doc.type].update(docWithDefaults._id, docWithDefaults);
     notifyOfChange('update', docWithDefaults, patches);
     return docWithDefaults;
   },
@@ -357,7 +357,7 @@ export const database = {
 
     let docsToReturn: T[] = doc ? [doc] : [];
     if (types.length === 0) {
-      types = Object.keys(nedbBucket) as AllTypes[];
+      types = Object.keys(databaseBucket) as AllTypes[];
     }
     async function next(docs: T[]): Promise<T[]> {
       const foundDocs: T[] = [];
@@ -439,7 +439,7 @@ export const database = {
   },
 };
 
-let nedbBucket: Record<AllTypes, Database> = {} as Record<AllTypes, Database>;
+let databaseBucket: Record<AllTypes, Database> = {} as Record<AllTypes, Database>;
 
 // ~~~~~~~~~~~~~~~~ //
 // Change Listeners //

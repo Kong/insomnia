@@ -1,21 +1,19 @@
-# Insomnia Core
+# Insomnia Storage
 
-This package contains the core functionality and types for the Insomnia application which could be shared across insomnia and inso-cli.
+This package contains the storage functionality and types for the Insomnia application which could be shared across insomnia and inso-cli.
 
 ## Usage
 
-Install
+### Install
 
-```sh
-npm install insomnia-core -w <workspace>
+Uses npm workspace, so no need to install.
+
+### Import
+
+```ts
+// For all runtimes
+import { type Database } from 'insomnia-storage';
+
+// For Node.js runtimes
+import { NeDBClient } from 'insomnia-storage/node';
 ```
-
-Import
-
-```jsx
-import { getUserProfile, type UserProfileResponse } from 'insomnia-core/insomnia-api';
-```
-
-## Exports
-
-- insomnia-core/insomnia-api - Exports the Insomnia API client and types.

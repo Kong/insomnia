@@ -2,7 +2,7 @@ import electron from 'electron';
 import { type Database, type DBItem } from 'insomnia-storage';
 import { v4 as uuidv4 } from 'uuid';
 
-const nedbMap = new Map<string, Database<DBItem>>();
+const databaseMap = new Map<string, Database<DBItem>>();
 
 async function _send<T>(fnName: string, type: string, ...args: any[]) {
   return new Promise<T>((resolve, reject) => {
@@ -35,13 +35,13 @@ class RendererDBClient<T extends DBItem> implements Database<T> {
 }
 
 export function databaseFactory<T extends DBItem>(type: string): Database<T> {
-  if (nedbMap.has(type)) {
-    return nedbMap.get(type) as Database<T>;
+  if (databaseMap.has(type)) {
+    return databaseMap.get(type) as Database<T>;
   }
 
   const db = new RendererDBClient<T>({
     type,
   });
-  nedbMap.set(type, db);
+  databaseMap.set(type, db);
   return db;
 }
