@@ -66,6 +66,8 @@ export const METHOD_NOTIFICATION_TOOL_LIST_CHANGED = ToolListChangedNotification
 export const METHOD_NOTIFICATION_PROMPT_LIST_CHANGED = PromptListChangedNotificationSchema.shape.method.value;
 export const METHOD_NOTIFICATION_ELICITATION_COMPLETE = ElicitationCompleteNotificationSchema.shape.method.value;
 export const METHOD_NOTIFICATION_TASK_STATUS = TaskStatusNotificationSchema.shape.method.value;
+// method for json-rpc error
+export const METHOD_JSONRPC_ERROR = 'JSON-RPC Error';
 
 export const unsupportedMethodPrefix = 'Unsupported/';
 export const METHOD_UNKNOWN = 'Unknown Method';

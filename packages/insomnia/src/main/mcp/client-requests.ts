@@ -168,7 +168,15 @@ export const responseElicitationRequest = (
         break;
       }
       case 'submit': {
-        serverRequestResolver?.resolve({ action: 'accept', content: content });
+        if (content) {
+          // remove undefined values from content
+          Object.keys(content).forEach(key => {
+            if (content[key] === undefined) {
+              delete content[key];
+            }
+          });
+          serverRequestResolver?.resolve({ action: 'accept', content: content });
+        }
         break;
       }
       default: {

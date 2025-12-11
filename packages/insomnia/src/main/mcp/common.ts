@@ -16,6 +16,7 @@ import { v4 as uuidV4 } from 'uuid';
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import {
   METHOD_ELICITATION_CREATE_MESSAGE,
+  METHOD_JSONRPC_ERROR,
   METHOD_LIST_ROOTS,
   METHOD_NOTIFICATION_CANCELLED,
   METHOD_SAMPLING_CREATE_MESSAGE,
@@ -262,7 +263,8 @@ export const writeEventLogAndNotify = (
     const jsonRPCId = 'id' in data ? data.id : null;
     const eventMethod = eventData.method;
     const isUnsupportedMethod = eventMethod.startsWith(unsupportedMethodPrefix);
-    const isErrorRequest = 'error' in data && data.error;
+    // for server response with error like { method: 'JSON-RPC Error', type: 'message', data: {…}}
+    const isJsonRPCError = eventMethod === METHOD_JSONRPC_ERROR;
     const isServerRequest =
       eventMethod === METHOD_ELICITATION_CREATE_MESSAGE ||
       eventMethod === METHOD_SAMPLING_CREATE_MESSAGE ||
@@ -270,20 +272,28 @@ export const writeEventLogAndNotify = (
     if (eventMethod === METHOD_NOTIFICATION_CANCELLED) {
       // find the cancelled notification message indicates cancellation of the request
       removePendingEvent(e => e.jsonRPCId === (data as CancelledNotification).params.requestId);
-    } else if (jsonRPCId !== null && !isUnsupportedMethod && !isErrorRequest) {
-      if (direction === 'OUTGOING') {
-        if (isServerRequest) {
-          removePendingEvent(e => e.jsonRPCId === jsonRPCId && e.direction === 'INCOMING');
-        } else {
-          // Track mcp client outgoing requests
-          pendingEventIds.push({ jsonRPCId, eventId: eventData._id, direction });
-        }
-      } else if (direction === 'INCOMING') {
-        if (isServerRequest) {
-          // Track mcp server incoming requests
-          pendingEventIds.push({ jsonRPCId, eventId: eventData._id, direction });
-        } else {
-          removePendingEvent(e => e.jsonRPCId === jsonRPCId && e.direction === 'OUTGOING');
+    } else if (jsonRPCId !== null && !isUnsupportedMethod) {
+      if (isJsonRPCError) {
+        // for json-rpc error response, remove from corresponding pending events
+        removePendingEvent(e => e.jsonRPCId === jsonRPCId);
+      } else {
+        // for normal request/response messages
+        if (direction === 'OUTGOING') {
+          if (isServerRequest) {
+            // client responses server incoming requests, remove from corresponding pending events
+            removePendingEvent(e => e.jsonRPCId === jsonRPCId && e.direction === 'INCOMING');
+          } else {
+            // Track mcp client outgoing requests
+            pendingEventIds.push({ jsonRPCId, eventId: eventData._id, direction });
+          }
+        } else if (direction === 'INCOMING') {
+          if (isServerRequest) {
+            // Track mcp server incoming requests
+            pendingEventIds.push({ jsonRPCId, eventId: eventData._id, direction });
+          } else {
+            // Server response received, remove from corresponding pending events
+            removePendingEvent(e => e.jsonRPCId === jsonRPCId && e.direction === 'OUTGOING');
+          }
         }
       }
     }
@@ -310,7 +320,7 @@ export const parseAndLogMcpRequest = (context: ConnectionContext, message: any) 
       } else if (ElicitResultSchema.safeParse(message?.result).success) {
         requestMethod = METHOD_ELICITATION_CREATE_MESSAGE;
       } else if (JSONRPCErrorSchema.safeParse(message).success) {
-        requestMethod = 'JSON-RPC Error';
+        requestMethod = METHOD_JSONRPC_ERROR;
       } else {
         requestMethod = METHOD_UNKNOWN;
       }
