@@ -263,7 +263,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               title={isGitProject(project!) ? 'Removing Git Sync connection' : 'Converting to Cloud Sync project'}
               message={
                 isGitProject(project!)
-                  ? 'RChanging this project to a Cloud Sync project will remove the connection to your repo. This does not delete the project files on the remote repo.'
+                  ? 'Changing this project to a Cloud Sync project will remove the connection to your repo. This does not delete the project files on the remote repo.'
                   : 'Anything added in the project will be securely synced to the Insomnia cloud and enables you to collaborate on projects with others. '
               }
               footer={<LearnMoreLink href={''}>Learn more about changing project types</LearnMoreLink>}
