@@ -179,6 +179,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
     event: SegmentEvent.projectCreated,
     properties: {
       storage: newProjectData.storageType,
+      git_provider: newProjectData.oauth2format || 'none',
     },
   });
 
