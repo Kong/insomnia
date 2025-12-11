@@ -20,6 +20,7 @@ import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
 import { useGitProjectPushActionFetcher } from '~/routes/git.push';
 import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
+import { SegmentEvent } from '~/ui/analytics';
 
 import type { GitRepository } from '../../../models/git-repository';
 import { GitVCSOperationErrors } from '../../../sync/git/git-vcs';
@@ -490,7 +491,12 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
           <div className="flex w-full items-center justify-between gap-2 truncate">
             <span className="truncate">Git is not connected</span>
             <Button
-              onPress={() => setIsGitRepoSettingsModalOpen(true)}
+              onPress={() => {
+                setIsGitRepoSettingsModalOpen(true);
+                window.main.trackSegmentEvent({
+                  event: SegmentEvent.gitSyncButtonClicked,
+                });
+              }}
               className="flex h-[25px] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
             >
               <Icon icon="plug" />
