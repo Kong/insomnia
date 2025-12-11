@@ -1,7 +1,8 @@
-import type { FC } from 'react';
+import { type FC, useEffect } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
 import { isGitCredentialsOAuth } from '~/models/git-repository';
+import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
@@ -72,6 +73,12 @@ export const GitRepoForm: FC<Props> = ({
 
     setActiveView('git-results');
   };
+  const allConnectedReposLoaderFetcher = useAllConnectedReposLoaderFetcher();
+  const allConnectedReposLoaderFetcherLoad = allConnectedReposLoaderFetcher.load;
+  useEffect(() => {
+    allConnectedReposLoaderFetcherLoad();
+  }, [allConnectedReposLoaderFetcherLoad]);
+  const allConnectedRepoURIProjectNameMap = allConnectedReposLoaderFetcher.data;
   return (
     <ErrorBoundary>
       <Tabs
@@ -112,7 +119,10 @@ export const GitRepoForm: FC<Props> = ({
           </Tab>
         </TabList>
         <TabPanel className="h-full w-full overflow-y-auto py-2" id="github">
-          <GitHubRepositorySetupFormGroup onSubmit={onGitRepoFormSubmit} />
+          <GitHubRepositorySetupFormGroup
+            onSubmit={onGitRepoFormSubmit}
+            allConnectedRepoURIProjectNameMap={allConnectedRepoURIProjectNameMap}
+          />
         </TabPanel>
         <TabPanel className="h-full w-full overflow-y-auto py-2" id="gitlab">
           <GitLabRepositorySetupFormGroup onSubmit={onGitRepoFormSubmit} />

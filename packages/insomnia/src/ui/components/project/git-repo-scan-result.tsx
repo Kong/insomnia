@@ -52,27 +52,33 @@ export const GitRepoScanResult: FC<Props> = ({ initCloneGitRepositoryFetcher, in
         ) : (
           <div className="flex flex-col justify-center py-2">
             <table className="text-base">
-              <tr className="border-b border-solid border-(--hl-sm)">
-                <th className="w-[86px] pb-2 text-base normal-case">Count</th>
-                <th className="pb-2 text-base normal-case">File type</th>
-              </tr>
-              {Object.keys(fileTypeCountMap)
-                .sort()
-                .map((scope, idx) => (
-                  <tr key={scope}>
-                    <td
-                      className={classNames('pl-3 text-base leading-10 text-(--color-font-info)', {
-                        'pt-2': idx === 0,
-                      })}
-                    >
-                      {fileTypeCountMap[scope as ProjectScopeKeys]}
-                    </td>
-                    <td className={classNames('text-base leading-10 text-(--color-font-info)', { 'pt-2': idx === 0 })}>
-                      <Icon icon={scopeToIconMap[scope as ProjectScopeKeys]} className="mr-2 w-4" />
-                      {scopeToLabelMap[scope as ProjectScopeKeys]}
-                    </td>
-                  </tr>
-                ))}
+              <thead>
+                <tr className="border-b border-solid border-(--hl-sm)">
+                  <th className="w-[86px] pb-2 text-base normal-case">Count</th>
+                  <th className="pb-2 text-base normal-case">File type</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.keys(fileTypeCountMap)
+                  .sort()
+                  .map((scope, idx) => (
+                    <tr key={scope}>
+                      <td
+                        className={classNames('pl-3 text-base leading-10 text-(--color-font-info)', {
+                          'pt-2': idx === 0,
+                        })}
+                      >
+                        {fileTypeCountMap[scope as ProjectScopeKeys]}
+                      </td>
+                      <td
+                        className={classNames('text-base leading-10 text-(--color-font-info)', { 'pt-2': idx === 0 })}
+                      >
+                        <Icon icon={scopeToIconMap[scope as ProjectScopeKeys]} className="mr-2 w-4" />
+                        {scopeToLabelMap[scope as ProjectScopeKeys]}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
             </table>
           </div>
         )}

@@ -69,7 +69,6 @@ export const ProjectModal = ({
                   <Icon icon="x" />
                 </Button>
               </div>
-              {/* TODO: what's the difference between close and onOpenChange(false) */}
               {project ? (
                 <ProjectSettingsForm
                   storageRules={storageRules}
@@ -77,7 +76,7 @@ export const ProjectModal = ({
                   project={project}
                   gitRepository={gitRepository}
                   onCancel={close}
-                  onSuccessUpdate={() => onOpenChange(false)}
+                  onSuccessUpdate={close}
                 />
               ) : (
                 <ProjectCreateForm

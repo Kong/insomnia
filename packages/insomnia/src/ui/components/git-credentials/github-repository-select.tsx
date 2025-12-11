@@ -8,7 +8,15 @@ import { GitRemoteBranchSelect } from './git-remote-branch-select';
 
 type GitHubRepository = Awaited<ReturnType<typeof window.main.git.getGitHubRepositories>>['repos'][number];
 
-export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: string }) => {
+export const GitHubRepositorySelect = ({
+  uri,
+  token,
+  allConnectedRepoURIProjectNameMap,
+}: {
+  uri?: string;
+  token: string;
+  allConnectedRepoURIProjectNameMap?: Record<string, string> | undefined;
+}) => {
   const [loading, setLoading] = useState(false);
   const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
   const [selectedRepository, setSelectedRepository] = useState<GitHubRepository | null>(null);
@@ -118,14 +126,26 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
                 id: string;
                 name: string;
               }> className="flex min-w-max flex-col p-2 text-sm select-none focus:outline-hidden">
-                {item => (
-                  <ListBoxItem
-                    textValue={item.name}
-                    className="flex h-(--line-height-xs) w-full items-center gap-2 rounded-sm bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:bg-(--hl-sm) aria-selected:font-bold data-focused:bg-(--hl-xs)"
-                  >
-                    <span className="truncate">{item.name}</span>
-                  </ListBoxItem>
-                )}
+                {item => {
+                  const isDisabled =
+                    allConnectedRepoURIProjectNameMap &&
+                    Object.prototype.hasOwnProperty.call(allConnectedRepoURIProjectNameMap, item.id);
+                  return (
+                    <ListBoxItem
+                      isDisabled={isDisabled}
+                      textValue={item.name}
+                      className="group flex h-(--line-height-xs) w-full items-center gap-2 rounded-sm bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden aria-disabled:cursor-not-allowed aria-selected:bg-(--hl-sm) aria-selected:font-bold data-focused:bg-(--hl-xs)"
+                    >
+                      {isDisabled && <Icon icon="lock" className="group-aria-disabled:opacity-30" />}
+                      <span className="truncate group-aria-disabled:opacity-30">{item.name}</span>
+                      {isDisabled && (
+                        <span className="hidden rounded border border-solid border-(--hl-xl) px-2 py-1 text-(--color-font-info) group-hover:inline-block">
+                          Already connected to: {allConnectedRepoURIProjectNameMap[item.id]}
+                        </span>
+                      )}
+                    </ListBoxItem>
+                  );
+                }}
               </ListBox>
             </Popover>
             <FieldError className="text-xs text-(--color-danger)" />
