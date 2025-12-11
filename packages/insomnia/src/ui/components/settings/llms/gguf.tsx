@@ -1,5 +1,3 @@
-import { resolve } from 'node:path';
-
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Button, Input, Text } from 'react-aria-components';
 import z from 'zod/v4';
@@ -41,8 +39,8 @@ export const GGUF = ({
   });
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
-  const userDataPath = resolve(window.app.getPath('userData'));
-  const llmsFolder = resolve(userDataPath, LLMS_FOLDER_NAME);
+  const userDataPath = window.path.resolve(window.app.getPath('userData'));
+  const llmsFolder = window.path.resolve(userDataPath, LLMS_FOLDER_NAME);
   const [availableLLMs, setAvailableLLMs] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const refreshModelsDirectory = useCallback(() => {
@@ -125,7 +123,7 @@ export const GGUF = ({
             ))}
           </select>
           <Button
-            className="border-md rounded-md border border-solid border-[--hl-md] px-2 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]"
+            className="border-md rounded-md border border-solid border-(--hl-md) px-2 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)"
             onClick={() => {
               refreshModelsDirectory();
               setSelectedModel('');
@@ -144,7 +142,7 @@ export const GGUF = ({
       {selectedModel && (
         <div className="mt-4">
           <Button
-            className="flex w-full items-center justify-between rounded-md border border-[--hl-md] bg-[--color-bg] px-4 py-3 text-left text-[--color-font] transition-all hover:bg-[--hl-xs]"
+            className="flex w-full items-center justify-between rounded-md border border-(--hl-md) bg-(--color-bg) px-4 py-3 text-left text-(--color-font) transition-all hover:bg-(--hl-xs)"
             onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
           >
             <Text className="font-medium">Advanced Options</Text>
@@ -152,7 +150,7 @@ export const GGUF = ({
           </Button>
 
           {showAdvancedOptions && (
-            <div className="mt-3 rounded-md border border-[--hl-md] bg-[--hl-xs] p-4 text-sm">
+            <div className="mt-3 rounded-md border border-(--hl-md) bg-(--hl-xs) p-4 text-sm">
               <div className="grid grid-cols-2 gap-4">
                 <div className="form-control form-control--outlined">
                   <label htmlFor={temperatureId}>Temperature (0-2):</label>
@@ -161,7 +159,7 @@ export const GGUF = ({
                     type="number"
                     value={modelParameters.temperature.toString()}
                     onChange={e => {
-                      const value = parseFloat(e.target.value);
+                      const value = Number.parseFloat(e.target.value);
                       if (!Number.isNaN(value) && value >= 0 && value <= 2) {
                         setModelParameters(prev => ({ ...prev, temperature: value }));
                       }
@@ -179,7 +177,7 @@ export const GGUF = ({
                     type="number"
                     value={modelParameters.topP.toString()}
                     onChange={e => {
-                      const value = parseFloat(e.target.value);
+                      const value = Number.parseFloat(e.target.value);
                       if (!Number.isNaN(value) && value >= 0 && value <= 1) {
                         setModelParameters(prev => ({ ...prev, topP: value }));
                       }
@@ -197,7 +195,7 @@ export const GGUF = ({
                     type="number"
                     value={modelParameters.topK.toString()}
                     onChange={e => {
-                      const value = parseInt(e.target.value, 10);
+                      const value = Number.parseInt(e.target.value, 10);
                       if (!Number.isNaN(value) && value >= 0 && value <= 100) {
                         setModelParameters(prev => ({ ...prev, topK: value }));
                       }
@@ -215,7 +213,7 @@ export const GGUF = ({
                     type="number"
                     value={modelParameters.repeatPenalty.toString()}
                     onChange={e => {
-                      const value = parseFloat(e.target.value);
+                      const value = Number.parseFloat(e.target.value);
                       if (!Number.isNaN(value) && value >= 0 && value <= 10) {
                         setModelParameters(prev => ({ ...prev, repeatPenalty: value }));
                       }
@@ -246,7 +244,7 @@ export const GGUF = ({
         <Button
           isDisabled={currentLLM?.backend !== 'gguf'}
           onClick={deactivateCurrentLLM}
-          className="rounded-md border border-solid border-red-500 bg-[--color-bg] px-4 py-2 text-base text-red-500 ring-1 ring-transparent transition-all hover:border-red-600 hover:bg-[--hl-xs] focus:ring-inset focus:ring-red-300"
+          className="rounded-md border border-solid border-red-500 bg-(--color-bg) px-4 py-2 text-base text-red-500 ring-1 ring-transparent transition-all hover:border-red-600 hover:bg-(--hl-xs) focus:ring-red-300 focus:ring-inset"
         >
           Deactivate
         </Button>
@@ -269,7 +267,7 @@ export const GGUF = ({
               console.error('Validation failed:', validationResult.error);
             }
           }}
-          className="border-md rounded-md border border-solid border-[--hl-md] px-4 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]"
+          className="border-md rounded-md border border-solid border-(--hl-md) px-4 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)"
         >
           Activate
         </Button>

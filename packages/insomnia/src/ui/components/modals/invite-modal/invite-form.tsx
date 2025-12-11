@@ -253,7 +253,7 @@ export const InviteForm = ({
     <div className="flex w-full flex-col gap-1">
       {upgradeBannerStatus !== 'closed' && (
         <div
-          className={classNames('mb-5 mt-3 flex items-start justify-start gap-5 rounded-md px-6 py-5', {
+          className={classNames('mt-3 mb-5 flex items-start justify-start gap-5 rounded-md px-6 py-5', {
             'bg-[#292535]': !isLightTheme,
             'bg-[#EEEBFF]': isLightTheme,
           })}
@@ -273,7 +273,7 @@ export const InviteForm = ({
             {isUserOwner && (
               <a
                 href={upgradeBannerWording[upgradeBannerStatus].submitLink}
-                className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+                className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
               >
                 {upgradeBannerWording[upgradeBannerStatus].submitText}
               </a>
@@ -283,7 +283,7 @@ export const InviteForm = ({
       )}
       <div className="flex w-full items-center gap-4">
         <div
-          className="flex flex-1 justify-between gap-3 rounded-md border border-[#4c4c4c] bg-[--hl-xs] p-2"
+          className="flex flex-1 justify-between gap-3 rounded-md border border-[#4c4c4c] bg-(--hl-xs) p-2"
           ref={triggerRef}
         >
           <div
@@ -293,7 +293,7 @@ export const InviteForm = ({
             {emails.map(({ picture, email, isValid }: EmailInput) => (
               <span
                 key={email}
-                className={`flex h-7 items-center gap-2 rounded-full bg-[--hl-xs] pl-1 pr-2 text-sm leading-6 text-[--color-font] ${isValid ? 'bg-[--hl-xs]' : 'border border-dashed border-orange-400 bg-orange-400 bg-opacity-40'}`}
+                className={`flex h-7 items-center gap-2 rounded-full bg-(--hl-xs) pr-2 pl-1 text-sm leading-6 text-(--color-font) ${isValid ? 'bg-(--hl-xs)' : 'border border-dashed border-orange-400 bg-orange-400/40'}`}
               >
                 <TooltipTrigger delay={0}>
                   <Button
@@ -313,7 +313,7 @@ export const InviteForm = ({
                   <Tooltip
                     offset={8}
                     placement="top"
-                    className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                    className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
                   >
                     Click to edit
                   </Tooltip>
@@ -325,14 +325,14 @@ export const InviteForm = ({
                     removeEmail(email);
                   }}
                 >
-                  <Icon icon="xmark" className="h-4 w-4 cursor-default text-[--color-font]" />
+                  <Icon icon="xmark" className="h-4 w-4 cursor-default text-(--color-font)" />
                 </Button>
               </span>
             ))}
             <input
               ref={inputRef}
               type="text"
-              className="min-h-[24px] grow-[inherit] border-none px-2 py-1 leading-6 outline-none disabled:cursor-not-allowed"
+              className="min-h-[24px] grow-[inherit] border-none px-2 py-1 leading-6 outline-hidden disabled:cursor-not-allowed"
               placeholder={emails.length > 0 ? 'Enter more emails...' : 'Enter emails, separated by comma...'}
               onKeyDown={handleInputKeyPress}
               onBlur={handleInputBlur}
@@ -354,7 +354,7 @@ export const InviteForm = ({
           </div>
         </div>
         <Button
-          className="h-[40px] w-[67px] shrink-0 self-end rounded bg-[#4000bf] text-center text-[--color-font-surprise] disabled:cursor-not-allowed disabled:opacity-70"
+          className="h-[40px] w-[67px] shrink-0 self-end rounded-sm bg-[#4000bf] text-center text-(--color-font-surprise) disabled:cursor-not-allowed disabled:opacity-70"
           isDisabled={loading || (checkSeatsResponseData && !checkSeatsResponseData.isAllowed)}
           onPress={async () => {
             if (emails.some(({ isValid }) => !isValid)) {
@@ -404,14 +404,14 @@ export const InviteForm = ({
         </Button>
         <Popover
           placement="bottom start"
-          className="w-[--trigger-width] min-w-[650px] rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] shadow-md"
+          className="w-(--trigger-width) min-w-[650px] rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) shadow-md"
           ref={popoverRef}
           triggerRef={triggerRef}
           isOpen={showResults}
           onOpenChange={setShowResults}
         >
           <ListBox
-            className="p-1 outline-none"
+            className="p-1 outline-hidden"
             selectionMode="single"
             aria-label="Organization members"
             onAction={(email: Key) => {
@@ -457,7 +457,7 @@ const UserItem = (props: ListBoxItemProps & { children: React.ReactNode; isSelec
   return (
     <ListBoxItem
       {...props}
-      className="group flex cursor-pointer select-none items-center gap-2 rounded px-1 py-1 outline-none hover:bg-[--hl-xs] hover:text-[--color-font] focus:bg-[--hl-xs] focus:text-[--color-font]"
+      className="group flex cursor-pointer items-center gap-2 rounded-sm px-1 py-1 outline-hidden select-none hover:bg-(--hl-xs) hover:text-(--color-font) focus:bg-(--hl-xs) focus:text-(--color-font)"
     >
       <span className="group-selected:font-medium flex flex-1 items-center gap-3 truncate font-normal">
         {props.children}

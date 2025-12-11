@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import * as protoLoader from '@grpc/proto-loader';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
@@ -232,7 +230,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
     const protoText = await window.main.insecureReadFile({ path: filePath });
 
     const updatedFile = await models.protoFile.update(protoFile, {
-      name: path.basename(filePath),
+      name: window.path.basename(filePath),
       protoText,
     });
     const impacted = await models.grpcRequest.findByProtoFileId(updatedFile._id);
@@ -287,7 +285,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
     const protoText = await window.main.insecureReadFile({ path: filePath });
 
     const newFile = await models.protoFile.create({
-      name: path.basename(filePath),
+      name: window.path.basename(filePath),
       parentId: workspaceId,
       protoText,
     });

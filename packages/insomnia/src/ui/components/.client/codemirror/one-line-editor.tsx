@@ -381,7 +381,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           event.preventDefault();
           const pluginTemplateTags = (await getTemplateTags()).map(tag => ({
             // Skip unsupported objects like functions in template tag to send in IPC
-            templateTag: JSON.parse(JSON.stringify(tag.templateTag)),
+            templateTag: structuredClone(tag.templateTag),
           }));
           const target = event.target as HTMLElement;
           // right click on nunjucks tag

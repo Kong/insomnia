@@ -228,7 +228,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       if (projectData.connectRepositoryLater) {
         await models.project.update(project, { name, gitRepositoryId: EMPTY_GIT_PROJECT_ID });
       } else {
-        let credentials: GitCredentials | undefined = undefined;
+        let credentials: GitCredentials | undefined;
         if (projectData.oauth2format) {
           credentials = {
             oauth2format: projectData.oauth2format,

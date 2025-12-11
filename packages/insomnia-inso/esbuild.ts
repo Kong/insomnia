@@ -16,6 +16,9 @@ const config: BuildOptions = {
   sourcemap: true,
   format: 'cjs',
   tsconfig: 'tsconfig.json',
+  alias: {
+    electron: '../insomnia/send-request/electron',
+  },
   plugins: [
     // taken from https://github.com/tjx666/awesome-vscode-extension-boilerplate/blob/main/scripts/esbuild.ts
     {

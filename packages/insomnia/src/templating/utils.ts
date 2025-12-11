@@ -188,7 +188,7 @@ export function getDefaultFill(name: string, args: NunjucksParsedTagArg[]) {
       return `'${value}'`;
     }
     if (argDefinition.type === 'number') {
-      return `${parseFloat(argDefinition.defaultValue + '') || 0}`;
+      return `${Number.parseFloat(argDefinition.defaultValue + '') || 0}`;
     }
     if (argDefinition.type === 'boolean') {
       return argDefinition.defaultValue ? 'true' : 'false';

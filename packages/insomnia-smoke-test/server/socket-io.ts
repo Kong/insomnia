@@ -14,7 +14,7 @@ export function startSocketIOServer() {
     console.log('socket.io connected:', socket.id);
     socket.on('message', (...args) => {
       console.log('socket.io server received data:', args);
-      if (args[args.length - 1] instanceof Function) {
+      if (typeof args[args.length - 1] === 'function') {
         const ackCallback = args.pop();
         ackCallback('ack from socket.io server', ...args);
       }

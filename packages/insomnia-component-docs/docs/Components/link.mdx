@@ -1,0 +1,44 @@
+---
+id: link
+sidebar_label: 'Link'
+sidebar_position: 1
+---
+
+# LearnMoreLink
+
+An external link component with an arrow icon that opens in a new tab.
+
+## Props
+
+| Prop        | Type              | Required | Description            |
+| ----------- | ----------------- | -------- | ---------------------- |
+| `href`      | `string`          | Yes      | URL to navigate to     |
+| `children`  | `React.ReactNode` | Yes      | Link text or content   |
+| `className` | `string`          | No       | Additional CSS classes |
+
+## Usage Examples
+
+### Basic Link
+
+```tsx live
+<LearnMoreLink href="https://docs.insomnia.rest">Learn more about Insomnia</LearnMoreLink>
+```
+
+### Custom Styling
+
+```tsx live
+<LearnMoreLink className="text-[--color-font]!" href="https://insomnia.rest">
+  Visit our website
+</LearnMoreLink>
+```
+
+## Styling
+
+### CSS Variables
+
+The component uses the following CSS variables for theming:
+
+- `--color-font`: Link text color
+- `--color-bg`: Link background color
+
+You can customize these variables in your CSS to theme the link appearance.

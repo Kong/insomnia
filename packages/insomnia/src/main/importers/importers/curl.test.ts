@@ -5,7 +5,7 @@ import type { Parameter } from '../entities';
 import { convert } from './curl';
 
 describe('curl', () => {
-  describe('cURL --data flags', () => {
+  describe("cURL --data flags -H 'Content-Type: application/x-www-form-urlencoded'", () => {
     it.each([
       // -d
       { flag: '-d', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
@@ -207,6 +207,27 @@ describe('curl', () => {
       },
     );
   });
+
+  describe('cURL --data flags', () => {
+    it.each([{ flag: '-d', inputs: ['key=value'], expected: 'key=value' }])(
+      'handles %p correctly',
+      async ({ flag, inputs, expected }: { flag: string; inputs: string[]; expected: string }) => {
+        const flaggedInputs = inputs.map(input => `${flag} ${quote([input])}`).join(' ');
+        const rawData = `curl -X POST https://example.com 
+      ${flaggedInputs}
+      `;
+
+        expect(convert(rawData)).toMatchObject([
+          {
+            body: {
+              text: expected,
+            },
+          },
+        ]);
+      },
+    );
+  });
+
   describe('cURL -H flags', () => {
     it.each([
       { flag: '-H', inputs: ['X-Host: example.com'], expected: [{ name: 'X-Host', value: 'example.com' }] },

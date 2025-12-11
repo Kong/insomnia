@@ -41,7 +41,7 @@ import { queryXPath } from '~/utils/xpath/query';
 
 import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;
-const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
+const MAX_SIZE_FOR_LINTING = 1_000_000; // Around 1MB
 
 interface EditorState {
   scroll: CodeMirror.ScrollInfo;
@@ -255,7 +255,7 @@ export const CodeEditor = memo(
                   const results = JSONPath({ json: codeObj, path: filter.trim() });
                   jsonString = JSON.stringify(results);
                 } catch (err) {
-                  console.log('[jsonpath] Error: ', err);
+                  console.log('[jsonpath] Error:', err);
                   jsonString = '[]';
                 }
               }
@@ -411,12 +411,10 @@ export const CodeEditor = memo(
             doc.scrollTo(0, scrollPosition);
           }
 
-          if (onPaste) {
-            if (change.origin === 'paste' && change.update) {
-              const translatedText = onPaste(change.text.join('\n')).split('\n');
+          if (onPaste && change.origin === 'paste' && change.update) {
+            const translatedText = onPaste(change.text.join('\n')).split('\n');
 
-              change.update(change.from, change.to, translatedText);
-            }
+            change.update(change.from, change.to, translatedText);
           }
         });
 
@@ -746,7 +744,7 @@ export const CodeEditor = memo(
             event.preventDefault();
             const pluginTemplateTags = (await getTemplateTags()).map(tag => ({
               // Skip unsupported objects like functions in template tag to send in IPC
-              templateTag: JSON.parse(JSON.stringify(tag.templateTag)),
+              templateTag: structuredClone(tag.templateTag),
             }));
             const target = event.target as HTMLElement;
             // right click on nunjucks tag
@@ -778,7 +776,7 @@ export const CodeEditor = memo(
           {showFilter || showPrettify ? (
             <div
               key={uniquenessKey}
-              className="flex h-[--line-height-sm] w-full items-center border-t border-solid border-[--hl-md] text-[--font-size-sm]"
+              className="flex h-(--line-height-sm) w-full items-center border-t border-solid border-(--hl-md) text-(--font-size-sm)"
             >
               {showFilter ? (
                 <input
@@ -813,7 +811,7 @@ export const CodeEditor = memo(
                   <MenuTrigger>
                     <Button
                       aria-label="Filter History"
-                      className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     >
                       <Icon icon="clock" />
                     </Button>
@@ -837,11 +835,11 @@ export const CodeEditor = memo(
                           name: filter,
                           key: index,
                         }))}
-                        className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                        className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
                       >
                         {item => (
                           <MenuItem
-                            className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                            className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                             aria-label={item.name}
                           >
                             <span>{item.name}</span>
@@ -856,7 +854,7 @@ export const CodeEditor = memo(
                 {showPrettify ? (
                   <Button
                     key="prettify"
-                    className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     aria-label="Auto-format request body whitespace"
                     onPress={() => {
                       if (mode?.includes('json') || mode?.includes('xml')) {

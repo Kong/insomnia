@@ -167,7 +167,7 @@ const isNsisInstaller = async () => {
     // we inject this file(nsisInstall.nsh) during the NSIS build process to indicate the installer type
     const flagFilePath = path.join(installDir, 'installer-info.json');
 
-    const content = await fs.promises.readFile(flagFilePath, 'utf-8');
+    const content = await fs.promises.readFile(flagFilePath, 'utf8');
     const json = JSON.parse(content);
     console.log('installer type', json.installer);
     return json.installer === 'nsis';

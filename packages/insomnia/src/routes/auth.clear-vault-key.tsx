@@ -1,9 +1,9 @@
 import electron from 'electron';
+import { getVault } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';
 import { removeAllSecrets } from '~/models/environment';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/auth.clear-vault-key';
@@ -14,14 +14,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const userSession = await sessionModel.getOrCreate();
   const { id: sessionId } = userSession;
   const { salt: newVaultSalt } =
-    (await insomniaFetch<{
-      salt?: string;
-      error?: string;
-    }>({
-      method: 'GET',
-      path: '/v1/user/vault',
-      sessionId,
-    }).catch(error => {
+    (await getVault({ sessionId }).catch(error => {
       console.error(`failed to get vault salt ${error.toString()}`);
     })) || {};
   // User on other device has reset the vault key.

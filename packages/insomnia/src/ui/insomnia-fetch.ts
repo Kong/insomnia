@@ -1,26 +1,16 @@
+import type { FetchConfig } from 'insomnia-api';
+
 import { getApiBaseURL, getClientString, INSOMNIA_FETCH_TIME_OUT, PLAYWRIGHT } from '../common/constants';
 import { generateId } from '../common/misc';
 
-interface FetchConfig {
-  method: 'POST' | 'PUT' | 'GET' | 'DELETE' | 'PATCH';
-  path: string;
-  sessionId: string | null;
-  organizationId?: string | null;
-  data?: unknown;
-  retries?: number;
-  origin?: string;
-  headers?: Record<string, string>;
-  onlyResolveOnSuccess?: boolean;
-  timeout?: number;
-}
-
 export class ResponseFailError extends Error {
-  constructor(msg: string, response: Response) {
+  constructor(name: string, msg: string, response: Response) {
     super(msg);
+    this.name = 'ResponseFailError';
+    if (name) this.name += `: ${name}`;
     this.response = response;
   }
   response;
-  name = 'ResponseFailError';
 }
 
 // Adds headers, retries and opens deep links returned from the api
@@ -34,7 +24,11 @@ export async function insomniaFetch<T = void>({
   headers,
   onlyResolveOnSuccess = false,
   timeout = INSOMNIA_FETCH_TIME_OUT,
-}: FetchConfig): Promise<T> {
+}: FetchConfig & {
+  // It's not used at all, should be removed?
+  retries?: number;
+  onlyResolveOnSuccess?: boolean;
+}): Promise<T> {
   const config: RequestInit = {
     method,
     headers: {
@@ -62,23 +56,24 @@ export async function insomniaFetch<T = void>({
     }
     const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
     if (onlyResolveOnSuccess && !response.ok) {
-      let errMsg = '';
+      let errName = `CODE-${response.status}`,
+        errMsg = response.statusText;
       if (isJson) {
         try {
           const json = await response.json();
+          if (typeof json?.error === 'string') {
+            errName = json.error;
+          }
           if (typeof json?.message === 'string') {
             errMsg = json.message;
           }
-        } catch (err) {}
+        } catch {}
       }
-      throw new ResponseFailError(errMsg, response);
+      throw new ResponseFailError(errName, errMsg, response);
     }
     return isJson ? response.json() : (response.text() as Promise<T>);
   } catch (err) {
-    if (err.name === 'AbortError') {
-      throw new Error('insomniaFetch timed out');
-    } else {
-      throw err;
-    }
+    const error = err.name === 'AbortError' ? new Error('insomniaFetch timed out') : err;
+    throw error;
   }
 }

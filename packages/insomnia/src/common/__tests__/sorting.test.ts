@@ -306,10 +306,10 @@ describe('Sorting methods', () => {
     expect(
       createdFirstSort(
         {
-          created: 123456789,
+          created: 123_456_789,
         },
         {
-          created: 123456789,
+          created: 123_456_789,
         },
       ),
     ).toBe(0);
@@ -357,10 +357,10 @@ describe('Sorting methods', () => {
     expect(
       createdLastSort(
         {
-          created: 123456789,
+          created: 123_456_789,
         },
         {
-          created: 123456789,
+          created: 123_456_789,
         },
       ),
     ).toBe(0);

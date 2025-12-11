@@ -78,7 +78,7 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
   const db = emptyDb();
 
   // Now, reading and parsing
-  const content = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
+  const content = await fs.promises.readFile(filePath, { encoding: 'utf8' });
   let parsed:
     | {
         __export_format: number;

@@ -9,7 +9,7 @@ import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { BrowserWindow } from 'electron';
 import type { Dispatcher } from 'undici';
 
-import { getFetchDispatcher, timelineFileStreams, writeEventLogAndNotify } from '~/main/mcp/common';
+import { type ConnectionContext, getFetchDispatcher, writeEventLogAndNotify, writeTimeline } from '~/main/mcp/common';
 import { MCPAuthError, type McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
 import type { McpAuthEventWithoutBase, OpenMcpHTTPClientConnectionOptions } from '~/main/mcp/types';
 import * as models from '~/models';
@@ -23,32 +23,12 @@ interface NodeRequestInit extends RequestInit {
   dispatcher?: Dispatcher;
 }
 
-interface ResponseEventOptions {
-  responseId: string;
-  requestId: string;
-  environmentId: string | null;
-  timelinePath: string;
-  eventLogPath: string;
-  authProvider: McpOAuthClientProvider;
-}
-
 export const createStreamableHTTPTransport = async (
+  context: ConnectionContext,
   options: OpenMcpHTTPClientConnectionOptions,
-  {
-    responseId,
-    responseEnvironmentId,
-    timelinePath,
-    eventLogPath,
-    authProvider,
-  }: {
-    responseId: string;
-    responseEnvironmentId: string | null;
-    timelinePath: string;
-    eventLogPath: string;
-    authProvider: McpOAuthClientProvider;
-  },
+  authProvider: McpOAuthClientProvider,
 ) => {
-  const { url, requestId } = options;
+  const { url, headers } = options;
   if (!url) {
     throw new Error('MCP server url is required');
   }
@@ -57,7 +37,7 @@ export const createStreamableHTTPTransport = async (
     ...acc,
     [name.toLowerCase() || '']: value || '',
   });
-  const lowerCasedEnabledHeaders = options.headers
+  const lowerCasedEnabledHeaders = headers
     .filter(({ name, disabled }) => Boolean(name) && !disabled)
     .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
 
@@ -66,17 +46,9 @@ export const createStreamableHTTPTransport = async (
     requestInit: {
       headers: lowerCasedEnabledHeaders,
     },
-    fetch: (url, init) =>
-      wrappedFetch(url, init || {}, {
-        requestId,
-        responseId,
-        environmentId: responseEnvironmentId,
-        timelinePath,
-        eventLogPath,
-        authProvider,
-      }),
+    fetch: (url, init) => wrappedFetch(url, init || {}, context, authProvider),
     reconnectionOptions: {
-      maxReconnectionDelay: 30000,
+      maxReconnectionDelay: 30_000,
       initialReconnectionDelay: 1000,
       reconnectionDelayGrowFactor: 1.5,
       maxRetries: 2,
@@ -107,10 +79,11 @@ const parseResponseAndBuildTimeline = (requestHeaderLogs: string, response: Resp
 const wrappedFetch = async (
   url: string | URL,
   init: RequestInit,
-  options: ResponseEventOptions,
+  context: ConnectionContext,
+  authProvider: McpOAuthClientProvider,
   calledByAuth?: boolean,
 ) => {
-  const { requestId, responseId, environmentId, timelinePath, eventLogPath, authProvider } = options;
+  const { requestId, responseId, environmentId, timelinePath, eventLogPath } = context;
   const { method = 'GET' } = init;
 
   const reqHeader = new Headers(init?.headers || {});
@@ -130,7 +103,7 @@ const wrappedFetch = async (
       { value: `Preparing request to ${url.toString()}`, name: 'Text', timestamp: Date.now() },
       { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
     ];
-    initialTimelines.map(t => timelineFileStreams.get(requestId)?.write(JSON.stringify(t) + '\n'));
+    initialTimelines.map(t => writeTimeline(context, JSON.stringify(t)));
   }
   const requestHeaders: { name: string; value: string }[] = [...reqHeader.entries()].map(([name, value]) => ({
     name,
@@ -147,7 +120,7 @@ const wrappedFetch = async (
     `${requestMethodLine}\n${headersOut}`,
     response,
   );
-  timeline.map(t => timelineFileStreams.get(requestId)?.write(JSON.stringify(t) + '\n'));
+  timeline.map(t => writeTimeline(context, JSON.stringify(t)));
 
   if (isMcpInitializeRequest) {
     // Create response model only for initialize response
@@ -202,7 +175,7 @@ const wrappedFetch = async (
         resourceMetadataUrl: resourceMetadataUrl?.toString() || null,
       },
     };
-    writeEventLogAndNotify(requestId, authEvent);
+    writeEventLogAndNotify(context, authEvent);
 
     let authResult: AuthResult;
 
@@ -225,7 +198,7 @@ const wrappedFetch = async (
           body: init?.body || null,
         },
       };
-      writeEventLogAndNotify(requestId, authRequestEvent);
+      writeEventLogAndNotify(context, authRequestEvent);
       try {
         const response = await fetch(url, {
           ...init,
@@ -242,7 +215,7 @@ const wrappedFetch = async (
             body: await response.clone().text(),
           },
         };
-        writeEventLogAndNotify(requestId, authResponseEvent);
+        writeEventLogAndNotify(context, authResponseEvent);
 
         return response;
       } catch (error) {
@@ -257,7 +230,7 @@ const wrappedFetch = async (
             ...(error.cause ? { cause: error.cause.message || String(error.cause) } : {}),
           },
         };
-        writeEventLogAndNotify(requestId, authErrorEvent);
+        writeEventLogAndNotify(context, authErrorEvent);
         throw error;
       }
     };
@@ -283,10 +256,6 @@ const wrappedFetch = async (
           fetchFn: authFetchFn,
         });
       }
-      // Close the oauth authorization modal after authorization is complete
-      BrowserWindow.getAllWindows().forEach(window => {
-        window.webContents.send('hide-oauth-authorization-modal');
-      });
       if (authResult !== 'AUTHORIZED') {
         throw new UnauthorizedError();
       }
@@ -295,9 +264,13 @@ const wrappedFetch = async (
       // Wrap and throw MCPAuthError for better identification, some of the errors thrown by sdk are generic Error which is hard to identify
       throw new MCPAuthError(e.message || 'Authentication failed', { cause: e });
     } finally {
+      // Close the oauth authorization modal after authorization is complete
+      BrowserWindow.getAllWindows().forEach(window => {
+        window.webContents.send('hide-oauth-authorization-modal');
+      });
       unsubscribe();
     }
-    return await wrappedFetch(url, init, options, calledByAuth);
+    return await wrappedFetch(url, init, context, authProvider, true);
   }
   return response;
 };

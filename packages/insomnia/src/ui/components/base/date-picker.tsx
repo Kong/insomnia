@@ -30,13 +30,13 @@ export const DatePicker = <T extends DateValue>({
 }: CustomDatePickerProps<T>) => {
   return (
     <RaDatePicker aria-label="Insomnia Date Picker" {...props}>
-      <Group className="flex w-full items-center justify-between rounded border border-solid border-[--hl-sm] px-2 py-1 data-[invalid]:border-[--color-danger]">
+      <Group className="flex w-full items-center justify-between rounded-sm border border-solid border-(--hl-sm) px-2 py-1 data-invalid:border-(--color-danger)">
         <DateInput>{segment => <DateSegment segment={segment} />}</DateInput>
         <Button>
           <Icon icon="chevron-down" />
         </Button>
       </Group>
-      <Popover className="rounded border border-solid border-[--hl-sm] bg-[--color-bg] p-8 text-[--color-font]">
+      <Popover className="rounded-sm border border-solid border-(--hl-sm) bg-(--color-bg) p-8 text-(--color-font)">
         <Dialog>
           <Calendar firstDayOfWeek={firstDayOfWeek}>
             <header className="mb-4 flex items-center justify-between">
@@ -50,7 +50,7 @@ export const DatePicker = <T extends DateValue>({
             </header>
             <CalendarGrid>
               {date => (
-                <CalendarCell className="w-8 text-center leading-8 data-[selected]:bg-[--color-surprise]" date={date} />
+                <CalendarCell className="w-8 text-center leading-8 data-selected:bg-(--color-surprise)" date={date} />
               )}
             </CalendarGrid>
           </Calendar>

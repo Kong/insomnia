@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import type { FC } from 'react';
 import React, { useEffect, useState } from 'react';
 import {
@@ -9,8 +8,6 @@ import {
   Heading,
   Input,
   Label,
-  Radio,
-  RadioGroup,
   Row,
   Tab,
   Table,
@@ -23,30 +20,24 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { getAppWebsiteBaseURL } from '~/common/constants';
-import { docsPricingLearnMoreLink } from '~/common/documentation';
+import { Divider } from '~/basic-components/divider';
 import { isGitCredentialsOAuth } from '~/models/git-repository';
-import { isOwnerOfOrganization, type StorageRules } from '~/models/organization';
-import { useRootLoaderData } from '~/root';
+import type { StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import {
   fallbackFeatures,
   useOrganizationPermissionsLoaderFetcher,
 } from '~/routes/organization.$organizationId.permissions';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
-import { useIsLightTheme } from '~/ui/hooks/theme';
+import { GitConnectionInfo } from '~/ui/components/git/connection-info';
+import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
+import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
+import { useActiveView } from '~/ui/components/project/utils';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
-import {
-  getDefaultProjectStorageType,
-  getProjectStorageTypeLabel,
-  isGitProject,
-  isRemoteProject,
-  type Project,
-} from '../../../models/project';
+import { getDefaultProjectStorageType, isGitProject, isRemoteProject, type Project } from '../../../models/project';
 import {
   scopeToBgColorMap,
   scopeToIconMap,
@@ -112,9 +103,9 @@ export const ProjectSettingsForm: FC<Props> = ({
   const [storageType, setStorageType] = useState<'local' | 'remote' | 'git'>(
     getDefaultProjectStorageType(storageRules, project),
   );
-  const [activeView, setActiveView] = useState<'project' | 'git-clone' | 'git-results' | 'switch-storage-type'>(
-    'project',
-  );
+
+  const { activeView, setActiveView } = useActiveView();
+
   const [selectedTab, setTab] = useState<OauthProviderName>('github');
 
   const [error, setError] = useState<string | null>(null);
@@ -150,8 +141,6 @@ export const ProjectSettingsForm: FC<Props> = ({
   const updateProjectFetcher = useProjectUpdateActionFetcher();
   const newProjectFetcher = useProjectNewActionFetcher();
 
-  const showStorageRestrictionMessage =
-    !storageRules.enableCloudSync || !storageRules.enableLocalVault || !storageRules.enableGitSync;
   const insomniaFiles =
     initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data
       ? initCloneGitRepositoryFetcher.data.files
@@ -232,29 +221,13 @@ export const ProjectSettingsForm: FC<Props> = ({
           storageType,
         },
       });
-    } else {
-      newProjectFetcher.submit({
-        organizationId,
-        projectData: {
-          ...projectData,
-          storageType,
-        },
-      });
     }
   };
 
-  const organizationData = useOrganizationLoaderData();
-  const { userSession } = useRootLoaderData()!;
-  const organization = organizationData?.organizations.find(o => o.id === organizationId);
-  const isUserOwner =
-    organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
-
-  const isLightTheme = useIsLightTheme();
-
   return (
-    <div className="flex w-full max-w-[600px] flex-col gap-4">
+    <div className="flex w-full max-w-[600px] flex-col gap-8">
       {error && (
-        <div className="flex items-center gap-2 rounded-sm bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-[--color-font-danger]">
+        <div className="flex items-center gap-2 rounded-xs bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-(--color-font-danger)">
           <Icon icon="triangle-exclamation" />
           <span>{error}</span>
         </div>
@@ -262,7 +235,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 
       {activeView === 'project' && (
         <>
-          <div className="mt-4 flex w-full flex-col justify-start gap-8 overflow-y-auto pb-2 text-left">
+          <div className="mt-4 flex w-full flex-col justify-start gap-8 text-left">
             <TextField
               autoFocus
               name="name"
@@ -270,147 +243,70 @@ export const ProjectSettingsForm: FC<Props> = ({
               onChange={name => setProjectData({ ...projectData, name })}
               className="group relative flex flex-col gap-2 px-0.5"
             >
-              <Label className="text-sm text-[--hl]">Project name</Label>
+              <Label className="pt-0 text-sm text-(--color-font)">Project name</Label>
               <Input
                 placeholder="My project"
-                className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
               />
             </TextField>
-            <RadioGroup
-              name="type"
-              className="flex flex-col gap-2 px-0.5"
-              onChange={value => {
-                error && setError(null);
-                setStorageType(value as 'local' | 'remote' | 'git');
-              }}
+            <ProjectTypeSelect
+              storageRules={storageRules}
               value={storageType}
-            >
-              <Label className="text-sm text-[--hl]">Project type</Label>
-              <div className="flex gap-2">
-                <Radio
-                  isDisabled={!storageRules.enableLocalVault}
-                  value="local"
-                  className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon icon="laptop" />
-                    <Heading className="text-lg font-bold">Local Vault</Heading>
-                  </div>
-                  <p className="pt-2">Stored locally only, with no cloud. Ideal when collaboration is not needed.</p>
-                </Radio>
-
-                <Radio
-                  isDisabled={!storageRules.enableCloudSync}
-                  value="remote"
-                  className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon icon="globe" />
-                    <Heading className="text-lg font-bold">Cloud Sync</Heading>
-                  </div>
-                  <p className="pt-2">
-                    Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
-                  </p>
-                </Radio>
-                <Radio
-                  isDisabled={!storageRules.enableGitSync}
-                  value="git"
-                  className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon icon={['fab', 'git-alt']} />
-                    <Heading className="text-lg font-bold">Git Sync</Heading>
-                  </div>
-                  <p className="pt-2">
-                    Stored locally and synced to a Git repository. Ideal for version control and collaboration.
-                  </p>
-                </Radio>
-              </div>
-              {storageType === 'git' && !isGitSyncEnabled && (
-                <div
-                  className={classNames('mt-3 flex items-start justify-start gap-5 rounded-md px-6 py-5', {
-                    'bg-[#292535]': !isLightTheme,
-                    'bg-[#EEEBFF]': isLightTheme,
-                  })}
-                >
-                  <Icon icon="circle-info" className="pt-1.5" />
-                  <div className="flex flex-col items-start justify-start gap-3.5">
-                    <Heading className="text-lg font-bold">
-                      Git Sync limited to organizations of 3 or fewer users
-                    </Heading>
-                    {isUserOwner ? (
-                      <>
-                        <p>
-                          Git Sync is included on your plan for up to 3 users. Since your team is larger, you’ll need to
-                          upgrade your plan to use it.{' '}
-                          <a href={docsPricingLearnMoreLink} className="underline">
-                            Learn more ↗
-                          </a>
-                        </p>
-                        <a
-                          href={getAppWebsiteBaseURL() + '/app/pricing?source=app_create_git_project'}
-                          className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
-                        >
-                          Upgrade
-                        </a>
-                      </>
-                    ) : (
-                      <>
-                        <p>
-                          Git Sync is included on your plan for up to 3 users. Because your team is larger, your admin
-                          will need to upgrade the plan for you to access it.
-                        </p>
-                        <a
-                          href={docsPricingLearnMoreLink}
-                          className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
-                        >
-                          Learn More ↗
-                        </a>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-            </RadioGroup>
-            {showStorageRestrictionMessage && (
-              <div className="flex items-center gap-2 rounded-sm bg-[rgba(var(--color-warning-rgb),0.5)] px-2 py-1 text-sm text-[--color-font-warning]">
-                <Icon icon="triangle-exclamation" />
-                <span>
-                  The organization owner mandates that projects must be created and stored using{' '}
-                  {getProjectStorageTypeLabel(storageRules)}.
-                </span>
-              </div>
-            )}
+              onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
+            />
+            <ProjectTypeWarning
+              isGitSyncEnabled={isGitSyncEnabled}
+              storageType={storageType}
+              storageRules={storageRules}
+            />
           </div>
+          {storageType === 'git' && (
+            <>
+              <Divider />
+              <GitConnectionInfo gitRepository={gitRepository} />
+            </>
+          )}
           <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5 pb-10">
             <div className="flex items-center gap-2">
               {onCancel && (
                 <Button
                   onPress={onCancel}
-                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
                 >
                   Cancel
                 </Button>
               )}
-              {storageType === 'git' && (
+              {storageType === 'git' && isSwitchingStorageType(project!, storageType) && (
                 <Button
                   isDisabled={!isGitSyncEnabled}
                   onPress={() => setActiveView('git-clone')}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                 >
                   Next
+                </Button>
+              )}
+              {storageType === 'git' && !isSwitchingStorageType(project!, storageType) && (
+                <Button
+                  onPress={onUpsertProject}
+                  isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
+                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                >
+                  {(updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') && (
+                    <Icon icon="spinner" className="animate-spin" />
+                  )}
+                  <span>Update</span>
                 </Button>
               )}
               {storageType !== 'git' && (
                 <Button
                   onPress={onUpsertProject}
                   isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                 >
                   {(updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') && (
                     <Icon icon="spinner" className="animate-spin" />
                   )}
-                  <span>{project ? 'Update' : 'Create'}</span>
+                  <span>Update</span>
                 </Button>
               )}
             </div>
@@ -427,28 +323,28 @@ export const ProjectSettingsForm: FC<Props> = ({
               onChange={isSelected => setProjectData(prev => ({ ...prev, connectRepositoryLater: isSelected }))}
               className="group flex h-full items-center p-0"
             >
-              <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+              <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
                 <Icon
                   icon="check"
-                  className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+                  className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
                 />
               </div>
             </Checkbox>
-            <span className="text-sm text-[--hl]">Connect repository later</span>
+            <span className="text-sm text-(--hl)">Connect repository later</span>
           </Label>
           {project && !gitRepository && projectData.connectRepositoryLater ? (
-            <div className="flex h-full w-full flex-col items-center justify-center rounded-sm border border-dashed border-[--hl-sm] p-4">
-              <Icon icon="link" className="mb-4 text-[30px] text-[--hl]" />
-              <Heading className="text-lg font-bold text-[--hl]">Your project is already set up to start.</Heading>
-              <p className="text-sm text-[--hl]">
+            <div className="flex h-full w-full flex-col items-center justify-center rounded-xs border border-dashed border-(--hl-sm) p-4">
+              <Icon icon="link" className="mb-4 text-[30px] text-(--hl)" />
+              <Heading className="text-lg font-bold text-(--hl)">Your project is already set up to start.</Heading>
+              <p className="text-sm text-(--hl)">
                 Want to connect a repository now? You can uncheck “Connect repository later” to do so.
               </p>
             </div>
           ) : projectData.connectRepositoryLater ? (
-            <div className="flex h-full w-full flex-col items-center justify-center rounded-sm border border-dashed border-[--hl-sm] p-4">
-              <Icon icon="link" className="mb-4 text-[30px] text-[--hl]" />
-              <Heading className="text-lg font-bold text-[--hl]">You're all set to start your project.</Heading>
-              <p className="text-sm text-[--hl]">You can connect a repository anytime from the project settings.</p>
+            <div className="flex h-full w-full flex-col items-center justify-center rounded-xs border border-dashed border-(--hl-sm) p-4">
+              <Icon icon="link" className="mb-4 text-[30px] text-(--hl)" />
+              <Heading className="text-lg font-bold text-(--hl)">You're all set to start your project.</Heading>
+              <p className="text-sm text-(--hl)">You can connect a repository anytime from the project settings.</p>
             </div>
           ) : (
             <ErrorBoundary>
@@ -461,11 +357,11 @@ export const ProjectSettingsForm: FC<Props> = ({
                 className="mt-4 flex h-full w-full flex-col"
               >
                 <TabList
-                  className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+                  className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
                   aria-label="Request pane tabs"
                 >
                   <Tab
-                    className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                    className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                     id="github"
                   >
                     <div className="flex items-center gap-2">
@@ -473,7 +369,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                     </div>
                   </Tab>
                   <Tab
-                    className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                    className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                     id="gitlab"
                   >
                     <div className="flex items-center gap-2">
@@ -481,7 +377,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                     </div>
                   </Tab>
                   <Tab
-                    className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                    className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                     id="custom"
                   >
                     <div className="flex items-center gap-2">
@@ -508,7 +404,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                   setError(null);
                   setActiveView('project');
                 }}
-                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
               >
                 Back
               </Button>
@@ -516,21 +412,21 @@ export const ProjectSettingsForm: FC<Props> = ({
                 <Button
                   type="submit"
                   form={selectedTab}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                 >
                   Clone
                 </Button>
               ) : project && projectData.connectRepositoryLater && !gitRepository ? (
                 <Button
                   onPress={onCancel}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                 >
                   Close
                 </Button>
               ) : (
                 <Button
                   onPress={onUpsertProject}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                 >
                   {project ? 'Update' : 'Create'}
                 </Button>
@@ -544,27 +440,27 @@ export const ProjectSettingsForm: FC<Props> = ({
         <>
           {initCloneGitRepositoryFetcher.state !== 'idle' && (
             <div className="flex w-full flex-col items-center justify-center gap-2 pt-4">
-              <div className="flex w-full flex-col items-center gap-2 rounded-sm bg-[--hl-xs] p-4 text-sm text-[--color-font-success]">
+              <div className="flex w-full flex-col items-center gap-2 rounded-xs bg-(--hl-xs) p-4 text-sm text-(--color-font-success)">
                 <span className="relative flex items-center justify-center">
                   <InsomniaLogo className="h-12 w-12" />
                 </span>
-                <p className="p-2 text-center font-bold text-[--color-font]">Loading Insomnia files from repository</p>
+                <p className="p-2 text-center font-bold text-(--color-font)">Loading Insomnia files from repository</p>
               </div>
             </div>
           )}
           {insomniaFiles?.length === 0 && initCloneGitRepositoryFetcher.state === 'idle' && (
             <div className="flex w-full flex-col items-center justify-center gap-2 pt-4">
-              <div className="flex w-full flex-col items-center gap-2 rounded-sm bg-[--hl-xs] p-4 text-sm text-[--color-font-success]">
+              <div className="flex w-full flex-col items-center gap-2 rounded-xs bg-(--hl-xs) p-4 text-sm text-(--color-font-success)">
                 <span className="relative flex items-center justify-center">
                   <InsomniaLogo className="h-12 w-12" />
                 </span>
-                <p className="p-2 text-center font-bold text-[--color-font]">
+                <p className="p-2 text-center font-bold text-(--color-font)">
                   We didn't find any Insomnia files in this repository.
                 </p>
-                <p className="p-2 text-center font-bold text-[--color-font]">
+                <p className="p-2 text-center font-bold text-(--color-font)">
                   Clone this repository to start a new project.
                 </p>
-                <p className="p-2 text-center text-[--color-font]">
+                <p className="p-2 text-center text-(--color-font)">
                   Add your collections, documents, environments and mock servers, and share them using Git.
                 </p>
               </div>
@@ -573,7 +469,7 @@ export const ProjectSettingsForm: FC<Props> = ({
           {insomniaFiles && insomniaFiles?.length > 0 && (
             <div className="flex flex-col gap-2">
               <Heading className="text-base">We found {insomniaFiles.length} Insomnia files in your repository</Heading>
-              <div className="max-h-96 w-full select-none overflow-y-auto overflow-x-hidden rounded border border-solid border-[--hl-sm]">
+              <div className="max-h-96 w-full overflow-x-hidden overflow-y-auto rounded-sm border border-solid border-(--hl-sm) select-none">
                 <Table
                   selectionMode="none"
                   aria-label="Insomnia files"
@@ -582,47 +478,47 @@ export const ProjectSettingsForm: FC<Props> = ({
                   <TableHeader>
                     <Column
                       isRowHeader
-                      className="sticky top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] px-2 py-2 text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none"
+                      className="sticky top-0 z-10 border-b border-(--hl-sm) bg-(--hl-xs) px-2 py-2 text-left text-xs font-semibold backdrop-blur-sm backdrop-filter focus:outline-hidden"
                     >
                       Name
                     </Column>
-                    <Column className="sticky top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] px-2 py-2 text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                    <Column className="sticky top-0 z-10 border-b border-(--hl-sm) bg-(--hl-xs) px-2 py-2 text-left text-xs font-semibold backdrop-blur-sm backdrop-filter focus:outline-hidden">
                       Type
                     </Column>
-                    <Column className="sticky top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] px-2 py-2 text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                    <Column className="sticky top-0 z-10 border-b border-(--hl-sm) bg-(--hl-xs) px-2 py-2 text-left text-xs font-semibold backdrop-blur-sm backdrop-filter focus:outline-hidden">
                       File path
                     </Column>
                   </TableHeader>
                   <TableBody
-                    className="divide divide-solid divide-[--hl-sm]"
+                    className="divide divide-solid divide-(--hl-sm)"
                     items={insomniaFiles.map(file => ({ id: file.path, ...file }))}
                   >
                     {file => (
-                      <Row className="group transition-colors focus-within:bg-[--hl-xxs] focus:outline-none">
-                        <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
+                      <Row className="group transition-colors focus-within:bg-(--hl-xxs) focus:outline-hidden">
+                        <Cell className="border-b border-solid border-(--hl-sm) text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
                           <div className="flex items-center gap-2 px-2 py-2">
                             <span
-                              className={`${scopeToBgColorMap[file.scope]} ${scopeToTextColorMap[file.scope]} flex aspect-square h-6 items-center justify-center rounded`}
+                              className={`${scopeToBgColorMap[file.scope]} ${scopeToTextColorMap[file.scope]} flex aspect-square h-6 items-center justify-center rounded-sm`}
                             >
                               <Icon icon={scopeToIconMap[file.scope]} className="w-4" />
                             </span>
                             <span className="truncate">{file.name}</span>
                             {file.path === '.insomnia' && (
-                              <span className="flex items-center gap-2 text-[--color-warning]">
+                              <span className="flex items-center gap-2 text-(--color-warning)">
                                 <Icon icon="triangle-exclamation" />
                               </span>
                             )}
                           </div>
                         </Cell>
-                        <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
-                          <span className="flex items-center gap-1 px-2 text-[--hl]">
+                        <Cell className="border-b border-solid border-(--hl-sm) text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
+                          <span className="flex items-center gap-1 px-2 text-(--hl)">
                             {scopeToLabelMap[file.scope]}
                           </span>
                         </Cell>
-                        <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
-                          <span className="flex items-center gap-1 italic text-[--hl]">
-                            <Icon icon={file.path === '.insomnia' ? 'folder' : 'file'} className="text-[--hl]" />
-                            <span className="truncate px-2 text-[--hl]">{file.path}</span>
+                        <Cell className="border-b border-solid border-(--hl-sm) text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
+                          <span className="flex items-center gap-1 text-(--hl) italic">
+                            <Icon icon={file.path === '.insomnia' ? 'folder' : 'file'} className="text-(--hl)" />
+                            <span className="truncate px-2 text-(--hl)">{file.path}</span>
                           </span>
                         </Cell>
                       </Row>
@@ -633,9 +529,9 @@ export const ProjectSettingsForm: FC<Props> = ({
             </div>
           )}
           {insomniaFiles && insomniaFiles?.some(file => file.path === '.insomnia') && (
-            <div className="rounded-sm bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-50 p-[--padding-sm] text-[--color-font-warning]">
+            <div className="rounded-xs bg-(--color-warning)/50 p-(--padding-sm) text-(--color-font-warning)">
               <Heading className="flex items-center gap-2 text-lg font-bold">
-                <Icon icon="triangle-exclamation" className="text-[--color-font-warning]" />
+                <Icon icon="triangle-exclamation" className="text-(--color-font-warning)" />
                 We found legacy Insomnia files in your repository
               </Heading>
               <p className="pt-2">
@@ -655,14 +551,14 @@ export const ProjectSettingsForm: FC<Props> = ({
                 setActiveView('git-clone');
                 setError(null);
               }}
-              className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
+              className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
             >
               Back
             </Button>
             <Button
               isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
               onPress={onUpsertProject}
-              className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+              className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
             >
               {updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle' ? (
                 <>
@@ -683,7 +579,7 @@ export const ProjectSettingsForm: FC<Props> = ({
         <>
           <div className="flex flex-col justify-start gap-2 overflow-y-auto px-10">
             {storageType === 'git' && (
-              <div className="flex flex-col gap-4 text-[--color-font]">
+              <div className="flex flex-col gap-4 text-(--color-font)">
                 <div className="flex flex-col gap-4">
                   <p>
                     {project && isRemoteProject(project)
@@ -705,7 +601,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                   <p>You can synchronize a local project back to the cloud if you decide to do so.</p>
                   {project && isRemoteProject(project) && (
                     <p className="flex items-center gap-2">
-                      <Icon icon="triangle-exclamation" className="text-[--color-warning]" />
+                      <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
                       Remember to pull your latest project updates before this operation
                     </p>
                   )}
@@ -713,7 +609,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               </div>
             )}
             {storageType === 'local' && (
-              <div className="flex flex-col gap-4 text-[--color-font]">
+              <div className="flex flex-col gap-4 text-(--color-font)">
                 <div className="flex flex-col gap-4">
                   <p>
                     {project && isGitProject(project)
@@ -757,14 +653,14 @@ export const ProjectSettingsForm: FC<Props> = ({
                     </>
                   )}
                   <p className="flex items-center gap-2">
-                    <Icon icon="triangle-exclamation" className="text-[--color-warning]" />
+                    <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
                     Remember to pull your latest project updates before this operation
                   </p>
                 </div>
               </div>
             )}
             {storageType === 'remote' && (
-              <div className="flex flex-col gap-4 text-[--color-font]">
+              <div className="flex flex-col gap-4 text-(--color-font)">
                 <div className="flex flex-col gap-4">
                   <p>
                     We will be synchronizing your local project to Insomnia's Cloud in a secure encrypted format which
@@ -795,14 +691,14 @@ export const ProjectSettingsForm: FC<Props> = ({
                   setError(null);
                   setActiveView('project');
                 }}
-                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
               >
                 Back
               </Button>
               <Button
                 onPress={onUpsertProject}
                 isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
-                className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 {(updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') && (
                   <Icon icon="spinner" className="animate-spin" />

@@ -7,7 +7,7 @@ import { isWindows } from '../../../common/constants';
 // to fail with an EACCES or EPERM if the directory contains newly
 // created files.
 
-const WINDOWS_RENAME_TIMEOUT = 60000; // 1 minute
+const WINDOWS_RENAME_TIMEOUT = 60_000; // 1 minute
 
 function wait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -41,7 +41,7 @@ async function renameWithRetry(
         if (!stat.isFile()) {
           abortRetry = true; // if target is not a file, EPERM error may be raised and we should not attempt to retry
         }
-      } catch (error) {
+      } catch {
         // Ignore
       }
 

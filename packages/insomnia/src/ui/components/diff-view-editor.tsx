@@ -37,7 +37,7 @@ export const DiffEditor = ({ original, modified }: { original: string; modified:
         'focusBorder': '#ffffff00',
         'editor.background': '#ffffff00',
         'editorCursor.foreground': getColorVariableAsHex('--color-font'),
-        'scrollbar.shadow': getColorVariableAsHex('--color-bg'),
+        'scrollbar.shadow-sm': getColorVariableAsHex('--color-bg'),
         'editor.lineHighlightBorder': getColorVariableAsHex('--hl', 30),
         'editor.foreground': getColorVariableAsHex('--color-font'),
         'editor.selectionBackground': getColorVariableAsHex('--hl'),

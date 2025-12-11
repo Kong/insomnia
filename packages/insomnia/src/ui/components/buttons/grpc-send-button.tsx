@@ -21,7 +21,7 @@ export const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, 
 
   return (
     <Button
-      className="ml-1 rounded-l-sm bg-[--color-surprise] px-5 text-[--color-font-surprise] hover:brightness-75 focus:brightness-75"
+      className="ml-1 rounded-l-sm bg-(--color-surprise) px-5 text-(--color-font-surprise) hover:brightness-75 focus:brightness-75"
       onPress={running ? handleCancel : handleStart}
     >
       {running ? 'Cancel' : methodType === 'unary' ? 'Send' : 'Start'}

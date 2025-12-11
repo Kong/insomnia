@@ -88,7 +88,7 @@ const LocalBranchItem = ({
           {branch !== 'master' && (
             <PromptButton
               confirmMessage="Confirm"
-              className="flex min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+              className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               doneMessage="Deleted"
               disabled={isCurrent || branch === 'master'}
               onClick={() => {
@@ -102,13 +102,13 @@ const LocalBranchItem = ({
             >
               <Icon
                 icon={deleteBranchFetcher.state !== 'idle' ? 'spinner' : 'trash'}
-                className={`w-5 text-[--color-danger] ${deleteBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
+                className={`w-5 text-(--color-danger) ${deleteBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
               />
               Delete
             </PromptButton>
           )}
           <Button
-            className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+            className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             isDisabled={isCurrent}
             onPress={() => {
               setErrorMessage('');
@@ -127,7 +127,7 @@ const LocalBranchItem = ({
             Checkout
           </Button>
           <PromptButton
-            className="flex min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+            className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             doneMessage="Merged"
             confirmMessage="Confirm"
             loadingMessage="Merging"
@@ -195,7 +195,7 @@ const LocalBranchItem = ({
           </PromptButton>
         </div>
       </div>
-      {errMsg && <div className="whitespace-break-spaces text-right text-[--color-danger]">{errMsg}</div>}
+      {errMsg && <div className="text-right whitespace-break-spaces text-(--color-danger)">{errMsg}</div>}
     </div>
   );
 };
@@ -232,7 +232,7 @@ const RemoteBranchItem = ({
       <span className="flex-1 truncate">{branch}</span>
       <div className="flex items-center gap-2">
         <Button
-          className="flex min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() =>
             checkoutBranchFetcher.submit({
               projectId,
@@ -323,23 +323,23 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
         !isOpen && onClose();
       }}
       isDismissable
-      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
-        className="flex max-h-full w-full max-w-4xl flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
+        className="flex max-h-full w-full max-w-4xl flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
       >
-        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
             <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-              <div className="flex flex-shrink-0 items-center justify-between gap-2">
+              <div className="flex shrink-0 items-center justify-between gap-2">
                 <Heading slot="title" className="text-2xl">
                   Branches
                 </Heading>
                 <Button
-                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
                 >
                   <Icon icon="x" />
@@ -358,20 +358,20 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
                   });
                 }}
                 method="POST"
-                className="flex flex-shrink-0 flex-col gap-2"
+                className="flex shrink-0 flex-col gap-2"
               >
                 <TextField className="flex flex-col gap-2">
                   <Label className="col-span-4">New branch name:</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       required
-                      className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                      className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                       type="text"
                       name="branch"
                       placeholder="Branch name"
                     />
                     <Button
-                      className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                       isDisabled={createBranchFetcher.state !== 'idle'}
                       type="submit"
                     >
@@ -384,7 +384,7 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
                   </div>
                 </TextField>
                 {createNewBranchError && (
-                  <div className="flex flex-wrap items-center justify-between gap-2 rounded border border-solid border-[--hl-md] bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-50 p-[--padding-sm] text-[--color-font-warning]">
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-md) bg-(--color-warning) p-(--padding-sm) text-(--color-font-warning)">
                     <p className="text-base">
                       <Icon icon="exclamation-triangle" className="mr-2" />
                       {createNewBranchError}
@@ -393,8 +393,8 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
                 )}
               </form>
 
-              <div className="flex max-h-96 flex-1 select-none flex-col divide-y divide-solid divide-[--hl-sm] overflow-hidden rounded border border-solid border-[--hl-sm]">
-                <Heading className="p-2 text-sm font-semibold uppercase text-[--hl]">Local Branches</Heading>
+              <div className="flex max-h-96 flex-1 flex-col divide-y divide-solid divide-(--hl-sm) overflow-hidden rounded-sm border border-solid border-(--hl-sm) select-none">
+                <Heading className="p-2 text-sm font-semibold text-(--hl) uppercase">Local Branches</Heading>
                 <GridList
                   aria-label="Branches list"
                   selectionMode="none"
@@ -404,14 +404,14 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
                     name: branch,
                     isCurrent: branch === currentBranch,
                   }))}
-                  className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-sm] overflow-y-auto focus:outline-none data-[empty]:py-0"
+                  className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-sm) overflow-y-auto focus:outline-hidden data-empty:py-0"
                 >
                   {item => (
                     <GridListItem
                       id={item.id}
                       key={item.key}
                       textValue={item.name}
-                      className="w-full p-2 transition-colors focus:bg-[--hl-sm] focus:outline-none"
+                      className="w-full p-2 transition-colors focus:bg-(--hl-sm) focus:outline-hidden"
                     >
                       <LocalBranchItem
                         branch={item.name}
@@ -425,8 +425,8 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
                 </GridList>
               </div>
 
-              <div className="flex max-h-96 flex-1 select-none flex-col divide-y divide-solid divide-[--hl-sm] overflow-hidden rounded border border-solid border-[--hl-sm]">
-                <Heading className="p-2 text-sm font-semibold uppercase text-[--hl]">Remote Branches</Heading>
+              <div className="flex max-h-96 flex-1 flex-col divide-y divide-solid divide-(--hl-sm) overflow-hidden rounded-sm border border-solid border-(--hl-sm) select-none">
+                <Heading className="p-2 text-sm font-semibold text-(--hl) uppercase">Remote Branches</Heading>
                 <GridList
                   aria-label="Remote Branches list"
                   selectionMode="none"
@@ -437,18 +437,18 @@ export const GitBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }
                     isCurrent: branch === currentBranch,
                   }))}
                   renderEmptyState={() => (
-                    <div className="p-2 text-center text-[--color-font-disabled]">
+                    <div className="p-2 text-center text-(--color-font-disabled)">
                       {isFetchingRemoteBranches ? 'Fetching remote branches...' : 'No remote branches found'}
                     </div>
                   )}
-                  className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-sm] overflow-y-auto focus:outline-none data-[empty]:py-0"
+                  className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-sm) overflow-y-auto focus:outline-hidden data-empty:py-0"
                 >
                   {item => (
                     <GridListItem
                       id={item.id}
                       key={item.key}
                       textValue={item.name}
-                      className="w-full p-2 transition-colors focus:bg-[--hl-sm] focus:outline-none"
+                      className="w-full p-2 transition-colors focus:bg-(--hl-sm) focus:outline-hidden"
                     >
                       <RemoteBranchItem branch={item.name} projectId={projectId} workspaceId={workspaceId} />
                     </GridListItem>

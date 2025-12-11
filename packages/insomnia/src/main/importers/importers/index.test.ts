@@ -23,7 +23,7 @@ describe('Fixtures', () => {
       }
 
       it(input, async () => {
-        vi.spyOn(Date, 'now').mockImplementation(() => 1622117984000);
+        vi.spyOn(Date, 'now').mockImplementation(() => 1_622_117_984_000);
 
         expect.assertions(3);
 
