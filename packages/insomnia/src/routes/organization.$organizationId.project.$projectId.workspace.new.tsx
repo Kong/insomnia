@@ -155,14 +155,14 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     let event = SegmentEvent.documentCreate;
-    let environmentType = undefined;
+    let environmentType: string | undefined;
 
     if (isCollection(workspace)) {
       event = SegmentEvent.collectionCreate;
     } else if (isEnvironment(workspace)) {
       event = SegmentEvent.environmentCreate;
       const environment = await models.environment.getById(workspace._id);
-      environmentType = !environment ? undefined : environment.isPrivate ? 'private' : 'global';
+      environmentType = environment?.isPrivate ? 'private' : 'global';
     } else if (scope === 'mcp') {
       event = SegmentEvent.mcpClientWorkspaceCreate;
     }
