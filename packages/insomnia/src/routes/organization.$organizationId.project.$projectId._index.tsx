@@ -858,7 +858,15 @@ const Component = () => {
                     className="group relative flex-1"
                     isDisabled={activeProject === undefined}
                     value={projectListFilter}
-                    onChange={setProjectListFilter}
+                    onChange={value => {
+                      setProjectListFilter(value);
+
+                      if (value.trim() !== '') {
+                        window.main.trackSegmentEvent({
+                          event: SegmentEvent.filterCreatedProjects,
+                        });
+                      }
+                    }}
                   >
                     <Input
                       placeholder="Filter"
