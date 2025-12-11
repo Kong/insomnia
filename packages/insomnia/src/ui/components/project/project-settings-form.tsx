@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Cell,
@@ -20,7 +20,9 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { Banner } from '~/basic-components/banner';
 import { Divider } from '~/basic-components/divider';
+import { LearnMoreLink } from '~/basic-components/link';
 import { isGitCredentialsOAuth } from '~/models/git-repository';
 import type { StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
@@ -33,6 +35,7 @@ import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 import { useActiveView } from '~/ui/components/project/utils';
+import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
@@ -100,11 +103,17 @@ export const ProjectSettingsForm: FC<Props> = ({
   const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise, organizationId);
   isGitSyncEnabled = features.gitSync.enabled;
 
+  const isLightTheme = useIsLightTheme();
+
   const [storageType, setStorageType] = useState<'local' | 'remote' | 'git'>(
     getDefaultProjectStorageType(storageRules, project),
   );
 
   const { activeView, setActiveView } = useActiveView();
+
+  const showSwitchBanner = useMemo(() => {
+    return isSwitchingStorageType(project!, storageType);
+  }, [project, storageType]);
 
   const [selectedTab, setTab] = useState<OauthProviderName>('github');
 
@@ -207,11 +216,6 @@ export const ProjectSettingsForm: FC<Props> = ({
   };
 
   const onUpsertProject = () => {
-    if (project && activeView !== 'switch-storage-type' && isSwitchingStorageType(project, storageType)) {
-      setActiveView('switch-storage-type');
-      return;
-    }
-
     if (project) {
       updateProjectFetcher.submit({
         organizationId,
@@ -260,6 +264,32 @@ export const ProjectSettingsForm: FC<Props> = ({
               storageRules={storageRules}
             />
           </div>
+          {showSwitchBanner && storageType === 'remote' && (
+            <Banner
+              type="info"
+              className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
+              title={isGitProject(project!) ? 'Removing Git Sync connection' : 'Converting to Cloud Sync project'}
+              message={
+                isGitProject(project!)
+                  ? 'RChanging this project to a Cloud Sync project will remove the connection to your repo. This does not delete the project files on the remote repo.'
+                  : 'Anything added in the project will be securely synced to the Insomnia cloud and enables you to collaborate on projects with others. '
+              }
+              footer={<LearnMoreLink href={''}>Learn more about changing project types</LearnMoreLink>}
+            />
+          )}
+          {showSwitchBanner && storageType === 'local' && (
+            <Banner
+              type="info"
+              className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
+              title={isGitProject(project!) ? 'Removing Git Sync connection' : 'Converting to Local Vault project'}
+              message={
+                isGitProject(project!)
+                  ? 'Changing this project to a Local Vault project will remove the connection to your repo. This does not delete the project files on the remote repo.'
+                  : 'Your files will now be stored on your local machine. You will no longer be able to collaborate with others on this project.'
+              }
+              footer={<LearnMoreLink href={''}>Learn more about changing project types</LearnMoreLink>}
+            />
+          )}
           {storageType === 'git' && (
             <>
               <Divider />
@@ -571,141 +601,6 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </>
               )}
             </Button>
-          </div>
-        </>
-      )}
-
-      {activeView === 'switch-storage-type' && (
-        <>
-          <div className="flex flex-col justify-start gap-2 overflow-y-auto px-10">
-            {storageType === 'git' && (
-              <div className="flex flex-col gap-4 text-(--color-font)">
-                <div className="flex flex-col gap-4">
-                  <p>
-                    {project && isRemoteProject(project)
-                      ? 'We will be converting your Cloud Sync project into a Git project, and permanently remove all cloud data for this project from the cloud.'
-                      : 'We will be converting your project into a Git project.'}
-                  </p>
-                  <ul className="flex flex-col gap-2 text-left">
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.
-                    </li>
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> Your collaborators can synchronize files using Git.
-                    </li>
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> The project will be stored locally also for every
-                      existing collaborator.
-                    </li>
-                  </ul>
-                  <p>You can synchronize a local project back to the cloud if you decide to do so.</p>
-                  {project && isRemoteProject(project) && (
-                    <p className="flex items-center gap-2">
-                      <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
-                      Remember to pull your latest project updates before this operation
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-            {storageType === 'local' && (
-              <div className="flex flex-col gap-4 text-(--color-font)">
-                <div className="flex flex-col gap-4">
-                  <p>
-                    {project && isGitProject(project)
-                      ? 'We will be converting your Git project into a local project.'
-                      : 'We will be converting your Cloud Sync project into a local project, and permanently remove all cloud data for this project from the cloud.'}
-                  </p>
-                  {project && isGitProject(project) && (
-                    <ul className="flex flex-col gap-2 text-left">
-                      <li>
-                        <i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.
-                      </li>
-                      <li>
-                        <i className="fa fa-check text-emerald-600" /> You will not be able to synchronize this project
-                        using Git anymore.
-                      </li>
-                      <li>
-                        <i className="fa fa-check text-emerald-600" /> This action will not delete your remote
-                        repository.
-                      </li>
-                    </ul>
-                  )}
-                  {project && isRemoteProject(project) && (
-                    <>
-                      <ul className="flex flex-col gap-2 text-left">
-                        <li>
-                          <i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.
-                        </li>
-                        <li>
-                          <i className="fa fa-check text-emerald-600" /> Your collaborators will not be able to push and
-                          pull files anymore.
-                        </li>
-                        <li>
-                          <i className="fa fa-check text-emerald-600" /> The project will become local also for every
-                          existing collaborator.
-                        </li>
-                      </ul>
-                      <p>
-                        You can still use Git Sync for local projects without using the cloud, and you can synchronize a
-                        local project back to the cloud if you decide to do so.
-                      </p>
-                    </>
-                  )}
-                  <p className="flex items-center gap-2">
-                    <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
-                    Remember to pull your latest project updates before this operation
-                  </p>
-                </div>
-              </div>
-            )}
-            {storageType === 'remote' && (
-              <div className="flex flex-col gap-4 text-(--color-font)">
-                <div className="flex flex-col gap-4">
-                  <p>
-                    We will be synchronizing your local project to Insomnia's Cloud in a secure encrypted format which
-                    will enable cloud collaboration.
-                  </p>
-                  <ul className="flex flex-col gap-2 text-left">
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> Your data in the cloud is encrypted and secure.
-                    </li>
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> You can now collaborate with any amount of users
-                      and use cloud features.
-                    </li>
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> Your project will be always available on any client
-                      after logging in.
-                    </li>
-                  </ul>
-                  <p>You can still use Git Sync for cloud projects.</p>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center justify-end gap-2 px-10 pb-10">
-            <div className="flex items-center gap-2">
-              <Button
-                onPress={() => {
-                  setError(null);
-                  setActiveView('project');
-                }}
-                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
-              >
-                Back
-              </Button>
-              <Button
-                onPress={onUpsertProject}
-                isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
-                className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-              >
-                {(updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') && (
-                  <Icon icon="spinner" className="animate-spin" />
-                )}
-                <span>Update</span>
-              </Button>
-            </div>
           </div>
         </>
       )}

@@ -13,6 +13,7 @@ export const LearnMoreLink = ({ href, children = 'Learn more ↗', className }: 
       rel="noreferrer"
     >
       {children}
+      {' ↗'}
     </a>
   );
 };
