@@ -27,7 +27,7 @@ export const GitLabRepositorySetupFormGroup = (props: Props) => {
     }
   }, [gitlabTokenLoader]);
 
-  const credentials = gitlabTokenLoader.data;
+  const credentials = gitlabTokenLoader.data?.credentials;
 
   if (!credentials?.token) {
     return <GitLabSignInForm />;
