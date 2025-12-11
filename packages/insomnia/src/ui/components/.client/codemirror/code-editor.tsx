@@ -117,6 +117,7 @@ export interface CodeEditorProps {
   // NOTE: for caching scroll and marks
   uniquenessKey?: string;
   updateFilter?: (filter: string) => void;
+  collapseAllOnInit?: boolean;
 }
 
 const normalizeMimeType = (mode?: string) => {
@@ -192,6 +193,7 @@ export const CodeEditor = memo(
         style,
         uniquenessKey,
         updateFilter,
+        collapseAllOnInit,
       },
       ref,
     ) => {
@@ -399,6 +401,15 @@ export const CodeEditor = memo(
           },
         };
         codeMirror.current = CodeMirror.fromTextArea(textAreaRef.current, initialOptions);
+        // If requested, collapse all JSON nodes after initial content set
+        if (collapseAllOnInit && normalizeMimeType(mode)?.includes('json')) {
+          // Defer to allow CM to render
+          setTimeout(() => {
+            try {
+              codeMirror.current?.execCommand('foldAll');
+            } catch {}
+          }, 0);
+        }
         codeMirror.current.on('beforeChange', (doc: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
           const isGraphqlWithChange = doc.getOption('mode') === 'graphql' && change.text.length > 0;
           if (isGraphqlWithChange) {

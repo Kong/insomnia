@@ -159,6 +159,11 @@ export const General: FC = () => {
         <div>
           <BooleanSetting label="Disable JS in HTML preview" setting="disableHtmlPreviewJs" />
           <BooleanSetting label="Disable links in response viewer" setting="disableResponsePreviewLinks" />
+          <BooleanSetting
+            label="Collapse JSON responses by default"
+            setting="collapseJsonResponseByDefault"
+            help="If checked, JSON response bodies will be rendered with all nodes collapsed initially."
+          />
 
           <BooleanSetting
             label="Disable default User-Agent on new requests"
