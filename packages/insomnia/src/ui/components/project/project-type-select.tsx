@@ -14,18 +14,6 @@ interface ProjectTypeItem {
   isDisabled: boolean;
 }
 
-const TypeItem = ({ icon, name, description }: Omit<ProjectTypeItem, 'type' | 'isDisabled'>) => {
-  return (
-    <div className="flex gap-2 p-2">
-      <Icon icon={icon} className="mt-1" />
-      <div>
-        <div>{name}</div>
-        <div className="text-sm text-(--hl)">{description}</div>
-      </div>
-    </div>
-  );
-};
-
 interface Props {
   value?: ProjectTypeItem['type'];
   onChange: (value: string) => void;
@@ -84,7 +72,13 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
               aria-label={`Project Type: ${item.type}`}
               className="w-full rounded-sm border border-transparent pt-0 transition-colors hover:border-transparent hover:bg-(--hl-xs) data-disabled:cursor-not-allowed data-disabled:opacity-50 data-selected:border-(--color-surprise)"
             >
-              <TypeItem icon={item.icon} name={item.name} description={item.description} />
+              <div className="flex gap-2 p-2">
+                <Icon icon={item.icon} className="mt-1" />
+                <div>
+                  <div>{item.name}</div>
+                  <div className="text-sm text-(--hl)">{item.description}</div>
+                </div>
+              </div>
             </Radio>
           ))}
         </RadioGroup>
