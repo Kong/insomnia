@@ -141,7 +141,7 @@ export const ProjectCreateForm: FC<Props> = ({
                 slot={null}
                 isSelected={projectData.connectRepositoryLater}
                 onChange={isSelected => setProjectData(prev => ({ ...prev, connectRepositoryLater: isSelected }))}
-                className="group mt-4 flex h-full items-center gap-2 p-0 pl-[1px]"
+                className="group mt-4 flex h-full items-center gap-2 p-0 pl-px"
               >
                 <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
                   <Icon
