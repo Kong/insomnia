@@ -3,19 +3,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Cell,
-  Checkbox,
   Column,
   Heading,
   Input,
   Label,
   Row,
-  Tab,
   Table,
   TableBody,
   TableHeader,
-  TabList,
-  TabPanel,
-  Tabs,
   TextField,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
@@ -32,6 +27,7 @@ import {
 } from '~/routes/organization.$organizationId.permissions';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
+import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 import { useActiveView } from '~/ui/components/project/utils';
@@ -48,10 +44,6 @@ import {
   scopeToTextColorMap,
 } from '../../../routes/organization.$organizationId.project.$projectId._index';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
-import { ErrorBoundary } from '../error-boundary';
-import { CustomRepositorySettingsFormGroup } from '../git-credentials/custom-repository-settings-form';
-import { GitHubRepositorySetupFormGroup } from '../git-credentials/github-repository-settings-form';
-import { GitLabRepositorySetupFormGroup } from '../git-credentials/gitlab-repository-settings-form';
 import { Icon } from '../icon';
 import { InsomniaLogo } from '../insomnia-icon';
 
@@ -290,11 +282,24 @@ export const ProjectSettingsForm: FC<Props> = ({
               footer={<LearnMoreLink href={''}>Learn more about changing project types</LearnMoreLink>}
             />
           )}
-          {storageType === 'git' && (
+          {storageType === 'git' && !isSwitchingStorageType(project!, storageType) && (
             <>
               <Divider />
               <GitConnectionInfo gitRepository={gitRepository} />
             </>
+          )}
+          {storageType === 'git' && isSwitchingStorageType(project!, storageType) && (
+            <GitRepoForm
+              {...{
+                setProjectData,
+                projectData,
+                initCloneGitRepositoryFetcher,
+                organizationId,
+                setActiveView,
+                selectedTab,
+                setTab,
+              }}
+            />
           )}
           <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5">
             <div className="flex items-center gap-2">
@@ -309,10 +314,11 @@ export const ProjectSettingsForm: FC<Props> = ({
               {storageType === 'git' && isSwitchingStorageType(project!, storageType) && (
                 <Button
                   isDisabled={!isGitSyncEnabled}
-                  onPress={() => setActiveView('git-clone')}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                  form={selectedTab}
+                  type="submit"
+                  className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                 >
-                  Next
+                  Scan for files
                 </Button>
               )}
               {storageType === 'git' && !isSwitchingStorageType(project!, storageType) && (
@@ -337,128 +343,6 @@ export const ProjectSettingsForm: FC<Props> = ({
                     <Icon icon="spinner" className="animate-spin" />
                   )}
                   <span>Update</span>
-                </Button>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-
-      {activeView === 'git-clone' && (
-        <>
-          <Label className="flex items-center gap-2">
-            <Checkbox
-              slot={null}
-              isSelected={projectData.connectRepositoryLater}
-              onChange={isSelected => setProjectData(prev => ({ ...prev, connectRepositoryLater: isSelected }))}
-              className="group flex h-full items-center p-0"
-            >
-              <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
-                <Icon
-                  icon="check"
-                  className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
-                />
-              </div>
-            </Checkbox>
-            <span className="text-sm text-(--hl)">Connect repository later</span>
-          </Label>
-          {project && !gitRepository && projectData.connectRepositoryLater ? (
-            <div className="flex h-full w-full flex-col items-center justify-center rounded-xs border border-dashed border-(--hl-sm) p-4">
-              <Icon icon="link" className="mb-4 text-[30px] text-(--hl)" />
-              <Heading className="text-lg font-bold text-(--hl)">Your project is already set up to start.</Heading>
-              <p className="text-sm text-(--hl)">
-                Want to connect a repository now? You can uncheck “Connect repository later” to do so.
-              </p>
-            </div>
-          ) : projectData.connectRepositoryLater ? (
-            <div className="flex h-full w-full flex-col items-center justify-center rounded-xs border border-dashed border-(--hl-sm) p-4">
-              <Icon icon="link" className="mb-4 text-[30px] text-(--hl)" />
-              <Heading className="text-lg font-bold text-(--hl)">You're all set to start your project.</Heading>
-              <p className="text-sm text-(--hl)">You can connect a repository anytime from the project settings.</p>
-            </div>
-          ) : (
-            <ErrorBoundary>
-              <Tabs
-                selectedKey={selectedTab}
-                onSelectionChange={key => {
-                  setTab(key as OauthProviderName);
-                }}
-                aria-label="Git repository settings tabs"
-                className="mt-4 flex h-full w-full flex-col"
-              >
-                <TabList
-                  className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
-                  aria-label="Request pane tabs"
-                >
-                  <Tab
-                    className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-                    id="github"
-                  >
-                    <div className="flex items-center gap-2">
-                      <i className="fa fa-github" /> GitHub
-                    </div>
-                  </Tab>
-                  <Tab
-                    className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-                    id="gitlab"
-                  >
-                    <div className="flex items-center gap-2">
-                      <i className="fa fa-gitlab" /> GitLab
-                    </div>
-                  </Tab>
-                  <Tab
-                    className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-                    id="custom"
-                  >
-                    <div className="flex items-center gap-2">
-                      <i className="fa fa-code-fork" /> Git
-                    </div>
-                  </Tab>
-                </TabList>
-                <TabPanel className="h-full w-full overflow-y-auto py-2" id="github">
-                  <GitHubRepositorySetupFormGroup onSubmit={onGitRepoFormSubmit} />
-                </TabPanel>
-                <TabPanel className="h-full w-full overflow-y-auto py-2" id="gitlab">
-                  <GitLabRepositorySetupFormGroup onSubmit={onGitRepoFormSubmit} />
-                </TabPanel>
-                <TabPanel className="h-full w-full overflow-y-auto py-2" id="custom">
-                  <CustomRepositorySettingsFormGroup onSubmit={onGitRepoFormSubmit} />
-                </TabPanel>
-              </Tabs>
-            </ErrorBoundary>
-          )}
-          <div className="flex w-full items-center justify-end gap-2">
-            <div className="flex items-center gap-2">
-              <Button
-                onPress={() => {
-                  setError(null);
-                  setActiveView('project');
-                }}
-                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
-              >
-                Back
-              </Button>
-              {!projectData.connectRepositoryLater ? (
-                <Button
-                  type="submit"
-                  form={selectedTab}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-                >
-                  Clone
-                </Button>
-              ) : project && projectData.connectRepositoryLater && !gitRepository ? (
-                <Button
-                  onPress={onCancel}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-                >
-                  Close
-                </Button>
-              ) : (
-                <Button
-                  onPress={onUpsertProject}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-                >
-                  {project ? 'Update' : 'Create'}
                 </Button>
               )}
             </div>
@@ -578,7 +462,7 @@ export const ProjectSettingsForm: FC<Props> = ({
             <Button
               isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
               onPress={() => {
-                setActiveView('git-clone');
+                setActiveView('project');
                 setError(null);
               }}
               className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
