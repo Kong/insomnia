@@ -79,6 +79,11 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           selectedKey={defaultTabKey}
           onSelectionChange={key => {
             setDefaultTabKey(key.toString());
+
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.preferencesViewed,
+              properties: { tab: key.toString() },
+            });
           }}
           aria-label="Settings"
           className="flex h-full w-full flex-1 flex-col"
@@ -208,6 +213,6 @@ export const showSettingsModal = (options?: { tab?: string }) => {
 
   window.main.trackSegmentEvent({
     event: SegmentEvent.preferencesViewed,
-    properties: { tab: options?.tab },
+    properties: { tab: options?.tab || 'general' },
   });
 };
