@@ -5,6 +5,7 @@ import type { McpServerPrimitiveTypes } from '../../../models/mcp-request';
 interface CommonItemProps {
   itemLevel: number;
   hide: boolean;
+  collapsed?: boolean;
 }
 
 export interface ToolItem extends Tool, CommonItemProps {

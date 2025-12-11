@@ -1,6 +1,7 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import type { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import type { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import type { AnySchema } from '@modelcontextprotocol/sdk/server/zod-compat.js';
 import type { RequestOptions } from '@modelcontextprotocol/sdk/shared/protocol.js';
 import {
   CancelledNotificationSchema,
@@ -15,7 +16,6 @@ import {
   ServerNotificationSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import electron from 'electron';
-import type { ZodType } from 'zod';
 
 import { getAppVersion, getProductName, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { getMcpMethodFromMessage, METHOD_NOTIFICATION_CANCELLED } from '~/common/mcp-utils';
@@ -370,7 +370,7 @@ const performConnection = async (context: ConnectionContext) => {
     }
   });
   const originClientRequest = mcpClient.request.bind(mcpClient);
-  mcpClient.request = <T extends ZodType<object>>(request: Request, resultSchema: T, options?: RequestOptions) => {
+  mcpClient.request = <T extends AnySchema>(request: Request, resultSchema: T, options?: RequestOptions) => {
     // @ts-expect-error - need to access private property _requestMessageId to get message id
     const messageId = mcpClient._requestMessageId.toString();
     // add abort controller for each MCP client request
