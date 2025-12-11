@@ -1,4 +1,4 @@
-import crypto from 'node:crypto';
+import shajs from 'sha.js';
 
 interface InsertOperation {
   type: 'INSERT';
@@ -96,7 +96,7 @@ function getBlock(value: string, start: number, blockSize: number): Block {
   return {
     start,
     len: blockSlice.length,
-    hash: crypto.createHash('sha1').update(blockSlice).digest('hex'),
+    hash: shajs('sha1').update(blockSlice).digest('hex'),
   };
 }
 

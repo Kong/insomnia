@@ -1,6 +1,5 @@
-import crypto from 'node:crypto';
-
 import clone from 'clone';
+import shajs from 'sha.js';
 
 import { strings } from '../../common/strings';
 import type { BaseModel } from '../../models';
@@ -444,7 +443,7 @@ export function hash(obj?: any): {
   }
 
   const content = deterministicStringify(obj);
-  const hash = crypto.createHash('sha1').update(content).digest('hex');
+  const hash = shajs('sha1').update(content).digest('hex');
   return {
     hash,
     content,

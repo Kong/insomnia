@@ -1,10 +1,10 @@
 // @TODOs
 // - [ ] Rename things that run a fetch to fetchSomething...
 // - [ ] Make sure that pull handles updating the parentId to the current project._id
-import crypto from 'node:crypto';
 import path from 'node:path';
 
 import clone from 'clone';
+import shajs from 'sha.js';
 
 import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
@@ -41,7 +41,7 @@ import {
   updateStateWithConflictResolutions,
 } from './util';
 
-const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
+const EMPTY_HASH = shajs('sha1').digest('hex').replace(/./g, '0');
 
 type ConflictHandler = (
   conflicts: MergeConflict[],
@@ -1635,7 +1635,7 @@ export class VCS {
 
 /** Generate snapshot ID from hashing parent, backendProject, and state together */
 function _generateSnapshotID(parentId: string, backendProjectId: string, state: SnapshotState) {
-  const hash = crypto.createHash('sha1').update(backendProjectId).update(parentId);
+  const hash = shajs('sha1').update(backendProjectId).update(parentId);
   const newState = [...state].sort((a, b) => (a.blob > b.blob ? 1 : -1));
 
   for (const entry of newState) {

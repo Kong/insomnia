@@ -1,5 +1,4 @@
-import crypto from 'node:crypto';
-
+import shajs from 'sha.js';
 import { v4 as uuidv4 } from 'uuid';
 
 import { database as db } from '../common/database';
@@ -73,7 +72,7 @@ export async function getOrCreateForParentId(parentId: string) {
       parentId,
       // Deterministic ID. It helps reduce sync complexity since we won't have to
       // de-duplicate cookie jar.
-      _id: `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
+      _id: `${prefix}_${shajs('sha1').update(parentId).digest('hex')}`,
     });
   }
   return cookieJars[0];

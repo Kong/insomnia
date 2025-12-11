@@ -1,6 +1,5 @@
-import * as crypto from 'node:crypto';
-
 import orderedJSON from 'json-order';
+import shajs from 'sha.js';
 
 import * as crypt from '../account/crypt';
 import { JSON_ORDER_SEPARATOR } from '../common/constants';
@@ -232,7 +231,7 @@ export async function getOrCreateForParentId(parentId: string) {
   if (!environments.length) {
     // Deterministic base env ID. It helps reduce sync complexity since we won't have to
     // de-duplicate environments.
-    const baseEnvironmentId = `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`;
+    const baseEnvironmentId = `${prefix}_${shajs('sha1').update(parentId).digest('hex')}`;
     try {
       const baseEnvironment = await create({
         parentId,
