@@ -5,7 +5,7 @@ interface LearnMoreLinkProps {
   children?: React.ReactNode;
   className?: string;
 }
-export const LearnMoreLink = ({ href, children = 'Learn more ↗', className }: LearnMoreLinkProps) => {
+export const LearnMoreLink = ({ href, children = 'Learn more', className }: LearnMoreLinkProps) => {
   return (
     <a
       href={href}
