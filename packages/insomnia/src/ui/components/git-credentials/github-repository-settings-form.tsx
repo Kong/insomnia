@@ -123,7 +123,8 @@ const GitHubRepositoryForm = ({
         </div>
         <PromptButton
           confirmMessage="Confirm"
-          onClick={() => {
+          onClick={e => {
+            e.preventDefault();
             signOutFetcher.submit();
           }}
         >

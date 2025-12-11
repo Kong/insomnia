@@ -105,7 +105,8 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
           </div>
         </div>
         <PromptButton
-          onClick={() => {
+          onClick={e => {
+            e.preventDefault();
             signOutFetcher.submit();
           }}
         >
