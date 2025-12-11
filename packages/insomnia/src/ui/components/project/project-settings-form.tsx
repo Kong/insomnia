@@ -165,48 +165,6 @@ export const ProjectSettingsForm: FC<Props> = ({
     }
   }, [updateProjectFetcher.data, updateProjectFetcher.state]);
 
-  const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository & { ref?: string }>) => {
-    const { author, credentials, created, modified, isPrivate, needsFullClone, uriNeedsMigration, ...repoPatch } =
-      gitRepositoryPatch;
-
-    setProjectData({
-      ...projectData,
-      ...credentials,
-      authorName: author?.name || '',
-      authorEmail: author?.email || '',
-      uri: repoPatch.uri,
-      ref: repoPatch.ref,
-    });
-
-    initCloneGitRepositoryFetcher.submit({
-      ...repoPatch,
-      authorName: author?.name || '',
-      authorEmail: author?.email || '',
-      ...(credentials
-        ? isGitCredentialsOAuth(credentials)
-          ? {
-              credentials: {
-                token: credentials.token || '',
-                oauth2format: credentials.oauth2format || 'github',
-                username: credentials.username || '',
-              },
-            }
-          : {
-              credentials,
-            }
-        : {
-            credentials: {
-              password: '',
-              username: '',
-            },
-          }),
-      uri: repoPatch.uri || '',
-      organizationId,
-    });
-
-    setActiveView('git-results');
-  };
-
   const onUpsertProject = () => {
     if (project) {
       updateProjectFetcher.submit({
