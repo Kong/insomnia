@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import type { FC } from 'react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, Input, Label, TextField } from 'react-aria-components';
@@ -15,6 +16,7 @@ import {
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
+import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 import { useActiveView } from '~/ui/components/project/utils';
@@ -26,8 +28,6 @@ import type { GitRepository } from '../../../models/git-repository';
 import { getDefaultProjectStorageType, isGitProject, isRemoteProject, type Project } from '../../../models/project';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
-import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
-import classNames from 'classnames';
 
 function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
   if (storageType === 'git' && !isGitProject(project)) {
@@ -234,7 +234,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 slot={null}
                 isSelected={projectData.connectRepositoryLater}
                 onChange={isSelected => setProjectData(prev => ({ ...prev, connectRepositoryLater: isSelected }))}
-                className="group mt-4 flex h-full items-center gap-2 p-0 pl-[1px]"
+                className="group mt-4 flex h-full items-center gap-2 p-0 pl-px"
               >
                 <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
                   <Icon
