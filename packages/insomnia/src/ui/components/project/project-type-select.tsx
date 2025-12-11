@@ -72,40 +72,32 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
       {listOpen || !currentType ? (
         <RadioGroup
           aria-label="Project Type Radio"
-          className="flex flex-col px-0.5"
+          className="flex flex-col rounded-sm border border-(--hl-md) p-1"
           value={value}
           onChange={handleChange}
         >
-          <div className="rounded-sm border border-(--hl-md) p-1">
-            {typeList.map(item => (
-              <Radio
-                key={item.name}
-                value={item.type}
-                isDisabled={item.isDisabled}
-                className="w-full pt-0 data-disabled:cursor-not-allowed data-disabled:opacity-50"
-              >
-                {({ isHovered, isSelected }) => (
-                  <div
-                    aria-label={`Project Type: ${item.type}`}
-                    className={`rounded-sm border ${isSelected ? 'border-(--color-surprise)' : 'border-transparent'} ${isHovered ? 'border-transparent bg-(--hl-xs)' : ''}`}
-                  >
-                    <TypeItem icon={item.icon} name={item.name} description={item.description} />
-                  </div>
-                )}
-              </Radio>
-            ))}
-          </div>
+          {typeList.map(item => (
+            <Radio
+              key={item.name}
+              value={item.type}
+              isDisabled={item.isDisabled}
+              aria-label={`Project Type: ${item.type}`}
+              className="w-full rounded-sm border border-transparent pt-0 transition-colors hover:border-transparent hover:bg-(--hl-xs) data-disabled:cursor-not-allowed data-disabled:opacity-50 data-selected:border-(--color-surprise)"
+            >
+              <TypeItem icon={item.icon} name={item.name} description={item.description} />
+            </Radio>
+          ))}
         </RadioGroup>
       ) : (
         <div
           className="flex h-[30px] cursor-default items-center justify-between rounded-sm border border-(--hl-sm) px-2"
           onClick={() => setListOpen(true)}
         >
-          <div>
-            <Icon className="mr-2" icon={currentType?.icon} />
-            {currentType?.name}
+          <div className="flex items-center gap-2">
+            <Icon icon={currentType?.icon} />
+            <span>{currentType?.name}</span>
           </div>
-          <div>Change</div>
+          <span>Change</span>
         </div>
       )}
     </div>
