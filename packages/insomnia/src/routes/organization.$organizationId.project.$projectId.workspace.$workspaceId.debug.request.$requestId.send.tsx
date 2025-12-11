@@ -364,7 +364,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
               protocol: activeRequest.type,
               response_header_names: activeRequest.headers.map(h => h.name),
               count_headers: response.headers.length,
-              count_cookies: response.headers.find(h => h.name === 'set-cookie')?.value.split(',').length,
+              count_cookies: response.headers.find(h => h.name === 'set-cookie')?.value.split(',').length || 0,
               count_tests: response.requestTestResults?.length || 0,
             },
           });
