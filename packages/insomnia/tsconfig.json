@@ -19,7 +19,7 @@
       "~/*": ["./src/*"]
     },
     /* Runs in the DOM */
-    "lib": ["ES2023", "DOM.Iterable", "DOM"],
+    "lib": ["ES2024", "DOM.Iterable", "DOM"],
     "jsx": "preserve",
     /* Strictness */
     "strict": true,

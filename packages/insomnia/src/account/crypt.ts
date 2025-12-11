@@ -106,7 +106,8 @@ export function encryptAESBuffer(jwkOrKey: string | JsonWebKey, buff: Buffer, ad
     iv,
     tagLength: 128,
   });
-  cipher.update(forge.util.createBuffer(buff));
+  const newBuffer = forge.util.createBuffer(buff as Buffer<ArrayBuffer>);
+  cipher.update(newBuffer);
   cipher.finish();
   return {
     iv: forge.util.bytesToHex(iv),

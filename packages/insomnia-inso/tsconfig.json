@@ -16,7 +16,7 @@
     /* Transpiling Options */
     "module": "ESNext",
     "sourceMap": true,
-    "lib": ["ES2023", "DOM.Iterable"],
+    "lib": ["ES2024", "DOM.Iterable"],
     /* Strictness */
     "strict": true,
     "noImplicitReturns": true,

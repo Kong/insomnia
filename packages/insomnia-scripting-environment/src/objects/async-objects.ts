@@ -56,10 +56,21 @@ export class ProxiedPromise<T> extends Promise<T> {
     return promise;
   }
 
-  // TODO: Promise.any seems not supported for the compile target (es2021)
+  public static withResolvers<T>(): {
+    promise: Promise<T>;
+    resolve: (value: T | PromiseLike<T>) => void;
+    reject: (reason?: any) => void;
+  } {
+    let resolve: (value: T | PromiseLike<T>) => void = () => {};
+    let reject: (reason?: any) => void = () => {};
 
-  static withResolvers() {
-    return super.reject("'Promise.withResolvers' not supported");
+    // Use the native Promise constructor to get the resolve/reject functions
+    const promise = new ProxiedPromise<T>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+
+    return { promise, resolve, reject };
   }
 }
 
