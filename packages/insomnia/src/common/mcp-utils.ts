@@ -52,7 +52,6 @@ export const METHOD_READ_RESOURCE = ReadResourceRequestSchema.shape.method.value
 export const METHOD_GET_PROMPT = GetPromptRequestSchema.shape.method.value;
 export const METHOD_SUBSCRIBE_RESOURCE = SubscribeRequestSchema.shape.method.value;
 export const METHOD_UNSUBSCRIBE_RESOURCE = UnsubscribeRequestSchema.shape.method.value;
-export const METHOD_JSONRPC_ERROR = 'JSON-RPC Error';
 // methods for client features
 export const METHOD_SAMPLING_CREATE_MESSAGE = CreateMessageRequestSchema.shape.method.value;
 export const METHOD_LIST_ROOTS = ListRootsRequestSchema.shape.method.value;
@@ -107,7 +106,6 @@ export const MCP_SERVER_REQUEST_METHODS: string[] = [
   METHOD_SAMPLING_CREATE_MESSAGE,
   METHOD_ELICITATION_CREATE_MESSAGE,
   METHOD_LIST_ROOTS,
-  METHOD_JSONRPC_ERROR,
 ];
 
 export type McpServerMethods = (typeof SERVER_METHODS)[number];
@@ -153,8 +151,13 @@ export const getMcpMethodFromMessage = (message: JSONRPCMessage): McpMessageEven
     }
   } else if (ServerRequestSchema.safeParse(message).success) {
     const requestMethod = ServerRequestSchema.parse(message).method;
-    // Do not support ping server requests
-    method = requestMethod === 'ping' ? `${unsupportedMethodPrefix}${requestMethod}` : requestMethod;
+    // Support elicitation, sampling and listing roots requests from server
+    method =
+      requestMethod === 'elicitation/create' ||
+      requestMethod === 'sampling/createMessage' ||
+      requestMethod === 'roots/list'
+        ? requestMethod
+        : `${unsupportedMethodPrefix}Prefix}${requestMethod}`;
   }
   return method;
 };
