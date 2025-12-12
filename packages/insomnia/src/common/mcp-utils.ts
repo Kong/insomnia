@@ -153,9 +153,9 @@ export const getMcpMethodFromMessage = (message: JSONRPCMessage): McpMessageEven
     const requestMethod = ServerRequestSchema.parse(message).method;
     // Support elicitation, sampling and listing roots requests from server
     method =
-      requestMethod === 'elicitation/create' ||
-      requestMethod === 'sampling/createMessage' ||
-      requestMethod === 'roots/list'
+      requestMethod === METHOD_ELICITATION_CREATE_MESSAGE ||
+      requestMethod === METHOD_SAMPLING_CREATE_MESSAGE ||
+      requestMethod === METHOD_LIST_ROOTS
         ? requestMethod
         : `${unsupportedMethodPrefix}Prefix}${requestMethod}`;
   }
