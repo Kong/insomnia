@@ -1,4 +1,4 @@
-import type { RJSFSchema, UiSchema } from '@rjsf/utils/lib/types.js';
+import type { RJSFSchema, UiSchema } from '@rjsf/utils';
 import { useRef, useState } from 'react';
 import { Button, Toolbar } from 'react-aria-components';
 

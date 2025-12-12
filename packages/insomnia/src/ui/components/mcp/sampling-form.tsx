@@ -79,7 +79,7 @@ export const SamplingForm = ({ requestId, serverRequestId, samplingData }: Sampl
               const samplingMessages: MultiTurnMessage[] = [];
               for (const msg of messages) {
                 const { role, content } = msg;
-                if (content.type === 'text') {
+                if ('type' in content && content.type === 'text') {
                   // only handle text type for now
                   samplingMessages.push({
                     role,

@@ -3,6 +3,7 @@ import {
   CreateMessageRequestSchema,
   ElicitRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import { type RJSFSchema } from '@rjsf/utils';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useParams } from 'react-router';
@@ -92,7 +93,7 @@ export const MessageEventView = ({ event }: Props) => {
     if (ElicitRequestSchema.safeParse(eventData).success) {
       const parsedElicitRequest = ElicitRequestSchema.parse(eventData);
       const requestSchema = parsedElicitRequest.params.requestedSchema;
-      return requestSchema;
+      return requestSchema as RJSFSchema;
     }
     return {};
   };
