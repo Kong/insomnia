@@ -1,8 +1,7 @@
-import type { Database, DBItem } from 'insomnia-storage';
 import { NeDBClient } from 'insomnia-storage/node';
 import { vi } from 'vitest';
 
-import { configureModel } from '~/models/db';
+import { configureModel, type DatabaseBuckets } from '~/models/db';
 
 import { nodeLibcurlMock } from './src/__mocks__/@getinsomnia/node-libcurl';
 import { electronMock } from './src/__mocks__/electron';
@@ -10,15 +9,56 @@ import { database as db } from './src/common/database';
 import { v4Mock } from './src/models/__mocks__/uuid';
 
 vi.mock('electron', () => ({ default: electronMock }));
-const databaseMap = new Map<string, Database<DBItem>>();
-export function databaseFactory<T extends DBItem>(type: string): Database<T> {
-  if (databaseMap.has(type)) {
-    return databaseMap.get(type) as Database<T>;
-  }
+export function databaseFactory(): DatabaseBuckets {
+  const databaseBuckets: DatabaseBuckets = {} as DatabaseBuckets;
+  [
+    'ApiSpec',
+    'CaCertificate',
+    'ClientCertificate',
+    'CloudCredential',
+    'CookieJar',
+    'Environment',
+    'GitCredentials',
+    'GitRepository',
+    'GrpcRequest',
+    'GrpcRequestMeta',
+    'MockRoute',
+    'MockServer',
+    'McpRequest',
+    'McpResponse',
+    'McpPayload',
+    'OAuth2Token',
+    'PluginData',
+    'Project',
+    'ProtoDirectory',
+    'ProtoFile',
+    'Request',
+    'RequestGroup',
+    'RequestGroupMeta',
+    'RequestMeta',
+    'RequestVersion',
+    'Response',
+    'RunnerTestResult',
+    'Settings',
+    'SocketIOPayload',
+    'SocketIORequest',
+    'SocketIOResponse',
+    'Stats',
+    'UnitTest',
+    'UnitTestResult',
+    'UnitTestSuite',
+    'UserSession',
+    'WebSocketPayload',
+    'WebSocketRequest',
+    'WebSocketResponse',
+    'Workspace',
+    'WorkspaceMeta',
+  ].forEach(bucketName => {
+    // @ts-expect-error -- mapping unsoundness
+    databaseBuckets[bucketName] = new NeDBClient({ inMemoryOnly: true });
+  });
 
-  const db = new NeDBClient<T>({});
-  databaseMap.set(type, db);
-  return db;
+  return databaseBuckets;
 }
 
 configureModel({ databaseFactory });
