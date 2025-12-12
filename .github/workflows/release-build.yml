@@ -106,11 +106,32 @@ jobs:
           CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
 
+      # This will install smctl
+      # smctl will be used in the next step for signing
+      - name: Setup Software Trust Manager
+        if: runner.os == 'Windows'
+        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1
+        with:
+          simple-signing-mode: true
+        env:
+          SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
+          SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
+          SM_CLIENT_CERT_FILE: ${{ env.DIGICERT_SM_CLIENT_CERT_FILE }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
+
       # creates unpacked electron-builder contents that can be signed afterwards
       - name: Package unpacked app (Windows only)
         if: runner.os == 'Windows'
         shell: bash
-        run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:unpacked -w insomnia
+        run: |
+          smctl credentials save ${SM_API_KEY} ${SM_CLIENT_CERT_PASSWORD}
+          NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:unpacked -w insomnia
+        env:
+          SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
+          SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
+          SM_CLIENT_CERT_FILE: ${{ env.DIGICERT_SM_CLIENT_CERT_FILE }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
+          SM_KEYPAIR_ALIAS: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
 
       # wraps the Insomnia.exe PE with another PE that will bootstrap particular security
       # features added to Windows 8 in order to stopgap CVE-2025-1353
@@ -162,7 +183,6 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          smctl credentials save ${SM_API_KEY} ${SM_CLIENT_CERT_PASSWORD}
           NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
         env:
           SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
