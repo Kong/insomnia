@@ -1,5 +1,4 @@
 import { database as db } from '../common/database';
-import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export const name = 'Folder Meta';
@@ -17,8 +16,6 @@ interface BaseRequestGroupMeta {
 }
 
 export type RequestGroupMeta = BaseModel & BaseRequestGroupMeta;
-
-export const requestGroupMetaDbBucket = createDatabaseBucket<RequestGroupMeta>(type);
 
 export const isRequestGroupMeta = (model: Pick<BaseModel, 'type'>): model is RequestGroupMeta => model.type === type;
 

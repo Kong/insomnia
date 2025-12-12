@@ -1,5 +1,4 @@
 import { database as db } from '../common/database';
-import { createDatabaseBucket } from './db';
 import { isGrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
 import * as models from './index';
@@ -32,8 +31,6 @@ export interface BaseStats {
 }
 
 export type Stats = BaseModel & BaseStats;
-
-export const statsDbBucket = createDatabaseBucket<Stats>(type);
 
 export const isStats = (model: Pick<BaseModel, 'type'>): model is Stats => model.type === type;
 

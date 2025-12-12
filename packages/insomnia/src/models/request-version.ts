@@ -3,7 +3,6 @@ import deepEqual from 'deep-equal';
 import { database, database as db } from '../common/database';
 import { compressObject, decompressObject } from '../common/misc';
 import * as requestOperations from '../models/helpers/request-operations';
-import { createDatabaseBucket } from './db';
 import type { GrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
 import { isMcpRequest, type McpRequest } from './mcp-request';
@@ -31,8 +30,6 @@ interface BaseRequestVersion {
 }
 
 export type RequestVersion = BaseModel & BaseRequestVersion;
-
-export const requestVersionDbBucket = createDatabaseBucket<RequestVersion>(type);
 
 const FIELDS_TO_IGNORE = [
   '_id',

@@ -2,7 +2,6 @@ import type { Merge } from 'type-fest';
 
 import { database as db } from '../common/database';
 import { strings } from '../common/strings';
-import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 import * as models from './index';
 import { isProjectId } from './project';
@@ -31,8 +30,6 @@ export const WorkspaceScopeKeys = {
 } as const;
 
 export type Workspace = BaseModel & BaseWorkspace;
-
-export const workspaceDbBucket = createDatabaseBucket<Workspace>(type);
 
 export const isWorkspace = (model: Pick<BaseModel, 'type'>): model is Workspace => model.type === type;
 

@@ -7,7 +7,6 @@ import { database as db } from '../common/database';
 import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as requestOperations from '../models/helpers/request-operations';
 import { deserializeNDJSON } from '../utils/ndjson';
-import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 import * as models from './index';
 
@@ -56,8 +55,6 @@ export interface BaseResponse {
 }
 
 export type Response = BaseModel & BaseResponse;
-
-export const responseDbBucket = createDatabaseBucket<Response>(type);
 
 export const isResponse = (model: Pick<BaseModel, 'type'>): model is Response => model.type === type;
 

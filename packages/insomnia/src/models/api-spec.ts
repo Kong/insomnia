@@ -1,6 +1,5 @@
 import { database as db } from '../common/database';
 import { strings } from '../common/strings';
-import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export const name = 'ApiSpec';
@@ -20,8 +19,6 @@ export interface BaseApiSpec {
 }
 
 export type ApiSpec = BaseModel & BaseApiSpec;
-
-export const apiSpecDbBucket = createDatabaseBucket<ApiSpec>(type);
 
 export const isApiSpec = (model: Pick<BaseModel, 'type'>): model is ApiSpec => model.type === type;
 

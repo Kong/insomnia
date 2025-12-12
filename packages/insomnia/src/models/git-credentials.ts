@@ -1,5 +1,4 @@
 import { database as db } from '../common/database';
-import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export type OauthProviderName = 'gitlab' | 'github';
@@ -15,8 +14,6 @@ export const prefix = 'git_creds';
 export const canDuplicate = false;
 
 export const canSync = false;
-
-export const gitCredentialsDbBucket = createDatabaseBucket<GitCredentials>(type);
 
 export function init(): BaseGitCredentials {
   return {

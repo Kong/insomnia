@@ -1,6 +1,5 @@
 import { database } from '../common/database';
 import type { BaseModel } from '.';
-import { createDatabaseBucket } from './db';
 
 export const name = 'MCP Payload';
 
@@ -18,8 +17,6 @@ export interface BaseMcpPayload {
 }
 
 export type McpPayload = BaseModel & BaseMcpPayload & { type: typeof type };
-
-export const mcpPayloadDbBucket = createDatabaseBucket<McpPayload>(type);
 
 export const isSocketIOPayload = (model: Pick<BaseModel, 'type'>): model is McpPayload => model.type === type;
 

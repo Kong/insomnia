@@ -20,7 +20,7 @@ const neDbAdapter: DbAdapter = async (dir, filterTypes) => {
   const db = emptyDb();
 
   const databaseFactory = genDatabaseFactory(dir);
-  configureModel(databaseFactory);
+  configureModel({ databaseFactory });
   await database.init();
 
   const types = filterTypes?.length ? filterTypes : (Object.keys(db) as (keyof Database)[]);

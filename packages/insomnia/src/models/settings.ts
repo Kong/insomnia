@@ -2,7 +2,6 @@ import { getAppDefaultDarkTheme, getAppDefaultLightTheme, getAppDefaultTheme } f
 import { database as db } from '../common/database';
 import * as hotkeys from '../common/hotkeys';
 import { HttpVersions, type KeyboardShortcut, type Settings as BaseSettings, UpdateChannel } from '../common/settings';
-import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export type Settings = BaseModel & BaseSettings;
@@ -13,8 +12,6 @@ export const canDuplicate = false;
 export const canSync = false;
 
 export type ThemeSettings = Pick<Settings, 'autoDetectColorScheme' | 'lightTheme' | 'darkTheme' | 'theme'>;
-
-export const settingsDbBucket = createDatabaseBucket<Settings>(type);
 
 export const isSettings = (model: Pick<BaseModel, 'type'>): model is Settings => model.type === type;
 

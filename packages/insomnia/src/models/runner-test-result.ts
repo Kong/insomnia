@@ -1,6 +1,5 @@
 import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import { database as db } from '../common/database';
-import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export const name = 'Runner Test Result';
@@ -39,8 +38,6 @@ export interface BaseRunnerTestResult {
 }
 
 export type RunnerTestResult = BaseModel & BaseRunnerTestResult;
-
-export const runnerTestResultDbBucket = createDatabaseBucket<RunnerTestResult>(type);
 
 export const isRunnerTestResult = (model: Pick<BaseModel, 'type'>): model is RunnerTestResult => model.type === type;
 

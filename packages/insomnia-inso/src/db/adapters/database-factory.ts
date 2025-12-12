@@ -1,20 +1,61 @@
 import fsPath from 'node:path';
 
-import type { Database, DBItem } from 'insomnia-storage';
+import type { DBItem } from 'insomnia-storage';
 import { NeDBClient } from 'insomnia-storage/node';
 
-const databaseMap = new Map<string, Database<DBItem>>();
+import type { DatabaseBuckets } from '~/models/db';
 
 export const genDatabaseFactory =
   (dbPath: string) =>
-  <T extends DBItem>(type: string): Database<T> => {
-    if (databaseMap.has(type)) {
-      return databaseMap.get(type) as Database<T>;
-    }
-
-    const db = new NeDBClient<T>({
-      filename: fsPath.join(dbPath, `insomnia.${type}.db`),
+  <T extends DBItem>(): DatabaseBuckets => {
+    const databaseBuckets: DatabaseBuckets = {} as DatabaseBuckets;
+    [
+      'ApiSpec',
+      'CaCertificate',
+      'ClientCertificate',
+      'CloudCredential',
+      'CookieJar',
+      'Environment',
+      'GitCredentials',
+      'GitRepository',
+      'GrpcRequest',
+      'GrpcRequestMeta',
+      'MockRoute',
+      'MockServer',
+      'McpRequest',
+      'McpResponse',
+      'McpPayload',
+      'OAuth2Token',
+      'PluginData',
+      'Project',
+      'ProtoDirectory',
+      'ProtoFile',
+      'Request',
+      'RequestGroup',
+      'RequestGroupMeta',
+      'RequestMeta',
+      'RequestVersion',
+      'Response',
+      'RunnerTestResult',
+      'Settings',
+      'SocketIOPayload',
+      'SocketIORequest',
+      'SocketIOResponse',
+      'Stats',
+      'UnitTest',
+      'UnitTestResult',
+      'UnitTestSuite',
+      'UserSession',
+      'WebSocketPayload',
+      'WebSocketRequest',
+      'WebSocketResponse',
+      'Workspace',
+      'WorkspaceMeta',
+    ].forEach(bucketName => {
+      const filename = fsPath.join(dbPath, `insomnia.${bucketName}.db`);
+      // @ts-expect-error -- mapping unsoundness
+      databaseBuckets[bucketName] = new NeDBClient<T>({ filename });
     });
-    databaseMap.set(type, db);
-    return db;
+
+    return databaseBuckets;
   };

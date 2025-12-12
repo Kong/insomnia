@@ -4,7 +4,7 @@ import type { Database, DBItem, Query } from '../database';
 
 export class NeDBClient<T extends DBItem = DBItem> implements Database<T> {
   private db: NeDB<T>;
-  constructor({ filename, inMemoryOnly = false }: { filename: string; inMemoryOnly?: boolean }) {
+  constructor({ filename, inMemoryOnly = false }: { filename?: string; inMemoryOnly?: boolean }) {
     this.db = new NeDB({
       autoload: true,
       corruptAlertThreshold: 0.9,

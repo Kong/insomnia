@@ -2,7 +2,6 @@ import type { StorageRules } from '~/models/organization';
 
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
-import { createDatabaseBucket } from './db';
 import { type BaseModel } from './index';
 
 export const name = 'Project';
@@ -50,8 +49,6 @@ export interface GitProject extends BaseModel, CommonProject {
 }
 
 export type Project = LocalProject | RemoteProject | GitProject;
-
-export const projectDbBucket = createDatabaseBucket<Project>(type);
 
 export const isProject = (model: Pick<BaseModel, 'type'>): model is Project => model.type === type;
 

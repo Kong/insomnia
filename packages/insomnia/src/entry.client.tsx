@@ -7,7 +7,7 @@ import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
 import { configureModel } from '~/models/db';
-import { databaseFactory } from '~/ui/database';
+import { databaseFactory } from '~/ui/database-factory';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
@@ -30,7 +30,7 @@ initializeSentry();
 // Force onlyResolveOnSuccess to true, will be removed after all usages are updated
 configureFetch(options => insomniaFetch({ ...options, onlyResolveOnSuccess: true }));
 
-configureModel(databaseFactory);
+configureModel({ databaseFactory });
 
 await database.init();
 

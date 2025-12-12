@@ -1,5 +1,4 @@
 import { database as db } from '../common/database';
-import { createDatabaseBucket } from './db';
 import { type BaseModel, workspace } from './index';
 
 export const name = 'Mock Server';
@@ -20,8 +19,6 @@ interface BaseMockServer {
 }
 
 export type MockServer = BaseModel & BaseMockServer;
-
-export const mockServerDbBucket = createDatabaseBucket<MockServer>(type);
 
 export function init(): BaseMockServer {
   return {

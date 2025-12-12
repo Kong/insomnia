@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { CONTENT_TYPE_JSON } from '../common/constants';
 import { database } from '../common/database';
 import type { BaseModel } from '.';
-import { createDatabaseBucket } from './db';
 
 export const name = 'SocketIO Payload';
 
@@ -28,8 +27,6 @@ export interface BaseSocketIOPayload {
 }
 
 export type SocketIOPayload = BaseModel & BaseSocketIOPayload & { type: typeof type };
-
-export const socketIOPayloadDbBucket = createDatabaseBucket<SocketIOPayload>(type);
 
 export const isSocketIOPayload = (model: Pick<BaseModel, 'type'>): model is SocketIOPayload => model.type === type;
 

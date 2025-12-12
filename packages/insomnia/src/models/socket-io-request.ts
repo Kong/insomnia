@@ -1,6 +1,5 @@
 import { database } from '../common/database';
 import type { BaseModel } from '.';
-import { createDatabaseBucket } from './db';
 import type { RequestAuthentication, RequestHeader, RequestParameter, RequestPathParameter } from './request';
 
 export const name = 'Socket.IO Request';
@@ -36,8 +35,6 @@ export interface BaseSocketIORequest {
 }
 
 export type SocketIORequest = BaseModel & BaseSocketIORequest & { type: typeof type };
-
-export const socketIORequestDbBucket = createDatabaseBucket<SocketIORequest>(type);
 
 export const isSocketIORequest = (model: Pick<BaseModel, 'type'>): model is SocketIORequest => model.type === type;
 

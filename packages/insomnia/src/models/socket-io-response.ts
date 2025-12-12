@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 
 import { database as db } from '../common/database';
-import { createDatabaseBucket } from './db';
 import * as requestOperations from './helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';
@@ -29,8 +28,6 @@ export interface BaseSocketIOResponse {
 }
 
 export type SocketIOResponse = BaseModel & BaseSocketIOResponse;
-
-export const socketIOResponseDbBucket = createDatabaseBucket<SocketIOResponse>(type);
 
 export const isSocketIOResponse = (model: Pick<BaseModel, 'type'>): model is SocketIOResponse => model.type === type;
 

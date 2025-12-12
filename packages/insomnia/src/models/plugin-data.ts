@@ -1,5 +1,4 @@
 import { database as db } from '../common/database';
-import { createDatabaseBucket } from './db';
 import type { BaseModel } from './index';
 
 export const name = 'PluginData';
@@ -19,8 +18,6 @@ interface BasePluginData {
 }
 
 export type PluginData = BaseModel & BasePluginData;
-
-export const pluginDataDbBucket = createDatabaseBucket<PluginData>(type);
 
 export const isPluginData = (model: Pick<BaseModel, 'type'>): model is PluginData => model.type === type;
 

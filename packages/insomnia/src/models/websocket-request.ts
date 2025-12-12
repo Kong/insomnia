@@ -1,6 +1,5 @@
 import { database } from '../common/database';
 import type { BaseModel } from '.';
-import { createDatabaseBucket } from './db';
 import type { RequestAuthentication, RequestHeader, RequestParameter, RequestPathParameter } from './request';
 
 export const name = 'WebSocket Request';
@@ -30,8 +29,6 @@ export interface BaseWebSocketRequest {
 }
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
-
-export const webSocketRequestDbBucket = createDatabaseBucket<WebSocketRequest>(type);
 
 export const isWebSocketRequest = (model: Pick<BaseModel, 'type'>): model is WebSocketRequest => model.type === type;
 

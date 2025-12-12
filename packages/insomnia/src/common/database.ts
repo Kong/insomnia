@@ -3,47 +3,7 @@
 import electron from 'electron';
 import type { Database, Query } from 'insomnia-storage';
 
-import { apiSpecDbBucket } from '~/models/api-spec';
-import { caCertificateDbBucket } from '~/models/ca-certificate';
-import { clientCertificateDbBucket } from '~/models/client-certificate';
-import { cloudCredentialDbBucket } from '~/models/cloud-credential';
-import { cookieJarDbBucket } from '~/models/cookie-jar';
-import { environmentDbBucket } from '~/models/environment';
-import { gitCredentialsDbBucket } from '~/models/git-credentials';
-import { gitRepositoryDbBucket } from '~/models/git-repository';
-import { grpcRequestDbBucket } from '~/models/grpc-request';
-import { grpcRequestMetaDbBucket } from '~/models/grpc-request-meta';
-import { mcpRequestDbBucket } from '~/models/mcp-request';
-import { mcpPayloadDbBucket } from '~/models/mcp-request-payload';
-import { mcpResponseDbBucket } from '~/models/mcp-response';
-import { mockRouteDbBucket } from '~/models/mock-route';
-import { mockServerDbBucket } from '~/models/mock-server';
-import { oAuth2TokenDbBucket } from '~/models/o-auth-2-token';
-import { pluginDataDbBucket } from '~/models/plugin-data';
-import { projectDbBucket } from '~/models/project';
-import { protoDirectoryDbBucket } from '~/models/proto-directory';
-import { protoFileDbBucket } from '~/models/proto-file';
-import { requestDbBucket } from '~/models/request';
-import { requestGroupDbBucket } from '~/models/request-group';
-import { requestGroupMetaDbBucket } from '~/models/request-group-meta';
-import { requestMetaDbBucket } from '~/models/request-meta';
-import { requestVersionDbBucket } from '~/models/request-version';
-import { responseDbBucket } from '~/models/response';
-import { runnerTestResultDbBucket } from '~/models/runner-test-result';
-import { settingsDbBucket } from '~/models/settings';
-import { socketIOPayloadDbBucket } from '~/models/socket-io-payload';
-import { socketIORequestDbBucket } from '~/models/socket-io-request';
-import { socketIOResponseDbBucket } from '~/models/socket-io-response';
-import { statsDbBucket } from '~/models/stats';
-import { unitTestDbBucket } from '~/models/unit-test';
-import { unitTestResultDbBucket } from '~/models/unit-test-result';
-import { unitTestSuiteDbBucket } from '~/models/unit-test-suite';
-import { userSessionDbBucket } from '~/models/user-session';
-import { webSocketPayloadDbBucket } from '~/models/websocket-payload';
-import { webSocketRequestDbBucket } from '~/models/websocket-request';
-import { webSocketResponseDbBucket } from '~/models/websocket-response';
-import { workspaceDbBucket } from '~/models/workspace';
-import { workspaceMetaDbBucket } from '~/models/workspace-meta';
+import { initDatabaseBuckets } from '~/models/db';
 
 import { mustGetModel } from '../models';
 import type { CookieJar } from '../models/cookie-jar';
@@ -231,49 +191,7 @@ export const database = {
       databaseBucket = {} as Record<AllTypes, Database>;
     }
 
-    databaseBucket = {
-      ApiSpec: apiSpecDbBucket,
-      CaCertificate: caCertificateDbBucket,
-      ClientCertificate: clientCertificateDbBucket,
-      CloudCredential: cloudCredentialDbBucket,
-      CookieJar: cookieJarDbBucket,
-      Environment: environmentDbBucket,
-      GitCredentials: gitCredentialsDbBucket,
-      GitRepository: gitRepositoryDbBucket,
-      GrpcRequest: grpcRequestDbBucket,
-      GrpcRequestMeta: grpcRequestMetaDbBucket,
-      MockRoute: mockRouteDbBucket,
-      MockServer: mockServerDbBucket,
-      McpRequest: mcpRequestDbBucket,
-      McpResponse: mcpResponseDbBucket,
-      McpPayload: mcpPayloadDbBucket,
-      OAuth2Token: oAuth2TokenDbBucket,
-      PluginData: pluginDataDbBucket,
-      Project: projectDbBucket,
-      ProtoDirectory: protoDirectoryDbBucket,
-      ProtoFile: protoFileDbBucket,
-      Request: requestDbBucket,
-      RequestGroup: requestGroupDbBucket,
-      RequestGroupMeta: requestGroupMetaDbBucket,
-      RequestMeta: requestMetaDbBucket,
-      RequestVersion: requestVersionDbBucket,
-      Response: responseDbBucket,
-      RunnerTestResult: runnerTestResultDbBucket,
-      Settings: settingsDbBucket,
-      SocketIOPayload: socketIOPayloadDbBucket,
-      SocketIORequest: socketIORequestDbBucket,
-      SocketIOResponse: socketIOResponseDbBucket,
-      Stats: statsDbBucket,
-      UnitTest: unitTestDbBucket,
-      UnitTestResult: unitTestResultDbBucket,
-      UnitTestSuite: unitTestSuiteDbBucket,
-      UserSession: userSessionDbBucket,
-      WebSocketPayload: webSocketPayloadDbBucket,
-      WebSocketRequest: webSocketRequestDbBucket,
-      WebSocketResponse: webSocketResponseDbBucket,
-      Workspace: workspaceDbBucket,
-      WorkspaceMeta: workspaceMetaDbBucket,
-    };
+    databaseBucket = initDatabaseBuckets();
 
     // NOTE: Only repair the DB if we're not running in memory. Repairing here causes tests to hang indefinitely for some reason.
     // TODO: Figure out why this makes tests hang
