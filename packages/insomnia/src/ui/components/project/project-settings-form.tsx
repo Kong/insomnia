@@ -206,7 +206,11 @@ export const ProjectSettingsForm: FC<Props> = ({
                   ? 'Changing this project to a Cloud Sync project will remove the connection to your repo. This does not delete the project files on the remote repo.'
                   : 'Anything added in the project will be securely synced to the Insomnia cloud and enables you to collaborate on projects with others. '
               }
-              footer={<LearnMoreLink href={''}>Learn more about changing project types</LearnMoreLink>}
+              footer={
+                <LearnMoreLink href={'https://developer.konghq.com/insomnia/storage/'}>
+                  Learn more about changing project types
+                </LearnMoreLink>
+              }
             />
           )}
           {showSwitchBanner && storageType === 'local' && (
@@ -219,7 +223,11 @@ export const ProjectSettingsForm: FC<Props> = ({
                   ? 'Changing this project to a Local Vault project will remove the connection to your repo. This does not delete the project files on the remote repo.'
                   : 'Your files will now be stored on your local machine. You will no longer be able to collaborate with others on this project.'
               }
-              footer={<LearnMoreLink href={''}>Learn more about changing project types</LearnMoreLink>}
+              footer={
+                <LearnMoreLink href={'https://developer.konghq.com/insomnia/storage/'}>
+                  Learn more about changing project types
+                </LearnMoreLink>
+              }
             />
           )}
           {storageType === 'git' && !isSwitchingStorageType(project!, storageType) && (

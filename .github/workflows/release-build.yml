@@ -38,6 +38,7 @@ jobs:
     env:
       INSO_PACKAGE_NAME: insomnia-inso
       INSO_DOCKER_TAR: inso-docker-image.tar
+      DIGICERT_SM_CLIENT_CERT_FILE: sm_client_cert.p12
     strategy:
       fail-fast: false
       matrix:
@@ -123,45 +124,52 @@ jobs:
         shell: pwsh
         run: |
           New-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -ItemType Directory -Force
-          New-Item -Path "packages/insomnia/dist/win-unpacked/signed" -ItemType Directory -Force
           Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
           Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
 
+      - name: Setup DIGICERT_SM_CLIENT_CERT_FILE from base64 secret data
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "${{ secrets.DIGICERT_SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > ${{ env.DIGICERT_SM_CLIENT_CERT_FILE }}
+
       # signs unpacked electron-builder contents, in this case only the .exe
+      # this installs smctl as well
       - name: Code-sign unpacked .exe (Windows only)
         if: runner.os == 'Windows'
-        uses: sslcom/esigner-codesign@3b2dc3b6075c05ef889d88b761a1fd0183b28c6a # develop
+        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1
         with:
-          command: batch_sign
-          username: ${{secrets.ES_USERNAME}}
-          password: ${{secrets.ES_PASSWORD}}
-          credential_id: ${{secrets.ES_CREDENTIAL_ID}}
-          totp_secret: ${{secrets.ES_TOTP_SECRET}}
-          dir_path: packages/insomnia/dist/win-unpacked/tosign
-          output_path: packages/insomnia/dist/win-unpacked/signed
-          override: true
+          simple-signing-mode: true
+          # If the below 2 parameters are supplied, then smctl executable is invoked to attempt the signing.
+          input: packages/insomnia/dist/win-unpacked/tosign
+          keypair-alias: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
+        env:
+          SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
+          SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
+          SM_CLIENT_CERT_FILE: ${{ env.DIGICERT_SM_CLIENT_CERT_FILE }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
 
       - name: Move .dll and .exe files back to win-unpacked and delete /tosign
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/signed" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
-          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/signed" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/tosign" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/tosign" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
           Remove-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -Recurse -Force
-          Remove-Item -Path "packages/insomnia/dist/win-unpacked/signed" -Recurse -Force
 
       # re-packages the now code-signed electron-builder contents into the installer
       - name: Package dist app (Windows only)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          docker pull ghcr.io/sslcom/codesigner-win:latest
+          smctl credentials save ${SM_API_KEY} ${SM_CLIENT_CERT_PASSWORD}
           NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
         env:
-          USERNAME: ${{secrets.ES_USERNAME}}
-          PASSWORD: ${{secrets.ES_PASSWORD}}
-          CREDENTIAL_ID: ${{secrets.ES_CREDENTIAL_ID}}
-          TOTP_SECRET: ${{secrets.ES_TOTP_SECRET}}
+          SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
+          SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
+          SM_CLIENT_CERT_FILE: ${{ env.DIGICERT_SM_CLIENT_CERT_FILE }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
+          SM_KEYPAIR_ALIAS: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
 
       - name: Check squirrel exe signature (Windows only)
         if: runner.os == 'Windows'
@@ -210,15 +218,22 @@ jobs:
 
       - name: Code-sign inso exe (Windows only)
         if: runner.os == 'Windows'
-        uses: sslcom/esigner-codesign@3b2dc3b6075c05ef889d88b761a1fd0183b28c6a # develop
+        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1
         with:
-          command: sign
-          username: ${{secrets.ES_USERNAME}}
-          password: ${{secrets.ES_PASSWORD}}
-          credential_id: ${{secrets.ES_CREDENTIAL_ID}}
-          totp_secret: ${{secrets.ES_TOTP_SECRET}}
-          file_path: packages/insomnia-inso/binaries/inso.exe
-          override: true
+          simple-signing-mode: true
+          # If the below 2 parameters are supplied, then smctl executable is invoked to attempt the signing.
+          input: packages/insomnia/dist/win-unpacked/tosign
+          keypair-alias: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
+        env:
+          SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
+          SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
+          SM_CLIENT_CERT_FILE: packages/insomnia-inso/binaries/inso.exe
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
+
+      - name: Remove DigiCert client certificate after signing
+        shell: bash
+        run: |
+          rm -f ${{ env.SM_CLIENT_CERT_FILE }}
 
       - name: Code-sign & create Inso CLI installer (macOS only)
         if: runner.os == 'macOS'
