@@ -24,6 +24,7 @@ import type { Response } from '~/models/response';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
+import { SegmentEvent } from '~/ui/analytics';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 import { Dropdown, DropdownItem, ItemContent } from '~/ui/components/base/dropdown';
 import { MockResponseHeadersEditor } from '~/ui/components/editors/mock-response-headers-editor';
@@ -306,6 +307,13 @@ export const MockRouteRoute = () => {
                 mode={mockRoute.mimeType}
                 placeholder="..."
                 noLint={mockRoute.body?.includes('{{') && mockRoute.body?.includes('}}')}
+                updateFilter={filter => {
+                  if (filter) {
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.filterCreatedResponseBody,
+                    });
+                  }
+                }}
               />
             ) : (
               <EmptyStatePane

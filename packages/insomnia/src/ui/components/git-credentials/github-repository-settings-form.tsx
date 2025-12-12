@@ -28,7 +28,7 @@ export const GitHubRepositorySetupFormGroup = (props: Props) => {
     }
   }, [githubTokenLoader]);
 
-  const credentials = githubTokenLoader.data;
+  const credentials = githubTokenLoader.data?.credentials;
 
   if (!credentials?.token) {
     return <GitHubSignInForm />;
@@ -123,7 +123,8 @@ const GitHubRepositoryForm = ({
         </div>
         <PromptButton
           confirmMessage="Confirm"
-          onClick={() => {
+          onClick={e => {
+            e.preventDefault();
             signOutFetcher.submit();
           }}
         >

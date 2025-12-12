@@ -27,7 +27,7 @@ export const GitLabRepositorySetupFormGroup = (props: Props) => {
     }
   }, [gitlabTokenLoader]);
 
-  const credentials = gitlabTokenLoader.data;
+  const credentials = gitlabTokenLoader.data?.credentials;
 
   if (!credentials?.token) {
     return <GitLabSignInForm />;
@@ -105,7 +105,8 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
           </div>
         </div>
         <PromptButton
-          onClick={() => {
+          onClick={e => {
+            e.preventDefault();
             signOutFetcher.submit();
           }}
         >

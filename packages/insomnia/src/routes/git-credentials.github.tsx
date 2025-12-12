@@ -8,7 +8,9 @@ import type { Route } from './+types/git-credentials.github';
 export async function clientLoader(_args: Route.ClientActionArgs) {
   const credentials = await gitCredentials.getByProvider('github');
 
-  return credentials;
+  return {
+    credentials,
+  };
 }
 
 export const useGitHubCredentialsFetcher = createFetcherLoadHook(

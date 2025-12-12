@@ -6,6 +6,7 @@ import { useParams } from 'react-router';
 import { useRootLoaderData } from '~/root';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
+import { SegmentEvent } from '~/ui/analytics';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
@@ -118,6 +119,10 @@ export const RequestActionsDropdown = ({
 
   const generateCode = () => {
     if (isRequest(request)) {
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.generateCodeClicked,
+      });
+
       showModal(GenerateCodeModal, { request });
     }
   };
@@ -132,6 +137,10 @@ export const RequestActionsDropdown = ({
       if (cmd) {
         window.clipboard.writeText(cmd);
       }
+
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.copyAsCurl,
+      });
     } catch (err) {
       showModal(AlertModal, {
         title: 'Could not generate cURL',
