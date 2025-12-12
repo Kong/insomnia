@@ -139,7 +139,7 @@ export const GitHubRepositorySelect = ({
                       {isDisabled && <Icon icon="lock" className="group-aria-disabled:opacity-30" />}
                       <span className="truncate group-aria-disabled:opacity-30">{item.name}</span>
                       {isDisabled && (
-                        <span className="hidden rounded border border-solid border-(--hl-xl) px-2 py-1 text-(--color-font-info) group-hover:inline-block">
+                        <span className="hidden rounded border border-solid border-(--hl-xl) px-2 py-1 text-(--color-font) group-hover:inline-block">
                           Already connected to: {allConnectedRepoURIProjectNameMap[item.id]}
                         </span>
                       )}

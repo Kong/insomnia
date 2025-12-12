@@ -30,7 +30,7 @@ export const GitRepoScanResult: FC<Props> = ({ initCloneGitRepositoryFetcher, in
   return (
     <>
       <div className="rounded border border-solid border-(--hl-sm) px-4 pt-4 text-left">
-        <h3 className="mb-2 text-lg font-bold text-(--color-font-info)">Insomnia files in repo</h3>
+        <h3 className="mb-2 text-lg font-bold text-(--color-font)">Insomnia files in repo</h3>
         <p className="mb-4 text-(--hl)">{repoURI}</p>
         {initCloneGitRepositoryFetcher.state !== 'idle' ? (
           <div className="flex min-h-[134px] flex-col justify-center">
@@ -42,7 +42,7 @@ export const GitRepoScanResult: FC<Props> = ({ initCloneGitRepositoryFetcher, in
         ) : insomniaFiles?.length === 0 ? (
           <div className="flex min-h-[134px] flex-col justify-center">
             <p className="text-center text-base text-(--hl)">
-              <span className="mb-2 block font-bold text-(--color-font-info)">
+              <span className="mb-2 block font-bold text-(--color-font)">
                 No Insomnia files found − let’s start something new!
               </span>
               There were no Insomnia files in the selected repo or branch, so you’ll begin with a blank project locally.
@@ -64,15 +64,13 @@ export const GitRepoScanResult: FC<Props> = ({ initCloneGitRepositoryFetcher, in
                   .map((scope, idx) => (
                     <tr key={scope}>
                       <td
-                        className={classNames('pl-3 text-base leading-10 text-(--color-font-info)', {
+                        className={classNames('pl-3 text-base leading-10 text-(--color-font)', {
                           'pt-2': idx === 0,
                         })}
                       >
                         {fileTypeCountMap[scope as ProjectScopeKeys]}
                       </td>
-                      <td
-                        className={classNames('text-base leading-10 text-(--color-font-info)', { 'pt-2': idx === 0 })}
-                      >
+                      <td className={classNames('text-base leading-10 text-(--color-font)', { 'pt-2': idx === 0 })}>
                         <Icon icon={scopeToIconMap[scope as ProjectScopeKeys]} className="mr-2 w-4" />
                         {scopeToLabelMap[scope as ProjectScopeKeys]}
                       </td>
