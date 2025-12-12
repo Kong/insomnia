@@ -157,7 +157,7 @@ export const getMcpMethodFromMessage = (message: JSONRPCMessage): McpMessageEven
       requestMethod === METHOD_SAMPLING_CREATE_MESSAGE ||
       requestMethod === METHOD_LIST_ROOTS
         ? requestMethod
-        : `${unsupportedMethodPrefix}Prefix}${requestMethod}`;
+        : `${unsupportedMethodPrefix}${requestMethod}`;
   }
   return method;
 };
