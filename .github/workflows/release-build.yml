@@ -106,6 +106,12 @@ jobs:
           CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
 
+      - name: Setup DIGICERT_SM_CLIENT_CERT_FILE from base64 secret data
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "${{ secrets.DIGICERT_SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > ${{ env.DIGICERT_SM_CLIENT_CERT_FILE }}
+
       # This will install smctl
       # smctl will be used in the next step for signing
       - name: Setup Software Trust Manager
@@ -147,12 +153,6 @@ jobs:
           New-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -ItemType Directory -Force
           Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
           Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
-
-      - name: Setup DIGICERT_SM_CLIENT_CERT_FILE from base64 secret data
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          echo "${{ secrets.DIGICERT_SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > ${{ env.DIGICERT_SM_CLIENT_CERT_FILE }}
 
       # signs unpacked electron-builder contents, in this case only the .exe
       # this installs smctl as well
