@@ -1,10 +1,10 @@
 import fsPath from 'node:path';
 
 import electron from 'electron';
+import { types } from 'insomnia/src/models';
+import type { DatabaseBuckets } from 'insomnia/src/models/db';
 import type { DBItem } from 'insomnia-storage';
 import { NeDBClient } from 'insomnia-storage/node';
-
-import type { DatabaseBuckets } from '~/models/db';
 
 let latestListener: Parameters<typeof electron.ipcMain.on>[1] | null = null;
 
@@ -30,49 +30,7 @@ export function databaseFactory<T extends DBItem>(): DatabaseBuckets {
   latestListener = handler;
 
   const databaseBuckets: DatabaseBuckets = {} as DatabaseBuckets;
-  [
-    'ApiSpec',
-    'CaCertificate',
-    'ClientCertificate',
-    'CloudCredential',
-    'CookieJar',
-    'Environment',
-    'GitCredentials',
-    'GitRepository',
-    'GrpcRequest',
-    'GrpcRequestMeta',
-    'MockRoute',
-    'MockServer',
-    'McpRequest',
-    'McpResponse',
-    'McpPayload',
-    'OAuth2Token',
-    'PluginData',
-    'Project',
-    'ProtoDirectory',
-    'ProtoFile',
-    'Request',
-    'RequestGroup',
-    'RequestGroupMeta',
-    'RequestMeta',
-    'RequestVersion',
-    'Response',
-    'RunnerTestResult',
-    'Settings',
-    'SocketIOPayload',
-    'SocketIORequest',
-    'SocketIOResponse',
-    'Stats',
-    'UnitTest',
-    'UnitTestResult',
-    'UnitTestSuite',
-    'UserSession',
-    'WebSocketPayload',
-    'WebSocketRequest',
-    'WebSocketResponse',
-    'Workspace',
-    'WorkspaceMeta',
-  ].forEach(bucketName => {
+  types().forEach(bucketName => {
     const filename = fsPath.join(dbPath, `insomnia.${bucketName}.db`);
     // @ts-expect-error -- mapping unsoundness
     databaseBuckets[bucketName] = new NeDBClient<T>({ filename });

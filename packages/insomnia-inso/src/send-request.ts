@@ -51,12 +51,7 @@ export async function getSendRequestCallbackMemDb(
   // Initialize the DB in-memory and fill it with data if we're given one
   const databaseFactory = genDatabaseFactory();
   configureModel({ databaseFactory });
-  await database.init(
-    {
-      inMemoryOnly: true,
-    },
-    true,
-  );
+  await database.init(false, true);
   const docs: BaseModel[] = [];
 
   const settings = await models.settings.getOrCreate();

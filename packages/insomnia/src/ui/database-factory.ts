@@ -2,6 +2,7 @@ import electron from 'electron';
 import { type Database, type DBItem } from 'insomnia-storage';
 import { v4 as uuidv4 } from 'uuid';
 
+import { types } from '~/models';
 import type { DatabaseBuckets } from '~/models/db';
 
 export function databaseFactory<T extends DBItem>(): DatabaseBuckets {
@@ -36,49 +37,7 @@ export function databaseFactory<T extends DBItem>(): DatabaseBuckets {
   }
 
   const databaseBuckets: DatabaseBuckets = {} as DatabaseBuckets;
-  [
-    'ApiSpec',
-    'CaCertificate',
-    'ClientCertificate',
-    'CloudCredential',
-    'CookieJar',
-    'Environment',
-    'GitCredentials',
-    'GitRepository',
-    'GrpcRequest',
-    'GrpcRequestMeta',
-    'MockRoute',
-    'MockServer',
-    'McpRequest',
-    'McpResponse',
-    'McpPayload',
-    'OAuth2Token',
-    'PluginData',
-    'Project',
-    'ProtoDirectory',
-    'ProtoFile',
-    'Request',
-    'RequestGroup',
-    'RequestGroupMeta',
-    'RequestMeta',
-    'RequestVersion',
-    'Response',
-    'RunnerTestResult',
-    'Settings',
-    'SocketIOPayload',
-    'SocketIORequest',
-    'SocketIOResponse',
-    'Stats',
-    'UnitTest',
-    'UnitTestResult',
-    'UnitTestSuite',
-    'UserSession',
-    'WebSocketPayload',
-    'WebSocketRequest',
-    'WebSocketResponse',
-    'Workspace',
-    'WorkspaceMeta',
-  ].forEach(bucketName => {
+  types().forEach(bucketName => {
     // @ts-expect-error -- mapping unsoundness
     databaseBuckets[bucketName] = new RendererDBClient<T>({ type: bucketName });
   });

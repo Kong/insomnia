@@ -180,12 +180,7 @@ export const database = {
   },
 
   /** init in main process */
-  init: async (
-    config: {
-      inMemoryOnly?: boolean;
-    } = {},
-    forceReset = false,
-  ) => {
+  init: async (repairDatabase = true, forceReset = false) => {
     if (forceReset) {
       changeListeners = [];
       databaseBucket = {} as Record<AllTypes, Database>;
@@ -195,7 +190,7 @@ export const database = {
 
     // NOTE: Only repair the DB if we're not running in memory. Repairing here causes tests to hang indefinitely for some reason.
     // TODO: Figure out why this makes tests hang
-    if (!config.inMemoryOnly) {
+    if (repairDatabase) {
       await _repairDatabase();
     }
   },

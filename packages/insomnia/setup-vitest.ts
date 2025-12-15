@@ -62,7 +62,7 @@ export function databaseFactory(): DatabaseBuckets {
 }
 
 configureModel({ databaseFactory });
-await db.init({ inMemoryOnly: true }, true);
+await db.init(false, true);
 
 vi.mock('uuid', () => ({
   v4: () => v4Mock(),
