@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import type { HiddenBrowserWindowToMainBridgeAPI } from '../src/hidden-window-preload';
 import type { RendererToMainBridgeAPI } from '../src/main/ipc/main';
+import type { DatabaseBridgeAPI } from '../src/main/ipc/database';
 import type { DiffMatchPatch, DiffOp } from 'diff-match-patch-ts';
 
 declare global {
@@ -18,6 +19,7 @@ declare global {
       basename: (p: string) => string;
       join: (...paths: string[]) => string;
     };
+    database: DatabaseBridgeAPI;
     showAlert: (options?: Record<string, any>) => void;
     showWrapper: (options?: Record<string, any>) => void;
     showPrompt: (options?: Record<string, any>) => void;
