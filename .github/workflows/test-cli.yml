@@ -23,14 +23,20 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v4
 
+      - name: Check git status
+        run: |
+          echo "Current Commit SHA: $(git rev-parse HEAD)"
+          git log -1 --oneline
+          git show -s --format=%s HEAD
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version-file: ".nvmrc"
+          cache: "npm"
           cache-dependency-path: package-lock.json
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@kong'
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@kong"
 
       - name: Install packages
         run: npm ci
