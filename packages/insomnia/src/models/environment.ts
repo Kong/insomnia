@@ -53,7 +53,6 @@ export interface EnvironmentKvPairData {
   enabled?: boolean;
 }
 export type Environment = BaseModel & BaseEnvironment;
-
 // This is a representation of the data taken from a csv or json file AKA iterationData
 export type UserUploadEnvironment = Pick<Environment, 'data' | 'dataPropertyOrder' | 'name'>;
 

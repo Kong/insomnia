@@ -2,7 +2,7 @@
   "private": true,
   "name": "insomnia-storage",
   "version": "12.1.0",
-  "description": "Insomnia core functionalities",
+  "description": "Insomnia storage functionalities",
   "author": "Kong <office@konghq.com>",
   "license": "Apache-2.0",
   "repository": {

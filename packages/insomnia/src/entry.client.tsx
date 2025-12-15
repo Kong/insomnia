@@ -31,8 +31,7 @@ initializeSentry();
 configureFetch(options => insomniaFetch({ ...options, onlyResolveOnSuccess: true }));
 
 configureModel({ databaseFactory });
-
-await database.init();
+await database.init(false);
 
 await initPlugins();
 
