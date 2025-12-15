@@ -2,12 +2,11 @@ import { stat } from 'node:fs/promises';
 import path from 'node:path';
 
 import { database } from 'insomnia/src/common/database';
+import { configureModel } from 'insomnia/src/models/db';
 
-import { configureModel } from '~/models/db';
-
+import { genDatabaseFactory } from '../../database-factory';
 import type { Database, DbAdapter } from '../index';
 import { emptyDb } from '../index';
-import { genDatabaseFactory } from './database-factory';
 
 const neDbAdapter: DbAdapter = async (dir, filterTypes) => {
   // Confirm if db files exist
@@ -21,6 +20,7 @@ const neDbAdapter: DbAdapter = async (dir, filterTypes) => {
 
   const databaseFactory = genDatabaseFactory(dir);
   configureModel({ databaseFactory });
+
   await database.init();
 
   const types = filterTypes?.length ? filterTypes : (Object.keys(db) as (keyof Database)[]);

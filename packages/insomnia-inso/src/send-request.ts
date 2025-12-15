@@ -1,11 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import type { BaseModel } from '../models';
-import * as models from '../models';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
-import { getBodyBuffer } from '../models/response';
-import type { Settings } from '../models/settings';
+import { database } from 'insomnia/src/common/database';
+import type { BaseModel } from 'insomnia/src/models';
+import * as models from 'insomnia/src/models';
+import { configureModel } from 'insomnia/src/models/db';
+import type { Environment, UserUploadEnvironment } from 'insomnia/src/models/environment';
+import { getBodyBuffer } from 'insomnia/src/models/response';
+import type { Settings } from 'insomnia/src/models/settings';
 import {
   defaultSendActionRuntime,
   fetchRequestData,
@@ -14,8 +16,9 @@ import {
   tryToExecuteAfterResponseScript,
   tryToExecutePreRequestScript,
   tryToInterpolateRequest,
-} from '../network/network';
-import { database } from './database';
+} from 'insomnia/src/network/network';
+
+import { genDatabaseFactory } from './database-factory';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
@@ -46,6 +49,8 @@ export async function getSendRequestCallbackMemDb(
   iterationCount?: number,
 ) {
   // Initialize the DB in-memory and fill it with data if we're given one
+  const databaseFactory = genDatabaseFactory();
+  configureModel({ databaseFactory });
   await database.init(
     {
       inMemoryOnly: true,

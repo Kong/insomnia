@@ -11,7 +11,6 @@ import { cosmiconfig } from 'cosmiconfig';
 import { Confirm } from 'enquirer';
 import { pick } from 'es-toolkit';
 import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
-import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
 import type { Environment, UserUploadEnvironment } from 'insomnia/src/models/environment';
 import { init } from 'insomnia/src/models/environment';
 import type { Request } from 'insomnia/src/models/request';
@@ -42,7 +41,7 @@ import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
 import { logTestResult, logTestResultSummary, reporterTypes, type TestReporter } from './reporter';
 import { generateDocumentation } from './scripts/docs';
-
+import { getSendRequestCallbackMemDb } from './send-request';
 export interface GlobalOptions {
   ci: boolean;
   config: string;

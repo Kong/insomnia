@@ -1,12 +1,11 @@
 import fsPath from 'node:path';
 
+import type { DatabaseBuckets } from 'insomnia/src/models/db';
 import type { DBItem } from 'insomnia-storage';
 import { NeDBClient } from 'insomnia-storage/node';
 
-import type { DatabaseBuckets } from '~/models/db';
-
 export const genDatabaseFactory =
-  (dbPath: string) =>
+  (dbPath?: string) =>
   <T extends DBItem>(): DatabaseBuckets => {
     const databaseBuckets: DatabaseBuckets = {} as DatabaseBuckets;
     [
@@ -52,9 +51,9 @@ export const genDatabaseFactory =
       'Workspace',
       'WorkspaceMeta',
     ].forEach(bucketName => {
-      const filename = fsPath.join(dbPath, `insomnia.${bucketName}.db`);
+      const filename = dbPath ? fsPath.join(dbPath, `insomnia.${bucketName}.db`) : undefined;
       // @ts-expect-error -- mapping unsoundness
-      databaseBuckets[bucketName] = new NeDBClient<T>({ filename });
+      databaseBuckets[bucketName] = new NeDBClient<T>(filename ? { filename } : { inMemoryOnly: true });
     });
 
     return databaseBuckets;
