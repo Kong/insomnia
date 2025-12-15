@@ -18,7 +18,7 @@ export function databaseFactory<T extends DBItem>(): DatabaseBuckets {
 
   // Remove existing handler before registering to avoid duplicates
   electron.ipcMain.removeHandler('database.invoke');
-  
+
   // Register a single IPC handler for all database operations
   electron.ipcMain.handle('database.invoke', async (_event, fnName: string, type: string, ...args: any[]) => {
     // @ts-expect-error -- mapping unsoundness
