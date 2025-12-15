@@ -1,4 +1,4 @@
-import { href, Outlet, useRouteLoaderData } from 'react-router';
+import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 
 import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
@@ -68,6 +68,10 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   const { organizationId, projectId, workspaceId } = params;
 
   const activeWorkspace = await models.workspace.getById(workspaceId);
+
+  if (!activeWorkspace) {
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+  }
 
   invariant(activeWorkspace, 'Workspace not found');
 

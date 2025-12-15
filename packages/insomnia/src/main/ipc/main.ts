@@ -21,7 +21,12 @@ import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
 import { insecureReadFile, insecureReadFileWithEncoding, secureReadFile } from '~/main/secure-read-file';
-import type { GenerateCommitsFromDiffFunction, MockRouteData, ModelConfig } from '~/plugins/types';
+import type {
+  GenerateCommitsFromDiffFunction,
+  GenerateMcpSamplingResponseFunction,
+  MockRouteData,
+  ModelConfig,
+} from '~/plugins/types';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
@@ -163,6 +168,12 @@ export interface RendererToMainBridgeAPI {
   ) => Promise<
     | { commits: Awaited<ReturnType<GenerateCommitsFromDiffFunction>>; error: undefined }
     | { commits: undefined; error: string }
+  >;
+  generateMcpSamplingResponse: (
+    input: Parameters<GenerateMcpSamplingResponseFunction>[0],
+  ) => Promise<
+    | { response: Awaited<ReturnType<GenerateMcpSamplingResponseFunction>>; error: undefined }
+    | { response: undefined; error: string }
   >;
 }
 
@@ -479,6 +490,65 @@ export function registerMainHandlers() {
       process.postMessage({
         input,
         modelConfig,
+        aiPluginName: AI_PLUGIN_NAME,
+      });
+    });
+  });
+
+  ipcMainHandle('generateMcpSamplingResponse', async (_, input: Parameters<GenerateMcpSamplingResponseFunction>[0]) => {
+    return new Promise(async (resolve, reject) => {
+      const modelConfig = (await getCurrentConfig()) as ModelConfig | null;
+      if (!modelConfig) {
+        reject(new Error('No LLM model configured'));
+      }
+      const process = utilityProcess.fork(path.join(__dirname, 'main/mcp-generate-sampling-response.mjs'));
+
+      process.on('exit', code => {
+        console.log('[mcp-generate-sampling-response-process] exited with code:', code);
+        let errorMessage: string;
+
+        const signals = os.constants.signals;
+        if (code === 0) {
+          errorMessage = 'MCP sampling response generation process exited with code 0.';
+        } else if (code === signals.SIGSEGV) {
+          errorMessage = `MCP sampling response generation process crashed with a segmentation fault (SIGSEGV). This may be due to system compatibility when running a GGUF model.`;
+        } else if (code === signals.SIGKILL) {
+          errorMessage = `MCP sampling response generation process was killed (SIGKILL). This may be due to memory limits or system resources.`;
+        } else if (code === signals.SIGTERM) {
+          errorMessage = `MCP sampling response generation process was terminated (SIGTERM).`;
+        } else if (code === signals.SIGABRT) {
+          errorMessage = `MCP sampling response generation process aborted (SIGABRT). This usually indicates an internal error.`;
+        } else {
+          errorMessage = `MCP sampling response generation process exited unexpectedly with code ${code}.`;
+        }
+
+        resolve({ error: errorMessage });
+      });
+
+      process.on('message', msg => {
+        console.log('[mcp-generate-sampling-response-process] received message');
+        resolve({
+          response: {
+            content: msg,
+            modelConfig,
+          },
+        });
+        process.kill();
+      });
+
+      process.on('error', err => {
+        console.error('[mcp-generate-sampling-response-process] error:', err);
+        reject({ error: err.toString() });
+      });
+      const { systemPrompt, messages, modelConfig: modelConfigFromSamplingRequest } = input;
+
+      process.postMessage({
+        messages,
+        systemPrompt,
+        modelConfig: {
+          ...modelConfig,
+          ...modelConfigFromSamplingRequest,
+        },
         aiPluginName: AI_PLUGIN_NAME,
       });
     });

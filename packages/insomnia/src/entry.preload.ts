@@ -1,10 +1,12 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
+import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
 
 import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
+import type { AIFeatureNames } from './main/llm-config-service';
 import type { CurlBridgeAPI } from './main/network/curl';
 import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
@@ -76,6 +78,7 @@ const mcp: McpBridgeAPI = {
   },
   client: {
     responseElicitationRequest: options => ipcRenderer.send('mcp.client.responseElicitationRequest', options),
+    responseSamplingRequest: options => ipcRenderer.send('mcp.client.responseSamplingRequest', options),
     hasRequestResponded: options => ipcRenderer.invoke('mcp.client.hasRequestResponded', options),
     cancelRequest: options => ipcRenderer.invoke('mcp.client.cancelRequest', options),
   },
@@ -156,9 +159,8 @@ const llm: LLMConfigServiceAPI = {
     ipcRenderer.invoke('llm.updateBackendConfig', backend, config),
   getAllConfigurations: () => ipcRenderer.invoke('llm.getAllConfigurations'),
   getCurrentConfig: () => ipcRenderer.invoke('llm.getCurrentConfig'),
-  getAIFeatureEnabled: (feature: 'aiMockServers' | 'aiCommitMessages') =>
-    ipcRenderer.invoke('llm.getAIFeatureEnabled', feature),
-  setAIFeatureEnabled: (feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean) =>
+  getAIFeatureEnabled: (feature: AIFeatureNames) => ipcRenderer.invoke('llm.getAIFeatureEnabled', feature),
+  setAIFeatureEnabled: (feature: AIFeatureNames, enabled: boolean) =>
     ipcRenderer.invoke('llm.setAIFeatureEnabled', feature, enabled),
 };
 
@@ -257,6 +259,8 @@ const main: Window['main'] = {
     ),
   generateCommitsFromDiff: (input: { diff: string; recent_commits: string }) =>
     ipcRenderer.invoke('generateCommitsFromDiff', input),
+  generateMcpSamplingResponse: (parameters: Parameters<GenerateMcpSamplingResponseFunction>[0]) =>
+    ipcRenderer.invoke('generateMcpSamplingResponse', parameters),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {

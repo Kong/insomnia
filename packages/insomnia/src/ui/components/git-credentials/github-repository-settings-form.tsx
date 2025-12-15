@@ -15,10 +15,11 @@ import { GitHubRepositorySelect } from './github-repository-select';
 interface Props {
   uri?: string;
   onSubmit: (args: Partial<GitRepository>) => void;
+  allConnectedRepoURIProjectNameMap?: Record<string, string> | undefined;
 }
 
 export const GitHubRepositorySetupFormGroup = (props: Props) => {
-  const { onSubmit, uri } = props;
+  const { onSubmit, uri, allConnectedRepoURIProjectNameMap } = props;
   const githubTokenLoader = useGitHubCredentialsFetcher();
 
   useEffect(() => {
@@ -27,13 +28,20 @@ export const GitHubRepositorySetupFormGroup = (props: Props) => {
     }
   }, [githubTokenLoader]);
 
-  const credentials = githubTokenLoader.data;
+  const credentials = githubTokenLoader.data?.credentials;
 
   if (!credentials?.token) {
     return <GitHubSignInForm />;
   }
 
-  return <GitHubRepositoryForm uri={uri} onSubmit={onSubmit} credentials={credentials} />;
+  return (
+    <GitHubRepositoryForm
+      uri={uri}
+      onSubmit={onSubmit}
+      credentials={credentials}
+      allConnectedRepoURIProjectNameMap={allConnectedRepoURIProjectNameMap}
+    />
+  );
 };
 
 const Avatar = ({ src }: { src: string }) => {
@@ -68,9 +76,15 @@ interface GitHubRepositoryFormProps {
   uri?: string;
   onSubmit: (args: Partial<GitRepository & { ref?: string }>) => void;
   credentials: GitCredentials;
+  allConnectedRepoURIProjectNameMap?: Record<string, string> | undefined;
 }
 
-const GitHubRepositoryForm = ({ uri, credentials, onSubmit }: GitHubRepositoryFormProps) => {
+const GitHubRepositoryForm = ({
+  uri,
+  credentials,
+  onSubmit,
+  allConnectedRepoURIProjectNameMap,
+}: GitHubRepositoryFormProps) => {
   const [error, setError] = useState('');
   const signOutFetcher = useGithubSignOutFetcher();
 
@@ -109,14 +123,19 @@ const GitHubRepositoryForm = ({ uri, credentials, onSubmit }: GitHubRepositoryFo
         </div>
         <PromptButton
           confirmMessage="Confirm"
-          onClick={() => {
+          onClick={e => {
+            e.preventDefault();
             signOutFetcher.submit();
           }}
         >
           Disconnect
         </PromptButton>
       </div>
-      <GitHubRepositorySelect uri={uri} token={credentials.token} />
+      <GitHubRepositorySelect
+        uri={uri}
+        token={credentials.token}
+        allConnectedRepoURIProjectNameMap={allConnectedRepoURIProjectNameMap}
+      />
       {error && (
         <p className="notice error margin-bottom-sm">
           <button className="pull-right icon" onClick={() => setError('')}>

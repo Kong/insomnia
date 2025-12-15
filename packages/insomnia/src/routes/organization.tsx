@@ -83,6 +83,7 @@ export interface FeatureList {
   orgBasicRbac: FeatureStatus;
   aiMockServers: FeatureStatus;
   aiCommitMessages: FeatureStatus;
+  aiMcpClient: FeatureStatus;
 }
 
 export interface Billing {

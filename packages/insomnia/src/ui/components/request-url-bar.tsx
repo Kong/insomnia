@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
@@ -29,11 +29,9 @@ import {
 } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
-import { SegmentEvent } from '../analytics';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import { useReadyState } from '../hooks/use-ready-state';
-import { useRequestPatcher } from '../hooks/use-request';
-import { useRequestMetaPatcher } from '../hooks/use-request';
+import { useRequestMetaPatcher, useRequestPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/use-timeout-when';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { MethodDropdown } from './dropdowns/method-dropdown';
@@ -184,15 +182,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       async (shouldPromptForPathAfterResponse?: boolean, ignoreUndefinedEnvVariable?: boolean) => {
         updateTabById?.(requestId, { temporary: false });
         models.stats.incrementExecutedRequests();
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.requestExecute,
-          properties: {
-            preferredHttpVersion: settings.preferredHttpVersion,
-            // @ts-expect-error -- who cares
-            authenticationType: activeRequest.authentication?.type,
-            mimeType: activeRequest.body.mimeType,
-          },
-        });
         // reset timeout
         setCurrentTimeout(undefined);
 
@@ -249,16 +238,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           });
         }
       },
-      [
-        activeEnvironment._id,
-        activeRequest,
-        activeWorkspace._id,
-        connect,
-        requestId,
-        send,
-        settings.preferredHttpVersion,
-        updateTabById,
-      ],
+      [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, updateTabById],
     );
 
     useEffect(() => {

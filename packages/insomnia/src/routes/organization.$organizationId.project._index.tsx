@@ -1,6 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import { getLearningFeature as getLearningFeatureAPI, type LearningFeature } from 'insomnia-api';
-import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   GridList,
@@ -825,7 +825,15 @@ const Component = () => {
                     className="group relative flex-1"
                     isDisabled={activeProject === undefined}
                     value={projectListFilter}
-                    onChange={setProjectListFilter}
+                    onChange={value => {
+                      setProjectListFilter(value);
+
+                      if (value.trim() !== '') {
+                        window.main.trackSegmentEvent({
+                          event: SegmentEvent.filterCreatedHomePage,
+                        });
+                      }
+                    }}
                   >
                     <Input
                       placeholder="Filter"

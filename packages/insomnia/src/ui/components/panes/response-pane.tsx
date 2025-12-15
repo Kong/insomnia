@@ -1,8 +1,9 @@
 import { extension as mimeExtension } from 'mime-types';
-import React, { type FC, useCallback, useMemo } from 'react';
+import { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
 import { useRootLoaderData } from '~/root';
+import { SegmentEvent } from '~/ui/analytics';
 import { jsonPrettify } from '~/utils/prettify/json';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
@@ -146,7 +147,20 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
           />
         </PaneHeader>
       )}
-      <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
+      <Tabs
+        aria-label="Request group tabs"
+        className="flex h-full w-full flex-1 flex-col"
+        onSelectionChange={key => {
+          if (key === 'mock-response') {
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.responseToMockClicked,
+              properties: {
+                source: 'Response Pane Tab',
+              },
+            });
+          }
+        }}
+      >
         <TabList
           className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
           aria-label="Request pane tabs"

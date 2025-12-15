@@ -3,10 +3,12 @@ import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-compone
 import { useNavigation } from 'react-router';
 
 import type { StorageRules } from '~/models/organization';
+import { useActiveView } from '~/ui/components/project/utils';
 
 import type { GitRepository } from '../../../models/git-repository';
 import type { Project } from '../../../models/project';
 import { Icon } from '../icon';
+import { ProjectCreateForm } from '../project/project-create-form';
 import { ProjectSettingsForm } from '../project/project-settings-form';
 
 export const ProjectModal = ({
@@ -33,19 +35,26 @@ export const ProjectModal = ({
     }
   }, [activeNavigation, isOpen, onOpenChange]);
 
-  const title = project ? 'Update project' : 'Create a new project';
+  const activeViewObj = useActiveView();
+
+  let title = '';
+  if (project) {
+    title = 'Project settings';
+  } else {
+    title = activeViewObj.activeView === 'git-results' ? 'Create Git Sync project' : 'Create project';
+  }
 
   return (
     <ModalOverlay
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       isDismissable
-      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
+      className="fixed top-0 right-0 bottom-0 left-0 z-10 flex items-start justify-center bg-black/30 pt-[70px]"
     >
-      <Modal className="flex max-h-[90dvh] min-h-[420px] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)">
+      <Modal className="flex max-h-[calc(var(--visual-viewport-height)-140px)] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)">
         <Dialog
           aria-label="Create or update dialog"
-          className="grid flex-1 grid-rows-[min-content_1fr_min-content] gap-4 px-10 pt-10 outline-hidden"
+          className="grid flex-1 grid-rows-[min-content_1fr] gap-4 overflow-hidden p-10 outline-hidden"
         >
           {({ close }) => (
             <>
@@ -60,14 +69,23 @@ export const ProjectModal = ({
                   <Icon icon="x" />
                 </Button>
               </div>
-              <ProjectSettingsForm
-                storageRules={storageRules}
-                isGitSyncEnabled={isGitSyncEnabled}
-                project={project}
-                gitRepository={gitRepository}
-                onCancel={close}
-                onSuccessUpdate={() => onOpenChange(false)}
-              />
+              {project ? (
+                <ProjectSettingsForm
+                  storageRules={storageRules}
+                  isGitSyncEnabled={isGitSyncEnabled}
+                  project={project}
+                  gitRepository={gitRepository}
+                  onCancel={close}
+                  onSuccessUpdate={close}
+                />
+              ) : (
+                <ProjectCreateForm
+                  storageRules={storageRules}
+                  isGitSyncEnabled={isGitSyncEnabled}
+                  onCancel={close}
+                  activeViewObj={activeViewObj}
+                />
+              )}
             </>
           )}
         </Dialog>

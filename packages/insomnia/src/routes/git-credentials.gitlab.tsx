@@ -8,7 +8,7 @@ import type { Route } from './+types/git-credentials.gitlab';
 export async function clientLoader(_args: Route.ClientActionArgs) {
   const credentials = await gitCredentials.getByProvider('gitlab');
 
-  return credentials;
+  return { credentials };
 }
 
 export const useGitLabCredentialsFetcher = createFetcherLoadHook(

@@ -16,11 +16,13 @@ export const AISettings = () => {
   const [configuredLLMs, setConfiguredLLMs] = useState<LLMConfig[]>([]);
   const [mockServerEnabled, setMockServerEnabled] = useState(false);
   const [commitMessagesEnabled, setCommitMessagesEnabled] = useState(false);
+  const [mcpClientEnabled, setMcpClientEnabled] = useState(false);
 
   const hasActiveLLM = currentLLM !== null;
   // If the feature is undefined, default to disabled (org hasn't enabled it)
   const isMockServerEnabledByOrg = features.aiMockServers ? features.aiMockServers.enabled : false;
   const isCommitMessagesEnabledByOrg = features.aiCommitMessages ? features.aiCommitMessages.enabled : false;
+  const isMcpClientEnabledByOrg = features.aiMcpClient ? features.aiMcpClient.enabled : false;
 
   useEffect(() => {
     const loadConfigurations = async () => {
@@ -28,9 +30,11 @@ export const AISettings = () => {
       const current = await window.main.llm.getActiveBackend();
       const mockServerFeature = await window.main.llm.getAIFeatureEnabled('aiMockServers');
       const commitMessagesFeature = await window.main.llm.getAIFeatureEnabled('aiCommitMessages');
+      const mcpClientFeature = await window.main.llm.getAIFeatureEnabled('aiMcpClient');
 
       setMockServerEnabled(isMockServerEnabledByOrg && mockServerFeature);
       setCommitMessagesEnabled(isCommitMessagesEnabledByOrg && commitMessagesFeature);
+      setMcpClientEnabled(isMcpClientEnabledByOrg && mcpClientFeature);
 
       setConfiguredLLMs(configs);
       if (current) {
@@ -40,7 +44,7 @@ export const AISettings = () => {
     };
 
     loadConfigurations();
-  }, [isMockServerEnabledByOrg, isCommitMessagesEnabledByOrg]);
+  }, [isMockServerEnabledByOrg, isCommitMessagesEnabledByOrg, isMcpClientEnabledByOrg]);
 
   const saveLLMSettings = useCallback(
     async (setCurrent: boolean, backend: LLMBackend, extras: Partial<LLMConfig> = {}) => {
@@ -75,6 +79,11 @@ export const AISettings = () => {
   const handleCommitMessagesToggle = useCallback(async (enabled: boolean) => {
     setCommitMessagesEnabled(enabled);
     await window.main.llm.setAIFeatureEnabled('aiCommitMessages', enabled);
+  }, []);
+
+  const handleMcpClientToggle = useCallback(async (enabled: boolean) => {
+    setMcpClientEnabled(enabled);
+    await window.main.llm.setAIFeatureEnabled('aiMcpClient', enabled);
   }, []);
 
   const activeBadge = (
@@ -148,6 +157,30 @@ export const AISettings = () => {
               isSelected={commitMessagesEnabled && isCommitMessagesEnabledByOrg}
               onChange={handleCommitMessagesToggle}
               isDisabled={!hasActiveLLM || !isCommitMessagesEnabledByOrg}
+              className="group flex items-center gap-2"
+            >
+              <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-disabled:opacity-50 group-data-selected:bg-(--color-surprise)">
+                <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
+              </div>
+            </Switch>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-(--color-font)">Allow MCP client to use the LLM service</span>
+              {!isMcpClientEnabledByOrg ? (
+                <p className="text-xs text-(--color-danger)">
+                  Disabled by organization
+                  {features.aiMcpClient?.reason ? `: ${features.aiMcpClient.reason}` : ''}
+                </p>
+              ) : !hasActiveLLM ? (
+                <p className="text-xs text-(--hl)">Configure and activate an LLM to enable this feature</p>
+              ) : null}
+            </div>
+            <Switch
+              isSelected={mcpClientEnabled && isMcpClientEnabledByOrg}
+              onChange={handleMcpClientToggle}
+              isDisabled={!hasActiveLLM || !isMcpClientEnabledByOrg}
               className="group flex items-center gap-2"
             >
               <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-disabled:opacity-50 group-data-selected:bg-(--color-surprise)">

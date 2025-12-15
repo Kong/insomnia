@@ -1,7 +1,8 @@
 import classNames from 'classnames';
-import React, { type FC, useCallback, useEffect, useState } from 'react';
+import { type FC, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-aria-components';
 
+import { SegmentEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
@@ -136,6 +137,10 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
       window.showAlert({
         title: 'URL Too Long',
         message: `Your URL is quite long, so only the first ${MAX_URL_LENGTH} characters were copied.`,
+      });
+    } else {
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.requestUrlCopied,
       });
     }
   }, [tooLong]);
