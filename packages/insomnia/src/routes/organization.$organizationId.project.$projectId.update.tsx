@@ -288,6 +288,44 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       };
     }
 
+    // connect to git repo
+    if (
+      storageType === 'git' &&
+      project.gitRepositoryId === EMPTY_GIT_PROJECT_ID &&
+      !projectData.connectRepositoryLater
+    ) {
+      let credentials: GitCredentials | undefined;
+      if (projectData.oauth2format) {
+        credentials = {
+          oauth2format: projectData.oauth2format,
+          token: projectData.token ?? '',
+          username: projectData.username ?? '',
+        };
+      } else if (projectData.username && projectData.password) {
+        credentials = {
+          username: projectData.username,
+          password: projectData.password,
+        };
+      }
+
+      await window.main.git.updateGitRepo({
+        projectId: project._id,
+        author: {
+          name: projectData.authorName ?? '',
+          email: projectData.authorEmail ?? '',
+        },
+        uri: projectData.uri ?? '',
+        credentials: credentials || {
+          username: '',
+          password: '',
+        },
+        ref: projectData.ref,
+      });
+      return {
+        success: true,
+      };
+    }
+
     // convert from git to local
     if (storageType === 'local' && project.gitRepositoryId) {
       const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);

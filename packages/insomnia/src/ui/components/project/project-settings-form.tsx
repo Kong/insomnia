@@ -13,7 +13,6 @@ import {
   fallbackFeatures,
   useOrganizationPermissionsLoaderFetcher,
 } from '~/routes/organization.$organizationId.permissions';
-import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
@@ -128,7 +127,6 @@ export const ProjectSettingsForm: FC<Props> = ({
 
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
   const updateProjectFetcher = useProjectUpdateActionFetcher();
-  const newProjectFetcher = useProjectNewActionFetcher();
 
   const insomniaFiles =
     initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data
@@ -140,12 +138,6 @@ export const ProjectSettingsForm: FC<Props> = ({
       onSuccessUpdate();
     }
   }, [onSuccessUpdate, updateProjectFetcher.data]);
-
-  useEffect(() => {
-    if (newProjectFetcher.state === 'idle' && newProjectFetcher.data && newProjectFetcher.data?.error) {
-      setError(newProjectFetcher.data.error);
-    }
-  }, [newProjectFetcher.data, newProjectFetcher.state]);
 
   useEffect(() => {
     if (updateProjectFetcher.state === 'idle' && updateProjectFetcher.data && updateProjectFetcher.data?.error) {
@@ -277,10 +269,10 @@ export const ProjectSettingsForm: FC<Props> = ({
               ) : (
                 <Button
                   onPress={onUpsertProject}
-                  isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
+                  isDisabled={updateProjectFetcher.state !== 'idle' || updateProjectFetcher.state !== 'idle'}
                   className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                 >
-                  {(updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') && (
+                  {(updateProjectFetcher.state !== 'idle' || updateProjectFetcher.state !== 'idle') && (
                     <Icon icon="spinner" className="animate-spin" />
                   )}
                   <span>Update</span>
@@ -299,7 +291,7 @@ export const ProjectSettingsForm: FC<Props> = ({
         />
         <div className="mt-8 flex items-center justify-end gap-2">
           <Button
-            isDisabled={newProjectFetcher.state !== 'idle' || initCloneGitRepositoryFetcher.state !== 'idle'}
+            isDisabled={updateProjectFetcher.state !== 'idle' || initCloneGitRepositoryFetcher.state !== 'idle'}
             onPress={() => {
               setActiveView('project');
               setError(null);
@@ -319,11 +311,11 @@ export const ProjectSettingsForm: FC<Props> = ({
             </Button>
           ) : (
             <Button
-              isDisabled={newProjectFetcher.state !== 'idle'}
+              isDisabled={updateProjectFetcher.state !== 'idle'}
               onPress={onUpsertProject}
               className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
             >
-              {newProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
+              {updateProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
               <span>
                 {(() => {
                   if (insomniaFiles) {
