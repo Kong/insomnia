@@ -54,7 +54,7 @@ export const ProjectModal = ({
       <Modal className="flex max-h-[calc(var(--visual-viewport-height)-140px)] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)">
         <Dialog
           aria-label="Create or update dialog"
-          className="grid flex-1 grid-rows-[min-content_1fr] gap-4 overflow-hidden p-10 outline-hidden"
+          className="grid flex-1 grid-rows-[min-content_1fr_min-content] gap-4 overflow-hidden p-10 outline-hidden"
         >
           {({ close }) => (
             <>

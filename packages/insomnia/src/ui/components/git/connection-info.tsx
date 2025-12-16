@@ -13,14 +13,18 @@ export const GitConnectionInfo = ({ gitRepository }: { gitRepository?: GitReposi
     <div className="text-[12px]">
       <div className="mb-6 font-semibold text-(--hl)">Connection Info</div>
       <div className="flex flex-col gap-4">
-        <div className="flex">
-          <div className="w-[110px] font-semibold">Provider</div>
-          <GitProviderTag provider={provider} />
-        </div>
-        <div className="flex">
-          <div className="w-[110px] font-semibold">Repo URL</div>
-          <div>{repoUrl}</div>
-        </div>
+        <dl className="flex">
+          <dt className="w-[110px] font-semibold">Provider</dt>
+          <dd>
+            <GitProviderTag provider={provider} />
+          </dd>
+        </dl>
+        <dl className="flex">
+          <dt className="w-[110px] font-semibold">Repo URL</dt>
+          <dd>
+            <a href={repoUrl}>{repoUrl}</a>
+          </dd>
+        </dl>
         {/* TODO: get repo branch */}
         {/* <div className="flex">
           <div className="w-[110px] font-semibold">Base Branch</div>

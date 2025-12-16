@@ -21,12 +21,14 @@ interface Props {
 
 export const GitRepoScanResult: FC<Props> = ({ initCloneGitRepositoryFetcher, insomniaFiles, repoURI }) => {
   const fileTypeCountMap: Partial<Record<ProjectScopeKeys, number>> = {};
+
   insomniaFiles?.forEach(({ scope }) => {
     if (!fileTypeCountMap[scope]) {
       fileTypeCountMap[scope] = 0;
     }
     fileTypeCountMap[scope]++;
   });
+
   return (
     <>
       <div className="rounded border border-solid border-(--hl-sm) px-4 pt-4 text-left">

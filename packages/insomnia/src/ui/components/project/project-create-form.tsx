@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import type { FC } from 'react';
 import React, { useEffect, useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
@@ -102,16 +101,20 @@ export const ProjectCreateForm: FC<Props> = ({
   };
 
   return (
-    <div className="flex w-full flex-col gap-4 overflow-y-auto">
-      {error && (
-        <div className="flex items-center gap-2 rounded-xs bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-(--color-font-danger)">
-          <Icon icon="triangle-exclamation" />
-          <span>{error}</span>
-        </div>
-      )}
+    <>
+      {/* Content */}
+      <div className="flex flex-col gap-2 overflow-y-auto">
+        {error && (
+          <div className="flex items-center gap-2 rounded-xs bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-(--color-font-danger)">
+            <Icon icon="triangle-exclamation" />
+            <span>{error}</span>
+          </div>
+        )}
 
-      <div className={classNames({ hidden: activeView !== 'project' })}>
-        <div className="mt-4 flex w-full flex-col justify-start gap-4 pb-2 text-left">
+        {/* Important Note: We want to keep the state of the components so we only hide the contents */}
+        <div
+          className={`flex w-full flex-col justify-start gap-4 pb-2 text-left ${activeView === 'project' ? '' : 'hidden'}`}
+        >
           <TextField
             autoFocus
             name="name"
@@ -147,7 +150,20 @@ export const ProjectCreateForm: FC<Props> = ({
             />
           )}
         </div>
-        <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5">
+
+        <div className={activeView === 'git-results' ? '' : 'hidden'}>
+          <GitRepoScanResult
+            initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
+            insomniaFiles={insomniaFiles}
+            repoURI={projectData.uri}
+          />
+        </div>
+      </div>
+
+      {/* Actions */}
+
+      {activeView === 'project' && (
+        <div className="flex w-full items-center justify-end gap-2 px-0.5">
           <div className="flex items-center gap-2">
             {onCancel && (
               <Button
@@ -177,15 +193,10 @@ export const ProjectCreateForm: FC<Props> = ({
             )}
           </div>
         </div>
-      </div>
+      )}
 
-      <div className={classNames({ hidden: activeView !== 'git-results' })}>
-        <GitRepoScanResult
-          initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
-          insomniaFiles={insomniaFiles}
-          repoURI={projectData.uri}
-        />
-        <div className="mt-8 flex items-center justify-end gap-2">
+      {activeView === 'git-results' && (
+        <div className="flex items-center justify-end gap-2">
           <Button
             isDisabled={newProjectFetcher.state !== 'idle' || initCloneGitRepositoryFetcher.state !== 'idle'}
             onPress={() => {
@@ -229,7 +240,7 @@ export const ProjectCreateForm: FC<Props> = ({
             </Button>
           )}
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
