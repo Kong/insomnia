@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import type { FC } from 'react';
 import React, { useEffect, useState } from 'react';
-import { Button, Checkbox, Input, Label, TextField } from 'react-aria-components';
+import { Button, Input, Label, TextField } from 'react-aria-components';
 import { useParams } from 'react-router';
 
 import { type StorageRules } from '~/models/organization';
@@ -136,35 +136,17 @@ export const ProjectCreateForm: FC<Props> = ({
             storageRules={storageRules}
           />
           {storageType === 'git' && (
-            <>
-              <Checkbox
-                slot={null}
-                isSelected={projectData.connectRepositoryLater}
-                onChange={isSelected => setProjectData(prev => ({ ...prev, connectRepositoryLater: isSelected }))}
-                className="group mt-4 flex h-full items-center gap-2 p-0 pl-px"
-              >
-                <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
-                  <Icon
-                    icon="check"
-                    className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
-                  />
-                </div>
-                <span className="text-sm text-(--hl)">Connect repository later</span>
-              </Checkbox>
-              {!projectData.connectRepositoryLater && (
-                <GitRepoForm
-                  {...{
-                    setProjectData,
-                    projectData,
-                    initCloneGitRepositoryFetcher,
-                    organizationId,
-                    setActiveView,
-                    selectedTab,
-                    setTab,
-                  }}
-                />
-              )}
-            </>
+            <GitRepoForm
+              {...{
+                setProjectData,
+                projectData,
+                initCloneGitRepositoryFetcher,
+                organizationId,
+                setActiveView,
+                selectedTab,
+                setTab,
+              }}
+            />
           )}
         </div>
         <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5">

@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import type { FC } from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Checkbox, Input, Label, TextField } from 'react-aria-components';
+import { Button, Input, Label, TextField } from 'react-aria-components';
 import { useParams } from 'react-router';
 
 import { Banner } from '~/basic-components/banner';
@@ -25,7 +25,13 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
-import { getDefaultProjectStorageType, isGitProject, isRemoteProject, type Project } from '../../../models/project';
+import {
+  EMPTY_GIT_PROJECT_ID,
+  getDefaultProjectStorageType,
+  isGitProject,
+  isRemoteProject,
+  type Project,
+} from '../../../models/project';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
 
@@ -230,43 +236,23 @@ export const ProjectSettingsForm: FC<Props> = ({
               }
             />
           )}
-          {storageType === 'git' && !isSwitchingStorageType(project!, storageType) && (
-            <>
-              <Divider />
-              <GitConnectionInfo gitRepository={gitRepository} />
-            </>
-          )}
-          {storageType === 'git' && isSwitchingStorageType(project!, storageType) && (
-            <>
-              <Checkbox
-                slot={null}
-                isSelected={projectData.connectRepositoryLater}
-                onChange={isSelected => setProjectData(prev => ({ ...prev, connectRepositoryLater: isSelected }))}
-                className="group mt-4 flex h-full items-center gap-2 p-0 pl-px"
-              >
-                <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
-                  <Icon
-                    icon="check"
-                    className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
-                  />
-                </div>
-                <span className="text-sm text-(--hl)">Connect repository later</span>
-              </Checkbox>
-              {!projectData.connectRepositoryLater && (
-                <GitRepoForm
-                  {...{
-                    setProjectData,
-                    projectData,
-                    initCloneGitRepositoryFetcher,
-                    organizationId,
-                    setActiveView,
-                    selectedTab,
-                    setTab,
-                  }}
-                />
-              )}
-            </>
-          )}
+          {storageType === 'git' &&
+            (!isSwitchingStorageType(project!, storageType) && project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID ? (
+              <>
+                <Divider />
+                <GitConnectionInfo gitRepository={gitRepository} />
+              </>
+            ) : (
+              <GitRepoForm
+                projectData={projectData}
+                setProjectData={setProjectData}
+                initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
+                organizationId={organizationId}
+                setActiveView={setActiveView}
+                selectedTab={selectedTab}
+                setTab={setTab}
+              />
+            ))}
           <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5">
             <div className="flex items-center gap-2">
               {onCancel && (
@@ -278,30 +264,17 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </Button>
               )}
               {storageType === 'git' &&
-                !projectData.connectRepositoryLater &&
-                isSwitchingStorageType(project!, storageType) && (
-                  <Button
-                    isDisabled={!isGitSyncEnabled}
-                    form={selectedTab}
-                    type="submit"
-                    className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-                  >
-                    Scan for files
-                  </Button>
-                )}
-              {storageType === 'git' && !isSwitchingStorageType(project!, storageType) && (
+              !projectData.connectRepositoryLater &&
+              isSwitchingStorageType(project!, storageType) ? (
                 <Button
-                  onPress={onUpsertProject}
-                  isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                  isDisabled={!isGitSyncEnabled}
+                  form={selectedTab}
+                  type="submit"
+                  className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                 >
-                  {(updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') && (
-                    <Icon icon="spinner" className="animate-spin" />
-                  )}
-                  <span>Update</span>
+                  Scan for files
                 </Button>
-              )}
-              {(storageType !== 'git' || projectData.connectRepositoryLater) && (
+              ) : (
                 <Button
                   onPress={onUpsertProject}
                   isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}

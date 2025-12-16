@@ -955,6 +955,7 @@ const Component = () => {
                     <GitProjectSyncDropdown
                       key={activeProjectGitRepository?._id}
                       gitRepository={activeProjectGitRepository}
+                      activeProject={activeProject}
                     />
                   )}
                   {isLocalProject(activeProject) && !isGitProject(activeProject) && <LocalProjectBar />}
