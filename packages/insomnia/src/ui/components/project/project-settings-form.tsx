@@ -122,7 +122,7 @@ export const ProjectSettingsForm: FC<Props> = ({
       gitRepository?.credentials && 'oauth2format' in gitRepository.credentials
         ? (gitRepository?.credentials?.oauth2format ?? 'github')
         : undefined,
-    connectRepositoryLater: false,
+    connectRepositoryLater: Boolean(!gitRepository?._id),
   });
 
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
@@ -167,33 +167,32 @@ export const ProjectSettingsForm: FC<Props> = ({
         </div>
       )}
 
-      {activeView === 'project' && (
-        <>
-          <div className="mt-4 flex w-full flex-col justify-start gap-4 text-left">
-            <TextField
-              autoFocus
-              name="name"
-              value={projectData.name}
-              onChange={name => setProjectData({ ...projectData, name })}
-              className="group relative flex flex-col gap-2 px-0.5"
-            >
-              <Label className="pt-0 text-sm text-(--color-font)">Project name</Label>
-              <Input
-                placeholder="My project"
-                className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-              />
-            </TextField>
-            <ProjectTypeSelect
-              storageRules={storageRules}
-              value={storageType}
-              onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
+      <div className={classNames({ hidden: activeView !== 'project' })}>
+        <div className="mt-4 flex w-full flex-col justify-start gap-4 pb-2 text-left">
+          <TextField
+            autoFocus
+            name="name"
+            value={projectData.name}
+            onChange={name => setProjectData({ ...projectData, name })}
+            className="group relative flex flex-col gap-2 px-0.5"
+          >
+            <Label className="pt-0 text-sm text-(--color-font)">Project name</Label>
+            <Input
+              placeholder="My project"
+              className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
             />
-            <ProjectTypeWarning
-              isGitSyncEnabled={isGitSyncEnabled}
-              storageType={storageType}
-              storageRules={storageRules}
-            />
-          </div>
+          </TextField>
+          <ProjectTypeSelect
+            storageRules={storageRules}
+            value={storageType}
+            onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
+          />
+          <ProjectTypeWarning
+            isGitSyncEnabled={isGitSyncEnabled}
+            storageType={storageType}
+            storageRules={storageRules}
+          />
+
           {showSwitchBanner && storageType === 'remote' && (
             <Banner
               type="info"
@@ -245,43 +244,44 @@ export const ProjectSettingsForm: FC<Props> = ({
                 setTab={setTab}
               />
             ))}
-          <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5">
-            <div className="flex items-center gap-2">
-              {onCancel && (
-                <Button
-                  onPress={onCancel}
-                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
-                >
-                  Cancel
-                </Button>
-              )}
-              {storageType === 'git' &&
-              !projectData.connectRepositoryLater &&
-              (isSwitchingStorageType(project!, storageType) || project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID) ? (
-                <Button
-                  isDisabled={!isGitSyncEnabled}
-                  form={selectedTab}
-                  type="submit"
-                  className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-                >
-                  Scan for files
-                </Button>
-              ) : (
-                <Button
-                  onPress={onUpsertProject}
-                  isDisabled={updateProjectFetcher.state !== 'idle' || updateProjectFetcher.state !== 'idle'}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-                >
-                  {(updateProjectFetcher.state !== 'idle' || updateProjectFetcher.state !== 'idle') && (
-                    <Icon icon="spinner" className="animate-spin" />
-                  )}
-                  <span>Update</span>
-                </Button>
-              )}
-            </div>
+        </div>
+
+        <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5">
+          <div className="flex items-center gap-2">
+            {onCancel && (
+              <Button
+                onPress={onCancel}
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
+              >
+                Cancel
+              </Button>
+            )}
+            {storageType === 'git' &&
+            !projectData.connectRepositoryLater &&
+            (isSwitchingStorageType(project!, storageType) || project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID) ? (
+              <Button
+                isDisabled={!isGitSyncEnabled}
+                form={selectedTab}
+                type="submit"
+                className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+              >
+                Scan for files
+              </Button>
+            ) : (
+              <Button
+                onPress={onUpsertProject}
+                isDisabled={updateProjectFetcher.state !== 'idle' || updateProjectFetcher.state !== 'idle'}
+                className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+              >
+                {(updateProjectFetcher.state !== 'idle' || updateProjectFetcher.state !== 'idle') && (
+                  <Icon icon="spinner" className="animate-spin" />
+                )}
+                <span>Update</span>
+              </Button>
+            )}
           </div>
-        </>
-      )}
+        </div>
+      </div>
 
       <div className={classNames({ hidden: activeView !== 'git-results' })}>
         <GitRepoScanResult
