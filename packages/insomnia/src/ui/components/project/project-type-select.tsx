@@ -66,6 +66,7 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
         >
           {typeList.map(item => (
             <Radio
+              onClick={() => setListOpen(false)}
               key={item.name}
               value={item.type}
               isDisabled={item.isDisabled}
@@ -84,7 +85,7 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
         </RadioGroup>
       ) : (
         <div
-          className="flex h-[30px] cursor-default items-center justify-between rounded-sm border border-(--hl-sm) px-2"
+          className="flex h-[30px] cursor-pointer items-center justify-between rounded-sm border border-(--hl-sm) px-2"
           onClick={() => setListOpen(true)}
         >
           <div className="flex items-center gap-2">
