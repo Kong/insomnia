@@ -104,18 +104,18 @@ export const GitHubRepositorySelect = ({
                   <Icon icon="caret-down" className="w-5 shrink-0" />
                 </Button>
               </div>
-              <Button
+              {/* There ought to be only on react-aria Button under ComboBox, so we use the original button here */}
+              <button
                 type="button"
-                isDisabled={loading}
-                className="m-2 flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                disabled={loading}
+                className="m-2 flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset active:bg-(--hl-sm)"
                 aria-label="Refresh repositories"
-                onPress={() => {
-                  setLoading(true);
+                onClick={() => {
                   getRepositories();
                 }}
               >
                 <Icon icon="refresh" className={loading ? 'animate-spin' : ''} />
-              </Button>
+              </button>
             </div>
             <Popover
               className="grid w-(--trigger-width) min-w-max grid-flow-col divide-x divide-solid divide-(--hl-md) overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none focus:outline-hidden"
