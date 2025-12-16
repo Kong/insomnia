@@ -9,6 +9,7 @@ import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { SegmentEvent } from '~/ui/analytics';
+import { showToast } from '~/ui/components/toast-notification';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -73,12 +74,25 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           error = 'The owner of the organization allows only Local Vault project creation, please try again.';
         }
 
+        showToast({
+          title: 'Error updating project',
+          description: error,
+          icon: 'warning',
+          status: 'error',
+        });
+
         return {
           error,
         };
       }
 
       await models.project.update(project, { name });
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
+
       return {
         success: true,
       };
@@ -115,12 +129,25 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           error = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
         }
 
+        showToast({
+          title: 'Error updating project',
+          description: error,
+          icon: 'warning',
+          status: 'error',
+        });
+
         return {
           error,
         };
       }
 
       await models.project.update(project, { name, remoteId: null });
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
+
       return {
         success: true,
       };
@@ -168,6 +195,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           error = 'The owner of the organization allows only Local Vault project creation, please try again.';
         }
 
+        showToast({
+          title: 'Error updating project',
+          description: error,
+          icon: 'warning',
+          status: 'error',
+        });
+
         return {
           error,
         };
@@ -182,6 +216,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       await models.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
 
       project.gitRepositoryId && reportGitProjectCount(organizationId, sessionId);
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
+
       return {
         success: true,
       };
@@ -218,6 +258,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           if (response.error === 'PROJECT_STORAGE_RESTRICTION') {
             error = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
           }
+
+          showToast({
+            title: 'Error updating project',
+            description: error,
+            icon: 'warning',
+            status: 'error',
+          });
 
           return {
             error,
@@ -275,6 +322,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         await database.flushChanges(bufferId);
 
         if (errors) {
+          showToast({
+            title: 'Error updating project',
+            description: errors.join(', '),
+            icon: 'warning',
+            status: 'error',
+          });
+
           return {
             error: errors.join(', '),
           };
@@ -282,6 +336,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       }
 
       reportGitProjectCount(organizationId, sessionId);
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
 
       return {
         success: true,
@@ -321,6 +380,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         },
         ref: projectData.ref,
       });
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
+
       return {
         success: true,
       };
@@ -335,6 +400,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
       reportGitProjectCount(organizationId, sessionId);
 
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
+
       return {
         success: true,
       };
@@ -348,6 +418,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       properties: {
         storage: 'local',
       },
+    });
+
+    showToast({
+      title: 'Project updated',
+      status: 'success',
     });
 
     return {
