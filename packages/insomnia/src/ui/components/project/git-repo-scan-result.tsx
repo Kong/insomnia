@@ -81,14 +81,14 @@ export const GitRepoScanResult: FC<Props> = ({ initCloneGitRepositoryFetcher, in
           </div>
         )}
       </div>
-      {/* TODO: update learn more link */}
       {insomniaFiles && insomniaFiles?.some(file => file.path === '.insomnia') && (
         <Banner
           type="warning"
           message={
             <>
               There are out of date Insomnia project files in the selected repo. By cloning this project, outdated files
-              will automatically be migrated to the latest version. <LearnMoreLink href="https://insomnia.rest" />
+              will automatically be migrated to the latest version.{' '}
+              <LearnMoreLink href="https://developer.konghq.com/insomnia/storage/#what-happens-if-my-git-repository-contains-legacy-insomnia-content-when-i-create-a-git-sync-project" />
             </>
           }
           title="Migrate legacy files?"
