@@ -207,7 +207,13 @@ export const ProjectSettingsForm: FC<Props> = ({
                   : 'Anything added in the project will be securely synced to the Insomnia cloud and enables you to collaborate on projects with others. '
               }
               footer={
-                <LearnMoreLink href={'https://developer.konghq.com/insomnia/storage/'}>
+                <LearnMoreLink
+                  href={`https://developer.konghq.com/insomnia/storage/${
+                    isGitProject(project!)
+                      ? '#what-happens-if-i-change-a-git-sync-project-into-a-cloud-sync-project'
+                      : '#can-i-change-a-local-vault-project-into-a-cloud-sync-project'
+                  }`}
+                >
                   Learn more about changing project types
                 </LearnMoreLink>
               }
@@ -224,7 +230,13 @@ export const ProjectSettingsForm: FC<Props> = ({
                   : 'Your files will now be stored on your local machine. You will no longer be able to collaborate with others on this project.'
               }
               footer={
-                <LearnMoreLink href={'https://developer.konghq.com/insomnia/storage/'}>
+                <LearnMoreLink
+                  href={`https://developer.konghq.com/insomnia/storage/${
+                    isGitProject(project!)
+                      ? '#can-i-change-a-git-sync-project-into-a-local-vault-project'
+                      : '#can-i-change-a-cloud-sync-project-into-a-local-vault-project'
+                  }`}
+                >
                   Learn more about changing project types
                 </LearnMoreLink>
               }
