@@ -265,7 +265,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               )}
               {storageType === 'git' &&
               !projectData.connectRepositoryLater &&
-              isSwitchingStorageType(project!, storageType) ? (
+              (isSwitchingStorageType(project!, storageType) || project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID) ? (
                 <Button
                   isDisabled={!isGitSyncEnabled}
                   form={selectedTab}

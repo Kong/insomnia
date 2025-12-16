@@ -22,7 +22,7 @@ import { HelpTooltip } from '../../help-tooltip';
 import { showModal } from '..';
 import { AlertModal } from '../alert-modal';
 
-function getDefaultOAuthProvider(credentials?: GitCredentials | null): OauthProviderName {
+export function getDefaultOAuthProvider(credentials?: GitCredentials | null): OauthProviderName {
   if (!credentials) {
     return 'github';
   }

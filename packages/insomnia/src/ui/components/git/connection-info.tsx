@@ -1,18 +1,7 @@
-import type { GitCredentials, GitRepository, OauthProviderName } from '~/models/git-repository';
+import type { GitRepository } from '~/models/git-repository';
+import { getDefaultOAuthProvider } from '~/ui/components/modals/git-repository-settings-modal/git-repository-settings-modal';
 
 import { GitProviderTag } from './git-provider-tag';
-
-export function getDefaultOAuthProvider(credentials?: GitCredentials | null): OauthProviderName {
-  if (!credentials) {
-    return 'github';
-  }
-
-  if ('oauth2format' in credentials && credentials.oauth2format) {
-    return credentials.oauth2format;
-  }
-
-  return 'custom';
-}
 
 export const GitConnectionInfo = ({ gitRepository }: { gitRepository?: GitRepository }) => {
   if (!gitRepository) {
