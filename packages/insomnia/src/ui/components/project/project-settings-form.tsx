@@ -121,7 +121,7 @@ export const ProjectSettingsForm: FC<Props> = ({
       gitRepository?.credentials && 'oauth2format' in gitRepository.credentials
         ? (gitRepository?.credentials?.oauth2format ?? 'github')
         : undefined,
-    connectRepositoryLater: Boolean(!gitRepository?._id),
+    connectRepositoryLater: false,
   });
 
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
