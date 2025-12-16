@@ -85,6 +85,7 @@ export const GitRepoForm: FC<Props> = ({
       <Checkbox
         isSelected={projectData.connectRepositoryLater}
         onChange={isSelected => setProjectData(prev => ({ ...prev, connectRepositoryLater: isSelected }))}
+        className="w-fit"
       >
         Connect repository later
       </Checkbox>
