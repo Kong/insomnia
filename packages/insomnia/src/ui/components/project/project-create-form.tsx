@@ -137,15 +137,13 @@ export const ProjectCreateForm: FC<Props> = ({
           />
           {storageType === 'git' && (
             <GitRepoForm
-              {...{
-                setProjectData,
-                projectData,
-                initCloneGitRepositoryFetcher,
-                organizationId,
-                setActiveView,
-                selectedTab,
-                setTab,
-              }}
+              projectData={projectData}
+              setProjectData={setProjectData}
+              initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
+              organizationId={organizationId}
+              setActiveView={setActiveView}
+              selectedTab={selectedTab}
+              setTab={setTab}
             />
           )}
         </div>
