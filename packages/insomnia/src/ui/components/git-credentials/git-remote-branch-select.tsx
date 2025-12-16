@@ -70,6 +70,7 @@ export const GitRemoteBranchSelect = ({
           id: branch,
           name: branch,
         }))}
+        menuTrigger="focus"
       >
         <div className="flex w-full items-center gap-2">
           <div className="group flex h-(--line-height-xs) flex-1 items-center gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
