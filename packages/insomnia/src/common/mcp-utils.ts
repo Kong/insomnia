@@ -102,6 +102,11 @@ export const NOTIFICATIONS_LIST_CHANGED: string[] = [
   METHOD_NOTIFICATION_TOOL_LIST_CHANGED,
   METHOD_NOTIFICATION_PROMPT_LIST_CHANGED,
 ];
+export const MCP_SERVER_REQUEST_METHODS: string[] = [
+  METHOD_SAMPLING_CREATE_MESSAGE,
+  METHOD_ELICITATION_CREATE_MESSAGE,
+  METHOD_LIST_ROOTS,
+];
 
 export type McpServerMethods = (typeof SERVER_METHODS)[number];
 export type NotificationMethods = (typeof NOTIFICATION_METHODS)[number];
@@ -146,9 +151,11 @@ export const getMcpMethodFromMessage = (message: JSONRPCMessage): McpMessageEven
     }
   } else if (ServerRequestSchema.safeParse(message).success) {
     const requestMethod = ServerRequestSchema.parse(message).method;
-    // Do not support any server requests to client including ping, elicitation and sampling
+    // Support elicitation, sampling and listing roots requests from server
     method =
-      requestMethod === METHOD_LIST_ROOTS || requestMethod === METHOD_ELICITATION_CREATE_MESSAGE
+      requestMethod === METHOD_ELICITATION_CREATE_MESSAGE ||
+      requestMethod === METHOD_SAMPLING_CREATE_MESSAGE ||
+      requestMethod === METHOD_LIST_ROOTS
         ? requestMethod
         : `${unsupportedMethodPrefix}${requestMethod}`;
   }

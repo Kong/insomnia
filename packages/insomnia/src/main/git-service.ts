@@ -2377,10 +2377,7 @@ async function completeSignInToGitHub({ code, state }: { code: string; state: st
           },
         }));
 
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.gitAuthenticationCompleted,
-      properties: { provider: 'github' },
-    });
+    trackSegmentEvent(SegmentEvent.gitAuthenticationCompleted, { provider: 'github' });
 
     return {};
   } catch (error) {
@@ -2663,10 +2660,7 @@ async function completeSignInToGitLab({ code, state }: { code: string; state: st
       });
     }
 
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.gitAuthenticationCompleted,
-      properties: { provider: 'gitlab' },
-    });
+    trackSegmentEvent(SegmentEvent.gitAuthenticationCompleted, { provider: 'gitlab' });
 
     return await models.gitCredentials.create({
       token: access_token,

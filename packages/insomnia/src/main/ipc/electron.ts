@@ -24,6 +24,9 @@ export type HandleChannels =
   | 'authorizeUserInWindow'
   | 'backup'
   | 'cancelAuthorizationInDefaultBrowser'
+  | 'generateMockRouteDataFromSpec'
+  | 'generateCommitsFromDiff'
+  | 'generateMcpSamplingResponse'
   | 'curl.event.findMany'
   | 'curl.open'
   | 'curl.readyState'
@@ -180,6 +183,7 @@ export type MainOnChannels =
   | 'webSocket.closeAll'
   | 'mcp.closeAll'
   | 'mcp.client.responseElicitationRequest'
+  | 'mcp.client.responseSamplingRequest'
   | 'mcp.sendMCPRequest'
   | 'writeText';
 

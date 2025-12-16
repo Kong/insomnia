@@ -3,6 +3,8 @@ import path from 'node:path';
 
 import {
   type CancelledNotification,
+  type CreateMessageResult,
+  CreateMessageResultSchema,
   type ElicitResult,
   ElicitResultSchema,
   JSONRPCErrorSchema,
@@ -15,6 +17,7 @@ import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import {
+  MCP_SERVER_REQUEST_METHODS,
   METHOD_ELICITATION_CREATE_MESSAGE,
   METHOD_JSONRPC_ERROR,
   METHOD_LIST_ROOTS,
@@ -81,6 +84,10 @@ export type ConnectionContext = {
     string | number,
     { resolve: (value: ElicitResult) => void; reject: (reason?: any) => void }
   >;
+  mcpServerSamplingRequests: Map<
+    string | number,
+    { resolve: (value: CreateMessageResult) => void; reject: (reason?: any) => void }
+  >;
   mcpRequestAbortControllers: Map<string, AbortController>;
   // Abort controller for this specific connection
   abortController: AbortController;
@@ -119,6 +126,7 @@ export const createConnectionContext = async (
 
   const pendingEventIds: { jsonRPCId: string; eventId: string; direction: McpEventDirection }[] = [];
   const mcpServerElicitationRequests = new Map();
+  const mcpServerSamplingRequests = new Map();
 
   const mcpRequestAbortControllers = new Map();
 
@@ -146,6 +154,7 @@ export const createConnectionContext = async (
     abortController,
     environmentId,
     mcpServerElicitationRequests,
+    mcpServerSamplingRequests,
     mcpRequestAbortControllers,
     options,
     status: 'connecting',
@@ -265,10 +274,7 @@ export const writeEventLogAndNotify = (
     const isUnsupportedMethod = eventMethod.startsWith(unsupportedMethodPrefix);
     // for server response with error like { method: 'JSON-RPC Error', type: 'message', data: {…}}
     const isJsonRPCError = eventMethod === METHOD_JSONRPC_ERROR;
-    const isServerRequest =
-      eventMethod === METHOD_ELICITATION_CREATE_MESSAGE ||
-      eventMethod === METHOD_SAMPLING_CREATE_MESSAGE ||
-      eventMethod === METHOD_LIST_ROOTS;
+    const isServerRequest = MCP_SERVER_REQUEST_METHODS.includes(eventMethod);
     if (eventMethod === METHOD_NOTIFICATION_CANCELLED) {
       // find the cancelled notification message indicates cancellation of the request
       removePendingEvent(e => e.jsonRPCId === (data as CancelledNotification).params.requestId);
@@ -319,6 +325,8 @@ export const parseAndLogMcpRequest = (context: ConnectionContext, message: any) 
         requestMethod = METHOD_LIST_ROOTS;
       } else if (ElicitResultSchema.safeParse(message?.result).success) {
         requestMethod = METHOD_ELICITATION_CREATE_MESSAGE;
+      } else if (CreateMessageResultSchema.safeParse(message?.result).success) {
+        requestMethod = METHOD_SAMPLING_CREATE_MESSAGE;
       } else if (JSONRPCErrorSchema.safeParse(message).success) {
         requestMethod = METHOD_JSONRPC_ERROR;
       } else {
@@ -380,10 +388,12 @@ export const hasRequestResponded = async ({
 }: CommonMcpOptions & { serverRequestId: string }) => {
   const hasResponded = true;
   const context = getReadyActiveMcpConnectionContext(requestId);
-  const pendingServerRequestResolvers = context?.mcpServerElicitationRequests;
-  if (pendingServerRequestResolvers) {
-    return !pendingServerRequestResolvers.has(serverRequestId);
+
+  if (context) {
+    const { mcpServerElicitationRequests, mcpServerSamplingRequests } = context;
+    return !mcpServerElicitationRequests.has(serverRequestId) && !mcpServerSamplingRequests.has(serverRequestId);
   }
+
   return hasResponded;
 };
 

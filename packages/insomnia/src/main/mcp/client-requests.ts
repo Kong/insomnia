@@ -1,6 +1,7 @@
 import {
   type CallToolRequest,
   CompatibilityCallToolResultSchema,
+  type CreateMessageResult,
   type GetPromptRequest,
   type ListPromptsRequest,
   type ListResourcesRequest,
@@ -184,5 +185,47 @@ export const responseElicitationRequest = (
       }
     }
     mcpServerElicitationRequests.delete(serverRequestId);
+  }
+};
+
+export const responseSamplingRequest = (
+  options: CommonMcpOptions &
+    (
+      | {
+          serverRequestId: string;
+          type: 'approve';
+          result: CreateMessageResult;
+        }
+      | {
+          serverRequestId: string;
+          type: 'reject';
+          reason: string;
+        }
+    ),
+) => {
+  const { serverRequestId, type, requestId } = options;
+  const context = getReadyActiveMcpConnectionContext(requestId);
+  if (!context) {
+    return;
+  }
+  const { mcpServerSamplingRequests } = context;
+  if (mcpServerSamplingRequests) {
+    const serverRequestResolver = mcpServerSamplingRequests.get(serverRequestId);
+    if (serverRequestResolver) {
+      switch (options.type) {
+        case 'approve': {
+          serverRequestResolver.resolve(options.result);
+          break;
+        }
+        case 'reject': {
+          serverRequestResolver.reject(new Error(options.reason || 'User rejected the sampling request'));
+          break;
+        }
+        default: {
+          throw new Error(`Unknown server request response type: ${type}`);
+        }
+      }
+      mcpServerSamplingRequests.delete(serverRequestId);
+    }
   }
 };
