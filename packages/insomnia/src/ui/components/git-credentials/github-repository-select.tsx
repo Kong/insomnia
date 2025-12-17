@@ -109,7 +109,7 @@ export const GitHubRepositorySelect = ({
               <button
                 type="button"
                 disabled={loading}
-                className="m-2 flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset active:bg-(--hl-sm)"
+                className="m-2 mr-0 flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset active:bg-(--hl-sm)"
                 aria-label="Refresh repositories"
                 onClick={() => {
                   getRepositories();
@@ -122,6 +122,7 @@ export const GitHubRepositorySelect = ({
               className="grid w-(--trigger-width) min-w-max grid-flow-col divide-x divide-solid divide-(--hl-md) overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none focus:outline-hidden"
               placement="bottom start"
               offset={8}
+              shouldFlip={false}
             >
               <ListBox<{
                 id: string;
