@@ -97,16 +97,16 @@ export interface AzureOAuthCredential {
 type BaseCloudCredential =
   | {
       provider: 'aws';
-      credentials: AWSTemporaryCredential | AWSFileCredential | AWSSSOCredential;
+      credentials?: AWSTemporaryCredential | AWSFileCredential | AWSSSOCredential;
     }
   | {
       provider: 'gcp';
-      credentials: GCPCredential;
+      credentials?: GCPCredential;
     }
-  | { provider: 'azure'; credentials: AzureOAuthCredential }
+  | { provider: 'azure'; credentials?: AzureOAuthCredential }
   | {
       provider: 'hashicorp';
-      credentials:
+      credentials?:
         | HCPCredential
         | VaultAppRoleCredential
         | VaultTokenCredential
