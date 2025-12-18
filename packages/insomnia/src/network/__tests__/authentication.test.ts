@@ -1,6 +1,14 @@
+import * as crypto from 'node:crypto';
+
 import { describe, expect, it } from 'vitest';
 
 import { _buildBearerHeader, getAuthHeader, getAuthObjectOrNull, getAuthQueryParams } from '../authentication';
+
+const base64UrlToBuffer = (base64Url: string) => {
+  const normalized = base64Url.replaceAll('-', '+').replaceAll('_', '/');
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+  return Buffer.from(padded, 'base64');
+};
 
 describe('OAuth 1.0', () => {
   it('Does OAuth 1.0', async () => {
@@ -199,6 +207,102 @@ describe('API Key', () => {
         value: 'test',
       });
     });
+  });
+});
+
+describe('JWT', () => {
+  it('Creates Authorization header with generated JWT (HS256)', async () => {
+    const authentication = {
+      type: 'jwt',
+      algorithm: 'HS256',
+      secret: 'secret',
+      isSecretBase64Encoded: false,
+      payload: '{"sub":"example"}',
+      header: '{"kid":"example"}',
+      addTokenTo: 'header',
+      headerPrefix: 'Bearer',
+    };
+    const request = {
+      url: 'https://insomnia.rest/',
+      method: 'GET',
+      authentication,
+    };
+    const header = await getAuthHeader(request, 'https://insomnia.rest/');
+    expect(header?.name).toBe('Authorization');
+    expect(header?.value.startsWith('Bearer ')).toBe(true);
+
+    const token = header!.value.replace(/^Bearer\s+/, '');
+    const [encodedHeader, encodedPayload, encodedSignature] = token.split('.');
+    expect(encodedHeader).toBeTruthy();
+    expect(encodedPayload).toBeTruthy();
+    expect(encodedSignature).toBeTruthy();
+
+    const parsedHeader = JSON.parse(base64UrlToBuffer(encodedHeader).toString('utf8'));
+    const parsedPayload = JSON.parse(base64UrlToBuffer(encodedPayload).toString('utf8'));
+
+    expect(parsedHeader).toMatchObject({ alg: 'HS256', typ: 'JWT', kid: 'example' });
+    expect(parsedPayload).toMatchObject({ sub: 'example' });
+  });
+
+  it('Creates query param with generated JWT when addTokenTo is "queryParams"', () => {
+    const authentication = {
+      type: 'jwt',
+      algorithm: 'HS256',
+      secret: 'secret',
+      payload: '{"sub":"example"}',
+      addTokenTo: 'queryParams',
+      queryParamKey: 'assertion',
+    };
+
+    const param = getAuthQueryParams(authentication as any);
+    expect(param).toBeDefined();
+    expect(param?.name).toBe('assertion');
+    expect(param?.value.split('.')).toHaveLength(3);
+  });
+
+  it('Signs RS256 tokens with RSA private key', async () => {
+    const privateKey =
+      '-----BEGIN RSA PRIVATE KEY-----\n' +
+      'MIICXgIBAAKBgQC6jwJjt/KywX4N4ZA3YOLcNFrS9S2+TcArdMyo89yqLZWzC9x9\n' +
+      'MY4gA+1+iOpG+S/jlDM3WuJSCnEzQhzDo9UGtNODC+Qr8nStRcKdjSOhywRXPd4d\n' +
+      '+u6TOae/Flukwqzl0Pw3fsMWqwp0dni6OIc7E2gm2jj4MTLsd4oq/0igCQIDAQAB\n' +
+      'AoGBAJCdHusRwo6SsxYrjdF/xxuPcgApkmX8e0S0a5lkP9+jKnH6ddaOPW/P25/E\n' +
+      'nmaZ72dokDMOvnV+JrXnP8jgDNatJsBqS2aLBNpSI4TsOQDfhB3rPoafc5s2bNVY\n' +
+      '5SRp2kr3QL74BZzLzAsIJzGDpRyKQGRPzMFiPzkQcfJuO7rpAkEA3gZq2v2OUzcV\n' +
+      'iQIoCy7bkvxaKZUlkj6xT0msExqrAt9mtVE6XW3GsHUSyB2ePOzDz6zcKeX90nTq\n' +
+      '79PAGTAm1wJBANcbO+xt9By9Omq8K51RuKkvlESHH8j+meAWW6DoKJvHdy2/+xnA\n' +
+      'XEcDcWb9cV9V5FNWmJ+mMF1jfu/GxTMp9B8CQQDazaQ80KiUZbK5ZQCllLYbcspA\n' +
+      'NJXkPBhtNQN5iEyD9jm38qb8MBUhDR9HS7kH/aUzYv1N5TRxVXu6ggnMSOHdAkBI\n' +
+      'Gojrp6+8MnHydUDpawtLKve4QNMWvME3rEbqmOeD0EjSvReeeix0YWMR8sKeAlyW\n' +
+      '0uA2I67ynvddyHMxw05hAkEAyXuG1xpqs3VYQeHRC67dQjkKw0YbcOeeWHpo1+cn\n' +
+      'F29dI2yG3Ti+28/WlSdfYGe9P9SfeYM7RQbNbUp1MHWrkg==\n' +
+      '-----END RSA PRIVATE KEY-----';
+
+    const authentication = {
+      type: 'jwt',
+      algorithm: 'RS256',
+      privateKey,
+      payload: '{"sub":"example"}',
+      addTokenTo: 'header',
+      headerPrefix: 'Bearer',
+    };
+    const request = {
+      url: 'https://insomnia.rest/',
+      method: 'GET',
+      authentication,
+    };
+    const header = await getAuthHeader(request, 'https://insomnia.rest/');
+    expect(header?.name).toBe('Authorization');
+
+    const token = header!.value.replace(/^Bearer\s+/, '');
+    const [encodedHeader, encodedPayload, encodedSignature] = token.split('.');
+    const signingInput = `${encodedHeader}.${encodedPayload}`;
+
+    const signature = base64UrlToBuffer(encodedSignature);
+    const publicKey = crypto.createPublicKey(privateKey);
+    const isValid = crypto.verify('sha256', Buffer.from(signingInput), publicKey, signature);
+
+    expect(isValid).toBe(true);
   });
 });
 

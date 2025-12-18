@@ -14,6 +14,7 @@ import { BasicAuth } from './basic-auth';
 import { BearerAuth } from './bearer-auth';
 import { DigestAuth } from './digest-auth';
 import { HawkAuth } from './hawk-auth';
+import { JwtAuth } from './jwt-auth';
 import { NetrcAuth } from './netrc-auth';
 import { NTLMAuth } from './ntlm-auth';
 import { OAuth1Auth } from './o-auth-1-auth';
@@ -47,6 +48,8 @@ export const AuthWrapper: FC<{
     authBody = <NTLMAuth />;
   } else if (type === 'bearer') {
     authBody = <BearerAuth disabled={disabled} />;
+  } else if (type === 'jwt') {
+    authBody = <JwtAuth disabled={disabled} />;
   } else if (type === 'iam') {
     authBody = <AWSAuth />;
   } else if (type === 'netrc') {

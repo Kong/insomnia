@@ -266,6 +266,21 @@ describe('Authentication discriminated union', () => {
     expect(a.prefix).toBe('Bearer');
   });
 
+  it('jwt', () => {
+    const a = fromReq({
+      type: 'jwt',
+      algorithm: 'HS256',
+      secret: 'secret',
+      isSecretBase64Encoded: false,
+      payload: '{"sub":"example"}',
+      header: '{"kid":"example"}',
+      addTokenTo: 'header',
+      headerPrefix: 'Bearer',
+    });
+    expect(a.type).toBe('jwt');
+    expect(a.algorithm).toBe('HS256');
+  });
+
   it('iam', () => {
     const a = fromReq({ type: 'iam', accessKeyId: 'a', secretAccessKey: 's', region: 'eu-west-1' });
     expect(a.type).toBe('iam');

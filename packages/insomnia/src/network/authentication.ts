@@ -5,6 +5,7 @@ import type { RenderedRequest } from '../templating/types';
 import { COOKIE, HEADER, QUERY_PARAMS } from './api-key/constants';
 import { getBasicAuthHeader } from './basic-auth/get-header';
 import { getBearerAuthHeader } from './bearer-auth/get-header';
+import { getJwtToken } from './jwt-auth/get-token';
 import getOAuth1Token from './o-auth-1/get-token';
 import { getOAuth2Token } from './o-auth-2/get-token';
 
@@ -48,6 +49,16 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
   if (authentication.type === 'bearer' && authentication.token) {
     const { token, prefix } = authentication;
     return getBearerAuthHeader(token, prefix);
+  }
+
+  if (authentication.type === 'jwt') {
+    const { addTokenTo = HEADER, headerPrefix } = authentication;
+    if (addTokenTo === QUERY_PARAMS) {
+      return;
+    }
+
+    const token = getJwtToken(authentication);
+    return _buildBearerHeader(token, headerPrefix);
   }
 
   if (authentication.type === 'oauth2') {
@@ -151,6 +162,14 @@ export function getAuthQueryParams(authentication: RequestAuthentication) {
     return {
       name: key,
       value: value,
+    } as RequestParameter;
+  }
+
+  if (authentication.type === 'jwt' && authentication.addTokenTo === QUERY_PARAMS) {
+    const { queryParamKey = 'token' } = authentication;
+    return {
+      name: queryParamKey,
+      value: getJwtToken(authentication),
     } as RequestParameter;
   }
 

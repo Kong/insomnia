@@ -1,4 +1,4 @@
-import type { OAuth2ResponseType, RequestAuthentication } from 'insomnia/src/models/request';
+import type { JwtSigningAlgorithm, OAuth2ResponseType, RequestAuthentication } from 'insomnia/src/models/request';
 import type { OAuth1SignatureMethod } from 'insomnia/src/network/o-auth-1/constants';
 
 import { Property } from './properties';
@@ -36,6 +36,21 @@ export const AuthTypes = new Set([
   'netrc',
 ]);
 
+const JWT_SIGNING_ALGORITHMS: JwtSigningAlgorithm[] = [
+  'HS256',
+  'HS384',
+  'HS512',
+  'RS256',
+  'RS384',
+  'RS512',
+  'ES256',
+  'ES384',
+  'ES512',
+  'PS256',
+  'PS384',
+  'PS512',
+];
+
 export interface AuthOption {
   key: string;
   value: string;
@@ -63,6 +78,7 @@ export interface JWTOptions {
   secret: string;
   algorithm: string;
   isSecretBase64Encoded: boolean;
+  privateKey: string;
   payload: string; // e.g. "{}"
   addTokenTo: string;
   headerPrefix: string;
@@ -399,6 +415,26 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
         prefix: findValueInKvArray('prefix', authObj.bearer),
       };
     }
+    case 'jwt': {
+      const algorithm = findValueInKvArray('algorithm', authObj.jwt);
+      const addTokenTo = findValueInKvArray('addTokenTo', authObj.jwt);
+
+      return {
+        type: 'jwt',
+        disabled: findValueInKvArray('disabled', authObj.jwt) === 'true',
+        algorithm: JWT_SIGNING_ALGORITHMS.includes(algorithm as JwtSigningAlgorithm)
+          ? (algorithm as JwtSigningAlgorithm)
+          : undefined,
+        secret: findValueInKvArray('secret', authObj.jwt),
+        isSecretBase64Encoded: findValueInKvArray('isSecretBase64Encoded', authObj.jwt) === 'true',
+        privateKey: findValueInKvArray('privateKey', authObj.jwt),
+        payload: findValueInKvArray('payload', authObj.jwt),
+        addTokenTo: addTokenTo === 'header' || addTokenTo === 'queryParams' ? addTokenTo : undefined,
+        headerPrefix: findValueInKvArray('headerPrefix', authObj.jwt),
+        queryParamKey: findValueInKvArray('queryParamKey', authObj.jwt),
+        header: findValueInKvArray('header', authObj.jwt),
+      };
+    }
     case 'basic': {
       return {
         type: 'basic',
@@ -621,6 +657,23 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
           { key: 'disabled', value: auth.disabled ? 'true' : 'false' },
           { key: 'token', value: auth.token || '' },
           { key: 'prefix', value: auth.prefix || '' },
+        ],
+      };
+    }
+    case 'jwt': {
+      return {
+        type: 'jwt',
+        jwt: [
+          { key: 'disabled', value: auth.disabled ? 'true' : 'false' },
+          { key: 'algorithm', value: auth.algorithm || '' },
+          { key: 'secret', value: auth.secret || '' },
+          { key: 'isSecretBase64Encoded', value: auth.isSecretBase64Encoded ? 'true' : 'false' },
+          { key: 'privateKey', value: auth.privateKey || '' },
+          { key: 'payload', value: auth.payload || '' },
+          { key: 'header', value: auth.header || '' },
+          { key: 'addTokenTo', value: auth.addTokenTo || '' },
+          { key: 'headerPrefix', value: auth.headerPrefix || '' },
+          { key: 'queryParamKey', value: auth.queryParamKey || '' },
         ],
       };
     }

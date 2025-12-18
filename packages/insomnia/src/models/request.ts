@@ -131,6 +131,32 @@ export interface AuthTypeBearer {
   token?: string;
   prefix?: string;
 }
+export type JwtSigningAlgorithm =
+  | 'HS256'
+  | 'HS384'
+  | 'HS512'
+  | 'RS256'
+  | 'RS384'
+  | 'RS512'
+  | 'ES256'
+  | 'ES384'
+  | 'ES512'
+  | 'PS256'
+  | 'PS384'
+  | 'PS512';
+export interface AuthTypeJwt {
+  type: 'jwt';
+  disabled?: boolean;
+  algorithm?: JwtSigningAlgorithm;
+  secret?: string;
+  isSecretBase64Encoded?: boolean;
+  privateKey?: string;
+  payload?: string;
+  header?: string;
+  addTokenTo?: 'header' | 'queryParams';
+  headerPrefix?: string;
+  queryParamKey?: string;
+}
 export interface AuthTypeAwsIam {
   type: 'iam';
   disabled?: boolean;
@@ -169,6 +195,7 @@ export type RequestAuthentication =
   | AuthTypeOAuth2
   | AuthTypeBasic
   | AuthTypeBearer
+  | AuthTypeJwt
   | AuthTypeDigest
   | AuthTypeHawk
   | AuthTypeOAuth1

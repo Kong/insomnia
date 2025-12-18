@@ -18,6 +18,7 @@ import type {
   AuthTypeAPIKey,
   AuthTypeAwsIam,
   AuthTypeBasic,
+  AuthTypeJwt,
   AuthTypeNTLM,
   RequestAuthentication,
 } from '../../../models/request';
@@ -108,6 +109,23 @@ function castOneAuthTypeToAnother(type: AuthTypes, oldAuth: RequestAuthenticatio
     };
   }
 
+  if (type === 'jwt') {
+    const oldJwt = oldAuth as AuthTypeJwt;
+    return {
+      type,
+      disabled: oldJwt.disabled || false,
+      addTokenTo: oldJwt.addTokenTo || 'header',
+      headerPrefix: oldJwt.headerPrefix || 'Bearer',
+      queryParamKey: oldJwt.queryParamKey || 'token',
+      algorithm: oldJwt.algorithm || 'HS256',
+      secret: oldJwt.secret || '',
+      isSecretBase64Encoded: oldJwt.isSecretBase64Encoded || false,
+      privateKey: oldJwt.privateKey || '',
+      payload: oldJwt.payload || '{}',
+      header: oldJwt.header || '{}',
+    };
+  }
+
   if (type === 'asap') {
     return {
       type,
@@ -135,6 +153,7 @@ const defaultTypes: AuthTypes[] = [
   'ntlm',
   'iam',
   'bearer',
+  'jwt',
   'hawk',
   'asap',
   'netrc',
@@ -215,6 +234,10 @@ export const AuthDropdown: FC<Props> = ({
     {
       id: 'bearer',
       name: 'Bearer Token',
+    },
+    {
+      id: 'jwt',
+      name: 'JWT Bearer',
     },
     {
       id: 'hawk',

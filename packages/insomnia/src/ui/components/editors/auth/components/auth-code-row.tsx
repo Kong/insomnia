@@ -12,31 +12,30 @@ import {
 import { showModal } from '~/ui/components/modals';
 import { CodePromptModal } from '~/ui/components/modals/code-prompt-modal';
 import { useRequestGroupPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
-import { invariant } from '~/utils/invariant';
 
 import { AuthRow } from './auth-row';
 
-const PRIVATE_KEY_PLACEHOLDER = `
------BEGIN RSA PRIVATE KEY-----
-MIIEpQIBAAKCAQEA39k9udklHnmkU0GtTLpnYtKk1l5txYmUD/cGI0bFd3HHOOLG
-mI0av55vMFEhxL7yrFrcL8pRKp0+pnOVStMDmbwsPE/pu9pf3uxD+m9/Flv89bUk
-mml+R3E8PwAYzkX0cr4yQTPN9PSSqy+d2+KrZ9QZmpc3tqltTbMVV93cxKCxfBrf
-jbiMIAVh7silDVY5+V46SJu8zY2kXOBBtlrE7/JoMiTURCkRjNIA8/sgSmRxBTdM
-313lKJM7NgxaGnREbP75U7ErfBvReJsf5p6h5+XXFirG7F2ntcqjUoR3M+opngp0
-CgffdGcsK7MmUUgAG7r05b0mljhI35t/0Y57MwIDAQABAoIBAQCH1rLohudJmROp
-Gl/qAewfQiiZlfATQavCDGuDGL1YAIme8a8GgApNYf2jWnidhiqJgRHBRor+yzFr
-cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
------END RSA PRIVATE KEY-----
-`.trim();
-
 interface Props {
   label: string;
-  property: 'privateKey';
+  property: string;
+  title?: string;
   help?: ReactNode;
+  placeholder?: string;
+  mode: string;
+  hideMode?: boolean;
   disabled?: boolean;
 }
 
-export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help, disabled = false }) => {
+export const AuthCodeRow: FC<Props> = ({
+  label,
+  property,
+  title,
+  help,
+  placeholder,
+  mode,
+  hideMode = true,
+  disabled = false,
+}) => {
   const reqData = useRequestLoaderData() as RequestLoaderData;
   const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const patchRequest = useRequestPatcher();
@@ -44,23 +43,23 @@ export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help, disabled =
   const patcher = reqData ? patchRequest : patchRequestGroup;
 
   const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
-  invariant('privateKey' in authentication, 'must have privateKey property in authentication object');
+  const authRecord = authentication as Record<string, unknown>;
+  const value = (typeof authRecord[property] === 'string' ? authRecord[property] : '') || '';
 
-  const privateKey = authentication[property];
   const onChange = useCallback(
     (value: string) => patcher(_id, { authentication: { ...authentication, [property]: value } }),
     [_id, authentication, patcher, property],
   );
 
-  const editPrivateKey = () => {
+  const editValue = () => {
     showModal(CodePromptModal, {
       submitName: 'Done',
-      title: 'Edit Private Key',
-      defaultValue: privateKey || '',
+      title: title || `Edit ${label}`,
+      defaultValue: value,
       onChange,
-      placeholder: PRIVATE_KEY_PLACEHOLDER,
-      mode: 'text/plain',
-      hideMode: true,
+      placeholder: placeholder || '',
+      mode,
+      hideMode,
     });
   };
 
@@ -68,9 +67,9 @@ export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help, disabled =
 
   return (
     <AuthRow labelFor={id} label={label} help={help} disabled={disabled}>
-      <button id={id} className="btn btn--clicky wide" onClick={editPrivateKey} disabled={disabled}>
+      <button id={id} className="btn btn--clicky wide" onClick={editValue} disabled={disabled}>
         <i className="fa fa-edit space-right" />
-        {privateKey ? 'Click to Edit' : 'Click to Add'}
+        {value ? 'Click to Edit' : 'Click to Add'}
       </button>
     </AuthRow>
   );

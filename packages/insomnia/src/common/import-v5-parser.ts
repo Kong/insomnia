@@ -258,6 +258,20 @@ const BearerAuthenticationSchema = z.object({
   prefix: z.string().optional(),
 });
 
+const JwtAuthenticationSchema = z.object({
+  type: z.literal('jwt'),
+  disabled: z.boolean().optional(),
+  algorithm: z.string().optional(),
+  secret: z.string().optional(),
+  isSecretBase64Encoded: z.boolean().optional(),
+  privateKey: z.string().optional(),
+  payload: z.string().optional(),
+  header: z.string().optional(),
+  addTokenTo: z.enum(['header', 'queryParams']).optional(),
+  headerPrefix: z.string().optional(),
+  queryParamKey: z.string().optional(),
+});
+
 const AWS_IAM_AuthenticationSchema = z.object({
   type: z.literal('iam'),
   disabled: z.boolean().optional(),
@@ -305,6 +319,7 @@ const AuthenticationSchema = z.union([
     DigestAuthenticationSchema,
     NTLMAuthenticationSchema,
     BearerAuthenticationSchema,
+    JwtAuthenticationSchema,
     AWS_IAM_AuthenticationSchema,
     NetrcAuthenticationSchema,
     ASAPAuthenticationSchema,

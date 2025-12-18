@@ -281,6 +281,7 @@ export type AuthTypes =
   | 'basic'
   | 'digest'
   | 'bearer'
+  | 'jwt'
   | 'ntlm'
   | 'hawk'
   | 'iam'

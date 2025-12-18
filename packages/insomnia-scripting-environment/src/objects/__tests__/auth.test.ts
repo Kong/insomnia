@@ -120,6 +120,19 @@ describe('test auth transforming', () => {
       token: 'token',
       prefix: 'prefix',
     };
+    const jwtAuth = {
+      type: 'jwt',
+      disabled: true,
+      addTokenTo: 'header',
+      headerPrefix: 'Bearer',
+      queryParamKey: 'token',
+      algorithm: 'RS256',
+      secret: 'secret',
+      isSecretBase64Encoded: false,
+      privateKey: 'privateKey',
+      payload: '{"sub":"example"}',
+      header: '{"kid":"example"}',
+    };
     const awsv4Auth = {
       type: 'iam',
       disabled: true,
@@ -177,6 +190,7 @@ describe('test auth transforming', () => {
       digestAuth,
       digestNtlm,
       bearerAuth,
+      jwtAuth,
       awsv4Auth,
       asapAuth,
       noneAuth,
