@@ -333,7 +333,7 @@ collection: []
     });
   });
 
-  describe('Legacy Insomnia  Cases', () => {
+  describe('Edge Cases', () => {
     it('imports collection without meta', () => {
       const yaml = `
 type: collection.insomnia.rest/5.0
