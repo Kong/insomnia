@@ -13,7 +13,6 @@ import {
   Scripts,
   ScrollRestoration,
   useNavigate,
-  useNavigation,
   useParams,
   useRouteLoaderData,
 } from 'react-router';
@@ -100,8 +99,6 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
     return err?.stack;
   };
 
-  const navigate = useNavigate();
-  const navigation = useNavigation();
   const errorMessage = getErrorMessage(error);
   const logoutFetcher = useLogoutFetcher();
 
@@ -124,10 +121,9 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
       <div className="flex items-center gap-2">
         <Button
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-          onPress={() => navigate('/organization')}
+          onPress={() => (window.location.pathname = '/organization')}
         >
-          Try to reload the app{' '}
-          <span>{navigation.state === 'loading' ? <Icon icon="spinner" className="animate-spin" /> : null}</span>
+          Try to reload the app
         </Button>
         <Button
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
