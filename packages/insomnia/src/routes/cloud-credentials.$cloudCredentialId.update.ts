@@ -34,8 +34,10 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     if (provider === 'hashicorp') {
       // update access token and expires_at
       const { access_token, expires_at } = result as { access_token: string; expires_at: number };
-      patch.credentials['access_token'] = access_token;
-      patch.credentials['expires_at'] = expires_at;
+      if (patch.credentials) {
+        patch.credentials['access_token'] = access_token;
+        patch.credentials['expires_at'] = expires_at;
+      }
     }
     await models.cloudCredential.update(originCredential, patch);
     return result as { access_token: string; expires_at: number };
