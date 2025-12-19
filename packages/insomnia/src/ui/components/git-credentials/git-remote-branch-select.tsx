@@ -3,6 +3,7 @@ import { Button, ComboBox, Input, Label, ListBox, ListBoxItem, Popover } from 'r
 import * as reactUse from 'react-use';
 import { z } from 'zod/v4';
 
+import { fuzzyMatch } from '~/common/misc';
 import type { GitCredentials } from '~/models/git-repository';
 import { useGitRemoteBranchesActionFetcher } from '~/routes/git.remote-branches';
 
@@ -66,11 +67,14 @@ export const GitRemoteBranchSelect = ({
         className="w-full"
         defaultSelectedKey={remoteBranches[0]}
         isDisabled={isComboboxDisabled}
-        items={remoteBranches.map(branch => ({
+        defaultItems={remoteBranches.map(branch => ({
           id: branch,
           name: branch,
         }))}
         menuTrigger="focus"
+        defaultFilter={(branch: string, inputValue: string) =>
+          Boolean(fuzzyMatch(inputValue, branch, { splitSpace: true, loose: false })?.indexes)
+        }
       >
         <div className="flex w-full items-center gap-2">
           <div className="group flex h-(--line-height-xs) flex-1 items-center gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Button, ComboBox, FieldError, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 
+import { fuzzyMatch } from '~/common/misc';
+
 import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { isGitHubAppUserToken } from '../github-app-config-link';
 import { Icon } from '../icon';
 import { GitRemoteBranchSelect } from './git-remote-branch-select';
-import { fuzzyMatch } from '~/common/misc';
 
 type GitHubRepository = Awaited<ReturnType<typeof window.main.git.getGitHubRepositories>>['repos'][number];
 
