@@ -195,7 +195,6 @@ export const getOAuth2Token = async (
         { name: 'grant_type', value: GRANT_TYPE_AUTHORIZATION_CODE },
         { name: 'code', value: redirectParams.code },
         ...insertAuthKeyIf('redirect_uri', redirectUrl),
-        ...insertAuthKeyIf('state', authentication.state),
         ...insertAuthKeyIf('audience', authentication.audience),
         ...insertAuthKeyIf('resource', authentication.resource),
         ...insertAuthKeyIf('code_verifier', codeVerifier),
