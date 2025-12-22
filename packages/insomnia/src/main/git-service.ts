@@ -53,6 +53,7 @@ import GitVCS, {
   GIT_INTERNAL_DIR,
   type GitFileStatus,
   type GitFileStatusSymbol,
+  GitVCS as GitVCSClass,
   GitVCSOperationErrors,
   MergeConflictError,
   type Status,
@@ -2686,6 +2687,19 @@ async function signOutOfGitLab() {
   }
 }
 
+async function getCurrentBranchByRepositoryId({
+  repositoryId,
+  projectId,
+}: {
+  repositoryId: string;
+  projectId: string;
+}): Promise<any> {
+  const fs = await getGitFSClient({ gitRepositoryId: repositoryId, projectId });
+  return GitVCSClass.getRepoCurrentBranch({
+    fs,
+  });
+}
+
 export interface GitServiceAPI {
   loadGitRepository: typeof loadGitRepository;
   getGitBranches: typeof getGitBranches;
@@ -2726,6 +2740,7 @@ export interface GitServiceAPI {
   initSignInToGitLab: typeof initSignInToGitLab;
   completeSignInToGitLab: typeof completeSignInToGitLab;
   signOutOfGitLab: typeof signOutOfGitLab;
+  getCurrentBranchByRepositoryId: typeof getCurrentBranchByRepositoryId;
 }
 
 export const registerGitServiceAPI = () => {
@@ -2818,4 +2833,8 @@ export const registerGitServiceAPI = () => {
     completeSignInToGitLab(options),
   );
   ipcMainHandle('git.signOutOfGitLab', () => signOutOfGitLab());
+  ipcMainHandle(
+    'git.getCurrentBranchByRepositoryId',
+    (_, options: Parameters<typeof getCurrentBranchByRepositoryId>[0]) => getCurrentBranchByRepositoryId(options),
+  );
 };

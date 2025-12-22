@@ -72,6 +72,7 @@ export type HandleChannels =
   | 'git.resetGitRepo'
   | 'git.signOutOfGitHub'
   | 'git.signOutOfGitLab'
+  | 'git.getCurrentBranchByRepositoryId'
   | 'git.stageChanges'
   | 'git.unstageChanges'
   | 'git.updateGitRepo'
