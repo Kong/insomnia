@@ -501,6 +501,10 @@ describe('InsomniaFileSchema (discriminated union)', () => {
     expect(f.type).toBe('mock.insomnia.rest/5.0');
   });
 
+  it('rejects future or unsupported type', () => {
+    expect(() => InsomniaFileSchema.parse({ type: 'futureCollection.insomnia.rest/5.0' })).toThrow();
+  });
+
   it('rejects unknown type', () => {
     expect(() => InsomniaFileSchema.parse({ type: 'nope' })).toThrow();
   });

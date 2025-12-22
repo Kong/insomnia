@@ -94,7 +94,7 @@ export const GitRepoScanResult: FC<Props> = ({ initCloneGitRepositoryFetcher, in
             </>
           }
           title="Migrate legacy files?"
-          className="text-left"
+          className="mt-4 text-left"
         />
       )}
     </>

@@ -4,8 +4,9 @@ import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
 
 import { database, database as db } from '../../common/database';
+import { extractErrorMessages } from '../../common/import';
 import type { InsomniaFile } from '../../common/import-v5-parser';
-import { getInsomniaV5DataExport, importInsomniaV5Data } from '../../common/insomnia-v5';
+import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import * as models from '../../models';
 import { isMcp, isWorkspace, type Workspace } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
@@ -82,7 +83,12 @@ export class GitProjectNeDBClient {
     if (dataStr.split('\n').includes('=======')) {
       return;
     }
-    const dataToImport = importInsomniaV5Data(dataStr);
+    const { data: dataToImport, error } = tryImportV5Data(dataStr);
+    if (error) {
+      const errorMsg = extractErrorMessages(error);
+      console.warn(`[git] Skipping import of ${filePath} due to error: ${errorMsg}.  Fallback to default FS.`);
+      throw new Error(`Failed to import data from git file ${filePath}: ${errorMsg}`);
+    }
 
     const bufferId = await db.bufferChanges();
 
