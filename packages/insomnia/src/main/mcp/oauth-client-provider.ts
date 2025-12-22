@@ -148,6 +148,13 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     });
     await this.refreshMcpRequest();
   }
+  // add state parameter to authorization url if present in authentication
+  async state() {
+    if ('state' in this.mcpRequest.authentication && this.mcpRequest.authentication.state) {
+      return this.mcpRequest.authentication.state;
+    }
+    return '';
+  }
   saveResourceMetadataUrl(url: URL | undefined) {
     this._resourceMetadataUrl = url;
   }

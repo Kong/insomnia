@@ -291,7 +291,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
 
     advanced = [responseType, scope, state, tokenPrefix, audience];
   } else if (grantType === GRANT_TYPE_MCP_AUTH_FLOW) {
-    basic = [clientId, clientSecret, readonlyRedirectUri];
+    basic = [clientId, clientSecret, readonlyRedirectUri, state, scope];
     advanced = [];
   }
 
