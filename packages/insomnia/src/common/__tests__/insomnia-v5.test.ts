@@ -10,6 +10,7 @@ import YAML from 'yaml';
 
 import { INSOMNIA_SCHEMA_VERSION } from '../../common/insomnia-schema-migrations/schema-version';
 import * as models from '../../models';
+import type { Request } from '../../models/request';
 import { database as db } from '../database';
 import {
   getInsomniaV5DataExport,
@@ -358,6 +359,40 @@ collection: []
       const result = tryImportV5Data(invalid);
       expect(result.data).toEqual([]);
       expect(result.error).toBeDefined();
+    });
+  });
+
+  describe('Handle legacy Insomnia files', () => {
+    it('imports collection with incomplete header', () => {
+      const yaml = `
+type: collection.insomnia.rest/5.0
+name: Test Collection
+meta:
+  id: wrk_legacy_insomnia_file
+  created: 1234567890
+  modified: 1234567890
+collection:
+  - name: Test Request
+    url: https://api.example.com/test
+    method: GET
+    meta:
+      id: req_test
+      created: 1234567890
+      modified: 1234567890
+    headers:
+      - name: missing_value_header
+      - name: number
+        value: "100"
+      - name: offset
+        value: "0"
+`;
+      const result = tryImportV5Data(yaml);
+      expect(result.error).toBeUndefined();
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0]._id).toBe('wrk_legacy_insomnia_file');
+      expect(result.data[1].type).toBe('Request');
+      const requestData = result.data[1] as Request;
+      expect(requestData.headers).toHaveLength(3);
     });
   });
 });
