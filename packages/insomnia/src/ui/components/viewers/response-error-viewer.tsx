@@ -52,15 +52,19 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink, isMcpResp
 
   return (
     <div>
-      <pre
-        className="selectable pad force-pre-wrap"
-        style={{
-          fontSize: `${editorFontSize}px`,
-        }}
-      >
-        {error}
-      </pre>
-      <hr />
+      {!isMcpResponse && (
+        <>
+          <pre
+            className="selectable pad force-pre-wrap"
+            style={{
+              fontSize: `${editorFontSize}px`,
+            }}
+          >
+            {error}
+          </pre>
+          <hr />
+        </>
+      )}
       <div className="pad text-center">
         <p className="faint pad-left pad-right">Here are some additional things that may help.</p>
         {msg}
