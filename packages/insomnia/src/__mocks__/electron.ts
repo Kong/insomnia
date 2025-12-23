@@ -70,6 +70,8 @@ export const electronMock = {
     on: vi.fn(),
 
     once() {},
+
+    handle: vi.fn(),
   },
   ipcRenderer: {
     on: vi.fn(),
