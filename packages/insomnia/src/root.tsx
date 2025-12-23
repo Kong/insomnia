@@ -10,6 +10,7 @@ import {
   matchPath,
   Meta,
   Outlet,
+  Link as RouterLink,
   Scripts,
   ScrollRestoration,
   useNavigate,
@@ -119,12 +120,13 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
         </div>
       )}
       <div className="flex items-center gap-2">
-        <Button
+        <RouterLink
+          reloadDocument
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-          onPress={() => (window.location.pathname = '/organization')}
+          to="/organization"
         >
           Try to reload the app
-        </Button>
+        </RouterLink>
         <Button
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => logoutFetcher.submit()}
