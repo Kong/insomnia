@@ -84,7 +84,7 @@ import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 
-type ProjectScopeKeys = WorkspaceScope | 'unsynced';
+export type ProjectScopeKeys = WorkspaceScope | 'unsynced';
 export const scopeToLabelMap: Record<
   ProjectScopeKeys,
   'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client'
@@ -858,7 +858,15 @@ const Component = () => {
                     className="group relative flex-1"
                     isDisabled={activeProject === undefined}
                     value={projectListFilter}
-                    onChange={setProjectListFilter}
+                    onChange={value => {
+                      setProjectListFilter(value);
+
+                      if (value.trim() !== '') {
+                        window.main.trackSegmentEvent({
+                          event: SegmentEvent.filterCreatedProjects,
+                        });
+                      }
+                    }}
                   >
                     <Input
                       placeholder="Filter"
@@ -980,6 +988,7 @@ const Component = () => {
                     <GitProjectSyncDropdown
                       key={activeProjectGitRepository?._id}
                       gitRepository={activeProjectGitRepository}
+                      activeProject={activeProject}
                     />
                   )}
                   {isLocalProject(activeProject) && !isGitProject(activeProject) && <LocalProjectBar />}

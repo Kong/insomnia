@@ -80,6 +80,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     window.main.trackSegmentEvent({
       event: SegmentEvent.mockRouteCreate,
+      properties: {
+        source: 'from_response',
+      },
     });
 
     return redirect(

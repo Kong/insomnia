@@ -1958,6 +1958,22 @@ export class GitVCS {
     });
     return newBranches;
   }
+
+  static getRepoCurrentBranch({
+    fs,
+    dir = GIT_CLONE_DIR,
+    gitdir = GIT_INTERNAL_DIR,
+  }: {
+    fs: git.FsClient;
+    dir?: string;
+    gitdir?: string;
+  }) {
+    return git.currentBranch({
+      fs,
+      dir,
+      gitdir,
+    });
+  }
 }
 export class MergeConflictError extends Error {
   constructor(

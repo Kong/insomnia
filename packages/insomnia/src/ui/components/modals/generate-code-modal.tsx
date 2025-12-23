@@ -1,7 +1,8 @@
 import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
+import { SegmentEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import { exportHarWithRequest } from '../../../common/har';
@@ -92,6 +93,13 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
         const cmd = snippet.convert(targetOrFallback.key, clientOrFallback.key) || '';
         setSnippet(cmd);
       }
+
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.generateCodeLanguageChanged,
+        properties: {
+          language: target?.title,
+        },
+      });
     },
     [props.environmentId],
   );

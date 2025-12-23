@@ -1,6 +1,7 @@
 import iconv from 'iconv-lite';
-import React, { Fragment, useCallback, useRef, useState } from 'react';
+import { Fragment, useCallback, useRef, useState } from 'react';
 
+import { SegmentEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import {
@@ -243,7 +244,15 @@ export const ResponseViewer = ({
         placeholder="..."
         readOnly
         uniquenessKey={responseId}
-        updateFilter={updateFilter}
+        updateFilter={filter => {
+          updateFilter?.(filter);
+
+          if (filter) {
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.filterCreatedResponseBody,
+            });
+          }
+        }}
       />
     );
   }
@@ -362,7 +371,15 @@ export const ResponseViewer = ({
       placeholder="..."
       readOnly
       uniquenessKey={responseId}
-      updateFilter={updateFilter}
+      updateFilter={filter => {
+        updateFilter?.(filter);
+
+        if (filter) {
+          window.main.trackSegmentEvent({
+            event: SegmentEvent.filterCreatedResponseBody,
+          });
+        }
+      }}
     />
   );
 };

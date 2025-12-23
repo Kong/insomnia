@@ -7,6 +7,7 @@ import * as models from '~/models';
 import type { GitCredentials, OauthProviderName } from '~/models/git-repository';
 import { EMPTY_GIT_PROJECT_ID, type Project } from '~/models/project';
 import { SegmentEvent } from '~/ui/analytics';
+import { showToast } from '~/ui/components/toast-notification';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -179,9 +180,14 @@ export const createProject = async (organizationId: string, newProjectData: Crea
     event: SegmentEvent.projectCreated,
     properties: {
       storage: newProjectData.storageType,
+      git_provider: newProjectData.oauth2format || 'none',
     },
   });
 
+  showToast({
+    title: 'Project created',
+    status: 'success',
+  });
   return newProjectId;
 };
 

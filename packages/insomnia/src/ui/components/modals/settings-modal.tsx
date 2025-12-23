@@ -1,9 +1,10 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { getBundlePlugins } from '~/plugins';
 import { useRootLoaderData } from '~/root';
+import { SegmentEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
@@ -78,6 +79,11 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           selectedKey={defaultTabKey}
           onSelectionChange={key => {
             setDefaultTabKey(key.toString());
+
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.preferencesViewed,
+              properties: { tab: key.toString() },
+            });
           }}
           aria-label="Settings"
           className="flex h-full w-full flex-1 flex-col"
@@ -202,4 +208,11 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   );
 });
 SettingsModal.displayName = 'SettingsModal';
-export const showSettingsModal = (options?: { tab?: string }) => showModal(SettingsModal, options);
+export const showSettingsModal = (options?: { tab?: string }) => {
+  showModal(SettingsModal, options);
+
+  window.main.trackSegmentEvent({
+    event: SegmentEvent.preferencesViewed,
+    properties: { tab: options?.tab || 'general' },
+  });
+};

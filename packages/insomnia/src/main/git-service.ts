@@ -53,6 +53,7 @@ import GitVCS, {
   GIT_INTERNAL_DIR,
   type GitFileStatus,
   type GitFileStatusSymbol,
+  GitVCS as GitVCSClass,
   GitVCSOperationErrors,
   MergeConflictError,
   type Status,
@@ -746,21 +747,28 @@ export const initGitRepoCloneAction = async ({
   const insomniaFiles = await recursivelyFindInsomniaFiles(inMemoryFsClient, GIT_CLONE_DIR);
   // Get all files that start with 'insomnia.' recursively in the root directory
 
-  const files = await Promise.all(
-    insomniaFiles.map(async file => {
-      const fileContents = await inMemoryFsClient.promises.readFile(path.join(GIT_CLONE_DIR, file), 'utf8');
+  const files: {
+    scope: WorkspaceScope;
+    name: string;
+    path: string;
+  }[] = [];
 
-      // Apply schema migration before parsing to handle older schema versions
-      const migratedContents = migrateToLatestYaml(fileContents);
-      const insomniaFile = InsomniaFileSchema.parse(YAML.parse(migratedContents));
-
-      return {
+  for (const file of insomniaFiles) {
+    const fileContents = await inMemoryFsClient.promises.readFile(path.join(GIT_CLONE_DIR, file), 'utf8');
+    // Apply schema migration before parsing to handle older schema versions
+    const migratedContents = migrateToLatestYaml(fileContents);
+    const yamlDocument = parse(migratedContents);
+    const fileSchemaParser = InsomniaFileSchema.safeParse(yamlDocument);
+    // Validate that the file conforms to the Insomnia file schema
+    if (fileSchemaParser.success) {
+      const insomniaFile = fileSchemaParser.data;
+      files.push({
         scope: insomniaSchemaTypeToScope(insomniaFile.type),
         name: insomniaFile.name || 'Untitled',
         path: file,
-      };
-    }),
-  );
+      });
+    }
+  }
 
   const legacyInsomniaFile = await containsLegacyInsomniaDir({ fsClient: inMemoryFsClient });
 
@@ -813,7 +821,11 @@ export const cloneGitRepoAction = async ({
     repoSettingsPatch.credentials = credentials;
 
     if (!projectId) {
-      trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'clone'));
+      trackSegmentEvent(SegmentEvent.vcsSyncStart, {
+        ...vcsSegmentEventProperties('git', 'clone'),
+        provider: getOauth2FormatName(credentials),
+        repoId: repoSettingsPatch._id,
+      });
       repoSettingsPatch.needsFullClone = true;
 
       const inMemoryFsClient = MemClient.createClient();
@@ -933,6 +945,7 @@ export const cloneGitRepoAction = async ({
       trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
         ...vcsSegmentEventProperties('git', 'clone'),
         providerName,
+        repoId: repoSettingsPatch._id,
       });
 
       return {
@@ -944,7 +957,11 @@ export const cloneGitRepoAction = async ({
     const project = await models.project.getById(projectId);
     invariant(project, 'Project not found');
 
-    trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'clone'));
+    trackSegmentEvent(SegmentEvent.vcsSyncStart, {
+      ...vcsSegmentEventProperties('git', 'clone'),
+      provider: getOauth2FormatName(credentials),
+      repoId: repoSettingsPatch._id,
+    });
     repoSettingsPatch.needsFullClone = true;
 
     const inMemoryFsClient = MemClient.createClient();
@@ -1003,6 +1020,7 @@ export const cloneGitRepoAction = async ({
       trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
         ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
         providerName,
+        repoId: repoSettingsPatch._id,
       });
 
       workspaceId = workspace._id;
@@ -1021,6 +1039,7 @@ export const cloneGitRepoAction = async ({
         trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
           ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'),
           providerName,
+          repoId: repoSettingsPatch._id,
         });
 
         return {
@@ -1032,6 +1051,7 @@ export const cloneGitRepoAction = async ({
         trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
           ...vcsSegmentEventProperties('git', 'clone', 'multiple workspaces found'),
           providerName,
+          repoId: repoSettingsPatch._id,
         });
 
         return {
@@ -1118,6 +1138,7 @@ export const cloneGitRepoAction = async ({
     trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
       ...vcsSegmentEventProperties('git', 'clone'),
       providerName,
+      repoId: repoSettingsPatch._id,
     });
 
     invariant(workspaceId, 'Workspace ID is required');
@@ -1296,6 +1317,7 @@ export const commitToGitRepoAction = async ({
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'commit'),
       providerName,
+      repoId: gitRepository._id,
     });
 
     const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
@@ -1402,6 +1424,7 @@ export const commitAndPushToGitRepoAction = async ({
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'commit'),
       providerName,
+      repoId: repo._id,
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Error while committing changes';
@@ -1436,6 +1459,7 @@ export const commitAndPushToGitRepoAction = async ({
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'push'),
       providerName,
+      repoId: repo._id,
     });
 
     const hasUnpushedChanges = await GitVCS.canPush(repo.credentials);
@@ -1469,6 +1493,7 @@ export const commitAndPushToGitRepoAction = async ({
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'push', errorMessage),
       providerName,
+      repoId: repo._id,
     });
 
     return {
@@ -1505,6 +1530,7 @@ export const createNewGitBranchAction = async ({
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'create_branch'),
       providerName,
+      repoId: gitRepository._id,
     });
 
     const { hasUncommittedChanges } = await getGitChanges();
@@ -1651,6 +1677,7 @@ export const mergeGitBranch = async ({
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'merge_branch'),
       providerName,
+      repoId: gitRepository._id,
     });
 
     const log = (await GitVCS.log({ depth: 1 })) || [];
@@ -1674,7 +1701,11 @@ export const mergeGitBranch = async ({
       errorMessage = `${err.message}, ${err.data.response}`;
     }
 
-    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'merge_branch', errorMessage));
+    trackSegmentEvent(SegmentEvent.vcsAction, {
+      ...vcsSegmentEventProperties('git', 'merge_branch', errorMessage),
+      providerName,
+      repoId: gitRepository._id,
+    });
 
     return {
       errors: [errorMessage],
@@ -1702,6 +1733,7 @@ export const deleteGitBranchAction = async ({
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'delete_branch'),
       providerName: getOauth2FormatName(repo?.credentials),
+      repoId: repo._id,
     });
     return {};
   } catch (err) {
@@ -1767,6 +1799,7 @@ export const pushToGitRemoteAction = async ({
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push'),
       providerName,
+      repoId: gitRepository._id,
     });
 
     await models.gitRepository.update(gitRepository, {
@@ -1801,6 +1834,7 @@ export const pushToGitRemoteAction = async ({
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'push', errorMessage),
       providerName,
+      repoId: gitRepository._id,
     });
 
     return {
@@ -1843,6 +1877,7 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'pull'),
       providerName,
+      repoId: gitRepository._id,
     });
 
     const log = (await GitVCS.log({ depth: 1 })) || [];
@@ -1870,7 +1905,14 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
       errorMessage = `${err.message}, ${err.data.response}`;
     }
 
-    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'pull', errorMessage));
+    const gitRepository = await getGitRepository({ projectId, workspaceId });
+    const providerName = getOauth2FormatName(gitRepository.credentials);
+
+    trackSegmentEvent(SegmentEvent.vcsAction, {
+      ...vcsSegmentEventProperties('git', 'pull', errorMessage),
+      providerName,
+      repoId: gitRepository._id,
+    });
 
     return {
       success: false,
@@ -2343,6 +2385,8 @@ async function completeSignInToGitHub({ code, state }: { code: string; state: st
           },
         }));
 
+    trackSegmentEvent(SegmentEvent.gitAuthenticationCompleted, { provider: 'github' });
+
     return {};
   } catch (error) {
     console.error('Failed to complete the GitHub OAuth flow:', error);
@@ -2624,6 +2668,8 @@ async function completeSignInToGitLab({ code, state }: { code: string; state: st
       });
     }
 
+    trackSegmentEvent(SegmentEvent.gitAuthenticationCompleted, { provider: 'gitlab' });
+
     return await models.gitCredentials.create({
       token: access_token,
       refreshToken: refresh_token,
@@ -2646,6 +2692,19 @@ async function signOutOfGitLab() {
   if (existingGitLabCredentials) {
     await models.gitCredentials.remove(existingGitLabCredentials);
   }
+}
+
+async function getCurrentBranchByRepositoryId({
+  repositoryId,
+  projectId,
+}: {
+  repositoryId: string;
+  projectId: string;
+}): Promise<any> {
+  const fs = await getGitFSClient({ gitRepositoryId: repositoryId, projectId });
+  return GitVCSClass.getRepoCurrentBranch({
+    fs,
+  });
 }
 
 export interface GitServiceAPI {
@@ -2688,6 +2747,7 @@ export interface GitServiceAPI {
   initSignInToGitLab: typeof initSignInToGitLab;
   completeSignInToGitLab: typeof completeSignInToGitLab;
   signOutOfGitLab: typeof signOutOfGitLab;
+  getCurrentBranchByRepositoryId: typeof getCurrentBranchByRepositoryId;
 }
 
 export const registerGitServiceAPI = () => {
@@ -2780,4 +2840,8 @@ export const registerGitServiceAPI = () => {
     completeSignInToGitLab(options),
   );
   ipcMainHandle('git.signOutOfGitLab', () => signOutOfGitLab());
+  ipcMainHandle(
+    'git.getCurrentBranchByRepositoryId',
+    (_, options: Parameters<typeof getCurrentBranchByRepositoryId>[0]) => getCurrentBranchByRepositoryId(options),
+  );
 };

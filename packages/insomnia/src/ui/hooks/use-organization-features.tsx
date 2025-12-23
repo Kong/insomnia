@@ -48,21 +48,26 @@ export function useOrganizationPermissions() {
 interface AIFeatureStatus {
   isGenerateMockServersWithAIEnabled: boolean;
   isGenerateCommitMessagesWithAIEnabled: boolean;
+  isMCPWithAIEnabled: boolean;
 }
 
 export function useAIFeatureStatus(): AIFeatureStatus {
   const { features } = useOrganizationPermissions();
   const [generateMockServersWithAIEnabledByUser, setGenerateMockServersWithAIEnabledByUser] = useState(false);
   const [generateCommitMessagesWithAIEnabledByUser, setGenerateCommitMessagesWithAIEnabledByUser] = useState(false);
+  const [mcpIntegrationWithAIEnabledByUser, setMCPIntegrationWithAIEnabledByUser] = useState(false);
   const [hasActiveLLM, setHasActiveLLM] = useState(false);
 
   const loadFeatureStatus = useCallback(async () => {
     const userEnabledGenerateMockServersWithAI = await window.main.llm.getAIFeatureEnabled('aiMockServers');
     const userEnabledGenerateCommitMessagesWithAI = await window.main.llm.getAIFeatureEnabled('aiCommitMessages');
+    const userEnabledMcpClientWithAI = await window.main.llm.getAIFeatureEnabled('aiMcpClient');
+
     const currentLLM = await window.main.llm.getCurrentConfig();
 
     setGenerateMockServersWithAIEnabledByUser(userEnabledGenerateMockServersWithAI);
     setGenerateCommitMessagesWithAIEnabledByUser(userEnabledGenerateCommitMessagesWithAI);
+    setMCPIntegrationWithAIEnabledByUser(userEnabledMcpClientWithAI);
     setHasActiveLLM(currentLLM !== null);
   }, []);
 
@@ -72,11 +77,13 @@ export function useAIFeatureStatus(): AIFeatureStatus {
 
   const generateMockServersWithAIAllowedByOrg = features.aiMockServers ? features.aiMockServers.enabled : true;
   const generateCommitMessagesWithAIAllowedByOrg = features.aiCommitMessages ? features.aiCommitMessages.enabled : true;
+  const mcpClientWithAIAllowedByOrg = features.aiMcpClient ? features.aiMcpClient.enabled : true;
 
   return {
     isGenerateMockServersWithAIEnabled:
       generateMockServersWithAIAllowedByOrg && generateMockServersWithAIEnabledByUser && hasActiveLLM,
     isGenerateCommitMessagesWithAIEnabled:
       generateCommitMessagesWithAIAllowedByOrg && generateCommitMessagesWithAIEnabledByUser && hasActiveLLM,
+    isMCPWithAIEnabled: mcpClientWithAIAllowedByOrg && mcpIntegrationWithAIEnabledByUser && hasActiveLLM,
   };
 }

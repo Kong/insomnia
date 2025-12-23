@@ -6,6 +6,8 @@ import { promisify } from 'node:util';
 
 import { app, net } from 'electron';
 
+import { SegmentEvent } from '~/ui/analytics';
+
 import { isDevelopment } from '../common/constants';
 import * as models from '../models';
 import { validatePluginName } from '../utils/plugin';
@@ -154,6 +156,14 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
           await cp(src, dest, { recursive: true, verbatimSymlinks: true });
         }),
     );
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.installPlugin,
+      properties: {
+        pluginName: moduleName,
+        pluginVersion: info.version,
+      },
+    });
   } catch (err) {
     // Log and rethrow any installation errors
     console.error(`[plugins] Failed to install plugin ${pluginName}:`, err);

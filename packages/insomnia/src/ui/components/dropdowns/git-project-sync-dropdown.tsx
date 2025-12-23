@@ -15,11 +15,19 @@ import {
 import { useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { isScratchpadOrganizationId } from '~/models/organization';
+import type { GitProject } from '~/models/project';
 import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
 import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
 import { useGitProjectPushActionFetcher } from '~/routes/git.push';
 import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
+import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
+import { SegmentEvent } from '~/ui/analytics';
+import { ProjectModal } from '~/ui/components/modals/project-modal';
+import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
+import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 
 import type { GitRepository } from '../../../models/git-repository';
 import { GitVCSOperationErrors } from '../../../sync/git/git-vcs';
@@ -32,20 +40,19 @@ import { GitProjectLogModal } from '../modals/git-project-log-modal';
 import { GitProjectMigrationModal } from '../modals/git-project-migration-modal';
 import { GitProjectStagingModal, type StagingModalMode, StagingModalModes } from '../modals/git-project-staging-modal';
 import { GitPullRequiredModal } from '../modals/git-pull-required-modal';
-import { GitProjectRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncMergeModal } from '../modals/sync-merge-modal';
 import { showToast } from '../toast-notification';
 interface Props {
   gitRepository?: GitRepository;
+  activeProject: GitProject;
 }
 
-export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
+export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject }) => {
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
   };
 
-  const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
   const [isGitBranchesModalOpen, setIsGitBranchesModalOpen] = useState(false);
   const [isGitLogModalOpen, setIsGitLogModalOpen] = useState(false);
   const [isGitStagingModalOpen, setIsGitStagingModalOpen] = useState(false);
@@ -61,6 +68,22 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   const gitFetchFetcher = useGitProjectFetchActionFetcher();
   const gitIntervalFetchFetcher = useGitProjectFetchActionFetcher();
   const gitStatusFetcher = useGitProjectStatusActionFetcher();
+  const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
+
+  const { features } = useOrganizationPermissions();
+  const isGitSyncEnabled = features.gitSync.enabled;
+
+  const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
+  useEffect(() => {
+    if (!isScratchpadOrganizationId(organizationId)) {
+      const load = storageRuleFetcher.load;
+      load({ organizationId });
+    }
+  }, [organizationId, storageRuleFetcher.load]);
+
+  const { storagePromise } = storageRuleFetcher.data || {};
+
+  const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
 
   const [isPulling, setIsPulling] = useState(false);
   const [operationError, setOperationError] = useState<string | null>(null);
@@ -423,13 +446,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     action: () => void;
   }[] = [
     {
-      id: 'repository-settings',
-      label: 'Repository Settings',
-      isDisabled: false,
-      icon: 'wrench',
-      action: () => setIsGitRepoSettingsModalOpen(true),
-    },
-    {
       id: 'branches',
       label: 'Branches',
       isDisabled: false,
@@ -497,7 +513,12 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
           <div className="flex w-full items-center justify-between gap-2 truncate">
             <span className="truncate">Git is not connected</span>
             <Button
-              onPress={() => setIsGitRepoSettingsModalOpen(true)}
+              onPress={() => {
+                setIsUpdateProjectModalOpen(true);
+                window.main.trackSegmentEvent({
+                  event: SegmentEvent.gitSyncButtonClicked,
+                });
+              }}
               className="flex h-[25px] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
             >
               <Icon icon="plug" />
@@ -622,10 +643,14 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
           </Popover>
         </MenuTrigger>
       )}
-      {isGitRepoSettingsModalOpen && (
-        <GitProjectRepositorySettingsModal
-          gitRepository={gitRepository ?? undefined}
-          onHide={() => setIsGitRepoSettingsModalOpen(false)}
+      {isUpdateProjectModalOpen && (
+        <ProjectModal
+          isOpen={isUpdateProjectModalOpen}
+          onOpenChange={setIsUpdateProjectModalOpen}
+          project={activeProject}
+          gitRepository={gitRepository || undefined}
+          storageRules={storageRules}
+          isGitSyncEnabled={isGitSyncEnabled}
         />
       )}
       {isGitBranchesModalOpen && gitRepository && currentBranch && (

@@ -12,6 +12,7 @@ test.describe('Dashboard', () => {
 
     // Create new project
     await page.getByRole('button', { name: 'Create new Project' }).click();
+    await page.getByText('Local Vault').click();
     await page.getByRole('button', { name: 'Create', exact: true }).click();
 
     // Check empty project

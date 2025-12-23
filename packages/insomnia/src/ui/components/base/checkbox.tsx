@@ -28,7 +28,7 @@ export const Checkbox = memo(
         className={twMerge('group flex items-center gap-2 p-0', className)}
         {...rest}
       >
-        <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
+        <div className="flex h-4 w-4 items-center justify-center rounded-sm border border-(--hl-sm) text-xs transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
           <Icon
             icon={isIndeterminate ? 'minus' : 'check'}
             className="h-3 w-3 opacity-0 group-data-indeterminate:text-(--color-success) group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"

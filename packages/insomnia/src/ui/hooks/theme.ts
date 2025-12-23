@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
+import { SegmentEvent } from '~/ui/analytics';
 
 import type { ThemeSettings } from '../../models/settings';
 import { type ColorScheme, getThemes } from '../../plugins';
@@ -54,6 +55,11 @@ export const useThemes = () => {
   // Activate the theme for the selected color scheme
   const activate = useCallback(
     async (themeName: string, colorScheme: ColorScheme) => {
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.themeChanged,
+        properties: { themeName, colorScheme },
+      });
+
       switch (colorScheme) {
         case 'light': {
           await apply({ lightTheme: themeName });

@@ -117,6 +117,13 @@ export function cleanHeadersAndParameters(obj: any): any {
 
             const { id, ...rest } = entry; // remove `id` only here
 
+            if (key === 'headers' && !('name' in rest && 'value' in rest)) {
+              // Ensure headers have name and value fields
+              // Refer INS-1822, legacy app might have headers without name or value and that kind of request will be parsed as GRPC request
+              rest.name = rest.name || '';
+              rest.value = rest.value || '';
+            }
+
             return cleanHeadersAndParameters(rest);
           });
 

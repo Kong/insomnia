@@ -8,7 +8,15 @@ import { GitRemoteBranchSelect } from './git-remote-branch-select';
 
 type GitHubRepository = Awaited<ReturnType<typeof window.main.git.getGitHubRepositories>>['repos'][number];
 
-export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: string }) => {
+export const GitHubRepositorySelect = ({
+  uri,
+  token,
+  allConnectedRepoURIProjectNameMap,
+}: {
+  uri?: string;
+  token: string;
+  allConnectedRepoURIProjectNameMap?: Record<string, string> | undefined;
+}) => {
   const [loading, setLoading] = useState(false);
   const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
   const [selectedRepository, setSelectedRepository] = useState<GitHubRepository | null>(null);
@@ -80,6 +88,7 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
               name: repo.full_name,
             }))}
             onSelectionChange={key => setSelectedRepository(repositories.find(r => r.clone_url === key) || null)}
+            menuTrigger="focus"
           >
             <div className="flex w-full items-center gap-2">
               <div className="group flex h-(--line-height-xs) flex-1 items-center gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
@@ -96,36 +105,49 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
                   <Icon icon="caret-down" className="w-5 shrink-0" />
                 </Button>
               </div>
-              <Button
+              {/* There ought to be only on react-aria Button under ComboBox, so we use the original button here */}
+              <button
                 type="button"
-                isDisabled={loading}
-                className="m-2 flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                disabled={loading}
+                className="m-2 mr-0 flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset active:bg-(--hl-sm)"
                 aria-label="Refresh repositories"
-                onPress={() => {
-                  setLoading(true);
+                onClick={() => {
                   getRepositories();
                 }}
               >
                 <Icon icon="refresh" className={loading ? 'animate-spin' : ''} />
-              </Button>
+              </button>
             </div>
             <Popover
               className="grid w-(--trigger-width) min-w-max grid-flow-col divide-x divide-solid divide-(--hl-md) overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none focus:outline-hidden"
               placement="bottom start"
               offset={8}
+              shouldFlip={false}
             >
               <ListBox<{
                 id: string;
                 name: string;
               }> className="flex min-w-max flex-col p-2 text-sm select-none focus:outline-hidden">
-                {item => (
-                  <ListBoxItem
-                    textValue={item.name}
-                    className="flex h-(--line-height-xs) w-full items-center gap-2 rounded-sm bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:bg-(--hl-sm) aria-selected:font-bold data-focused:bg-(--hl-xs)"
-                  >
-                    <span className="truncate">{item.name}</span>
-                  </ListBoxItem>
-                )}
+                {item => {
+                  const isDisabled =
+                    allConnectedRepoURIProjectNameMap &&
+                    Object.prototype.hasOwnProperty.call(allConnectedRepoURIProjectNameMap, item.id);
+                  return (
+                    <ListBoxItem
+                      isDisabled={isDisabled}
+                      textValue={item.name}
+                      className="group flex h-(--line-height-xs) w-full items-center gap-2 rounded-sm bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden aria-disabled:cursor-not-allowed aria-selected:bg-(--hl-sm) aria-selected:font-bold data-focused:bg-(--hl-xs)"
+                    >
+                      {isDisabled && <Icon icon="lock" className="group-aria-disabled:opacity-30" />}
+                      <span className="truncate group-aria-disabled:opacity-30">{item.name}</span>
+                      {isDisabled && (
+                        <span className="hidden rounded border border-solid border-(--hl-xl) px-2 py-1 text-(--color-font) group-hover:inline-block">
+                          Already connected to: {allConnectedRepoURIProjectNameMap[item.id]}
+                        </span>
+                      )}
+                    </ListBoxItem>
+                  );
+                }}
               </ListBox>
             </Popover>
             <FieldError className="text-xs text-(--color-danger)" />

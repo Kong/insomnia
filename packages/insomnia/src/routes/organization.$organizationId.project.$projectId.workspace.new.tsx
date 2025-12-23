@@ -155,17 +155,25 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     let event = SegmentEvent.documentCreate;
+    let environmentType: string | undefined;
 
     if (isCollection(workspace)) {
       event = SegmentEvent.collectionCreate;
     } else if (isEnvironment(workspace)) {
-      event = SegmentEvent.environmentWorkspaceCreate;
+      event = SegmentEvent.environmentCreate;
+      const environment = await models.environment.getById(workspace._id);
+      environmentType = environment?.isPrivate ? 'private' : 'global';
     } else if (scope === 'mcp') {
       event = SegmentEvent.mcpClientWorkspaceCreate;
     }
 
     window.main.trackSegmentEvent({
       event: event,
+      ...(environmentType && {
+        properties: {
+          type: environmentType,
+        },
+      }),
     });
 
     if (workspaceData.withRequest) {
@@ -190,7 +198,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         })
       )._id;
 
-      window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType: 'HTTP' } });
+      window.main.trackSegmentEvent({ event: SegmentEvent.requestCreated, properties: { requestType: 'HTTP' } });
 
       return redirect(
         href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
@@ -362,6 +370,7 @@ async function createMockServer(
         generation_from: workspaceData.apiSpecContents ? 'design_doc' : workspaceData.mockServerSpecSource || '',
         dynamic_responses: workspaceData.mockServerDynamicResponses ? 'yes' : 'no',
         generation_duration_seconds: generationDurationMs / 1000,
+        source: 'menu',
       },
     });
 

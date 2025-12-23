@@ -15,10 +15,11 @@ import { GitHubRepositorySelect } from './github-repository-select';
 interface Props {
   uri?: string;
   onSubmit: (args: Partial<GitRepository>) => void;
+  allConnectedRepoURIProjectNameMap?: Record<string, string> | undefined;
 }
 
 export const GitHubRepositorySetupFormGroup = (props: Props) => {
-  const { onSubmit, uri } = props;
+  const { onSubmit, uri, allConnectedRepoURIProjectNameMap } = props;
   const githubTokenLoader = useGitHubCredentialsFetcher();
 
   useEffect(() => {
@@ -27,13 +28,20 @@ export const GitHubRepositorySetupFormGroup = (props: Props) => {
     }
   }, [githubTokenLoader]);
 
-  const credentials = githubTokenLoader.data;
+  const credentials = githubTokenLoader.data?.credentials;
 
   if (!credentials?.token) {
     return <GitHubSignInForm />;
   }
 
-  return <GitHubRepositoryForm uri={uri} onSubmit={onSubmit} credentials={credentials} />;
+  return (
+    <GitHubRepositoryForm
+      uri={uri}
+      onSubmit={onSubmit}
+      credentials={credentials}
+      allConnectedRepoURIProjectNameMap={allConnectedRepoURIProjectNameMap}
+    />
+  );
 };
 
 const Avatar = ({ src }: { src: string }) => {
@@ -68,9 +76,15 @@ interface GitHubRepositoryFormProps {
   uri?: string;
   onSubmit: (args: Partial<GitRepository & { ref?: string }>) => void;
   credentials: GitCredentials;
+  allConnectedRepoURIProjectNameMap?: Record<string, string> | undefined;
 }
 
-const GitHubRepositoryForm = ({ uri, credentials, onSubmit }: GitHubRepositoryFormProps) => {
+const GitHubRepositoryForm = ({
+  uri,
+  credentials,
+  onSubmit,
+  allConnectedRepoURIProjectNameMap,
+}: GitHubRepositoryFormProps) => {
   const [error, setError] = useState('');
   const signOutFetcher = useGithubSignOutFetcher();
 
@@ -109,14 +123,19 @@ const GitHubRepositoryForm = ({ uri, credentials, onSubmit }: GitHubRepositoryFo
         </div>
         <PromptButton
           confirmMessage="Confirm"
-          onClick={() => {
+          onClick={e => {
+            e.preventDefault();
             signOutFetcher.submit();
           }}
         >
           Disconnect
         </PromptButton>
       </div>
-      <GitHubRepositorySelect uri={uri} token={credentials.token} />
+      <GitHubRepositorySelect
+        uri={uri}
+        token={credentials.token}
+        allConnectedRepoURIProjectNameMap={allConnectedRepoURIProjectNameMap}
+      />
       {error && (
         <p className="notice error margin-bottom-sm">
           <button className="pull-right icon" onClick={() => setError('')}>
@@ -188,12 +207,12 @@ const GitHubSignInForm = () => {
         >
           <label className="form-control form-control--outlined">
             <div>If you aren't redirected to the app you can manually paste the authentication url here:</div>
-            <div className="form-row">
+            <div className="flex justify-between gap-2">
               <input name="link" />
               <Button
                 type="submit"
                 name="add-token"
-                className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
+                className="flex h-(--line-height-xs) items-center justify-center rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
               >
                 Authenticate
               </Button>
@@ -208,8 +227,8 @@ const GitHubSignInForm = () => {
             </p>
           )}
           {(initSignInError || completeSignInError) && (
-            <p className="margin-bottom-sm flex items-center rounded-xs border border-solid border-(--color-danger) bg-(--color-danger-bg) p-2 text-(--color-danger)">
-              <Icon icon="exclamation-triangle" className="size-4" />
+            <p className="margin-bottom-sm flex items-start gap-2 rounded-xs border border-solid border-(--color-danger) bg-(--color-danger-bg) p-2 text-(--color-danger)">
+              <Icon icon="exclamation-triangle" className="mt-1 size-4" />
               <span>{initSignInError || completeSignInError}</span>
             </p>
           )}

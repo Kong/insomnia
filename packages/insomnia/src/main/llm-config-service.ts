@@ -23,6 +23,7 @@ export interface LLMConfig {
   seed?: boolean;
   repeatPenalty?: number;
 }
+export type AIFeatureNames = 'aiMockServers' | 'aiCommitMessages' | 'aiMcpClient';
 
 export const getActiveBackend = async (): Promise<LLMBackend | null> => {
   const active = await models.pluginData.getByKey(LLM_PLUGIN_NAME, 'model.active');
@@ -112,15 +113,12 @@ export const getCurrentConfig = async (): Promise<LLMConfig | null> => {
   return { ...config, backend: activeBackend } as LLMConfig;
 };
 
-export const getAIFeatureEnabled = async (feature: 'aiMockServers' | 'aiCommitMessages'): Promise<boolean> => {
+export const getAIFeatureEnabled = async (feature: AIFeatureNames): Promise<boolean> => {
   const data = await models.pluginData.getByKey(LLM_PLUGIN_NAME, `feature.${feature}`);
   return data?.value === 'true';
 };
 
-export const setAIFeatureEnabled = async (
-  feature: 'aiMockServers' | 'aiCommitMessages',
-  enabled: boolean,
-): Promise<void> => {
+export const setAIFeatureEnabled = async (feature: AIFeatureNames, enabled: boolean): Promise<void> => {
   await models.pluginData.upsertByKey(LLM_PLUGIN_NAME, `feature.${feature}`, String(enabled));
 
   trackSegmentEvent(enabled ? SegmentEvent.aiFeatureEnabled : SegmentEvent.aiFeatureDisabled, {

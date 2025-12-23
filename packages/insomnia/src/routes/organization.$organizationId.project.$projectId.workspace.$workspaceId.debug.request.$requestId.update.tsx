@@ -4,6 +4,7 @@ import * as requestOperations from '~/models/helpers/request-operations';
 import { getPathParametersFromUrl, isRequest } from '~/models/request';
 import type { WebSocketRequest } from '~/models/websocket-request';
 import { isWebSocketRequest } from '~/models/websocket-request';
+import { SegmentEvent } from '~/ui/analytics';
 import { updateMimeType } from '~/ui/components/dropdowns/content-type-dropdown';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -41,6 +42,12 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
 
   await requestOperations.update(req, patch);
+
+  if (req.name !== patch.name) {
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.requestRenamed,
+    });
+  }
 
   return null;
 }

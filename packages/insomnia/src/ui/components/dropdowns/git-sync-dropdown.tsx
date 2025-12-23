@@ -1,5 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { type FC, useEffect, useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 import {
   Button,
   Collection,

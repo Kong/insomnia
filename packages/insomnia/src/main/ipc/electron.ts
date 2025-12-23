@@ -24,6 +24,9 @@ export type HandleChannels =
   | 'authorizeUserInWindow'
   | 'backup'
   | 'cancelAuthorizationInDefaultBrowser'
+  | 'generateMockRouteDataFromSpec'
+  | 'generateCommitsFromDiff'
+  | 'generateMcpSamplingResponse'
   | 'curl.event.findMany'
   | 'curl.open'
   | 'curl.readyState'
@@ -69,6 +72,7 @@ export type HandleChannels =
   | 'git.resetGitRepo'
   | 'git.signOutOfGitHub'
   | 'git.signOutOfGitLab'
+  | 'git.getCurrentBranchByRepositoryId'
   | 'git.stageChanges'
   | 'git.unstageChanges'
   | 'git.updateGitRepo'
@@ -180,6 +184,7 @@ export type MainOnChannels =
   | 'webSocket.closeAll'
   | 'mcp.closeAll'
   | 'mcp.client.responseElicitationRequest'
+  | 'mcp.client.responseSamplingRequest'
   | 'mcp.sendMCPRequest'
   | 'writeText';
 
