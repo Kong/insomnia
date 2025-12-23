@@ -188,6 +188,11 @@ export async function registerInsomniaProtocols() {
         return await net.fetch(`file://${filePath}`, { bypassCustomProtocolHandlers: true });
       }
 
+      // Let Google Fonts bypass custom handler to avoid issues
+      if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+        return net.fetch(request.url, { bypassCustomProtocolHandlers: true });
+      }
+
       return net.fetch(request, { bypassCustomProtocolHandlers: true });
     });
   }
