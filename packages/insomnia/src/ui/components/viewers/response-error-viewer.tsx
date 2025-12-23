@@ -52,6 +52,7 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink, isMcpResp
 
   return (
     <div>
+      {/* Avoid response error to cover MCP events table  */}
       {!isMcpResponse && (
         <>
           <pre
