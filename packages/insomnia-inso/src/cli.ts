@@ -4,8 +4,6 @@ import { homedir } from 'node:os';
 import nodePath from 'node:path';
 
 import * as commander from 'commander';
-import type { logType } from 'consola';
-import consola, { BasicReporter, FancyReporter, LogLevel } from 'consola';
 import { cosmiconfig } from 'cosmiconfig';
 // @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
 import { Confirm } from 'enquirer';
@@ -40,6 +38,7 @@ import type { BaseModel } from './db/models/types';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
 import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
+import { BasicReporter, logger, LogLevel } from './logger';
 import { logTestResult, logTestResultSummary, reporterTypes, type TestReporter } from './reporter';
 import { generateDocumentation } from './scripts/docs';
 
@@ -89,25 +88,6 @@ export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: 
 
   return {};
 };
-
-export type LogsByType = Partial<Record<logType, string[]>>;
-
-export type ModifiedConsola = ReturnType<typeof consola.create> & { __getLogs: () => LogsByType };
-
-const consolaLogger = consola.create({
-  reporters: [
-    new FancyReporter({
-      formatOptions: {
-        // @ts-expect-error something is wrong here, ultimately these types come from https://nodejs.org/api/util.html#util_util_inspect_object_options and `date` doesn't appear to be one of the options.
-        date: false,
-      },
-    }),
-  ],
-});
-
-(consolaLogger as ModifiedConsola).__getLogs = () => ({});
-
-export const logger = consolaLogger as ModifiedConsola;
 
 export class InsoError extends Error {
   cause?: Error | null;
