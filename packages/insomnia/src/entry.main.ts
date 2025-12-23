@@ -8,13 +8,14 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
 
+import { mainDatabase } from '~/common/database/database.main';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
-import { database } from './common/database';
+import { database, initDatabase } from './common/database';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
@@ -110,7 +111,7 @@ app.on('ready', async () => {
   }
 
   // Init some important things first
-  await database.init();
+  await initDatabase(mainDatabase);
   await _createModelInstances();
   // backup needs the channel from settings which needs the database
   await backupIfNewerVersionAvailable();
