@@ -246,7 +246,7 @@ export const ProjectSettingsForm: FC<Props> = ({
             (!isSwitchingStorageType(project!, storageType) && project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID ? (
               <>
                 <Divider />
-                <GitConnectionInfo gitRepository={gitRepository} />
+                <GitConnectionInfo gitRepository={gitRepository} projectId={project!._id} />
               </>
             ) : (
               <GitRepoForm

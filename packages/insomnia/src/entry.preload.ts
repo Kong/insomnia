@@ -148,6 +148,7 @@ const git: GitServiceAPI = {
   initSignInToGitLab: () => ipcRenderer.invoke('git.initSignInToGitLab'),
   completeSignInToGitLab: options => ipcRenderer.invoke('git.completeSignInToGitLab', options),
   signOutOfGitLab: () => ipcRenderer.invoke('git.signOutOfGitLab'),
+  getCurrentBranchByRepositoryId: options => ipcRenderer.invoke('git.getCurrentBranchByRepositoryId', options),
 };
 
 const llm: LLMConfigServiceAPI = {
