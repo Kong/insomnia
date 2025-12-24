@@ -6,7 +6,7 @@ const DEFAULT_PORT = 443;
 export function urlMatchesCertHost(certificateHost: string, requestUrl: string, needCheckPort = true) {
   const cHostWithProtocol = setDefaultProtocol(certificateHost, 'https:');
 
-  let hostname: string | null = null;
+  let hostname: string = '';
   let port = '';
   try {
     const parsedUrl = new URL(requestUrl);
