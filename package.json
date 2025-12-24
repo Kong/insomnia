@@ -40,7 +40,8 @@
     "test:smoke:package": "npm run test:package -w insomnia-smoke-test -- --project=Smoke",
     "test:crit:package": "npm run test:package -w insomnia-smoke-test -- --project=Critical",
     "test:crit:dev": "npm run test:dev -w insomnia-smoke-test -- --project=Critical",
-    "postinstall": "patch-package && npm run verify-bundle-plugins -w insomnia"
+    "postinstall": "patch-package && npm run verify-bundle-plugins -w insomnia",
+    "check-cycle-references": "madge --circular --extensions ts,tsx packages"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
@@ -60,6 +61,7 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unicorn": "^62.0.0",
     "globals": "^16.5.0",
+    "madge": "^8.0.0",
     "patch-package": "^8.0.0",
     "prettier": "3.6.2",
     "prettier-plugin-tailwindcss": "^0.7.1",

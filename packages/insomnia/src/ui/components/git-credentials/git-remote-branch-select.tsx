@@ -3,6 +3,7 @@ import { Button, ComboBox, Input, Label, ListBox, ListBoxItem, Popover } from 'r
 import * as reactUse from 'react-use';
 import { z } from 'zod/v4';
 
+import { fuzzyMatch } from '~/common/misc';
 import type { GitCredentials } from '~/models/git-repository';
 import { useGitRemoteBranchesActionFetcher } from '~/routes/git.remote-branches';
 
@@ -66,11 +67,14 @@ export const GitRemoteBranchSelect = ({
         className="w-full"
         defaultSelectedKey={remoteBranches[0]}
         isDisabled={isComboboxDisabled}
-        items={remoteBranches.map(branch => ({
+        defaultItems={remoteBranches.map(branch => ({
           id: branch,
           name: branch,
         }))}
         menuTrigger="focus"
+        defaultFilter={(branch: string, inputValue: string) =>
+          Boolean(fuzzyMatch(inputValue, branch, { splitSpace: true, loose: false })?.indexes)
+        }
       >
         <div className="flex w-full items-center gap-2">
           <div className="group flex h-(--line-height-xs) flex-1 items-center gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
@@ -87,12 +91,12 @@ export const GitRemoteBranchSelect = ({
               <Icon icon="caret-down" className="w-5 shrink-0" />
             </Button>
           </div>
-          <Button
+          <button
             type="button"
-            isDisabled={isRefetchButtonDisabled}
-            className="m-2 flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-30 aria-pressed:bg-(--hl-sm)"
+            disabled={isRefetchButtonDisabled}
+            className="m-2 mr-0 flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset active:bg-(--hl-sm) disabled:opacity-30"
             aria-label="Refresh repositories"
-            onPress={() => {
+            onClick={() => {
               if (uri && !isLoadingRemoteBranches) {
                 remoteBranchesFetcher.submit({
                   uri,
@@ -102,13 +106,14 @@ export const GitRemoteBranchSelect = ({
             }}
           >
             <Icon icon="refresh" className={isLoadingRemoteBranches ? 'animate-spin' : ''} />
-          </Button>
+          </button>
         </div>
         <p className="hidden text-xs text-(--color-danger) group-valid/form:inline-flex">{remoteBranchesFetchErrors}</p>
         <Popover
           className="grid w-(--trigger-width) min-w-max grid-flow-col divide-x divide-solid divide-(--hl-md) overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none focus:outline-hidden"
           placement="bottom start"
           offset={8}
+          shouldFlip={false}
         >
           <ListBox<{
             id: string;

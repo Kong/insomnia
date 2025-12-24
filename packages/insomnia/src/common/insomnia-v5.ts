@@ -645,27 +645,36 @@ function getCollection(
 function importData(rawData: string) {
   // Apply schema migration before parsing to handle older schema versions
   const migratedData = migrateToLatestYaml(rawData);
-  const file = InsomniaFileSchema.parse(parse(migratedData));
+  const fileSchemaParser = InsomniaFileSchema.safeParse(parse(migratedData));
 
-  if (file.type === 'collection.insomnia.rest/5.0') {
-    return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
-  }
+  if (fileSchemaParser.success) {
+    const file = fileSchemaParser.data;
+    if (file.type === 'collection.insomnia.rest/5.0') {
+      return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
+    }
 
-  if (file.type === 'spec.insomnia.rest/5.0') {
-    return [
-      getWorkspace(file),
-      ...getEnvironments(file),
-      ...getCookieJar(file),
-      ...getCollection(file),
-      ...getApiSpec(file),
-      ...getTestSuites(file),
-    ];
-  }
+    if (file.type === 'spec.insomnia.rest/5.0') {
+      return [
+        getWorkspace(file),
+        ...getEnvironments(file),
+        ...getCookieJar(file),
+        ...getCollection(file),
+        ...getApiSpec(file),
+        ...getTestSuites(file),
+      ];
+    }
 
-  if (file.type === 'environment.insomnia.rest/5.0') {
-    return [getWorkspace(file), ...getEnvironments(file)];
+    if (file.type === 'environment.insomnia.rest/5.0') {
+      return [getWorkspace(file), ...getEnvironments(file)];
+    }
+
+    if (file.type === 'mock.insomnia.rest/5.0') {
+      return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
+    }
+    // @ts-expect-error this errors happen when new types are added but not handled here
+    throw new Error(`No import handler found for type ${file.type}`);
   }
-  return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
+  throw new Error(`Failed to parse yaml file to Insomnia schema ${fileSchemaParser.error?.toString()}`);
 }
 
 /**

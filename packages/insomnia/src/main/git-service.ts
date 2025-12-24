@@ -53,6 +53,7 @@ import GitVCS, {
   GIT_INTERNAL_DIR,
   type GitFileStatus,
   type GitFileStatusSymbol,
+  GitVCS as GitVCSClass,
   GitVCSOperationErrors,
   MergeConflictError,
   type Status,
@@ -746,21 +747,28 @@ export const initGitRepoCloneAction = async ({
   const insomniaFiles = await recursivelyFindInsomniaFiles(inMemoryFsClient, GIT_CLONE_DIR);
   // Get all files that start with 'insomnia.' recursively in the root directory
 
-  const files = await Promise.all(
-    insomniaFiles.map(async file => {
-      const fileContents = await inMemoryFsClient.promises.readFile(path.join(GIT_CLONE_DIR, file), 'utf8');
+  const files: {
+    scope: WorkspaceScope;
+    name: string;
+    path: string;
+  }[] = [];
 
-      // Apply schema migration before parsing to handle older schema versions
-      const migratedContents = migrateToLatestYaml(fileContents);
-      const insomniaFile = InsomniaFileSchema.parse(YAML.parse(migratedContents));
-
-      return {
+  for (const file of insomniaFiles) {
+    const fileContents = await inMemoryFsClient.promises.readFile(path.join(GIT_CLONE_DIR, file), 'utf8');
+    // Apply schema migration before parsing to handle older schema versions
+    const migratedContents = migrateToLatestYaml(fileContents);
+    const yamlDocument = parse(migratedContents);
+    const fileSchemaParser = InsomniaFileSchema.safeParse(yamlDocument);
+    // Validate that the file conforms to the Insomnia file schema
+    if (fileSchemaParser.success) {
+      const insomniaFile = fileSchemaParser.data;
+      files.push({
         scope: insomniaSchemaTypeToScope(insomniaFile.type),
         name: insomniaFile.name || 'Untitled',
         path: file,
-      };
-    }),
-  );
+      });
+    }
+  }
 
   const legacyInsomniaFile = await containsLegacyInsomniaDir({ fsClient: inMemoryFsClient });
 
@@ -2686,6 +2694,19 @@ async function signOutOfGitLab() {
   }
 }
 
+async function getCurrentBranchByRepositoryId({
+  repositoryId,
+  projectId,
+}: {
+  repositoryId: string;
+  projectId: string;
+}): Promise<any> {
+  const fs = await getGitFSClient({ gitRepositoryId: repositoryId, projectId });
+  return GitVCSClass.getRepoCurrentBranch({
+    fs,
+  });
+}
+
 export interface GitServiceAPI {
   loadGitRepository: typeof loadGitRepository;
   getGitBranches: typeof getGitBranches;
@@ -2726,6 +2747,7 @@ export interface GitServiceAPI {
   initSignInToGitLab: typeof initSignInToGitLab;
   completeSignInToGitLab: typeof completeSignInToGitLab;
   signOutOfGitLab: typeof signOutOfGitLab;
+  getCurrentBranchByRepositoryId: typeof getCurrentBranchByRepositoryId;
 }
 
 export const registerGitServiceAPI = () => {
@@ -2818,4 +2840,8 @@ export const registerGitServiceAPI = () => {
     completeSignInToGitLab(options),
   );
   ipcMainHandle('git.signOutOfGitLab', () => signOutOfGitLab());
+  ipcMainHandle(
+    'git.getCurrentBranchByRepositoryId',
+    (_, options: Parameters<typeof getCurrentBranchByRepositoryId>[0]) => getCurrentBranchByRepositoryId(options),
+  );
 };
