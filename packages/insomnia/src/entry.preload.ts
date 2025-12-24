@@ -296,7 +296,7 @@ const webUtils: Window['webUtils'] = {
   getPathForFile: (file: File) => webUtilities.getPathForFile(file),
 };
 const database: Window['database'] = {
-  invoke: (fnName, type, ...args) => ipcRenderer.invoke('database.invoke', fnName, type, ...args),
+  invoke: (fnName, ...args) => ipcRenderer.invoke('database.invoke', fnName, ...args),
 };
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);

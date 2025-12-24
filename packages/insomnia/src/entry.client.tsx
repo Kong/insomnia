@@ -26,7 +26,7 @@ import { getInitialEntry } from './utils/router';
 
 initializeSentry();
 
-// Initialize NeDB database for main process
+// Initialize database for renderer process
 await initDatabase(clientDatabase);
 
 // Force onlyResolveOnSuccess to true, will be removed after all usages are updated
