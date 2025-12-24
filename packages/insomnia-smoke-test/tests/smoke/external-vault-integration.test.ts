@@ -18,7 +18,7 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await page.getByLabel('Template Tag Collection').click();
   // Nav to cloud credentials page
   await page.getByTestId('settings-button').click();
-  await page.getByRole('tab', { name: 'Cloud Credentials' }).click();
+  await page.getByRole('tab', { name: 'Credentials' }).click();
   // create aws credential
   const awsCredentialName = 'smoke-test-aws';
   await page.getByRole('button', { name: 'Create Credential' }).click();
