@@ -133,34 +133,34 @@ export const McpRequestPane: FC<Props> = ({
   );
 
   const handleSend = async () => {
-    if (rjsfFormRef.current?.validate()) {
-      try {
-        if (selectedPrimitiveItem?.type === 'tools') {
-          await window.main.mcp.primitive.callTool({
-            name: selectedPrimitiveItem?.name || '',
-            arguments: mcpParams[primitiveId],
-            requestId: requestId,
-          });
-        } else if (selectedPrimitiveItem?.type === 'resources') {
-          await window.main.mcp.primitive.readResource({
-            requestId,
-            uri: selectedPrimitiveItem?.uri || '',
-          });
-        } else if (selectedPrimitiveItem?.type === 'resourceTemplates') {
-          await window.main.mcp.primitive.readResource({
-            requestId,
-            uri: fillUriTemplate(selectedPrimitiveItem.uriTemplate, mcpParams[primitiveId] || {}),
-          });
-        } else if (selectedPrimitiveItem?.type === 'prompts') {
-          await window.main.mcp.primitive.getPrompt({
-            requestId,
-            name: selectedPrimitiveItem?.name || '',
-            arguments: mcpParams[primitiveId],
-          });
-        }
-      } catch (err) {
-        console.warn('MCP primitive call error', err);
+    // validate the form before sending, but don't block sending on validation errors for debug purpose
+    rjsfFormRef.current?.validate();
+    try {
+      if (selectedPrimitiveItem?.type === 'tools') {
+        await window.main.mcp.primitive.callTool({
+          name: selectedPrimitiveItem?.name || '',
+          arguments: mcpParams[primitiveId],
+          requestId: requestId,
+        });
+      } else if (selectedPrimitiveItem?.type === 'resources') {
+        await window.main.mcp.primitive.readResource({
+          requestId,
+          uri: selectedPrimitiveItem?.uri || '',
+        });
+      } else if (selectedPrimitiveItem?.type === 'resourceTemplates') {
+        await window.main.mcp.primitive.readResource({
+          requestId,
+          uri: fillUriTemplate(selectedPrimitiveItem.uriTemplate, mcpParams[primitiveId] || {}),
+        });
+      } else if (selectedPrimitiveItem?.type === 'prompts') {
+        await window.main.mcp.primitive.getPrompt({
+          requestId,
+          name: selectedPrimitiveItem?.name || '',
+          arguments: mcpParams[primitiveId],
+        });
       }
+    } catch (err) {
+      console.warn('MCP primitive call error', err);
     }
   };
 

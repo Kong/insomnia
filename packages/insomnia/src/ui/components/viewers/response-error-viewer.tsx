@@ -13,8 +13,9 @@ interface Props {
   url: string;
   docsLink?: string;
   isMcpResponse?: boolean;
+  showErrorDetails?: boolean;
 }
-export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink, isMcpResponse }) => {
+export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink, isMcpResponse, showErrorDetails = true }) => {
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
   let msg: React.ReactNode = null;
   const { settings } = useRootLoaderData()!;
@@ -52,15 +53,19 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink, isMcpResp
 
   return (
     <div>
-      <pre
-        className="selectable pad force-pre-wrap"
-        style={{
-          fontSize: `${editorFontSize}px`,
-        }}
-      >
-        {error}
-      </pre>
-      <hr />
+      {showErrorDetails && (
+        <>
+          <pre
+            className="selectable pad force-pre-wrap"
+            style={{
+              fontSize: `${editorFontSize}px`,
+            }}
+          >
+            {error}
+          </pre>
+          <hr />
+        </>
+      )}
       <div className="pad text-center">
         <p className="faint pad-left pad-right">Here are some additional things that may help.</p>
         {msg}

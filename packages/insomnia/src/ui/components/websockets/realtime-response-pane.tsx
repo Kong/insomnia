@@ -314,7 +314,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="events">
           <PanelGroup direction="vertical" className="grid h-full w-full grid-rows-[repeat(auto-fit,minmax(0,1fr))]">
             {response.error && !isMCPAuthError ? (
-              <ResponseErrorViewer url={response.url} error={response.error} />
+              <ResponseErrorViewer url={response.url} error={response.error} isMcpResponse={isMcpResponse(response)} />
             ) : (
               <>
                 <Panel minSize={10} defaultSize={50} className="box-border flex w-full flex-1 flex-col overflow-hidden">
@@ -383,6 +383,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
                     url={response.url}
                     error={response.error}
                     docsLink={docsMcpAuthentication}
+                    showErrorDetails={false}
                     isMcpResponse
                   />
                 ) : null}

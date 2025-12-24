@@ -292,7 +292,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
     advanced = [responseType, scope, state, tokenPrefix, audience];
   } else if (grantType === GRANT_TYPE_MCP_AUTH_FLOW) {
     basic = [clientId, clientSecret, readonlyRedirectUri];
-    advanced = [];
+    advanced = [state, scope];
   }
 
   return {
@@ -320,6 +320,9 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
             options={showMcpAuthFlow ? grantTypeOptionsWithMcpAuthFlow : grantTypeOptions}
           />
           {basic}
+          <AuthAccordion accordionKey="OAuth2AdvancedOptions" label="Advanced Options">
+            {advanced}
+          </AuthAccordion>
         </AuthTableBody>
         <div className="pad">
           <OAuth2Tokens hideRefresh />
