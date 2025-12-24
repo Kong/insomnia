@@ -1,5 +1,3 @@
-import { parse as urlParse } from 'node:url';
-
 function formatHostname(rawHostname: string) {
   // canonicalize the hostname, so that 'oogle.com' won't match 'google.com'
   const hostname = rawHostname.replace(/^\.*/, '.').toLowerCase();
@@ -26,14 +24,20 @@ export function isUrlMatchedInNoProxyRule(url: string | undefined, noProxyRule: 
   if (!url || !noProxyRule || typeof noProxyRule !== 'string') {
     return false;
   }
-  const uri = urlParse(url);
+
+  let uri: URL;
+  try {
+    uri = new URL(url);
+  } catch {
+    return false;
+  }
+
   if (!uri.hostname && !uri.port && !uri.protocol) {
     return false;
   }
   const port = uri.port || (uri.protocol === 'https:' ? '443' : '80');
-  // TODO: remove non-null assertion
 
-  const hostname = formatHostname(uri.hostname!);
+  const hostname = formatHostname(uri.hostname);
   const noProxyList = noProxyRule.split(',');
 
   // iterate through the noProxyList until it finds a match.
