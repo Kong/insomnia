@@ -1125,14 +1125,11 @@ const Debug = () => {
                 onAction={key => {
                   const id = key.toString();
                   if (isRequestGroupId(id)) {
-                    const item = collection.find(i => i.doc._id === id);
-                    if (item) {
-                      groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
-                      navigate(
-                        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${id}?${searchParams.toString()}`,
-                      );
-                      return;
-                    }
+                    // Navigate to folder but don't toggle collapse (icon handles that)
+                    navigate(
+                      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${id}?${searchParams.toString()}`,
+                    );
+                    return;
                   }
                   navigate(
                     `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${id}?${searchParams.toString()}`,
@@ -1397,6 +1394,7 @@ const CollectionGridListItem = ({
   projectId,
   workspaceId,
   style,
+  groupMetaPatcher,
 }: {
   label: string;
   item: Child;
@@ -1518,9 +1516,16 @@ const CollectionGridListItem = ({
           </span>
         )}
         {isRequestGroup(item.doc) && (
-          <span>
+          <Button
+            aria-label={item.collapsed ? 'Expand folder' : 'Collapse folder'}
+            excludeFromTabOrder
+            className="flex items-center justify-center rounded-xs transition-colors hover:bg-(--hl-sm)"
+            onPress={() => {
+              groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+            }}
+          >
             <Icon className="w-6 shrink-0" icon={item.collapsed ? 'folder' : 'folder-open'} />
-          </span>
+          </Button>
         )}
         <EditableInput
           editable={isEditable}
