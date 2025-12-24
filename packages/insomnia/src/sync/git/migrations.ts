@@ -34,7 +34,7 @@ import type { GitCredentials } from '../../models/git-credentials';
 const MIGRATION_KEY = 'GIT_CREDENTIALS_MIGRATION';
 
 const migrationStorage = new ElectronStorage('git-migrations');
-const hasRunMigration = () => migrationStorage.getItem(MIGRATION_KEY) === 2;
+const hasRunMigration = () => migrationStorage.getItem(MIGRATION_KEY);
 const markMigrationComplete = () => migrationStorage.setItem(MIGRATION_KEY, 1);
 
 async function migrateGitHubConnectedRepositories(repositories: GitRepository[]) {
