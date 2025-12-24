@@ -17,7 +17,6 @@ import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning
 import { type ProjectData, type ProjectType, useActiveView } from '~/ui/components/project/utils';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
-import type { OauthProviderName } from '../../../models/git-credentials';
 import { Icon } from '../icon';
 
 interface Props {
@@ -57,19 +56,12 @@ export const ProjectCreateForm: FC<Props> = ({
     setActiveView = activeViewObj.setActiveView;
   }
 
-  const [selectedTab, setTab] = useState<OauthProviderName>('github');
-
   const [error, setError] = useState<string | null>(null);
 
   const [projectData, setProjectData] = useState<ProjectData>({
     name: defaultProjectName,
-    authorName: '',
-    authorEmail: '',
     uri: '',
-    username: '',
-    password: '',
-    token: '',
-    oauth2format: undefined,
+    credentialsId: undefined,
     connectRepositoryLater: false,
   });
 
@@ -145,8 +137,6 @@ export const ProjectCreateForm: FC<Props> = ({
               initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
               organizationId={organizationId}
               setActiveView={setActiveView}
-              selectedTab={selectedTab}
-              setTab={setTab}
             />
           )}
         </div>
@@ -185,7 +175,7 @@ export const ProjectCreateForm: FC<Props> = ({
             ) : (
               <Button
                 type="submit"
-                form={selectedTab}
+                form="git-repo-form"
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 Scan for files
