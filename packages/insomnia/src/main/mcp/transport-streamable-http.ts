@@ -162,7 +162,10 @@ const wrappedFetch = async (
 
     const { resourceMetadataUrl, scope: scopeFromWWWAuthenticate } = extractWWWAuthenticateParams(response);
     // Use scope from authenticate config if available, otherwise use scope from WWW-Authenticate header
-    const scope = 'scope' in authentication && authentication.scope ? authentication.scope : scopeFromWWWAuthenticate;
+    const scope =
+      'scope' in authentication && authentication.scope && authentication.scope.trim().length > 0
+        ? authentication.scope
+        : scopeFromWWWAuthenticate;
     if (resourceMetadataUrl) {
       authProvider.saveResourceMetadataUrl(resourceMetadataUrl);
     }

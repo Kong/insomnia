@@ -13,8 +13,9 @@ interface Props {
   url: string;
   docsLink?: string;
   isMcpResponse?: boolean;
+  showErrorDetails?: boolean;
 }
-export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink, isMcpResponse }) => {
+export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink, isMcpResponse, showErrorDetails = true }) => {
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
   let msg: React.ReactNode = null;
   const { settings } = useRootLoaderData()!;
@@ -52,8 +53,7 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink, isMcpResp
 
   return (
     <div>
-      {/* Avoid response error to cover MCP events table  */}
-      {!isMcpResponse && (
+      {showErrorDetails && (
         <>
           <pre
             className="selectable pad force-pre-wrap"

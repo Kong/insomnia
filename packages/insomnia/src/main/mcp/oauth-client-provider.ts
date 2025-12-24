@@ -93,7 +93,8 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
 
     if ('clientId' in this.mcpRequest.authentication && this.mcpRequest.authentication.clientId) {
       const { clientId, clientSecret, clientIdIssuedAt, clientSecretExpiresAt } = this.mcpRequest.authentication;
-      // https://github.com/modelcontextprotocol/typescript-sdk/blob/main/packages/client/src/client/auth.ts#L223
+
+      // https://github.com/modelcontextprotocol/typescript-sdk/blob/6b4d99f10b975d65392bb777cc8cb1151c20c972/packages/client/src/client/auth.ts#L223%20
       // Set client_secret to undefined if it's not set or empty string
       const parsedClientSecret = clientSecret && clientSecret.trim().length > 0 ? clientSecret : undefined;
       return {
