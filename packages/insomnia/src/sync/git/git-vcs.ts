@@ -6,7 +6,8 @@ import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
-import type { GitAuthor, GitCredentials, GitRemoteConfig } from '~/models/git-repository';
+import type { GitAuthor, GitRemoteConfig } from '~/models/git-repository';
+import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 
 import { hasSignificantChanges } from '../../common/significant-diff-detection';
@@ -14,11 +15,6 @@ import { type MergeConflict, RESOLUTION_SOURCE } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
 import { getAuthorFromGitRepository, gitCallbacks } from './utils';
-export const GitVCSOperationErrors = {
-  UncommittedChangesError: 'UncommittedChangesError',
-  RequiredPullRemoteChangesError: 'RequiredPullRemoteChangesError',
-};
-
 export type GitHash = string;
 
 export type GitRef = GitHash | string;
@@ -56,7 +52,7 @@ interface InitOptions {
   directory: string;
   fs: git.FsClient;
   gitDirectory?: string;
-  gitCredentials?: GitCredentials | null;
+  credentialsId?: string | null;
   uri?: string;
   repoId: string;
   ref?: string;
@@ -66,7 +62,7 @@ interface InitOptions {
 
 interface InitFromCloneOptions {
   url: string;
-  gitCredentials?: GitCredentials | null;
+  credentialsId?: string | null;
   directory: string;
   fs: git.FsClient;
   gitDirectory: string;
@@ -151,11 +147,11 @@ export class GitVCS {
   // @ts-expect-error -- TSCONVERSION not initialized with required properties
   _baseOpts: BaseOpts = gitCallbacks();
 
-  async init({ directory, fs, gitDirectory, gitCredentials, uri = '', repoId, legacyDiff = false, ref }: InitOptions) {
+  async init({ directory, fs, gitDirectory, credentialsId, uri = '', repoId, legacyDiff = false, ref }: InitOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       dir: directory,
-      ...gitCallbacks(gitCredentials),
+      ...gitCallbacks(credentialsId),
       gitdir: gitDirectory,
       fs,
       http: httpClient,
@@ -206,10 +202,10 @@ export class GitVCS {
     }
   }
 
-  async initFromClone({ repoId, url, gitCredentials, directory, fs, gitDirectory, ref }: InitFromCloneOptions) {
+  async initFromClone({ repoId, url, credentialsId, directory, fs, gitDirectory, ref }: InitFromCloneOptions) {
     this._baseOpts = {
       ...this._baseOpts,
-      ...gitCallbacks(gitCredentials),
+      ...gitCallbacks(credentialsId),
       dir: directory,
       gitdir: gitDirectory,
       fs,
@@ -1077,10 +1073,10 @@ export class GitVCS {
    * when pushing with isomorphic-git, if the HEAD of local is equal the HEAD
    * of remote, it will fail with a non-fast-forward message.
    *
-   * @param gitCredentials
+   * @param credentialsId Optional credentials ID for authentication
    * @returns {Promise<boolean>}
    */
-  async canPush(gitCredentials?: GitCredentials | null): Promise<boolean> {
+  async canPush(credentialsId?: string | null): Promise<boolean> {
     const branch = await this.getCurrentBranch();
     const remote = await this.getRemote('origin');
 
@@ -1090,7 +1086,7 @@ export class GitVCS {
 
     const remoteInfo = await git.getRemoteInfo({
       ...this._baseOpts,
-      ...gitCallbacks(gitCredentials),
+      ...gitCallbacks(credentialsId),
       forPush: true,
       url: remote.url,
     });
@@ -1112,12 +1108,12 @@ export class GitVCS {
     return true;
   }
 
-  async push(gitCredentials?: GitCredentials | null, force = false) {
+  async push(credentialsId?: string | null, force = false) {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
 
     const response = await git.push({
       ...this._baseOpts,
-      ...gitCallbacks(gitCredentials),
+      ...gitCallbacks(credentialsId),
       remote: 'origin',
       force,
     });
@@ -1157,7 +1153,7 @@ export class GitVCS {
     return { oursBranch, theirsBranch };
   }
 
-  async pullWithConflictSupport(gitCredentials?: GitCredentials | null) {
+  async pullWithConflictSupport(credentialsId?: string | null) {
     const hasUncommittedChanges = await this.hasUncommittedChanges();
 
     if (hasUncommittedChanges) {
@@ -1176,7 +1172,7 @@ export class GitVCS {
       // Try to pull changes from the remote repository
       await git.pull({
         ...this._baseOpts,
-        ...gitCallbacks(gitCredentials),
+        ...gitCallbacks(credentialsId),
         remote: 'origin',
         singleBranch: true,
       });
@@ -1199,7 +1195,7 @@ export class GitVCS {
           // Retry the pull operation
           await git.pull({
             ...this._baseOpts,
-            ...gitCallbacks(gitCredentials),
+            ...gitCallbacks(credentialsId),
             remote: 'origin',
             singleBranch: true,
             ref: currentBranch,
@@ -1210,7 +1206,7 @@ export class GitVCS {
         } catch (retryError) {
           console.error('[git] Retry pull failed after resolving checkout conflicts:', retryError);
 
-          const handledError = await this.handleGitPullErrors(err, gitCredentials, writeFileMap);
+          const handledError = await this.handleGitPullErrors(err, credentialsId, writeFileMap);
 
           if (handledError) {
             return handledError;
@@ -1221,7 +1217,7 @@ export class GitVCS {
       }
 
       // Handle other specific git errors (e.g., merge conflicts, merge not supported)
-      const handledError = await this.handleGitPullErrors(err, gitCredentials, writeFileMap);
+      const handledError = await this.handleGitPullErrors(err, credentialsId, writeFileMap);
 
       if (handledError) {
         return handledError;
@@ -1239,7 +1235,7 @@ export class GitVCS {
     }
   }
 
-  async handleGitPullErrors(err: unknown, gitCredentials?: GitCredentials | null, writeFileMap: WriteFileMap = {}) {
+  async handleGitPullErrors(err: unknown, credentialsId?: string | null, writeFileMap: WriteFileMap = {}) {
     const { oursBranch, theirsBranch } = await this.getBranchPair();
 
     // merge conflict from pull
@@ -1254,7 +1250,7 @@ export class GitVCS {
         await this.fetch({
           singleBranch: true,
           depth: 1,
-          credentials: gitCredentials,
+          credentialsId,
         });
 
         await git.merge({
@@ -1653,7 +1649,6 @@ export class GitVCS {
     commitMessage,
     commitParent,
   }: {
-    gitCredentials?: GitCredentials | null;
     handledMergeConflicts: MergeConflict[];
     commitMessage: string;
     commitParent: string[];
@@ -1761,18 +1756,18 @@ export class GitVCS {
   async fetch({
     singleBranch,
     depth,
-    credentials,
+    credentialsId,
     relative = false,
   }: {
     singleBranch: boolean;
     depth?: number;
-    credentials?: GitCredentials | null;
+    credentialsId?: string | null;
     relative?: boolean;
   }) {
     console.log('[git] Fetch remote=origin');
     return git.fetch({
       ...this._baseOpts,
-      ...gitCallbacks(credentials),
+      ...gitCallbacks(credentialsId),
       singleBranch,
       remote: 'origin',
       relative,
@@ -2001,9 +1996,9 @@ function assertIsPromiseFsClient(fs: git.FsClient): asserts fs is git.PromiseFsC
   }
 }
 
-export async function fetchRemoteBranches({ uri, credentials }: { uri: string; credentials?: GitCredentials | null }) {
+export async function fetchRemoteBranches({ uri, credentialsId }: { uri: string; credentialsId?: string | null }) {
   const [mainRef] = await git.listServerRefs({
-    ...gitCallbacks(credentials),
+    ...gitCallbacks(credentialsId),
     http: httpClient,
     url: uri,
     prefix: 'HEAD',
@@ -2011,7 +2006,7 @@ export async function fetchRemoteBranches({ uri, credentials }: { uri: string; c
   });
 
   const remoteRefs = await git.listServerRefs({
-    ...gitCallbacks(credentials),
+    ...gitCallbacks(credentialsId),
     http: httpClient,
     url: uri,
     prefix: 'refs/heads/',
