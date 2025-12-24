@@ -188,7 +188,9 @@ export async function registerInsomniaProtocols() {
         return await net.fetch(`file://${filePath}`, { bypassCustomProtocolHandlers: true });
       }
 
-      // Let Google Fonts bypass custom handler to avoid issues
+      // Allow Google Fonts to bypass the custom https protocol handler.
+      // Some embedded UIs (including the Customer.io in-app messaging/marketing SDK) load fonts from Google fonts.
+      // When those requests are routed through our custom https handler they fail due to unknown issues.
       if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
         return net.fetch(request.url, { bypassCustomProtocolHandlers: true });
       }

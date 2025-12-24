@@ -65,7 +65,6 @@ export const useCio = () => {
     }
 
     const identifyCall = () => {
-      console.log('[CIO] Identifying user:', currentUserId);
       globalAnalyticsInstance?.identify(currentUserId, {
         email: userSession.email,
         first_name: userSession.firstName,

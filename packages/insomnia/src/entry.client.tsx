@@ -69,7 +69,7 @@ window.addEventListener(
   'message',
   (event: MessageEvent) => {
     // If origin is renderer.gist.build (original URL), stop propagation and dispatch a new event
-    if (event.origin === 'https://renderer.gist.build' || event.origin.startsWith('https://renderer.gist.build/')) {
+    if (event.origin.startsWith('https://renderer.gist.build')) {
       // Stop the original event from reaching other listeners
       event.stopImmediatePropagation();
 
