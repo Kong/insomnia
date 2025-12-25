@@ -23,6 +23,8 @@ import { useGitProjectPushActionFetcher } from '~/routes/git.push';
 import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
+import { getOauth2FormatName } from '~/sync/git/get-oauth2-format-name';
+import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import { SegmentEvent } from '~/ui/analytics';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
@@ -30,8 +32,6 @@ import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 
 import type { GitRepository } from '../../../models/git-repository';
-import { GitVCSOperationErrors } from '../../../sync/git/git-vcs';
-import { getOauth2FormatName } from '../../../sync/git/utils';
 import type { MergeConflict } from '../../../sync/types';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
