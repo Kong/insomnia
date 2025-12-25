@@ -23,7 +23,10 @@ export function urlMatchesCertHost(certificateHost: string, requestUrl: string, 
     // return false early if the certificate host is invalid
     return false;
   }
-  const { hostname: cHostname, port: cPort } = certificateHostWithProtocol;
+  let { hostname: cHostname, port: cPort } = certificateHostWithProtocol;
+  cHostname = decodeURIComponent(cHostname);
+  cPort = decodeURIComponent(cPort);
+
   const assumedPort = Number.parseInt(port) || DEFAULT_PORT;
   const assumedCPort = Number.parseInt(cPort) || DEFAULT_PORT;
   const cHostnameRegex = escapeRegex(cHostname || '').replace(/\\\*/g, '.*');
