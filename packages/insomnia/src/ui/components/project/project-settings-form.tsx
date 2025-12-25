@@ -8,6 +8,7 @@ import { Divider } from '~/basic-components/divider';
 import { LearnMoreLink } from '~/basic-components/link';
 import type { StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
+import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
 import {
   fallbackFeatures,
   useOrganizationPermissionsLoaderFetcher,
@@ -21,7 +22,6 @@ import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
-import type { OauthProviderName } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
 import {
   EMPTY_GIT_PROJECT_ID,
@@ -93,34 +93,18 @@ export const ProjectSettingsForm: FC<Props> = ({
     return isSwitchingStorageType(project!, storageType);
   }, [project, storageType]);
 
-  const [selectedTab, setTab] = useState<OauthProviderName>('github');
-
   const [error, setError] = useState<string | null>(null);
 
   const [projectData, setProjectData] = useState<{
     name: string;
-    authorName?: string;
-    authorEmail?: string;
     uri?: string;
     ref?: string;
-    username?: string;
-    password?: string;
-    token?: string;
-    oauth2format?: OauthProviderName;
+    credentialsId?: string;
     connectRepositoryLater?: boolean;
   }>({
     name: project?.name || defaultProjectName,
-    authorName: gitRepository?.author?.name || '',
-    authorEmail: gitRepository?.author?.email || '',
     uri: gitRepository?.uri || '',
-    username: gitRepository?.credentials?.username || '',
-    password:
-      gitRepository?.credentials && 'password' in gitRepository.credentials ? gitRepository?.credentials?.password : '',
-    token: gitRepository?.credentials && 'token' in gitRepository.credentials ? gitRepository?.credentials?.token : '',
-    oauth2format:
-      gitRepository?.credentials && 'oauth2format' in gitRepository.credentials
-        ? (gitRepository?.credentials?.oauth2format ?? 'github')
-        : undefined,
+    credentialsId: gitRepository?.credentialsId ?? undefined,
     connectRepositoryLater: false,
   });
 
@@ -156,6 +140,17 @@ export const ProjectSettingsForm: FC<Props> = ({
       });
     }
   };
+
+  const credentialsFetcher = useGitCredentialsLoaderFetcher();
+
+  useEffect(() => {
+    if (credentialsFetcher.state === 'idle' && !credentialsFetcher.data) {
+      credentialsFetcher.load();
+    }
+  }, [credentialsFetcher]);
+
+  const selectedCredential = credentialsFetcher.data?.credentials.find(c => c._id === projectData.credentialsId);
+  const selectedProvider = credentialsFetcher.data?.providers.find(p => p.type === selectedCredential?.provider);
 
   return (
     <>
@@ -246,7 +241,13 @@ export const ProjectSettingsForm: FC<Props> = ({
             (!isSwitchingStorageType(project!, storageType) && project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID ? (
               <>
                 <Divider />
-                <GitConnectionInfo gitRepository={gitRepository} projectId={project!._id} />
+                {selectedProvider && (
+                  <GitConnectionInfo
+                    gitRepository={gitRepository}
+                    providerInfo={selectedProvider}
+                    projectId={project!._id}
+                  />
+                )}
               </>
             ) : (
               <GitRepoForm
@@ -255,8 +256,6 @@ export const ProjectSettingsForm: FC<Props> = ({
                 initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
                 organizationId={organizationId}
                 setActiveView={setActiveView}
-                selectedTab={selectedTab}
-                setTab={setTab}
               />
             ))}
         </div>
@@ -288,7 +287,7 @@ export const ProjectSettingsForm: FC<Props> = ({
             (isSwitchingStorageType(project!, storageType) || project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID) ? (
               <Button
                 isDisabled={!isGitSyncEnabled}
-                form={selectedTab}
+                form="git-repo-form"
                 type="submit"
                 className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >

@@ -4,7 +4,6 @@ import { database } from '~/common/database';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { projectLock } from '~/common/project';
 import * as models from '~/models';
-import type { GitCredentials, OauthProviderName } from '~/models/git-repository';
 import { EMPTY_GIT_PROJECT_ID, type Project } from '~/models/project';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
@@ -22,13 +21,8 @@ export interface CreateProjectActionResult {
 export interface CreateProjectData {
   name: string;
   storageType: 'local' | 'remote' | 'git';
-  authorName?: string;
-  authorEmail?: string;
   uri?: string;
-  username?: string;
-  password?: string;
-  token?: string;
-  oauth2format?: OauthProviderName;
+  credentialsId?: string | null;
   connectRepositoryLater?: boolean;
   ref?: string;
 }
@@ -88,37 +82,12 @@ export const createProject = async (organizationId: string, newProjectData: Crea
         return project._id;
       }
 
-      let credentials: GitCredentials | undefined;
-      if (newProjectData.oauth2format === 'custom') {
-        credentials = {
-          username: newProjectData.username || '',
-          password: newProjectData.token || '',
-        };
-      } else if (newProjectData.oauth2format) {
-        credentials = {
-          oauth2format: newProjectData.oauth2format,
-          token: newProjectData.token || '',
-          username: newProjectData.username || '',
-        };
-      } else if (newProjectData.username && newProjectData.password) {
-        credentials = {
-          username: newProjectData.username,
-          password: newProjectData.password,
-        };
-      }
-
+      invariant(newProjectData.credentialsId, 'Credentials ID is required for Git project creation');
       const { projectId, errors } = await window.main.git.cloneGitRepo({
         organizationId,
         uri: newProjectData.uri || '',
-        author: {
-          name: newProjectData.authorName || '',
-          email: newProjectData.authorEmail || '',
-        },
+        credentialsId: newProjectData.credentialsId,
         name: newProjectData.name,
-        credentials: credentials || {
-          username: '',
-          password: '',
-        },
         ref: newProjectData.ref || '',
       });
 
@@ -176,11 +145,21 @@ export const createProject = async (organizationId: string, newProjectData: Crea
   };
 
   const newProjectId = await projectLock.wrapWithLock(createProjectImpl)(organizationId, newProjectData);
+
+  let git_provider = 'none';
+
+  if (newProjectData.credentialsId) {
+    const credentials = await models.gitCredentials.getById(newProjectData.credentialsId);
+    if (credentials) {
+      git_provider = credentials.provider;
+    }
+  }
+
   window.main.trackSegmentEvent({
     event: SegmentEvent.projectCreated,
     properties: {
       storage: newProjectData.storageType,
-      git_provider: newProjectData.oauth2format || 'none',
+      git_provider,
     },
   });
 
