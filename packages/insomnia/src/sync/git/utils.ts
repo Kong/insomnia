@@ -14,8 +14,8 @@ const onMessage: MessageCallback = message => {
 };
 
 const onAuthFailure = (credentialsId?: string | null): AuthFailureCallback => {
-  return async message => {
-    console.log(`[git-event] Auth Failure: ${message}`);
+  return async url => {
+    console.log(`[git-event] Auth Failure: ${url}`);
 
     try {
       invariant(credentialsId, 'No credentials ID provided for auth failure handling');

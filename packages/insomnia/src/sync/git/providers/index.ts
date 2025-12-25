@@ -79,7 +79,6 @@ export function initializeGitRemoteProviders(): void {
       iconName: ['fab', 'github'],
       apiUrl: getGitHubRestApiUrl(),
       webUrl: 'https://github.com',
-      supportsOAuth: true,
     }),
   );
 
@@ -92,7 +91,6 @@ export function initializeGitRemoteProviders(): void {
       iconName: ['fab', 'gitlab'],
       instanceUrl: 'https://gitlab.com',
       apiUrl: 'https://gitlab.com/api/v4',
-      supportsOAuth: true,
     }),
   );
 
@@ -103,7 +101,6 @@ export function initializeGitRemoteProviders(): void {
       displayName: 'Access Token',
       description: 'Any Git server with personal access token',
       iconName: 'key',
-      supportsOAuth: false,
     }),
   );
 

@@ -149,12 +149,6 @@ export async function getById(id: string) {
   return doc ? migrate(doc) : null;
 }
 
-export async function getByProvider(provider: GitRemoteProviderType | 'githubapp') {
-  const doc = await db.findOne<GitCredentials>(type, { provider });
-
-  return doc;
-}
-
 export function update(credentials: GitCredentials, patch: Partial<GitCredentials>) {
   return db.docUpdate<GitCredentials>(credentials, patch);
 }

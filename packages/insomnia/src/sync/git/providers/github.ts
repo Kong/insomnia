@@ -176,24 +176,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
       throw new Error('Invalid credential type for GitHub provider');
     }
 
-    const response = await net.fetch(`${this.config.apiUrl}/user/emails`, {
-      headers: {
-        Authorization: `token ${credential.token}`,
-        Accept: 'application/vnd.github.v3+json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.statusText}`);
-    }
-
-    const data = (await response.json()) as GitHubEmailApiResponse[];
-
-    return data.map(email => ({
-      email: email.email,
-      primary: email.primary,
-      verified: email.verified,
-    }));
+    return this.fetchEmails(credential.token);
   }
 
   /**
@@ -330,6 +313,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
       const email = emails.find(e => e.primary)?.email ?? userProfileEmail ?? '';
 
       await models.gitCredentials.create({
+        name: 'Github Credential',
         token: data.access_token,
         provider: 'github',
         renewalAttempts: 0,

@@ -75,7 +75,7 @@ async function getGitLabConfig() {
  * Base64 URL encode helper for PKCE
  */
 function base64URLEncode(buffer: Buffer) {
-  return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  return buffer.toString('base64url');
 }
 
 /**
@@ -271,17 +271,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
       throw new Error('Invalid credential type for GitLab provider');
     }
 
-    const response = await net.fetch(`${this.config.apiUrl}/user`, {
-      headers: {
-        Authorization: `Bearer ${credential.token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`GitLab API error: ${response.statusText}`);
-    }
-
-    const data = (await response.json()) as GitLabUserApiResponse;
+    const data = await this.fetchUserWithToken(credential.token);
 
     return {
       id: String(data.id),

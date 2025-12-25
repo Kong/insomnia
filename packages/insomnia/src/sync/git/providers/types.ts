@@ -26,7 +26,6 @@ export interface GitHubProviderConfig extends BaseProviderConfig {
   type: 'github';
   apiUrl: string; // 'api.github.com' or GHE API URL
   webUrl: string; // 'github.com' or GHE web URL
-  supportsOAuth: true;
 }
 
 /**
@@ -37,7 +36,6 @@ export interface GitLabProviderConfig extends BaseProviderConfig {
   type: 'gitlab';
   instanceUrl: string; // 'gitlab.com' or self-hosted URL
   apiUrl: string; // API endpoint
-  supportsOAuth: true;
 }
 
 /**
@@ -46,7 +44,6 @@ export interface GitLabProviderConfig extends BaseProviderConfig {
  */
 export interface CustomProviderConfig extends BaseProviderConfig {
   type: 'custom';
-  supportsOAuth: false;
 }
 
 /**

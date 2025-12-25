@@ -25,7 +25,7 @@
  */
 
 import { database } from '~/common/database';
-import ElectronStorage from '~/main/electron-storage';
+import { initElectronStorage } from '~/main/window-utils';
 import { type GitRepository, isGitCredentialsOAuth } from '~/models/git-repository';
 
 import * as models from '../../models';
@@ -33,41 +33,55 @@ import type { GitCredentials } from '../../models/git-credentials';
 
 const MIGRATION_KEY = 'GIT_CREDENTIALS_MIGRATION';
 
-const migrationStorage = new ElectronStorage('git-migrations');
-const hasRunMigration = () => migrationStorage.getItem(MIGRATION_KEY) === 2;
+const migrationStorage = initElectronStorage();
+// TODO: test
+const hasRunMigration = () => migrationStorage.getItem(MIGRATION_KEY) === 1;
 const markMigrationComplete = () => migrationStorage.setItem(MIGRATION_KEY, 1);
 
 async function migrateGitHubConnectedRepositories(repositories: GitRepository[]) {
-  const githubCredentials = await models.gitCredentials.getByProvider('githubapp');
+  const githubCredentials = await database.findOne<GitCredentials>(models.gitCredentials.type, {
+    provider: 'githubapp',
+  });
 
   if (githubCredentials) {
     await models.gitCredentials.update(githubCredentials, {
+      name: 'Github Credential',
       provider: 'github',
+      renewalAttempts: 0,
     });
 
     for (const repo of repositories) {
       await models.gitRepository.update(repo, {
         credentialsId: githubCredentials._id,
-        credentials: undefined,
-        author: undefined,
+        credentials: null,
+        author: {
+          name: '',
+          email: '',
+        },
       });
     }
   }
 }
 
 async function migrateGitLabConnectedRepositories(repositories: GitRepository[]) {
-  const gitlabCredentials = await models.gitCredentials.getByProvider('gitlab');
+  const gitlabCredentials = await database.findOne<GitCredentials>(models.gitCredentials.type, { provider: 'gitlab' });
 
   if (gitlabCredentials) {
     await models.gitCredentials.update(gitlabCredentials, {
+      name: 'Gitlab Credential',
       provider: 'gitlab',
+      renewalAttempts: 0,
     });
 
     for (const repo of repositories) {
       await models.gitRepository.update(repo, {
         credentialsId: gitlabCredentials._id,
-        credentials: undefined,
-        author: undefined,
+        credentials: null,
+        // TODO: what is author in gitRepository used for?
+        author: {
+          name: '',
+          email: '',
+        },
       });
     }
   }
@@ -87,17 +101,22 @@ async function migrateCustomCredentialsRepositories(repositories: GitRepository[
 
     if (!credentials) {
       credentials = await models.gitCredentials.create({
+        name: 'Custom git credential',
         provider: 'custom',
+        author: repo.author,
+        renewalAttempts: 0,
         username: repo.credentials.username,
         password: repo.credentials.password,
-        author: repo.author,
       });
     }
 
     await models.gitRepository.update(repo, {
       credentialsId: credentials._id,
-      credentials: undefined,
-      author: undefined,
+      credentials: null,
+      author: {
+        name: '',
+        email: '',
+      },
     });
   }
 }
