@@ -368,6 +368,35 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
   });
 };
 
+export const exportMcpClientToFile = async (workspace: Workspace) => {
+  const fileName = await showSaveExportedFileDialog({
+    exportedFileNamePrefix: workspace.name,
+    selectedFormat: 'yaml',
+  });
+  if (!fileName) {
+    return;
+  }
+
+  try {
+    const stringifiedExport = await getInsomniaV5DataExport({
+      workspaceId: workspace._id,
+      includePrivateEnvironments: false,
+    });
+    await writeExportedFileToFileSystem(fileName, stringifiedExport);
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.dataExport,
+      properties: { type: 'yaml', scope: 'mcp' },
+    });
+  } catch (err) {
+    showError({
+      title: 'Export Failed',
+      error: err,
+      message: 'Export failed due to an unexpected error',
+    });
+    return;
+  }
+};
+
 export async function exportWorkspaceData({
   workspace,
   dirPath,
