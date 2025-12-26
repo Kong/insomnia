@@ -1,26 +1,10 @@
-import HKDF from 'hkdf';
 import forge from 'node-forge';
-
-const DEFAULT_BYTE_LENGTH = 32;
-const DEFAULT_PBKDF2_ITERATIONS = 1e5; // 100,000
 
 export interface AESMessage {
   iv: string;
   t: string;
   d: string;
   ad: string;
-}
-
-/**
- * Generate hex signing key used for AES encryption
- *
- * @param pass
- * @param email
- * @param salt
- */
-export async function deriveKey(pass: string, email: string, salt: string) {
-  const combinedSalt = await _hkdfSalt(salt, email);
-  return _pbkdf2Passphrase(pass, combinedSalt);
 }
 
 /**
@@ -242,96 +226,9 @@ export async function generateAES256Key() {
   };
 }
 
-/**
- * Generate RSA keypair JWK with 2048 bits and exponent 0x10001
- *
- * @returns Object
- */
-export async function generateKeyPairJWK() {
-  // NOTE: Safari has crypto.webkitSubtle, but it does not support RSA-OAEP-SHA256
-  const subtle = window.crypto && window.crypto.subtle;
-
-  if (subtle) {
-    console.log('[crypt] Using Native RSA Generation');
-    const pair = await subtle.generateKey(
-      {
-        name: 'RSA-OAEP',
-        publicExponent: new Uint8Array([1, 0, 1]),
-        modulusLength: 2048,
-        hash: 'SHA-256',
-      },
-      true,
-      ['encrypt', 'decrypt'],
-    );
-    if (!pair.publicKey || !pair.privateKey) {
-      throw new Error('Unexpected error generating a keypair.');
-    }
-    return {
-      publicKey: await subtle.exportKey('jwk', pair.publicKey),
-      privateKey: await subtle.exportKey('jwk', pair.privateKey),
-    };
-  }
-  console.log('[crypt] Using Forge RSA Generation');
-  const pair = forge.pki.rsa.generateKeyPair({
-    bits: 2048,
-    e: 0x1_00_01,
-  });
-  const privateKey = {
-    alg: 'RSA-OAEP-256',
-    kty: 'RSA',
-    key_ops: ['decrypt'],
-    ext: true,
-    d: _bigIntToB64Url(pair.privateKey.d),
-    dp: _bigIntToB64Url(pair.privateKey.dP),
-    dq: _bigIntToB64Url(pair.privateKey.dQ),
-    e: _bigIntToB64Url(pair.privateKey.e),
-    n: _bigIntToB64Url(pair.privateKey.n),
-    p: _bigIntToB64Url(pair.privateKey.p),
-    q: _bigIntToB64Url(pair.privateKey.q),
-    qi: _bigIntToB64Url(pair.privateKey.qInv),
-  };
-  const publicKey = {
-    alg: 'RSA-OAEP-256',
-    kty: 'RSA',
-    key_ops: ['encrypt'],
-    e: _bigIntToB64Url(pair.publicKey.e),
-    n: _bigIntToB64Url(pair.publicKey.n),
-  };
-  return {
-    privateKey,
-    publicKey,
-  };
-}
-
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
-
-/**
- * Combine email and raw salt into usable salt
- *
- * @param rawSalt
- * @param rawEmail
- * @returns {Promise}
- */
-async function _hkdfSalt(rawSalt: string, rawEmail: string): Promise<string> {
-  return new Promise<string>(resolve => {
-    const hkdf = new HKDF('sha256', rawSalt, rawEmail);
-    hkdf.derive('', DEFAULT_BYTE_LENGTH, buffer => resolve(buffer.toString('hex')));
-  });
-}
-
-/**
- * Convert a JSBN BigInteger to a URL-safe version of base64 encoding. This
- * should only be used for encoding JWKs
- *
- * @param n BigInteger
- * @returns {string}
- */
-function _bigIntToB64Url(n: forge.jsbn.BigInteger) {
-  // HACK: The node-forge typings are fairly inaccurate.
-  return _hexToB64Url((n as any).toString(16));
-}
 
 function _hexToB64Url(h: string) {
   const bytes = forge.util.hexToBytes(h);
@@ -347,42 +244,4 @@ function _b64UrlToBigInt(s: string) {
 function _b64UrlToHex(s: string) {
   const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
   return forge.util.bytesToHex(window.atob(b64));
-}
-
-/**
- * Derive key from password
- *
- * @param passphrase
- * @param salt hex representation of salt
- */
-async function _pbkdf2Passphrase(passphrase: string, salt: string) {
-  if (window.crypto && window.crypto.subtle) {
-    console.log('[crypt] Using native PBKDF2');
-    const k = await window.crypto.subtle.importKey(
-      'raw',
-      Buffer.from(passphrase, 'utf8'),
-      {
-        name: 'PBKDF2',
-      },
-      false,
-      ['deriveBits'],
-    );
-    const algo = {
-      name: 'PBKDF2',
-      salt: Buffer.from(salt, 'hex'),
-      iterations: DEFAULT_PBKDF2_ITERATIONS,
-      hash: 'SHA-256',
-    };
-    const derivedKeyRaw = await window.crypto.subtle.deriveBits(algo, k, DEFAULT_BYTE_LENGTH * 8);
-    return Buffer.from(derivedKeyRaw).toString('hex');
-  }
-  console.log('[crypt] Using Forge PBKDF2');
-  const derivedKeyRaw = forge.pkcs5.pbkdf2(
-    passphrase,
-    forge.util.hexToBytes(salt),
-    DEFAULT_PBKDF2_ITERATIONS,
-    DEFAULT_BYTE_LENGTH,
-    forge.md.sha256.create(),
-  );
-  return forge.util.bytesToHex(derivedKeyRaw);
 }

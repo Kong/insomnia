@@ -98,7 +98,6 @@
     "gsap": "^3.12.7",
     "hawk": "9.0.2",
     "highlight.js": "^11.11.1",
-    "hkdf": "^0.0.2",
     "hosted-git-info": "5.2.1",
     "html-entities": "^2.6.0",
     "http-proxy-agent": "^7.0.2",
