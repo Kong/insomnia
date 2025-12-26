@@ -392,7 +392,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
 
       // Create or update credential in database
       const credentialData = {
-        name: 'Gitlab Credential',
+        name: 'GitLab Credential',
         token: access_token,
         refreshToken: refresh_token,
         provider: 'gitlab' as const,
