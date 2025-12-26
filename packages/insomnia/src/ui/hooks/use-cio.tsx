@@ -53,6 +53,8 @@ export const useCio = () => {
       })
       .catch(err => {
         console.error('[CIO] Failed to load SDK:', err);
+      })
+      .finally(() => {
         isInitializing = false;
       });
   }, []);
