@@ -20,7 +20,7 @@ import { fromUrl } from 'hosted-git-info';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
-import { type GitRemoteProviderType, isGitCredential } from '~/models/git-credentials';
+import { type GitRemoteProviderType, isGitCredentialsV2 } from '~/models/git-credentials';
 import { EMPTY_GIT_PROJECT_ID, isEmptyGitProject } from '~/models/project';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import { gitRemoteProviderRegistry, initializeGitRemoteProviders, type ProviderRepository } from '~/sync/git/providers';
@@ -776,7 +776,7 @@ export const cloneGitRepoAction = async ({
     if (credentialsId) {
       const credentials = await models.gitCredentials.getById(credentialsId);
       invariant(credentials, 'Git Credentials not found');
-      if (!isGitCredential(credentials)) {
+      if (!isGitCredentialsV2(credentials)) {
         throw new Error('Invalid Git Credentials');
       }
       provider = credentials.provider;
@@ -2352,7 +2352,7 @@ async function getGitProviderRepositories({
   try {
     const credentials = await models.gitCredentials.getById(credentialsId);
     invariant(credentials, 'Git credentials not found');
-    invariant(isGitCredential(credentials), 'Invalid Git credentials');
+    invariant(isGitCredentialsV2(credentials), 'Invalid Git credentials');
 
     // Use the appropriate provider for fetching repositories
     const provider = gitRemoteProviderRegistry.get(credentials.provider);

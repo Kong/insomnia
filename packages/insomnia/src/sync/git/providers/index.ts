@@ -32,12 +32,7 @@ export type {
 export type { GitCredentials as GitCredentialData, OauthProviderName } from '~/models/git-credentials';
 
 // Export type guards from model
-export {
-  isGitCredential as isUnifiedCredential,
-  isLegacyCredential,
-  isOAuthCredential,
-  supportsRenewal,
-} from '~/models/git-credentials';
+export { isGitCredentialsV2, isGitCredentialsV1, isOAuthCredential, supportsRenewal } from '~/models/git-credentials';
 
 // Export registry class
 export { GitRemoteProviderRegistry } from './registry';

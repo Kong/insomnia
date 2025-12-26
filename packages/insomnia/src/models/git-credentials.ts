@@ -8,6 +8,9 @@ export type GitRemoteProviderType = 'github' | 'gitlab' | 'custom';
 
 export type GitCredentials = BaseModel & BaseGitCredentials;
 
+export type GitCredentialsV1 = BaseModel & BaseGitCredentialsV1;
+export type GitCredentialsV2 = BaseModel & BaseGitCredentialsV2;
+
 export const name = 'Git Credentials';
 
 export const type = 'GitCredentials';
@@ -38,7 +41,7 @@ export function init(): BaseGitCredentials {
  * Legacy git credentials interface (for backward compatibility)
  * @deprecated Use the new provider-specific credential types
  */
-interface LegacyGitCredentials {
+interface BaseGitCredentialsV1 {
   token: string;
   refreshToken?: string;
   provider: 'githubapp' | 'github' | 'gitlab' | 'custom';
@@ -112,25 +115,25 @@ interface CustomCredential extends BaseCredentialData {
 /**
  * Unified credential type (new structure)
  */
-type GitCredential = GitHubCredential | GitLabCredential | CustomCredential;
+type BaseGitCredentialsV2 = GitHubCredential | GitLabCredential | CustomCredential;
 
 /**
  * Combined type supporting both legacy and new credential structures
  */
-type BaseGitCredentials = LegacyGitCredentials | GitCredential;
+type BaseGitCredentials = BaseGitCredentialsV1 | BaseGitCredentialsV2;
 
 /**
  * Type guard to check if credential is using new unified structure
  */
-export function isGitCredential(credential: GitCredentials): credential is BaseModel & GitCredential {
+export function isGitCredentialsV2(credential: GitCredentials): credential is GitCredentialsV2 {
   return 'name' in credential && typeof credential.name === 'string' && 'renewalAttempts' in credential;
 }
 
 /**
  * Type guard to check if credential is legacy structure
  */
-export function isLegacyCredential(credential: GitCredentials): credential is BaseModel & LegacyGitCredentials {
-  return !isGitCredential(credential);
+export function isGitCredentialsV1(credential: GitCredentials): credential is GitCredentialsV1 {
+  return !isGitCredentialsV2(credential);
 }
 
 /**
@@ -172,14 +175,14 @@ export function removeAll() {
 export function isOAuthCredential(
   credential: GitCredentials,
 ): credential is BaseModel & (GitHubCredential | GitLabCredential) {
-  return isGitCredential(credential) && (credential.provider === 'github' || credential.provider === 'gitlab');
+  return isGitCredentialsV2(credential) && (credential.provider === 'github' || credential.provider === 'gitlab');
 }
 
 /**
  * Type guard for credentials that support renewal
  */
 export function supportsRenewal(credential: GitCredentials): boolean {
-  if (!isGitCredential(credential)) return false;
+  if (!isGitCredentialsV2(credential)) return false;
   if (credential.provider === 'gitlab') {
     return !!credential.refreshToken;
   }

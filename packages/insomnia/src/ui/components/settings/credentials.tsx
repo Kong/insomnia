@@ -15,7 +15,12 @@ import {
 } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
-import type { GitRemoteProviderType } from '~/models/git-credentials';
+import {
+  type GitCredentials,
+  type GitCredentialsV2,
+  type GitRemoteProviderType,
+  isGitCredentialsV2,
+} from '~/models/git-credentials';
 import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
 import { useGitCredentialsDeleteActionFetcher } from '~/routes/git-credentials.$id.delete';
 import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
@@ -139,14 +144,18 @@ export const GitCredentialModal = ({
   isOpen,
   onClose,
   provider,
+  gitCredentialToEdit,
+  mode,
 }: {
+  isOpen: boolean;
+  onClose: () => void;
   provider: {
     type: GitRemoteProviderType;
     displayName: string;
     iconName?: IconProp;
   } | null;
-  isOpen: boolean;
-  onClose: () => void;
+  gitCredentialToEdit: GitCredentials | null;
+  mode: CredentialModalMode;
 }) => {
   return (
     <ModalOverlay
@@ -170,12 +179,26 @@ export const GitCredentialModal = ({
                   <Icon icon="x" />
                 </Button>
               </div>
-              {!provider || provider.type === 'custom' ? (
-                <GitCustomCredentialForm onCancel={close} onComplete={close} />
-              ) : null}
-              {provider && provider.type !== 'custom' && (
-                <GitProviderOAuthForm onComplete={onClose} provider={provider} />
+              {mode === 'create' && (
+                <>
+                  {!provider || provider.type === 'custom' ? (
+                    <GitCustomCredentialForm onCancel={close} onComplete={onClose} />
+                  ) : null}
+                  {provider && provider.type !== 'custom' && (
+                    <GitProviderOAuthForm onComplete={onClose} provider={provider} />
+                  )}
+                </>
               )}
+              {mode === 'edit' &&
+                gitCredentialToEdit &&
+                isGitCredentialsV2(gitCredentialToEdit) &&
+                provider?.type === 'custom' && (
+                  <GitCustomCredentialForm
+                    gitCredentialToEdit={gitCredentialToEdit}
+                    onCancel={close}
+                    onComplete={onClose}
+                  />
+                )}
             </div>
           )}
         </Dialog>
@@ -184,7 +207,11 @@ export const GitCredentialModal = ({
   );
 };
 
+type CredentialModalMode = 'create' | 'edit';
+
 const GitCredentialsList = () => {
+  const [gitCredentialModalMode, setGitCredentialModalMode] = useState<CredentialModalMode>('create');
+  const [gitCredentialToEdit, setGitCredentialToEdit] = useState<GitCredentialsV2 | null>(null);
   const credentialsFetcher = useGitCredentialsLoaderFetcher();
   const deleteCredentialFetcher = useGitCredentialsDeleteActionFetcher();
   const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
@@ -223,8 +250,9 @@ const GitCredentialsList = () => {
                     displayName: provider.displayName,
                     iconName: provider.iconName,
                   });
+                  setGitCredentialModalMode('create');
+                  setIsCredentialModalOpen(true);
                 }
-                setIsCredentialModalOpen(true);
               }}
               items={credentialsFetcher.data?.providers || []}
               className="max-h-[85vh] min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
@@ -246,19 +274,14 @@ const GitCredentialsList = () => {
       </div>
 
       <GridList
-        items={
-          credentialsFetcher.data?.credentials.map(credential => ({
-            ...credential,
-            id: credential._id,
-          })) || []
-        }
+        items={credentialsFetcher.data?.credentials || []}
         className="grid grid-cols-[min-content_1fr_min-content] gap-4"
       >
         {item => {
           const provider = credentialsFetcher.data?.providers.find(p => p.type === item.provider);
 
           return (
-            <GridListItem className="col-span-full grid grid-cols-subgrid grid-rows-subgrid">
+            <GridListItem id={item._id} className="col-span-full grid grid-cols-subgrid grid-rows-subgrid">
               <div className="flex items-center gap-2">
                 {provider?.iconName && <Icon icon={provider.iconName} className="size-5" />}
                 <span className="text-nowrap">{provider?.displayName}</span>
@@ -279,8 +302,22 @@ const GitCredentialsList = () => {
                 <span>{item.author.email}</span>
               </div>
               <div className="flex items-center justify-end gap-2">
-                {provider?.supportsOAuth ? null : (
-                  <Button className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)">
+                {isGitCredentialsV2(item) && provider && !provider.supportsOAuth && (
+                  <Button
+                    className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
+                    onPress={() => {
+                      if (provider) {
+                        setSelectedProvider({
+                          type: provider.type,
+                          displayName: provider.displayName,
+                          iconName: provider.iconName,
+                        });
+                        setGitCredentialToEdit(item);
+                        setGitCredentialModalMode('edit');
+                        setIsCredentialModalOpen(true);
+                      }
+                    }}
+                  >
                     <Icon icon="edit" /> Edit
                   </Button>
                 )}
@@ -293,7 +330,7 @@ const GitCredentialsList = () => {
                       okLabel: 'Delete',
                       addCancel: true,
                       onConfirm: async () => {
-                        deleteCredentialFetcher.submit({ id: item.id });
+                        deleteCredentialFetcher.submit({ id: item._id });
                       },
                     });
                   }}
@@ -308,6 +345,8 @@ const GitCredentialsList = () => {
       </GridList>
       {selectedProvider && (
         <GitCredentialModal
+          gitCredentialToEdit={gitCredentialToEdit}
+          mode={gitCredentialModalMode}
           isOpen={isCredentialModalOpen}
           onClose={() => {
             setIsCredentialModalOpen(false);

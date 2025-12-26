@@ -1,8 +1,8 @@
 import type { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
-import { isGitCredential } from '~/models/git-credentials';
+import { isGitCredentialsV2 } from '~/models/git-credentials';
 import type { GitAuthor } from '~/models/git-repository';
-import { gitRemoteProviderRegistry, isLegacyCredential } from '~/sync/git/providers';
+import { gitRemoteProviderRegistry, isGitCredentialsV1 } from '~/sync/git/providers';
 import { invariant } from '~/utils/invariant';
 
 import { gitCredentials, gitRepository } from '../../models';
@@ -21,7 +21,7 @@ const onAuthFailure = (credentialsId?: string | null): AuthFailureCallback => {
       invariant(credentialsId, 'No credentials ID provided for auth failure handling');
       const credentials = await gitCredentials.getById(credentialsId);
       invariant(credentials, 'Credentials not found for auth failure handling');
-      invariant(isGitCredential(credentials), 'Legacy credentials are not supported');
+      invariant(isGitCredentialsV2(credentials), 'Legacy credentials are not supported');
 
       const provider = gitRemoteProviderRegistry.get(credentials.provider);
 
@@ -57,7 +57,7 @@ const onAuth =
 
     const credentials = await gitCredentials.getById(credentialsId);
 
-    if (!credentials || isLegacyCredential(credentials)) {
+    if (!credentials || isGitCredentialsV1(credentials)) {
       console.log('[git-event] No credentials found or using legacy credentials');
       return {
         username: '',
@@ -91,7 +91,7 @@ export const getAuthorFromGitRepository = async (gitRepositoryId: string): Promi
 
   const credentials = await gitCredentials.getById(gitRepo.credentialsId);
 
-  if (!credentials || isLegacyCredential(credentials)) {
+  if (!credentials || isGitCredentialsV1(credentials)) {
     return {
       name: '',
       email: '',

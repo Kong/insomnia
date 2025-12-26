@@ -6,7 +6,7 @@ import { v4 } from 'uuid';
 import { getApiBaseURL, getAppWebsiteBaseURL, PLAYWRIGHT } from '~/common/constants';
 import * as models from '~/models';
 import type { GitCredentials } from '~/models/git-credentials';
-import { isGitCredential } from '~/models/git-credentials';
+import { isGitCredentialsV2 } from '~/models/git-credentials';
 
 import type {
   GitHubProviderConfig,
@@ -109,7 +109,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
    * Fetch repositories accessible by the credential
    */
   async fetchRepositories(credentials: GitCredentials, refresh?: boolean): Promise<ProviderRepository[]> {
-    if (!isGitCredential(credentials) || credentials.provider !== 'github') {
+    if (!isGitCredentialsV2(credentials) || credentials.provider !== 'github') {
       throw new Error('Invalid credential type for GitHub provider');
     }
 
@@ -172,7 +172,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
    * Fetch user emails from GitHub
    */
   async fetchUserEmails(credential: GitCredentials): Promise<ProviderEmail[]> {
-    if (!isGitCredential(credential) || credential.provider !== 'github') {
+    if (!isGitCredentialsV2(credential) || credential.provider !== 'github') {
       throw new Error('Invalid credential type for GitHub provider');
     }
 
@@ -183,14 +183,10 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
    * Fetch user info from GitHub
    * Used during OAuth completion to get user details
    */
-  async fetchUser(credential: GitCredentials): Promise<ProviderUser> {
-    if (!isGitCredential(credential) || credential.provider !== 'github') {
-      throw new Error('Invalid credential type for GitHub provider');
-    }
-
+  async fetchUser(token: string): Promise<ProviderUser> {
     const response = await net.fetch(`${this.config.apiUrl}/user`, {
       headers: {
-        Authorization: `token ${credential.token}`,
+        Authorization: `token ${token}`,
         Accept: 'application/vnd.github.v3+json',
       },
     });
@@ -291,23 +287,11 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
       const data = (await response.json()) as GitHubOAuthTokenResponse;
       githubStatesCache.delete(state);
 
-      const credential = {
-        _id: 'temp',
-        type: 'GitCredentials',
-        parentId: '',
-        modified: Date.now(),
-        created: Date.now(),
-        isPrivate: false,
-        token: data.access_token,
-        provider: 'github',
-        name: 'GitHub OAuth',
-        author: { email: '', name: '', avatarUrl: '' },
-        renewalAttempts: 0,
-        emails: [],
-      } satisfies GitCredentials;
-
       // Fetch user details
-      const [emails, user] = await Promise.all([this.fetchEmails(data.access_token), this.fetchUser(credential)]);
+      const [emails, user] = await Promise.all([
+        this.fetchEmails(data.access_token),
+        this.fetchUser(data.access_token),
+      ]);
 
       const userProfileEmail = user.email ?? '';
       const email = emails.find(e => e.primary)?.email ?? userProfileEmail ?? '';
@@ -326,7 +310,6 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
 
       return {
         success: true,
-        credential,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to complete the GitHub OAuth flow';
@@ -343,7 +326,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
    * Converts GitHub OAuth token to format expected by isomorphic-git
    */
   authCallback(credential: GitCredentials): GitAuth {
-    if (!isGitCredential(credential) || credential.provider !== 'github') {
+    if (!isGitCredentialsV2(credential) || credential.provider !== 'github') {
       throw new Error('Invalid credential type for GitHub provider');
     }
 

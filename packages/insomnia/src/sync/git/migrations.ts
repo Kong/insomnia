@@ -34,8 +34,7 @@ import type { GitCredentials } from '../../models/git-credentials';
 const MIGRATION_KEY = 'GIT_CREDENTIALS_MIGRATION';
 
 const migrationStorage = initElectronStorage();
-// TODO: test
-const hasRunMigration = () => migrationStorage.getItem(MIGRATION_KEY) === 1;
+const hasRunMigration = () => migrationStorage.getItem(MIGRATION_KEY);
 const markMigrationComplete = () => migrationStorage.setItem(MIGRATION_KEY, 1);
 
 async function migrateGitHubConnectedRepositories(repositories: GitRepository[]) {
@@ -77,7 +76,6 @@ async function migrateGitLabConnectedRepositories(repositories: GitRepository[])
       await models.gitRepository.update(repo, {
         credentialsId: gitlabCredentials._id,
         credentials: null,
-        // TODO: what is author in gitRepository used for?
         author: {
           name: '',
           email: '',
@@ -101,7 +99,7 @@ async function migrateCustomCredentialsRepositories(repositories: GitRepository[
 
     if (!credentials) {
       credentials = await models.gitCredentials.create({
-        name: 'Custom git credential',
+        name: 'Custom Git Credential',
         provider: 'custom',
         author: repo.author,
         renewalAttempts: 0,

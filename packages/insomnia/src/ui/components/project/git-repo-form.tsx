@@ -24,7 +24,7 @@ import { GitRemoteBranchSelect } from '~/ui/components/git-credentials/git-remot
 import { GitRepositorySelect } from '~/ui/components/git-credentials/git-repository-select';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
-import { type GitCredentials, isGitCredential } from '../../../models/git-credentials';
+import { type GitCredentials, isGitCredentialsV2 } from '../../../models/git-credentials';
 import { ErrorBoundary } from '../error-boundary';
 import type { ActiveView, ProjectData } from './utils';
 
@@ -207,7 +207,7 @@ export const GitRepoForm: FC<Props> = ({
                 let prefix = '';
                 if (
                   selectedCredential &&
-                  isGitCredential(selectedCredential) &&
+                  isGitCredentialsV2(selectedCredential) &&
                   selectedCredential.provider === 'custom' &&
                   selectedCredential.baseURI
                 ) {
@@ -221,7 +221,7 @@ export const GitRepoForm: FC<Props> = ({
             >
               <Label className="text-start text-sm">Git URI (https, including .git suffix)</Label>
               {selectedCredential &&
-              isGitCredential(selectedCredential) &&
+              isGitCredentialsV2(selectedCredential) &&
               selectedCredential.provider === 'custom' &&
               selectedCredential.baseURI ? (
                 <div className="flex h-(--line-height-xxs) w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) p-0 pr-7 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">

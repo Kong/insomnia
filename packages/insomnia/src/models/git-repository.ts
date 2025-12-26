@@ -42,6 +42,9 @@ export interface BaseGitRepository {
    */
   credentials: GitCredentials | null;
   credentialsId: string | null;
+  /**
+   * @deprecated Use the author in the corresponding credential
+   */
   author: {
     name: string;
     email: string;
