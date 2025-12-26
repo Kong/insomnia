@@ -1,4 +1,4 @@
-import type { GitRemoteProvider, GitRemoteProviderType, ValidationResult } from './types';
+import type { GitProviderOption, GitRemoteProvider, GitRemoteProviderType, ValidationResult } from './types';
 
 // Re-export types from git-credentials model for convenience
 export type {
@@ -56,7 +56,7 @@ export class GitRemoteProviderRegistry {
   /**
    * List provider options for UI
    */
-  listProviderOptions() {
+  listProviderOptions(): GitProviderOption[] {
     return this.getAll().map(provider => ({
       id: provider.config.type,
       type: provider.config.type,

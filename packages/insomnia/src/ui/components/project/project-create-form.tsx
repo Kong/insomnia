@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { GitCredentials } from '~/models/git-credentials';
 import { type StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import {
@@ -10,6 +11,7 @@ import {
   useOrganizationPermissionsLoaderFetcher,
 } from '~/routes/organization.$organizationId.permissions';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
+import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
@@ -25,6 +27,8 @@ interface Props {
   defaultProjectName?: string;
   onCancel?(): void;
   activeViewObj?: ReturnType<typeof useActiveView>;
+  credentials: GitCredentials[];
+  providers: GitProviderOption[];
 }
 
 export const ProjectCreateForm: FC<Props> = ({
@@ -33,6 +37,8 @@ export const ProjectCreateForm: FC<Props> = ({
   defaultProjectName = 'My Project',
   onCancel,
   activeViewObj,
+  credentials,
+  providers,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
@@ -92,6 +98,8 @@ export const ProjectCreateForm: FC<Props> = ({
     });
   };
 
+  const hideActionButtons = storageType === 'git' && !projectData.connectRepositoryLater && credentials.length === 0;
+
   return (
     <>
       {/* Content */}
@@ -137,6 +145,8 @@ export const ProjectCreateForm: FC<Props> = ({
               initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
               organizationId={organizationId}
               setActiveView={setActiveView}
+              credentials={credentials}
+              providers={providers}
             />
           )}
         </div>
@@ -154,34 +164,36 @@ export const ProjectCreateForm: FC<Props> = ({
 
       {activeView === 'project' && (
         <div className="flex w-full items-center justify-end gap-2 px-0.5">
-          <div className="flex items-center gap-2">
-            {onCancel && (
-              <Button
-                onPress={onCancel}
-                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
-              >
-                Cancel
-              </Button>
-            )}
-            {storageType !== 'git' || projectData.connectRepositoryLater ? (
-              <Button
-                onPress={onUpsertProject}
-                isDisabled={!storageType || newProjectFetcher.state !== 'idle'}
-                className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-              >
-                {newProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
-                <span>Create</span>
-              </Button>
-            ) : (
-              <Button
-                type="submit"
-                form="git-repo-form"
-                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-              >
-                Scan for files
-              </Button>
-            )}
-          </div>
+          {!hideActionButtons && (
+            <div className="flex items-center gap-2">
+              {onCancel && (
+                <Button
+                  onPress={onCancel}
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
+                >
+                  Cancel
+                </Button>
+              )}
+              {storageType !== 'git' || projectData.connectRepositoryLater ? (
+                <Button
+                  onPress={onUpsertProject}
+                  isDisabled={!storageType || newProjectFetcher.state !== 'idle'}
+                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                >
+                  {newProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
+                  <span>Create</span>
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  form="git-repo-form"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                >
+                  Scan for files
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       )}
 

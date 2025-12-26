@@ -180,3 +180,14 @@ export interface GitRemoteProvider<TConfig extends BaseProviderConfig = BaseProv
    */
   authFailureCallback(credential: any): Promise<GitAuth> | GitAuth | void | Promise<void>;
 }
+
+export interface GitProviderOption {
+  id: GitRemoteProviderType;
+  type: GitRemoteProviderType;
+  displayName: string;
+  description?: string;
+  iconName?: IconProp;
+  supportsOAuth: boolean;
+  supportsFetchRepos: boolean;
+  supportsAutoRenew: boolean;
+}
