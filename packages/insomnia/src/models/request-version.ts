@@ -4,10 +4,10 @@ import { database, database as db } from '../common/database';
 import { compressObject, decompressObject } from '../common/misc';
 import * as requestOperations from '../models/helpers/request-operations';
 import type { GrpcRequest } from './grpc-request';
-import type { BaseModel } from './index';
 import { isMcpRequest, type McpRequest } from './mcp-request';
 import { isRequest, type Request } from './request';
 import { isSocketIORequest, type SocketIORequest } from './socket-io-request';
+import type { BaseModel } from './types';
 import { isWebSocketRequest, type WebSocketRequest } from './websocket-request';
 
 /* When viewing a specific request, the user can click the Send button to test-send it.

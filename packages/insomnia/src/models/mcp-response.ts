@@ -2,10 +2,10 @@ import fs from 'node:fs';
 
 import { database as db } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
-import type { BaseModel } from './index';
 import * as models from './index';
 import { TRANSPORT_TYPES, type TransportType } from './mcp-request';
 import type { ResponseHeader } from './response';
+import type { BaseModel } from './types';
 
 export const name = 'Mcp Response';
 export const type = 'McpResponse';

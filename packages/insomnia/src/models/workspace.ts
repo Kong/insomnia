@@ -2,9 +2,9 @@ import type { Merge } from 'type-fest';
 
 import { database as db } from '../common/database';
 import { strings } from '../common/strings';
-import type { BaseModel } from './index';
 import * as models from './index';
 import { isProjectId } from './project';
+import type { BaseModel } from './types';
 
 export const name = 'Workspace';
 export const type = 'Workspace';

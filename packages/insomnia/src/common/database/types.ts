@@ -3,7 +3,7 @@
 
 import type NeDB from '@seald-io/nedb';
 
-import type { AllTypes, BaseModel } from '../../models/index';
+import type { AllTypes, BaseModel } from '~/models/types';
 
 export interface Operation {
   upsert?: BaseModel[];
@@ -75,7 +75,7 @@ export interface IDatabase {
     type: AllTypes,
     query?: Query<T> | string,
     sort?: Record<string, any>,
-    limit?: number
+    limit?: number,
   ): Promise<T[]>;
 
   /**
@@ -84,7 +84,7 @@ export interface IDatabase {
   findOne<T extends BaseModel>(
     type: AllTypes,
     query?: Query<T> | string,
-    sort?: Record<string, any>
+    sort?: Record<string, any>,
   ): Promise<T | undefined>;
 
   /**

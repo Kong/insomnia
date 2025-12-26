@@ -1,6 +1,6 @@
 import { database } from '../common/database';
-import type { BaseModel } from '.';
 import type { RequestAuthentication, RequestHeader, RequestParameter, RequestPathParameter } from './request';
+import type { BaseModel } from './types';
 
 export const name = 'Socket.IO Request';
 

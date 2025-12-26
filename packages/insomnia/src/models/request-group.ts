@@ -1,7 +1,7 @@
 import { database as db } from '../common/database';
 import type { EnvironmentKvPairData, EnvironmentType } from './environment';
-import type { BaseModel } from './index';
 import type { RequestAuthentication, RequestHeader } from './request';
+import type { BaseModel } from './types';
 
 export const name = 'Folder';
 

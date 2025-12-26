@@ -7,8 +7,8 @@ import { database as db } from '../common/database';
 import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as requestOperations from '../models/helpers/request-operations';
 import { deserializeNDJSON } from '../utils/ndjson';
-import type { BaseModel } from './index';
 import * as models from './index';
+import type { BaseModel } from './types';
 
 export const name = 'Response';
 
