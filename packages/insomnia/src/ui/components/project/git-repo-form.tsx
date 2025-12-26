@@ -17,8 +17,9 @@ import {
 import { Icon } from '~/basic-components/icon';
 import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
+import type { GitProviderOption } from '~/sync/git/providers/types';
 import { Checkbox } from '~/ui/components/base/checkbox';
+import { GitCredentialSetup } from '~/ui/components/git-credentials/credential-setup';
 import { GitRemoteBranchSelect } from '~/ui/components/git-credentials/git-remote-branch-select';
 import { GitRepositorySelect } from '~/ui/components/git-credentials/git-repository-select';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
@@ -33,6 +34,8 @@ interface Props {
   initCloneGitRepositoryFetcher: ReturnType<typeof useGitProjectInitCloneActionFetcher>;
   organizationId: string;
   setActiveView: React.Dispatch<React.SetStateAction<ActiveView>>;
+  credentials: GitCredentials[];
+  providers: GitProviderOption[];
 }
 
 export const GitRepoForm: FC<Props> = ({
@@ -41,6 +44,8 @@ export const GitRepoForm: FC<Props> = ({
   initCloneGitRepositoryFetcher,
   organizationId,
   setActiveView,
+  credentials,
+  providers,
 }) => {
   const allConnectedReposLoaderFetcher = useAllConnectedReposLoaderFetcher();
   const allConnectedReposLoaderFetcherLoad = allConnectedReposLoaderFetcher.load;
@@ -51,19 +56,12 @@ export const GitRepoForm: FC<Props> = ({
 
   const allConnectedRepoURIProjectNameMap = allConnectedReposLoaderFetcher.data;
 
-  const credentialsFetcher = useGitCredentialsLoaderFetcher();
-
-  useEffect(() => {
-    if (credentialsFetcher.state === 'idle' && !credentialsFetcher.data) {
-      credentialsFetcher.load();
-    }
-  }, [credentialsFetcher]);
-
   const [isCredentialSelectOpen, setIsCredentialSelectOpen] = useState(false);
 
-  const selectedCredentialsId = projectData.credentialsId || credentialsFetcher.data?.credentials[0]?._id;
-  const selectedCredential = credentialsFetcher.data?.credentials.find(c => c._id === selectedCredentialsId);
-  const selectedProvider = credentialsFetcher.data?.providers.find(p => p.type === selectedCredential?.provider);
+  const selectedCredentialsId = projectData.credentialsId || credentials?.[0]?._id;
+  const selectedCredential = credentials.find(c => c._id === selectedCredentialsId);
+  const selectedProvider = providers.find(p => p.type === selectedCredential?.provider);
+  const needToSetupCredentials = credentials.length === 0;
 
   return (
     <ErrorBoundary>
@@ -75,7 +73,9 @@ export const GitRepoForm: FC<Props> = ({
         Connect repository later
       </Checkbox>
 
-      {!projectData.connectRepositoryLater && credentialsFetcher.data && (
+      {needToSetupCredentials && !projectData.connectRepositoryLater && <GitCredentialSetup providers={providers} />}
+
+      {!needToSetupCredentials && !projectData.connectRepositoryLater && (
         <Form
           id="git-repo-form"
           onSubmit={async e => {
@@ -116,13 +116,13 @@ export const GitRepoForm: FC<Props> = ({
                   credentialsId: id as string,
                 }))
               }
-              defaultSelectedKey={credentialsFetcher.data?.credentials[0]._id}
+              defaultSelectedKey={credentials?.[0]?._id}
             >
               <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
                 <SelectValue<GitCredentials> className="flex items-center justify-center gap-2 truncate">
                   {({ selectedItem }) => {
                     if (selectedItem) {
-                      const provider = credentialsFetcher.data?.providers.find(p => p.type === selectedItem.provider);
+                      const provider = providers.find(p => p.type === selectedItem.provider);
 
                       return (
                         <Fragment>
@@ -141,10 +141,7 @@ export const GitRepoForm: FC<Props> = ({
                 <Icon icon="caret-down" />
               </Button>
               <Popover className="isolate flex w-(--trigger-width) min-w-max flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none">
-                <ListBox
-                  items={credentialsFetcher.data?.credentials}
-                  className="min-w-max overflow-y-auto py-2 focus:outline-hidden"
-                >
+                <ListBox items={credentials} className="min-w-max overflow-y-auto py-2 focus:outline-hidden">
                   {item => (
                     <ListBoxItem
                       id={item._id}
@@ -155,7 +152,7 @@ export const GitRepoForm: FC<Props> = ({
                       value={item}
                     >
                       {({ isSelected }) => {
-                        const provider = credentialsFetcher.data?.providers.find(p => p.type === item.provider);
+                        const provider = providers.find(p => p.type === item.provider);
 
                         return (
                           <Fragment>

@@ -3,32 +3,24 @@ import { useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
-  FieldError,
-  Form,
   GridList,
   GridListItem,
   Heading,
-  Input,
-  Label,
-  Link,
   Menu,
   MenuItem,
   MenuTrigger,
   Modal,
   ModalOverlay,
   Popover,
-  TextField,
 } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
-import { docsGitAccessToken } from '~/common/documentation';
 import type { GitRemoteProviderType } from '~/models/git-credentials';
 import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
 import { useGitCredentialsDeleteActionFetcher } from '~/routes/git-credentials.$id.delete';
 import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
-import { useGitCredentialsCreateActionFetcher } from '~/routes/git-credentials.create';
 import { useInitSignInToGitProviderFetcher } from '~/routes/git-credentials.init-sign-in';
-import { HelpTooltip } from '~/ui/components/help-tooltip';
+import { GitCustomCredentialForm } from '~/ui/components/git-credentials/git-custom-credential-form';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { CloudServiceCredentialList } from '~/ui/components/settings/cloud-service-credentials';
@@ -143,153 +135,7 @@ const GitProviderOAuthForm = ({
   );
 };
 
-const GitProviderAccessTokenForm = ({ onComplete }: { onComplete?: () => void }) => {
-  const createCredentialFetcher = useGitCredentialsCreateActionFetcher();
-
-  const linkIcon = <i className="fa fa-external-link-square" />;
-  const defaultValues = {
-    uri: '',
-    credentials: { username: '', password: '' },
-    author: { name: '', email: '' },
-  };
-
-  const [credentials, setCredentials] = useState({
-    username: defaultValues.credentials?.username || '',
-    password:
-      defaultValues.credentials && 'password' in defaultValues.credentials ? defaultValues.credentials.password : '',
-  });
-
-  const author = defaultValues.author;
-
-  return (
-    <Form
-      className="group/form grid grid-cols-2 gap-4"
-      onSubmit={async event => {
-        event.preventDefault();
-
-        const formData = new FormData(event.currentTarget);
-
-        await createCredentialFetcher.submit({
-          provider: 'custom',
-          author: {
-            name: (formData.get('authorName') as string) || '',
-            email: (formData.get('authorEmail') as string) || '',
-          },
-          username: (formData.get('username') as string) || '',
-          password: (formData.get('password') as string) || '',
-          baseURI: (formData.get('baseURI') as string) || '',
-        });
-
-        onComplete?.();
-      }}
-    >
-      <TextField
-        autoFocus
-        name="authorName"
-        defaultValue={author?.name}
-        className="flex w-full flex-col gap-1 px-0.5"
-        isRequired
-      >
-        <Label className="text-start text-sm font-semibold">Your Name</Label>
-        <Input
-          placeholder="Your Name"
-          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-        />
-        <FieldError className="text-xs text-(--color-danger)" />
-      </TextField>
-      <TextField
-        name="authorEmail"
-        type="email"
-        defaultValue={author?.email}
-        className="flex w-full flex-col gap-1 px-0.5"
-        isRequired
-      >
-        <Label className="text-start text-sm font-semibold">Your Email</Label>
-        <Input
-          placeholder="Email"
-          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-        />
-        <FieldError className="text-xs text-(--color-danger)" />
-      </TextField>
-      <TextField
-        name="username"
-        defaultValue={credentials?.username}
-        onChange={value => setCredentials({ ...credentials, username: value })}
-        className="flex w-full flex-col gap-1 px-0.5"
-        isRequired
-      >
-        <Label className="text-start text-sm font-semibold">Your Git Username</Label>
-        <Input
-          placeholder="MyUserName"
-          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-        />
-        <FieldError className="text-xs text-(--color-danger)" />
-      </TextField>
-      <TextField
-        name="password"
-        type="password"
-        onChange={value => setCredentials({ ...credentials, password: value })}
-        defaultValue={'password' in credentials ? credentials?.password : ''}
-        className="flex w-full flex-col gap-1 px-0.5"
-        isRequired
-      >
-        <Label className="text-start text-sm font-semibold">
-          Git Access Token
-          <HelpTooltip className="space-left">
-            Create a personal access token
-            <br />
-            <Link href={docsGitAccessToken.github}>GitHub {linkIcon}</Link>
-            {' | '}
-            <Link href={docsGitAccessToken.gitlab}>GitLab {linkIcon}</Link>
-            {' | '}
-            <Link href={docsGitAccessToken.bitbucket}>Bitbucket {linkIcon}</Link>
-            {' | '}
-            <Link href={docsGitAccessToken.bitbucketServer}>Bitbucket Server {linkIcon}</Link>
-            {' | '}
-            <Link href={docsGitAccessToken.azureDevOps}>Azure DevOps {linkIcon}</Link>
-          </HelpTooltip>
-        </Label>
-        <Input
-          placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
-          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-        />
-        <FieldError className="text-xs text-(--color-danger)" />
-      </TextField>
-      <TextField name="baseURI" type="url" className="col-span-2 flex w-full flex-col gap-1 px-0.5">
-        <Label className="text-start text-sm font-semibold">
-          Repository base URL
-          <p className="text-xs text-(--hl)">Specify the git server base URL that correlates with this access token.</p>
-        </Label>
-        <Input
-          placeholder="https://github.com/my-organization/"
-          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-        />
-        <FieldError className="text-xs text-(--color-danger)">
-          {({ isInvalid }) => (isInvalid ? 'Please ensure the URL is valid.' : null)}
-        </FieldError>
-      </TextField>
-      <div className="col-span-full flex items-center justify-end gap-2">
-        <Button
-          type="button"
-          className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-sm)"
-          onPress={() => {
-            onComplete?.();
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          className="col-span-2 flex h-(--line-height-xs) items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-        >
-          Create Credential
-        </Button>
-      </div>
-    </Form>
-  );
-};
-
-const GitCredentialModal = ({
+export const GitCredentialModal = ({
   isOpen,
   onClose,
   provider,
@@ -324,7 +170,9 @@ const GitCredentialModal = ({
                   <Icon icon="x" />
                 </Button>
               </div>
-              {!provider || provider.type === 'custom' ? <GitProviderAccessTokenForm onComplete={onClose} /> : null}
+              {!provider || provider.type === 'custom' ? (
+                <GitCustomCredentialForm onCancel={close} onComplete={close} />
+              ) : null}
               {provider && provider.type !== 'custom' && (
                 <GitProviderOAuthForm onComplete={onClose} provider={provider} />
               )}
