@@ -145,7 +145,6 @@ export const GitCredentialModal = ({
   onClose,
   provider,
   gitCredentialToEdit,
-  mode,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -155,7 +154,6 @@ export const GitCredentialModal = ({
     iconName?: IconProp;
   } | null;
   gitCredentialToEdit: GitCredentials | null;
-  mode: CredentialModalMode;
 }) => {
   return (
     <ModalOverlay
@@ -179,7 +177,7 @@ export const GitCredentialModal = ({
                   <Icon icon="x" />
                 </Button>
               </div>
-              {mode === 'create' && (
+              {!gitCredentialToEdit && (
                 <>
                   {!provider || provider.type === 'custom' ? (
                     <GitCustomCredentialForm onCancel={close} onComplete={onClose} />
@@ -189,16 +187,13 @@ export const GitCredentialModal = ({
                   )}
                 </>
               )}
-              {mode === 'edit' &&
-                gitCredentialToEdit &&
-                isGitCredentialsV2(gitCredentialToEdit) &&
-                provider?.type === 'custom' && (
-                  <GitCustomCredentialForm
-                    gitCredentialToEdit={gitCredentialToEdit}
-                    onCancel={close}
-                    onComplete={onClose}
-                  />
-                )}
+              {gitCredentialToEdit && isGitCredentialsV2(gitCredentialToEdit) && provider?.type === 'custom' && (
+                <GitCustomCredentialForm
+                  gitCredentialToEdit={gitCredentialToEdit}
+                  onCancel={close}
+                  onComplete={onClose}
+                />
+              )}
             </div>
           )}
         </Dialog>
@@ -207,10 +202,7 @@ export const GitCredentialModal = ({
   );
 };
 
-type CredentialModalMode = 'create' | 'edit';
-
 const GitCredentialsList = () => {
-  const [gitCredentialModalMode, setGitCredentialModalMode] = useState<CredentialModalMode>('create');
   const [gitCredentialToEdit, setGitCredentialToEdit] = useState<GitCredentialsV2 | null>(null);
   const credentialsFetcher = useGitCredentialsLoaderFetcher();
   const deleteCredentialFetcher = useGitCredentialsDeleteActionFetcher();
@@ -250,7 +242,7 @@ const GitCredentialsList = () => {
                     displayName: provider.displayName,
                     iconName: provider.iconName,
                   });
-                  setGitCredentialModalMode('create');
+                  setGitCredentialToEdit(null);
                   setIsCredentialModalOpen(true);
                 }
               }}
@@ -275,13 +267,17 @@ const GitCredentialsList = () => {
 
       <GridList
         items={credentialsFetcher.data?.credentials || []}
+        aria-label="Git credentials list"
         className="grid grid-cols-[min-content_1fr_min-content] gap-4"
       >
         {item => {
           const provider = credentialsFetcher.data?.providers.find(p => p.type === item.provider);
-
           return (
-            <GridListItem id={item._id} className="col-span-full grid grid-cols-subgrid grid-rows-subgrid">
+            <GridListItem
+              id={item._id}
+              className="col-span-full grid grid-cols-subgrid grid-rows-subgrid"
+              textValue={item.name || 'Credentials Item'}
+            >
               <div className="flex items-center gap-2">
                 {provider?.iconName && <Icon icon={provider.iconName} className="size-5" />}
                 <span className="text-nowrap">{provider?.displayName}</span>
@@ -313,7 +309,6 @@ const GitCredentialsList = () => {
                           iconName: provider.iconName,
                         });
                         setGitCredentialToEdit(item);
-                        setGitCredentialModalMode('edit');
                         setIsCredentialModalOpen(true);
                       }
                     }}
@@ -346,7 +341,6 @@ const GitCredentialsList = () => {
       {selectedProvider && (
         <GitCredentialModal
           gitCredentialToEdit={gitCredentialToEdit}
-          mode={gitCredentialModalMode}
           isOpen={isCredentialModalOpen}
           onClose={() => {
             setIsCredentialModalOpen(false);
