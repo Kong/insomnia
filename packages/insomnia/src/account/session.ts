@@ -193,34 +193,7 @@ async function _removeAllCredentials() {
   const cloudCredentials = await cloudCredential.all();
   for (const cred of cloudCredentials) {
     if ('credentials' in cred) {
-      if ('secretAccessKey' in cred.credentials) {
-        removals.push(
-          cloudCredential.update(cred, {
-            // AWS
-            credentials: { ...cred.credentials, secretAccessKey: '', sessionToken: '' },
-          }),
-        );
-        continue;
-      }
-      // hashicorp
-      if ('access_token' in cred.credentials) {
-        removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, access_token: '' } }));
-        continue;
-      }
-      if ('client_secret' in cred.credentials) {
-        removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, client_secret: '' } }));
-        continue;
-      }
-      if ('secret_id' in cred.credentials) {
-        removals.push(
-          cloudCredential.update(cred, { credentials: { ...cred.credentials, secret_id: '', role_id: '' } }),
-        );
-        continue;
-      }
-      // azure
-      if ('accessToken' in cred.credentials) {
-        removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, accessToken: '' } }));
-      }
+      removals.push(cloudCredential.update(cred, { credentials: undefined }));
     }
   }
 

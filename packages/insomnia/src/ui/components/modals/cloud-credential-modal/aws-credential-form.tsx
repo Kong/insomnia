@@ -19,7 +19,7 @@ export interface AWSCredentialFormProps {
   isLoading: boolean;
   errorMessage?: string;
 }
-const initialFormValue: { name: string; credentials: AWSCloudCredential['credentials'] } = {
+const initialFormValue: { name: string; credentials: Required<AWSCloudCredential>['credentials'] } = {
   name: '',
   credentials: {
     type: AWSCredentialType.temp,
@@ -34,7 +34,7 @@ export const providerType: CloudProviderName = 'aws';
 export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
   const { data, onSubmit, isLoading, errorMessage } = props;
   const isEdit = !!data;
-  const { name, credentials } = (data || initialFormValue) as {
+  const { name, credentials = initialFormValue.credentials } = (data || initialFormValue) as {
     name: string;
     credentials: AWSCloudCredential['credentials'];
   };

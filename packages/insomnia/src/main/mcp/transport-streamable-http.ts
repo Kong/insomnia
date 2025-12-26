@@ -1,7 +1,7 @@
 import {
   auth,
   type AuthResult,
-  extractResourceMetadataUrl,
+  extractWWWAuthenticateParams,
   UnauthorizedError,
 } from '@modelcontextprotocol/sdk/client/auth.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
@@ -160,7 +160,12 @@ const wrappedFetch = async (
       }
     }
 
-    const resourceMetadataUrl = extractResourceMetadataUrl(response);
+    const { resourceMetadataUrl, scope: scopeFromWWWAuthenticate } = extractWWWAuthenticateParams(response);
+    // Use scope from authenticate config if available, otherwise use scope from WWW-Authenticate header
+    const scope =
+      'scope' in authentication && authentication.scope && authentication.scope.trim().length > 0
+        ? authentication.scope
+        : scopeFromWWWAuthenticate;
     if (resourceMetadataUrl) {
       authProvider.saveResourceMetadataUrl(resourceMetadataUrl);
     }
@@ -183,6 +188,7 @@ const wrappedFetch = async (
     const redirectPromise = new Promise<string>(res => (authPromiseResolve = res));
     const unsubscribe = authProvider.onRedirectEnd(async (authorizationCode: string) => {
       // Resolve the promise to continue the auth flow after user has completed authorization in default browser
+      // Will be triggered when `redirectToAuthorization` completes in the oauth client provider
       authPromiseResolve(authorizationCode);
     });
 
@@ -243,6 +249,7 @@ const wrappedFetch = async (
         serverUrl: url,
         resourceMetadataUrl,
         fetchFn: authFetchFn,
+        scope,
       });
       // Wait for user to complete authorization in default browser and get authorization code
       if (authResult === 'REDIRECT') {
@@ -252,6 +259,7 @@ const wrappedFetch = async (
         authResult = await auth(authProvider, {
           serverUrl: url,
           resourceMetadataUrl,
+          scope,
           authorizationCode,
           fetchFn: authFetchFn,
         });
@@ -268,6 +276,7 @@ const wrappedFetch = async (
       BrowserWindow.getAllWindows().forEach(window => {
         window.webContents.send('hide-oauth-authorization-modal');
       });
+      // cleanup the oauth client provider listener
       unsubscribe();
     }
     return await wrappedFetch(url, init, context, authProvider, true);

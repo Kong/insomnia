@@ -33,8 +33,8 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: package-lock.json
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@kong"
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kong'
 
       - name: Install packages
         run: npm ci
@@ -52,6 +52,8 @@ jobs:
 
       - name: Check Circular References
         uses: actions/github-script@v7
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: github.event_name == 'pull_request' && always()
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
