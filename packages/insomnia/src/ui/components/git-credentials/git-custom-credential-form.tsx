@@ -22,6 +22,7 @@ export const GitCustomCredentialForm = ({
         name: (formData.get('authorName') as string) || '',
         email: (formData.get('authorEmail') as string) || '',
       },
+      username: (formData.get('username') as string) || '',
       password: (formData.get('password') as string) || '',
       baseURI: (formData.get('baseURI') as string) || '',
     });
