@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import React, { type FC, Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
-import { Heading, Switch } from 'react-aria-components';
+import { Heading } from 'react-aria-components';
 
 import { useImportResourcesFetcher } from '~/routes/import.resources';
 import { useScanResourcesFetcher } from '~/routes/import.scan';
