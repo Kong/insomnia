@@ -19,7 +19,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     await vcs.removeRemoteBranch(branch);
     try {
       await vcs.removeBranch(branch);
-    } catch (err) {
+    } catch {
       // Branch doesn't exist locally, ignore
     }
 

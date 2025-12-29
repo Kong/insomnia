@@ -44,7 +44,7 @@ function hashFunction(signatureMethod: OAuth1SignatureMethod) {
   throw new Error(`Invalid signature method ${signatureMethod}`);
 }
 
-export default async function (
+export default async function getToken(
   url: string,
   method: string,
   authentication: Extract<RequestAuthentication, { type: 'oauth1' }>,

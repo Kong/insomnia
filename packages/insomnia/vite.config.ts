@@ -2,6 +2,7 @@ import { builtinModules } from 'node:module';
 import path from 'node:path';
 
 import { reactRouter } from '@react-router/dev/vite';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 import pkg from './package.json';
@@ -61,9 +62,34 @@ export default defineConfig(({ mode }) => {
         ],
       }),
       reactRouter(),
+      tailwindcss(),
+      DetectNodeBuiltinImports(),
     ],
     worker: {
       format: 'es',
     },
   };
 });
+let totalWarnings = 0;
+function DetectNodeBuiltinImports() {
+  const builtins = new Set(builtinModules);
+
+  return {
+    name: 'detect-node-builtin-imports',
+
+    resolveId(source: string, importer: string | undefined) {
+      // Ignore node_modules and virtual imports
+      if (!importer) return null;
+      if (importer.includes('node_modules')) return null;
+
+      // If the import target is a Node builtin module
+      if (builtins.has(source) || builtins.has(source.replace('virtual:external:node:', ''))) {
+        const file = path.relative(process.cwd(), importer);
+        totalWarnings += 1;
+        console.warn(`⚠️  ${totalWarnings} File "${file}" imports Node builtin module "${source}"`);
+      }
+
+      return null; // Let Vite handle the actual resolution
+    },
+  };
+}

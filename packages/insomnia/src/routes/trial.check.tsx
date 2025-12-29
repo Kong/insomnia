@@ -1,7 +1,7 @@
 import { href } from 'react-router';
 
 import { userSession } from '~/models';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/settings.update';
@@ -32,7 +32,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     return {
       isEligible: 'isEligible' in check ? check.isEligible : false,
     };
-  } catch (err) {
+  } catch {
     return {
       isEligible: false,
     };

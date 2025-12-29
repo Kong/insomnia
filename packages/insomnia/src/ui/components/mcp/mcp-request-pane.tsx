@@ -7,11 +7,10 @@ import { useLatest } from 'react-use';
 
 import { docsMcpClient } from '~/common/documentation';
 import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
-import type { McpReadyState } from '~/main/network/mcp';
+import type { McpReadyState } from '~/main/mcp/types';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Link } from '~/ui/components/base/link';
 import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
-import { Icon } from '~/ui/components/icon';
 import { InsomniaRjsfForm, type InsomniaRjsfFormHandle } from '~/ui/components/rjsf';
 
 import { type AuthTypes } from '../../../common/constants';
@@ -67,7 +66,6 @@ export const McpRequestPane: FC<Props> = ({
 }) => {
   const primitiveId = `${selectedPrimitiveItem?.type}_${selectedPrimitiveItem?.name}`;
   const { activeRequest, activeRequestMeta, requestPayload } = useRequestLoaderData()! as McpRequestLoaderData;
-  const [isCalling, setIsCalling] = useState(false);
   const latestRequestPayloadRef = useLatest(requestPayload);
 
   const { activeProject } = useWorkspaceLoaderData()!;
@@ -135,9 +133,9 @@ export const McpRequestPane: FC<Props> = ({
   );
 
   const handleSend = async () => {
+    // validate the form before sending, but don't block sending on validation errors for debug purpose
     rjsfFormRef.current?.validate();
     try {
-      setIsCalling(true);
       if (selectedPrimitiveItem?.type === 'tools') {
         await window.main.mcp.primitive.callTool({
           name: selectedPrimitiveItem?.name || '',
@@ -163,8 +161,6 @@ export const McpRequestPane: FC<Props> = ({
       }
     } catch (err) {
       console.warn('MCP primitive call error', err);
-    } finally {
-      setIsCalling(false);
     }
   };
 
@@ -184,7 +180,7 @@ export const McpRequestPane: FC<Props> = ({
           };
         });
       }
-    } catch (err) {}
+    } catch {}
   };
 
   const sendButtonText = useMemo(() => {
@@ -212,7 +208,7 @@ export const McpRequestPane: FC<Props> = ({
 
   return (
     <Pane type="request">
-      <header className="pane__header theme--pane__header !items-stretch">
+      <header className="pane__header theme--pane__header items-stretch!">
         <McpUrlActionBar
           key={uniqueKey}
           request={activeRequest}
@@ -233,23 +229,23 @@ export const McpRequestPane: FC<Props> = ({
         selectedKey={activeTab}
       >
         <TabList
-          className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+          className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
           aria-label="Request pane tabs"
         >
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="params"
           >
             <span>Params</span>
           </Tab>
           {!isStdio && (
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="auth"
             >
               <span>Auth</span>
               {!isNoneOrInherited && (
-                <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+                <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                   <span className="h-2 w-2 rounded-full bg-green-500" />
                 </span>
               )}
@@ -257,12 +253,12 @@ export const McpRequestPane: FC<Props> = ({
           )}
           {!isStdio && (
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="headers"
             >
               <span>Headers</span>
               {headersCount > 0 && (
-                <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+                <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                   {headersCount}
                 </span>
               )}
@@ -270,19 +266,19 @@ export const McpRequestPane: FC<Props> = ({
           )}
           {isStdio && (
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="env"
             >
               <span>Environment</span>
             </Tab>
           )}
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="roots"
           >
             <span>Roots</span>
             {activeRequest.roots.length > 0 && (
-              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                 <span className="h-2 w-2 rounded-full bg-green-500" />
               </span>
             )}
@@ -300,15 +296,14 @@ export const McpRequestPane: FC<Props> = ({
             <PanelGroup className="flex-1 overflow-hidden" direction={'vertical'}>
               <Panel minSize={20}>
                 <div className="flex h-full flex-col">
-                  <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center justify-between gap-2 px-2 py-2">
-                    <Heading className="text-xs font-bold uppercase text-[--hl]">Parameter Builder</Heading>
+                  <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center justify-between gap-2 px-2 py-2">
+                    <Heading className="text-xs font-bold text-(--hl) uppercase">Parameter Builder</Heading>
                     {sendButtonText && (
                       <div className="flex items-center gap-2">
                         <Button
                           onClick={handleSend}
-                          className="rounded bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise]"
+                          className="rounded-sm bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise)"
                         >
-                          {isCalling && <Icon className="mr-1 animate-spin" icon="spinner" />}
                           {sendButtonText}
                         </Button>
                       </div>
@@ -324,7 +319,7 @@ export const McpRequestPane: FC<Props> = ({
                   {jsonSchema && (
                     <div className="overflow-auto p-4">
                       <p>{selectedPrimitiveItem?.name}</p>
-                      <p className="text-[--hl]">{selectedPrimitiveItem?.description}</p>
+                      <p className="text-(--hl)">{selectedPrimitiveItem?.description}</p>
                       {selectedPrimitiveItem?.type === 'resourceTemplates' && (
                         <p className="py-2">
                           uri: {fillUriTemplate(selectedPrimitiveItem.uriTemplate, mcpParams[primitiveId] || {})}
@@ -344,11 +339,11 @@ export const McpRequestPane: FC<Props> = ({
                   )}
                 </div>
               </Panel>
-              <PanelResizeHandle className="h-[1px] w-full bg-[--hl-md]" />
+              <PanelResizeHandle className="h-px w-full bg-(--hl-md)" />
               {selectedPrimitiveItem?.type !== 'resources' && selectedPrimitiveItem?.type !== 'resourceTemplates' && (
                 <Panel minSize={20}>
                   <div className="flex h-full flex-col">
-                    <Heading className="p-4 text-xs font-bold text-[--hl]">Parameter Overview</Heading>
+                    <Heading className="p-4 text-xs font-bold text-(--hl)">Parameter Overview</Heading>
                     <div className="flex-1 overflow-hidden">
                       <CodeEditor
                         ref={paramEditorRef}

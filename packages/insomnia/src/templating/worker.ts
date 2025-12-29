@@ -60,8 +60,8 @@ export function render(
         .replace(/^\s*Error:\s*/, '')
         .trim();
       const location = err.message.match(/\[Line (\d+), Column (\d+)*]/);
-      const line = location ? parseInt(location[1]) : 1;
-      const column = location ? parseInt(location[2]) : 1;
+      const line = location ? Number.parseInt(location[1]) : 1;
+      const column = location ? Number.parseInt(location[2]) : 1;
       const reason = err.message.includes('attempted to output null or undefined value') ? 'undefined' : 'error';
       const newError = new RenderError(sanitizedMsg);
       newError.path = path || '';
@@ -142,9 +142,9 @@ async function getNunjucks(ignoreUndefinedEnvVariable?: boolean): Promise<Nunjuc
   // Create Env with Extensions //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   const nunjucksEnvironment = nunjucks.configure(config) as NunjucksEnvironment;
-  nunjucksEnvironment.addGlobal('range', undefined);
-  nunjucksEnvironment.addGlobal('cycler', undefined);
-  nunjucksEnvironment.addGlobal('joiner', undefined);
+  nunjucksEnvironment.addGlobal('range', () => {});
+  nunjucksEnvironment.addGlobal('cycler', () => {});
+  nunjucksEnvironment.addGlobal('joiner', () => {});
   const bundlePluginTemplateTags = (await fetchFromTemplateWorkerDatabase(
     'plugin.getBundlePluginTemplateTags',
     {},

@@ -1,4 +1,4 @@
-import { href, Outlet, useRouteLoaderData } from 'react-router';
+import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 
 import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
@@ -71,6 +71,10 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     models.workspace.getById(workspaceId),
     models.project.getById(projectId),
   ]);
+
+  if (!activeWorkspace) {
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+  }
 
   invariant(activeWorkspace, 'Workspace not found');
   invariant(activeProject, 'Project not found');

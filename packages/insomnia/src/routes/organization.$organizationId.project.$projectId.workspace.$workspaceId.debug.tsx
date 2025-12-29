@@ -82,6 +82,7 @@ import Tutorial, {
   scratchPadTutorialList,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.tutorial.$panel';
 import { useToggleExpandAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.toggle-expand-all';
+import { SegmentEvent } from '~/ui/analytics';
 import { DropdownHint } from '~/ui/components/base/dropdown/dropdown-hint';
 import { DocumentTab } from '~/ui/components/document-tab';
 import { RequestActionsDropdown } from '~/ui/components/dropdowns/request-actions-dropdown';
@@ -188,7 +189,7 @@ const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
   const readyState = useReadyState({ requestId, protocol: 'webSocket' });
   return readyState ? (
     <div
-      className="mr-[--padding-sm] h-2.5 w-2.5 flex-shrink-0 rounded-full bg-[--color-success]"
+      className="mr-(--padding-sm) h-2.5 w-2.5 shrink-0 rounded-full bg-(--color-success)"
       data-testid="WebSocketSpinner__Connected"
     />
   ) : null;
@@ -198,7 +199,7 @@ const SocketIOSpinner = ({ requestId }: { requestId: string }) => {
   const readyState = useReadyState({ requestId, protocol: 'socketIO' });
   return readyState ? (
     <div
-      className="mr-[--padding-sm] h-2.5 w-2.5 flex-shrink-0 rounded-full bg-[--color-success]"
+      className="mr-(--padding-sm) h-2.5 w-2.5 shrink-0 rounded-full bg-(--color-success)"
       data-testid="SocketIOSpinner__Connected"
     />
   ) : null;
@@ -208,7 +209,7 @@ const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
   const readyState = useReadyState({ requestId, protocol: 'curl' });
   return readyState ? (
     <div
-      className="mr-[--padding-sm] h-2.5 w-2.5 flex-shrink-0 rounded-full bg-[--color-success]"
+      className="mr-(--padding-sm) h-2.5 w-2.5 shrink-0 rounded-full bg-(--color-success)"
       data-testid="EventStreamSpinner__Connected"
     />
   ) : null;
@@ -224,7 +225,7 @@ const RequestTiming = ({ requestId }: { requestId: string }) => {
   const { isExecuting } = useExecutionState({ requestId });
   return isExecuting ? (
     <div
-      className="mr-[--padding-sm] h-2.5 w-2.5 flex-shrink-0 rounded-full bg-[--color-success]"
+      className="mr-(--padding-sm) h-2.5 w-2.5 shrink-0 rounded-full bg-(--color-success)"
       data-testid="WebSocketSpinner__Connected"
     />
   ) : null;
@@ -397,11 +398,7 @@ const Debug = () => {
       return;
     }
 
-    if (layout && layout[0] > 0) {
-      layout[0] = 0;
-    } else {
-      layout[0] = DEFAULT_SIDEBAR_SIZE;
-    }
+    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
 
     sidebarPanelRef.current?.setLayout(layout);
   }
@@ -590,20 +587,18 @@ const Debug = () => {
           const beforeItem = targetItem;
           const afterItem = targetSiblingsCollections[targetIndexInSiblingsCollection + 1];
 
-          if (beforeItem && afterItem) {
-            metaSortKey = beforeItem.doc.metaSortKey - (beforeItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2;
-          } else {
-            metaSortKey = beforeItem.doc.metaSortKey + 100;
-          }
+          metaSortKey =
+            beforeItem && afterItem
+              ? beforeItem.doc.metaSortKey - (beforeItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2
+              : beforeItem.doc.metaSortKey + 100;
         } else {
           const beforeItem = targetSiblingsCollections[targetIndexInSiblingsCollection - 1];
           const afterItem = targetItem;
 
-          if (beforeItem && afterItem) {
-            metaSortKey = afterItem.doc.metaSortKey - (afterItem.doc.metaSortKey - beforeItem.doc.metaSortKey) / 2;
-          } else {
-            metaSortKey = afterItem.doc.metaSortKey - 100;
-          }
+          metaSortKey =
+            beforeItem && afterItem
+              ? afterItem.doc.metaSortKey - (afterItem.doc.metaSortKey - beforeItem.doc.metaSortKey) / 2
+              : afterItem.doc.metaSortKey - 100;
         }
       }
 
@@ -628,7 +623,7 @@ const Debug = () => {
           return (
             <DropIndicator
               target={target}
-              className="absolute left-0 top-0 z-10 w-full outline outline-1 outline-[--color-surprise]"
+              className="absolute top-0 left-0 z-10 w-full outline-1 outline-(--color-surprise) outline-solid"
               style={{
                 transform: `translateY(${target.dropPosition === 'before' ? item?.start : item.end}px)`,
               }}
@@ -638,7 +633,10 @@ const Debug = () => {
       }
 
       return (
-        <DropIndicator target={target} className="absolute left-0 top-0 outline outline-1 outline-[--color-surprise]" />
+        <DropIndicator
+          target={target}
+          className="absolute top-0 left-0 outline-1 outline-(--color-surprise) outline-solid"
+        />
       );
     },
   });
@@ -810,31 +808,31 @@ const Debug = () => {
       ref={sidebarPanelRef}
       autoSaveId="insomnia-sidebar"
       id="wrapper"
-      className="new-sidebar h-full w-full text-[--color-font]"
+      className="new-sidebar h-full w-full text-(--color-font)"
       direction="horizontal"
     >
       <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
-        <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
-          <div className="flex flex-col items-start divide-y divide-solid divide-[--hl-md]">
+        <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
+          <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
             <div className={`flex w-full h-[${INSOMNIA_TAB_HEIGHT}px]`}>
-              <Breadcrumbs className="m-0 flex h-full w-full list-none items-center gap-2 px-[--padding-sm] font-bold">
-                <Breadcrumb className="flex h-full select-none items-center gap-2 text-[--color-font] outline-none data-[focused]:outline-none">
+              <Breadcrumbs className="m-0 flex h-full w-full list-none items-center gap-2 px-(--padding-sm) font-bold">
+                <Breadcrumb className="flex h-full items-center gap-2 text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
                   <NavLink
                     data-testid="project"
-                    className="flex aspect-square h-7 flex-shrink-0 items-center justify-center gap-2 rounded-sm px-1 py-1 text-sm text-[--color-font] outline-none ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] data-[focused]:outline-none"
+                    className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
                     to={`/organization/${organizationId}/project/${activeProject._id}`}
                   >
                     <Icon className="text-xs" icon="chevron-left" />
                   </NavLink>
-                  <span aria-hidden role="separator" className="h-4 text-[--hl-lg] outline outline-1" />
+                  <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-1 outline-solid" />
                 </Breadcrumb>
-                <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-[--color-font] outline-none data-[focused]:outline-none">
+                <Breadcrumb className="flex h-full items-center gap-2 truncate text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
                   <WorkspaceDropdown />
                 </Breadcrumb>
-                <Breadcrumb className="ml-auto mr-2.5 flex h-full select-none items-center gap-2 justify-self-end truncate text-sm text-[--color-font] outline-none data-[focused]:outline-none">
+                <Breadcrumb className="mr-2.5 ml-auto flex h-full items-center gap-2 justify-self-end truncate text-sm text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
                   <NavLink
                     data-testid="run-collection-btn-quick"
-                    className="flex h-7 flex-shrink-0 items-center justify-center gap-2 rounded-sm px-2 py-1 text-sm text-[--color-font] outline-none ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-[current]:hidden data-[focused]:outline-none"
+                    className="flex h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-[current]:hidden data-focused:outline-hidden"
                     to={`/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner?folder=`}
                   >
                     <Icon icon="play" />
@@ -846,7 +844,7 @@ const Debug = () => {
             {isDesign(activeWorkspace) && (
               <DocumentTab organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
             )}
-            <div className="flex w-full flex-col items-start gap-2 p-[--padding-sm]">
+            <div className="flex w-full flex-col items-start gap-2 p-(--padding-sm)">
               <div className="flex w-full items-center justify-between gap-2">
                 <EnvironmentPicker
                   isOpen={isEnvironmentPickerOpen}
@@ -856,9 +854,9 @@ const Debug = () => {
               </div>
               <Button
                 onPress={() => setIsCookieModalOpen(true)}
-                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               >
-                <Icon icon="cookie-bite" className="w-5 flex-shrink-0" />
+                <Icon icon="cookie-bite" className="w-5 shrink-0" />
                 <span className="truncate">
                   {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies{' '}
                   {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}
@@ -866,9 +864,9 @@ const Debug = () => {
               </Button>
               <Button
                 onPress={() => setCertificatesModalOpen(true)}
-                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               >
-                <Icon icon="file-contract" className="w-5 flex-shrink-0" />
+                <Icon icon="file-contract" className="w-5 shrink-0" />
                 <span className="truncate">
                   {clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates{' '}
                   {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
@@ -880,19 +878,27 @@ const Debug = () => {
             </div>
           </div>
           <div className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex justify-between gap-1 p-[--padding-sm]">
+            <div className="flex justify-between gap-1 p-(--padding-sm)">
               <SearchField
                 aria-label="Request filter"
                 className="group relative flex-1"
                 value={filter ?? ''}
-                onChange={setFilter}
+                onChange={value => {
+                  setFilter(value);
+
+                  if (value.trim() !== '') {
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.filterCreatedRequests,
+                    });
+                  }
+                }}
               >
                 <Input
                   placeholder="Filter"
-                  className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                  className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                 />
-                <div className="absolute right-0 top-0 flex h-full items-center px-2">
-                  <Button className="flex aspect-square w-5 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] group-data-[empty]:hidden">
+                <div className="absolute top-0 right-0 flex h-full items-center px-2">
+                  <Button className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
                     <Icon icon="close" />
                   </Button>
                 </div>
@@ -911,7 +917,7 @@ const Debug = () => {
               >
                 <Button
                   aria-label="Select sort order"
-                  className="flex aspect-square h-full flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex aspect-square h-full shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 >
                   <Icon icon="sort" />
                 </Button>
@@ -923,13 +929,13 @@ const Debug = () => {
                         name: sortOrderName[order],
                       };
                     })}
-                    className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                    className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
                   >
                     {item => (
                       <ListBoxItem
                         id={item.id}
                         key={item.id}
-                        className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                        className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                         aria-label={item.name}
                         textValue={item.name}
                         value={item}
@@ -937,7 +943,7 @@ const Debug = () => {
                         {({ isSelected }) => (
                           <Fragment>
                             <span>{item.name}</span>
-                            {isSelected && <Icon icon="check" className="justify-self-end text-[--color-success]" />}
+                            {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                           </Fragment>
                         )}
                       </ListBoxItem>
@@ -959,7 +965,7 @@ const Debug = () => {
                       toggle: allExpanded ? 'collapse-all' : 'expand-all',
                     });
                   }}
-                  className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
+                  className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                 >
                   {({ isSelected }) => (
                     <Icon
@@ -969,7 +975,7 @@ const Debug = () => {
                 </ToggleButton>
                 <Tooltip
                   offset={8}
-                  className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                  className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
                 >
                   <span>{allExpanded ? 'Collapse all' : 'Expand all'}</span>
                 </Tooltip>
@@ -978,7 +984,7 @@ const Debug = () => {
               <MenuTrigger>
                 <Button
                   aria-label="Create in collection"
-                  className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 >
                   <Icon icon="plus-circle" />
                 </Button>
@@ -993,11 +999,11 @@ const Debug = () => {
                         ?.action()
                     }
                     items={createInCollectionActionList}
-                    className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                    className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
                   >
                     {section => (
                       <MenuSection className="flex flex-1 flex-col">
-                        <Header className="flex items-center gap-2 py-1 pl-2 text-xs uppercase text-[--hl]">
+                        <Header className="flex items-center gap-2 py-1 pl-2 text-xs text-(--hl) uppercase">
                           <Icon icon={section.icon} /> <span>{section.name}</span>
                         </Header>
                         <Collection items={section.items}>
@@ -1005,7 +1011,7 @@ const Debug = () => {
                             <MenuItem
                               key={item.id}
                               id={item.id}
-                              className="flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
                             >
                               <Icon icon={item.icon} />
@@ -1023,7 +1029,7 @@ const Debug = () => {
 
             <GridList
               id="sidebar-pinned-request-gridlist"
-              className="max-h-[50%] overflow-y-auto border-b border-t border-solid border-[--hl-sm] py-[--padding-sm] data-[empty]:border-none data-[empty]:py-0"
+              className="max-h-[50%] overflow-y-auto border-t border-b border-solid border-(--hl-sm) py-(--padding-sm) data-empty:border-none data-empty:py-0"
               items={collection.filter(item => item.pinned)}
               aria-label="Pinned Requests"
               disallowEmptySelection
@@ -1043,41 +1049,41 @@ const Debug = () => {
                   <GridListItem
                     key={item.doc._id}
                     id={item.doc._id}
-                    className="group select-none outline-none"
+                    className="group outline-hidden select-none"
                     textValue={item.doc.name}
                     data-testid={item.doc.name}
                   >
-                    <div className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:text-[--color-font]">
-                      <span className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-[--color-surprise]" />
+                    <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
+                      <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
                       {isRequest(item.doc) && (
                         <span
-                          className={`flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] text-[0.65rem] ${
+                          className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${
                             {
-                              GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-[--color-font-surprise]',
-                              POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-[--color-font-success]',
-                              HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
-                              OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
-                              DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-[--color-font-danger]',
-                              PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-[--color-font-warning]',
-                              PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-[--color-font-notice]',
-                            }[item.doc.method] || 'bg-[--hl-md] text-[--color-font]'
+                              GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
+                              POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
+                              HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                              OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                              DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
+                              PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
+                              PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
+                            }[item.doc.method] || 'bg-(--hl-md) text-(--color-font)'
                           }`}
                         >
                           {getMethodShortHand(item.doc)}
                         </span>
                       )}
                       {isWebSocketRequest(item.doc) && (
-                        <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-[--color-font-notice]">
+                        <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                           WS
                         </span>
                       )}
                       {isSocketIORequest(item.doc) && (
-                        <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-[--color-font-notice]">
+                        <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                           IO
                         </span>
                       )}
                       {isGrpcRequest(item.doc) && (
-                        <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-[--color-font-info]">
+                        <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
                           gRPC
                         </span>
                       )}
@@ -1086,17 +1092,17 @@ const Debug = () => {
                         name="request name"
                         ariaLabel="request name"
                         className="flex-1 px-1"
-                        onSubmit={name => {
+                        onSubmit={newName => {
                           if (isRequestGroup(item.doc)) {
-                            patchGroup(item.doc._id, { name });
+                            patchGroup(item.doc._id, { name: newName });
                           } else {
-                            patchRequest(item.doc._id, { name });
+                            patchRequest(item.doc._id, { name: newName });
                           }
                         }}
                       />
                       {item.pinned && (
                         <Icon
-                          className="text-[--font-size-sm]"
+                          className="text-(--font-size-sm)"
                           icon="thumb-tack"
                           onDoubleClick={() => patchRequestMeta(item.doc._id, { pinned: !item.pinned })}
                         />
@@ -1203,7 +1209,7 @@ const Debug = () => {
           )}
         </div>
       </Panel>
-      <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
+      <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
       <Panel className="flex flex-col">
         {/* Hide tabs when it's on the tutorial panel */}
         {!panel && <OrganizationTabList currentPage="debug" />}
@@ -1250,9 +1256,7 @@ const Debug = () => {
                   {activeRequest ? (
                     <>
                       <PanelResizeHandle
-                        className={
-                          direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'h-[1px] w-full bg-[--hl-md]'
-                        }
+                        className={direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'}
                       />
                       <Panel id="pane-two" order={2} minSize={10} className="pane-two theme--pane">
                         <ErrorBoundary showAlert>
@@ -1287,6 +1291,8 @@ const ScratchPadTutorialPanel = () => {
     dismissedAt: number;
   }>('scratchpad-sign-up-tip-dismissed', { dismissed: false, dismissedAt: 0 });
 
+  const [currentTime] = useState(() => Date.now());
+
   const handleDismiss = () => {
     setSignUpTipDismissedState({ dismissed: true, dismissedAt: Date.now() });
   };
@@ -1314,32 +1320,31 @@ const ScratchPadTutorialPanel = () => {
     }
 
     const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000;
-    const now = Date.now();
 
-    return now - signUpTipDismissedState.dismissedAt >= twoWeeksInMs;
-  }, [signUpTipDismissedState]);
+    return currentTime - signUpTipDismissedState.dismissedAt >= twoWeeksInMs;
+  }, [signUpTipDismissedState, currentTime]);
 
   return (
     <>
       {shouldShowSignUpTip ? (
-        <div className="m-2 rounded-lg !border border-solid border-[--hl-sm] bg-[--color-bg] p-4">
+        <div className="m-2 rounded-lg border! border-solid border-(--hl-sm) bg-(--color-bg) p-4">
           <div className="flex flex-col items-start justify-between">
             <div className="flex w-full justify-between">
-              <h3 className="mb-2 text-lg font-semibold text-[--color-font]">Unlock full features</h3>
+              <h3 className="mb-2 text-lg font-semibold text-(--color-font)">Unlock full features</h3>
               <Button
                 onPress={handleDismiss}
-                className="ml-4 flex h-6 w-6 items-center justify-center rounded-sm text-[--color-font-secondary] transition-colors hover:bg-[--hl-xs] hover:text-[--color-font] focus:outline-none"
+                className="ml-4 flex h-6 w-6 items-center justify-center rounded-xs text-(--color-font-secondary) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font) focus:outline-hidden"
                 aria-label="Dismiss tutorial"
               >
                 <Icon icon="times" className="h-3 w-3" />
               </Button>
             </div>
-            <p className="mb-4 text-sm text-[--color-font-secondary]">
-              Create multiple collections, design APIs, manage projects, and collaborate with your team.
+            <p className="mb-4 text-sm text-(--color-font-secondary)">
+              Create multiple collections, design APIs, MCP clients, manage projects, and collaborate with your team.
             </p>
             <Button
               onPress={handleSignUp}
-              className="rounded-md bg-[--color-surprise] px-4 py-2 text-sm font-medium text-white transition-colors"
+              className="rounded-md bg-(--color-surprise) px-4 py-2 text-sm font-medium text-white transition-colors"
             >
               Sign up for free
             </Button>
@@ -1350,7 +1355,7 @@ const ScratchPadTutorialPanel = () => {
       <GridList
         aria-label="Scope filter"
         items={scratchPadTutorialList}
-        className="flex-shrink-0 overflow-y-auto py-[--padding-sm] data-[empty]:py-0"
+        className="shrink-0 overflow-y-auto py-(--padding-sm) data-empty:py-0"
         disallowEmptySelection
         selectedKeys={[panel]}
         selectionMode="single"
@@ -1365,8 +1370,8 @@ const ScratchPadTutorialPanel = () => {
       >
         {item => {
           return (
-            <GridListItem textValue={item.title} className="group select-none outline-none">
-              <div className="relative flex h-12 w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:bg-[--hl-sm] group-aria-selected:text-[--color-font]">
+            <GridListItem textValue={item.title} className="group outline-hidden select-none">
+              <div className="relative flex h-12 w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
                 <span className="flex h-6 w-6 items-center justify-center">
                   <Icon icon={item.icon} className="w-6" />
                 </span>
@@ -1442,7 +1447,7 @@ const CollectionGridListItem = ({
   return (
     <GridListItem
       id={item.doc._id}
-      className={`group absolute left-0 top-0 w-full select-none outline-none ${isRequestGroup(item.doc) ? 'data-[drop-target]:bg-[--hl-md]' : 'border-solid data-[drop-target]:border-b data-[drop-target]:border-[--color-surprise]'}`}
+      className={`group absolute top-0 left-0 w-full outline-hidden select-none ${isRequestGroup(item.doc) ? 'data-drop-target:bg-(--hl-md)' : 'border-solid data-drop-target:border-b data-drop-target:border-(--color-surprise)'}`}
       textValue={label}
       data-testid={item.doc.name}
       style={style}
@@ -1456,30 +1461,30 @@ const CollectionGridListItem = ({
         }}
         onDoubleClick={() => setIsEditable(true)}
         data-selected={isSelected}
-        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden pl-4 pr-2 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] data-[selected=true]:text-[--color-font]"
+        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden pr-2 pl-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) data-[selected=true]:text-(--color-font)"
         style={{
           paddingLeft: `${item.level + 1}rem`,
         }}
       >
         <span
           data-selected={isSelected}
-          className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors data-[selected=true]:bg-[--color-surprise]"
+          className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors data-[selected=true]:bg-(--color-surprise)"
         />
         <Button slot="drag" className="hidden" />
         {isRequest(item.doc) && (
           <span
             aria-hidden
             role="presentation"
-            className={`flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] text-[0.65rem] ${
+            className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${
               {
-                GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-[--color-font-surprise]',
-                POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-[--color-font-success]',
-                HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
-                OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
-                DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-[--color-font-danger]',
-                PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-[--color-font-warning]',
-                PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-[--color-font-notice]',
-              }[item.doc.method] || 'bg-[--hl-md] text-[--color-font]'
+                GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
+                POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
+                HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
+                PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
+                PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
+              }[item.doc.method] || 'bg-(--hl-md) text-(--color-font)'
             }`}
           >
             {getMethodShortHand(item.doc)}
@@ -1489,7 +1494,7 @@ const CollectionGridListItem = ({
           <span
             aria-hidden
             role="presentation"
-            className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-[--color-font-notice]"
+            className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)"
           >
             WS
           </span>
@@ -1498,7 +1503,7 @@ const CollectionGridListItem = ({
           <span
             aria-hidden
             role="presentation"
-            className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-[--color-font-notice]"
+            className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)"
           >
             IO
           </span>
@@ -1507,14 +1512,14 @@ const CollectionGridListItem = ({
           <span
             aria-hidden
             role="presentation"
-            className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-[--color-font-info]"
+            className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)"
           >
             gRPC
           </span>
         )}
         {isRequestGroup(item.doc) && (
           <span>
-            <Icon className="w-6 flex-shrink-0" icon={item.collapsed ? 'folder' : 'folder-open'} />
+            <Icon className="w-6 shrink-0" icon={item.collapsed ? 'folder' : 'folder-open'} />
           </span>
         )}
         <EditableInput
@@ -1523,12 +1528,12 @@ const CollectionGridListItem = ({
           value={getRequestNameOrFallback({ ...item.doc, name })}
           name="request name"
           ariaLabel={label}
-          className="flex-1 hover:!bg-transparent"
-          onSubmit={name => {
+          className="flex-1 hover:bg-transparent!"
+          onSubmit={newName => {
             if (isRequestGroup(item.doc)) {
-              patchGroup(item.doc._id, { name });
+              patchGroup(item.doc._id, { name: newName });
             } else {
-              patchRequest(item.doc._id, { name });
+              patchRequest(item.doc._id, { name: newName });
             }
           }}
         />
@@ -1539,7 +1544,7 @@ const CollectionGridListItem = ({
         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
         {item.pinned && (
           <Icon
-            className="text-[--font-size-sm]"
+            className="text-(--font-size-sm)"
             icon="thumb-tack"
             onDoubleClick={() => patchRequestMeta(item.doc._id, { pinned: !item.pinned })}
           />

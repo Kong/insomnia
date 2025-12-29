@@ -35,7 +35,7 @@ function ensureStringify(val?: string | object): string {
   if (typeof val === 'object') {
     try {
       defaultVal = JSON.stringify(val);
-    } catch (error) {
+    } catch {
       // If we can't stringify, just return the default
     }
 
@@ -102,12 +102,8 @@ export const jsonPrettify = (json?: string | object, indentChars = '\t', replace
       const closeState = NUNJUCKS_CLOSE_STATES[nextTwo];
       if (closeState) {
         state = STATE_NONE;
-        if (closeState === STATE_IN_NUN_COM) {
-          // Put comments on their own lines
-          newJson += nextTwo + '\n' + repeatString(tab, indentLevel);
-        } else {
-          newJson += nextTwo;
-        }
+        // Put comments on their own lines
+        newJson += closeState === STATE_IN_NUN_COM ? nextTwo + '\n' + repeatString(tab, indentLevel) : nextTwo;
         i++;
         continue;
       } else {
@@ -195,7 +191,7 @@ const repeatString = (str: string, count: number) => {
   if (count < 0) {
     return '';
   }
-  return new Array(count + 1).join(str);
+  return Array.from({ length: count + 1 }).join(str);
 };
 
 /**
@@ -220,7 +216,7 @@ const convertUnicode = (originalStr: string) => {
 
     try {
       cStr = m[0].slice(2); // Trim off start
-      c = String.fromCharCode(parseInt(cStr, 16));
+      c = String.fromCodePoint(Number.parseInt(cStr, 16));
       if (c === '"') {
         // Escape it if it's double quotes
         c = `\\${c}`;

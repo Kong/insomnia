@@ -75,25 +75,25 @@ export const UpgradePlanModal = () => {
       onOpenChange={isOpen => {
         !isOpen && handleClose();
       }}
-      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && handleClose();
         }}
         className={classnames(
-          'flex w-[540px] flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]',
+          'flex w-[540px] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)',
         )}
       >
-        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
             <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-              <div className="flex flex-shrink-0 items-center justify-between gap-2">
-                <Heading slot="title" className="text-[18px] text-[--color-font]">
+              <div className="flex shrink-0 items-center justify-between gap-2">
+                <Heading slot="title" className="text-[18px] text-(--color-font)">
                   Welcome to Insomnia, {firstName || email} 🎉
                 </Heading>
                 <Button
-                  className="ml-auto flex h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="ml-auto flex h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={() => close()}
                 >
                   <Icon icon="x" />
@@ -108,28 +108,28 @@ export const UpgradePlanModal = () => {
                 <ul className="mt-2 flex flex-col items-start gap-2">
                   <li className="flex flex-col py-2">
                     <div className="flex items-center gap-[8px]">
-                      <Icon icon="check-circle" className="h-[16px] text-[--color-surprise]" />
+                      <Icon icon="check-circle" className="h-[16px] text-(--color-surprise)" />
                       <span className="font-semibold">User Governance</span>
                     </div>
-                    <span className="ml-[24px] mt-1 text-sm">
+                    <span className="mt-1 ml-[24px] text-sm">
                       SSO, SCIM, RBAC and Teams let you control who can access what
                     </span>
                   </li>
                   <li className="flex flex-1 flex-col py-2">
                     <div className="flex items-center gap-[8px]">
-                      <Icon icon="check-circle" className="h-[16px] text-[--color-surprise]" />
+                      <Icon icon="check-circle" className="h-[16px] text-(--color-surprise)" />
                       <span className="font-semibold">Increased Storage & Security</span>
                     </div>
-                    <span className="ml-[24px] mt-1 text-sm">
+                    <span className="mt-1 ml-[24px] text-sm">
                       Mandate Git, Cloud or Local project storage, plus E2EE
                     </span>
                   </li>
                   <li className="flex flex-1 flex-col py-2">
                     <div className="flex items-center gap-[8px]">
-                      <Icon icon="check-circle" className="h-[16px] text-[--color-surprise]" />
+                      <Icon icon="check-circle" className="h-[16px] text-(--color-surprise)" />
                       <span className="font-semibold">World Class Support</span>
                     </div>
-                    <span className="ml-[24px] mt-1 text-sm">
+                    <span className="mt-1 ml-[24px] text-sm">
                       A dedicated CSM that understands you, support access, and optional pro services to start quickly
                     </span>
                   </li>
@@ -137,14 +137,14 @@ export const UpgradePlanModal = () => {
               </div>
               <div className="mt-3 flex justify-start gap-[20px]">
                 <Button
-                  className="h-[30px] rounded bg-[--color-surprise] px-[12px] text-center text-sm text-[--color-font-surprise]"
+                  className="h-[30px] rounded-sm bg-(--color-surprise) px-[12px] text-center text-sm text-(--color-font-surprise)"
                   onPress={handleUpgrade}
                 >
                   Buy Now
                 </Button>
                 {checkerData?.isEligible && (
                   <Button
-                    className="h-[30px] rounded border border-solid !border-[--hl-md] px-[12px] text-sm text-[--color-font] hover:bg-[--hl-xs]"
+                    className="h-[30px] rounded-sm border border-solid border-(--hl-md)! px-[12px] text-sm text-(--color-font) hover:bg-(--hl-xs)"
                     isDisabled={startFetcher.state !== 'idle'}
                     onPress={handleStartTrial}
                   >
@@ -152,7 +152,7 @@ export const UpgradePlanModal = () => {
                   </Button>
                 )}
                 <Button
-                  className="ml-auto h-[30px] rounded !border-none px-[0px] text-sm text-[--color-font]"
+                  className="ml-auto h-[30px] rounded-sm border-none! px-0 text-sm text-(--color-font)"
                   onPress={() => close()}
                 >
                   No, Thanks

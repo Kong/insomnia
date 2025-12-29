@@ -9,7 +9,8 @@ import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { SegmentEvent } from '~/ui/analytics';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { showToast } from '~/ui/components/toast-notification';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -73,12 +74,25 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           error = 'The owner of the organization allows only Local Vault project creation, please try again.';
         }
 
+        showToast({
+          title: 'Error updating project',
+          description: error,
+          icon: 'warning',
+          status: 'error',
+        });
+
         return {
           error,
         };
       }
 
       await models.project.update(project, { name });
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
+
       return {
         success: true,
       };
@@ -115,12 +129,25 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           error = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
         }
 
+        showToast({
+          title: 'Error updating project',
+          description: error,
+          icon: 'warning',
+          status: 'error',
+        });
+
         return {
           error,
         };
       }
 
       await models.project.update(project, { name, remoteId: null });
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
+
       return {
         success: true,
       };
@@ -168,6 +195,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           error = 'The owner of the organization allows only Local Vault project creation, please try again.';
         }
 
+        showToast({
+          title: 'Error updating project',
+          description: error,
+          icon: 'warning',
+          status: 'error',
+        });
+
         return {
           error,
         };
@@ -182,6 +216,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       await models.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
 
       project.gitRepositoryId && reportGitProjectCount(organizationId, sessionId);
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
+
       return {
         success: true,
       };
@@ -219,6 +259,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             error = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
           }
 
+          showToast({
+            title: 'Error updating project',
+            description: error,
+            icon: 'warning',
+            status: 'error',
+          });
+
           return {
             error,
           };
@@ -228,7 +275,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       if (projectData.connectRepositoryLater) {
         await models.project.update(project, { name, gitRepositoryId: EMPTY_GIT_PROJECT_ID });
       } else {
-        let credentials: GitCredentials | undefined = undefined;
+        let credentials: GitCredentials | undefined;
         if (projectData.oauth2format) {
           credentials = {
             oauth2format: projectData.oauth2format,
@@ -275,6 +322,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         await database.flushChanges(bufferId);
 
         if (errors) {
+          showToast({
+            title: 'Error updating project',
+            description: errors.join(', '),
+            icon: 'warning',
+            status: 'error',
+          });
+
           return {
             error: errors.join(', '),
           };
@@ -282,6 +336,55 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       }
 
       reportGitProjectCount(organizationId, sessionId);
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
+
+      return {
+        success: true,
+      };
+    }
+
+    // connect to git repo
+    if (
+      storageType === 'git' &&
+      project.gitRepositoryId === EMPTY_GIT_PROJECT_ID &&
+      !projectData.connectRepositoryLater
+    ) {
+      let credentials: GitCredentials | undefined;
+      if (projectData.oauth2format) {
+        credentials = {
+          oauth2format: projectData.oauth2format,
+          token: projectData.token ?? '',
+          username: projectData.username ?? '',
+        };
+      } else if (projectData.username && projectData.password) {
+        credentials = {
+          username: projectData.username,
+          password: projectData.password,
+        };
+      }
+
+      await window.main.git.updateGitRepo({
+        projectId: project._id,
+        author: {
+          name: projectData.authorName ?? '',
+          email: projectData.authorEmail ?? '',
+        },
+        uri: projectData.uri ?? '',
+        credentials: credentials || {
+          username: '',
+          password: '',
+        },
+        ref: projectData.ref,
+      });
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
 
       return {
         success: true,
@@ -297,6 +400,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
       reportGitProjectCount(organizationId, sessionId);
 
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
+
       return {
         success: true,
       };
@@ -310,6 +418,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       properties: {
         storage: 'local',
       },
+    });
+
+    showToast({
+      title: 'Project updated',
+      status: 'success',
     });
 
     return {

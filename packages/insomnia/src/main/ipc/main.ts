@@ -19,8 +19,14 @@ import iconv from 'iconv-lite';
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
+import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
 import { insecureReadFile, insecureReadFileWithEncoding, secureReadFile } from '~/main/secure-read-file';
-import type { GenerateCommitsFromDiffFunction, MockRouteData, ModelConfig } from '~/plugins/types';
+import type {
+  GenerateCommitsFromDiffFunction,
+  GenerateMcpSamplingResponseFunction,
+  MockRouteData,
+  ModelConfig,
+} from '~/plugins/types';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
@@ -31,8 +37,8 @@ import {
   authorizeUserInDefaultBrowser,
   cancelAuthorizationInDefaultBrowser,
   onDefaultBrowserOAuthRedirect,
-} from '../authorizeUserInDefaultBrowser';
-import { authorizeUserInWindow } from '../authorizeUserInWindow';
+} from '../authorize-user-in-default-browser';
+import { authorizeUserInWindow } from '../authorize-user-in-window';
 import { backup, restoreBackup } from '../backup';
 import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';
@@ -50,7 +56,7 @@ import {
 import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
-import extractPostmanDataDumpHandler from './extractPostmanDataDump';
+import extractPostmanDataDumpHandler from './extract-postman-data-dump';
 import type { gRPCBridgeAPI } from './grpc';
 import type { secretStorageBridgeAPI } from './secret-storage';
 
@@ -97,6 +103,7 @@ export interface RendererToMainBridgeAPI {
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
   parseImport: typeof convert;
+  multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
   secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
@@ -162,6 +169,12 @@ export interface RendererToMainBridgeAPI {
     | { commits: Awaited<ReturnType<GenerateCommitsFromDiffFunction>>; error: undefined }
     | { commits: undefined; error: string }
   >;
+  generateMcpSamplingResponse: (
+    input: Parameters<GenerateMcpSamplingResponseFunction>[0],
+  ) => Promise<
+    | { response: Awaited<ReturnType<GenerateMcpSamplingResponseFunction>>; error: undefined }
+    | { response: undefined; error: string }
+  >;
 }
 
 export function registerMainHandlers() {
@@ -182,6 +195,9 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
     return models.caCertificate.create(options);
+  });
+  ipcMainHandle('multipartBufferToArray', async (_, options) => {
+    return multipartBufferToArray(options);
   });
   ipcMainOn('loginStateChange', async () => {
     BrowserWindow.getAllWindows().forEach(w => {
@@ -264,7 +280,7 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('insecureReadFileWithEncoding', async (_, options: { path: string; encoding: string }) => {
     try {
-      const contentBuffer = await insecureReadFileWithEncoding(options.path, undefined);
+      const contentBuffer = await insecureReadFileWithEncoding(options.path);
       if (typeof contentBuffer === 'string') {
         return { content: contentBuffer, encoding: 'utf8' };
       }
@@ -474,6 +490,65 @@ export function registerMainHandlers() {
       process.postMessage({
         input,
         modelConfig,
+        aiPluginName: AI_PLUGIN_NAME,
+      });
+    });
+  });
+
+  ipcMainHandle('generateMcpSamplingResponse', async (_, input: Parameters<GenerateMcpSamplingResponseFunction>[0]) => {
+    return new Promise(async (resolve, reject) => {
+      const modelConfig = (await getCurrentConfig()) as ModelConfig | null;
+      if (!modelConfig) {
+        reject(new Error('No LLM model configured'));
+      }
+      const process = utilityProcess.fork(path.join(__dirname, 'main/mcp-generate-sampling-response.mjs'));
+
+      process.on('exit', code => {
+        console.log('[mcp-generate-sampling-response-process] exited with code:', code);
+        let errorMessage: string;
+
+        const signals = os.constants.signals;
+        if (code === 0) {
+          errorMessage = 'MCP sampling response generation process exited with code 0.';
+        } else if (code === signals.SIGSEGV) {
+          errorMessage = `MCP sampling response generation process crashed with a segmentation fault (SIGSEGV). This may be due to system compatibility when running a GGUF model.`;
+        } else if (code === signals.SIGKILL) {
+          errorMessage = `MCP sampling response generation process was killed (SIGKILL). This may be due to memory limits or system resources.`;
+        } else if (code === signals.SIGTERM) {
+          errorMessage = `MCP sampling response generation process was terminated (SIGTERM).`;
+        } else if (code === signals.SIGABRT) {
+          errorMessage = `MCP sampling response generation process aborted (SIGABRT). This usually indicates an internal error.`;
+        } else {
+          errorMessage = `MCP sampling response generation process exited unexpectedly with code ${code}.`;
+        }
+
+        resolve({ error: errorMessage });
+      });
+
+      process.on('message', msg => {
+        console.log('[mcp-generate-sampling-response-process] received message');
+        resolve({
+          response: {
+            content: msg,
+            modelConfig,
+          },
+        });
+        process.kill();
+      });
+
+      process.on('error', err => {
+        console.error('[mcp-generate-sampling-response-process] error:', err);
+        reject({ error: err.toString() });
+      });
+      const { systemPrompt, messages, modelConfig: modelConfigFromSamplingRequest } = input;
+
+      process.postMessage({
+        messages,
+        systemPrompt,
+        modelConfig: {
+          ...modelConfig,
+          ...modelConfigFromSamplingRequest,
+        },
         aiPluginName: AI_PLUGIN_NAME,
       });
     });

@@ -91,8 +91,10 @@ const generateTestLines = (num: number, test?: Test | null) => {
   const { defaultRequestId } = test;
 
   if (typeof defaultRequestId === 'string') {
-    lines.push(indent(num, '// Set active request on global insomnia object'));
-    lines.push(indent(num, `insomnia.setActiveRequestId('${defaultRequestId}');`));
+    lines.push(
+      indent(num, '// Set active request on global insomnia object'),
+      indent(num, `insomnia.setActiveRequestId('${defaultRequestId}');`),
+    );
   }
 
   // Add user-defined test source

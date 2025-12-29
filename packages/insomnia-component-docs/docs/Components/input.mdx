@@ -1,0 +1,86 @@
+---
+id: input
+sidebar_label: 'Input'
+sidebar_position: 1
+---
+
+# Input
+
+A flexible text input component built on React Aria's `Input` component with consistent styling and accessibility features.
+
+## Props
+
+| Prop           | Type                                                 | Default  | Description                                   |
+| -------------- | ---------------------------------------------------- | -------- | --------------------------------------------- |
+| `label`        | `string`                                             | -        | Optional label text displayed above the input |
+| `placeholder`  | `string`                                             | -        | Placeholder text shown when input is empty    |
+| `value`        | `string`                                             | -        | Controlled value                              |
+| `defaultValue` | `string`                                             | -        | Initial value for uncontrolled mode           |
+| `onChange`     | `(value: string) => void`                            | -        | Called when input value changes               |
+| `isDisabled`   | `boolean`                                            | `false`  | Whether the input is disabled                 |
+| `isReadOnly`   | `boolean`                                            | `false`  | Whether the input is read-only                |
+| `isRequired`   | `boolean`                                            | `false`  | Whether the input is required                 |
+| `type`         | `text \| search \| url \| tel \| email  \| password` | `'text'` | HTML input type (text, email, password, etc.) |
+
+Extends all [React Aria TextFieldProps](https://react-spectrum.adobe.com/react-aria/TextField.html#props).
+
+## Usage Examples
+
+### Default Input
+
+```tsx live
+<Input placeholder="Enter text..." />
+```
+
+### With Label
+
+```tsx live
+<Input label="Username" placeholder="Enter your username" />
+```
+
+### With Default Value
+
+```tsx live
+<Input label="Name" placeholder="Enter your name" defaultValue="John Doe" />
+```
+
+### Disabled State
+
+```tsx live
+<Input label="Disabled Input" placeholder="Cannot edit" defaultValue="Disabled value" isDisabled />
+```
+
+### Read-Only State
+
+```tsx live
+<Input label="Read-Only Input" placeholder="Cannot edit" defaultValue="Read-only value" isReadOnly />
+```
+
+### Password Input
+
+```tsx live
+<Input label="Password" type="password" placeholder="Enter your password" isRequired />
+```
+
+### Search Input
+
+```tsx live
+function SearchInputDemo() {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  return <Input placeholder="Search..." type="search" value={searchQuery} onChange={setSearchQuery} />;
+}
+```
+
+## Styling
+
+### CSS Variables
+
+The component uses the following CSS variables for theming:
+
+- `--color-bg`: Input background color
+- `--hl-sm`: Standard border color
+- `--hl-lg`: Highlight for focus/active
+- `--color-danger`: Error/invalid state color
+
+You can customize these variables in your CSS to theme the input appearance.

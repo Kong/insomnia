@@ -4,8 +4,9 @@ import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
 
 import { database, database as db } from '../../common/database';
+import { extractErrorMessages } from '../../common/import';
 import type { InsomniaFile } from '../../common/import-v5-parser';
-import { getInsomniaV5DataExport, importInsomniaV5Data } from '../../common/insomnia-v5';
+import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import * as models from '../../models';
 import { isMcp, isWorkspace, type Workspace } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
@@ -58,7 +59,7 @@ export class GitProjectNeDBClient {
         return raw.toString(options.encoding);
       }
       return raw;
-    } catch (err) {
+    } catch {
       throw this._errMissing(filePath);
     }
   }
@@ -82,7 +83,12 @@ export class GitProjectNeDBClient {
     if (dataStr.split('\n').includes('=======')) {
       return;
     }
-    const dataToImport = importInsomniaV5Data(dataStr);
+    const { data: dataToImport, error } = tryImportV5Data(dataStr);
+    if (error) {
+      const errorMsg = extractErrorMessages(error);
+      console.warn(`[git] Skipping import of ${filePath} due to error: ${errorMsg}.  Fallback to default FS.`);
+      throw new Error(`Failed to import data from git file ${filePath}: ${errorMsg}`);
+    }
 
     const bufferId = await db.bufferChanges();
 
@@ -176,14 +182,14 @@ export class GitProjectNeDBClient {
     let dir: string[] | null = null;
     try {
       fileBuff = await this.readFile(filePath);
-    } catch (err) {
+    } catch {
       // console.log('[nedb] Failed to read file', err);
     }
 
     if (fileBuff === null) {
       try {
         dir = await this.readdir(filePath);
-      } catch (err) {
+      } catch {
         // console.log('[nedb] Failed to read dir', err);
       }
     }
@@ -238,24 +244,33 @@ export class GitProjectNeDBClient {
     });
   }
 
+  /**
+   * Given a file path, find the workspace ID associated with it.
+   * This is used to map a git file path to the corresponding workspace in the database.
+   */
   async getWorkspaceIdFromFilePath(filePath: string) {
+    // Normalize the file path to ensure consistency (handles OS differences, etc.)
     filePath = path.normalize(filePath);
 
+    // Find all workspaces that belong to the current project
     const workspaces = await db.find<Workspace>(models.workspace.type, {
       parentId: this._projectId,
     });
 
+    // Find workspaceMeta entries that match the file path and belong to one of the found workspaces
     const workspaceMeta = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
       gitFilePath: filePath,
       parentId: {
-        $in: workspaces.map(w => w._id),
+        $in: workspaces.map(w => w._id), // Only consider metas for workspaces in this project
       },
     });
 
+    // If no matching workspaceMeta is found, return null (file is not tracked)
     if (workspaceMeta.length === 0) {
       return null;
     }
 
+    // Return the parentId (workspace ID) of the first matching workspaceMeta
     return workspaceMeta[0].parentId;
   }
 }

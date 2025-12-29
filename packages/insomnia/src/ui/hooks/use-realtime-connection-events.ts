@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 
+import type { McpEvent } from '../../main/mcp/types';
 import type { CurlEvent } from '../../main/network/curl';
-import type { McpEvent } from '../../main/network/mcp';
 import type { SocketIOEvent } from '../../main/network/socket-io';
 import type { WebSocketEvent } from '../../main/network/websocket';
 

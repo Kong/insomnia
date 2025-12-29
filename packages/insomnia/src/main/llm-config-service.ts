@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { app } from 'electron';
 
+import type { LLM_BACKENDS } from '~/common/constants';
 import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 import { ipcMainHandle } from '~/main/ipc/electron';
 
@@ -9,7 +10,7 @@ import * as models from '../models';
 
 const LLM_PLUGIN_NAME = 'insomnia-llm';
 
-export type LLMBackend = 'gguf' | 'claude' | 'openai' | 'gemini';
+export type LLMBackend = (typeof LLM_BACKENDS)[number];
 
 export interface LLMConfig {
   backend: LLMBackend;
@@ -22,6 +23,7 @@ export interface LLMConfig {
   seed?: boolean;
   repeatPenalty?: number;
 }
+export type AIFeatureNames = 'aiMockServers' | 'aiCommitMessages' | 'aiMcpClient';
 
 export const getActiveBackend = async (): Promise<LLMBackend | null> => {
   const active = await models.pluginData.getByKey(LLM_PLUGIN_NAME, 'model.active');
@@ -57,7 +59,7 @@ export const getBackendConfig = async (backend: LLMBackend): Promise<Partial<LLM
       case 'topP':
       case 'topK':
       case 'repeatPenalty': {
-        config[field] = parseFloat(value);
+        config[field] = Number.parseFloat(value);
         break;
       }
       case 'seed': {
@@ -111,21 +113,18 @@ export const getCurrentConfig = async (): Promise<LLMConfig | null> => {
   return { ...config, backend: activeBackend } as LLMConfig;
 };
 
-export const getAIFeatureEnabled = async (feature: 'aiMockServers' | 'aiCommitMessages'): Promise<boolean> => {
+export const getAIFeatureEnabled = async (feature: AIFeatureNames): Promise<boolean> => {
   const data = await models.pluginData.getByKey(LLM_PLUGIN_NAME, `feature.${feature}`);
   return data?.value === 'true';
 };
 
-export const setAIFeatureEnabled = async (feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean): Promise<void> => {
+export const setAIFeatureEnabled = async (feature: AIFeatureNames, enabled: boolean): Promise<void> => {
   await models.pluginData.upsertByKey(LLM_PLUGIN_NAME, `feature.${feature}`, String(enabled));
 
-  trackSegmentEvent(
-    enabled ? SegmentEvent.aiFeatureEnabled : SegmentEvent.aiFeatureDisabled,
-    {
-      feature: feature,
-      set_for: "user",
-    }
-  );
+  trackSegmentEvent(enabled ? SegmentEvent.aiFeatureEnabled : SegmentEvent.aiFeatureDisabled, {
+    feature: feature,
+    set_for: 'user',
+  });
 };
 
 export interface LLMConfigServiceAPI {
@@ -150,6 +149,10 @@ export const registerLLMConfigServiceAPI = () => {
   );
   ipcMainHandle('llm.getAllConfigurations', async () => getAllConfigurations());
   ipcMainHandle('llm.getCurrentConfig', async () => getCurrentConfig());
-  ipcMainHandle('llm.getAIFeatureEnabled', async (_, feature: 'aiMockServers' | 'aiCommitMessages') => getAIFeatureEnabled(feature));
-  ipcMainHandle('llm.setAIFeatureEnabled', async (_, feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean) => setAIFeatureEnabled(feature, enabled));
+  ipcMainHandle('llm.getAIFeatureEnabled', async (_, feature: 'aiMockServers' | 'aiCommitMessages') =>
+    getAIFeatureEnabled(feature),
+  );
+  ipcMainHandle('llm.setAIFeatureEnabled', async (_, feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean) =>
+    setAIFeatureEnabled(feature, enabled),
+  );
 };

@@ -4,6 +4,7 @@ import {
   CallToolResultSchema,
   CancelledNotificationSchema,
   CreateMessageRequestSchema,
+  ElicitationCompleteNotificationSchema,
   ElicitRequestSchema,
   GetPromptRequestSchema,
   GetPromptResultSchema,
@@ -33,6 +34,7 @@ import {
   ServerNotificationSchema,
   ServerRequestSchema,
   SubscribeRequestSchema,
+  TaskStatusNotificationSchema,
   type Tool,
   ToolListChangedNotificationSchema,
   UnsubscribeRequestSchema,
@@ -62,6 +64,10 @@ export const METHOD_NOTIFICATION_RESOURCE_UPDATED = ResourceUpdatedNotificationS
 export const METHOD_NOTIFICATION_RESOURCE_LIST_CHANGED = ResourceListChangedNotificationSchema.shape.method.value;
 export const METHOD_NOTIFICATION_TOOL_LIST_CHANGED = ToolListChangedNotificationSchema.shape.method.value;
 export const METHOD_NOTIFICATION_PROMPT_LIST_CHANGED = PromptListChangedNotificationSchema.shape.method.value;
+export const METHOD_NOTIFICATION_ELICITATION_COMPLETE = ElicitationCompleteNotificationSchema.shape.method.value;
+export const METHOD_NOTIFICATION_TASK_STATUS = TaskStatusNotificationSchema.shape.method.value;
+// method for json-rpc error
+export const METHOD_JSONRPC_ERROR = 'JSON-RPC Error';
 
 export const unsupportedMethodPrefix = 'Unsupported/';
 export const METHOD_UNKNOWN = 'Unknown Method';
@@ -73,6 +79,8 @@ export const NOTIFICATION_METHODS = [
   METHOD_NOTIFICATION_RESOURCE_LIST_CHANGED,
   METHOD_NOTIFICATION_TOOL_LIST_CHANGED,
   METHOD_NOTIFICATION_PROMPT_LIST_CHANGED,
+  METHOD_NOTIFICATION_ELICITATION_COMPLETE,
+  METHOD_NOTIFICATION_TASK_STATUS,
 ] as const;
 export const CLIENT_METHODS = [
   METHOD_SAMPLING_CREATE_MESSAGE,
@@ -93,6 +101,11 @@ export const NOTIFICATIONS_LIST_CHANGED: string[] = [
   METHOD_NOTIFICATION_RESOURCE_LIST_CHANGED,
   METHOD_NOTIFICATION_TOOL_LIST_CHANGED,
   METHOD_NOTIFICATION_PROMPT_LIST_CHANGED,
+];
+export const MCP_SERVER_REQUEST_METHODS: string[] = [
+  METHOD_SAMPLING_CREATE_MESSAGE,
+  METHOD_ELICITATION_CREATE_MESSAGE,
+  METHOD_LIST_ROOTS,
 ];
 
 export type McpServerMethods = (typeof SERVER_METHODS)[number];
@@ -138,12 +151,13 @@ export const getMcpMethodFromMessage = (message: JSONRPCMessage): McpMessageEven
     }
   } else if (ServerRequestSchema.safeParse(message).success) {
     const requestMethod = ServerRequestSchema.parse(message).method;
-    if (requestMethod === METHOD_LIST_ROOTS) {
-      method = METHOD_LIST_ROOTS;
-    } else {
-      // Do not support any server requests to client including ping, elicitation and sampling
-      method = `${unsupportedMethodPrefix}${ServerRequestSchema.parse(message).method}`;
-    }
+    // Support elicitation, sampling and listing roots requests from server
+    method =
+      requestMethod === METHOD_ELICITATION_CREATE_MESSAGE ||
+      requestMethod === METHOD_SAMPLING_CREATE_MESSAGE ||
+      requestMethod === METHOD_LIST_ROOTS
+        ? requestMethod
+        : `${unsupportedMethodPrefix}${requestMethod}`;
   }
   return method;
 };

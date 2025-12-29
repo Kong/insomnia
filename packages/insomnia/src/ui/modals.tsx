@@ -10,6 +10,7 @@ import { AskModal } from './components/modals/ask-modal';
 import { CodePromptModal } from './components/modals/code-prompt-modal';
 import { ErrorModal } from './components/modals/error-modal';
 import { GenerateCodeModal } from './components/modals/generate-code-modal';
+import { LogoutModal } from './components/modals/logout-modal';
 import { NunjucksModal } from './components/modals/nunjucks-modal';
 import { PromptModal } from './components/modals/prompt-modal';
 import { RequestRenderErrorModal } from './components/modals/request-render-error-modal';
@@ -58,6 +59,8 @@ const Modals = () => {
         <SyncMergeModal ref={instance => registerModal(instance, 'SyncMergeModal')} />
 
         <UpgradeModal ref={instance => registerModal(instance, 'UpgradeModal')} />
+
+        <LogoutModal ref={instance => registerModal(instance, 'LogoutModal')} />
 
         <OAuthAuthorizationStatusModal />
       </ErrorBoundary>

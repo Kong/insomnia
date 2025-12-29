@@ -2,7 +2,7 @@ import { href, redirect, type ShouldRevalidateFunctionArgs } from 'react-router'
 
 import { userSession } from '~/models';
 import { isScratchpadOrganizationId, type Organization } from '~/models/organization';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.permissions';
@@ -14,6 +14,7 @@ export const fallbackFeatures = Object.freeze<FeatureList>({
   orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
   aiMockServers: { enabled: false, reason: 'Insomnia API unreachable' },
   aiCommitMessages: { enabled: false, reason: 'Insomnia API unreachable' },
+  aiMcpClient: { enabled: false, reason: 'Insomnia API unreachable' },
 });
 
 // If network unreachable assume user has paid for the current period

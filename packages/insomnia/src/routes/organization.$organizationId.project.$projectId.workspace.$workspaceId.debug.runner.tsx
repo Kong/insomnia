@@ -54,17 +54,16 @@ import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
 import { moveAfter, moveBefore } from '~/utils';
 import { invariant } from '~/utils/invariant';
 
-import { type RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 
 const inputStyle =
-  'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
+  'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-xs border-2 border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden focus:ring-1 focus:ring-(--hl-md) transition-colors';
 const iterationInputStyle =
-  'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
+  'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-xs border-2 border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden focus:ring-1 focus:ring-(--hl-md) transition-colors';
 
 // TODO: improve the performance for a lot of logs
 async function aggregateAllTimelines(errorMsg: string | null, testResult: RunnerTestResult) {
-  let timelines = new Array<ResponseTimelineEntry>();
+  let timelines: ResponseTimelineEntry[] = [];
   const responsesInfo = testResult.responsesInfo;
 
   for (const respInfo of responsesInfo) {
@@ -135,7 +134,7 @@ const defaultAdvancedConfig = {
   keepLog: true,
 };
 
-export const Runner: FC<{}> = () => {
+export const Runner: FC = () => {
   const [searchParams] = useSearchParams();
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
 
@@ -225,9 +224,9 @@ export const Runner: FC<{}> = () => {
     },
     renderDragPreview(items) {
       return (
-        <div className="rounded bg-slate-800 px-2 py-0.5">
+        <div className="rounded-sm bg-slate-800 px-2 py-0.5">
           <mark
-            className="text-extrabold rounded bg-green-400 px-2 text-lg dark:bg-green-400"
+            className="text-extrabold rounded-sm bg-green-400 px-2 text-lg dark:bg-green-400"
             style={{ color: 'black' }}
           >{` ${items.length}`}</mark>{' '}
           item(s)
@@ -242,7 +241,7 @@ export const Runner: FC<{}> = () => {
             <DropIndicator
               target={target}
               className={({ isDropTarget }) => {
-                return `${isDropTarget ? 'border border-solid border-[--hl-sm]' : ''}`;
+                return `${isDropTarget ? 'border border-solid border-(--hl-sm)' : ''}`;
               }}
             />
           );
@@ -309,7 +308,7 @@ export const Runner: FC<{}> = () => {
   const onToggleSelection = () => {
     if (selectedKeys === 'all' || Array.from(selectedKeys).length === Array.from(reqList).length) {
       // unselect all
-      updateRunnerState(organizationId, runnerId, { selectedKeys: new Set([]) });
+      updateRunnerState(organizationId, runnerId, { selectedKeys: new Set() });
     } else {
       // select all
       const allKeys = reqList.map(item => item.id);
@@ -423,23 +422,21 @@ export const Runner: FC<{}> = () => {
     let passedTestCount = 0;
     let totalTestCount = 0;
 
-    if (!isRunning) {
-      if (executionResult?.iterationResults) {
-        for (const iteration of executionResult.iterationResults) {
-          for (const requests of iteration) {
-            for (const testCase of requests.results) {
-              if (testCase.status === 'passed') {
-                passedTestCount++;
-              }
-              totalTestCount++;
+    if (!isRunning && executionResult?.iterationResults) {
+      for (const iteration of executionResult.iterationResults) {
+        for (const requests of iteration) {
+          for (const testCase of requests.results) {
+            if (testCase.status === 'passed') {
+              passedTestCount++;
             }
+            totalTestCount++;
           }
         }
       }
     }
 
     const testResultCountTagColor =
-      totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-[var(--hl-sm)]';
+      totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-(--hl-sm)';
 
     return { passedTestCount, totalTestCount, testResultCountTagColor };
   }, [executionResult, isRunning]);
@@ -475,7 +472,7 @@ export const Runner: FC<{}> = () => {
         <ErrorBoundary showAlert>
           <Pane type="request">
             <PaneHeader>
-              <Heading className="flex h-[--line-height-sm] w-full items-center pl-[--padding-md]">
+              <Heading className="flex h-(--line-height-sm) w-full items-center pl-(--padding-md)">
                 <div className="h-full w-full overflow-hidden text-left">
                   <div className="h-full min-w-[500px]">
                     <span className="mr-6 text-sm">
@@ -485,9 +482,9 @@ export const Runner: FC<{}> = () => {
                         disabled={isRunning}
                         onChange={e => {
                           try {
-                            if (parseInt(e.target.value, 10) > 0) {
+                            if (Number.parseInt(e.target.value, 10) > 0) {
                               updateRunnerState(organizationId, runnerId, {
-                                iterationCount: parseInt(e.target.value, 10),
+                                iterationCount: Number.parseInt(e.target.value, 10),
                               });
                             }
                           } catch {}
@@ -495,7 +492,7 @@ export const Runner: FC<{}> = () => {
                         type="number"
                         className={iterationInputStyle}
                       />
-                      <span className="border">Iterations</span>
+                      <span>Iterations</span>
                     </span>
                     <span className="mr-6 text-sm">
                       <input
@@ -504,7 +501,7 @@ export const Runner: FC<{}> = () => {
                         name="Delay"
                         onChange={e => {
                           try {
-                            const delay = parseInt(e.target.value, 10);
+                            const delay = Number.parseInt(e.target.value, 10);
                             if (delay >= 0) {
                               updateRunnerState(organizationId, runnerId, { delay }); // also update the temp settings
                             }
@@ -513,11 +510,11 @@ export const Runner: FC<{}> = () => {
                         type="number"
                         className={inputStyle}
                       />
-                      <span className="mr-1 border">Delay (ms)</span>
+                      <span className="mr-1">Delay (ms)</span>
                     </span>
                     <Button
                       onPress={() => setShowUploadModal(true)}
-                      className="mr-6 h-full rounded-sm border-[--hl-sm] px-1 py-0.5 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
+                      className="mr-6 h-full rounded-xs border-(--hl-sm) px-1 py-0.5 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) aria-pressed:bg-(--hl-sm)"
                       isDisabled={isRunning}
                     >
                       <Icon icon={file ? 'eye' : 'upload'} /> {file ? 'View Data' : 'Upload Data'}
@@ -527,7 +524,7 @@ export const Runner: FC<{}> = () => {
                 <div className="flex self-stretch p-1">
                   <Button
                     isDisabled={isDisabled}
-                    className="ml-1 rounded-l-sm bg-[--color-surprise] px-5 text-[--color-font-surprise] hover:bg-opacity-90 focus:bg-opacity-90"
+                    className="ml-1 rounded-l-sm bg-(--color-surprise) px-5 text-(--color-font-surprise) hover:bg-(--color-surprise)/90 focus:bg-(--color-surprise)/90"
                     onPress={onRun}
                   >
                     Run
@@ -541,7 +538,7 @@ export const Runner: FC<{}> = () => {
                     triggerButton={
                       <Button
                         isDisabled={isDisabled}
-                        className="rounded-r-sm bg-[--color-surprise] px-1 text-[--color-font-surprise]"
+                        className="rounded-r-sm bg-(--color-surprise) px-1 text-(--color-font-surprise)"
                         style={{
                           borderTopRightRadius: '0.125rem',
                           borderBottomRightRadius: '0.125rem',
@@ -563,18 +560,18 @@ export const Runner: FC<{}> = () => {
             </PaneHeader>
             <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
               <TabList
-                className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+                className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
                 aria-label="Request pane tabs"
               >
                 <Tab
-                  className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                  className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                   id="request-order"
                 >
                   <i className="fa fa-sort fa-1x mr-2 h-4" />
                   Request Order
                 </Tab>
                 <Tab
-                  className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                  className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                   id="advanced"
                 >
                   <i className="fa fa-gear fa-1x mr-2 h-4" />
@@ -582,7 +579,7 @@ export const Runner: FC<{}> = () => {
                 </Tab>
               </TabList>
               <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="request-order">
-                <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
+                <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
                   <span className="mr-2">
                     {selectedKeys === 'all' || Array.from(selectedKeys).length === Array.from(reqList).length ? (
                       <span onClick={onToggleSelection}>
@@ -620,8 +617,8 @@ export const Runner: FC<{}> = () => {
                         return (
                           <TooltipTrigger key={`parent-folder-${id}=${name}`}>
                             <Tooltip message={name}>
-                              <i className="fa fa-folder fa-1x mr-0.3 h-4 text-[--color-font]" />
-                              <i className="fa fa-caret-right fa-1x mr-0.3 text-[--color-font]-50 h-4 opacity-50" />
+                              <i className="fa fa-folder fa-1x mr-0.3 h-4" />
+                              <i className="fa fa-caret-right fa-1x mr-0.3 h-4 opacity-50" />
                             </Tooltip>
                           </TooltipTrigger>
                         );
@@ -632,11 +629,11 @@ export const Runner: FC<{}> = () => {
                       return (
                         <GridListItem
                           textValue={item.name}
-                          className={`runner-request-list-${item.name} border border-solid border-transparent text-[--color-font]`}
+                          className={`runner-request-list-${item.name} border border-solid border-transparent text-(--color-font)`}
                           style={{ outline: 'none' }}
                         >
                           <Button slot="drag" className="hover:cursor-grab">
-                            <Icon icon="grip-vertical" className="mr-2 w-2 text-[--hl]" />
+                            <Icon icon="grip-vertical" className="mr-2 w-2 text-(--hl)" />
                           </Button>
                           <Checkbox slot="selection">
                             {({ isSelected }) => (
@@ -655,7 +652,7 @@ export const Runner: FC<{}> = () => {
                           {parentFolderContainer}
                           <span className={`ml-2 text-xs uppercase http-method-${item.method}`}>{item.method}</span>
                           <span
-                            className="ml-2 cursor-pointer text-[--hl] hover:underline"
+                            className="ml-2 cursor-pointer text-(--hl) hover:underline"
                             onClick={() => goToRequest(item.id)}
                           >
                             {item.name}
@@ -752,11 +749,11 @@ export const Runner: FC<{}> = () => {
         </ErrorBoundary>
       </Panel>
       <PanelResizeHandle
-        className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'h-[1px] w-full bg-[--hl-md]'}
+        className={direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'}
       />
       <Panel id="pane-two" className="pane-two theme--pane">
         <PaneHeader className="row-spaced">
-          <Heading className="flex h-[--line-height-sm] w-full items-center border-b border-solid border-b-[--hl-md] pl-3">
+          <Heading className="flex h-(--line-height-sm) w-full items-center border-b border-solid border-b-(--hl-md) pl-3">
             {executionResult?.duration ? (
               <div className="bg-info tag">
                 <strong>{`${totalTime.duration} ${totalTime.unit}`}</strong>
@@ -773,17 +770,17 @@ export const Runner: FC<{}> = () => {
           className="flex h-full w-full flex-1 flex-col"
         >
           <TabList
-            className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+            className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
             aria-label="Request pane tabs"
           >
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="test-results"
             >
               <div>
                 <span>Tests</span>
                 <span
-                  className={`test-result-count ml-1 rounded-sm px-1 ${testResultCountTagColor}`}
+                  className={`test-result-count ml-1 rounded-xs px-1 ${testResultCountTagColor}`}
                   style={{ color: 'white' }}
                 >
                   {`${passedTestCount} / ${totalTestCount}`}
@@ -791,13 +788,13 @@ export const Runner: FC<{}> = () => {
               </div>
             </Tab>
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="history"
             >
               History
             </Tab>
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="console"
             >
               Console
@@ -952,7 +949,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       while (j < requests.length) {
         // TODO: we might find a better way to do runner cancellation
         if (getExecution(runnerId) === undefined) {
-          throw 'Runner has been stopped';
+          throw new Error('Runner has been stopped');
         }
 
         const targetRequest = requests[j];
@@ -1001,7 +998,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
           await new Promise(resolve => setTimeout(resolve, delay));
 
-          const mutatedContext = (await sendActionImplementation({
+          const execution = await sendActionImplementation({
             requestId: targetRequest.id,
             iteration: i + 1,
             iterationCount,
@@ -1011,9 +1008,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             testResultCollector: resultCollector,
             runtime,
             transientVariables: testCtx.transientVariables,
-          })) as RequestContext | null;
-          if (mutatedContext?.execution?.nextRequestIdOrName) {
-            nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
+          });
+          if (execution?.nextRequestIdOrName) {
+            nextRequestIdOrName = execution.nextRequestIdOrName || '';
           }
 
           const requestResults: RunnerResultPerRequest = {
@@ -1086,10 +1083,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     window.main.completeExecutionStep({ requestId: runnerId });
   } catch (e) {
     // the error could be from third party
-    const errMsg = e.error || e;
-    updateExecution(runnerId, {
-      error: errMsg,
-    });
+    const errMsg = e.message || e.error || e;
+    updateExecution(runnerId, { error: errMsg });
     return null;
   } finally {
     cancelExecution(runnerId);

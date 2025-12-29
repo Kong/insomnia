@@ -1,10 +1,12 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
+import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
 
 import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
+import type { AIFeatureNames } from './main/llm-config-service';
 import type { CurlBridgeAPI } from './main/network/curl';
 import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
@@ -74,8 +76,16 @@ const mcp: McpBridgeAPI = {
   readyState: {
     getCurrent: options => ipcRenderer.invoke('mcp.readyState', options),
   },
+  client: {
+    responseElicitationRequest: options => ipcRenderer.send('mcp.client.responseElicitationRequest', options),
+    responseSamplingRequest: options => ipcRenderer.send('mcp.client.responseSamplingRequest', options),
+    hasRequestResponded: options => ipcRenderer.invoke('mcp.client.hasRequestResponded', options),
+    cancelRequest: options => ipcRenderer.invoke('mcp.client.cancelRequest', options),
+  },
   event: {
     findMany: options => ipcRenderer.invoke('mcp.event.findMany', options),
+    findNotifications: options => ipcRenderer.invoke('mcp.event.findNotifications', options),
+    findPendingEvents: options => ipcRenderer.invoke('mcp.event.findPendingEvents', options),
   },
 };
 
@@ -138,6 +148,7 @@ const git: GitServiceAPI = {
   initSignInToGitLab: () => ipcRenderer.invoke('git.initSignInToGitLab'),
   completeSignInToGitLab: options => ipcRenderer.invoke('git.completeSignInToGitLab', options),
   signOutOfGitLab: () => ipcRenderer.invoke('git.signOutOfGitLab'),
+  getCurrentBranchByRepositoryId: options => ipcRenderer.invoke('git.getCurrentBranchByRepositoryId', options),
 };
 
 const llm: LLMConfigServiceAPI = {
@@ -149,9 +160,8 @@ const llm: LLMConfigServiceAPI = {
     ipcRenderer.invoke('llm.updateBackendConfig', backend, config),
   getAllConfigurations: () => ipcRenderer.invoke('llm.getAllConfigurations'),
   getCurrentConfig: () => ipcRenderer.invoke('llm.getCurrentConfig'),
-  getAIFeatureEnabled: (feature: 'aiMockServers' | 'aiCommitMessages') =>
-    ipcRenderer.invoke('llm.getAIFeatureEnabled', feature),
-  setAIFeatureEnabled: (feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean) =>
+  getAIFeatureEnabled: (feature: AIFeatureNames) => ipcRenderer.invoke('llm.getAIFeatureEnabled', feature),
+  setAIFeatureEnabled: (feature: AIFeatureNames, enabled: boolean) =>
     ipcRenderer.invoke('llm.setAIFeatureEnabled', feature, enabled),
 };
 
@@ -174,6 +184,7 @@ const main: Window['main'] = {
   onDefaultBrowserOAuthRedirect: options => ipcRenderer.invoke('onDefaultBrowserOAuthRedirect', options),
   cancelAuthorizationInDefaultBrowser: options => ipcRenderer.invoke('cancelAuthorizationInDefaultBrowser', options),
   setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
+  multipartBufferToArray: options => ipcRenderer.invoke('multipartBufferToArray', options),
   installPlugin: (lookupName: string, allowScopedPackageNames = false) =>
     ipcRenderer.invoke('installPlugin', lookupName, allowScopedPackageNames),
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
@@ -249,6 +260,8 @@ const main: Window['main'] = {
     ),
   generateCommitsFromDiff: (input: { diff: string; recent_commits: string }) =>
     ipcRenderer.invoke('generateCommitsFromDiff', input),
+  generateMcpSamplingResponse: (parameters: Parameters<GenerateMcpSamplingResponseFunction>[0]) =>
+    ipcRenderer.invoke('generateMcpSamplingResponse', parameters),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {
@@ -256,7 +269,12 @@ ipcRenderer.on('hidden-browser-window-response-listener', event => {
   ports.set('hiddenWindowPort', port);
   ipcRenderer.invoke('main-window-script-port-ready');
 });
-
+const path: Window['path'] = {
+  dirname: (p: string) => ipcRenderer.sendSync('path.dirname', p),
+  basename: (p: string) => ipcRenderer.sendSync('path.basename', p),
+  join: (...paths: string[]) => ipcRenderer.sendSync('path.join', ...paths),
+  resolve: (...paths: string[]) => ipcRenderer.sendSync('path.resolve', ...paths),
+};
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),
   showSaveDialog: options => ipcRenderer.invoke('showSaveDialog', options),
@@ -284,6 +302,7 @@ if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('shell', shell);
   contextBridge.exposeInMainWorld('clipboard', clipboard);
   contextBridge.exposeInMainWorld('webUtils', webUtils);
+  contextBridge.exposeInMainWorld('path', path);
 } else {
   window.main = main;
   window.dialog = dialog;
@@ -291,4 +310,5 @@ if (process.contextIsolated) {
   window.shell = shell;
   window.clipboard = clipboard;
   window.webUtils = webUtils;
+  window.path = path;
 }

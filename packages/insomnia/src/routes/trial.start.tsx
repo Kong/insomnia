@@ -1,5 +1,5 @@
 import { userSession } from '~/models';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { syncCurrentPlan } from '~/ui/organization-utils';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -28,7 +28,7 @@ export async function clientAction(_args: Route.ClientActionArgs) {
       await syncCurrentPlan(sessionId, accountId);
     }
     return result;
-  } catch (err) {
+  } catch {
     return {
       success: false,
     };

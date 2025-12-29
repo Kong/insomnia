@@ -17,7 +17,7 @@ import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initiali
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -155,24 +155,39 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     let event = SegmentEvent.documentCreate;
+    let environmentType: string | undefined;
 
     if (isCollection(workspace)) {
       event = SegmentEvent.collectionCreate;
     } else if (isEnvironment(workspace)) {
-      event = SegmentEvent.environmentWorkspaceCreate;
+      event = SegmentEvent.environmentCreate;
+      const environment = await models.environment.getById(workspace._id);
+      environmentType = environment?.isPrivate ? 'private' : 'global';
     } else if (scope === 'mcp') {
       event = SegmentEvent.mcpClientWorkspaceCreate;
     }
 
     window.main.trackSegmentEvent({
       event: event,
+      ...(environmentType && {
+        properties: {
+          type: environmentType,
+        },
+      }),
     });
 
     if (workspaceData.withRequest) {
       const settings = await models.settings.getOrCreate();
       const defaultHeaders = settings.disableAppVersionUserAgent
         ? []
-        : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
+        : [
+            {
+              name: 'User-Agent',
+              value: `insomnia/${getAppVersion()}`,
+              description: '',
+              disabled: false,
+            },
+          ];
 
       const activeRequestId = (
         await models.request.create({
@@ -183,7 +198,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         })
       )._id;
 
-      window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType: 'HTTP' } });
+      window.main.trackSegmentEvent({ event: SegmentEvent.requestCreated, properties: { requestType: 'HTTP' } });
 
       return redirect(
         href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
@@ -291,6 +306,8 @@ async function createMockServer(
       workspaceId: workspace._id,
     })}/mock-server`;
 
+    const modelConfig = await window.main.llm.getCurrentConfig();
+
     const generationStartTime = Date.now();
 
     if (workspaceData.mockServerCreationType === 'ai') {
@@ -308,7 +325,6 @@ async function createMockServer(
         specText = workspaceData.mockServerSpecText!;
       }
 
-      const modelConfig = await window.main.llm.getCurrentConfig();
       const result = await window.main.generateMockRouteDataFromSpec(
         openapiSpec,
         specUrl,
@@ -347,11 +363,14 @@ async function createMockServer(
     window.main.trackSegmentEvent({
       event: SegmentEvent.mockCreate,
       properties: {
+        provider: (modelConfig && modelConfig.backend) || '',
+        model: (modelConfig && modelConfig.model) || '',
         hosting: workspaceData.mockServerType || '',
         generation: workspaceData.mockServerCreationType || '',
         generation_from: workspaceData.apiSpecContents ? 'design_doc' : workspaceData.mockServerSpecSource || '',
         dynamic_responses: workspaceData.mockServerDynamicResponses ? 'yes' : 'no',
         generation_duration_seconds: generationDurationMs / 1000,
+        source: 'menu',
       },
     });
 
@@ -368,7 +387,7 @@ async function createMockServer(
         ),
         status: 'success',
       },
-      { timeout: 10000 },
+      { timeout: 10_000 },
     );
 
     return undefined;

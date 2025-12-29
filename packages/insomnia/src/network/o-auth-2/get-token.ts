@@ -16,7 +16,7 @@ import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParamete
 import type { Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId, type RequestGroup } from '../../models/request-group';
 import type { Response } from '../../models/response';
-import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../ui/eventBus';
+import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../ui/event-bus';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getAuthObjectOrNull, isAuthEnabled } from '../authentication';
@@ -89,7 +89,7 @@ export const getOAuth2Token = async (
           ? [
               {
                 name: 'nonce',
-                value: Math.floor(Math.random() * 9999999999999) + 1 + '',
+                value: Math.floor(Math.random() * 9_999_999_999_999) + 1 + '',
               },
             ]
           : []),
@@ -195,7 +195,6 @@ export const getOAuth2Token = async (
         { name: 'grant_type', value: GRANT_TYPE_AUTHORIZATION_CODE },
         { name: 'code', value: redirectParams.code },
         ...insertAuthKeyIf('redirect_uri', redirectUrl),
-        ...insertAuthKeyIf('state', authentication.state),
         ...insertAuthKeyIf('audience', authentication.audience),
         ...insertAuthKeyIf('resource', authentication.resource),
         ...insertAuthKeyIf('code_verifier', codeVerifier),
@@ -479,13 +478,13 @@ export const encodePKCE = (buffer: Buffer) => {
 const tryToParse = (body: string): Record<string, any> | null => {
   try {
     return JSON.parse(body);
-  } catch (err) {}
+  } catch {}
 
   try {
     // NOTE: parse does not return a JS Object, so
     //   we cannot use hasOwnProperty on it
     return querystring.parse(body);
-  } catch (err) {}
+  } catch {}
   return null;
 };
 

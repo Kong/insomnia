@@ -38,6 +38,10 @@ export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () =>
   appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT ? 'development' : 'production'];
 export const getSentryDsn = () => appConfig.sentryDsn;
+export const getCioWriteKey = () =>
+  appConfig.cio[isDevelopment() || env.PLAYWRIGHT ? 'development' : 'production'].writeKey;
+export const getCioSiteId = () =>
+  appConfig.cio[isDevelopment() || env.PLAYWRIGHT ? 'development' : 'production'].siteId;
 export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
 
 export const getBrowserUserAgent = () =>
@@ -76,6 +80,8 @@ export const FLEXIBLE_URL_REGEX =
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 24;
 
 export const ACCEPTED_NODE_CA_FILE_EXTS = ['.pem', '.crt', '.cer', '.p12'];
+
+export const LLM_BACKENDS = ['gguf', 'claude', 'openai', 'gemini'] as const;
 
 // Available editor key map
 export enum EditorKeyMap {
@@ -181,7 +187,6 @@ export const isDesignActivity = (activity?: string): activity is GlobalActivity 
       return true;
     }
 
-    case 'home':
     default: {
       return false;
     }
@@ -194,9 +199,6 @@ export const isCollectionActivity = (activity?: string): activity is GlobalActiv
       return true;
     }
 
-    case 'spec':
-    case 'unittest':
-    case 'home':
     default: {
       return false;
     }
@@ -549,4 +551,5 @@ export const INSOMNIA_FETCH_TIME_OUT = 30_000;
 export const REALTIME_EVENTS_CHANNELS = {
   READY_STATE: 'readyState',
   NEW_EVENT: 'newEventReceived',
+  MCP_NOTIFICATION: 'mcpNotification',
 };

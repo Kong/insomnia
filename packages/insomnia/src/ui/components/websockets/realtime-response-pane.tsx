@@ -1,15 +1,16 @@
-import fs from 'node:fs';
-
+import classnames from 'classnames';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
+import { docsMcpAuthentication } from '~/common/documentation';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
+import { useRealtimeConnectionNotifications } from '~/ui/hooks/use-realtime-connection-notifications';
 
 import { getSetCookieHeaders } from '../../../common/misc';
+import type { McpEvent } from '../../../main/mcp/types';
 import type { CurlEvent } from '../../../main/network/curl';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
-import type { McpEvent } from '../../../main/network/mcp';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
 import { TRANSPORT_TYPES } from '../../../models/mcp-request';
@@ -47,7 +48,7 @@ export const RealtimeResponsePane: FC<{ requestId?: string }> = () => {
   if (!activeResponse) {
     return (
       <Pane type="response">
-        <PaneHeader className="!justify-normal" />
+        <PaneHeader className="justify-normal!" />
         <PlaceholderResponsePane />
       </Pane>
     );
@@ -64,6 +65,7 @@ export const RealtimeResponsePane: FC<{ requestId?: string }> = () => {
 
 type ResponseType = WebSocketResponse | Response | SocketIOResponse | McpResponse;
 type EventType = CurlEvent | WebSocketEvent | SocketIOEvent | McpEvent;
+type ReadyState = 'disconnected' | 'connecting' | 'connected';
 interface RealtimeActiveResponsePaneProps {
   response: ResponseType;
   responses: ResponseType[];
@@ -93,7 +95,7 @@ const RealTimeActiveResponsePaneForMcp: FC<RealtimeActiveResponsePaneProps> = pr
   const { response } = props;
   const requestId = response.parentId;
   const readyState = useMcpReadyState({ requestId });
-  return <RealtimeActiveResponsePane {...props} connected={readyState === 'connected'} />;
+  return <RealtimeActiveResponsePane {...props} readyState={readyState} />;
 };
 
 const RealTimeActiveResponsePaneForOthers: FC<
@@ -102,21 +104,22 @@ const RealTimeActiveResponsePaneForOthers: FC<
   const { response, protocol } = props;
   const requestId = response.parentId;
   const readyState = useReadyState({ requestId, protocol });
-  return <RealtimeActiveResponsePane {...props} connected={readyState} />;
+  return <RealtimeActiveResponsePane {...props} readyState={readyState ? 'connected' : 'disconnected'} />;
 };
 
-const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connected: boolean }> = ({
+const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readyState: ReadyState }> = ({
   response,
   responses,
   requestVersions,
   autoSelectLatestEvent,
-  connected,
+  readyState,
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [clearEventsBefore, setClearEventsBefore] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [eventType, setEventType] = useState<CurlEvent['type']>();
+  const isConnected = readyState === 'connected';
 
   const protocol = useMemo(() => {
     if (isSocketIOResponse(response)) {
@@ -129,6 +132,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
   }, [response]);
 
   const allEvents = useRealtimeConnectionEvents({ responseId: response._id, protocol }) as EventType[];
+  const allNotifications = useRealtimeConnectionNotifications({ responseId: response._id, protocol });
   const handleSelection = (event: EventType) => {
     setSelectedEvent((selected: EventType | null) => (selected?._id === event._id ? null : event));
   };
@@ -152,11 +156,6 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
 
         // Filter out events that don't match the selected event type
         if (eventType && event.type !== eventType) {
-          return false;
-        }
-
-        // Filter out MCP notification events which will show on another tab
-        if (event.type === 'notification') {
           return false;
         }
 
@@ -196,8 +195,6 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
     }
   }, [events, autoSelectLatestEvent]);
 
-  const notificationEvents = useMemo(() => allEvents.filter(event => event.type === 'notification'), [allEvents]);
-
   useEffect(() => {
     setSelectedEvent(null);
     setSearchQuery('');
@@ -207,18 +204,10 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      try {
-        await fs.promises.stat(response.timelinePath);
-      } catch (err) {
-        if (err.code === 'ENOENT') {
-          return setTimeline([]);
-        }
-      }
-
-      // allow to read the file as it is chosen by user
       const content = await window.main.secureReadFile({
         path: response.timelinePath,
       });
+
       const timelineParsed = deserializeNDJSON(content);
       if (isMounted) {
         setTimeline(timelineParsed);
@@ -237,13 +226,23 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
 
   const cookieHeaders = hideCookies ? [] : getSetCookieHeaders(response.headers);
 
+  // When it is an MCP auth error, show the docs link about MCP authentication and keep the events view to be visible for better context.
+  const isMCPAuthError = isMcpResponse(response) && response.error && response.errorType === 'auth';
+
   return (
     <Pane type="response">
       <PaneHeader className="row-spaced">
         <div className="no-wrap scrollable scrollable--no-bars pad-left">
           {isLongRunning ? (
-            <div data-testid="response-status-tag" className={`${connected ? 'bg-success' : 'bg-danger'} px-2 py-1`}>
-              {connected ? 'Connected' : 'Disconnected'}
+            <div
+              data-testid="response-status-tag"
+              className={classnames('px-2 py-1 capitalize', {
+                'bg-success': readyState === 'connected',
+                'bg-info': readyState === 'connecting',
+                'bg-danger': readyState === 'disconnected',
+              })}
+            >
+              {readyState}
             </div>
           ) : (
             <>
@@ -257,36 +256,36 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
       </PaneHeader>
       <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
         <TabList
-          className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+          className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
           aria-label="Request pane tabs"
         >
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="events"
           >
             Events
           </Tab>
           {isMcpResponse(response) && (
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="notifications"
             >
               Notifications
-              {notificationEvents.length > 0 && (
-                <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
-                  {notificationEvents.length}
+              {allNotifications.length > 0 && (
+                <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
+                  {allNotifications.length}
                 </span>
               )}
             </Tab>
           )}
           {!hideHeaders && (
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="headers"
             >
               Headers
               {response.headers.length > 0 && (
-                <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
                   {response.headers.length}
                 </span>
               )}
@@ -294,19 +293,19 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
           )}
           {!hideCookies && (
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="cookies"
             >
               Cookies
               {cookieHeaders.length > 0 && (
-                <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
                   {cookieHeaders.length}
                 </span>
               )}
             </Tab>
           )}
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="timeline"
           >
             Console
@@ -314,8 +313,8 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
         </TabList>
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="events">
           <PanelGroup direction="vertical" className="grid h-full w-full grid-rows-[repeat(auto-fit,minmax(0,1fr))]">
-            {response.error ? (
-              <ResponseErrorViewer url={response.url} error={response.error} />
+            {response.error && !isMCPAuthError ? (
+              <ResponseErrorViewer url={response.url} error={response.error} isMcpResponse={isMcpResponse(response)} />
             ) : (
               <>
                 <Panel minSize={10} defaultSize={50} className="box-border flex w-full flex-1 flex-col overflow-hidden">
@@ -348,17 +347,17 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
                     >
                       <Input
                         placeholder="Search"
-                        className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                        className="w-full rounded-sm border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                       />
-                      <div className="absolute right-0 top-0 flex h-full items-center px-2">
-                        <Button className="flex aspect-square w-5 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] group-data-[empty]:hidden">
+                      <div className="absolute top-0 right-0 flex h-full items-center px-2">
+                        <Button className="flex aspect-square w-5 items-center justify-center rounded-sm text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
                           <Icon icon="close" />
                         </Button>
                       </div>
                     </SearchField>
                     <Button
                       aria-label="Create in collection"
-                      className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                       onPress={() => {
                         const lastEvent = events[0];
                         setClearEventsBefore(lastEvent.timestamp);
@@ -374,14 +373,25 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
                       onSelect={handleSelection}
                       selectionId={selectedEvent?._id}
                       autoSelectLatestEvent
+                      protocol={protocol}
+                      readyState={isConnected}
                     />
                   )}
                 </Panel>
+                {isMCPAuthError ? (
+                  <ResponseErrorViewer
+                    url={response.url}
+                    error={response.error}
+                    docsLink={docsMcpAuthentication}
+                    showErrorDetails={false}
+                    isMcpResponse
+                  />
+                ) : null}
                 {selectedEvent && (
                   <>
-                    <PanelResizeHandle className={'h-[1px] w-full bg-[--hl-md]'} />
+                    <PanelResizeHandle className={'h-px w-full bg-(--hl-md)'} />
                     <Panel minSize={10} defaultSize={isMcpResponse(response) ? 85 : 60}>
-                      <div className="h-full flex-1 border-t border-[var(--hl-md)]">{getEventView(selectedEvent)}</div>
+                      <div className="h-full flex-1">{getEventView(selectedEvent)}</div>
                     </Panel>
                   </>
                 )}
@@ -391,7 +401,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { connect
         </TabPanel>
         {isMcpResponse(response) && (
           <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="notifications">
-            <McpNotificationTab allEvents={notificationEvents} />
+            <McpNotificationTab allEvents={allNotifications} />
           </TabPanel>
         )}
         {!isSocketIOResponse(response) && (

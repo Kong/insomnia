@@ -3,7 +3,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState }
 
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
-import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
+import { isWindows, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 import { checkNestedKeys } from './environment-utils';
 
 export interface EnvironmentInfo {
@@ -29,11 +29,20 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(
     const [error, setError] = useState('');
     const getValue = useCallback(() => {
       // @ts-expect-error -- current can be null
-      const value = editorRef.current.getValue();
+      let value = editorRef.current.getValue();
       if (!editorRef.current || !value) {
         return null;
       }
-      const json = orderedJSON.parse(editorRef.current.getValue(), JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR);
+
+      // On Windows, backslashes are used as directory separators.
+      // The file tag inserted by Nunjucks in JSON uses double backslashes in its path parameter, but in the logic below, orderedJSON.parse unescapes those double backslashes into a single backslash. This causes the file tag to fail when the corresponding environment variable is referenced in a request.
+      // Therefore, we replace the double backslashes in the file tag’s path parameter with four backslashes, ensuring that after orderedJSON.parse runs, the path parameter in the file tag still contains two backslashes.
+      // See https://github.com/Kong/insomnia/issues/5754
+      if (isWindows()) {
+        value = escapeFileTag(value);
+      }
+
+      const json = orderedJSON.parse(value, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR);
       const environmentInfo = {
         object: json.object,
         propertyOrder: json.map || null,
@@ -54,11 +63,17 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(
       setError(message);
     };
 
-    const defaultValue = orderedJSON.stringify(
+    let defaultValue = orderedJSON.stringify(
       environmentInfo.object,
       environmentInfo.propertyOrder || null,
       JSON_ORDER_SEPARATOR,
     );
+
+    // The reverse operation of the logic in getValue.
+    if (isWindows()) {
+      defaultValue = unescapeFileTag(defaultValue);
+    }
+
     return (
       <div className="environment-editor">
         <CodeEditor
@@ -94,3 +109,19 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(
   },
 );
 EnvironmentEditor.displayName = 'EnvironmentEditor';
+
+function escapeFileTag(str: string) {
+  const regex = /\{\% *file +'(.+?)' *\%\}/g;
+
+  return str.replace(regex, (_match: any, oriFilePath: string) => {
+    return `{% file '${oriFilePath.replace(/(?<!\\)\\\\(?!\\)/g, '\\\\\\\\')}' %}`;
+  });
+}
+
+function unescapeFileTag(str: string) {
+  const regex = /\{\% *file +'(.+?)' *\%\}/g;
+
+  return str.replace(regex, (_match: any, oriFilePath: string) => {
+    return `{% file '${oriFilePath.replace(/(?<!\\)\\\\\\\\(?!\\)/g, '\\\\')}' %}`;
+  });
+}

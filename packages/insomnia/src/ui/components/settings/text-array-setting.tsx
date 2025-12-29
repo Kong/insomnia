@@ -83,14 +83,14 @@ export const TextArraySetting: FC<{
               id={dataFolderPath}
               data-testid={`data-folder-${index}`}
               textValue={dataFolderPath}
-              className="flex min-h-[30px] justify-between gap-2 rounded-sm px-2 py-1 outline-none odd:bg-[--hl-xs]"
+              className="flex min-h-[30px] justify-between gap-2 rounded-xs px-2 py-1 outline-hidden odd:bg-(--hl-xs)"
             >
               <span className="flex min-w-[70%] items-center break-all" data-testid="cookie-domain">
                 <span>{dataFolderPath || ''}</span>
               </span>
               <div className="flex min-w-[30%] items-center justify-end gap-1">
                 <PromptButton
-                  className="flex min-w-[15px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
+                  className="flex min-w-[15px] items-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
                   confirmMessage=""
                   doneMessage=""
                   onClick={() => onDeleteDataFolder(dataFolderPath)}

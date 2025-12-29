@@ -1,15 +1,13 @@
-import React, { useEffect,useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
-import {
-  useMockRouteLoaderData,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 
 import { getMockServiceBinURL } from '../../../common/constants';
 import * as models from '../../../models';
-import { useTimeoutWhen } from '../../hooks/useTimeoutWhen';
+import { useTimeoutWhen } from '../../hooks/use-timeout-when';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -18,18 +16,14 @@ import { AlertModal } from '../modals/alert-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { PromptModal } from '../modals/prompt-modal';
 
-export const MockUrlBar = ({
-  onSend,
-}: {
-  onSend: (path: string) => void;
-}) => {
+export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
   const { mockServer, mockRoute } = useMockRouteLoaderData()!;
   const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
   const [pathInput, setPathInput] = useState<string>(mockRoute.name);
   const dropdownRef = useRef<DropdownHandle>(null);
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
-  const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
+  const [currentTimeout, setCurrentTimeout] = useState<number | undefined>();
 
   useEffect(() => {
     setPathInput(mockRoute.name);
@@ -54,17 +48,15 @@ export const MockUrlBar = ({
   const isCancellable = currentInterval || currentTimeout;
   return (
     <div className="flex w-full items-center gap-2 self-stretch p-2">
-      <div className="flex-shrink-0 rounded-sm bg-[--hl-xs] px-3 py-1">
+      <div className="shrink-0 rounded-xs bg-(--hl-xs) px-3 py-1">
         <span className={`http-method-${mockRoute.method} text-sm font-medium`}>{mockRoute.method}</span>
       </div>
-      <div className="flex flex-1 items-center rounded-sm border border-[--hl-sm] bg-[--color-bg] px-3 py-1">
-        <span className="flex-1 text-[--color-font] font-mono text-sm">
-          {pathInput}
-        </span>
+      <div className="flex flex-1 items-center rounded-sm border border-(--hl-sm) bg-(--color-bg) px-3 py-1">
+        <span className="flex-1 font-mono text-sm text-(--color-font)">{pathInput}</span>
       </div>
 
       <Button
-        className="flex-shrink-0 rounded-sm bg-[--hl-sm] px-3 py-1 text-sm text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-xs]"
+        className="shrink-0 rounded-xs bg-(--hl-sm) px-3 py-1 text-sm text-(--color-font) hover:bg-(--hl-xs) focus:bg-(--hl-xs)"
         onPress={() => {
           showModal(AlertModal, {
             title: 'Full URL',
@@ -79,7 +71,7 @@ export const MockUrlBar = ({
       </Button>
 
       <Button
-        className="flex-shrink-0 rounded-sm bg-[--hl-sm] px-3 py-1 text-sm text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-xs]"
+        className="shrink-0 rounded-xs bg-(--hl-sm) px-3 py-1 text-sm text-(--color-font) hover:bg-(--hl-xs) focus:bg-(--hl-xs)"
         onPress={() => {
           window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput));
         }}
@@ -87,9 +79,9 @@ export const MockUrlBar = ({
         <Icon icon="copy" /> Copy
       </Button>
 
-      <div className="flex flex-shrink-0">
+      <div className="flex shrink-0">
         <Button
-          className="ml-1 rounded-l-sm bg-[--color-surprise] px-5 text-[--color-font-surprise] hover:bg-opacity-90 focus:bg-opacity-90"
+          className="ml-1 rounded-l-sm bg-(--color-surprise) px-5 text-(--color-font-surprise) hover:bg-(--color-surprise)/90 focus:bg-(--color-surprise)/90"
           onPress={() => {
             if (isCancellable) {
               setCurrentInterval(null);
@@ -109,7 +101,7 @@ export const MockUrlBar = ({
           closeOnSelect={false}
           triggerButton={
             <Button
-              className="rounded-r-sm bg-[--color-surprise] px-1 text-[--color-font-surprise]"
+              className="rounded-r-sm bg-(--color-surprise) px-1 text-(--color-font-surprise)"
               style={{
                 borderTopRightRadius: '0.125rem',
                 borderBottomRightRadius: '0.125rem',

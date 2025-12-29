@@ -77,7 +77,7 @@ test.describe('pre-request features tests', () => {
       customVerify: (bodyJson: any) => {
         const authzHeader = bodyJson.headers['authorization'];
         expect.soft(authzHeader != null).toBeTruthy();
-        const expectedEncCred = Buffer.from('myName:myPwd', 'utf-8').toString('base64');
+        const expectedEncCred = Buffer.from('myName:myPwd', 'utf8').toString('base64');
         expect.soft(bodyJson.headers['authorization']).toBe(`Basic ${expectedEncCred}`);
       },
     },
@@ -382,13 +382,14 @@ test.describe('pre-request features tests', () => {
     // update proxy configuration
     await page.getByTestId('settings-button').click();
     await page.locator('text=Insomnia Preferences').first().click();
+
+    await page.getByLabel('Request timeout (ms)').fill('5000');
     await page.getByRole('tab', { name: 'Proxy' }).click();
     await page.locator('text=Enable proxy').click();
     await page.locator('[name="httpProxy"]').fill('localhost:1111');
     await page.locator('[name="httpsProxy"]').fill('localhost:2222');
     await page.locator('[name="noProxy"]').fill('http://a.com,https://b.com');
     await page.locator('.app').press('Escape');
-    // add 1s timeout to ensure noProxy settings is applied - INS-4155
 
     await page.getByLabel('Request Collection').getByTestId('test proxies manipulation').press('Enter');
     await page.getByRole('tab', { name: 'Body' }).click();
@@ -397,7 +398,7 @@ test.describe('pre-request features tests', () => {
 
     // verify
     await page.getByRole('tab', { name: 'Console' }).click();
-    await expect.soft(responsePane).toContainText('localhost:2222'); // original proxy
+    await expect.soft(responsePane).toContainText('localhost:1111'); // original proxy
     await expect.soft(responsePane).toContainText('Trying 127.0.0.1:8888'); // updated proxy
   });
 

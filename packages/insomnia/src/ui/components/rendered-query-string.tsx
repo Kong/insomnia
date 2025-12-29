@@ -1,7 +1,8 @@
 import classNames from 'classnames';
-import React, { type FC, useCallback, useEffect, useState } from 'react';
+import { type FC, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-aria-components';
 
+import { SegmentEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
@@ -137,6 +138,10 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         title: 'URL Too Long',
         message: `Your URL is quite long, so only the first ${MAX_URL_LENGTH} characters were copied.`,
       });
+    } else {
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.requestUrlCopied,
+      });
     }
   }, [tooLong]);
 
@@ -148,12 +153,12 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
   const modifiedString = hasLink ? previewString.slice(0, previewString.length - linkText.length) : previewString;
 
   return (
-    <div className="relative flex h-full w-full justify-between gap-[var(--padding-sm)] overflow-auto">
+    <div className="relative flex h-full w-full justify-between gap-(--padding-sm) overflow-auto">
       <span className={classNames('my-auto', className)}>
         {modifiedString}
         {hasLink && (
           <Link
-            className="cursor-pointer text-[--color-surprise]"
+            className="cursor-pointer text-(--color-surprise)"
             onPress={() => showSettingsModal({ tab: 'general' })}
           >
             {linkText}

@@ -74,13 +74,13 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-start justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-start justify-center bg-black/30"
     >
       <Modal
-        className="m-24 flex max-h-[75%] w-full max-w-3xl flex-col overflow-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
+        className="m-24 flex max-h-[75%] w-full max-w-3xl flex-col overflow-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
         data-testid="input-vault-key-modal"
       >
-        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
             <div className="flex flex-1 flex-col gap-4 overflow-hidden">
               <div className="flex items-center justify-between gap-2">
@@ -89,7 +89,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                 </Heading>
                 {allowClose && (
                   <Button
-                    className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     onPress={close}
                   >
                     <Icon icon="x" />
@@ -98,10 +98,10 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
               </div>
               {!resetDone ? (
                 <>
-                  <div className="flex w-full shrink-0 grow basis-12 select-none flex-col gap-3 rounded">
+                  <div className="flex w-full shrink-0 grow basis-12 flex-col gap-3 rounded-sm select-none">
                     <label>Unlock all secrets by entering the vault key</label>
                     <Input
-                      className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font]"
+                      className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font)"
                       placeholder="Enter Vault Key"
                       value={vaultKey}
                       onChange={e => setVaultKey(e.target.value)}
@@ -113,7 +113,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                     <div>
                       <span className="faint text-sm">Forget Vault Key?</span>
                       <PromptButton
-                        className="h-full px-4 py-1 text-sm text-[--color-info] underline transition-all"
+                        className="h-full px-4 py-1 text-sm text-(--color-info) underline transition-all"
                         onClick={async () => {
                           await removeAllSecrets(organizations.map(org => org.id));
                           resetVaultKeyFetcher.submit();
@@ -123,12 +123,12 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                       </PromptButton>
                     </div>
                     <Button
-                      className="ml-4 flex items-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+                      className="ml-4 flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
                       onPress={handleValidateVaultKey}
                       isDisabled={isLoading || !vaultKey}
                     >
                       {isLoading && (
-                        <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-[--color-font]" />
+                        <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-(--color-font)" />
                       )}
                       Unlock
                     </Button>
@@ -140,7 +140,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                   <VaultKeyDisplayInput vaultKey={vaultKey} />
                   <div className="mt-2 flex items-center justify-end">
                     <Button
-                      className="ml-4 flex items-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+                      className="ml-4 flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
                       onPress={() => onClose(vaultKey)}
                     >
                       OK

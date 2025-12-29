@@ -188,7 +188,7 @@ const openCurlConnection = async (
         error,
         timestamp: Date.now(),
       };
-      console.error('curl - error: ', error, errorCode);
+      console.error('curl - error:', error, errorCode);
       CurlConnections.get(options.requestId)?.close();
       deleteRequestMaps(request._id, error.message, errorEvent);
       for (const window of BrowserWindow.getAllWindows()) {

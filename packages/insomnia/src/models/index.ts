@@ -320,7 +320,7 @@ export const getAllDescendantMap = (): Partial<Record<AllTypes, AllTypes[]>> => 
   };
 };
 
-let childToParentMap: Partial<Record<AllTypes, AllTypes[]>> | undefined = undefined;
+let childToParentMap: Partial<Record<AllTypes, AllTypes[]>> | undefined;
 
 const getChildToParentMap = () => {
   if (childToParentMap) {

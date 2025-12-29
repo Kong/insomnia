@@ -19,7 +19,7 @@ export const MessageEventView: FC<Props<SocketIOMessageEvent>> = ({ event }) => 
     try {
       const parsed = JSON.parse(raw);
       return JSON.stringify(parsed, null, '\t');
-    } catch (err) {
+    } catch {
       return raw;
     }
   };

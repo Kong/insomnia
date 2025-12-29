@@ -1,9 +1,9 @@
+import type { CurrentPlan } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { userSession } from '~/models';
-import type { CurrentPlan } from '~/models/organization';
 import { getTrialEligibility } from '~/routes/trial.check';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherLoadHook } from '~/utils/router';
 
 interface ResourceUsage {

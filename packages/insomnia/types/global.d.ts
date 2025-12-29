@@ -12,6 +12,12 @@ declare global {
     shell: Pick<Electron.Shell, 'showItemInFolder' | 'openPath'>;
     clipboard: Pick<Electron.Clipboard, 'readText' | 'writeText' | 'clear'>;
     webUtils: Pick<Electron.WebUtils, 'getPathForFile'>;
+    path: {
+      resolve: (...paths: string[]) => string;
+      dirname: (p: string) => string;
+      basename: (p: string) => string;
+      join: (...paths: string[]) => string;
+    };
     showAlert: (options?: Record<string, any>) => void;
     showWrapper: (options?: Record<string, any>) => void;
     showPrompt: (options?: Record<string, any>) => void;

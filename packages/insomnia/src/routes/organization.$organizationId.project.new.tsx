@@ -7,7 +7,8 @@ import * as models from '~/models';
 import type { GitCredentials, OauthProviderName } from '~/models/git-repository';
 import { EMPTY_GIT_PROJECT_ID, type Project } from '~/models/project';
 import { SegmentEvent } from '~/ui/analytics';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { showToast } from '~/ui/components/toast-notification';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -29,6 +30,7 @@ export interface CreateProjectData {
   token?: string;
   oauth2format?: OauthProviderName;
   connectRepositoryLater?: boolean;
+  ref?: string;
 }
 
 export const reportGitProjectCount = async (organizationId: string, sessionId: string, maxRetries = 3) => {
@@ -49,7 +51,7 @@ export const reportGitProjectCount = async (organizationId: string, sessionId: s
         },
       });
       return;
-    } catch (err) {
+    } catch {
       if (attempt < maxRetries) {
         await new Promise(resolve => setTimeout(resolve, attempt * 1000));
       }
@@ -86,7 +88,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
         return project._id;
       }
 
-      let credentials: GitCredentials | undefined = undefined;
+      let credentials: GitCredentials | undefined;
       if (newProjectData.oauth2format === 'custom') {
         credentials = {
           username: newProjectData.username || '',
@@ -117,6 +119,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
           username: '',
           password: '',
         },
+        ref: newProjectData.ref || '',
       });
 
       if (errors) {
@@ -177,9 +180,14 @@ export const createProject = async (organizationId: string, newProjectData: Crea
     event: SegmentEvent.projectCreated,
     properties: {
       storage: newProjectData.storageType,
+      git_provider: newProjectData.oauth2format || 'none',
     },
   });
 
+  showToast({
+    title: 'Project created',
+    status: 'success',
+  });
   return newProjectId;
 };
 

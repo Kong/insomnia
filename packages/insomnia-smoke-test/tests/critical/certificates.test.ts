@@ -10,7 +10,7 @@ test('can send request with custom ca root certificate', async ({ app, page }) =
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   await page.getByTestId('settings-button').click();
-  await page.getByTestId('dataFolders').fill(getFixturePath(path.join("certificates", "rootCA.pem")));
+  await page.getByTestId('dataFolders').fill(getFixturePath(path.join('certificates', 'rootCA.pem')));
   await page.getByTestId('dataFolders-btn').click();
   await expect.soft(page.getByText('rootCA.pem')).toBeVisible();
   await page.locator('.app').press('Escape');

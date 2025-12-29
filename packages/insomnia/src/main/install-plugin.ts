@@ -6,6 +6,8 @@ import { promisify } from 'node:util';
 
 import { app, net } from 'electron';
 
+import { SegmentEvent } from '~/ui/analytics';
+
 import { isDevelopment } from '../common/constants';
 import * as models from '../models';
 import { validatePluginName } from '../utils/plugin';
@@ -154,6 +156,14 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
           await cp(src, dest, { recursive: true, verbatimSymlinks: true });
         }),
     );
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.installPlugin,
+      properties: {
+        pluginName: moduleName,
+        pluginVersion: info.version,
+      },
+    });
   } catch (err) {
     // Log and rethrow any installation errors
     console.error(`[plugins] Failed to install plugin ${pluginName}:`, err);
@@ -250,7 +260,7 @@ export async function installPluginToTmpDir(lookupName: string, allowScopedPacka
     await writeFile(
       path.resolve(tmpDir, 'package.json'),
       JSON.stringify({ license: 'ISC', workspaces: [] }, null, 2),
-      'utf-8',
+      'utf8',
     );
 
     console.log(`[plugins] Installing plugin into temp dir: ${tmpDir}`);
@@ -382,8 +392,8 @@ export function containsOnlyDeprecationWarnings(output: string): boolean {
  */
 export function hasUnexpectedBinaryData(output: string): boolean {
   for (let i = 0; i < output.length; i++) {
-    const code = output.charCodeAt(i);
-    if (!(code === 0x09 || code === 0x0a || code === 0x0d || (code >= 0x20 && code <= 0x7e))) {
+    const code = output.codePointAt(i);
+    if (code && !(code === 0x09 || code === 0x0a || code === 0x0d || (code >= 0x20 && code <= 0x7e))) {
       return true;
     }
   }

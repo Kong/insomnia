@@ -109,7 +109,7 @@ const resolveVariables = (server: OpenAPIV3.ServerObject) => {
 const parseDocument = (rawData: string): OpenAPIV3.Document | null => {
   try {
     return (unthrowableParseJson(rawData) || YAML.parse(rawData)) as OpenAPIV3.Document;
-  } catch (err) {
+  } catch {
     return null;
   }
 };
@@ -131,13 +131,7 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
     return [];
   }
 
-  let servers: OpenAPIV3.ServerObject[] | undefined;
-
-  if (!document.servers) {
-    servers = [{ url: 'http://example.com/' }];
-  } else {
-    servers = document.servers;
-  }
+  const servers = !document.servers ? [{ url: 'http://example.com/' }] : document.servers;
 
   const securityVariables = getSecurityEnvVariables(
     document.components?.securitySchemes as unknown as OpenAPIV3.SecuritySchemeObject,
@@ -601,7 +595,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
     const { type, format, example, readOnly, default: defaultValue } = schema;
 
     if (readOnly) {
-      return undefined;
+      return;
     }
 
     if (example) {

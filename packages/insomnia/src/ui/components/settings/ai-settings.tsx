@@ -16,11 +16,13 @@ export const AISettings = () => {
   const [configuredLLMs, setConfiguredLLMs] = useState<LLMConfig[]>([]);
   const [mockServerEnabled, setMockServerEnabled] = useState(false);
   const [commitMessagesEnabled, setCommitMessagesEnabled] = useState(false);
+  const [mcpClientEnabled, setMcpClientEnabled] = useState(false);
 
   const hasActiveLLM = currentLLM !== null;
   // If the feature is undefined, default to disabled (org hasn't enabled it)
   const isMockServerEnabledByOrg = features.aiMockServers ? features.aiMockServers.enabled : false;
   const isCommitMessagesEnabledByOrg = features.aiCommitMessages ? features.aiCommitMessages.enabled : false;
+  const isMcpClientEnabledByOrg = features.aiMcpClient ? features.aiMcpClient.enabled : false;
 
   useEffect(() => {
     const loadConfigurations = async () => {
@@ -28,9 +30,11 @@ export const AISettings = () => {
       const current = await window.main.llm.getActiveBackend();
       const mockServerFeature = await window.main.llm.getAIFeatureEnabled('aiMockServers');
       const commitMessagesFeature = await window.main.llm.getAIFeatureEnabled('aiCommitMessages');
+      const mcpClientFeature = await window.main.llm.getAIFeatureEnabled('aiMcpClient');
 
       setMockServerEnabled(isMockServerEnabledByOrg && mockServerFeature);
       setCommitMessagesEnabled(isCommitMessagesEnabledByOrg && commitMessagesFeature);
+      setMcpClientEnabled(isMcpClientEnabledByOrg && mcpClientFeature);
 
       setConfiguredLLMs(configs);
       if (current) {
@@ -40,7 +44,7 @@ export const AISettings = () => {
     };
 
     loadConfigurations();
-  }, [isMockServerEnabledByOrg, isCommitMessagesEnabledByOrg]);
+  }, [isMockServerEnabledByOrg, isCommitMessagesEnabledByOrg, isMcpClientEnabledByOrg]);
 
   const saveLLMSettings = useCallback(
     async (setCurrent: boolean, backend: LLMBackend, extras: Partial<LLMConfig> = {}) => {
@@ -77,6 +81,11 @@ export const AISettings = () => {
     await window.main.llm.setAIFeatureEnabled('aiCommitMessages', enabled);
   }, []);
 
+  const handleMcpClientToggle = useCallback(async (enabled: boolean) => {
+    setMcpClientEnabled(enabled);
+    await window.main.llm.setAIFeatureEnabled('aiMcpClient', enabled);
+  }, []);
+
   const activeBadge = (
     <span className="bg-surprise flex h-5 min-w-5 items-center justify-center rounded-full px-2 py-1 text-xs text-white">
       Active
@@ -84,40 +93,40 @@ export const AISettings = () => {
   );
 
   const getNavStyle = (backend: LLMBackend) => {
-    return `w-[140px] rounded-sm border border-solid px-4 py-2 text-base ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] ${
+    return `w-[140px] rounded-xs border border-solid px-4 py-2 text-base ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset focus:ring-(--hl-md) ${
       selectedBackend === backend
-        ? 'border-[--color-surprise] bg-[--hl-xs] text-[--color-font]'
-        : 'border-[--hl-sm] text-[--color-font]'
+        ? 'border-(--color-surprise) bg-(--hl-xs) text-(--color-font)'
+        : 'border-(--hl-sm) text-(--color-font)'
     }`;
   };
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-md border border-solid border-[--hl-sm] bg-[--hl-xs] p-4">
+      <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
         <div className="flex flex-col gap-4">
           <div>
-            <h3 className="mb-3 text-base font-semibold text-[--color-font]">
+            <h3 className="mb-3 text-base font-semibold text-(--color-font)">
               <Badge color="surprise" icon="sparkles" label="AI" />
               Features
             </h3>
             {!hasActiveLLM ? (
-              <p className="mb-4 text-sm text-[--hl]">Configure and activate an LLM below to enable AI features.</p>
+              <p className="mb-4 text-sm text-(--hl)">Configure and activate an LLM below to enable AI features.</p>
             ) : (
-              <p className="mb-4 text-sm text-[--color-font]">Enable AI-powered features in Insomnia.</p>
+              <p className="mb-4 text-sm text-(--color-font)">Enable AI-powered features in Insomnia.</p>
             )}
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-[--color-font]">
+              <span className="text-sm font-medium text-(--color-font)">
                 Auto-generate Mock Servers from natural language
               </span>
               {!isMockServerEnabledByOrg ? (
-                <p className="text-xs text-[--color-danger]">
+                <p className="text-xs text-(--color-danger)">
                   Disabled by organization{features.aiMockServers?.reason ? `: ${features.aiMockServers.reason}` : ''}
                 </p>
               ) : !hasActiveLLM ? (
-                <p className="text-xs text-[--hl]">Configure and activate an LLM to enable this feature</p>
+                <p className="text-xs text-(--hl)">Configure and activate an LLM to enable this feature</p>
               ) : null}
             </div>
             <Switch
@@ -126,22 +135,22 @@ export const AISettings = () => {
               isDisabled={!hasActiveLLM || !isMockServerEnabledByOrg}
               className="group flex items-center gap-2"
             >
-              <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-[--hl-md] transition-colors group-data-[disabled]:cursor-not-allowed group-data-[selected]:bg-[--color-surprise] group-data-[disabled]:opacity-50">
-                <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-[selected]:translate-x-5" />
+              <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-disabled:opacity-50 group-data-selected:bg-(--color-surprise)">
+                <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
               </div>
             </Switch>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-[--color-font]">Suggest comments and grouping for Commits</span>
+              <span className="text-sm font-medium text-(--color-font)">Suggest comments and grouping for Commits</span>
               {!isCommitMessagesEnabledByOrg ? (
-                <p className="text-xs text-[--color-danger]">
+                <p className="text-xs text-(--color-danger)">
                   Disabled by organization
                   {features.aiCommitMessages?.reason ? `: ${features.aiCommitMessages.reason}` : ''}
                 </p>
               ) : !hasActiveLLM ? (
-                <p className="text-xs text-[--hl]">Configure and activate an LLM to enable this feature</p>
+                <p className="text-xs text-(--hl)">Configure and activate an LLM to enable this feature</p>
               ) : null}
             </div>
             <Switch
@@ -150,15 +159,39 @@ export const AISettings = () => {
               isDisabled={!hasActiveLLM || !isCommitMessagesEnabledByOrg}
               className="group flex items-center gap-2"
             >
-              <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-[--hl-md] transition-colors group-data-[disabled]:cursor-not-allowed group-data-[selected]:bg-[--color-surprise] group-data-[disabled]:opacity-50">
-                <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-[selected]:translate-x-5" />
+              <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-disabled:opacity-50 group-data-selected:bg-(--color-surprise)">
+                <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
+              </div>
+            </Switch>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-(--color-font)">Allow MCP client to use the LLM service</span>
+              {!isMcpClientEnabledByOrg ? (
+                <p className="text-xs text-(--color-danger)">
+                  Disabled by organization
+                  {features.aiMcpClient?.reason ? `: ${features.aiMcpClient.reason}` : ''}
+                </p>
+              ) : !hasActiveLLM ? (
+                <p className="text-xs text-(--hl)">Configure and activate an LLM to enable this feature</p>
+              ) : null}
+            </div>
+            <Switch
+              isSelected={mcpClientEnabled && isMcpClientEnabledByOrg}
+              onChange={handleMcpClientToggle}
+              isDisabled={!hasActiveLLM || !isMcpClientEnabledByOrg}
+              className="group flex items-center gap-2"
+            >
+              <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-disabled:opacity-50 group-data-selected:bg-(--color-surprise)">
+                <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
               </div>
             </Switch>
           </div>
         </div>
       </div>
 
-      <div className="rounded-md border border-solid border-[--hl-sm] bg-[--hl-xs] p-4">
+      <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
         <p className="notice info mb-4 text-sm">
           Activate a large language model here for use with Insomnia AI features.
         </p>

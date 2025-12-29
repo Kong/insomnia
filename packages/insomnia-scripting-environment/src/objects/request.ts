@@ -28,7 +28,7 @@ export interface RequestBodyOptions {
   raw?: string;
   urlencoded?: {
     key: string;
-    value: string;
+    value?: string;
     type?: string;
     disabled?: boolean;
     multiline?: boolean | string;
@@ -91,7 +91,7 @@ function getClassFields(opts: RequestBodyOptions) {
       )
     : undefined;
 
-  let urlencoded = undefined;
+  let urlencoded;
   if (opts.urlencoded != null) {
     if (typeof opts.urlencoded === 'string') {
       const queryParamObj = QueryParam.parse(opts.urlencoded);
@@ -247,14 +247,12 @@ function requestOptionsToClassFields(options: RequestOptions) {
 
   let headers: HeaderList<Header>;
   if (options.header != null) {
-    if (Array.isArray(options.header)) {
-      headers = new HeaderList(undefined, options.header ? options.header.map(header => new Header(header)) : []);
-    } else {
-      headers = new HeaderList(
-        undefined,
-        Object.entries(options.header).map(entry => new Header({ key: entry[0], value: entry[1] })),
-      );
-    }
+    headers = Array.isArray(options.header)
+      ? new HeaderList(undefined, options.header ? options.header.map(header => new Header(header)) : [])
+      : new HeaderList(
+          undefined,
+          Object.entries(options.header).map(entry => new Header({ key: entry[0], value: entry[1] })),
+        );
   } else {
     headers = new HeaderList(undefined, new Array<Header>());
   }

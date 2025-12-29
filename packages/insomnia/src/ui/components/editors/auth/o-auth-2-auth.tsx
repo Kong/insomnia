@@ -292,7 +292,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
     advanced = [responseType, scope, state, tokenPrefix, audience];
   } else if (grantType === GRANT_TYPE_MCP_AUTH_FLOW) {
     basic = [clientId, clientSecret, readonlyRedirectUri];
-    advanced = [];
+    advanced = [state, scope];
   }
 
   return {
@@ -320,6 +320,9 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
             options={showMcpAuthFlow ? grantTypeOptionsWithMcpAuthFlow : grantTypeOptions}
           />
           {basic}
+          <AuthAccordion accordionKey="OAuth2AdvancedOptions" label="Advanced Options">
+            {advanced}
+          </AuthAccordion>
         </AuthTableBody>
         <div className="pad">
           <OAuth2Tokens hideRefresh />
@@ -347,7 +350,7 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
               <td className="wide">
                 <div className="pad-top text-right">
                   <button
-                    className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                    className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                     onClick={initNewOAuthSession}
                   >
                     Clear OAuth 2 session
@@ -371,7 +374,7 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
 export function convertEpochToMilliseconds(epoch: number) {
   epoch = Math.floor(epoch);
   const expDigitCount = epoch.toString().length;
-  return parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
+  return Number.parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
 }
 const renderIdentityTokenExpiry = (token?: Pick<OAuth2Token, 'identityToken'>) => {
   if (!token || !token.identityToken) {
@@ -383,7 +386,7 @@ const renderIdentityTokenExpiry = (token?: Pick<OAuth2Token, 'identityToken'>) =
 
   try {
     decodedString = window.atob(base64Url);
-  } catch (error) {
+  } catch {
     return;
   }
 
@@ -431,11 +434,9 @@ const OAuth2TokenInput: FC<{
   const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const { _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const onChange = async ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => {
-    if (token) {
-      await models.oAuth2Token.update(token, { [property]: value });
-    } else {
-      await models.oAuth2Token.create({ [property]: value, parentId: _id });
-    }
+    await (token
+      ? models.oAuth2Token.update(token, { [property]: value })
+      : models.oAuth2Token.create({ [property]: value, parentId: _id }));
   };
 
   const expiryLabel = useMemo(() => {
@@ -535,7 +536,7 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
       <div className="pad-top text-right">
         {token ? (
           <button
-            className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+            className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
             disabled={!token}
             onClick={() => {
               if (token) {
@@ -549,7 +550,7 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
         ) : null}
         {!hideRefresh && (
           <button
-            className="ml-2 h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+            className="ml-2 h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
             onClick={async () => {
               setError('');
               setLoading(true);

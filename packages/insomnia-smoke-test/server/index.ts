@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:https';
-import { join } from 'node:path';
+import nodePath from 'node:path';
 
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
@@ -16,14 +16,19 @@ import { startGRPCServer } from './grpc';
 import insomniaApi from './insomnia-api';
 import { mtlsRouter } from './mtls';
 import { oauthRoutes } from './oauth';
+import simpleCrud from './simple-crud';
 import { startSocketIOServer } from './socket-io';
 import { startWebSocketServer } from './websocket';
 
 const app = express();
 app.use(cookieParser());
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} ${new Date().toISOString()}`);
+  next();
+});
 const port = 4010;
 const httpsPort = 4011;
-const grpcPort = 50051;
+const grpcPort = 50_051;
 const rawParser = bodyParser.raw({
   inflate: true,
   type: '*/*',
@@ -71,6 +76,7 @@ app.use('/protected', mtlsRouter);
 githubApi(app);
 gitlabApi(app);
 insomniaApi(app);
+simpleCrud(app);
 
 app.get('/delay/seconds/:duration', (req, res) => {
   const delaySec = Number.parseInt(req.params.duration || '2');
@@ -147,9 +153,9 @@ startWebSocketServer(
 startWebSocketServer(
   createServer(
     {
-      cert: readFileSync(join(__dirname, '../fixtures/certificates/localhost.pem')),
-      key: readFileSync(join(__dirname, '../fixtures/certificates/localhost-key.pem')),
-      ca: readFileSync(join(__dirname, '../fixtures/certificates/rootCA.pem')),
+      cert: readFileSync(nodePath.join(__dirname, '../fixtures/certificates/localhost.pem')),
+      key: readFileSync(nodePath.join(__dirname, '../fixtures/certificates/localhost-key.pem')),
+      ca: readFileSync(nodePath.join(__dirname, '../fixtures/certificates/rootCA.pem')),
       requestCert: true,
       rejectUnauthorized: false,
     },

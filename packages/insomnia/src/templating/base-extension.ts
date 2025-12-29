@@ -95,7 +95,7 @@ export default class BaseExtension {
     const renderPurpose = renderContext.getPurpose?.();
     // Extract the rest of the args
     const args = runArgs
-      .slice(0, runArgs.length - 1)
+      .slice(0, -1)
       .filter(a => a !== EMPTY_ARG)
       .map(decodeEncoding);
     // Define a helper context with utils

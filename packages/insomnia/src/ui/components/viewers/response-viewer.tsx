@@ -1,6 +1,7 @@
 import iconv from 'iconv-lite';
-import React, { Fragment, useCallback, useRef, useState } from 'react';
+import { Fragment, useCallback, useRef, useState } from 'react';
 
+import { SegmentEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import {
@@ -125,7 +126,7 @@ export const ResponseViewer = ({
         JSON.parse(overSizedBody.toString('utf8'));
         return 'application/json';
       }
-    } catch (error) {}
+    } catch {}
     // Try to detect HTML in all cases (even if header is set).
     // It is fairly common for webservers to send errors in HTML by default.
     // NOTE: This will probably never throw but I'm not 100% so wrap anyway
@@ -139,7 +140,7 @@ export const ResponseViewer = ({
       if (lowercasedOriginalContentType.indexOf('text/html') !== 0 && isProbablyHTML) {
         return 'text/html';
       }
-    } catch (error) {}
+    } catch {}
 
     return lowercasedOriginalContentType;
   }, [originalContentType, overSizedBody]);
@@ -150,7 +151,7 @@ export const ResponseViewer = ({
     }
     // Show everything else as "source"
     const match = _getContentType().match(/charset=([\w-]+)/);
-    const charset = match && match.length >= 2 ? match[1] : 'utf-8';
+    const charset = match && match.length >= 2 ? match[1] : 'utf8';
     // Sometimes iconv conversion fails so fallback to regular buffer
     try {
       return iconv.decode(overSizedBody, charset);
@@ -224,7 +225,7 @@ export const ResponseViewer = ({
     // So we try to unescape the forward slashes before passing it to the CodeEditor.
     try {
       bodyStr = unescapeForwardSlash(bodyStr);
-    } catch (err) {}
+    } catch {}
     return (
       <CodeEditor
         id="json-response-viewer"
@@ -243,7 +244,15 @@ export const ResponseViewer = ({
         placeholder="..."
         readOnly
         uniquenessKey={responseId}
-        updateFilter={updateFilter}
+        updateFilter={filter => {
+          updateFilter?.(filter);
+
+          if (filter) {
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.filterCreatedResponseBody,
+            });
+          }
+        }}
       />
     );
   }
@@ -362,7 +371,15 @@ export const ResponseViewer = ({
       placeholder="..."
       readOnly
       uniquenessKey={responseId}
-      updateFilter={updateFilter}
+      updateFilter={filter => {
+        updateFilter?.(filter);
+
+        if (filter) {
+          window.main.trackSegmentEvent({
+            event: SegmentEvent.filterCreatedResponseBody,
+          });
+        }
+      }}
     />
   );
 };

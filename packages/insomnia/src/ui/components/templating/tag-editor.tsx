@@ -21,7 +21,6 @@ import * as plugins from '../../../plugins';
 import * as pluginStore from '../../../plugins/context/store';
 import * as templating from '../../../templating';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../../../templating/types';
-import { sanitizeStrForWin32 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -113,7 +112,7 @@ export const TagEditor: FC<Props> = props => {
     // Fix strings: arg.value expects an escaped value (based on updateArg logic)
     for (const arg of activeTagData.args) {
       if (typeof arg.value === 'string') {
-        arg.value = sanitizeStrForWin32(arg.value);
+        arg.value = arg.value.replace(/\\/g, '\\\\');
       }
     }
     await Promise.all([refreshModels(), update(tagDefinitions, activeTagDefinition, activeTagData, true)]);
@@ -143,7 +142,7 @@ export const TagEditor: FC<Props> = props => {
     }
     // Fix strings
     if (typeof argValue === 'string') {
-      argValue = sanitizeStrForWin32(argValue);
+      argValue = argValue.replace(/\\/g, '\\\\');
     }
     // Ensure all arguments exist
     const defaultArgs = templateUtils.tokenizeTag(
@@ -178,16 +177,16 @@ export const TagEditor: FC<Props> = props => {
   function handleChange(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
     let argIndex = -1;
     if (event.currentTarget.parentNode instanceof HTMLElement) {
-      const index = event.currentTarget.parentNode?.getAttribute('data-arg-index');
-      argIndex = typeof index === 'string' ? parseInt(index, 10) : -1;
+      const index = event.currentTarget.parentNode?.dataset.argIndex;
+      argIndex = typeof index === 'string' ? Number.parseInt(index, 10) : -1;
     }
     // Handle special types
-    if (event.currentTarget.getAttribute('data-encoding') === 'base64') {
+    if (event.currentTarget.dataset.encoding === 'base64') {
       return updateArg(templateUtils.encodeEncoding(event.currentTarget.value, 'base64'), argIndex);
     }
     // Handle normal types
     if (event.currentTarget.type === 'number') {
-      return updateArg(parseFloat(event.currentTarget.value), argIndex);
+      return updateArg(Number.parseFloat(event.currentTarget.value), argIndex);
     } else if (event.currentTarget.type === 'checkbox') {
       return updateArg((event.currentTarget as HTMLInputElement).checked, argIndex);
     }
@@ -256,24 +255,22 @@ export const TagEditor: FC<Props> = props => {
   if (error) {
     // detects a string to replace with a link to settings
     const linkText = 'Insomnia Preferences → Security';
-    if (error.endsWith(linkText)) {
-      previewElement = (
-        <div className="danger min-h-[115px] rounded-md border border-solid border-[var(--hl-md)] bg-[var(--hl-xxs)] p-[var(--padding-sm)]">
-          {error.slice(0, error.length - linkText.length)}
-          <Link
-            className="cursor-pointer text-[--color-surprise]"
-            onPress={() => {
-              props.close();
-              showSettingsModal({ tab: 'general' });
-            }}
-          >
-            {linkText}
-          </Link>
-        </div>
-      );
-    } else {
-      previewElement = <textarea className="danger" value={error || 'Error'} readOnly rows={5} />;
-    }
+    previewElement = error.endsWith(linkText) ? (
+      <div className="danger min-h-[115px] rounded-md border border-solid border-(--hl-md) bg-(--hl-xxs) p-(--padding-sm)">
+        {error.slice(0, error.length - linkText.length)}
+        <Link
+          className="cursor-pointer text-(--color-surprise)"
+          onPress={() => {
+            props.close();
+            showSettingsModal({ tab: 'general' });
+          }}
+        >
+          {linkText}
+        </Link>
+      </div>
+    ) : (
+      <textarea className="danger" value={error || 'Error'} readOnly rows={5} />
+    );
   } else if (rendering) {
     previewElement = <textarea value="rendering..." readOnly rows={5} />;
   } else {
@@ -351,7 +348,7 @@ export const TagEditor: FC<Props> = props => {
             if (needToRenderSubForm) {
               argInput = (
                 <ArgConfigSubForm
-                  configValue={sanitizeStrForWin32(strValue)}
+                  configValue={strValue.replace(/\\\\/g, '\\') || ''}
                   onChange={(newConfigValue: string) => updateArg(newConfigValue, index)}
                   activeTagData={activeTagData}
                   activeTagDefinition={activeTagDefinition}
@@ -363,7 +360,7 @@ export const TagEditor: FC<Props> = props => {
               argInput = (
                 <input
                   type="text"
-                  defaultValue={sanitizeStrForWin32(strValue)}
+                  defaultValue={strValue.replace(/\\\\/g, '\\') || ''}
                   placeholder={placeholder}
                   onChange={handleChange}
                   data-encoding={encoding}
@@ -392,7 +389,7 @@ export const TagEditor: FC<Props> = props => {
                 showFileName
                 className="btn btn--clicky btn--super-compact"
                 onChange={path => updateArg(path, index)}
-                path={sanitizeStrForWin32(strValue)}
+                path={strValue.replace(/\\\\/g, '\\')}
                 itemtypes={argDefinition.itemTypes}
                 extensions={argDefinition.extensions}
               />

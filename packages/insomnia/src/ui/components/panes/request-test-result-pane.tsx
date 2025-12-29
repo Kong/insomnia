@@ -1,5 +1,3 @@
-import crypto from 'node:crypto';
-
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 
@@ -9,9 +7,9 @@ import { fuzzyMatch } from '../../../common/misc';
 type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
 
 const filterClassnames =
-  'mx-1 w-[6rem] text-center rounded-md h-[--line-height-xxs] text-sm cursor-pointer outline-none select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
+  'mx-1 w-24 text-center rounded-md h-(--line-height-xxs) text-sm cursor-pointer outline-hidden select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-(--hl) aria-selected:text-(--color-font-surprise) hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
 const activeFilterClassnames =
-  'text-white mx-1 w-[6rem] text-center rounded-md h-[--line-height-xxs] text-sm cursor-pointer outline-none select-none px-2 py-1 bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
+  'text-white mx-1 w-24 text-center rounded-md h-(--line-height-xxs) text-sm cursor-pointer outline-hidden select-none px-2 py-1 bg-[rgba(var(--color-surprise-rgb),50%)] text-(--hl) aria-selected:text-(--color-font-surprise) text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
 
 export interface RequestTestResultRowsProps {
   requestTestResults: RequestTestResult[];
@@ -59,9 +57,7 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
 
       return Boolean(fuzzyMatch(resultFilter, result.testCase, { splitSpace: false, loose: true })?.indexes);
     })
-    .map((result, i: number) => {
-      const key = crypto.createHash('sha1').update(`${result.testCase}"-${i}`).digest('hex');
-
+    .map(result => {
       const statusText = {
         passed: 'PASS',
         failed: 'FAIL',
@@ -80,7 +76,7 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
       );
       const statusTag = (
         <div
-          className={`inline-block w-16 rounded p-[2px] text-center text-xs font-semibold text-white ${statusTagColor}`}
+          className={`inline-block w-16 rounded-sm p-[2px] text-center text-xs font-semibold text-white ${statusTagColor}`}
         >
           {statusText}
         </div>
@@ -99,10 +95,10 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
             : 'Unknown';
 
       return (
-        <div key={key} data-testid="test-result-row">
+        <div key={result.testCase} data-testid="test-result-row">
           <div className="my-3 flex w-full text-base">
             <div className="m-auto mx-1 leading-4">
-              <span className="ml-2 mr-2">{statusTag}</span>
+              <span className="mr-2 ml-2">{statusTag}</span>
             </div>
             <div className="mr-2 leading-4">
               <div className="my-1 mr-2 w-auto text-nowrap">{message}</div>
@@ -145,9 +141,9 @@ export const RequestTestResultPane: FC<Props> = ({ requestTestResults }) => {
 
   return (
     <>
-      <div className="test-result-pane flex h-full flex-col divide-y divide-solid divide-[--hl-md]">
+      <div className="test-result-pane flex h-full flex-col divide-y divide-solid divide-(--hl-md)">
         <div className="h-[calc(100%-var(--line-height-sm))]">
-          <Toolbar className="box-border flex h-[--line-height-sm] flex-row items-center overflow-x-auto border-b border-solid border-b-[--hl-md] pl-2 text-[var(--font-size-sm)]">
+          <Toolbar className="box-border flex h-(--line-height-sm) flex-row items-center overflow-x-auto border-b border-solid border-b-(--hl-md) pl-2 text-(--font-size-sm)">
             <button
               className={targetTests === 'all' ? activeFilterClassnames : filterClassnames}
               onClick={selectAllTests}
@@ -181,7 +177,7 @@ export const RequestTestResultPane: FC<Props> = ({ requestTestResults }) => {
             />
           </div>
         </div>
-        <Toolbar className="box-border flex h-[--line-height-sm] flex-shrink-0 flex-row items-center overflow-x-auto text-[var(--font-size-sm)]">
+        <Toolbar className="box-border flex h-(--line-height-sm) shrink-0 flex-row items-center overflow-x-auto text-(--font-size-sm)">
           <input
             key="test-results-filter"
             type="text"
