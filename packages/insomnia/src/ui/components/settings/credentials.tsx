@@ -301,17 +301,17 @@ const GitCredentialsList = () => {
                 {isGitCredentialsV2(item) && provider && !provider.supportsOAuth && (
                   <Button
                     className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
+                    onPress={() => {
                       setSelectedProvider({
                         type: provider.type,
                         displayName: provider.displayName,
                         iconName: provider.iconName,
                       });
                       setGitCredentialToEdit(item);
-                      setGitCredentialModalMode('edit');
                       setIsCredentialModalOpen(true);
                     }}
                   >
-                    <Icon icon="edit" /> Edit
+                    <Icon icon="edit" /> Edit Expand Down
                   </Button>
                 )}
                 <Button
