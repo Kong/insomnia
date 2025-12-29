@@ -1,23 +1,31 @@
 import { Form } from 'react-aria-components';
 
 import { Button } from '~/basic-components/button';
+import type { CustomGitCredentialV2 } from '~/models/git-credentials';
+import { useGitCredentialsUpdateActionFetcher } from '~/routes/git-credentials.$id.update';
 import { useGitCredentialsCreateActionFetcher } from '~/routes/git-credentials.create';
 import { Input } from '~/ui/components/base/input';
 
 export const GitCustomCredentialForm = ({
   onCancel,
   onComplete,
+  showTitle = true,
+  gitCredentialToEdit,
 }: {
   onCancel: () => void;
   onComplete?: () => void;
+  showTitle?: boolean;
+  gitCredentialToEdit?: CustomGitCredentialV2;
 }) => {
   const createCredentialFetcher = useGitCredentialsCreateActionFetcher();
+  const updateCredentialFetcher = useGitCredentialsUpdateActionFetcher();
+  const isEditing = !!gitCredentialToEdit;
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
-    await createCredentialFetcher.submit({
-      provider: 'custom',
+    const credentialData = {
+      provider: 'custom' as const,
       author: {
         name: (formData.get('authorName') as string) || '',
         email: (formData.get('authorEmail') as string) || '',
@@ -25,13 +33,17 @@ export const GitCustomCredentialForm = ({
       username: (formData.get('username') as string) || '',
       password: (formData.get('password') as string) || '',
       baseURI: (formData.get('baseURI') as string) || '',
-    });
+    };
+
+    await (isEditing && gitCredentialToEdit._id
+      ? updateCredentialFetcher.submit(gitCredentialToEdit._id, credentialData)
+      : createCredentialFetcher.submit(credentialData));
     onComplete?.();
   };
 
   return (
     <Form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-      <div>Add Git credential</div>
+      {showTitle && <div>{isEditing ? 'Edit Git credential' : 'Add Git credential'}</div>}
       <div className="flex flex-col gap-2.5">
         <div className="flex w-full gap-3">
           <Input
@@ -41,17 +53,33 @@ export const GitCustomCredentialForm = ({
             className="w-1/2"
             label="Your Email"
             placeholder="e.g. your-name@acme.com"
+            defaultValue={gitCredentialToEdit?.author.email}
           />
-          <Input isRequired name="authorName" className="w-1/2" label="Your Git Username" placeholder="e.g. git-user" />
+          <Input
+            isRequired
+            name="authorName"
+            className="w-1/2"
+            label="Your Git Username"
+            placeholder="e.g. git-user"
+            defaultValue={gitCredentialToEdit?.author.name}
+          />
         </div>
         <div className="flex w-full gap-3">
-          <Input name="username" isRequired className="w-1/2" label="Username" placeholder="remote username for PAT" />
+          <Input
+            name="username"
+            isRequired
+            className="w-1/2"
+            label="Username"
+            placeholder="remote username for PAT"
+            defaultValue={gitCredentialToEdit?.username}
+          />
           <Input
             className="w-1/2"
             name="password"
             isRequired
             label="Git Access Token"
             placeholder="e.g. github_pat_11A11AAAAa111Aa11a1AA11"
+            defaultValue={gitCredentialToEdit?.password}
           />
         </div>
         <Input
@@ -61,11 +89,12 @@ export const GitCustomCredentialForm = ({
           label="Repository base URL"
           description="Specify the git server base URL that correlates with this access token."
           placeholder="e.g. https://github.your-domain.com/org-name"
+          defaultValue={gitCredentialToEdit?.baseURI}
         />
       </div>
       <div className="flex gap-2">
         <Button primary type="submit">
-          Save Credential
+          {isEditing ? 'Update Credential' : 'Save Credential'}
         </Button>
         <Button onPress={onCancel}>Cancel</Button>
       </div>
