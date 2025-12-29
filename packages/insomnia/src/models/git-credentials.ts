@@ -8,8 +8,24 @@ export type GitRemoteProviderType = 'github' | 'gitlab' | 'custom';
 
 export type GitCredentials = BaseModel & BaseGitCredentials;
 
+// for those keys do not need to add in model init method
+export const optionalKeys = [
+  'baseURI',
+  'renewalAttempts',
+  'lastRenewalAttempt',
+  'token',
+  'refreshToken',
+  'expiresAt',
+  'scopes',
+  'emails',
+  'selectedEmail',
+  'username',
+  'password',
+];
+
 export type GitCredentialsV1 = BaseModel & BaseGitCredentialsV1;
 export type GitCredentialsV2 = BaseModel & BaseGitCredentialsV2;
+export type CustomGitCredentialV2 = BaseModel & CustomCredential;
 
 export const name = 'Git Credentials';
 

@@ -153,7 +153,7 @@ export const GitCredentialModal = ({
     displayName: string;
     iconName?: IconProp;
   } | null;
-  gitCredentialToEdit: GitCredentials | null;
+  gitCredentialToEdit?: GitCredentials | null;
 }) => {
   return (
     <ModalOverlay
@@ -169,7 +169,9 @@ export const GitCredentialModal = ({
           {({ close }) => (
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between gap-2">
-                <Heading className="text-2xl">Add a new {provider?.displayName} Credential</Heading>
+                <Heading className="text-2xl">
+                  {gitCredentialToEdit ? 'Edit' : 'Add a new'} {provider?.displayName} Credential
+                </Heading>
                 <Button
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
@@ -187,13 +189,17 @@ export const GitCredentialModal = ({
                   )}
                 </>
               )}
-              {gitCredentialToEdit && isGitCredentialsV2(gitCredentialToEdit) && provider?.type === 'custom' && (
-                <GitCustomCredentialForm
-                  gitCredentialToEdit={gitCredentialToEdit}
-                  onCancel={close}
-                  onComplete={onClose}
-                />
-              )}
+              {gitCredentialToEdit &&
+                isGitCredentialsV2(gitCredentialToEdit) &&
+                gitCredentialToEdit.provider === 'custom' &&
+                provider?.type === 'custom' && (
+                  <GitCustomCredentialForm
+                    gitCredentialToEdit={gitCredentialToEdit}
+                    onCancel={close}
+                    onComplete={onClose}
+                    showTitle={false}
+                  />
+                )}
             </div>
           )}
         </Dialog>
@@ -220,7 +226,7 @@ const GitCredentialsList = () => {
   }, [credentialsFetcher]);
 
   return (
-    <div className="flex flex-col gap-2 py-4">
+    <div className="mb-4 flex flex-col gap-2 py-4">
       <div className="flex items-center justify-between gap-2">
         <Heading className="text-lg font-bold">Git Credentials</Heading>
         <MenuTrigger>
@@ -264,6 +270,10 @@ const GitCredentialsList = () => {
           </Popover>
         </MenuTrigger>
       </div>
+
+      {credentialsFetcher.data?.credentials.length === 0 && (
+        <p className="text-center">No Git credentials configured</p>
+      )}
 
       <GridList
         items={credentialsFetcher.data?.credentials || []}
@@ -311,7 +321,7 @@ const GitCredentialsList = () => {
                       setIsCredentialModalOpen(true);
                     }}
                   >
-                    <Icon icon="edit" /> Edit Expand Down
+                    <Icon icon="edit" /> Edit
                   </Button>
                 )}
                 <Button
