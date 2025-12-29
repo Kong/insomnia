@@ -33,9 +33,10 @@ jobs:
           scope: '@kong'
 
       - name: Install packages
-        run: npm ci --ignore-scripts
+        run: npm ci 
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SKIP_BUNDLE_PLUGIN_VERIFY: true
 
       - name: Build app for smoke tests
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
