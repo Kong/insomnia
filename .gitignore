@@ -29,7 +29,6 @@ graphql.config.json
 .cache
 .graphqlconfig
 schema.graphql
-packages/insomnia-smoke-test/traces
 *.tsbuildinfo
 dist
 .history
@@ -40,3 +39,7 @@ rootCA2.*
 final.cpp
 insomnia.ico
 final.rc
+
+# ignore the test reports
+playwright-report/*
+packages/insomnia-smoke-test/traces

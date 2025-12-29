@@ -34,7 +34,15 @@ const config: PlaywrightTestConfig = {
       sources: true,
     },
   },
-  reporter: process.env.CI ? [['github'], ['line']] : [['list']],
+  reporter: process.env.CI 
+  ? [
+      ['github'],
+      ['html', { outputFolder: 'playwright-report', open: 'never' }],
+    ]
+  : [
+      ['list'],
+      ['html', { open: 'on-failure' }],
+    ],
   timeout: process.env.CI ? 60 * 1000 : 20 * 1000,
   forbidOnly: !!process.env.CI,
   outputDir: 'traces',
