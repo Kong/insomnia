@@ -168,3 +168,54 @@ Search for, discover, and install plugins from the Insomnia [Plugin Hub](https:/
 ## License
 
 [Apache-2.0](LICENSE) &copy; [Insomnia](https://insomnia.rest)
+
+---
+
+---
+
+## Playwright E2E Test Assignment
+
+### Architecture Understanding
+
+Insomnia is a desktop application built with Electron, which means its UI runs
+inside a Chromium-based renderer with access to Node.js APIs.
+
+Playwright is used to automate the Electron application directly, rather than
+testing a traditional web page. The tests simulate real user interactions such as
+creating requests, clicking the "Send" button, and validating the response UI.
+
+The test environment consists of:
+
+- **Electron App (Insomnia UI)**  
+  Runs the actual application under test.
+
+- **Playwright**  
+  Controls the Electron window, performs user interactions, and validates UI output.
+
+### BUNDLE Modes
+
+The `BUNDLE` environment variable controls how Insomnia is launched:
+
+- `BUNDLE=dev`: Development mode (used for local testing and this assignment)
+- `BUNDLE=build`: Uses a built version of the app
+- `BUNDLE=package`: Uses a packaged distribution
+For this assignment, `BUNDLE=dev` is used to prioritize fast feedback and easier debugging.
+
+### Summary
+
+- Playwright HTML reporting is enabled both locally and in GitHub Actions.
+- Added a new smoke test:  
+  `packages/insomnia-smoke-test/tests/smoke/aa-request-main-workflow.test.ts`
+- The tests cover Insomnia’s core request workflow, including creating, sending, and validating HTTP requests for both successful and error responses.
+
+### Playwright HTML Report
+
+- **- Local:**
+    HTML reports are generated under `packages/insomnia-smoke-test/playwright-report`
+    run : `npx playwright show-report` to view the latest report
+
+    When running tests locally, the HTML report will automatically open in the browser if the test run fails.
+
+- **CI:**
+    A zipped HTML report is uploaded as a GitHub Actions artifact for each run.
+    ![playwright HTML Report](packages/insomnia-smoke-test/docs/imgs/playwright-report.jpg)
