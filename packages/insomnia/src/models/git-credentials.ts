@@ -10,11 +10,7 @@ export type GitCredentials = BaseModel & BaseGitCredentials;
 
 // for those keys do not need to add in model init method
 export const optionalKeys = [
-  'baseURI',
-  'renewalAttempts',
   'lastRenewalAttempt',
-  'token',
-  'refreshToken',
   'expiresAt',
   'scopes',
   'emails',
