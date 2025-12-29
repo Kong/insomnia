@@ -264,7 +264,7 @@ export const ImportModal: FC<ImportModalProps> = ({
             errors={importErrors}
             loading={importFetcher.state !== 'idle'}
             disabled={importErrors.length > 0}
-            isImportingBaseEnvironmentToWorkspace={isImportingBaseEnvironmentToWorkspace || false}
+            isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
             onImport={(overrideBaseEnvironmentData: boolean) => {
               invariant(Array.isArray(scanResourcesFetcherData));
 
