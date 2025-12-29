@@ -326,11 +326,19 @@ export class ImportPostman {
       afterResponseScript,
     };
 
+    const baseEnvironment: ImportRequest = {
+      parentId: '__WORKSPACE_ID__',
+      _id: '__BASE_ENVIRONMENT_ID__',
+      _type: 'environment',
+      name: 'Variables',
+    };
+
     if (postmanVariable) {
-      collectionFolder.variable = postmanVariable;
+      // Mapping postman collection variables to collection base environment
+      baseEnvironment.data = postmanVariable;
     }
 
-    return [collectionFolder, ...this.importItems(item, collectionFolder._id)];
+    return [collectionFolder, baseEnvironment, ...this.importItems(item, collectionFolder._id)];
   };
 
   importUrl = (url?: Url | string) => {
