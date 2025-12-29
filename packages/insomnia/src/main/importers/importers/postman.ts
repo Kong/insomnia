@@ -338,7 +338,7 @@ export class ImportPostman {
       baseEnvironment.data = postmanVariable;
     }
 
-    return [collectionFolder, baseEnvironment, ...this.importItems(item, collectionFolder._id)];
+    return [collectionFolder, ...this.importItems(item, collectionFolder._id), baseEnvironment];
   };
 
   importUrl = (url?: Url | string) => {
