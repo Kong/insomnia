@@ -92,11 +92,16 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     }
 
     if ('clientId' in this.mcpRequest.authentication && this.mcpRequest.authentication.clientId) {
+      const { clientId, clientSecret, clientIdIssuedAt, clientSecretExpiresAt } = this.mcpRequest.authentication;
+
+      // https://github.com/modelcontextprotocol/typescript-sdk/blob/6b4d99f10b975d65392bb777cc8cb1151c20c972/packages/client/src/client/auth.ts#L223%20
+      // Set client_secret to undefined if it's not set or empty string
+      const parsedClientSecret = clientSecret && clientSecret.trim().length > 0 ? clientSecret : undefined;
       return {
-        client_id: this.mcpRequest.authentication.clientId,
-        client_secret: this.mcpRequest.authentication.clientSecret,
-        client_id_issued_at: this.mcpRequest.authentication.clientIdIssuedAt,
-        client_secret_expires_at: this.mcpRequest.authentication.clientSecretExpiresAt,
+        client_id: clientId,
+        client_secret: parsedClientSecret,
+        client_id_issued_at: clientIdIssuedAt,
+        client_secret_expires_at: clientSecretExpiresAt,
       };
     }
     return;
@@ -147,6 +152,13 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
       },
     });
     await this.refreshMcpRequest();
+  }
+  // add state parameter to authorization url if present in authentication
+  async state() {
+    if ('state' in this.mcpRequest.authentication && this.mcpRequest.authentication.state) {
+      return this.mcpRequest.authentication.state;
+    }
+    return '';
   }
   saveResourceMetadataUrl(url: URL | undefined) {
     this._resourceMetadataUrl = url;
