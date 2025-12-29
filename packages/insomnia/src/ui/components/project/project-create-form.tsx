@@ -21,6 +21,8 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
 import { Icon } from '../icon';
 
+const FORMID = 'git-repo-form';
+
 interface Props {
   storageRules: StorageRules;
   isGitSyncEnabled: boolean;
@@ -140,6 +142,7 @@ export const ProjectCreateForm: FC<Props> = ({
           />
           {storageType === 'git' && (
             <GitRepoForm
+              formId={FORMID}
               projectData={projectData}
               setProjectData={setProjectData}
               initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
@@ -186,7 +189,7 @@ export const ProjectCreateForm: FC<Props> = ({
               ) : (
                 <Button
                   type="submit"
-                  form="git-repo-form"
+                  form={FORMID}
                   className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                 >
                   Scan for files
