@@ -86,7 +86,6 @@ export const GitRepoForm: FC<Props> = ({
           className="flex flex-col gap-4"
           onSubmit={async e => {
             e.preventDefault();
-
             const formData = new FormData(e.currentTarget);
             const credentialsId = formData.get('credentialsId') as string;
             const uri = formData.get('uri') as string;
@@ -205,13 +204,13 @@ export const GitRepoForm: FC<Props> = ({
           ) : (
             <Input
               label="Path to Repository"
+              description="Note: Some repo should include “.git” at the end of the path."
               prefix={baseURI || ''}
               name="uri"
               isRequired
               onChange={v => {
                 const prefix = baseURI ? baseURI.replace(/\/+$/, '') + '/' : '';
                 const fullUri = prefix ? `${prefix}${v}` : v;
-                console.log('fullUri', fullUri);
                 setProjectData(prev => ({ ...prev, uri: fullUri }));
               }}
             />

@@ -151,6 +151,8 @@ export const ProjectSettingsForm: FC<Props> = ({
   const selectedCredential = credentials.find(c => c._id === projectData.credentialsId);
   const selectedProvider = providers.find(p => p.type === selectedCredential?.provider);
 
+  const hideActionButtons = storageType === 'git' && !projectData.connectRepositoryLater && credentials.length === 0;
+
   return (
     <>
       {/* Content */}
@@ -273,7 +275,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 
       {/* Actions */}
 
-      {activeView === 'project' && (
+      {activeView === 'project' && !hideActionButtons && (
         <div className="flex w-full items-center justify-end gap-2 px-0.5">
           <div className="flex items-center gap-2">
             {onCancel && (
@@ -289,7 +291,7 @@ export const ProjectSettingsForm: FC<Props> = ({
             (isSwitchingStorageType(project!, storageType) || project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID) ? (
               <Button
                 isDisabled={!isGitSyncEnabled}
-                form="git-repo-form"
+                form={FORMID}
                 type="submit"
                 className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >

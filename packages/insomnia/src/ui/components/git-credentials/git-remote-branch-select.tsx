@@ -1,5 +1,5 @@
 import React, { useDeferredValue } from 'react';
-import { Button, ComboBox, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
+import { Button, ComboBox, FieldError, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 import * as reactUse from 'react-use';
 import { z } from 'zod/v4';
 
@@ -55,6 +55,7 @@ export const GitRemoteBranchSelect = ({
     <Label className="flex flex-col pt-0">
       <span className="text-sm">Branch</span>
       <ComboBox
+        isRequired
         isInvalid={!!remoteBranchesFetchErrors}
         key={`${url}:${remoteBranches[0]}:branch-select`}
         aria-label="Branch to clone"
@@ -106,7 +107,9 @@ export const GitRemoteBranchSelect = ({
             <Icon icon="refresh" className={isLoadingRemoteBranches ? 'animate-spin' : ''} />
           </button>
         </div>
-        <p className="hidden text-xs text-(--color-danger) group-valid/form:inline-flex">{remoteBranchesFetchErrors}</p>
+        <FieldError className="text-xs text-(--color-danger)">
+          {({ validationErrors }) => remoteBranchesFetchErrors || validationErrors?.join(', ')}
+        </FieldError>
         <Popover
           className="grid w-(--trigger-width) min-w-max grid-flow-col divide-x divide-solid divide-(--hl-md) overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none focus:outline-hidden"
           placement="bottom start"
