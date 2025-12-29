@@ -33,7 +33,7 @@ jobs:
           scope: '@kong'
 
       - name: Install packages
-        run: npm ci
+        run: npm ci --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
