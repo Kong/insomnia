@@ -16,6 +16,7 @@ import { CloudServiceCredentialList } from '../settings/cloud-service-credential
 import { General } from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import { MaskedSetting } from '../settings/masked-setting';
+import { McpServerSettings } from '../settings/mcp-server';
 import { Plugins } from '../settings/plugins';
 import { Shortcuts } from '../settings/shortcuts';
 import { TextSetting } from '../settings/text-setting';
@@ -33,6 +34,7 @@ export const TAB_INDEX_THEMES = 'themes';
 export const TAB_INDEX_PLUGINS = 'plugins';
 export const TAB_INDEX_AI = 'ai';
 export const TAB_CLOUD_CREDENTIAL = 'cloudCred';
+export const TAB_MCP_SERVER = 'mcpServer';
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
@@ -134,6 +136,12 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             >
               Cloud Credentials
             </Tab>
+            <Tab
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+              id="mcpServer"
+            >
+              MCP Server
+            </Tab>
             {shouldShowAiSettingsTab && (
               <Tab
                 className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
@@ -196,6 +204,9 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           </TabPanel>
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="cloudCred">
             <CloudServiceCredentialList />
+          </TabPanel>
+          <TabPanel className="h-full w-full overflow-y-auto p-4" id="mcpServer">
+            <McpServerSettings />
           </TabPanel>
           {shouldShowAiSettingsTab && (
             <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="aiSettings">

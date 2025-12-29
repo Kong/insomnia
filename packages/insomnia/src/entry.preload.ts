@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
+import type { McpServerBridgeAPI } from '~/main/mcp/mcp-server-bridge-api';
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
 
 import type { GitServiceAPI } from './main/git-service';
@@ -107,6 +108,13 @@ const secretStorage: secretStorageBridgeAPI = {
   decryptString: cipherText => ipcRenderer.invoke('secretStorage.decryptString', cipherText),
 };
 
+const mcpServer: McpServerBridgeAPI = {
+  start: (port?: number) => ipcRenderer.invoke('mcpServer.start', port),
+  stop: () => ipcRenderer.invoke('mcpServer.stop'),
+  getStatus: () => ipcRenderer.invoke('mcpServer.getStatus'),
+  restart: (port?: number) => ipcRenderer.invoke('mcpServer.restart', port),
+};
+
 const git: GitServiceAPI = {
   loadGitRepository: options => ipcRenderer.invoke('git.loadGitRepository', options),
   getGitBranches: options => ipcRenderer.invoke('git.getGitBranches', options),
@@ -204,6 +212,7 @@ const main: Window['main'] = {
   webSocket,
   socketIO,
   mcp,
+  mcpServer,
   git,
   llm,
   grpc,

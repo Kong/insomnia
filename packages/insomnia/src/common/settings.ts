@@ -158,4 +158,8 @@ export interface Settings {
   saveVaultKeyToOSSecretManager: boolean;
   vaultSecretCacheDuration: number;
   dataFolders: string[];
+  // MCP Server settings
+  mcpServerAutoStart: boolean;
+  mcpServerPort: number;
+  mcpServerApiKey: string;
 }

@@ -19,6 +19,7 @@ import iconv from 'iconv-lite';
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
+import type { McpServerBridgeAPI } from '~/main/mcp/mcp-server-bridge-api';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
 import { insecureReadFile, insecureReadFileWithEncoding, secureReadFile } from '~/main/secure-read-file';
 import type {
@@ -121,6 +122,7 @@ export interface RendererToMainBridgeAPI {
   webSocket: WebSocketBridgeAPI;
   socketIO: SocketIOBridgeAPI;
   mcp: McpBridgeAPI;
+  mcpServer: McpServerBridgeAPI;
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
   git: GitServiceAPI;

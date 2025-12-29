@@ -24,6 +24,7 @@ import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
 import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
 import log, { initializeLogging } from './main/log';
+import { registerMcpServerHandlers } from './main/mcp/server';
 import { registerCurlHandlers } from './main/network/curl';
 import { registerMcpHandlers } from './main/network/mcp';
 import { registerSocketIOHandlers } from './main/network/socket-io';
@@ -85,6 +86,7 @@ app.on('ready', async () => {
   registerSocketIOHandlers();
   registerCurlHandlers();
   registerMcpHandlers();
+  registerMcpServerHandlers();
   registerSecretStorageHandlers();
 
   /**
@@ -273,6 +275,18 @@ const _launchApp = async () => {
 async function _createModelInstances() {
   await models.stats.get();
   await models.settings.getOrCreate();
+
+  // Auto-start MCP server if enabled
+  const settings = await models.settings.get();
+  if (settings.mcpServerAutoStart && settings.mcpServerApiKey) {
+    try {
+      const { startMcpServer } = require('./main/mcp/server');
+      await startMcpServer();
+    } catch (error) {
+      console.error('[main] Failed to auto-start MCP server:', error);
+    }
+  }
+
   try {
     const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
     const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
