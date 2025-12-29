@@ -8,7 +8,7 @@ import { v4 } from 'uuid';
 import { getApiBaseURL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI, PLAYWRIGHT } from '~/common/constants';
 import * as models from '~/models';
 import type { GitCredentials } from '~/models/git-credentials';
-import { isGitCredential } from '~/models/git-credentials';
+import { isGitCredentialsV2 } from '~/models/git-credentials';
 
 import type {
   GitLabProviderConfig,
@@ -168,7 +168,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
    * Fetch projects (repositories) accessible by the credential
    */
   async fetchRepositories(credential: GitCredentials): Promise<ProviderRepository[]> {
-    if (!isGitCredential(credential) || credential.provider !== 'gitlab') {
+    if (!isGitCredentialsV2(credential) || credential.provider !== 'gitlab') {
       throw new Error('Invalid credential type for GitLab provider');
     }
 
@@ -218,7 +218,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
    * Fetch user emails from GitLab
    */
   async fetchUserEmails(credential: GitCredentials): Promise<ProviderEmail[]> {
-    if (!isGitCredential(credential) || credential.provider !== 'gitlab') {
+    if (!isGitCredentialsV2(credential) || credential.provider !== 'gitlab') {
       throw new Error('Invalid credential type for GitLab provider');
     }
 
@@ -267,7 +267,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
    * Used during OAuth completion to get user details
    */
   async fetchUser(credential: GitCredentials): Promise<ProviderUser> {
-    if (!isGitCredential(credential) || credential.provider !== 'gitlab') {
+    if (!isGitCredentialsV2(credential) || credential.provider !== 'gitlab') {
       throw new Error('Invalid credential type for GitLab provider');
     }
 
@@ -392,6 +392,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
 
       // Create or update credential in database
       const credentialData = {
+        name: 'GitLab Credential',
         token: access_token,
         refreshToken: refresh_token,
         provider: 'gitlab' as const,
@@ -409,7 +410,6 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
 
       return {
         success: true,
-        credential,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to complete the GitLab OAuth flow';
@@ -425,7 +425,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
    * Renew expired credential using refresh token
    */
   async renewCredential(credential: GitCredentials): Promise<GitCredentials> {
-    if (!isGitCredential(credential) || credential.provider !== 'gitlab') {
+    if (!isGitCredentialsV2(credential) || credential.provider !== 'gitlab') {
       throw new Error('Invalid credential type for GitLab provider');
     }
 
@@ -506,7 +506,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
    * Converts GitLab OAuth token to format expected by isomorphic-git
    */
   authCallback(credential: GitCredentials): GitAuth {
-    if (!isGitCredential(credential) || credential.provider !== 'gitlab') {
+    if (!isGitCredentialsV2(credential) || credential.provider !== 'gitlab') {
       throw new Error('Invalid credential type for GitLab provider');
     }
 
@@ -527,7 +527,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
 
     try {
       const renewed = await this.renewCredential(credential);
-      if (isGitCredential(renewed) && renewed.provider === 'gitlab') {
+      if (isGitCredentialsV2(renewed) && renewed.provider === 'gitlab') {
         console.log('[GitLabProvider] Token renewed successfully');
         return {
           username: 'oauth2',

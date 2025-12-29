@@ -64,7 +64,6 @@ export interface OAuthInitResult {
  */
 export interface OAuthCompleteResult {
   success: boolean;
-  credential?: any; // Will be typed as GitCredentialData
   error?: string;
 }
 

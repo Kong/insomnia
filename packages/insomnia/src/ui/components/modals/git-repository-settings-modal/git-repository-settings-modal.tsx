@@ -17,7 +17,7 @@ import {
 import { useParams } from 'react-router';
 
 import { Icon } from '~/basic-components/icon';
-import { type GitCredentials, isGitCredential } from '~/models/git-credentials';
+import { type GitCredentials, isGitCredentialsV2 } from '~/models/git-credentials';
 import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import { useGitProjectResetActionFetcher } from '~/routes/git.reset';
 import { useGitProjectUpdateActionFetcher } from '~/routes/git.update';
@@ -231,7 +231,7 @@ export const GitRepositorySettingsModal = ({
                     let prefix = '';
                     if (
                       selectedCredential &&
-                      isGitCredential(selectedCredential) &&
+                      isGitCredentialsV2(selectedCredential) &&
                       selectedCredential.provider === 'custom' &&
                       selectedCredential.baseURI
                     ) {
@@ -245,7 +245,7 @@ export const GitRepositorySettingsModal = ({
                 >
                   <Label className="text-start text-sm">Git URI (https, including .git suffix)</Label>
                   {selectedCredential &&
-                  isGitCredential(selectedCredential) &&
+                  isGitCredentialsV2(selectedCredential) &&
                   selectedCredential.provider === 'custom' &&
                   selectedCredential.baseURI ? (
                     <div className="flex h-(--line-height-xxs) w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) p-0 pr-7 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
