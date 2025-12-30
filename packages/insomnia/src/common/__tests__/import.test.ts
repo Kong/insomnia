@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { base } from '@faker-js/faker';
 import { describe, expect, it } from 'vitest';
 
 import { environment, project, request, requestGroup, workspace } from '../../models';
