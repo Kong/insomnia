@@ -26,6 +26,14 @@ import { type GitCredentials, isGitCredentialsV2 } from '../../../models/git-cre
 import { ErrorBoundary } from '../error-boundary';
 import type { ActiveView, ProjectData } from './utils';
 
+const getDisplayValue = (fullUri: string | undefined, prefix: string | undefined) => {
+  if (!fullUri) return '';
+  if (prefix && fullUri.startsWith(prefix)) {
+    return fullUri.slice(prefix.length);
+  }
+  return fullUri;
+};
+
 interface Props {
   setProjectData: React.Dispatch<React.SetStateAction<ProjectData>>;
   projectData: ProjectData;
@@ -63,10 +71,11 @@ export const GitRepoForm: FC<Props> = ({
   const selectedProvider = providers.find(p => p.type === selectedCredential?.provider);
   const needToSetupCredentials = credentials.length === 0;
   const baseURI =
-    selectedCredential &&
-    isGitCredentialsV2(selectedCredential) &&
-    selectedCredential.provider === 'custom' &&
-    selectedCredential.baseURI;
+    (selectedCredential &&
+      isGitCredentialsV2(selectedCredential) &&
+      selectedCredential.provider === 'custom' &&
+      selectedCredential.baseURI) ||
+    '';
 
   return (
     <ErrorBoundary>
@@ -114,12 +123,12 @@ export const GitRepoForm: FC<Props> = ({
             isOpen={isCredentialSelectOpen}
             aria-label="Git Credentials"
             name="credentialsId"
-            onSelectionChange={id =>
+            onSelectionChange={id => {
               setProjectData(prev => ({
                 ...prev,
                 credentialsId: id as string,
-              }))
-            }
+              }));
+            }}
             defaultSelectedKey={credentials?.[0]?._id}
           >
             <Label className="mb-2 px-0.5 pt-0 text-sm">Authorized as</Label>
@@ -188,32 +197,37 @@ export const GitRepoForm: FC<Props> = ({
               </div>
             </Popover>
           </Select>
-
-          {selectedProvider && selectedProvider.supportsFetchRepos ? (
-            <GitRepositorySelect
-              allConnectedRepoURIProjectNameMap={allConnectedRepoURIProjectNameMap}
-              uri={projectData.uri || ''}
-              onSelect={(uri: string) =>
-                setProjectData(prev => ({
-                  ...prev,
-                  uri,
-                }))
-              }
-              credentialsId={selectedCredentialsId}
-            />
-          ) : (
-            <Input
-              label="Path to Repository"
-              description="Note: Some repo should include “.git” at the end of the path."
-              prefix={baseURI || ''}
-              name="uri"
-              isRequired
-              onChange={v => {
-                const prefix = baseURI ? baseURI.replace(/\/+$/, '') + '/' : '';
-                const fullUri = prefix ? `${prefix}${v}` : v;
-                setProjectData(prev => ({ ...prev, uri: fullUri }));
-              }}
-            />
+          {selectedProvider && (
+            <>
+              {selectedProvider.supportsFetchRepos ? (
+                <GitRepositorySelect
+                  allConnectedRepoURIProjectNameMap={allConnectedRepoURIProjectNameMap}
+                  uri={projectData.uri || ''}
+                  onSelect={(uri: string) =>
+                    setProjectData(prev => ({
+                      ...prev,
+                      uri,
+                    }))
+                  }
+                  credentialsId={selectedCredentialsId}
+                />
+              ) : (
+                <Input
+                  label="Path to Repository"
+                  description="Note: Some repo should include “.git” at the end of the path."
+                  prefix={baseURI}
+                  defaultValue={getDisplayValue(projectData.uri, baseURI)}
+                  name="uri"
+                  type={baseURI ? 'text' : 'url'}
+                  isRequired
+                  onChange={async v => {
+                    const prefix = baseURI ? baseURI.replace(/\/+$/, '') + '/' : '';
+                    const fullUri = prefix ? `${prefix}${v}` : v;
+                    setProjectData(prev => ({ ...prev, uri: fullUri }));
+                  }}
+                />
+              )}
+            </>
           )}
 
           <GitRemoteBranchSelect credentialsId={selectedCredentialsId} url={projectData.uri || ''} isDisabled={false} />

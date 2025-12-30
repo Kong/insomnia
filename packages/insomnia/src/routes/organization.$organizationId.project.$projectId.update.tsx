@@ -34,6 +34,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
 
+  const gitRepository = project.gitRepositoryId ? await models.gitRepository.getById(project.gitRepositoryId) : null;
+
   const user = await models.userSession.getOrCreate();
   const sessionId = user.id;
 
@@ -323,7 +325,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     // connect to git repo
     if (
       storageType === 'git' &&
-      project.gitRepositoryId === EMPTY_GIT_PROJECT_ID &&
+      (project.gitRepositoryId === EMPTY_GIT_PROJECT_ID || !gitRepository?.credentialsId) &&
       !projectData.connectRepositoryLater
     ) {
       invariant(projectData.credentialsId, 'Credentials ID is required to clone git repository');

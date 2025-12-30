@@ -40,7 +40,7 @@ export const Input = ({ label, errorMessage, className, description, prefix, ...
             <RaInput className={twMerge('h-full w-full rounded-sm p-2')} />
           </div>
 
-          <FieldError className="text-xs text-(--color-danger)" />
+          <FieldError className="text-xs text-(--color-danger)">{errorMessage}</FieldError>
         </>
       )}
     </RaTextField>
