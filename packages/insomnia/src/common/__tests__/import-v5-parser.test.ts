@@ -440,7 +440,7 @@ describe('MockRouteSchema', () => {
 // -----------------------------
 
 describe('McpRequestSchema', () => {
-  it('parses mcp request schmea and applies defaults', () => {
+  it('parses mcp request schema and applies defaults', () => {
     const mcpRequestData = makeMcpRequest({
       env: [
         {
