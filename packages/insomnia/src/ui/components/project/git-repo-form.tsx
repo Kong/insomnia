@@ -216,6 +216,7 @@ export const GitRepoForm: FC<Props> = ({
                   label="Path to Repository"
                   description="Note: Some repo should include “.git” at the end of the path."
                   prefix={baseURI}
+                  key={selectedCredentialsId}
                   defaultValue={getDisplayValue(projectData.uri, baseURI)}
                   name="uri"
                   type={baseURI ? 'text' : 'url'}
