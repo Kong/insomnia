@@ -1,4 +1,3 @@
-import { base } from '@faker-js/faker';
 import { describe, expect, it } from 'vitest';
 
 import { ImportPostman, transformPostmanToNunjucksString } from './postman';

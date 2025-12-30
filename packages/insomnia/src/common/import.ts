@@ -8,7 +8,12 @@ import type { ImportEntry } from '../main/importers/entities';
 import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';
-import { type Environment, EnvironmentKvPairDataType, isEnvironment } from '../models/environment';
+import {
+  type Environment,
+  type EnvironmentKvPairData,
+  EnvironmentKvPairDataType,
+  isEnvironment,
+} from '../models/environment';
 import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
 import { type AllTypes, type BaseModel, getModel } from '../models/index';
 import * as models from '../models/index';
@@ -468,13 +473,30 @@ export const importResourcesToWorkspace = async ({
           };
       const { object, map } = orderedJSON.parse(JSON.stringify(newData), JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR);
       if (environmentType === 'kv') {
-        const newKvPairs = Object.keys(newData).map(key => ({
-          id: generateId('envPair'),
-          name: key,
-          value: newData[key] || '',
-          type: EnvironmentKvPairDataType.STRING,
-          enabled: true,
-        }));
+        const originKVPairData = baseEnvironment.kvPairData || [];
+        const originKVPairDataNames = originKVPairData.map(pair => pair.name);
+        const newKvPairs: EnvironmentKvPairData[] = [...originKVPairData];
+        Object.keys(newData).forEach(key => {
+          if (originKVPairDataNames.includes(key)) {
+            // update existing kv pair value
+            const originValue = originalEnvironmentData[key];
+            // find the kv pair with the same name and value in case duplicate names with different values exist
+            const index = newKvPairs.findIndex(pair => pair.name === key && pair.value === originValue);
+            newKvPairs[index] = {
+              ...newKvPairs[index],
+              value: newData[key],
+            };
+          } else {
+            // Create new kv pair since it does not exist in origin
+            newKvPairs.push({
+              id: generateId(models.environment.prefixEnvPair),
+              name: key,
+              value: newData[key],
+              type: EnvironmentKvPairDataType.STRING,
+              enabled: true,
+            });
+          }
+        });
         await models.environment.update(baseEnvironment, {
           kvPairData: newKvPairs,
           data: object,

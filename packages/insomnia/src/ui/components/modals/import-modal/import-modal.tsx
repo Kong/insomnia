@@ -5,6 +5,7 @@ import { Heading } from 'react-aria-components';
 
 import { useImportResourcesFetcher } from '~/routes/import.resources';
 import { useScanResourcesFetcher } from '~/routes/import.scan';
+import { Checkbox } from '~/ui/components/base/checkbox';
 
 import type { ScanResult } from '../../../../common/import';
 import { isScratchpadProject } from '../../../../models/project';
@@ -403,23 +404,16 @@ const ImportResourcesForm = ({
         <div className="overflow-y-auto">
           <ScanResultsTable scanResults={scanResults} />
           {isImportingBaseEnvironmentToWorkspace && (
-            <div className="">
-              <label className="flex items-center gap-2">
-                <input
-                  checked={overrideBaseEnvironmentData}
-                  name="overrideBaseEnvironmentData"
-                  onChange={event => {
-                    const isChecked = event.currentTarget.checked;
-                    setOverrideBaseEnvironmentData(isChecked);
-                  }}
-                  type="checkbox"
-                />
-                Override Base Environment On Name Conflict
-                <HelpTooltip className="space-left">
-                  Override the base environment data if environment with same name is found during import.
-                </HelpTooltip>
-              </label>
-            </div>
+            <Checkbox
+              isSelected={overrideBaseEnvironmentData}
+              onChange={checked => setOverrideBaseEnvironmentData(checked)}
+              className="mt-1"
+            >
+              Override Base Environment On Name Conflict
+              <HelpTooltip className="space-left">
+                Override existing variables in the base environment if the same variable names are found during import.
+              </HelpTooltip>
+            </Checkbox>
           )}
         </div>
 
