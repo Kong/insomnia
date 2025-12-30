@@ -1,5 +1,5 @@
 import React, { useDeferredValue } from 'react';
-import { Button, ComboBox, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
+import { Button, ComboBox, FieldError, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 import * as reactUse from 'react-use';
 import { z } from 'zod/v4';
 
@@ -52,9 +52,10 @@ export const GitRemoteBranchSelect = ({
     : null;
 
   return (
-    <Label className="flex flex-col">
-      <span className="text-sm font-semibold">Branch</span>
+    <Label className="flex flex-col pt-0">
+      <span className="text-sm">Branch</span>
       <ComboBox
+        isRequired
         isInvalid={!!remoteBranchesFetchErrors}
         key={`${url}:${remoteBranches[0]}:branch-select`}
         aria-label="Branch to clone"
@@ -69,6 +70,7 @@ export const GitRemoteBranchSelect = ({
           id: branch,
           name: branch,
         }))}
+        name="branch"
         menuTrigger="focus"
         defaultFilter={(branch: string, inputValue: string) =>
           Boolean(fuzzyMatch(inputValue, branch, { splitSpace: true, loose: false })?.indexes)
@@ -77,7 +79,6 @@ export const GitRemoteBranchSelect = ({
         <div className="flex w-full items-center gap-2">
           <div className="group flex h-(--line-height-xs) flex-1 items-center gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
             <Input
-              name="branch"
               aria-label="Search branches"
               placeholder={isLoadingRemoteBranches ? 'Fetching remote branches...' : 'Default branch'}
               className="w-full py-1 pr-7 pl-2 placeholder:italic"
@@ -106,7 +107,9 @@ export const GitRemoteBranchSelect = ({
             <Icon icon="refresh" className={isLoadingRemoteBranches ? 'animate-spin' : ''} />
           </button>
         </div>
-        <p className="hidden text-xs text-(--color-danger) group-valid/form:inline-flex">{remoteBranchesFetchErrors}</p>
+        <FieldError className="text-xs text-(--color-danger)">
+          {({ validationErrors }) => remoteBranchesFetchErrors || validationErrors?.join(', ')}
+        </FieldError>
         <Popover
           className="grid w-(--trigger-width) min-w-max grid-flow-col divide-x divide-solid divide-(--hl-md) overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none focus:outline-hidden"
           placement="bottom start"

@@ -21,6 +21,8 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
 import { Icon } from '../icon';
 
+const FORMID = 'git-repo-form';
+
 interface Props {
   storageRules: StorageRules;
   isGitSyncEnabled: boolean;
@@ -140,6 +142,7 @@ export const ProjectCreateForm: FC<Props> = ({
           />
           {storageType === 'git' && (
             <GitRepoForm
+              formId={FORMID}
               projectData={projectData}
               setProjectData={setProjectData}
               initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
@@ -162,38 +165,36 @@ export const ProjectCreateForm: FC<Props> = ({
 
       {/* Actions */}
 
-      {activeView === 'project' && (
+      {activeView === 'project' && !hideActionButtons && (
         <div className="flex w-full items-center justify-end gap-2 px-0.5">
-          {!hideActionButtons && (
-            <div className="flex items-center gap-2">
-              {onCancel && (
-                <Button
-                  onPress={onCancel}
-                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
-                >
-                  Cancel
-                </Button>
-              )}
-              {storageType !== 'git' || projectData.connectRepositoryLater ? (
-                <Button
-                  onPress={onUpsertProject}
-                  isDisabled={!storageType || newProjectFetcher.state !== 'idle'}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-                >
-                  {newProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
-                  <span>Create</span>
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  form="git-repo-form"
-                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-                >
-                  Scan for files
-                </Button>
-              )}
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {onCancel && (
+              <Button
+                onPress={onCancel}
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
+              >
+                Cancel
+              </Button>
+            )}
+            {storageType !== 'git' || projectData.connectRepositoryLater ? (
+              <Button
+                onPress={onUpsertProject}
+                isDisabled={!storageType || newProjectFetcher.state !== 'idle'}
+                className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+              >
+                {newProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
+                <span>Create</span>
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                form={FORMID}
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+              >
+                Scan for files
+              </Button>
+            )}
+          </div>
         </div>
       )}
 

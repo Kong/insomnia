@@ -88,6 +88,8 @@ export const ProjectModal = ({
                   gitRepository={gitRepository}
                   onCancel={close}
                   onSuccessUpdate={close}
+                  credentials={credentials}
+                  providers={providers}
                 />
               ) : (
                 <ProjectCreateForm

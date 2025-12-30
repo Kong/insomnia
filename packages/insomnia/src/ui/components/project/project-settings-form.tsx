@@ -6,13 +6,14 @@ import { useParams } from 'react-router';
 import { Banner } from '~/basic-components/banner';
 import { Divider } from '~/basic-components/divider';
 import { LearnMoreLink } from '~/basic-components/link';
+import type { GitCredentials } from '~/models/git-credentials';
 import type { StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
 import {
   fallbackFeatures,
   useOrganizationPermissionsLoaderFetcher,
 } from '~/routes/organization.$organizationId.permissions';
+import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
@@ -32,6 +33,8 @@ import {
 } from '../../../models/project';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
+
+const FORMID = 'git-repo-form';
 
 function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
   if (storageType === 'git' && !isGitProject(project)) {
@@ -57,6 +60,8 @@ interface Props {
   defaultProjectName?: string;
   onCancel?(): void;
   onSuccessUpdate?(): void;
+  credentials: GitCredentials[];
+  providers: GitProviderOption[];
 }
 
 export const ProjectSettingsForm: FC<Props> = ({
@@ -67,6 +72,8 @@ export const ProjectSettingsForm: FC<Props> = ({
   defaultProjectName = 'My Project',
   onCancel,
   onSuccessUpdate,
+  credentials,
+  providers,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
@@ -141,16 +148,10 @@ export const ProjectSettingsForm: FC<Props> = ({
     }
   };
 
-  const credentialsFetcher = useGitCredentialsLoaderFetcher();
+  const selectedCredential = credentials.find(c => c._id === projectData.credentialsId);
+  const selectedProvider = providers.find(p => p.type === selectedCredential?.provider);
 
-  useEffect(() => {
-    if (credentialsFetcher.state === 'idle' && !credentialsFetcher.data) {
-      credentialsFetcher.load();
-    }
-  }, [credentialsFetcher]);
-
-  const selectedCredential = credentialsFetcher.data?.credentials.find(c => c._id === projectData.credentialsId);
-  const selectedProvider = credentialsFetcher.data?.providers.find(p => p.type === selectedCredential?.provider);
+  const hideActionButtons = storageType === 'git' && !projectData.connectRepositoryLater && credentials.length === 0;
 
   return (
     <>
@@ -256,6 +257,9 @@ export const ProjectSettingsForm: FC<Props> = ({
                 initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
                 organizationId={organizationId}
                 setActiveView={setActiveView}
+                credentials={credentials}
+                providers={providers}
+                formId={FORMID}
               />
             ))}
         </div>
@@ -271,7 +275,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 
       {/* Actions */}
 
-      {activeView === 'project' && (
+      {activeView === 'project' && !hideActionButtons && (
         <div className="flex w-full items-center justify-end gap-2 px-0.5">
           <div className="flex items-center gap-2">
             {onCancel && (
@@ -287,7 +291,7 @@ export const ProjectSettingsForm: FC<Props> = ({
             (isSwitchingStorageType(project!, storageType) || project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID) ? (
               <Button
                 isDisabled={!isGitSyncEnabled}
-                form="git-repo-form"
+                form={FORMID}
                 type="submit"
                 className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
