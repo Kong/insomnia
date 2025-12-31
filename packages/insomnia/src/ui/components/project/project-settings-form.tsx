@@ -239,16 +239,17 @@ export const ProjectSettingsForm: FC<Props> = ({
             />
           )}
           {storageType === 'git' &&
-            (!isSwitchingStorageType(project!, storageType) && project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID ? (
+            (!isSwitchingStorageType(project!, storageType) &&
+            project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID &&
+            gitRepository?.credentialsId &&
+            selectedProvider ? (
               <>
                 <Divider />
-                {selectedProvider && (
-                  <GitConnectionInfo
-                    gitRepository={gitRepository}
-                    providerInfo={selectedProvider}
-                    projectId={project!._id}
-                  />
-                )}
+                <GitConnectionInfo
+                  gitRepository={gitRepository}
+                  providerInfo={selectedProvider}
+                  projectId={project!._id}
+                />
               </>
             ) : (
               <GitRepoForm
@@ -288,7 +289,9 @@ export const ProjectSettingsForm: FC<Props> = ({
             )}
             {storageType === 'git' &&
             !projectData.connectRepositoryLater &&
-            (isSwitchingStorageType(project!, storageType) || project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID) ? (
+            (isSwitchingStorageType(project!, storageType) ||
+              project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID ||
+              !gitRepository?.credentialsId) ? (
               <Button
                 isDisabled={!isGitSyncEnabled}
                 form={FORMID}

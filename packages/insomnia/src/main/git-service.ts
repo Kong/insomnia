@@ -1849,7 +1849,11 @@ export async function fetchGitRemoteBranches({
     if (!credentials) {
       return { branches: [] };
     }
-
+    const gitProvider = gitRemoteProviderRegistry.get(credentials.provider as GitRemoteProviderType);
+    const validateResult = await gitProvider?.validateUrl(uri);
+    if (!validateResult?.valid) {
+      throw new Error('Invalid Git Repository URL');
+    }
     const branches = await fetchRemoteBranches({
       uri: parseGitToHttpsURL(uri),
       credentialsId,
