@@ -303,12 +303,13 @@ export const ProjectSettingsForm: FC<Props> = ({
             ) : (
               <Button
                 onPress={onUpsertProject}
-                isDisabled={updateProjectFetcher.state !== 'idle' || updateProjectFetcher.state !== 'idle'}
+                isDisabled={
+                  updateProjectFetcher.state !== 'idle' ||
+                  (!isSwitchingStorageType(project!, storageType) && project?.name.trim() === projectData.name.trim())
+                }
                 className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
-                {(updateProjectFetcher.state !== 'idle' || updateProjectFetcher.state !== 'idle') && (
-                  <Icon icon="spinner" className="animate-spin" />
-                )}
+                {updateProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
                 <span>Update</span>
               </Button>
             )}
