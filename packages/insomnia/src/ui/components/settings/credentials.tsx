@@ -231,7 +231,7 @@ const GitCredentialsList = () => {
         <Heading className="text-lg font-bold">Git Credentials</Heading>
         <MenuTrigger>
           <Button
-            aria-label="Create Credential"
+            aria-label="Create Git Credential"
             className="flex h-full items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 py-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             <Icon icon="plus-circle" /> Add Credential
