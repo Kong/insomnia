@@ -1,3 +1,4 @@
+import orderedJSON from 'json-order';
 import { z, type ZodError } from 'zod/v4';
 
 import { insecureReadFile } from '~/main/secure-read-file';
@@ -7,7 +8,12 @@ import type { ImportEntry } from '../main/importers/entities';
 import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';
-import { type BaseEnvironment, type Environment, isEnvironment } from '../models/environment';
+import {
+  type Environment,
+  type EnvironmentKvPairData,
+  EnvironmentKvPairDataType,
+  isEnvironment,
+} from '../models/environment';
 import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
 import { type AllTypes, type BaseModel, getModel } from '../models/index';
 import * as models from '../models/index';
@@ -21,6 +27,7 @@ import { isUnitTestSuite, type UnitTestSuite } from '../models/unit-test-suite';
 import { isWebSocketRequest, type WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { invariant } from '../utils/invariant';
+import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
@@ -111,7 +118,7 @@ export async function getFilesFromPostmanExportedDataDump(filePath: string): Pro
 export interface ScanResult {
   requests?: (Request | WebSocketRequest | GrpcRequest | SocketIORequest)[];
   workspaces?: Workspace[];
-  environments?: BaseEnvironment[];
+  environments?: Environment[];
   apiSpecs?: ApiSpec[];
   cookieJars?: CookieJar[];
   unitTests?: UnitTest[];
@@ -420,7 +427,13 @@ const importRequestWithNewIds = (request: Request, ResourceIdMap: Map<string, st
   };
 };
 
-export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId: string }) => {
+export const importResourcesToWorkspace = async ({
+  workspaceId,
+  overrideBaseEnvironmentData = true,
+}: {
+  workspaceId: string;
+  overrideBaseEnvironmentData?: boolean;
+}) => {
   invariant(resourceCacheList.length > 0, 'No resources to import');
   for (const resourceCacheItem of resourceCacheList) {
     const resources = resourceCacheItem.resources;
@@ -446,7 +459,55 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
       .filter(isEnvironment)
       .find(env => env.parentId && env.parentId.startsWith('__WORKSPACE_ID__'));
     if (baseEnvironmentFromResources) {
-      await models.environment.update(baseEnvironment, { data: baseEnvironmentFromResources.data });
+      const environmentType = baseEnvironment.environmentType;
+      const originalEnvironmentData = baseEnvironment.data || {};
+      const baseEnvironmentDataFromResources = baseEnvironmentFromResources.data;
+      const newData = overrideBaseEnvironmentData
+        ? {
+            ...originalEnvironmentData,
+            ...baseEnvironmentDataFromResources,
+          }
+        : {
+            ...baseEnvironmentDataFromResources,
+            ...originalEnvironmentData,
+          };
+      const { object, map } = orderedJSON.parse(JSON.stringify(newData), JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR);
+      if (environmentType === 'kv') {
+        const originKVPairData = baseEnvironment.kvPairData || [];
+        const originKVPairDataNames = originKVPairData.map(pair => pair.name);
+        const newKvPairs: EnvironmentKvPairData[] = [...originKVPairData];
+        Object.keys(newData).forEach(key => {
+          if (originKVPairDataNames.includes(key)) {
+            // update existing kv pair value
+            const originValue = originalEnvironmentData[key];
+            // find the kv pair with the same name and value in case duplicate names with different values exist
+            const index = newKvPairs.findIndex(pair => pair.name === key && pair.value === originValue);
+            newKvPairs[index] = {
+              ...newKvPairs[index],
+              value: newData[key],
+            };
+          } else {
+            // Create new kv pair since it does not exist in origin
+            newKvPairs.push({
+              id: generateId(models.environment.prefixEnvPair),
+              name: key,
+              value: newData[key],
+              type: EnvironmentKvPairDataType.STRING,
+              enabled: true,
+            });
+          }
+        });
+        await models.environment.update(baseEnvironment, {
+          kvPairData: newKvPairs,
+          data: object,
+          dataPropertyOrder: map || null,
+        });
+      } else {
+        await models.environment.update(baseEnvironment, {
+          data: object,
+          dataPropertyOrder: map || null,
+        });
+      }
     }
     const subEnvironments = resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
 

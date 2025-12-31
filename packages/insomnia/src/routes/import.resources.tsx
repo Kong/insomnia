@@ -15,15 +15,21 @@ import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/import.resources';
 
+interface ImportScannedResourcesParams {
+  organizationId: string;
+  projectId: string;
+  workspaceId?: string;
+  options?: {
+    overrideBaseEnvironmentData?: boolean;
+  };
+}
+
 export const importScannedResources = async ({
   organizationId,
   projectId,
   workspaceId,
-}: {
-  organizationId: string;
-  projectId: string;
-  workspaceId?: string;
-}) => {
+  options,
+}: ImportScannedResourcesParams) => {
   invariant(organizationId && typeof organizationId === 'string', 'OrganizationId is required.');
   invariant(projectId && typeof projectId === 'string', 'ProjectId is required.');
 
@@ -33,6 +39,7 @@ export const importScannedResources = async ({
   await (typeof workspaceId === 'string' && workspaceId
     ? importResourcesToWorkspace({
         workspaceId: workspaceId,
+        overrideBaseEnvironmentData: options?.overrideBaseEnvironmentData ?? true,
       })
     : importResourcesToProject({
         projectId: project._id,
@@ -42,15 +49,12 @@ export const importScannedResources = async ({
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   try {
-    const data = (await request.json()) as {
-      organizationId: string;
-      projectId: string;
-      workspaceId?: string;
-    };
+    const data = (await request.json()) as ImportScannedResourcesParams;
 
     const organizationId = data.organizationId;
     const projectId = data.projectId;
     const workspaceId = data.workspaceId;
+    const options = data.options;
 
     invariant(typeof organizationId === 'string', 'OrganizationId is required.');
     invariant(typeof projectId === 'string', 'ProjectId is required.');
@@ -59,6 +63,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       organizationId,
       projectId,
       workspaceId,
+      options,
     });
     return { done: true };
   } catch (error) {
@@ -70,7 +75,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export const useImportResourcesFetcher = createFetcherSubmitHook(
-  submit => (data: { organizationId: string; projectId: string; workspaceId?: string }) => {
+  submit => (data: ImportScannedResourcesParams) => {
     submit(JSON.stringify(data), {
       action: href('/import/resources'),
       method: 'POST',

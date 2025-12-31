@@ -37,9 +37,9 @@ export const providerType: CloudProviderName = 'hashicorp';
 export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => {
   const { data, onSubmit, isLoading, errorMessage } = props;
   const isEdit = !!data;
-  const { name, credentials } = data || initialFormValue;
+  const { name, credentials = initialFormValue.credentials } = data || initialFormValue;
   const [isValidUrl, setIsValidUrl] = useState(true);
-  const { type } = credentials as HashiCorpCredential['credentials'];
+  const { type } = credentials as Required<HashiCorpCredential>['credentials'];
   const [credentialType, setCredentialType] = useState<HashiCorpCredentialType>(type);
   const [credentialAuthMethod, setAuthMethod] = useState<HashiCorpVaultAuthMethod>(
     (credentials as VaultTokenCredential | VaultAppRoleCredential).authMethod,
