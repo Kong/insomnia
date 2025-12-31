@@ -6,6 +6,7 @@ import { database as db } from './src/common/database';
 import { v4Mock } from './src/models/__mocks__/uuid';
 await db.init({ inMemoryOnly: true }, true);
 vi.mock('electron', () => ({ default: electronMock }));
+vi.mock('electron/main', () => ({ net: electronMock.net }));
 
 vi.mock('uuid', () => ({
   v4: () => v4Mock(),
