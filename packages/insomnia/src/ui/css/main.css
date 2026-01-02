@@ -8,7 +8,6 @@
 @import './lib/fontawesome/css/v4-font-face.css';
 @import './lib/fontawesome/css/v4-shims.css';
 @import '../../../../../node_modules/swagger-ui-dist/swagger-ui.css';
-@import '../../../../../node_modules/monaco-editor/min/vs/editor/editor.main.css';
 
 /* TODO: Remove custom reset and follow tailwindcss reset */
 /* Boilerplate */
