@@ -127,7 +127,11 @@ type BaseGitCredentials = BaseGitCredentialsV1 | BaseGitCredentialsV2;
  * Type guard to check if credential is using new unified structure
  */
 export function isGitCredentialsV2(gitCredential: GitCredentials): gitCredential is GitCredentialsV2 {
-  return 'credentials' in gitCredential && typeof gitCredential.credentials === 'object';
+  return (
+    'credentials' in gitCredential &&
+    gitCredential.credentials !== null &&
+    typeof gitCredential.credentials === 'object'
+  );
 }
 
 /**

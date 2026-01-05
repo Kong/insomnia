@@ -297,7 +297,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
       const email = emails.find(e => e.primary)?.email ?? userProfileEmail ?? '';
 
       await models.gitCredentials.create({
-        name: 'Github Credential',
+        name: 'GitHub Credential',
         credentials: {
           token: data.access_token,
         },

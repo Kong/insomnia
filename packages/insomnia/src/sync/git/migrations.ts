@@ -44,7 +44,7 @@ async function migrateGitHubConnectedRepositories(repositories: GitRepository[])
 
   if (githubCredentials && 'token' in githubCredentials) {
     const newCredential = await models.gitCredentials.create({
-      name: 'Github Credential',
+      name: 'GitHub Credential',
       provider: 'github',
       credentials: {
         token: githubCredentials.token,
@@ -69,8 +69,8 @@ async function migrateGitLabConnectedRepositories(repositories: GitRepository[])
   const gitlabCredentials = await database.findOne<GitCredentials>(models.gitCredentials.type, { provider: 'gitlab' });
 
   if (gitlabCredentials && isGitCredentialsV1(gitlabCredentials)) {
-    await models.gitCredentials.create({
-      name: 'Gitlab Credential',
+    const newCredential = await models.gitCredentials.create({
+      name: 'GitLab Credential',
       provider: 'gitlab',
       credentials: {
         token: gitlabCredentials.token,
@@ -81,7 +81,7 @@ async function migrateGitLabConnectedRepositories(repositories: GitRepository[])
 
     for (const repo of repositories) {
       await models.gitRepository.update(repo, {
-        credentialsId: gitlabCredentials._id,
+        credentialsId: newCredential._id,
         credentials: null,
         author: {
           name: '',
