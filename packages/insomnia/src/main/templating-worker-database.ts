@@ -6,6 +6,8 @@ import { shell } from 'electron';
 import iconv from 'iconv-lite';
 import { v4 as uuidv4 } from 'uuid';
 
+import { jarFromCookies } from '~/common/cookies';
+
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
@@ -101,6 +103,11 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
   },
   'cookieJar.getOrCreateForParentId': async (body: { parentId: string }) => {
     return await models.cookieJar.getOrCreateForParentId(body.parentId);
+  },
+  'cookieJar.getCookiesForUrl': async (body: { parentId: string; url: string }) => {
+    const cookies = await models.cookieJar.getOrCreateForParentId(body.parentId);
+    const jar = jarFromCookies(cookies.cookies);
+    return jar.getCookiesSync(body.url);
   },
   'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
     return await models.response.getLatestForRequestId(body.requestId, body.environmentId);
