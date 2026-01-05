@@ -1,5 +1,5 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -218,12 +218,22 @@ const GitCredentialsList = () => {
     displayName: string;
     iconName?: IconProp;
   } | null>(null);
+  const previousCredentialsLengthRef = useRef<number>(0);
 
   useEffect(() => {
     if (credentialsFetcher.state === 'idle' && !credentialsFetcher.data) {
       credentialsFetcher.load();
     }
   }, [credentialsFetcher]);
+
+  // Auto-close modal when credentials length increases, new credentials can be added by deeplink callback
+  useEffect(() => {
+    const currentLength = credentialsFetcher.data?.credentials.length || 0;
+    if (currentLength > previousCredentialsLengthRef.current) {
+      setIsCredentialModalOpen(false);
+    }
+    previousCredentialsLengthRef.current = currentLength;
+  }, [credentialsFetcher.data?.credentials.length]);
 
   return (
     <div className="mb-4 flex flex-col gap-2 py-4">
