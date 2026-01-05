@@ -30,7 +30,7 @@ export const jarFromCookies = (cookies: Cookie[] | CookieModel[]) => {
       ...cookie,
       // TODO: null will make getCookiesSync unhappy
       // probably it should be `undefined` when types of tough cookie is updated
-      expires: cookie.expires === null ? 'Infinity' : cookie.expires,
+      expires: cookie.expires === null || cookie.expires === undefined ? 'Infinity' : cookie.expires,
     }));
     // For some reason, fromJSON modifies `cookies`.
     // Create a copy first just to be sure.
