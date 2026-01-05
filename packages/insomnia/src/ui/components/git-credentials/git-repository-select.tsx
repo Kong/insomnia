@@ -92,7 +92,7 @@ export const GitRepositorySelect = ({
             aria-label="Refresh repositories"
             onClick={() => {
               if (credentialsId) {
-                getGitProviderRepositoriesFetcher.load({ credentialsId });
+                getGitProviderRepositoriesFetcher.load({ credentialsId, refresh: true });
               }
             }}
           >
