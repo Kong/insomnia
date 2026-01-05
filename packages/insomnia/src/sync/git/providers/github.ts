@@ -131,7 +131,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
         `${this.config.apiUrl}/user/repos?per_page=${perPage}&page=${page}&sort=updated`,
         {
           headers: {
-            Authorization: `token ${credentials.token}`,
+            Authorization: `token ${credentials.credentials?.token}`,
           },
         },
       );
@@ -176,7 +176,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
       throw new Error('Invalid credential type for GitHub provider');
     }
 
-    return this.fetchEmails(credential.token);
+    return this.fetchEmails(credential.credentials.token);
   }
 
   /**
@@ -298,9 +298,10 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
 
       await models.gitCredentials.create({
         name: 'Github Credential',
-        token: data.access_token,
+        credentials: {
+          token: data.access_token,
+        },
         provider: 'github',
-        renewalAttempts: 0,
         author: {
           email,
           name: user.name || user.username,
@@ -333,7 +334,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
     // GitHub requires token as username with x-oauth-basic as password
     // https://isomorphic-git.org/docs/en/authentication.html
     return {
-      username: credential.token,
+      username: credential?.credentials?.token,
       password: 'x-oauth-basic',
     };
   }

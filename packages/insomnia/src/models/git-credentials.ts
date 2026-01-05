@@ -8,17 +8,6 @@ export type GitRemoteProviderType = 'github' | 'gitlab' | 'custom';
 
 export type GitCredentials = BaseModel & BaseGitCredentials;
 
-// for those keys do not need to add in model init method
-export const optionalKeys = [
-  'lastRenewalAttempt',
-  'expiresAt',
-  'scopes',
-  'emails',
-  'selectedEmail',
-  'username',
-  'password',
-];
-
 export type GitCredentialsV1 = BaseModel & BaseGitCredentialsV1;
 export type GitCredentialsV2 = BaseModel & BaseGitCredentialsV2;
 export type CustomGitCredentialV2 = BaseModel & CustomCredential;
@@ -33,19 +22,16 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
-export function init(): BaseGitCredentials {
+export function init(): Partial<BaseGitCredentials> {
   return {
-    token: '',
-    refreshToken: '',
-    provider: 'github',
+    name: '',
+    provider: undefined,
+    credentials: undefined,
     author: {
       email: '',
       name: '',
       avatarUrl: '',
     },
-    baseURI: '',
-    name: '',
-    renewalAttempts: 0,
   };
 }
 
@@ -84,9 +70,6 @@ interface BaseCredentialData {
     email: string;
     avatarUrl?: string;
   };
-  baseURI?: string;
-  renewalAttempts: number;
-  lastRenewalAttempt?: number;
 }
 
 /**
@@ -94,12 +77,14 @@ interface BaseCredentialData {
  */
 interface GitHubCredential extends BaseCredentialData {
   provider: 'github';
-  token: string;
-  refreshToken?: string;
-  expiresAt?: number;
-  scopes?: string[];
-  emails?: ProviderEmail[];
-  selectedEmail?: string;
+  credentials: {
+    token: string;
+    refreshToken?: string;
+    expiresAt?: number;
+    scopes?: string[];
+    emails?: ProviderEmail[];
+    selectedEmail?: string;
+  };
 }
 
 /**
@@ -107,11 +92,13 @@ interface GitHubCredential extends BaseCredentialData {
  */
 interface GitLabCredential extends BaseCredentialData {
   provider: 'gitlab';
-  token: string;
-  refreshToken: string;
-  expiresAt: number;
-  emails?: ProviderEmail[];
-  selectedEmail?: string;
+  credentials: {
+    token: string;
+    refreshToken: string;
+    expiresAt?: number;
+    emails?: ProviderEmail[];
+    selectedEmail?: string;
+  };
 }
 
 /**
@@ -119,9 +106,11 @@ interface GitLabCredential extends BaseCredentialData {
  */
 interface CustomCredential extends BaseCredentialData {
   provider: 'custom';
-  username: string;
-  password: string; // Personal access token
-  baseURI?: string; // For custom providers
+  credentials: {
+    username: string;
+    password: string; // Personal access token
+    baseURI?: string; // For custom providers
+  };
 }
 
 /**
@@ -137,8 +126,8 @@ type BaseGitCredentials = BaseGitCredentialsV1 | BaseGitCredentialsV2;
 /**
  * Type guard to check if credential is using new unified structure
  */
-export function isGitCredentialsV2(credential: GitCredentials): credential is GitCredentialsV2 {
-  return 'name' in credential && typeof credential.name === 'string' && 'renewalAttempts' in credential;
+export function isGitCredentialsV2(gitCredential: GitCredentials): gitCredential is GitCredentialsV2 {
+  return 'credentials' in gitCredential && typeof gitCredential.credentials === 'object';
 }
 
 /**
@@ -155,8 +144,8 @@ export function migrate(doc: GitCredentials): GitCredentials {
   return doc;
 }
 
-export function create(patch: Partial<GitCredentials> = {}) {
-  return db.docCreate<GitCredentials>(type, patch);
+export function create(patch: Partial<GitCredentialsV2> = {}) {
+  return db.docCreate<GitCredentialsV2>(type, patch);
 }
 
 export async function getById(id: string) {
@@ -164,8 +153,8 @@ export async function getById(id: string) {
   return doc ? migrate(doc) : null;
 }
 
-export function update(credentials: GitCredentials, patch: Partial<GitCredentials>) {
-  return db.docUpdate<GitCredentials>(credentials, patch);
+export function update(credentials: GitCredentialsV2, patch: Partial<GitCredentialsV2>) {
+  return db.docUpdate<GitCredentialsV2>(credentials, patch);
 }
 
 export function remove(credentials: GitCredentials) {
@@ -193,13 +182,13 @@ export function isOAuthCredential(
 /**
  * Type guard for credentials that support renewal
  */
-export function supportsRenewal(credential: GitCredentials): boolean {
-  if (!isGitCredentialsV2(credential)) return false;
-  if (credential.provider === 'gitlab') {
-    return !!credential.refreshToken;
+export function supportsRenewal(gitCredential: GitCredentials): boolean {
+  if (!isGitCredentialsV2(gitCredential)) return false;
+  if (gitCredential.provider === 'gitlab') {
+    return !!gitCredential.credentials?.refreshToken;
   }
-  if (credential.provider === 'github') {
-    return !!credential.refreshToken;
+  if (gitCredential.provider === 'github') {
+    return !!gitCredential.credentials?.refreshToken;
   }
   return false;
 }

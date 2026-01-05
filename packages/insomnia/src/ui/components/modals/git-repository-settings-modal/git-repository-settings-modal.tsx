@@ -233,9 +233,9 @@ export const GitRepositorySettingsModal = ({
                       selectedCredential &&
                       isGitCredentialsV2(selectedCredential) &&
                       selectedCredential.provider === 'custom' &&
-                      selectedCredential.baseURI
+                      selectedCredential.credentials?.baseURI
                     ) {
-                      prefix = selectedCredential.baseURI.replace(/\/+$/, '') + '/';
+                      prefix = selectedCredential.credentials?.baseURI.replace(/\/+$/, '') + '/';
                     }
 
                     setRepoData(prev => ({ ...prev, uri: prefix + value }));
@@ -247,10 +247,10 @@ export const GitRepositorySettingsModal = ({
                   {selectedCredential &&
                   isGitCredentialsV2(selectedCredential) &&
                   selectedCredential.provider === 'custom' &&
-                  selectedCredential.baseURI ? (
+                  selectedCredential.credentials?.baseURI ? (
                     <div className="flex h-(--line-height-xxs) w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) p-0 pr-7 text-(--color-font) transition-colors placeholder:text-sm placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
                       <div className="flex h-full items-center bg-(--hl-sm) px-2 text-(--color-font)">
-                        {selectedCredential.baseURI.replace(/\/+$/, '')}/
+                        {selectedCredential.credentials?.baseURI.replace(/\/+$/, '')}/
                       </div>
                       <Input className="flex-1 px-2" />
                     </div>

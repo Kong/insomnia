@@ -29,7 +29,7 @@ import { initElectronStorage } from '~/main/window-utils';
 import { type GitRepository, isGitCredentialsOAuth } from '~/models/git-repository';
 
 import * as models from '../../models';
-import type { GitCredentials } from '../../models/git-credentials';
+import { type GitCredentials, isGitCredentialsV1 } from '../../models/git-credentials';
 
 const MIGRATION_KEY = 'GIT_CREDENTIALS_MIGRATION';
 
@@ -42,16 +42,19 @@ async function migrateGitHubConnectedRepositories(repositories: GitRepository[])
     provider: 'githubapp',
   });
 
-  if (githubCredentials) {
-    await models.gitCredentials.update(githubCredentials, {
+  if (githubCredentials && 'token' in githubCredentials) {
+    const newCredential = await models.gitCredentials.create({
       name: 'Github Credential',
       provider: 'github',
-      renewalAttempts: 0,
+      credentials: {
+        token: githubCredentials.token,
+      },
     });
+    await models.gitCredentials.remove(githubCredentials);
 
     for (const repo of repositories) {
       await models.gitRepository.update(repo, {
-        credentialsId: githubCredentials._id,
+        credentialsId: newCredential._id,
         credentials: null,
         author: {
           name: '',
@@ -65,12 +68,16 @@ async function migrateGitHubConnectedRepositories(repositories: GitRepository[])
 async function migrateGitLabConnectedRepositories(repositories: GitRepository[]) {
   const gitlabCredentials = await database.findOne<GitCredentials>(models.gitCredentials.type, { provider: 'gitlab' });
 
-  if (gitlabCredentials) {
-    await models.gitCredentials.update(gitlabCredentials, {
+  if (gitlabCredentials && isGitCredentialsV1(gitlabCredentials)) {
+    await models.gitCredentials.create({
       name: 'Gitlab Credential',
       provider: 'gitlab',
-      renewalAttempts: 0,
+      credentials: {
+        token: gitlabCredentials.token,
+        refreshToken: gitlabCredentials.refreshToken || '',
+      },
     });
+    await models.gitCredentials.remove(gitlabCredentials);
 
     for (const repo of repositories) {
       await models.gitRepository.update(repo, {
@@ -92,19 +99,20 @@ async function migrateCustomCredentialsRepositories(repositories: GitRepository[
     }
 
     let credentials = await database.findOne<GitCredentials>(models.gitCredentials.type, {
-      provider: 'custom',
-      username: repo.credentials.username,
-      password: repo.credentials.password,
-    });
+      'provider': 'custom',
+      'credentials.username': repo.credentials.username,
+      'credentials.password': repo.credentials.password,
+    } as any);
 
     if (!credentials) {
       credentials = await models.gitCredentials.create({
         name: 'Custom Git Credential',
         provider: 'custom',
         author: repo.author,
-        renewalAttempts: 0,
-        username: repo.credentials.username,
-        password: repo.credentials.password,
+        credentials: {
+          username: repo.credentials.username,
+          password: repo.credentials.password,
+        },
       });
     }
 

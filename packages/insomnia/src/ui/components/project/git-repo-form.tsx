@@ -74,7 +74,7 @@ export const GitRepoForm: FC<Props> = ({
     (selectedCredential &&
       isGitCredentialsV2(selectedCredential) &&
       selectedCredential.provider === 'custom' &&
-      selectedCredential.baseURI) ||
+      selectedCredential.credentials?.baseURI) ||
     '';
 
   return (

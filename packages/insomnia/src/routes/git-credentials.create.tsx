@@ -1,13 +1,13 @@
 import { href } from 'react-router';
 
 import { gitCredentials } from '~/models';
-import type { GitCredentials } from '~/models/git-credentials';
+import type { GitCredentials, GitCredentialsV2 } from '~/models/git-credentials';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/git-credentials.create';
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
-  const data = (await request.json()) as Partial<GitCredentials>;
+  const data = (await request.json()) as Partial<GitCredentialsV2>;
 
   await gitCredentials.create(data);
 
