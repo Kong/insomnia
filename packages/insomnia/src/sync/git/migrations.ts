@@ -42,13 +42,15 @@ async function migrateGitHubConnectedRepositories(repositories: GitRepository[])
     provider: 'githubapp',
   });
 
-  if (githubCredentials && 'token' in githubCredentials) {
+  if (githubCredentials && isGitCredentialsV1(githubCredentials)) {
     const newCredential = await models.gitCredentials.create({
       name: 'GitHub Credential',
       provider: 'github',
       credentials: {
         token: githubCredentials.token,
+        refreshToken: githubCredentials.refreshToken,
       },
+      author: githubCredentials.author,
     });
     await models.gitCredentials.remove(githubCredentials);
 
@@ -76,6 +78,7 @@ async function migrateGitLabConnectedRepositories(repositories: GitRepository[])
         token: gitlabCredentials.token,
         refreshToken: gitlabCredentials.refreshToken || '',
       },
+      author: gitlabCredentials.author,
     });
     await models.gitCredentials.remove(gitlabCredentials);
 

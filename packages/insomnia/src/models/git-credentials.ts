@@ -32,6 +32,9 @@ export function init(): Partial<BaseGitCredentials> {
       name: '',
       avatarUrl: '',
     },
+    // Legacy fields: token and refreshToken for backward compatibility
+    token: undefined,
+    refreshToken: undefined,
   };
 }
 
@@ -40,7 +43,9 @@ export function init(): Partial<BaseGitCredentials> {
  * @deprecated Use the new provider-specific credential types
  */
 interface BaseGitCredentialsV1 {
+  /** @deprecated Use provider-specific credentials.token instead */
   token: string;
+  /** @deprecated Use provider-specific credentials.refreshToken instead */
   refreshToken?: string;
   provider: 'githubapp' | 'github' | 'gitlab' | 'custom';
   author: {
@@ -127,11 +132,7 @@ type BaseGitCredentials = BaseGitCredentialsV1 | BaseGitCredentialsV2;
  * Type guard to check if credential is using new unified structure
  */
 export function isGitCredentialsV2(gitCredential: GitCredentials): gitCredential is GitCredentialsV2 {
-  return (
-    'credentials' in gitCredential &&
-    gitCredential.credentials !== null &&
-    typeof gitCredential.credentials === 'object'
-  );
+  return 'credentials' in gitCredential && gitCredential.credentials && typeof gitCredential.credentials === 'object';
 }
 
 /**
