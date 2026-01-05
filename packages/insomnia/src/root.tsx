@@ -6,15 +6,14 @@ import { Button } from 'react-aria-components';
 import {
   href,
   isRouteErrorResponse,
-  Link as RouterLink,
   Links,
   matchPath,
   Meta,
   Outlet,
+  Link as RouterLink,
   Scripts,
   ScrollRestoration,
   useNavigate,
-  useNavigation,
   useParams,
   useRouteLoaderData,
 } from 'react-router';
@@ -104,9 +103,6 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   const errorMessage = getErrorMessage(error);
   const logoutFetcher = useLogoutFetcher();
 
-  const navigate = useNavigate();
-  const navigation = useNavigation();
-
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden">
       <h1 className="flex items-center gap-2 text-2xl text-(--color-font)">
@@ -124,13 +120,6 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
         </div>
       )}
       <div className="flex items-center gap-2">
-        <Button
-          className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-          onPress={() => navigate('/organization')}
-        >
-          Try to reload the app button
-          <span>{navigation.state === 'loading' ? <Icon icon="spinner" className="animate-spin" /> : null}</span>
-        </Button>
         <RouterLink
           reloadDocument
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
