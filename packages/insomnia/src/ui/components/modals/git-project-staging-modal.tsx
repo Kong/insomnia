@@ -936,13 +936,6 @@ export const GitProjectStagingModal: FC<{
                     </p>
                   </div>
                 )}
-                <Button
-                  onPress={() => {
-                    generateCommitsFetcher.submit({ projectId });
-                  }}
-                >
-                  Throw
-                </Button>
                 <div className="grid h-full grid-cols-[300px_1fr] gap-2 divide-x divide-solid divide-(--hl-md) overflow-hidden">
                   <div className="flex flex-1 flex-col gap-4 overflow-hidden p-2">
                     {isGenerateCommitMessagesWithAIEnabled && (
