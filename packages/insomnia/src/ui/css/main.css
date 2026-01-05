@@ -146,6 +146,17 @@ body,
 #root {
   width: 100%;
   height: 100%;
+
+  /* 
+ * TEMPORARY WORKAROUND:
+ * These `--vscode-*` variables are normally injected by Monaco at runtime.
+ * In some cases (e.g. renderer recovery or long-running sessions) Monaco fails
+ * to re-apply them, which breaks DiffEditor styling.
+ *
+ * These values act as minimal fallbacks and should be removed once the
+ * upstream Monaco issue is resolved.
+ * See: https://github.com/microsoft/monaco-editor/issues/5169
+ */
   --vscode-foreground: #616161;
   --vscode-disabledForeground: rgba(97, 97, 97, 0.5);
   --vscode-errorForeground: #a1260d;
