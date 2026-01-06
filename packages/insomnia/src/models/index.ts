@@ -150,7 +150,7 @@ export function all() {
   ] as const;
 }
 
-export type AllTypes = (typeof databaseSchema)[keyof typeof databaseSchema]['type'];
+export type AllTypes = keyof typeof databaseSchema;
 
 export function canSync(d: BaseModel) {
   if (d.isPrivate) {

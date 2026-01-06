@@ -6,7 +6,7 @@ import { TRANSPORT_TYPES } from '~/models/mcp-request';
 import appConfig from '../../config/config.json';
 // TODO: come up with a meta sort key flag so its set at creation time
 export const databaseSchema = {
-  apiSpec: {
+  ApiSpec: {
     name: 'ApiSpec',
     type: 'ApiSpec',
     prefix: 'spc',
@@ -18,7 +18,7 @@ export const databaseSchema = {
       contentType: 'yaml',
     },
   },
-  caCertificate: {
+  CaCertificate: {
     name: 'CaCertificate',
     type: 'CaCertificate',
     prefix: 'crt',
@@ -31,7 +31,7 @@ export const databaseSchema = {
       isPrivate: false,
     },
   },
-  clientCertificate: {
+  ClientCertificate: {
     name: 'ClientCertificate',
     type: 'ClientCertificate',
     prefix: 'crt',
@@ -48,7 +48,7 @@ export const databaseSchema = {
       isPrivate: false,
     },
   },
-  cloudCredential: {
+  CloudCredential: {
     name: 'Cloud Credential',
     type: 'CloudCredential',
     prefix: 'cloudCred',
@@ -60,7 +60,7 @@ export const databaseSchema = {
       credentials: undefined,
     },
   },
-  cookieJar: {
+  CookieJar: {
     name: 'Cookie Jar',
     type: 'CookieJar',
     prefix: 'jar',
@@ -71,7 +71,7 @@ export const databaseSchema = {
       cookies: [],
     },
   },
-  environment: {
+  Environment: {
     name: 'Environment',
     type: 'Environment',
     prefix: 'env',
@@ -87,7 +87,7 @@ export const databaseSchema = {
     },
     optionalKeys: ['kvPairData', 'environmentType'],
   },
-  gitCredentials: {
+  GitCredentials: {
     name: 'Git Credentials',
     type: 'GitCredentials',
     prefix: 'git_creds',
@@ -104,7 +104,7 @@ export const databaseSchema = {
       },
     },
   },
-  gitRepository: {
+  GitRepository: {
     name: 'Git Repository',
     type: 'GitRepository',
     prefix: 'git',
@@ -126,7 +126,7 @@ export const databaseSchema = {
       uriNeedsMigration: true,
     },
   },
-  grpcRequest: {
+  GrpcRequest: {
     name: 'gRPC Request',
     type: 'GrpcRequest',
     prefix: 'greq',
@@ -152,7 +152,7 @@ export const databaseSchema = {
       },
     },
   },
-  grpcRequestMeta: {
+  GrpcRequestMeta: {
     name: 'gRPC Request Meta',
     type: 'GrpcRequestMeta',
     prefix: 'greqm',
@@ -163,7 +163,7 @@ export const databaseSchema = {
       lastActive: 0,
     },
   },
-  mcpPayload: {
+  McpPayload: {
     name: 'MCP Payload',
     type: 'McpPayload',
     prefix: 'mcp-payload',
@@ -174,7 +174,7 @@ export const databaseSchema = {
       url: '',
     },
   },
-  mcpRequest: {
+  McpRequest: {
     name: 'McpRequest',
     type: 'McpRequest',
     prefix: 'mcp-request',
@@ -195,7 +195,7 @@ export const databaseSchema = {
       sslValidation: true,
     },
   },
-  mcpResponse: {
+  McpResponse: {
     name: 'Mcp Response',
     type: 'McpResponse',
     prefix: 'mcp-response',
@@ -217,7 +217,7 @@ export const databaseSchema = {
       transportType: TRANSPORT_TYPES.HTTP,
     },
   },
-  mockRoute: {
+  MockRoute: {
     name: 'Mock Route',
     type: 'MockRoute',
     prefix: 'mock-route',
@@ -234,7 +234,7 @@ export const databaseSchema = {
       method: 'GET',
     },
   },
-  mockServer: {
+  MockServer: {
     name: 'Mock Server',
     type: 'MockServer',
     prefix: 'mock',
@@ -247,7 +247,7 @@ export const databaseSchema = {
       useInsomniaCloud: true,
     },
   },
-  oauth2Token: {
+  OAuth2Token: {
     name: 'OAuth 2.0 Token',
     type: 'OAuth2Token',
     prefix: 'oa2',
@@ -266,7 +266,7 @@ export const databaseSchema = {
       errorUri: '',
     },
   },
-  pluginData: {
+  PluginData: {
     name: 'PluginData',
     type: 'PluginData',
     prefix: 'plg',
@@ -278,7 +278,7 @@ export const databaseSchema = {
       value: '',
     },
   },
-  project: {
+  Project: {
     name: 'Project',
     type: 'Project',
     prefix: 'proj',
@@ -291,7 +291,7 @@ export const databaseSchema = {
       mcpStdioAccess: false,
     },
   },
-  protoDirectory: {
+  ProtoDirectory: {
     name: 'Proto Directory',
     type: 'ProtoDirectory',
     prefix: 'pd',
@@ -301,7 +301,7 @@ export const databaseSchema = {
       name: 'New Proto Directory',
     },
   },
-  protoFile: {
+  ProtoFile: {
     name: 'Proto File',
     type: 'ProtoFile',
     prefix: 'pf',
@@ -312,7 +312,7 @@ export const databaseSchema = {
       protoText: '',
     },
   },
-  request: {
+  Request: {
     name: 'Request',
     type: 'Request',
     prefix: 'req',
@@ -341,7 +341,7 @@ export const databaseSchema = {
       settingFollowRedirects: 'global',
     },
   },
-  requestGroup: {
+  RequestGroup: {
     name: 'Folder',
     type: 'RequestGroup',
     prefix: 'fld',
@@ -360,7 +360,7 @@ export const databaseSchema = {
     },
     optionalKeys: ['kvPairData', 'environmentType'],
   },
-  requestGroupMeta: {
+  RequestGroupMeta: {
     name: 'Folder Meta',
     type: 'RequestGroupMeta',
     prefix: 'fldm',
@@ -371,7 +371,7 @@ export const databaseSchema = {
       collapsed: false,
     },
   },
-  requestMeta: {
+  RequestMeta: {
     name: 'RequestMeta',
     type: 'RequestMeta',
     prefix: 'reqm',
@@ -390,7 +390,7 @@ export const databaseSchema = {
       expandedAccordionKeys: {},
     },
   },
-  requestVersion: {
+  RequestVersion: {
     name: 'Request Version',
     type: 'RequestVersion',
     prefix: 'rvr',
@@ -400,7 +400,7 @@ export const databaseSchema = {
       compressedRequest: null,
     },
   },
-  response: {
+  Response: {
     name: 'Response',
     type: 'Response',
     prefix: 'res',
@@ -435,7 +435,7 @@ export const databaseSchema = {
       globalEnvironmentId: null,
     },
   },
-  runnerTestResult: {
+  RunnerTestResult: {
     name: 'Runner Test Result',
     type: 'RunnerTestResult',
     prefix: 'rtr',
@@ -451,7 +451,7 @@ export const databaseSchema = {
       version: '1',
     },
   },
-  settings: {
+  Settings: {
     name: 'Settings',
     type: 'Settings',
     prefix: 'set',
@@ -516,7 +516,7 @@ export const databaseSchema = {
       dataFolders: [],
     },
   },
-  socketIOPayload: {
+  SocketIOPayload: {
     name: 'SocketIO Payload',
     type: 'SocketIOPayload',
     prefix: 'socket-io-payload',
@@ -528,7 +528,7 @@ export const databaseSchema = {
       ack: false,
     },
   },
-  socketIORequest: {
+  SocketIORequest: {
     name: 'Socket.IO Request',
     type: 'SocketIORequest',
     prefix: 'socketio-req',
@@ -549,7 +549,7 @@ export const databaseSchema = {
       eventListeners: [],
     },
   },
-  socketIOResponse: {
+  SocketIOResponse: {
     name: 'SocketIO Response',
     type: 'SocketIOResponse',
     prefix: 'socketIO-res',
@@ -565,7 +565,7 @@ export const databaseSchema = {
       url: '',
     },
   },
-  stats: {
+  Stats: {
     name: 'Stats',
     type: 'Stats',
     prefix: 'sta',
@@ -582,7 +582,7 @@ export const databaseSchema = {
       executedRequests: 0,
     },
   },
-  unitTest: {
+  UnitTest: {
     name: 'UnitTest',
     type: 'UnitTest',
     prefix: 'ut',
@@ -595,7 +595,7 @@ export const databaseSchema = {
       metaSortKey: -1 * Date.now(),
     },
   },
-  unitTestSuite: {
+  UnitTestSuite: {
     name: 'Unit Test Suite',
     type: 'UnitTestSuite',
     prefix: 'uts',
@@ -606,7 +606,7 @@ export const databaseSchema = {
       metaSortKey: -1 * Date.now(),
     },
   },
-  unitTestResult: {
+  UnitTestResult: {
     name: 'Unit Test Result',
     type: 'UnitTestResult',
     prefix: 'utr',
@@ -616,7 +616,7 @@ export const databaseSchema = {
       results: null,
     },
   },
-  userSession: {
+  UserSession: {
     name: 'UserSession',
     type: 'UserSession',
     prefix: 'us',
@@ -635,7 +635,7 @@ export const databaseSchema = {
       vaultSalt: '',
     },
   },
-  webSocketPayload: {
+  WebSocketPayload: {
     name: 'WebSocket Payload',
     type: 'WebSocketPayload',
     prefix: 'ws-payload',
@@ -647,7 +647,7 @@ export const databaseSchema = {
       mode: 'application/json',
     },
   },
-  webSocketRequest: {
+  WebSocketRequest: {
     name: 'WebSocket Request',
     type: 'WebSocketRequest',
     prefix: 'ws-req',
@@ -669,7 +669,7 @@ export const databaseSchema = {
     },
     optionalKeys: ['settingUseProxy'],
   },
-  webSocketResponse: {
+  WebSocketResponse: {
     name: 'WebSocket Response',
     type: 'WebSocketResponse',
     prefix: 'ws-res',
@@ -692,7 +692,7 @@ export const databaseSchema = {
       environmentId: null,
     },
   },
-  workspace: {
+  Workspace: {
     name: 'Workspace',
     type: 'Workspace',
     prefix: 'wrk',
@@ -704,7 +704,7 @@ export const databaseSchema = {
       scope: 'collection',
     },
   },
-  workspaceMeta: {
+  WorkspaceMeta: {
     name: 'Workspace Meta',
     type: 'WorkspaceMeta',
     prefix: 'wrkm',
