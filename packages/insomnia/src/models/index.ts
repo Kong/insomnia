@@ -1,3 +1,5 @@
+import { databaseSchema } from '~/models/schema';
+
 import { generateId } from '../common/misc';
 import { typedKeys } from '../utils';
 import * as _apiSpec from './api-spec';
@@ -148,7 +150,7 @@ export function all() {
   ] as const;
 }
 export function types() {
-  return all().map(model => model.type);
+  return Object.values(databaseSchema).map(model => model.type);
 }
 export type AllTypes =
   | 'ApiSpec'
@@ -214,16 +216,6 @@ export function getModel(type: string) {
   return all().find(m => m.type === type) || null;
 }
 
-export function mustGetModel(type: string) {
-  const model = getModel(type);
-
-  if (!model) {
-    throw new Error(`The model type ${type} must exist but could not be found.`);
-  }
-
-  return model;
-}
-
 export function canDuplicate(type: string) {
   const model = getModel(type);
   return model ? model.canDuplicate : false;
@@ -233,10 +225,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   const model = getModel(type);
 
   if (!model) {
-    const choices = all()
-      .map(m => m.type)
-      .join(', ');
-    throw new Error(`Tried to init invalid model "${type}". Choices are ${choices}`);
+    throw new Error(`Tried to init invalid model "${type}"`);
   }
 
   // Define global default fields
