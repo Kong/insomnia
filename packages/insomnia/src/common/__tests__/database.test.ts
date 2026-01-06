@@ -58,7 +58,6 @@ describe('bufferChanges()', () => {
     db.onChange(callback);
     await db.bufferChanges();
     const newDoc = await models.request.create(doc);
-    // @ts-expect-error -- TSCONVERSION appears to be genuine
     const updatedDoc = await models.request.update(newDoc);
     // Assert no change seen before flush
     expect(changesSeen.length).toBe(0);
@@ -95,7 +94,6 @@ describe('bufferChanges()', () => {
     db.onChange(callback);
     await db.bufferChanges();
     const newDoc = await models.request.create(doc);
-    // @ts-expect-error -- TSCONVERSION appears to be genuine
     const updatedDoc = await models.request.update(newDoc);
     // Default flush timeout is 1000ms after starting buffering
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -122,7 +120,6 @@ describe('bufferChanges()', () => {
     db.onChange(callback);
     await db.bufferChanges(500);
     const newDoc = await models.request.create(doc);
-    // @ts-expect-error -- TSCONVERSION appears to be genuine
     const updatedDoc = await models.request.update(newDoc);
     await new Promise(resolve => setTimeout(resolve, 1000));
     expect(changesSeen).toEqual([
@@ -150,7 +147,6 @@ describe('bufferChangesIndefinitely()', () => {
     db.onChange(callback);
     await db.bufferChangesIndefinitely();
     const newDoc = await models.request.create(doc);
-    // @ts-expect-error -- TSCONVERSION appears to be genuine
     const updatedDoc = await models.request.update(newDoc);
     // Default flush timeout is 1000ms after starting buffering
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -264,7 +260,6 @@ describe('_repairDatabase()', async () => {
     const descendants = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
       parentId: d.parentId,
-      // @ts-expect-error -- TSCONVERSION appears to be genuine
       data: d.data || null,
     }));
     expect(descendants).toEqual([
@@ -391,13 +386,12 @@ describe('_repairDatabase()', async () => {
       _id: 'j1',
       parentId: 'w1',
       cookies: [
-        // @ts-expect-error -- TSCONVERSION
         {
           id: '1',
           key: 'foo',
           value: '1',
         },
-        // @ts-expect-error -- TSCONVERSION
+
         {
           id: 'j1_1',
           key: 'j1',
@@ -409,13 +403,12 @@ describe('_repairDatabase()', async () => {
       _id: 'j2',
       parentId: 'w1',
       cookies: [
-        // @ts-expect-error -- TSCONVERSION
         {
           id: '1',
           key: 'foo',
           value: '2',
         },
-        // @ts-expect-error -- TSCONVERSION
+
         {
           id: 'j2_1',
           key: 'j2',
@@ -427,7 +420,7 @@ describe('_repairDatabase()', async () => {
     expect((await db.getWithDescendants(workspace)).length).toBe(3);
     const descendants = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
-      // @ts-expect-error -- TSCONVERSION
+
       cookies: d.cookies || null,
       parentId: d.parentId,
     }));
@@ -475,7 +468,7 @@ describe('_repairDatabase()', async () => {
     // Make sure things get adjusted
     const descendants2 = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
-      // @ts-expect-error -- TSCONVERSION
+
       cookies: d.cookies || null,
       parentId: d.parentId,
     }));
@@ -602,9 +595,9 @@ describe('duplicate()', () => {
     });
     expect(duplicated._id).not.toEqual(workspace._id);
     expect(duplicated._id).toMatch(/^wrk_[a-z0-9]{32}$/);
-    // @ts-expect-error -- TSCONVERSION
+
     delete workspace._id;
-    // @ts-expect-error -- TSCONVERSION
+
     delete duplicated._id;
     expect(duplicated).toEqual({
       ...workspace,
@@ -613,28 +606,6 @@ describe('duplicate()', () => {
       created: date,
       type: models.workspace.type,
     });
-  });
-
-  it('should should not call migrate when duplicating', async () => {
-    const workspace = await models.workspace.create({
-      name: 'Test Workspace',
-    });
-    const spy = vi.spyOn(models.workspace, 'migrate');
-    await db.duplicate(workspace);
-    expect(spy).not.toHaveBeenCalled();
-  });
-});
-
-describe('docCreate()', () => {
-  afterEach(() => vi.restoreAllMocks());
-
-  it('should call migrate when creating', async () => {
-    const spy = vi.spyOn(models.workspace, 'migrate');
-    await db.docCreate(models.workspace.type, {
-      name: 'Test Workspace',
-    });
-    // TODO: This is actually called twice, not once - we should avoid the double model.init() call.
-    expect(spy).toHaveBeenCalled();
   });
 });
 
@@ -689,13 +660,12 @@ describe('getWithDescendants()', () => {
       _id: 'j1',
       parentId: workspace._id,
       cookies: [
-        // @ts-expect-error -- TSCONVERSION
         {
           id: '1',
           key: 'foo',
           value: '1',
         },
-        // @ts-expect-error -- TSCONVERSION
+
         {
           id: 'j1_1',
           key: 'j1',
@@ -707,13 +677,12 @@ describe('getWithDescendants()', () => {
       _id: 'j2',
       parentId: workspace._id,
       cookies: [
-        // @ts-expect-error -- TSCONVERSION
         {
           id: '1',
           key: 'foo',
           value: '2',
         },
-        // @ts-expect-error -- TSCONVERSION
+
         {
           id: 'j2_1',
           key: 'j2',
