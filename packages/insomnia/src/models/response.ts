@@ -13,7 +13,6 @@ import type { BaseModel } from './index';
 import * as models from './index';
 
 const type = databaseSchema.Response.type;
-('Response');
 
 export interface ResponseHeader {
   name: string;
