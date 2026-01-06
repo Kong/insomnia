@@ -9,12 +9,7 @@ import type { ImportEntry } from '../main/importers/entities';
 import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';
-import {
-  type Environment,
-  type EnvironmentKvPairData,
-  EnvironmentKvPairDataType,
-  isEnvironment,
-} from '../models/environment';
+import { type Environment, type EnvironmentKvPairData, EnvironmentKvPairDataType } from '../models/environment';
 import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
 import { type AllTypes, type BaseModel, getModel } from '../models/index';
 import * as models from '../models/index';
@@ -32,6 +27,7 @@ import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
+const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => model.type === 'Environment';
 
 export type AllExportTypes =
   | 'request'

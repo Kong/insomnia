@@ -4,7 +4,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { environment, project, request, requestGroup, workspace } from '../../models';
-import { EnvironmentKvPairDataType } from '../../models/environment';
+import { EnvironmentKvPairDataType, EnvironmentType } from '../../models/environment';
 import * as importUtil from '../import';
 import { generateId } from '../misc';
 
@@ -276,7 +276,7 @@ describe('importRaw()', () => {
       data: {
         from: 'baseEnv',
       },
-      environmentType: environment.EnvironmentType.KVPAIR,
+      environmentType: EnvironmentType.KVPAIR,
       kvPairData: baseEnvironmentPair,
     });
 
@@ -346,7 +346,7 @@ describe('importRaw()', () => {
       data: {
         from: 'baseEnv',
       },
-      environmentType: environment.EnvironmentType.KVPAIR,
+      environmentType: EnvironmentType.KVPAIR,
       kvPairData: baseEnvironmentPair,
     });
 

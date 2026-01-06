@@ -34,13 +34,14 @@ export const baseModelSchema: Schema<BaseModel> = {
   type: () => 'base' as AllTypes,
 };
 
+// @ts-expect-error -- mapping unsoundness
 export const workspaceModelSchema: Schema<Workspace> = {
   ...baseModelSchema,
   ...toSchema(databaseSchema.Workspace.init()),
   certificates: () => {},
   type: () => databaseSchema.Workspace.type,
 };
-
+// @ts-expect-error -- mapping unsoundness
 export const requestModelSchema: Schema<Request> = {
   ...baseModelSchema,
   ...toSchema(databaseSchema.Request.init()),

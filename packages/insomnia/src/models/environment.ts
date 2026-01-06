@@ -9,9 +9,9 @@ import { JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
 import { base64decode, base64encode } from '../utils/vault';
-import { type BaseModel, project, workspace } from './index';
+import { type BaseModel } from './index';
 import type { Project } from './project';
-import type { Workspace } from './workspace';
+import { type Workspace, WorkspaceScopeKeys } from './workspace';
 
 const type = databaseSchema.Environment.type;
 
@@ -155,13 +155,13 @@ export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWeb
 
 // remove all secret items when user reset vault key
 export const removeAllSecrets = async (orgnizationIds: string[]) => {
-  const allProjects = await db.find<Project>(project.type, {
+  const allProjects = await db.find<Project>(databaseSchema.Project.type, {
     parentId: { $in: orgnizationIds },
   });
   const allProjectIds = allProjects.map(project => project._id);
-  const allGlobalEnvironmentWorkspaces = await db.find<Workspace>(workspace.type, {
+  const allGlobalEnvironmentWorkspaces = await db.find<Workspace>(databaseSchema.Workspace.type, {
     parentId: { $in: allProjectIds },
-    scope: workspace.WorkspaceScopeKeys.environment,
+    scope: WorkspaceScopeKeys.environment,
   });
   const allGlobalBaseEnvironments = await db.find<Environment>(type, {
     parentId: {
