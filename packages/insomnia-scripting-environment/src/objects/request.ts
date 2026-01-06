@@ -1,4 +1,4 @@
-import { type ClientCertificate, init as initClientCertificate } from 'insomnia/src/models/client-certificate';
+import { type ClientCertificate } from 'insomnia/src/models/client-certificate';
 import type {
   Request as InsomniaRequest,
   RequestBody as InsomniaRequestBody,
@@ -6,6 +6,8 @@ import type {
   RequestPathParameter,
 } from 'insomnia/src/models/request';
 import type { Settings } from 'insomnia/src/models/settings';
+
+import { databaseSchema } from '~/models/schema';
 
 import { type AuthOptions, type AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
 import type { CertificateOptions } from './certificates';
@@ -514,12 +516,12 @@ export function mergeClientCertificates(
     originalClientCertificates && originalClientCertificates.length > 0
       ? {
           // TODO: remove baseModelPart currently it is necessary for type checking
-          ...initClientCertificate(),
+          ...databaseSchema.ClientCertificate.init(),
           ...originalClientCertificates[0],
         }
       : {
           // TODO: remove baseModelPart currently it is necessary for type checking
-          ...initClientCertificate(),
+          ...databaseSchema.ClientCertificate.init(),
           _id: '',
           type: '',
           parentId: '',

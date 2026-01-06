@@ -1,7 +1,8 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import { isGrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
-import * as models from './index';
 import type { Project } from './project';
 import { isRequest } from './request';
 import type { RequestGroup } from './request-group';
@@ -9,15 +10,7 @@ import { isSocketIORequest } from './socket-io-request';
 import { isWebSocketRequest } from './websocket-request';
 import type { Workspace } from './workspace';
 
-export const name = 'Stats';
-
-export const type = 'Stats';
-
-export const prefix = 'sta';
-
-export const canDuplicate = false;
-
-export const canSync = false;
+const type = databaseSchema.Stats.type;
 
 export interface BaseStats {
   currentLaunch: number | null;
@@ -108,10 +101,10 @@ export async function incrementExecutedRequests() {
 
 export async function incrementCreatedRequestsForDescendents(doc: Workspace | RequestGroup) {
   const docs = await db.getWithDescendants(doc, [
-    models.request.type,
-    models.grpcRequest.type,
-    models.webSocketRequest.type,
-    models.socketIORequest.type,
+    databaseSchema.Request.type,
+    databaseSchema.GrpcRequest.type,
+    databaseSchema.WebSocketRequest.type,
+    databaseSchema.SocketIORequest.type,
   ]);
   const requests =
     docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc)) || isSocketIORequest(doc);
@@ -122,10 +115,10 @@ export async function incrementCreatedRequestsForDescendents(doc: Workspace | Re
 
 export async function incrementDeletedRequestsForDescendents(doc: Workspace | RequestGroup | Project) {
   const docs = await db.getWithDescendants(doc, [
-    models.request.type,
-    models.grpcRequest.type,
-    models.webSocketRequest.type,
-    models.socketIORequest.type,
+    databaseSchema.Request.type,
+    databaseSchema.GrpcRequest.type,
+    databaseSchema.WebSocketRequest.type,
+    databaseSchema.SocketIORequest.type,
   ]);
   const requests =
     docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc)) || isSocketIORequest(doc);

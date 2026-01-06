@@ -1,18 +1,11 @@
 import crypto from 'node:crypto';
 
-import { v4 as uuidv4 } from 'uuid';
+import { databaseSchema } from '~/models/schema';
 
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
-export const name = 'Cookie Jar';
 
-export const type = 'CookieJar';
-
-export const prefix = 'jar';
-
-export const canDuplicate = true;
-
-export const canSync = false;
+const type = databaseSchema.CookieJar.type;
 
 export interface Cookie {
   id: string;
@@ -40,23 +33,6 @@ export type CookieJar = BaseModel & BaseCookieJar;
 
 export const isCookieJar = (model: Pick<BaseModel, 'type'>): model is CookieJar => model.type === type;
 
-export function init() {
-  return {
-    name: 'Default Jar',
-    cookies: [],
-  };
-}
-
-export function migrate(doc: CookieJar) {
-  try {
-    doc = migrateCookieId(doc);
-    return doc;
-  } catch (e) {
-    console.log('[db] Error during cookie jar migration', e);
-    throw e;
-  }
-}
-
 export async function create(patch: Partial<CookieJar>) {
   if (!patch.parentId) {
     throw new Error(`New CookieJar missing \`parentId\`: ${JSON.stringify(patch)}`);
@@ -73,7 +49,7 @@ export async function getOrCreateForParentId(parentId: string) {
       parentId,
       // Deterministic ID. It helps reduce sync complexity since we won't have to
       // de-duplicate cookie jar.
-      _id: `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
+      _id: `${databaseSchema.CookieJar.prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
     });
   }
   return cookieJars[0];
@@ -89,15 +65,4 @@ export async function getById(id: string): Promise<CookieJar | undefined> {
 
 export async function update(cookieJar: CookieJar, patch: Partial<CookieJar> = {}) {
   return db.docUpdate(cookieJar, patch);
-}
-
-/** Ensure every cookie has an ID property */
-function migrateCookieId(cookieJar: CookieJar) {
-  for (const cookie of cookieJar.cookies) {
-    if (!cookie.id) {
-      cookie.id = uuidv4();
-    }
-  }
-
-  return cookieJar;
 }

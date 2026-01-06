@@ -1,16 +1,10 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database } from '../common/database';
 import type { BaseModel } from '.';
 import type { RequestAuthentication, RequestHeader, RequestParameter, RequestPathParameter } from './request';
 
-export const name = 'WebSocket Request';
-
-export const type = 'WebSocketRequest';
-
-export const prefix = 'ws-req';
-
-export const canDuplicate = true;
-
-export const canSync = true;
+const type = databaseSchema.WebSocketRequest.type;
 
 export interface BaseWebSocketRequest {
   name: string;
@@ -32,27 +26,8 @@ export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof
 
 export const isWebSocketRequest = (model: Pick<BaseModel, 'type'>): model is WebSocketRequest => model.type === type;
 
-export const isWebSocketRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
-
-// for those keys do not need to add in model init method but can update
-export const optionalKeys = ['settingUseProxy'];
-
-export const init = (): BaseWebSocketRequest => ({
-  name: 'New WebSocket Request',
-  url: '',
-  metaSortKey: -1 * Date.now(),
-  headers: [],
-  authentication: {},
-  parameters: [],
-  pathParameters: undefined,
-  settingEncodeUrl: true,
-  settingStoreCookies: true,
-  settingSendCookies: true,
-  settingFollowRedirects: 'global',
-  description: '',
-});
-
-export const migrate = (doc: WebSocketRequest) => doc;
+export const isWebSocketRequestId = (id?: string | null) =>
+  id?.startsWith(`${databaseSchema.WebSocketRequest.prefix}_`);
 
 export const create = (patch: Partial<WebSocketRequest> = {}) => {
   if (!patch.parentId) {
@@ -91,7 +66,7 @@ export async function duplicate(request: WebSocketRequest, patch: Partial<WebSoc
   const sortKeyIncrement = (nextSortKey - request.metaSortKey) / 2;
   const metaSortKey = request.metaSortKey + sortKeyIncrement;
   return database.duplicate<WebSocketRequest>(request, {
-    name,
+    name: databaseSchema.WebSocketRequest.name,
     metaSortKey,
     ...patch,
   });

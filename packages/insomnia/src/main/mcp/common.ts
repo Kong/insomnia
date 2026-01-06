@@ -40,7 +40,7 @@ import type {
 } from '~/main/mcp/types';
 import { insecureReadFile } from '~/main/secure-read-file';
 import * as models from '~/models';
-import { prefix as mcpResponsePrefix } from '~/models/mcp-response';
+import { databaseSchema } from '~/models/schema';
 import { invariant } from '~/utils/invariant';
 
 interface ConnectingState {
@@ -116,7 +116,7 @@ export const createConnectionContext = async (
   const connectionId = uuidV4();
 
   // Create response model and file streams
-  const responseId = generateId(mcpResponsePrefix);
+  const responseId = generateId(databaseSchema.McpResponse.prefix);
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
   const eventLogPath = path.join(responsesDir, uuidV4() + '.response');
   const timelinePath = path.join(responsesDir, responseId + '.timeline');

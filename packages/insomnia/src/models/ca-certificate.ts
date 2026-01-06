@@ -1,16 +1,8 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
-
-export const name = 'CA Certificate';
-
-export const type = 'CaCertificate';
-
-export const prefix = 'crt';
-
-export const canDuplicate = true;
-
-export const canSync = false;
-
+const type = databaseSchema.CaCertificate.type;
 interface BaseCaCertificate {
   parentId: string;
   path: string | null;
@@ -21,20 +13,7 @@ interface BaseCaCertificate {
 
 export type CaCertificate = BaseModel & BaseCaCertificate;
 
-export function init(): BaseCaCertificate {
-  return {
-    parentId: '',
-    disabled: false,
-    path: null,
-    isPrivate: false,
-  };
-}
-
 export const isCaCertificate = (model: Pick<BaseModel, 'type'>): model is CaCertificate => model.type === type;
-
-export function migrate(doc: CaCertificate) {
-  return doc;
-}
 
 export function create(patch: Partial<CaCertificate> = {}) {
   if (!patch.parentId) {

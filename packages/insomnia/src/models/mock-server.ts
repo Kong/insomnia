@@ -1,15 +1,9 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import { type BaseModel, workspace } from './index';
 
-export const name = 'Mock Server';
-
-export const type = 'MockServer';
-
-export const prefix = 'mock';
-
-export const canDuplicate = true;
-
-export const canSync = true;
+const type = databaseSchema.MockServer.type;
 
 interface BaseMockServer {
   parentId: string;
@@ -20,20 +14,7 @@ interface BaseMockServer {
 
 export type MockServer = BaseModel & BaseMockServer;
 
-export function init(): BaseMockServer {
-  return {
-    parentId: '',
-    name: 'New Mock',
-    url: 'http://localhost:8080',
-    useInsomniaCloud: true,
-  };
-}
-
 export const isMockServer = (model: Pick<BaseModel, 'type'>): model is MockServer => model.type === type;
-
-export function migrate(doc: MockServer) {
-  return doc;
-}
 
 export function create(patch: Partial<MockServer> = {}) {
   if (!patch.parentId) {

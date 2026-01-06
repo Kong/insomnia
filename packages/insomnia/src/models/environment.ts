@@ -2,6 +2,8 @@ import * as crypto from 'node:crypto';
 
 import orderedJSON from 'json-order';
 
+import { databaseSchema } from '~/models/schema';
+
 import * as crypt from '../account/crypt';
 import { JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
@@ -11,17 +13,15 @@ import { type BaseModel, project, workspace } from './index';
 import type { Project } from './project';
 import type { Workspace } from './workspace';
 
-export const name = 'Environment';
-export const type = 'Environment';
-export const prefix = 'env';
+const type = databaseSchema.Environment.type;
+
 export const prefixEnvPair = 'envPair';
 // vault environment path when saved in environment data
 export const vaultEnvironmentPath = '__insomnia_vault';
 // vault environment path when used in runtime rendering
 export const vaultEnvironmentRuntimePath = 'vault';
 export const vaultEnvironmentMaskValue = '••••••';
-export const canDuplicate = true;
-export const canSync = true;
+
 // for those keys do not need to add in model init method
 export const optionalKeys = ['kvPairData', 'environmentType'];
 
@@ -233,7 +233,7 @@ export async function getOrCreateForParentId(parentId: string) {
   if (!environments.length) {
     // Deterministic base env ID. It helps reduce sync complexity since we won't have to
     // de-duplicate environments.
-    const baseEnvironmentId = `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`;
+    const baseEnvironmentId = `${databaseSchema.Environment.prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`;
     try {
       const baseEnvironment = await create({
         parentId,

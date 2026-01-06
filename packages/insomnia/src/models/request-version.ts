@@ -1,5 +1,7 @@
 import deepEqual from 'deep-equal';
 
+import { databaseSchema } from '~/models/schema';
+
 import { database, database as db } from '../common/database';
 import { compressObject, decompressObject } from '../common/misc';
 import * as requestOperations from '../models/helpers/request-operations';
@@ -15,15 +17,7 @@ Each time the user sends the request, the parameters may differ—they might edi
 When the user browses the send history for a request and selects one of the entries, the current request is restored to the exact state it had when that request was sent, including the body, headers, and other settings.
 A Request Version is essentially a snapshot of the request at the moment it was test-sent. */
 
-export const name = 'Request Version';
-
-export const type = 'RequestVersion';
-
-export const prefix = 'rvr';
-
-export const canDuplicate = false;
-
-export const canSync = false;
+const type = databaseSchema.RequestVersion.type;
 
 interface BaseRequestVersion {
   compressedRequest: string | null;
@@ -43,16 +37,6 @@ const FIELDS_TO_IGNORE = [
 ] as const;
 
 export const isRequestVersion = (model: Pick<BaseModel, 'type'>): model is RequestVersion => model.type === type;
-
-export function init() {
-  return {
-    compressedRequest: null,
-  };
-}
-
-export function migrate(doc: RequestVersion) {
-  return doc;
-}
 
 export function getById(id: string) {
   return db.findOne<RequestVersion>(type, { _id: id });

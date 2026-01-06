@@ -1,18 +1,9 @@
-import { v4 as uuidv4 } from 'uuid';
+import { databaseSchema } from '~/models/schema';
 
-import { CONTENT_TYPE_JSON } from '../common/constants';
 import { database } from '../common/database';
 import type { BaseModel } from '.';
 
-export const name = 'SocketIO Payload';
-
-export const type = 'SocketIOPayload';
-
-export const prefix = 'socket-io-payload';
-
-export const canDuplicate = true;
-
-export const canSync = true;
+const type = databaseSchema.SocketIOPayload.type;
 
 export interface SocketIOArg {
   id: string;
@@ -30,17 +21,7 @@ export type SocketIOPayload = BaseModel & BaseSocketIOPayload & { type: typeof t
 
 export const isSocketIOPayload = (model: Pick<BaseModel, 'type'>): model is SocketIOPayload => model.type === type;
 
-export const isSocketIOPayloadId = (id: string | null) => id?.startsWith(`${prefix}_`);
-
-export const init = (): BaseSocketIOPayload => {
-  return {
-    args: [{ id: uuidv4(), value: '', mode: CONTENT_TYPE_JSON }],
-    eventName: '',
-    ack: false,
-  };
-};
-
-export const migrate = (doc: SocketIOPayload) => doc;
+export const isSocketIOPayloadId = (id: string | null) => id?.startsWith(`${databaseSchema.SocketIOPayload.prefix}_`);
 
 export const create = (patch: Partial<SocketIOPayload> = {}) => {
   if (!patch.parentId) {
@@ -64,7 +45,7 @@ export async function duplicate(request: SocketIOPayload, patch: Partial<SocketI
   }
 
   return database.duplicate<SocketIOPayload>(request, {
-    name,
+    name: databaseSchema.SocketIOPayload.name,
     ...patch,
   });
 }

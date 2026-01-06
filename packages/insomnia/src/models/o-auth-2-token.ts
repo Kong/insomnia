@@ -1,17 +1,11 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
 export type OAuth2Token = BaseModel & BaseOAuth2Token;
 
-export const name = 'OAuth 2.0 Token';
-
-export const type = 'OAuth2Token';
-
-export const prefix = 'oa2';
-
-export const canDuplicate = false;
-
-export const canSync = false;
+const type = databaseSchema.OAuth2Token.type;
 
 export interface BaseOAuth2Token {
   refreshToken: string;
@@ -29,27 +23,6 @@ export interface BaseOAuth2Token {
 }
 
 export const isOAuth2Token = (model: Pick<BaseModel, 'type'>): model is OAuth2Token => model.type === type;
-
-export function init(): BaseOAuth2Token {
-  return {
-    refreshToken: '',
-    accessToken: '',
-    identityToken: '',
-    expiresAt: null,
-    // Should be Date.now() if valid
-    // Debug
-    xResponseId: null,
-    xError: null,
-    // Error handling
-    error: '',
-    errorDescription: '',
-    errorUri: '',
-  };
-}
-
-export function migrate(doc: OAuth2Token) {
-  return doc;
-}
 
 export function create(patch: Partial<OAuth2Token> = {}) {
   if (!patch.parentId) {

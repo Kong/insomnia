@@ -1,11 +1,9 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
-export const name = 'Workspace Meta';
-export const type = 'WorkspaceMeta';
-export const prefix = 'wrkm';
-export const canDuplicate = false;
-export const canSync = false;
+const type = databaseSchema.WorkspaceMeta.type;
 
 export interface BaseWorkspaceMeta {
   activeActivity: string | null;
@@ -24,26 +22,6 @@ export interface BaseWorkspaceMeta {
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
 
 export const isWorkspaceMeta = (model: Pick<BaseModel, 'type'>): model is WorkspaceMeta => model.type === type;
-
-export function init(): BaseWorkspaceMeta {
-  return {
-    activeActivity: null,
-    activeEnvironmentId: null,
-    activeGlobalEnvironmentId: null,
-    activeRequestId: null,
-    activeUnitTestSuiteId: null,
-    gitRepositoryId: null,
-    gitFilePath: null,
-    parentId: null,
-    pushSnapshotOnInitialize: false,
-    hasUncommittedChanges: false,
-    hasUnpushedChanges: false,
-  };
-}
-
-export function migrate(doc: WorkspaceMeta) {
-  return doc;
-}
 
 export function create(patch: Partial<WorkspaceMeta> = {}) {
   if (!patch.parentId) {

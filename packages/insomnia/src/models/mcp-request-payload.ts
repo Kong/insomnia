@@ -1,15 +1,11 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database } from '../common/database';
 import type { BaseModel } from '.';
 
 export const name = 'MCP Payload';
 
-export const type = 'McpPayload';
-
-export const prefix = 'mcp-payload';
-
-export const canDuplicate = true;
-
-export const canSync = false;
+const type = databaseSchema.McpPayload.type;
 
 export interface BaseMcpPayload {
   params?: Record<string, any>;
@@ -20,16 +16,7 @@ export type McpPayload = BaseModel & BaseMcpPayload & { type: typeof type };
 
 export const isSocketIOPayload = (model: Pick<BaseModel, 'type'>): model is McpPayload => model.type === type;
 
-export const isMcpPayloadId = (id: string | null) => id?.startsWith(`${prefix}_`);
-
-export const init = (): BaseMcpPayload => {
-  return {
-    params: {},
-    url: '',
-  };
-};
-
-export const migrate = (doc: McpPayload) => doc;
+export const isMcpPayloadId = (id: string | null) => id?.startsWith(`${databaseSchema.McpPayload.prefix}_`);
 
 export const create = (patch: Partial<McpPayload> = {}) => {
   if (!patch.parentId) {

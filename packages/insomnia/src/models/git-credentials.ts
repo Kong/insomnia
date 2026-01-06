@@ -1,3 +1,5 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
@@ -7,36 +9,11 @@ export type OauthProviderName = 'gitlab' | 'github';
 export type GitRemoteProviderType = 'github' | 'gitlab' | 'custom';
 
 export type GitCredentials = BaseModel & BaseGitCredentials;
-
 export type GitCredentialsV1 = BaseModel & BaseGitCredentialsV1;
 export type GitCredentialsV2 = BaseModel & BaseGitCredentialsV2;
 export type CustomGitCredentialV2 = BaseModel & CustomCredential;
 
-export const name = 'Git Credentials';
-
-export const type = 'GitCredentials';
-
-export const prefix = 'git_creds';
-
-export const canDuplicate = false;
-
-export const canSync = false;
-
-export function init(): Partial<BaseGitCredentials> {
-  return {
-    name: '',
-    provider: undefined,
-    credentials: undefined,
-    author: {
-      email: '',
-      name: '',
-      avatarUrl: '',
-    },
-    // Legacy fields: token and refreshToken for backward compatibility
-    token: undefined,
-    refreshToken: undefined,
-  };
-}
+const type = databaseSchema.GitCredentials.type;
 
 /**
  * Legacy git credentials interface (for backward compatibility)
@@ -142,20 +119,13 @@ export function isGitCredentialsV1(credential: GitCredentials): credential is Gi
   return !isGitCredentialsV2(credential);
 }
 
-/**
- * Migrate legacy credential to new unified structure
- */
-export function migrate(doc: GitCredentials): GitCredentials {
-  return doc;
-}
-
 export function create(patch: BaseGitCredentialsV2) {
   return db.docCreate<GitCredentialsV2>(type, patch);
 }
 
 export async function getById(id: string) {
   const doc = await db.findOne<GitCredentials>(type, { _id: id });
-  return doc ? migrate(doc) : null;
+  return doc;
 }
 
 export function update(credentials: GitCredentialsV2, patch: Partial<GitCredentialsV2>) {
@@ -168,7 +138,7 @@ export function remove(credentials: GitCredentials) {
 
 export async function all() {
   const docs = await db.find<GitCredentials>(type);
-  return docs.map(migrate);
+  return docs;
 }
 
 export function removeAll() {

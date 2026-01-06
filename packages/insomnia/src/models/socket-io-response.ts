@@ -1,19 +1,13 @@
 import fs from 'node:fs';
 
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';
 
-export const name = 'SocketIO Response';
-
-export const type = 'SocketIOResponse';
-
-export const prefix = 'socketIO-res';
-
-export const canDuplicate = false;
-
-export const canSync = false;
+const type = databaseSchema.SocketIOResponse.type;
 
 export interface BaseSocketIOResponse {
   // Event logs are stored on the filesystem
@@ -30,22 +24,6 @@ export interface BaseSocketIOResponse {
 export type SocketIOResponse = BaseModel & BaseSocketIOResponse;
 
 export const isSocketIOResponse = (model: Pick<BaseModel, 'type'>): model is SocketIOResponse => model.type === type;
-
-export function init(): BaseSocketIOResponse {
-  return {
-    timelinePath: '',
-    eventLogPath: '',
-    requestVersionId: null,
-    environmentId: null,
-    elapsedTime: 0,
-    error: '',
-    url: '',
-  };
-}
-
-export function migrate(doc: SocketIOResponse) {
-  return doc;
-}
 
 export function update(doc: SocketIOResponse, patch: Partial<SocketIOResponse>) {
   return db.docUpdate(doc, patch);

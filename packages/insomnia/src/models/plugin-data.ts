@@ -1,15 +1,9 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
-export const name = 'PluginData';
-
-export const type = 'PluginData';
-
-export const prefix = 'plg';
-
-export const canDuplicate = false;
-
-export const canSync = false;
+const type = databaseSchema.PluginData.type;
 
 interface BasePluginData {
   plugin: string;
@@ -20,18 +14,6 @@ interface BasePluginData {
 export type PluginData = BaseModel & BasePluginData;
 
 export const isPluginData = (model: Pick<BaseModel, 'type'>): model is PluginData => model.type === type;
-
-export function init(): BasePluginData {
-  return {
-    plugin: '',
-    key: '',
-    value: '',
-  };
-}
-
-export function migrate(doc: PluginData) {
-  return doc;
-}
 
 export function create(patch: Partial<PluginData> = {}) {
   return db.docCreate<PluginData>(type, patch);

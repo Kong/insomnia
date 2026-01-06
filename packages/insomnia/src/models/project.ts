@@ -1,16 +1,13 @@
 import type { StorageRules } from '~/models/organization';
+import { databaseSchema } from '~/models/schema';
 
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
 import { type BaseModel } from './index';
 
-export const name = 'Project';
-export const type = 'Project';
-export const prefix = 'proj';
-export const canDuplicate = false;
-export const canSync = false;
+const type = databaseSchema.Project.type;
 
-export const SCRATCHPAD_PROJECT_ID = `${prefix}_scratchpad`;
+export const SCRATCHPAD_PROJECT_ID = `${databaseSchema.Project.prefix}_scratchpad`;
 
 // This is used to identify Git Projects that are not connected to a remote yet
 export const EMPTY_GIT_PROJECT_ID = 'empty';
@@ -52,7 +49,7 @@ export type Project = LocalProject | RemoteProject | GitProject;
 
 export const isProject = (model: Pick<BaseModel, 'type'>): model is Project => model.type === type;
 
-export const isProjectId = (id: string | null) => id?.startsWith(`${prefix}_`);
+export const isProjectId = (id: string | null) => id?.startsWith(`${databaseSchema.Project.prefix}_`);
 
 export function init(): Partial<Project> {
   return {
@@ -68,7 +65,7 @@ export function migrate(project: Project) {
 }
 
 export function createId() {
-  return generateId(prefix);
+  return generateId(databaseSchema.Project.prefix);
 }
 
 export function create(patch: Partial<Project> = {}) {

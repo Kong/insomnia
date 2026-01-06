@@ -1,16 +1,10 @@
+import { databaseSchema } from '~/models/schema';
+
 import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
-export const name = 'Runner Test Result';
-
-export const type = 'RunnerTestResult';
-
-export const prefix = 'rtr';
-
-export const canDuplicate = false;
-
-export const canSync = false;
+const type = databaseSchema.RunnerTestResult.type;
 
 export interface RunnerResultPerRequest {
   results: RequestTestResult[];
@@ -40,22 +34,6 @@ export interface BaseRunnerTestResult {
 export type RunnerTestResult = BaseModel & BaseRunnerTestResult;
 
 export const isRunnerTestResult = (model: Pick<BaseModel, 'type'>): model is RunnerTestResult => model.type === type;
-
-export function init() {
-  return {
-    source: 'runner',
-    iterations: 0,
-    duration: 0,
-    avgRespTime: 0,
-    iterationResults: [],
-    responsesInfo: [],
-    version: '1',
-  };
-}
-
-export function migrate(doc: RunnerTestResult) {
-  return doc;
-}
 
 export function create(patch: Partial<RunnerTestResult> = {}) {
   if (!patch.parentId) {

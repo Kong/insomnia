@@ -1,15 +1,10 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
-export const name = 'Unit Test';
+const type = databaseSchema.UnitTest.type;
 
-export const type = 'UnitTest';
-
-export const prefix = 'ut';
-
-export const canDuplicate = true;
-
-export const canSync = true;
 interface BaseUnitTest {
   name: string;
   code: string;
@@ -20,19 +15,6 @@ interface BaseUnitTest {
 export type UnitTest = BaseModel & BaseUnitTest;
 
 export const isUnitTest = (model: Pick<BaseModel, 'type'>): model is UnitTest => model.type === type;
-
-export function init() {
-  return {
-    requestId: null,
-    name: 'My Test',
-    code: '',
-    metaSortKey: -1 * Date.now(),
-  };
-}
-
-export function migrate(doc: UnitTest) {
-  return doc;
-}
 
 export function create(patch: Partial<UnitTest> = {}) {
   if (!patch.parentId) {

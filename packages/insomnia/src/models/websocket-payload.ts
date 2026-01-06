@@ -1,15 +1,9 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database } from '../common/database';
 import type { BaseModel } from '.';
 
-export const name = 'WebSocket Payload';
-
-export const type = 'WebSocketPayload';
-
-export const prefix = 'ws-payload';
-
-export const canDuplicate = true;
-
-export const canSync = true;
+const type = databaseSchema.WebSocketPayload.type;
 
 export interface BaseWebSocketPayload {
   name: string;
@@ -21,15 +15,7 @@ export type WebSocketPayload = BaseModel & BaseWebSocketPayload & { type: typeof
 
 export const isWebSocketPayload = (model: Pick<BaseModel, 'type'>): model is WebSocketPayload => model.type === type;
 
-export const isWebSocketPayloadId = (id: string | null) => id?.startsWith(`${prefix}_`);
-
-export const init = (): BaseWebSocketPayload => ({
-  name: 'New Payload',
-  value: '',
-  mode: 'application/json',
-});
-
-export const migrate = (doc: WebSocketPayload) => doc;
+export const isWebSocketPayloadId = (id: string | null) => id?.startsWith(`${databaseSchema.WebSocketPayload.prefix}_`);
 
 export const create = (patch: Partial<WebSocketPayload> = {}) => {
   if (!patch.parentId) {
@@ -53,7 +39,7 @@ export async function duplicate(request: WebSocketPayload, patch: Partial<WebSoc
   }
 
   return database.duplicate<WebSocketPayload>(request, {
-    name,
+    name: databaseSchema.WebSocketPayload.name,
     ...patch,
   });
 }

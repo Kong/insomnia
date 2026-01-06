@@ -1,12 +1,12 @@
 import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { invariant } from '../../utils/invariant';
-import type { GrpcRequest, type as GrpcRequestType } from '../grpc-request';
-import type { Request, type as RequestType } from '../request';
+import type { GrpcRequest } from '../grpc-request';
+import type { Request } from '../request';
 
 export const queryAllWorkspaceUrls = async (
   workspaceId: string,
-  reqType: typeof RequestType | typeof GrpcRequestType,
+  reqType: 'Request' | 'GrpcRequest',
   reqId = 'n/a',
 ): Promise<string[]> => {
   const workspace = await models.workspace.getById(workspaceId);

@@ -1,15 +1,8 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
-
-export const name = 'Client Certificate';
-
-export const type = 'ClientCertificate';
-
-export const prefix = 'crt';
-
-export const canDuplicate = true;
-
-export const canSync = false;
+const type = databaseSchema.ClientCertificate.type;
 
 interface BaseClientCertificate {
   parentId: string;
@@ -25,24 +18,7 @@ interface BaseClientCertificate {
 
 export type ClientCertificate = BaseModel & BaseClientCertificate;
 
-export function init(): BaseClientCertificate {
-  return {
-    parentId: '',
-    host: '',
-    passphrase: null,
-    disabled: false,
-    cert: null,
-    key: null,
-    pfx: null,
-    isPrivate: false,
-  };
-}
-
 export const isClientCertificate = (model: Pick<BaseModel, 'type'>): model is ClientCertificate => model.type === type;
-
-export function migrate(doc: ClientCertificate) {
-  return doc;
-}
 
 export function create(patch: Partial<ClientCertificate> = {}) {
   if (!patch.parentId) {

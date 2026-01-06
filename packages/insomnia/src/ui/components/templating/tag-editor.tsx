@@ -13,7 +13,7 @@ import { docsAfterResponseScript } from '../../../common/documentation';
 import { delay, fnOrString } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
 import * as models from '../../../models';
-import { type CloudProviderCredential, type as cloudCredentialModelType } from '../../../models/cloud-credential';
+import { type CloudProviderCredential } from '../../../models/cloud-credential';
 import type { BaseModel } from '../../../models/index';
 import { isRequest, type Request } from '../../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
@@ -92,7 +92,7 @@ export const TagEditor: FC<Props> = props => {
       allDocs[doc.type].push(doc);
     }
     // add global Cloud Credential data
-    allDocs[cloudCredentialModelType] = await models.cloudCredential.all();
+    allDocs[models.cloudCredential.type] = await models.cloudCredential.all();
     allDocs[models.request.type] = sortRequests(
       // @ts-expect-error -- type unsoundness
       (allDocs[models.request.type] || []).concat(allDocs[models.requestGroup.type] || []),
@@ -399,7 +399,7 @@ export const TagEditor: FC<Props> = props => {
             const modelName = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
             let targetDoc = state.allDocs[modelName];
             // hard coded here to filter cloud credential data by the provider
-            if (modelName === cloudCredentialModelType) {
+            if (modelName === models.cloudCredential.type) {
               const providerNameFromArgs = activeTagData.args[0].value;
               targetDoc = targetDoc.filter(doc => (doc as CloudProviderCredential).provider === providerNameFromArgs);
             }

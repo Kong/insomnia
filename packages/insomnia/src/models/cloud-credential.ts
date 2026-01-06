@@ -1,6 +1,9 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
+const type = databaseSchema.CloudCredential.type;
 export type CloudProviderName = 'aws' | 'azure' | 'gcp' | 'hashicorp';
 
 // AWS Credentials
@@ -115,12 +118,6 @@ type BaseCloudCredential =
     };
 export type CloudProviderCredential = BaseModel & BaseCloudCredential;
 
-export const name = 'Cloud Credential';
-export const type = 'CloudCredential';
-export const prefix = 'cloudCred';
-export const canDuplicate = false;
-export const canSync = false;
-
 export const isCloudCredential = (model: Pick<BaseModel, 'type'>): model is CloudProviderCredential =>
   model.type === type;
 
@@ -133,18 +130,6 @@ export function getProviderDisplayName(provider: CloudProviderName) {
       hashicorp: 'HashiCorp',
     }[provider] || ''
   );
-}
-
-export function init(): Partial<CloudProviderCredential> {
-  return {
-    name: '',
-    provider: undefined,
-    credentials: undefined,
-  };
-}
-
-export function migrate(doc: CloudProviderCredential) {
-  return doc;
 }
 
 export function create(patch: Partial<CloudProviderCredential> = {}) {

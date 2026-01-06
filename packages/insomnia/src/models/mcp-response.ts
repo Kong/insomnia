@@ -1,17 +1,15 @@
 import fs from 'node:fs';
 
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';
-import { TRANSPORT_TYPES, type TransportType } from './mcp-request';
+import { type TransportType } from './mcp-request';
 import type { ResponseHeader } from './response';
 
-export const name = 'Mcp Response';
-export const type = 'McpResponse';
-export const prefix = 'mcp-response';
-export const canDuplicate = false;
-export const canSync = false;
+const type = databaseSchema.McpResponse.type;
 
 export interface BaseMcpResponse {
   environmentId: string | null;
@@ -36,28 +34,6 @@ export interface BaseMcpResponse {
 export type McpResponse = BaseModel & BaseMcpResponse;
 
 export const isMcpResponse = (model: Pick<BaseModel, 'type'>): model is McpResponse => model.type === type;
-
-export function init(): BaseMcpResponse {
-  return {
-    url: '',
-    elapsedTime: 0,
-    headers: [],
-    timelinePath: '',
-    eventLogPath: '',
-    error: '',
-    errorType: '',
-    status: '',
-    statusCode: 0,
-    statusMessage: '',
-    requestVersionId: null,
-    environmentId: null,
-    transportType: TRANSPORT_TYPES.HTTP,
-  };
-}
-
-export function migrate(doc: McpResponse) {
-  return doc;
-}
 
 export function getById(id: string) {
   return db.findOne<McpResponse>(type, { _id: id });

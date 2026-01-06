@@ -107,7 +107,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       models.mockRoute.type,
       models.project.type,
     ];
-    return list.includes(docType);
+    return Boolean(list.find(type => type === docType));
   };
 
   const handleDelete = useCallback(

@@ -1,20 +1,14 @@
 import fs from 'node:fs';
 
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';
 import type { ResponseHeader } from './response';
 
-export const name = 'WebSocket Response';
-
-export const type = 'WebSocketResponse';
-
-export const prefix = 'ws-res';
-
-export const canDuplicate = false;
-
-export const canSync = false;
+const type = databaseSchema.WebSocketResponse.type;
 
 export interface BaseWebSocketResponse {
   environmentId: string | null;
@@ -38,29 +32,6 @@ export interface BaseWebSocketResponse {
 export type WebSocketResponse = BaseModel & BaseWebSocketResponse;
 
 export const isWebSocketResponse = (model: Pick<BaseModel, 'type'>): model is WebSocketResponse => model.type === type;
-
-export function init(): BaseWebSocketResponse {
-  return {
-    statusCode: 0,
-    statusMessage: '',
-    httpVersion: '',
-    contentType: '',
-    url: '',
-    elapsedTime: 0,
-    headers: [],
-    timelinePath: '',
-    eventLogPath: '',
-    error: '',
-    requestVersionId: null,
-    settingStoreCookies: null,
-    settingSendCookies: null,
-    environmentId: null,
-  };
-}
-
-export function migrate(doc: WebSocketResponse) {
-  return doc;
-}
 
 export function getById(id: string) {
   return db.findOne<WebSocketResponse>(type, { _id: id });

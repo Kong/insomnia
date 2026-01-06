@@ -1,16 +1,10 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
 import type { BaseModel } from './index';
 
-export const name = 'Proto Directory';
-
-export const type = 'ProtoDirectory';
-
-export const prefix = 'pd';
-
-export const canDuplicate = true;
-
-export const canSync = true;
+const type = databaseSchema.ProtoDirectory.type;
 
 interface BaseProtoDirectory {
   name: string;
@@ -20,18 +14,8 @@ export type ProtoDirectory = BaseModel & BaseProtoDirectory;
 
 export const isProtoDirectory = (model: Pick<BaseModel, 'type'>): model is ProtoDirectory => model.type === type;
 
-export function init(): BaseProtoDirectory {
-  return {
-    name: 'New Proto Directory',
-  };
-}
-
-export function migrate(doc: ProtoDirectory) {
-  return doc;
-}
-
 export function createId() {
-  return generateId(prefix);
+  return generateId(databaseSchema.ProtoDirectory.prefix);
 }
 
 export function create(patch: Partial<ProtoDirectory> = {}) {

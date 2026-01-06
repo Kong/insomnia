@@ -1,17 +1,12 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import type { EnvironmentKvPairData, EnvironmentType } from './environment';
 import type { BaseModel } from './index';
 import type { RequestAuthentication, RequestHeader } from './request';
 
-export const name = 'Folder';
+const type = databaseSchema.RequestGroup.type;
 
-export const type = 'RequestGroup';
-
-export const prefix = 'fld';
-
-export const canDuplicate = true;
-
-export const canSync = true;
 // for those keys do not need to add in model init method
 export const optionalKeys = ['kvPairData', 'environmentType'];
 interface BaseRequestGroup {
@@ -105,4 +100,4 @@ export async function duplicate(requestGroup: RequestGroup, patch: Partial<Reque
   });
 }
 
-export const isRequestGroupId = (id?: string | null) => id?.startsWith(prefix);
+export const isRequestGroupId = (id?: string | null) => id?.startsWith(databaseSchema.RequestGroup.prefix);

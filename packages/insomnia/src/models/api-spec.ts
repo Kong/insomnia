@@ -1,16 +1,8 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
-import { strings } from '../common/strings';
 import type { BaseModel } from './index';
-
-export const name = 'ApiSpec';
-
-export const type = 'ApiSpec';
-
-export const prefix = 'spc';
-
-export const canDuplicate = true;
-
-export const canSync = true;
+const type = databaseSchema.ApiSpec.type;
 
 export interface BaseApiSpec {
   fileName: string;
@@ -21,18 +13,6 @@ export interface BaseApiSpec {
 export type ApiSpec = BaseModel & BaseApiSpec;
 
 export const isApiSpec = (model: Pick<BaseModel, 'type'>): model is ApiSpec => model.type === type;
-
-export function init(): BaseApiSpec {
-  return {
-    fileName: `New ${strings.document.singular}`,
-    contents: '',
-    contentType: 'yaml',
-  };
-}
-
-export function migrate(doc: ApiSpec) {
-  return doc;
-}
 
 export function getByParentId(workspaceId: string) {
   return db.findOne<ApiSpec>(type, { parentId: workspaceId });

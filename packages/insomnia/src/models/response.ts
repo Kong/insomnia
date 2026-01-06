@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import type { Readable } from 'node:stream';
 import zlib from 'node:zlib';
 
+import { databaseSchema } from '~/models/schema';
+
 import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import { database as db } from '../common/database';
 import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
@@ -10,15 +12,8 @@ import { deserializeNDJSON } from '../utils/ndjson';
 import type { BaseModel } from './index';
 import * as models from './index';
 
-export const name = 'Response';
-
-export const type = 'Response';
-
-export const prefix = 'res';
-
-export const canDuplicate = false;
-
-export const canSync = false;
+const type = databaseSchema.Response.type;
+('Response');
 
 export interface ResponseHeader {
   name: string;
@@ -58,45 +53,6 @@ export type Response = BaseModel & BaseResponse;
 
 export const isResponse = (model: Pick<BaseModel, 'type'>): model is Response => model.type === type;
 
-export function init(): BaseResponse {
-  return {
-    statusCode: 0,
-    statusMessage: '',
-    httpVersion: '',
-    contentType: '',
-    url: '',
-    bytesRead: 0,
-    // -1 means that it was legacy and this property didn't exist yet
-    bytesContent: -1,
-    elapsedTime: 0,
-    headers: [],
-    // Actual timelines are stored on the filesystem
-    timelinePath: '',
-    // Actual bodies are stored on the filesystem
-    bodyPath: '',
-    // For legacy bodies
-    bodyCompression: '__NEEDS_MIGRATION__',
-    error: '',
-    // Things from the request
-    requestVersionId: null,
-    settingStoreCookies: null,
-    settingSendCookies: null,
-    // Responses sent before environment filtering will have a special value
-    // so they don't show up at all when filtering is on.
-    environmentId: '__LEGACY__',
-    requestTestResults: [],
-    globalEnvironmentId: null,
-  };
-}
-
-export function migrate(doc: Response) {
-  try {
-    return migrateBodyCompression(doc);
-  } catch (e) {
-    console.log('[db] Error during response migration', e);
-    throw e;
-  }
-}
 export function getById(id: string) {
   return db.findOne<Response>(type, { _id: id });
 }
@@ -276,12 +232,4 @@ export function getTimeline(response: Response, showBody?: boolean) {
     console.warn('Failed to read response body', err.message);
     return [];
   }
-}
-
-function migrateBodyCompression(doc: Response) {
-  if (doc.bodyCompression === '__NEEDS_MIGRATION__') {
-    doc.bodyCompression = 'zip';
-  }
-
-  return doc;
 }

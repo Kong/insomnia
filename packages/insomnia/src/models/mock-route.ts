@@ -1,16 +1,10 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 import type { RequestHeader } from './request';
 
-export const name = 'Mock Route';
-
-export const type = 'MockRoute';
-
-export const prefix = 'mock-route';
-
-export const canDuplicate = true;
-
-export const canSync = true;
+const type = databaseSchema.MockRoute.type;
 
 interface BaseMockRoute {
   body: string;
@@ -25,24 +19,7 @@ interface BaseMockRoute {
 
 export type MockRoute = BaseModel & BaseMockRoute;
 
-export function init(): BaseMockRoute {
-  return {
-    body: '',
-    headers: [],
-    parentId: '',
-    statusCode: 200,
-    statusText: '',
-    name: '/',
-    mimeType: 'application/json',
-    method: 'GET',
-  };
-}
-
 export const isMockRoute = (model: Pick<BaseModel, 'type'>): model is MockRoute => model.type === type;
-
-export function migrate(doc: MockRoute) {
-  return doc;
-}
 
 export function create(patch: Partial<MockRoute> = {}) {
   if (!patch.parentId) {

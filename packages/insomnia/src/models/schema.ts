@@ -1,4 +1,4 @@
-import { CONTENT_TYPE_JSON } from '~/common/constants';
+import { CONTENT_TYPE_JSON, PREVIEW_MODE_FRIENDLY } from '~/common/constants';
 import { newDefaultRegistry } from '~/common/hotkeys';
 import { HttpVersions, UpdateChannel } from '~/common/settings';
 import { TRANSPORT_TYPES } from '~/models/mcp-request';
@@ -94,14 +94,14 @@ export const databaseSchema = {
     canDuplicate: false,
     canSync: false,
     init: () => ({
-      token: '',
-      refreshToken: '',
       provider: 'github',
       author: {
         email: '',
         name: '',
         avatarUrl: '',
-      },
+      }, // Legacy fields: token and refreshToken for backward compatibility
+      token: undefined,
+      refreshToken: undefined,
     }),
   },
   GitRepository: {
@@ -114,6 +114,7 @@ export const databaseSchema = {
       needsFullClone: false,
       uri: '',
       credentials: null,
+      credentialsId: null,
       author: {
         name: '',
         email: '',
@@ -183,7 +184,6 @@ export const databaseSchema = {
     init: () => ({
       url: '',
       transportType: TRANSPORT_TYPES.HTTP,
-      name: 'New MCP Client',
       description: '',
       headers: [],
       authentication: {},
@@ -378,16 +378,17 @@ export const databaseSchema = {
     canDuplicate: false,
     canSync: false,
     init: () => ({
-      pinned: false,
-      lastActive: 0,
       parentId: null,
-      previewMode: 'friendly',
+      previewMode: PREVIEW_MODE_FRIENDLY,
       responseFilter: '',
       responseFilterHistory: [],
       activeResponseId: null,
       savedRequestBody: {},
+      pinned: false,
+      lastActive: 0,
       downloadPath: null,
       expandedAccordionKeys: {},
+      activeMcpPrimitive: null,
     }),
   },
   RequestVersion: {

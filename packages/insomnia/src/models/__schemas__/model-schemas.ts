@@ -1,12 +1,10 @@
 import type { Schema } from '@develohpanda/fluent-builder';
 import clone from 'clone';
 
-import { type AllTypes, type BaseModel, environment, grpcRequest, request, requestGroup, workspace } from '..';
+import { type AllTypes, type BaseModel, environment, grpcRequest, requestGroup } from '..';
 import { type Environment, EnvironmentKvPairDataType, EnvironmentType } from '../environment';
 import type { GrpcRequest } from '../grpc-request';
-import type { Request } from '../request';
 import type { RequestGroup } from '../request-group';
-import type { Workspace } from '../workspace';
 
 // move into fluent-builder
 const toSchema = <T>(obj: T): Schema<T> => {
@@ -30,19 +28,6 @@ export const baseModelSchema: Schema<BaseModel> = {
   name: () => 'name',
   parentId: () => '',
   type: () => 'base' as AllTypes,
-};
-
-export const workspaceModelSchema: Schema<Workspace> = {
-  ...baseModelSchema,
-  ...toSchema(workspace.init()),
-  certificates: () => {},
-  type: () => workspace.type,
-};
-
-export const requestModelSchema: Schema<Request> = {
-  ...baseModelSchema,
-  ...toSchema(request.init()),
-  type: () => request.type,
 };
 
 export const grpcRequestModelSchema: Schema<GrpcRequest> = {

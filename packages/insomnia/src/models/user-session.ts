@@ -1,3 +1,5 @@
+import { databaseSchema } from '~/models/schema';
+
 import type { AESMessage } from '../account/crypt';
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
@@ -20,30 +22,7 @@ export interface HashedUserSession {
 }
 
 export type UserSession = BaseModel & BaseUserSession & HashedUserSession;
-export const name = 'UserSession';
-export const type = 'UserSession';
-export const prefix = 'usr';
-export const canDuplicate = false;
-export const canSync = false;
-
-export function init(): BaseUserSession {
-  return {
-    accountId: '',
-    id: '',
-    email: '',
-    firstName: '',
-    lastName: '',
-    symmetricKey: {} as JsonWebKey,
-    publicKey: {} as JsonWebKey,
-    encPrivateKey: {} as AESMessage,
-    vaultKey: '',
-    vaultSalt: '',
-  };
-}
-
-export function migrate(doc: UserSession) {
-  return doc;
-}
+const type = databaseSchema.UserSession.type;
 
 export async function all() {
   let userList = await db.find<UserSession>(type);

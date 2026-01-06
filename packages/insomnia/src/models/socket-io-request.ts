@@ -1,16 +1,10 @@
+import { databaseSchema } from '~/models/schema';
+
 import { database } from '../common/database';
 import type { BaseModel } from '.';
 import type { RequestAuthentication, RequestHeader, RequestParameter, RequestPathParameter } from './request';
 
-export const name = 'Socket.IO Request';
-
-export const type = 'SocketIORequest';
-
-export const prefix = 'socketio-req';
-
-export const canDuplicate = true;
-
-export const canSync = true;
+const type = databaseSchema.SocketIORequest.type;
 
 export interface SocketIOEventListener {
   id: string;
@@ -38,22 +32,7 @@ export type SocketIORequest = BaseModel & BaseSocketIORequest & { type: typeof t
 
 export const isSocketIORequest = (model: Pick<BaseModel, 'type'>): model is SocketIORequest => model.type === type;
 
-export const isSocketIORequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
-
-export const init = (): BaseSocketIORequest => ({
-  name: 'New Socket.IO Request',
-  url: '',
-  metaSortKey: -1 * Date.now(),
-  headers: [],
-  authentication: {},
-  parameters: [],
-  pathParameters: undefined,
-  settingEncodeUrl: true,
-  settingStoreCookies: true,
-  settingSendCookies: true,
-  description: '',
-  eventListeners: [],
-});
+export const isSocketIORequestId = (id?: string | null) => id?.startsWith(`${databaseSchema.SocketIORequest.prefix}_`);
 
 export const create = (patch: Partial<SocketIORequest> = {}) => {
   if (!patch.parentId) {
@@ -64,8 +43,6 @@ export const create = (patch: Partial<SocketIORequest> = {}) => {
 };
 
 export const getById = (_id: string) => database.findOne<SocketIORequest>(type, { _id });
-
-export const migrate = (doc: SocketIORequest) => doc;
 
 export const remove = (obj: SocketIORequest) => database.remove(obj);
 
@@ -96,7 +73,7 @@ export async function duplicate(request: SocketIORequest, patch: Partial<SocketI
   const sortKeyIncrement = (nextSortKey - request.metaSortKey) / 2;
   const metaSortKey = request.metaSortKey + sortKeyIncrement;
   return database.duplicate<SocketIORequest>(request, {
-    name,
+    name: databaseSchema.SocketIORequest.name,
     metaSortKey,
     ...patch,
   });
