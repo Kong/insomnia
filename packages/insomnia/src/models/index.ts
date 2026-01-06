@@ -138,7 +138,7 @@ export async function initModel<T extends BaseModel>(type: AllTypes, ...sources:
       modified: Date.now(),
       created: Date.now(),
     },
-    model.defaults,
+    model.init(),
   );
   const fullObject = Object.assign({}, objectDefaults, ...sources);
 
