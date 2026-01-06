@@ -23,10 +23,10 @@ import { useGitProjectPushActionFetcher } from '~/routes/git.push';
 import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
-import { getOauth2FormatName } from '~/sync/git/get-oauth2-format-name';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import { SegmentEvent } from '~/ui/analytics';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
+import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
@@ -84,11 +84,13 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
   const { storagePromise } = storageRuleFetcher.data || {};
 
   const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
+  const { credentials } = useGitCredentials();
 
   const [isPulling, setIsPulling] = useState(false);
   const [operationError, setOperationError] = useState<string | null>(null);
 
-  const providerName = getOauth2FormatName(gitRepository?.credentials);
+  const selectedCredential = credentials.find(item => item._id === gitRepository?.credentialsId);
+  const providerName = selectedCredential?.provider;
   const { revalidate } = useRevalidator();
   const icon: IconProp = useMemo(() => {
     if (providerName === 'github') {
