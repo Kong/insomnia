@@ -996,18 +996,16 @@ export const GitProjectStagingModal: FC<{
 
                     {(!generateCommitsFetcher.data ||
                       (generateCommitsFetcher.data && 'error' in generateCommitsFetcher.data)) && (
-                      <>
-                        <ManualCommitForm
-                          projectId={projectId}
-                          mode={mode}
-                          changes={changes}
-                          setShowConfirmDiscardAndPullModal={setShowConfirmDiscardAndPullModal}
-                          onCommitSuccess={handleCommitSuccess}
-                          onPullRequired={handlePullRequired}
-                          diffChanges={diffChanges}
-                          setDiscardData={setDiscardData}
-                        />
-                      </>
+                      <ManualCommitForm
+                        projectId={projectId}
+                        mode={mode}
+                        changes={changes}
+                        setShowConfirmDiscardAndPullModal={setShowConfirmDiscardAndPullModal}
+                        onCommitSuccess={handleCommitSuccess}
+                        onPullRequired={handlePullRequired}
+                        diffChanges={diffChanges}
+                        setDiscardData={setDiscardData}
+                      />
                     )}
                   </div>
                   {previewDiffItem?.diff ? (
@@ -1026,9 +1024,12 @@ export const GitProjectStagingModal: FC<{
                     <div className="flex h-full flex-col items-center justify-center gap-4 p-2">
                       <Heading className="flex items-center justify-center gap-2 text-4xl font-semibold text-(--hl-md)">
                         <Icon icon="code-compare" />
-                        Diff view
+                        View diff
                       </Heading>
-                      <p className="text-(--hl)">Select an item to compare</p>
+                      <p className="text-(--hl)">Select a file to compare changes</p>
+                      <p className="text-sm text-(--hl-md)">
+                        Changes may include modifications you made and automatic updates like timestamps
+                      </p>
                     </div>
                   )}
                 </div>
