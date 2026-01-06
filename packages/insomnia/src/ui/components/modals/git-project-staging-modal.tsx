@@ -28,6 +28,7 @@ import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
 import { SegmentEvent } from '~/ui/analytics';
 import { Badge } from '~/ui/components/base/badge';
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
 import { GitFileType, GitVCSOperationErrors } from '../../../sync/git/git-vcs';
@@ -966,10 +967,24 @@ export const GitProjectStagingModal: FC<{
                       </div>
                     )}
                     {!isGenerateCommitMessagesWithAIEnabled && (
-                      <p className="text-xs text-(--hl)">
-                        Enable generating commit messages with AI in Insomnia Preferences → AI Settings to use this
-                        feature.
-                      </p>
+                      <div className="flex flex-col gap-3 rounded-sm border border-solid border-(--hl-md) p-3">
+                        <h3 className="font-semibold">
+                          <Badge icon="sparkles" color="surprise" label="AI" />
+                          Smart commits
+                        </h3>
+                        <div className="text-sm text-gray-300">
+                          Let AI create commits and comments from your staged changes.
+                        </div>
+                        <Button
+                          className="flex h-8 items-center gap-2 self-start rounded-md border border-solid border-(--hl-md) px-3 py-1 text-sm"
+                          onPress={() => {
+                            onClose();
+                            showSettingsModal({ tab: 'aiSettings' });
+                          }}
+                        >
+                          Enable AI to Try
+                        </Button>
+                      </div>
                     )}
                     {isGenerateCommitMessagesWithAIEnabled &&
                       generateCommitsFetcher.state === 'idle' &&
