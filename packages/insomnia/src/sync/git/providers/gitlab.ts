@@ -7,7 +7,7 @@ import { v4 } from 'uuid';
 
 import { getApiBaseURL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI, PLAYWRIGHT } from '~/common/constants';
 import * as models from '~/models';
-import type { GitCredentials } from '~/models/git-credentials';
+import type { BaseGitCredentialsV2, GitCredentials } from '~/models/git-credentials';
 import { isGitCredentialsV2 } from '~/models/git-credentials';
 
 import type {
@@ -181,7 +181,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
         `${this.config.apiUrl}/projects?membership=true&per_page=${perPage}&page=${page}&order_by=last_activity_at`,
         {
           headers: {
-            Authorization: `Bearer ${credential.token}`,
+            Authorization: `Bearer ${credential.credentials?.token}`,
           },
         },
       );
@@ -225,7 +225,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
     // Fetch current user to get emails
     const userResponse = await net.fetch(`${this.config.apiUrl}/user`, {
       headers: {
-        Authorization: `Bearer ${credential.token}`,
+        Authorization: `Bearer ${credential.credentials?.token}`,
       },
     });
 
@@ -238,7 +238,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
     // Fetch all emails for the user
     const emailsResponse = await net.fetch(`${this.config.apiUrl}/user/emails`, {
       headers: {
-        Authorization: `Bearer ${credential.token}`,
+        Authorization: `Bearer ${credential.credentials?.token}`,
       },
     });
 
@@ -271,7 +271,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
       throw new Error('Invalid credential type for GitLab provider');
     }
 
-    const data = await this.fetchUserWithToken(credential.token);
+    const data = await this.fetchUserWithToken(credential.credentials?.token);
 
     return {
       id: String(data.id),
@@ -393,15 +393,17 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
       // Create or update credential in database
       const credentialData = {
         name: 'GitLab Credential',
-        token: access_token,
-        refreshToken: refresh_token,
-        provider: 'gitlab' as const,
+        provider: 'gitlab',
         author: {
           email: user.commit_email ?? user.public_email ?? user.email ?? '',
           name: user.username ?? user.name ?? '',
           avatarUrl: user.avatar_url,
         },
-      };
+        credentials: {
+          token: access_token,
+          refreshToken: refresh_token,
+        },
+      } satisfies BaseGitCredentialsV2;
 
       const credential = await models.gitCredentials.create(credentialData);
 
@@ -429,7 +431,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
       throw new Error('Invalid credential type for GitLab provider');
     }
 
-    if (!credential.refreshToken) {
+    if (!credential.credentials?.refreshToken) {
       throw new Error('No refresh token available for renewal');
     }
 
@@ -468,7 +470,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
       url.search = new URLSearchParams({
         client_id: clientId,
         grant_type: 'refresh_token',
-        refresh_token: credential.refreshToken,
+        refresh_token: credential.credentials?.refreshToken,
         redirect_uri: redirectUri,
       }).toString();
 
@@ -485,8 +487,10 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
 
       // Update the credential in the database with new tokens
       const updatedCredential = await models.gitCredentials.update(credential, {
-        token: access_token,
-        refreshToken: refresh_token,
+        credentials: {
+          token: access_token,
+          refreshToken: refresh_token,
+        },
       });
 
       // Reset renewal tracking on success
@@ -514,7 +518,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
     // https://isomorphic-git.org/docs/en/authentication.html
     return {
       username: 'oauth2',
-      password: credential.token,
+      password: credential.credentials?.token,
     };
   }
 
@@ -531,7 +535,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
         console.log('[GitLabProvider] Token renewed successfully');
         return {
           username: 'oauth2',
-          password: renewed.token,
+          password: renewed.credentials?.token,
         };
       }
     } catch (error) {

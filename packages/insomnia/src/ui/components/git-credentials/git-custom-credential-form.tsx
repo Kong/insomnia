@@ -30,9 +30,12 @@ export const GitCustomCredentialForm = ({
         name: (formData.get('authorName') as string) || '',
         email: (formData.get('authorEmail') as string) || '',
       },
-      username: (formData.get('username') as string) || '',
-      password: (formData.get('password') as string) || '',
-      baseURI: (formData.get('baseURI') as string) || '',
+      credentials: {
+        username: (formData.get('username') as string) || '',
+        password: (formData.get('password') as string) || '',
+        baseURI: (formData.get('baseURI') as string) || '',
+      },
+      name: 'Custom Git Credential',
     };
 
     await (isEditing && gitCredentialToEdit._id
@@ -71,7 +74,7 @@ export const GitCustomCredentialForm = ({
             className="w-1/2"
             label="Username"
             placeholder="remote username for PAT"
-            defaultValue={gitCredentialToEdit?.username}
+            defaultValue={gitCredentialToEdit?.credentials?.username}
           />
           <Input
             className="w-1/2"
@@ -79,7 +82,7 @@ export const GitCustomCredentialForm = ({
             isRequired
             label="Git Access Token"
             placeholder="e.g. github_pat_11A11AAAAa111Aa11a1AA11"
-            defaultValue={gitCredentialToEdit?.password}
+            defaultValue={gitCredentialToEdit?.credentials?.password}
           />
         </div>
         <Input
@@ -89,7 +92,7 @@ export const GitCustomCredentialForm = ({
           label="Repository base URL"
           description="Specify the git server base URL that correlates with this access token."
           placeholder="e.g. https://github.your-domain.com/org-name"
-          defaultValue={gitCredentialToEdit?.baseURI}
+          defaultValue={gitCredentialToEdit?.credentials?.baseURI}
         />
       </div>
       <div className="flex gap-2">

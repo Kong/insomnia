@@ -67,8 +67,8 @@ export class CustomProvider implements GitRemoteProvider<CustomProviderConfig> {
 
     // Basic auth: username and password (PAT)
     return {
-      username: credential.username,
-      password: credential.password,
+      username: credential.credentials?.username,
+      password: credential.credentials?.password,
     };
   }
 
