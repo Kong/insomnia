@@ -1,5 +1,6 @@
 import { databaseSchema } from '~/models/schema';
 import { legacyMigrations } from '~/models/schema-migrations';
+import { invariant } from '~/utils/invariant';
 
 import { generateId } from '../common/misc';
 import * as _apiSpec from './api-spec';
@@ -101,55 +102,6 @@ export const mcpRequest = _mcpRequest;
 export const mcpResponse = _mcpResponse;
 export const mcpPayload = _mcpPayload;
 
-export function all() {
-  // NOTE: This list should be from most to least specific (ie. parents above children)
-  // For example, stats, settings, project and workspace are global models, with project and workspace being the top-most parents,
-  // so they must be at the top
-  return [
-    stats,
-    settings,
-    project,
-    workspace,
-    workspaceMeta,
-    environment,
-    gitCredentials,
-    gitRepository,
-    cookieJar,
-    apiSpec,
-    requestGroup,
-    requestGroupMeta,
-    request,
-    requestVersion,
-    requestMeta,
-    response,
-    mockServer,
-    mockRoute,
-    oAuth2Token,
-    caCertificate,
-    clientCertificate,
-    pluginData,
-    unitTestSuite,
-    unitTestResult,
-    unitTest,
-    protoFile,
-    protoDirectory,
-    grpcRequest,
-    grpcRequestMeta,
-    runnerTestResult,
-    webSocketPayload,
-    webSocketRequest,
-    webSocketResponse,
-    userSession,
-    socketIORequest,
-    socketIOPayload,
-    socketIOResponse,
-    cloudCredential,
-    mcpRequest,
-    mcpResponse,
-    mcpPayload,
-  ] as const;
-}
-
 export type AllTypes = keyof typeof databaseSchema;
 
 export function canSync(d: BaseModel) {
@@ -159,28 +111,22 @@ export function canSync(d: BaseModel) {
 
   const m = getModel(d.type);
 
-  if (!m) {
-    return false;
-  }
-
-  return m.canSync || false;
+  return m.canSync;
 }
 
-export function getModel(type: string) {
-  return Object.values(databaseSchema).find(m => m.type === type) || null;
+export function getModel(type: AllTypes) {
+  invariant(type, 'Type is required to get model');
+  invariant(databaseSchema[type], `Model not found for type "${type}"`);
+  return databaseSchema[type];
 }
 
-export function canDuplicate(type: string) {
+export function canDuplicate(type: AllTypes) {
   const model = getModel(type);
-  return model ? model.canDuplicate : false;
+  return model.canDuplicate;
 }
 
-export async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
+export async function initModel<T extends BaseModel>(type: AllTypes, ...sources: Record<string, any>[]): Promise<T> {
   const model = getModel(type);
-
-  if (!model) {
-    throw new Error(`Tried to init invalid model "${type}"`);
-  }
 
   // Define global default fields
   const objectDefaults = Object.assign(
