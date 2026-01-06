@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import clone from 'clone';
 
 import { strings } from '../../common/strings';
-import type { BaseModel } from '../../models';
+import { type BaseModel, MODEL_SCHEMA_VERSION_NAME } from '../../models';
 import { deleteKeys, resetKeys, shouldIgnoreKey } from '../ignore-keys';
 import { deterministicStringify } from '../lib/deterministic-stringify';
 import type {
@@ -349,9 +349,16 @@ export function getStagable(state: SnapshotState, candidates: StatusCandidate[])
 
     if (entry && candidate) {
       const { document, name } = candidate;
-      const { hash: blobId, content: blobContent } = hashDocument(document);
 
-      if (entry.blob !== blobId) {
+      const { hash: blobId, content: blobContent } = hashDocument(document);
+      let isSameBlob = entry.blob === blobId;
+      if (MODEL_SCHEMA_VERSION_NAME in document) {
+        const { hash: blobIdWithoutSchemaVersion } = hashDocument(document, true);
+        // Skip schema version changes
+        isSameBlob = entry.blob === blobIdWithoutSchemaVersion;
+      }
+
+      if (!isSameBlob) {
         stagable.push({
           key,
           name,
@@ -451,12 +458,16 @@ export function hash(obj?: any): {
   };
 }
 
-export function hashDocument(doc?: BaseModel) {
+export function hashDocument(doc?: BaseModel, ignoreSchemaVersion?: boolean) {
   // Remove fields we don't care about for sync purposes
   const newDoc = clone(doc);
 
   if (newDoc) {
     deleteKeys(newDoc);
+    // delete schema version if specified
+    if (ignoreSchemaVersion && MODEL_SCHEMA_VERSION_NAME in newDoc) {
+      delete newDoc[MODEL_SCHEMA_VERSION_NAME];
+    }
     resetKeys(newDoc);
   }
 

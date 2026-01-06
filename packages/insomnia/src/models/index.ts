@@ -54,6 +54,7 @@ export interface BaseModel {
   isPrivate: boolean;
   name: string;
 }
+export const MODEL_SCHEMA_VERSION_NAME = 'schemaVersion';
 
 // Reference to each model
 export const apiSpec = _apiSpec;
