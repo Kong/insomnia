@@ -5,6 +5,7 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
+import { databaseSchema } from '~/models/schema';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../../common/database';
@@ -83,7 +84,7 @@ export const TagEditor: FC<Props> = props => {
   const refreshModels = useCallback(async () => {
     setState(state => ({ ...state, loadingDocs: true }));
     const allDocs: Record<string, models.BaseModel[]> = {};
-    for (const type of models.types()) {
+    for (const type of Object.values(databaseSchema).map(model => model.type)) {
       allDocs[type] = [];
     }
     const descendants = await db.getWithDescendants(props.workspace, [models.request.type]);

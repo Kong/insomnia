@@ -6,7 +6,7 @@ import appConfig from '../../config/config.json';
 export const databaseSchema = {
   apiSpec: {
     name: 'ApiSpec',
-    type: 'apiSpec',
+    type: 'ApiSpec',
     prefix: 'spc',
     canDuplicate: true,
     canSync: true,
@@ -18,7 +18,7 @@ export const databaseSchema = {
   },
   caCertificate: {
     name: 'CaCertificate',
-    type: 'caCertificate',
+    type: 'CaCertificate',
     prefix: 'crt',
     canDuplicate: true,
     canSync: false,
@@ -31,7 +31,7 @@ export const databaseSchema = {
   },
   clientCertificate: {
     name: 'ClientCertificate',
-    type: 'clientCertificate',
+    type: 'ClientCertificate',
     prefix: 'crt',
     canDuplicate: true,
     canSync: false,
@@ -60,7 +60,7 @@ export const databaseSchema = {
   },
   cookieJar: {
     name: 'CookieJar',
-    type: 'cookieJar',
+    type: 'CookieJar',
     prefix: 'jar',
     canDuplicate: true,
     canSync: false,
@@ -71,7 +71,7 @@ export const databaseSchema = {
   },
   environment: {
     name: 'Environment',
-    type: 'environment',
+    type: 'Environment',
     prefix: 'env',
     canDuplicate: true,
     canSync: true,
@@ -86,7 +86,7 @@ export const databaseSchema = {
   },
   gitCredentials: {
     name: 'GitCredentials',
-    type: 'gitCredentials',
+    type: 'GitCredentials',
     prefix: 'git_creds',
     canDuplicate: false,
     canSync: false,
@@ -103,7 +103,7 @@ export const databaseSchema = {
   },
   gitRepository: {
     name: 'GitRepository',
-    type: 'gitRepository',
+    type: 'GitRepository',
     prefix: 'git',
     canDuplicate: false,
     canSync: false,
@@ -125,7 +125,7 @@ export const databaseSchema = {
   },
   grpcRequest: {
     name: 'GrpcRequest',
-    type: 'grpcRequest',
+    type: 'GrpcRequest',
     prefix: 'greq',
     canDuplicate: true,
     canSync: true,
@@ -151,7 +151,7 @@ export const databaseSchema = {
   },
   grpcRequestMeta: {
     name: 'GrpcRequestMeta',
-    type: 'grpcRequestMeta',
+    type: 'GrpcRequestMeta',
     prefix: 'greqm',
     canDuplicate: false,
     canSync: false,
@@ -160,9 +160,63 @@ export const databaseSchema = {
       lastActive: 0,
     },
   },
+  mcpPayload: {
+    name: 'MCP Payload',
+    type: 'McpPayload',
+    prefix: 'mcp-payload',
+    canDuplicate: true,
+    canSync: false,
+    defaults: {
+      params: {},
+      url: '',
+    },
+  },
+  mcpRequest: {
+    name: 'McpRequest',
+    type: 'McpRequest',
+    prefix: 'mcp-request',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      url: '',
+      transportType: 'streamable-http',
+      name: 'New MCP Client',
+      description: '',
+      headers: [],
+      authentication: {},
+      env: [],
+      mcpStdioAccess: false,
+      roots: [],
+      subscribeResources: [],
+      connected: false,
+      sslValidation: true,
+    },
+  },
+  mcpResponse: {
+    name: 'Mcp Response',
+    type: 'McpResponse',
+    prefix: 'mcp-response',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      url: '',
+      elapsedTime: 0,
+      headers: [],
+      timelinePath: '',
+      eventLogPath: '',
+      error: '',
+      errorType: '',
+      status: '',
+      statusCode: 0,
+      statusMessage: '',
+      requestVersionId: null,
+      environmentId: null,
+      transportType: 'streamable-http',
+    },
+  },
   mockRoute: {
     name: 'MockRoute',
-    type: 'mockRoute',
+    type: 'MockRoute',
     prefix: 'mock-route',
     canDuplicate: true,
     canSync: true,
@@ -179,7 +233,7 @@ export const databaseSchema = {
   },
   mockServer: {
     name: 'Mock Server',
-    type: 'mockServer',
+    type: 'MockServer',
     prefix: 'mock',
     canDuplicate: true,
     canSync: false,
@@ -191,8 +245,8 @@ export const databaseSchema = {
     },
   },
   oauth2Token: {
-    name: 'OAuth2Token',
-    type: 'oauth2Token',
+    name: 'OAuth 2.0 Token',
+    type: 'OAuth2Token',
     prefix: 'oa2',
     canDuplicate: false,
     canSync: false,
@@ -211,7 +265,7 @@ export const databaseSchema = {
   },
   pluginData: {
     name: 'PluginData',
-    type: 'pluginData',
+    type: 'PluginData',
     prefix: 'plg',
     canDuplicate: false,
     canSync: false,
@@ -223,7 +277,7 @@ export const databaseSchema = {
   },
   project: {
     name: 'Project',
-    type: 'project',
+    type: 'Project',
     prefix: 'proj',
     canDuplicate: false,
     canSync: false,
@@ -235,7 +289,7 @@ export const databaseSchema = {
   },
   protoDirectory: {
     name: 'ProtoDirectory',
-    type: 'protoDirectory',
+    type: 'ProtoDirectory',
     prefix: 'pd',
     canDuplicate: true,
     canSync: true,
@@ -245,7 +299,7 @@ export const databaseSchema = {
   },
   protoFile: {
     name: 'ProtoFile',
-    type: 'protoFile',
+    type: 'ProtoFile',
     prefix: 'pf',
     canDuplicate: true,
     canSync: true,
@@ -256,7 +310,7 @@ export const databaseSchema = {
   },
   request: {
     name: 'Request',
-    type: 'request',
+    type: 'Request',
     prefix: 'req',
     canDuplicate: true,
     canSync: true,
@@ -283,9 +337,27 @@ export const databaseSchema = {
       settingFollowRedirects: 'global',
     },
   },
+  requestGroup: {
+    name: 'Folder',
+    type: 'RequestGroup',
+    prefix: 'fld',
+    canDuplicate: true,
+    canSync: true,
+    defaults: {
+      name: 'New Folder',
+      description: '',
+      environment: {},
+      environmentPropertyOrder: null,
+      metaSortKey: -1 * Date.now(),
+      preRequestScript: undefined,
+      afterResponseScript: undefined,
+      authentication: undefined,
+      headers: undefined,
+    },
+  },
   requestGroupMeta: {
     name: 'RequestGroupMeta',
-    type: 'requestGroupMeta',
+    type: 'RequestGroupMeta',
     prefix: 'fldm', // Folder Meta
     canDuplicate: false,
     canSync: false,
@@ -296,7 +368,7 @@ export const databaseSchema = {
   },
   requestMeta: {
     name: 'RequestMeta',
-    type: 'requestMeta',
+    type: 'RequestMeta',
     prefix: 'reqm',
     canDuplicate: false,
     canSync: false,
@@ -315,7 +387,7 @@ export const databaseSchema = {
   },
   requestVersion: {
     name: 'RequestVersion',
-    type: 'requestVersion',
+    type: 'RequestVersion',
     prefix: 'rvr',
     canDuplicate: false,
     canSync: false,
@@ -325,7 +397,7 @@ export const databaseSchema = {
   },
   response: {
     name: 'Response',
-    type: 'response',
+    type: 'Response',
     prefix: 'res',
     canDuplicate: false,
     canSync: false,
@@ -360,7 +432,7 @@ export const databaseSchema = {
   },
   runnerTestResult: {
     name: 'RunnerTestResult',
-    type: 'runnerTestResult',
+    type: 'RunnerTestResult',
     prefix: 'rtr',
     canDuplicate: false,
     canSync: false,
@@ -376,7 +448,7 @@ export const databaseSchema = {
   },
   settings: {
     name: 'Settings',
-    type: 'settings',
+    type: 'Settings',
     prefix: 'set',
     canDuplicate: false,
     canSync: false,
@@ -441,7 +513,7 @@ export const databaseSchema = {
   },
   socketIOPayload: {
     name: 'SocketIOPayload',
-    type: 'socketIOPayload',
+    type: 'SocketIOPayload',
     prefix: 'sio-payload',
     canDuplicate: true,
     canSync: true,
@@ -458,7 +530,7 @@ export const databaseSchema = {
   },
   socketIORequest: {
     name: 'SocketIORequest',
-    type: 'socketIORequest',
+    type: 'SocketIORequest',
     prefix: 'sio-req',
     canDuplicate: true,
     canSync: true,
@@ -484,9 +556,9 @@ export const databaseSchema = {
       settingFollowRedirects: 'global',
     },
   },
-  socketIoResponse: {
+  socketIOResponse: {
     name: 'SocketIOResponse',
-    type: 'socketIoResponse',
+    type: 'SocketIOResponse',
     prefix: 'sio-res',
     canDuplicate: false,
     canSync: false,
@@ -508,7 +580,7 @@ export const databaseSchema = {
   },
   stats: {
     name: 'Stats',
-    type: 'stats',
+    type: 'Stats',
     prefix: 'sta',
     canDuplicate: false,
     canSync: false,
@@ -546,7 +618,7 @@ export const databaseSchema = {
   },
   unitTest: {
     name: 'UnitTest',
-    type: 'unitTest',
+    type: 'UnitTest',
     prefix: 'ut',
     canDuplicate: true,
     canSync: true,
@@ -562,7 +634,7 @@ export const databaseSchema = {
   },
   unitTestSuite: {
     name: 'UnitTestSuite',
-    type: 'unitTestSuite',
+    type: 'UnitTestSuite',
     prefix: 'uts',
     canDuplicate: true,
     canSync: true,
@@ -578,7 +650,7 @@ export const databaseSchema = {
   },
   unitTestResult: {
     name: 'UnitTestResult',
-    type: 'unitTestResult',
+    type: 'UnitTestResult',
     prefix: 'utr',
     canDuplicate: false,
     canSync: false,
@@ -593,9 +665,28 @@ export const databaseSchema = {
       globalEnvironmentId: null,
     },
   },
+  userSession: {
+    name: 'UserSession',
+    type: 'UserSession',
+    prefix: 'us',
+    canDuplicate: false,
+    canSync: false,
+    defaults: {
+      accountId: '',
+      id: '',
+      email: '',
+      firstName: '',
+      lastName: '',
+      symmetricKey: {},
+      publicKey: {},
+      encPrivateKey: {},
+      vaultKey: '',
+      vaultSalt: '',
+    },
+  },
   webSocketPayload: {
     name: 'WebSocketPayload',
-    type: 'webSocketPayload',
+    type: 'WebSocketPayload',
     prefix: 'ws-payload',
     canDuplicate: true,
     canSync: true,
@@ -611,7 +702,7 @@ export const databaseSchema = {
   },
   webSocketRequest: {
     name: 'WebSocketRequest',
-    type: 'webSocketRequest',
+    type: 'WebSocketRequest',
     prefix: 'ws-req',
     canDuplicate: true,
     canSync: true,
@@ -639,7 +730,7 @@ export const databaseSchema = {
   },
   webSocketResponse: {
     name: 'WebSocketResponse',
-    type: 'webSocketResponse',
+    type: 'WebSocketResponse',
     prefix: 'ws-res',
     canDuplicate: false,
     canSync: false,
@@ -660,7 +751,7 @@ export const databaseSchema = {
   },
   workspace: {
     name: 'Workspace',
-    type: 'workspace',
+    type: 'Workspace',
     prefix: 'wrk',
     canDuplicate: false,
     canSync: false,
@@ -672,7 +763,7 @@ export const databaseSchema = {
   },
   workspaceMeta: {
     name: 'WorkspaceMeta',
-    type: 'workspaceMeta',
+    type: 'WorkspaceMeta',
     prefix: 'wrkm',
     canDuplicate: false,
     canSync: false,
@@ -681,4 +772,12 @@ export const databaseSchema = {
       pinned: false,
     },
   },
-};
+} as const satisfies Record<string, SchemaEntry<string>>;
+interface SchemaEntry<K extends string> {
+  name: string;
+  type: K;
+  prefix: string;
+  canDuplicate: boolean;
+  canSync: boolean;
+  defaults: Record<string, any>;
+}

@@ -1,6 +1,7 @@
 import path from 'node:path';
 
-import { type AllTypes, isValidType } from '~/models';
+import { type AllTypes } from '~/models';
+import { databaseSchema } from '~/models/schema';
 
 import { GIT_CLONE_DIR } from './git-vcs';
 
@@ -25,7 +26,7 @@ const parseGitPath = (filePath: string): GitPathSegments => {
   const id = typeof idRaw === 'string' ? idRaw.replace(/\.(json|yml)$/, '') : idRaw;
   return {
     root: root || null,
-    type: isValidType(type) ? type : null,
+    type: Object.values(databaseSchema).find(model => model.type === type)?.type || null,
     id: id || null,
   };
 };

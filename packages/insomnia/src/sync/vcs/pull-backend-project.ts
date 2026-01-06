@@ -1,3 +1,5 @@
+import { databaseSchema } from '~/models/schema';
+
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
 import { database } from '../../common/database';
 import * as models from '../../models';
@@ -57,7 +59,7 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
       doc.parentId = remoteProject._id;
       workspaceId = doc._id;
     }
-    const allModelType = models.types();
+    const allModelType = Object.values(databaseSchema).map(model => model.type);
     if (allModelType.includes(doc.type)) {
       await database.update(doc);
     }

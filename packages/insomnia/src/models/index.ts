@@ -1,4 +1,4 @@
-import { databaseSchema } from '~/models/schema';
+import type { databaseSchema } from '~/models/schema';
 
 import { generateId } from '../common/misc';
 import { typedKeys } from '../utils';
@@ -149,55 +149,9 @@ export function all() {
     mcpPayload,
   ] as const;
 }
-export function types() {
-  return Object.values(databaseSchema).map(model => model.type);
-}
-export type AllTypes =
-  | 'ApiSpec'
-  | 'CaCertificate'
-  | 'ClientCertificate'
-  | 'CloudCredential'
-  | 'CookieJar'
-  | 'Environment'
-  | 'GitCredentials'
-  | 'GitRepository'
-  | 'GrpcRequest'
-  | 'GrpcRequestMeta'
-  | 'MockRoute'
-  | 'MockServer'
-  | 'OAuth2Token'
-  | 'PluginData'
-  | 'Project'
-  | 'ProtoDirectory'
-  | 'ProtoFile'
-  | 'Request'
-  | 'RequestGroup'
-  | 'RequestGroupMeta'
-  | 'RequestMeta'
-  | 'RequestVersion'
-  | 'Response'
-  | 'RunnerTestResult'
-  | 'Settings'
-  | 'SocketIOPayload'
-  | 'SocketIORequest'
-  | 'SocketIOResponse'
-  | 'Stats'
-  | 'UnitTest'
-  | 'UnitTestResult'
-  | 'UnitTestSuite'
-  | 'UserSession'
-  | 'WebSocketPayload'
-  | 'WebSocketRequest'
-  | 'WebSocketResponse'
-  | 'McpRequest'
-  | 'McpResponse'
-  | 'McpPayload'
-  | 'Workspace'
-  | 'WorkspaceMeta';
 
-export const isValidType = (type: string): type is AllTypes => {
-  return types().includes(type as AllTypes);
-};
+export type AllTypes = (typeof databaseSchema)[keyof typeof databaseSchema]['type'];
+
 export function canSync(d: BaseModel) {
   if (d.isPrivate) {
     return false;
