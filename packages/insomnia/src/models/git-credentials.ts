@@ -121,7 +121,7 @@ interface CustomCredential extends BaseCredentialData {
 /**
  * Unified credential type (new structure)
  */
-type BaseGitCredentialsV2 = GitHubCredential | GitLabCredential | CustomCredential;
+export type BaseGitCredentialsV2 = GitHubCredential | GitLabCredential | CustomCredential;
 
 /**
  * Combined type supporting both legacy and new credential structures
@@ -149,7 +149,7 @@ export function migrate(doc: GitCredentials): GitCredentials {
   return doc;
 }
 
-export function create(patch: Partial<GitCredentialsV2> = {}) {
+export function create(patch: BaseGitCredentialsV2) {
   return db.docCreate<GitCredentialsV2>(type, patch);
 }
 

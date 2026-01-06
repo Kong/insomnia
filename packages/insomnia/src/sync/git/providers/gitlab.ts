@@ -7,7 +7,7 @@ import { v4 } from 'uuid';
 
 import { getApiBaseURL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI, PLAYWRIGHT } from '~/common/constants';
 import * as models from '~/models';
-import type { GitCredentials } from '~/models/git-credentials';
+import type { BaseGitCredentialsV2, GitCredentials } from '~/models/git-credentials';
 import { isGitCredentialsV2 } from '~/models/git-credentials';
 
 import type {
@@ -393,15 +393,17 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
       // Create or update credential in database
       const credentialData = {
         name: 'GitLab Credential',
-        token: access_token,
-        refreshToken: refresh_token,
-        provider: 'gitlab' as const,
+        provider: 'gitlab',
         author: {
           email: user.commit_email ?? user.public_email ?? user.email ?? '',
           name: user.username ?? user.name ?? '',
           avatarUrl: user.avatar_url,
         },
-      };
+        credentials: {
+          token: access_token,
+          refreshToken: refresh_token,
+        },
+      } satisfies BaseGitCredentialsV2;
 
       const credential = await models.gitCredentials.create(credentialData);
 
