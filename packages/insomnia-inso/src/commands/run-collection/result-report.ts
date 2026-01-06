@@ -7,7 +7,6 @@ import { pick } from 'es-toolkit';
 import type { Environment, UserUploadEnvironment } from '~/models/environment';
 import type { Request, RequestAuthentication, RequestHeader } from '~/models/request';
 import type { Workspace } from '~/models/workspace';
-import { typedKeys } from '~/utils';
 
 import type { RequestTestResult } from '../../../../insomnia-scripting-environment/src/objects';
 
@@ -216,7 +215,8 @@ export class RunCollectionResultReport {
 
       if (!isValidAuth(auth)) return auth;
       const authWhitelist = new Set<string>(['type', 'disabled', 'grantType']);
-      return redactObject(auth, new Set(typedKeys(auth).filter(k => !authWhitelist.has(k))));
+      // @ts-expect-error -- Need to cast to string keys to satisfy Set<string>
+      return redactObject(auth, new Set(Object.keys(auth).filter(k => !authWhitelist.has(k))));
     };
 
     const redactEnvironment = (env?: Environment | null) => {

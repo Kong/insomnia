@@ -723,14 +723,13 @@ export const databaseSchema = {
       hasUnpushedChanges: false,
     }),
   },
-};
-//as const satisfies Record<string, SchemaEntry<string>>;
-// interface SchemaEntry<K extends string> {
-//   name: string;
-//   type: K;
-//   prefix: string;
-//   canDuplicate: boolean;
-//   canSync: boolean;
-//   init: () => Record<string, any>;
-//   optionalKeys?: string[];
-// }
+} as const satisfies Record<string, SchemaEntry<string>>;
+interface SchemaEntry<K extends string> {
+  name: string;
+  type: K;
+  prefix: string;
+  canDuplicate: boolean;
+  canSync: boolean;
+  init: () => Record<string, any>;
+  optionalKeys?: string[];
+}
