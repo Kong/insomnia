@@ -190,6 +190,7 @@ collection: []
         workspaceId: workspace._id,
         includePrivateEnvironments: false,
       });
+      expect(result.length).toBeGreaterThan(0);
 
       const parsed = YAML.parse(result);
       expect(parsed.type).toBe('collection.insomnia.rest/5.0');

@@ -185,8 +185,6 @@ export const removeAllSecrets = async (orgnizationIds: string[]) => {
   });
 };
 
-export const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => model.type === type;
-
 export function init() {
   return {
     name: 'New Environment',

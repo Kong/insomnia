@@ -20,6 +20,7 @@ import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/sch
 import type { McpRequest } from '~/models/mcp-request';
 import { invariant } from '~/utils/invariant';
 
+import type { BaseModel } from '../models';
 import * as models from '../models';
 import type { ApiSpec } from '../models/api-spec';
 import type { CookieJar } from '../models/cookie-jar';
@@ -1105,6 +1106,7 @@ export async function getInsomniaV5DataExport({
         statusText: resource.statusText,
       }));
     }
+    const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => model.type === 'Environment';
 
     function getMcpRequestFromResources(
       resource: McpRequest,
@@ -1152,7 +1154,7 @@ export async function getInsomniaV5DataExport({
         ),
         cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
         environments: getEnvironmentsFromResources(
-          exportableResources.filter(models.environment.isEnvironment),
+          exportableResources.filter(isEnvironment),
           includePrivateEnvironments,
         ),
       };
@@ -1178,7 +1180,7 @@ export async function getInsomniaV5DataExport({
         ),
         cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
         environments: getEnvironmentsFromResources(
-          exportableResources.filter(models.environment.isEnvironment),
+          exportableResources.filter(isEnvironment),
           includePrivateEnvironments,
         ),
         spec: getSpecFromResources(exportableResources.filter(models.apiSpec.isApiSpec)),
@@ -1199,7 +1201,7 @@ export async function getInsomniaV5DataExport({
         name: workspace.name,
         meta: mapWorkspaceMeta(workspace),
         environments: getEnvironmentsFromResources(
-          exportableResources.filter(models.environment.isEnvironment),
+          exportableResources.filter(isEnvironment),
           includePrivateEnvironments,
         ),
       };
