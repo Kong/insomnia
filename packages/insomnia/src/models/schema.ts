@@ -1,10 +1,8 @@
 import { CONTENT_TYPE_JSON, PREVIEW_MODE_FRIENDLY } from '~/common/constants';
 import { newDefaultRegistry } from '~/common/hotkeys';
 import { HttpVersions, UpdateChannel } from '~/common/settings';
-import { TRANSPORT_TYPES } from '~/models/mcp-request';
 
 import appConfig from '../../config/config.json';
-// TODO: come up with a meta sort key flag so its set at creation time
 export const databaseSchema = {
   ApiSpec: {
     name: 'ApiSpec',
@@ -183,7 +181,7 @@ export const databaseSchema = {
     canSync: false,
     init: () => ({
       url: '',
-      transportType: TRANSPORT_TYPES.HTTP,
+      transportType: 'streamable-http',
       description: '',
       headers: [],
       authentication: {},
@@ -214,7 +212,7 @@ export const databaseSchema = {
       statusMessage: '',
       requestVersionId: null,
       environmentId: null,
-      transportType: TRANSPORT_TYPES.HTTP,
+      transportType: 'streamable-http',
     }),
   },
   MockRoute: {
@@ -725,13 +723,14 @@ export const databaseSchema = {
       hasUnpushedChanges: false,
     }),
   },
-} as const satisfies Record<string, SchemaEntry<string>>;
-interface SchemaEntry<K extends string> {
-  name: string;
-  type: K;
-  prefix: string;
-  canDuplicate: boolean;
-  canSync: boolean;
-  init: () => Record<string, any>;
-  optionalKeys?: string[];
-}
+};
+//as const satisfies Record<string, SchemaEntry<string>>;
+// interface SchemaEntry<K extends string> {
+//   name: string;
+//   type: K;
+//   prefix: string;
+//   canDuplicate: boolean;
+//   canSync: boolean;
+//   init: () => Record<string, any>;
+//   optionalKeys?: string[];
+// }
