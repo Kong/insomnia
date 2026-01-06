@@ -1,8 +1,7 @@
-import type { databaseSchema } from '~/models/schema';
+import { databaseSchema } from '~/models/schema';
 import { legacyMigrations } from '~/models/schema-migrations';
 
 import { generateId } from '../common/misc';
-import { typedKeys } from '../utils';
 import * as _apiSpec from './api-spec';
 import * as _caCertificate from './ca-certificate';
 import * as _clientCertificate from './client-certificate';
@@ -33,7 +32,7 @@ import * as _runnerTestResult from './runner-test-result';
 import * as _settings from './settings';
 import * as _socketIOPayload from './socket-io-payload';
 import * as _socketIORequest from './socket-io-request';
-import * as _socketIoResponse from './socket-io-response';
+import * as _socketIOResponse from './socket-io-response';
 import * as _stats from './stats';
 import * as _unitTest from './unit-test';
 import * as _unitTestResult from './unit-test-result';
@@ -91,7 +90,7 @@ export const webSocketPayload = _webSocketPayload;
 export const webSocketRequest = _webSocketRequest;
 export const socketIORequest = _socketIORequest;
 export const socketIOPayload = _socketIOPayload;
-export const socketIOResponse = _socketIoResponse;
+export const socketIOResponse = _socketIOResponse;
 export const webSocketResponse = _webSocketResponse;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
@@ -168,7 +167,7 @@ export function canSync(d: BaseModel) {
 }
 
 export function getModel(type: string) {
-  return all().find(m => m.type === type) || null;
+  return Object.values(databaseSchema).find(m => m.type === type) || null;
 }
 
 export function canDuplicate(type: string) {
@@ -193,7 +192,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
       modified: Date.now(),
       created: Date.now(),
     },
-    model.init(),
+    model.defaults,
   );
   const fullObject = Object.assign({}, objectDefaults, ...sources);
 
@@ -209,7 +208,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   // If we put those keys in init method, all related models will show as modified in git sync.
   const modelOptionalKeys: string[] = 'optionalKeys' in model ? model.optionalKeys || [] : [];
   // Prune extra keys from doc
-  for (const key of typedKeys(migratedDoc)) {
+  for (const key of Object.keys(migratedDoc)) {
     if (!(key in objectDefaults) && !modelOptionalKeys.includes(key)) {
       delete migratedDoc[key];
     }

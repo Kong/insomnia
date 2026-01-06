@@ -83,6 +83,7 @@ export const databaseSchema = {
       isPrivate: false,
       metaSortKey: Date.now(),
     },
+    optionalKeys: ['kvPairData', 'environmentType'],
   },
   gitCredentials: {
     name: 'GitCredentials',
@@ -354,6 +355,7 @@ export const databaseSchema = {
       authentication: undefined,
       headers: undefined,
     },
+    optionalKeys: ['kvPairData', 'environmentType'],
   },
   requestGroupMeta: {
     name: 'RequestGroupMeta',
@@ -727,6 +729,7 @@ export const databaseSchema = {
       settingRebuildPath: true,
       settingFollowRedirects: 'global',
     },
+    optionalKeys: ['settingUseProxy'],
   },
   webSocketResponse: {
     name: 'WebSocketResponse',
@@ -780,4 +783,5 @@ interface SchemaEntry<K extends string> {
   canDuplicate: boolean;
   canSync: boolean;
   defaults: Record<string, any>;
+  optionalKeys?: string[];
 }
