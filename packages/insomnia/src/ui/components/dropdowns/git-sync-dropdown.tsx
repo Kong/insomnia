@@ -35,7 +35,7 @@ import { GitStagingModal } from '../modals/git-staging-modal';
 import { SyncMergeModal } from '../modals/sync-merge-modal';
 
 interface Props {
-  gitRepository: GitRepository | null;
+  gitRepository: GitRepository;
   isInsomniaSyncEnabled: boolean;
   showDeprecatedWarning: boolean;
 }
@@ -497,10 +497,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
         </Popover>
       </MenuTrigger>
       {isGitRepoSettingsModalOpen && (
-        <GitRepositorySettingsModal
-          gitRepository={gitRepository ?? undefined}
-          onHide={() => setIsGitRepoSettingsModalOpen(false)}
-        />
+        <GitRepositorySettingsModal gitRepository={gitRepository} onHide={() => setIsGitRepoSettingsModalOpen(false)} />
       )}
       {isGitBranchesModalOpen && gitRepository && (
         <GitBranchesModal

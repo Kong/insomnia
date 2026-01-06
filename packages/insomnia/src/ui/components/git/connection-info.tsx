@@ -9,7 +9,7 @@ export const GitConnectionInfo = ({
   providerInfo,
   projectId,
 }: {
-  projectId: string;
+  projectId?: string;
   gitRepository?: GitRepository;
   providerInfo: {
     iconName?: IconProp;

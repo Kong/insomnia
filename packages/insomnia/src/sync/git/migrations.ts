@@ -64,6 +64,39 @@ async function migrateGitHubConnectedRepositories(repositories: GitRepository[])
         },
       });
     }
+  } else {
+    const tokenToGitCredentialsMap: Record<string, GitCredentials> = {};
+    for (const repo of repositories) {
+      if (
+        repo.credentials &&
+        isGitCredentialsOAuth(repo.credentials) &&
+        repo.credentials.oauth2format === 'github' &&
+        repo.credentials.token
+      ) {
+        if (!tokenToGitCredentialsMap[repo.credentials.token]) {
+          const newCredentials = await models.gitCredentials.create({
+            name: 'Github Credential',
+            provider: 'github',
+            author: {
+              name: repo.author.name,
+              email: repo.author.email,
+            },
+            credentials: {
+              token: repo.credentials.token,
+            },
+          });
+          tokenToGitCredentialsMap[repo.credentials.token] = newCredentials;
+        }
+        await models.gitRepository.update(repo, {
+          credentialsId: tokenToGitCredentialsMap[repo.credentials.token]._id,
+          credentials: null,
+          author: {
+            name: '',
+            email: '',
+          },
+        });
+      }
+    }
   }
 }
 
@@ -91,6 +124,40 @@ async function migrateGitLabConnectedRepositories(repositories: GitRepository[])
           email: '',
         },
       });
+    }
+  } else {
+    const tokenToGitCredentialsMap: Record<string, GitCredentials> = {};
+    for (const repo of repositories) {
+      if (
+        repo.credentials &&
+        isGitCredentialsOAuth(repo.credentials) &&
+        repo.credentials.oauth2format === 'gitlab' &&
+        repo.credentials.token
+      ) {
+        if (!tokenToGitCredentialsMap[repo.credentials.token]) {
+          const newCredentials = await models.gitCredentials.create({
+            name: 'GitLab Credential',
+            provider: 'gitlab',
+            author: {
+              name: repo.author.name,
+              email: repo.author.email,
+            },
+            credentials: {
+              token: repo.credentials.token,
+              refreshToken: '',
+            },
+          });
+          tokenToGitCredentialsMap[repo.credentials.token] = newCredentials;
+        }
+        await models.gitRepository.update(repo, {
+          credentialsId: tokenToGitCredentialsMap[repo.credentials.token]._id,
+          credentials: null,
+          author: {
+            name: '',
+            email: '',
+          },
+        });
+      }
     }
   }
 }
