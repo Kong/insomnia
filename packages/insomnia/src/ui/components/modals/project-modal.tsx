@@ -3,8 +3,8 @@ import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-compone
 import { useNavigation } from 'react-router';
 
 import type { StorageRules } from '~/models/organization';
-import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
 import { useActiveView } from '~/ui/components/project/utils';
+import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 
 import type { GitRepository } from '../../../models/git-repository';
 import type { Project } from '../../../models/project';
@@ -45,15 +45,7 @@ export const ProjectModal = ({
     title = activeViewObj.activeView === 'git-results' ? 'Create Git Sync project' : 'Create project';
   }
 
-  const credentialsFetcher = useGitCredentialsLoaderFetcher();
-
-  useEffect(() => {
-    if (credentialsFetcher.state === 'idle' && !credentialsFetcher.data) {
-      credentialsFetcher.load();
-    }
-  }, [credentialsFetcher]);
-
-  const { credentials = [], providers = [] } = credentialsFetcher.data || {};
+  const { credentials, providers } = useGitCredentials();
 
   return (
     <ModalOverlay
