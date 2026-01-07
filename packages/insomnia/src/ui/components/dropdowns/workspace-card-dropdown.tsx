@@ -1,5 +1,6 @@
 import {
   exportGlobalEnvironmentToFile,
+  exportMcpClientToFile,
   exportMockServerToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
 import React, { type FC, Fragment, useCallback, useState } from 'react';
@@ -154,48 +155,49 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           />
         </DropdownItem>
         <DropdownSection aria-label="Meta section">
-          {isMcp(workspace) ? null : (
-            <>
-              <DropdownItem aria-label="Import">
-                <ItemContent
-                  label="Import"
-                  icon="file-import"
-                  onClick={() => {
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.importStarted,
-                      properties: {
-                        source: `${workspace.scope}-list`,
-                      },
-                    });
+          {!isMcp(workspace) ? (
+            <DropdownItem aria-label="Import">
+              <ItemContent
+                label="Import"
+                icon="file-import"
+                onClick={() => {
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.importStarted,
+                    properties: {
+                      source: `${workspace.scope}-list`,
+                    },
+                  });
 
-                    setIsImportModalOpen(true);
-                  }}
-                />
-              </DropdownItem>
-              <DropdownItem aria-label="Export">
-                <ItemContent
-                  label="Export"
-                  icon="file-export"
-                  onClick={() => {
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.exportStarted,
-                      properties: {
-                        source: `${workspace.scope}-list`,
-                      },
-                    });
+                  setIsImportModalOpen(true);
+                }}
+              />
+            </DropdownItem>
+          ) : null}
+          <DropdownItem aria-label="Export">
+            <ItemContent
+              label="Export"
+              icon="file-export"
+              onClick={() => {
+                window.main.trackSegmentEvent({
+                  event: SegmentEvent.exportStarted,
+                  properties: {
+                    source: `${workspace.scope}-list`,
+                  },
+                });
 
-                    if (workspace.scope === 'mock-server') {
-                      return exportMockServerToFile(workspace);
-                    }
-                    if (workspace.scope === 'environment') {
-                      return exportGlobalEnvironmentToFile(workspace);
-                    }
-                    return setIsExportModalOpen(true);
-                  }}
-                />
-              </DropdownItem>
-            </>
-          )}
+                if (workspace.scope === 'mock-server') {
+                  return exportMockServerToFile(workspace);
+                }
+                if (workspace.scope === 'environment') {
+                  return exportGlobalEnvironmentToFile(workspace);
+                }
+                if (workspace.scope === 'mcp') {
+                  return exportMcpClientToFile(workspace);
+                }
+                return setIsExportModalOpen(true);
+              }}
+            />
+          </DropdownItem>
           <DropdownItem aria-label="Settings">
             <ItemContent label="Settings" icon="gear" onClick={() => setIsSettingsModalOpen(true)} />
           </DropdownItem>

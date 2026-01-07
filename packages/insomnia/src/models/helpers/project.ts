@@ -7,7 +7,7 @@ import type { VCS } from '../../sync/vcs/vcs';
 import { insomniaFetch } from '../../ui/insomnia-fetch';
 import { invariant } from '../../utils/invariant';
 import { isDefaultOrganizationProject, type Project, update as updateProject } from '../project';
-import { isMcp, type Workspace } from '../workspace';
+import { type Workspace } from '../workspace';
 import { getOrCreateByParentId as getOrCreateWorkspaceMeta } from '../workspace-meta';
 export const sortProjects = (projects: Project[]) => [
   ...projects.filter(p => isDefaultOrganizationProject(p)).sort((a, b) => a.name.localeCompare(b.name)),
@@ -62,9 +62,6 @@ export async function updateLocalProjectToRemote({
   });
 
   for (const workspace of projectWorkspaces) {
-    if (isMcp(workspace)) {
-      continue;
-    }
     const workspaceMeta = await getOrCreateWorkspaceMeta(workspace._id);
 
     // Initialize Sync on the workspace if it's not using Git sync

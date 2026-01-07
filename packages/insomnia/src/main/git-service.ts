@@ -38,7 +38,7 @@ import {
   PLAYWRIGHT,
 } from '../common/constants';
 import { database } from '../common/database';
-import { InsomniaFileSchema } from '../common/import-v5-parser';
+import { InsomniaFileSchema, InsomniaFileTypeValues } from '../common/import-v5-parser';
 import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import * as models from '../models';
@@ -641,7 +641,12 @@ async function isInsomniaFile(fullPath: string, fsClient: PromiseFsClient) {
   }
 
   const fileContents = await fsClient.promises.readFile(fullPath, 'utf8');
-  return fileContents.split('\n')[0].trim().includes('insomnia.rest');
+  const fileTypeStr = fileContents.split('\n')[0].trim();
+  const doesFileContainInsomniaV5FormatTypeString = InsomniaFileTypeValues.some(fileType =>
+    fileTypeStr.includes(fileType),
+  );
+
+  return doesFileContainInsomniaV5FormatTypeString;
 }
 
 // Recursively finds all .yaml files in a repository that are Insomnia files and returns their paths relative to the repo root.
