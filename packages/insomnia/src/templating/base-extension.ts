@@ -4,6 +4,8 @@ import os from 'node:os';
 
 import iconv from 'iconv-lite';
 
+import { jarFromCookies } from '~/common/cookies';
+
 import { database as db } from '../common/database';
 import { secureReadFile } from '../main/secure-read-file';
 import * as models from '../models/index';
@@ -154,6 +156,11 @@ export default class BaseExtension {
           cookieJar: {
             getOrCreateForParentId: (parentId: string) => {
               return models.cookieJar.getOrCreateForParentId(parentId);
+            },
+            getCookiesForUrl: async (parentId: string, url: string) => {
+              const cookies = await models.cookieJar.getOrCreateForParentId(parentId);
+              const jar = jarFromCookies(cookies.cookies);
+              return jar.getCookiesSync(url);
             },
           },
           response: {
