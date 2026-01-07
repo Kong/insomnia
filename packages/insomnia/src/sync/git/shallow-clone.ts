@@ -7,7 +7,7 @@ import { gitCallbacks } from './utils';
 
 interface Options {
   fsClient: git.FsClient;
-  gitRepository: Pick<GitRepository, 'credentials' | 'uri'>;
+  gitRepository: Pick<GitRepository, 'credentialsId' | 'uri'>;
   ref?: string;
 }
 
@@ -16,7 +16,7 @@ interface Options {
  * */
 export const shallowClone = async ({ fsClient, gitRepository, ref }: Options) => {
   await git.clone({
-    ...gitCallbacks(gitRepository.credentials),
+    ...gitCallbacks(gitRepository.credentialsId),
     ...(ref ? { ref } : {}),
     fs: fsClient,
     http: httpClient,

@@ -136,7 +136,7 @@ export const CloudServiceCredentialList = () => {
         <h2 className="z-10 bg-(--color-bg) text-lg font-bold">Service Provider Credential List</h2>
         <MenuTrigger>
           <Button
-            aria-label="Create Credential"
+            aria-label="Create Cloud Credential"
             className="flex h-full items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 py-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             <Icon icon="plus-circle" /> Add Credential

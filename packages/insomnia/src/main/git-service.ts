@@ -13,30 +13,19 @@
  * - Legacy migration support
  *
  */
-
-import { createHash, randomBytes } from 'node:crypto';
 import path from 'node:path';
 
-import { shell } from 'electron';
-import { app, net } from 'electron/main';
+import { app } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
-import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
 
-import { type GitCredentials } from '~/models/git-repository';
+import { type GitRemoteProviderType, isGitCredentialsV2 } from '~/models/git-credentials';
 import { EMPTY_GIT_PROJECT_ID, isEmptyGitProject } from '~/models/project';
+import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
+import { gitRemoteProviderRegistry, initializeGitRemoteProviders, type ProviderRepository } from '~/sync/git/providers';
 
-import {
-  getApiBaseURL,
-  getAppWebsiteBaseURL,
-  getGitHubGraphQLApiURL,
-  getGitHubRestApiUrl,
-  INSOMNIA_GITLAB_API_URL,
-  INSOMNIA_GITLAB_CLIENT_ID,
-  INSOMNIA_GITLAB_REDIRECT_URI,
-  PLAYWRIGHT,
-} from '../common/constants';
+import { INSOMNIA_GITLAB_API_URL } from '../common/constants';
 import { database } from '../common/database';
 import { InsomniaFileSchema, InsomniaFileTypeValues } from '../common/import-v5-parser';
 import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
@@ -54,7 +43,6 @@ import GitVCS, {
   type GitFileStatus,
   type GitFileStatusSymbol,
   GitVCS as GitVCSClass,
-  GitVCSOperationErrors,
   MergeConflictError,
   type Status,
 } from '../sync/git/git-vcs';
@@ -64,11 +52,13 @@ import { GitProjectNeDBClient } from '../sync/git/project-ne-db-client';
 import { projectRoutableFSClient } from '../sync/git/project-routable-fs-client';
 import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
-import { getOauth2FormatName } from '../sync/git/utils';
 import type { MergeConflict } from '../sync/types';
 import { invariant } from '../utils/invariant';
 import { SegmentEvent, trackSegmentEvent } from './analytics';
 import { ipcMainHandle } from './ipc/electron';
+
+// Initialize Git Remote Providers on module load
+initializeGitRemoteProviders();
 
 type PushPull = 'push' | 'pull';
 type VCSAction =
@@ -264,12 +254,12 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
     }
 
     // Init VCS
-    const { credentials, uri } = gitRepository;
+    const { credentialsId, uri } = gitRepository;
     if (gitRepository.needsFullClone) {
       await GitVCS.initFromClone({
         repoId: gitRepository._id,
         url: uri,
-        gitCredentials: credentials,
+        credentialsId,
         directory: GIT_CLONE_DIR,
         fs: fsClient,
         gitDirectory: GIT_INTERNAL_DIR,
@@ -285,7 +275,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
         directory: GIT_CLONE_DIR,
         fs: fsClient,
         gitDirectory: GIT_INTERNAL_DIR,
-        gitCredentials: credentials,
+        credentialsId,
         legacyDiff: Boolean(workspaceId),
       });
     }
@@ -354,7 +344,7 @@ export const gitFetchAction = async ({ projectId, workspaceId }: { projectId: st
     await GitVCS.fetch({
       singleBranch: true,
       depth: 1,
-      credentials: gitRepository.credentials,
+      credentialsId: gitRepository.credentialsId,
     });
 
     return {
@@ -454,7 +444,7 @@ export const canPushLoader = async ({
   try {
     let hasUnpushedChanges = false;
     const gitRepository = await getGitRepository({ workspaceId, projectId });
-    hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+    hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentialsId);
 
     await models.gitRepository.update(gitRepository, {
       hasUnpushedChanges,
@@ -676,16 +666,12 @@ const recursivelyFindInsomniaFiles = async (
 // Actions
 export const initGitRepoCloneAction = async ({
   uri,
-  authorName,
-  authorEmail,
-  credentials,
+  credentialsId,
   ref,
 }: {
   organizationId: string;
   uri: string;
-  authorName: string;
-  authorEmail: string;
-  credentials: GitCredentials;
+  credentialsId?: string;
   ref?: string;
 }): Promise<
   | {
@@ -705,25 +691,8 @@ export const initGitRepoCloneAction = async ({
 > => {
   const repoSettingsPatch: Partial<GitRepository> = {};
   repoSettingsPatch.uri = parseGitToHttpsURL(uri);
-  repoSettingsPatch.author = {
-    name: authorName,
-    email: authorEmail,
-  };
 
-  // Git Credentials
-  if ('oauth2format' in credentials) {
-    invariant(
-      credentials.oauth2format === 'gitlab' || credentials.oauth2format === 'github',
-      'OAuth2 format is required',
-    );
-  } else if ('password' in credentials) {
-    invariant(typeof credentials.username === 'string', 'Username is required');
-    invariant(typeof credentials.password === 'string', 'Password is required');
-  } else {
-    throw new Error('Invalid credentials');
-  }
-
-  repoSettingsPatch.credentials = credentials;
+  repoSettingsPatch.credentialsId = credentialsId;
 
   repoSettingsPatch.needsFullClone = true;
 
@@ -789,20 +758,15 @@ export const cloneGitRepoAction = async ({
   organizationId,
   projectId,
   cloneIntoProjectId,
+  credentialsId,
   name,
   uri,
-  author,
-  credentials,
   ref,
 }: {
   organizationId: string;
   projectId?: string;
   cloneIntoProjectId?: string;
-  author: {
-    name: string;
-    email: string;
-  };
-  credentials: GitCredentials;
+  credentialsId: string | null;
   name?: string;
   uri: string;
   ref?: string;
@@ -810,32 +774,35 @@ export const cloneGitRepoAction = async ({
   try {
     const repoSettingsPatch: Partial<GitRepository> = {};
     repoSettingsPatch.uri = parseGitToHttpsURL(uri);
-    repoSettingsPatch.author = author;
 
-    // Git Credentials
-    if ('oauth2format' in credentials) {
-      invariant(
-        credentials.oauth2format === 'gitlab' || credentials.oauth2format === 'github',
-        'OAuth2 format is required',
-      );
-    } else if ('password' in credentials) {
-      invariant(typeof credentials.password === 'string', 'Password is required');
-      invariant(typeof credentials.username === 'string', 'Username is required');
+    repoSettingsPatch.credentialsId = credentialsId;
+
+    let provider = 'custom';
+    if (credentialsId) {
+      const credentials = await models.gitCredentials.getById(credentialsId);
+      invariant(credentials, 'Git Credentials not found');
+      if (!isGitCredentialsV2(credentials)) {
+        throw new Error('Invalid Git Credentials');
+      }
+      provider = credentials.provider;
     }
-
-    repoSettingsPatch.credentials = credentials;
 
     if (!projectId) {
       trackSegmentEvent(SegmentEvent.vcsSyncStart, {
         ...vcsSegmentEventProperties('git', 'clone'),
-        provider: getOauth2FormatName(credentials),
+        provider,
         repoId: repoSettingsPatch._id,
       });
       repoSettingsPatch.needsFullClone = true;
 
       const inMemoryFsClient = MemClient.createClient();
 
-      const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
+      let providerName = 'custom';
+      if (repoSettingsPatch.credentialsId) {
+        const credentials = await models.gitCredentials.getById(repoSettingsPatch.credentialsId);
+        invariant(credentials, 'Git Credentials not found');
+        providerName = credentials.provider;
+      }
 
       try {
         await shallowClone({
@@ -909,7 +876,7 @@ export const cloneGitRepoAction = async ({
         await GitVCS.initFromClone({
           repoId: gitRepository._id,
           url: uri,
-          gitCredentials: gitRepository.credentials,
+          credentialsId: gitRepository.credentialsId,
           directory: GIT_CLONE_DIR,
           fs: fsClient,
           gitDirectory: GIT_INTERNAL_DIR,
@@ -926,7 +893,7 @@ export const cloneGitRepoAction = async ({
           directory: GIT_CLONE_DIR,
           fs: fsClient,
           gitDirectory: GIT_INTERNAL_DIR,
-          gitCredentials: gitRepository.credentials,
+          credentialsId: gitRepository.credentialsId,
         });
       }
 
@@ -964,14 +931,13 @@ export const cloneGitRepoAction = async ({
 
     trackSegmentEvent(SegmentEvent.vcsSyncStart, {
       ...vcsSegmentEventProperties('git', 'clone'),
-      provider: getOauth2FormatName(credentials),
+      provider,
       repoId: repoSettingsPatch._id,
     });
     repoSettingsPatch.needsFullClone = true;
 
     const inMemoryFsClient = MemClient.createClient();
 
-    const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
     try {
       await shallowClone({
         ref,
@@ -1024,7 +990,7 @@ export const cloneGitRepoAction = async ({
 
       trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
         ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
-        providerName,
+        providerName: provider,
         repoId: repoSettingsPatch._id,
       });
 
@@ -1043,7 +1009,7 @@ export const cloneGitRepoAction = async ({
       if (workspaces.length === 0) {
         trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
           ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'),
-          providerName,
+          providerName: provider,
           repoId: repoSettingsPatch._id,
         });
 
@@ -1055,7 +1021,7 @@ export const cloneGitRepoAction = async ({
       if (workspaces.length > 1) {
         trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
           ...vcsSegmentEventProperties('git', 'clone', 'multiple workspaces found'),
-          providerName,
+          providerName: provider,
           repoId: repoSettingsPatch._id,
         });
 
@@ -1113,7 +1079,7 @@ export const cloneGitRepoAction = async ({
         await GitVCS.initFromClone({
           repoId: gitRepository._id,
           url: uri,
-          gitCredentials: gitRepository.credentials,
+          credentialsId: gitRepository.credentialsId,
           directory: GIT_CLONE_DIR,
           fs: routableFS,
           gitDirectory: GIT_INTERNAL_DIR,
@@ -1129,7 +1095,7 @@ export const cloneGitRepoAction = async ({
           directory: GIT_CLONE_DIR,
           fs: routableFS,
           gitDirectory: GIT_INTERNAL_DIR,
-          gitCredentials: gitRepository.credentials,
+          credentialsId: gitRepository.credentialsId,
           legacyDiff: true,
         });
       }
@@ -1142,7 +1108,7 @@ export const cloneGitRepoAction = async ({
     await database.flushChanges(bufferId);
     trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
       ...vcsSegmentEventProperties('git', 'clone'),
-      providerName,
+      providerName: provider,
       repoId: repoSettingsPatch._id,
     });
 
@@ -1162,18 +1128,13 @@ export const cloneGitRepoAction = async ({
 export const updateGitRepoAction = async ({
   projectId,
   workspaceId,
-  author,
-  credentials,
+  credentialsId,
   uri,
   ref,
 }: {
   projectId: string;
   workspaceId?: string;
-  author: {
-    name: string;
-    email: string;
-  };
-  credentials: GitCredentials;
+  credentialsId: string | null;
   uri: string;
   ref?: string;
 }) => {
@@ -1197,22 +1158,8 @@ export const updateGitRepoAction = async ({
     // URI
     repoSettingsPatch.uri = parseGitToHttpsURL(uri);
 
-    // Author
-    repoSettingsPatch.author = author;
-
     // Git Credentials
-    // Git Credentials
-    if ('oauth2format' in credentials) {
-      invariant(
-        credentials.oauth2format === 'gitlab' || credentials.oauth2format === 'github',
-        'OAuth2 format is required',
-      );
-    } else if ('password' in credentials) {
-      invariant(typeof credentials.password === 'string', 'Password is required');
-      invariant(typeof credentials.username === 'string', 'Username is required');
-    }
-
-    repoSettingsPatch.credentials = credentials;
+    repoSettingsPatch.credentialsId = credentialsId;
 
     async function setupGitRepository() {
       if (gitRepositoryId && gitRepositoryId !== EMPTY_GIT_PROJECT_ID) {
@@ -1249,7 +1196,7 @@ export const updateGitRepoAction = async ({
       directory: GIT_CLONE_DIR,
       fs: await getGitFSClient({ projectId, workspaceId, gitRepositoryId: gitRepository._id }),
       gitDirectory: GIT_INTERNAL_DIR,
-      gitCredentials: gitRepository.credentials,
+      credentialsId: gitRepository.credentialsId,
       legacyDiff: Boolean(workspaceId),
       ref,
     });
@@ -1258,7 +1205,7 @@ export const updateGitRepoAction = async ({
     await GitVCS.addRemote(uri);
 
     const { hasUncommittedChanges } = await getGitChanges();
-    const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+    const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentialsId);
 
     await models.gitRepository.update(gitRepository, {
       hasUncommittedChanges,
@@ -1317,7 +1264,12 @@ export const commitToGitRepoAction = async ({
     const gitRepository = await getGitRepository({ workspaceId, projectId });
     await GitVCS.commit(message);
 
-    const providerName = getOauth2FormatName(gitRepository?.credentials);
+    let providerName = 'custom';
+    if (gitRepository?.credentialsId) {
+      const credentials = await models.gitCredentials.getById(gitRepository.credentialsId);
+      invariant(credentials, 'Git Credentials not found');
+      providerName = credentials.provider;
+    }
 
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'commit'),
@@ -1325,7 +1277,7 @@ export const commitToGitRepoAction = async ({
       repoId: gitRepository._id,
     });
 
-    const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+    const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentialsId);
     // update workspace meta with git sync data, use for show unpushed changes on collection card
     await models.gitRepository.update(gitRepository, {
       hasUnpushedChanges,
@@ -1424,7 +1376,12 @@ export const commitAndPushToGitRepoAction = async ({
   try {
     await GitVCS.commit(message);
 
-    const providerName = getOauth2FormatName(repo?.credentials);
+    let providerName = 'custom';
+    if (repo.credentialsId) {
+      const credentials = await models.gitCredentials.getById(repo.credentialsId);
+      invariant(credentials, 'Git Credentials not found');
+      providerName = credentials.provider;
+    }
 
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'commit'),
@@ -1438,7 +1395,7 @@ export const commitAndPushToGitRepoAction = async ({
 
   let canPush = false;
   try {
-    canPush = await GitVCS.canPush(repo.credentials);
+    canPush = await GitVCS.canPush(repo.credentialsId);
   } catch (err) {
     if (err instanceof Errors.HttpError) {
       return {
@@ -1457,9 +1414,14 @@ export const commitAndPushToGitRepoAction = async ({
   }
 
   const bufferId = await database.bufferChanges();
-  const providerName = getOauth2FormatName(repo.credentials);
+  let providerName = 'custom';
+  if (repo.credentialsId) {
+    const credentials = await models.gitCredentials.getById(repo.credentialsId);
+    invariant(credentials, 'Git Credentials not found');
+    providerName = credentials.provider;
+  }
   try {
-    await GitVCS.push(repo.credentials);
+    await GitVCS.push(repo.credentialsId);
 
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'push'),
@@ -1467,7 +1429,7 @@ export const commitAndPushToGitRepoAction = async ({
       repoId: repo._id,
     });
 
-    const hasUnpushedChanges = await GitVCS.canPush(repo.credentials);
+    const hasUnpushedChanges = await GitVCS.canPush(repo.credentialsId);
 
     await models.gitRepository.update(repo, {
       hasUnpushedChanges,
@@ -1530,7 +1492,12 @@ export const createNewGitBranchAction = async ({
   invariant(typeof branch === 'string', 'Branch name is required');
 
   try {
-    const providerName = getOauth2FormatName(gitRepository?.credentials);
+    let providerName = 'custom';
+    if (gitRepository?.credentialsId) {
+      const credentials = await models.gitCredentials.getById(gitRepository.credentialsId);
+      invariant(credentials, 'Git Credentials not found');
+      providerName = credentials.provider;
+    }
     await GitVCS.checkout(branch);
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'create_branch'),
@@ -1542,7 +1509,7 @@ export const createNewGitBranchAction = async ({
 
     let hasUnpushedChanges = false;
     try {
-      hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+      hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentialsId);
     } catch (err) {
       console.error('Error checking for unpushed changes', err);
       hasUnpushedChanges = false;
@@ -1597,7 +1564,7 @@ export const checkoutGitBranchAction = async ({
 
     let hasUnpushedChanges = false;
     try {
-      hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+      hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentialsId);
     } catch (err) {
       console.error('Error checking for unpushed changes', err);
       hasUnpushedChanges = false;
@@ -1665,7 +1632,12 @@ export const mergeGitBranch = async ({
   allowUncommittedChangesBeforeMerge?: boolean;
 }) => {
   const gitRepository = await getGitRepository({ workspaceId, projectId });
-  const providerName = getOauth2FormatName(gitRepository.credentials);
+  let providerName = 'custom';
+  if (gitRepository?.credentialsId) {
+    const credentials = await models.gitCredentials.getById(gitRepository.credentialsId);
+    invariant(credentials, 'Git Credentials not found');
+    providerName = credentials.provider;
+  }
 
   invariant(typeof theirsBranch === 'string', 'Branch name is required');
 
@@ -1735,9 +1707,16 @@ export const deleteGitBranchAction = async ({
     const repo = await getGitRepository({ workspaceId, projectId });
     await GitVCS.deleteBranch(branch);
 
+    let providerName = 'custom';
+    if (repo.credentialsId) {
+      const credentials = await models.gitCredentials.getById(repo.credentialsId);
+      invariant(credentials, 'Git Credentials not found');
+      providerName = credentials.provider;
+    }
+
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'delete_branch'),
-      providerName: getOauth2FormatName(repo?.credentials),
+      providerName,
       repoId: repo._id,
     });
     return {};
@@ -1768,7 +1747,7 @@ export const pushToGitRemoteAction = async ({
   // Check if there is anything to push
   let canPush = false;
   try {
-    canPush = await GitVCS.canPush(gitRepository.credentials);
+    canPush = await GitVCS.canPush(gitRepository.credentialsId);
   } catch (err) {
     if (err instanceof Errors.HttpError) {
       if (err.data.statusCode === 401 || err.data.statusCode === 403) {
@@ -1796,10 +1775,15 @@ export const pushToGitRemoteAction = async ({
     };
   }
 
-  const providerName = getOauth2FormatName(gitRepository.credentials);
+  let providerName = 'custom';
+  if (gitRepository?.credentialsId) {
+    const credentials = await models.gitCredentials.getById(gitRepository.credentialsId);
+    invariant(credentials, 'Git Credentials not found');
+    providerName = credentials.provider;
+  }
   try {
     const bufferId = await database.bufferChanges();
-    await GitVCS.push(gitRepository.credentials);
+    await GitVCS.push(gitRepository.credentialsId);
 
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push'),
@@ -1855,15 +1839,29 @@ export const pushToGitRemoteAction = async ({
 
 export async function fetchGitRemoteBranches({
   uri,
-  credentials,
+  credentialsId,
 }: {
   uri: string;
-  credentials?: GitCredentials;
+  credentialsId?: string;
 }): Promise<{ branches: string[]; errors?: string[] }> {
   try {
+    if (!credentialsId) {
+      return { branches: [] };
+    }
+
+    const credentials = await models.gitCredentials.getById(credentialsId);
+
+    if (!credentials) {
+      return { branches: [] };
+    }
+    const gitProvider = gitRemoteProviderRegistry.get(credentials.provider as GitRemoteProviderType);
+    const validateResult = await gitProvider?.validateUrl(uri);
+    if (!validateResult?.valid) {
+      throw new Error('Invalid Git Repository URL');
+    }
     const branches = await fetchRemoteBranches({
       uri: parseGitToHttpsURL(uri),
-      credentials,
+      credentialsId,
     });
 
     return { branches };
@@ -1876,12 +1874,15 @@ export async function fetchGitRemoteBranches({
 export async function pullFromGitRemote({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
   try {
     const gitRepository = await getGitRepository({ projectId, workspaceId });
-    const providerName = getOauth2FormatName(gitRepository.credentials);
+    invariant(gitRepository.credentialsId, 'Git Credentials ID is required');
+    const credentials = await models.gitCredentials.getById(gitRepository.credentialsId);
+    invariant(credentials, 'Git Credentials not found');
+
     const bufferId = await database.bufferChanges();
-    await GitVCS.pullWithConflictSupport(gitRepository.credentials);
+    await GitVCS.pullWithConflictSupport(gitRepository.credentialsId);
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'pull'),
-      providerName,
+      providerName: credentials.provider,
       repoId: gitRepository._id,
     });
 
@@ -1911,7 +1912,12 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     }
 
     const gitRepository = await getGitRepository({ projectId, workspaceId });
-    const providerName = getOauth2FormatName(gitRepository.credentials);
+    let providerName = 'custom';
+    if (gitRepository?.credentialsId) {
+      const credentials = await models.gitCredentials.getById(gitRepository.credentialsId);
+      invariant(credentials, 'Git Credentials not found');
+      providerName = credentials.provider;
+    }
 
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'pull', errorMessage),
@@ -2289,415 +2295,93 @@ const getRepositoryDirectoryTree = async ({
   };
 };
 
-export const GITHUB_GRAPHQL_API_URL = getGitHubGraphQLApiURL();
+async function listGitProviders() {
+  const providers = gitRemoteProviderRegistry.listProviderOptions();
 
-/**
- * This cache stores the states that are generated for the OAuth flow.
- * This is used to check if a command to exchange a code for a token has been initiated by the app or not.
- * More info https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps#2-users-are-redirected-back-to-your-site-by-github
- */
-const statesCache = new Set<string>();
+  return providers;
+}
 
-async function initSignInToGitHub() {
+async function initSignInToGitProvider({ provider }: { provider: GitRemoteProviderType }) {
+  const gitProvider = gitRemoteProviderRegistry.get(provider);
+
+  invariant(gitProvider, `Git provider ${provider} not found`);
+
+  invariant(gitProvider.initiateOAuth, `Git provider ${provider} does not support OAuth`);
+
   try {
-    const state = v4();
-    statesCache.add(state);
-    const url = new URL(getAppWebsiteBaseURL() + '/oauth/github-app');
+    await gitProvider.initiateOAuth();
 
-    url.search = new URLSearchParams({
-      state,
-    }).toString();
-
-    await shell.openExternal(url.toString());
     return {};
   } catch (error) {
-    console.error('Failed to initiate the GitHub OAuth flow:', error);
-
-    return { errors: [`Failed to initiate the GitHub OAuth flow. ${getErrorMessage(error)}`] };
+    console.error(`Failed to initiate the ${provider} OAuth flow:`, error);
+    return { errors: [`Failed to initiate the ${provider} OAuth flow. ${getErrorMessage(error)}`] };
   }
 }
 
-interface GitHubUserApiResponse {
-  name: string;
-  login: string;
-  email: string | null;
-  avatar_url: string;
-  url: string;
-}
+async function completeSignInToGitProvider({
+  provider,
+  code,
+  state,
+}: {
+  provider: GitRemoteProviderType;
+  code: string;
+  state: string;
+}) {
+  const gitProvider = gitRemoteProviderRegistry.get(provider);
 
-async function completeSignInToGitHub({ code, state }: { code: string; state: string }) {
+  invariant(gitProvider, `Git provider ${provider} not found`);
+  invariant(gitProvider.completeOAuth, `Git provider ${provider} does not support OAuth`);
+
   try {
-    if (!PLAYWRIGHT && !statesCache.has(state)) {
-      throw new Error('Invalid state parameter. It looks like the authorization flow was not initiated by the app.');
+    const result = await gitProvider.completeOAuth(code, state);
+
+    if (!result.success) {
+      return { errors: [result.error || `Failed to complete the ${provider} OAuth flow`] };
     }
 
-    const response = await net.fetch(getApiBaseURL() + '/v1/oauth/github-app', {
-      method: 'POST',
-      body: JSON.stringify({
-        code,
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const data = (await response.json()) as { access_token: string };
-    statesCache.delete(state);
-    const existingGitHubCredentials = await models.gitCredentials.getByProvider('github');
-
-    // need both requests because the email in GET /user
-    // is the public profile email and may not exist
-    const emailsPromise = net
-      .fetch(getGitHubRestApiUrl() + '/user/emails', {
-        method: 'GET',
-        headers: {
-          Authorization: `token ${data.access_token}`,
-        },
-      })
-      .then(response => response.json() as Promise<{ email: string; primary: boolean }[]>);
-
-    const userPromise = net
-      .fetch(getGitHubRestApiUrl() + '/user', {
-        method: 'GET',
-        headers: {
-          Authorization: `token ${data.access_token}`,
-        },
-      })
-      .then(response => response.json() as Promise<GitHubUserApiResponse>);
-
-    const [emails, user] = await Promise.all([emailsPromise, userPromise]);
-
-    const userProfileEmail = user.email ?? '';
-    const email = emails.find(e => e.primary)?.email ?? userProfileEmail ?? '';
-
-    await (existingGitHubCredentials
-      ? models.gitCredentials.update(existingGitHubCredentials, {
-          token: data.access_token,
-          provider: 'githubapp',
-          author: {
-            email,
-            name: user.name ?? user.login ?? '',
-            avatarUrl: user.avatar_url,
-          },
-        })
-      : models.gitCredentials.create({
-          token: data.access_token,
-          provider: 'githubapp',
-          author: {
-            email,
-            name: user.name ?? user.login ?? '',
-            avatarUrl: user.avatar_url,
-          },
-        }));
-
-    trackSegmentEvent(SegmentEvent.gitAuthenticationCompleted, { provider: 'github' });
+    trackSegmentEvent(SegmentEvent.gitAuthenticationCompleted, { provider });
 
     return {};
   } catch (error) {
-    console.error('Failed to complete the GitHub OAuth flow:', error);
-    return { errors: ['Failed to complete the GitHub OAuth flow.'] };
+    console.error(`Failed to complete the ${provider} OAuth flow:`, error);
+    return { errors: [`Failed to complete the ${provider} OAuth flow. ${getErrorMessage(error)}`] };
   }
 }
 
-async function signOutOfGitHub() {
-  const existingGitHubCredentials = await models.gitCredentials.getByProvider('github');
-
-  if (existingGitHubCredentials) {
-    await models.gitCredentials.remove(existingGitHubCredentials);
-  }
-}
-
-interface GitHubRepositoryApiResponse {
-  id: string;
-  full_name: string;
-  clone_url: string;
-  permissions: {
-    push: boolean;
-    pull: boolean;
-  };
-}
-
-type GitHubRepositoriesApiResponse = GitHubRepositoryApiResponse[];
-
-const GITHUB_USER_REPOS_URL = `${getGitHubRestApiUrl()}/user/repos`;
-
-async function getGitHubRepositories({
-  url = `${GITHUB_USER_REPOS_URL}?per_page=100`,
-  repos = [],
+async function getGitProviderRepositories({
+  credentialsId,
+  refresh,
 }: {
-  url?: string;
-  repos?: GitHubRepositoriesApiResponse;
-}) {
+  credentialsId: string;
+  refresh?: boolean;
+}): Promise<{
+  repos: ProviderRepository[];
+  errors: string[];
+}> {
   try {
-    const credentials = await models.gitCredentials.getByProvider('github');
-    const opts = {
-      headers: {
-        Authorization: `token ${credentials?.token}`,
-      },
-    };
+    const credentials = await models.gitCredentials.getById(credentialsId);
+    invariant(credentials, 'Git credentials not found');
+    invariant(isGitCredentialsV2(credentials), 'Invalid Git credentials');
 
-    const response = await net.fetch(url, opts);
-    if (!response.ok) {
-      const raw = await response.text();
-      if (response.status === 401) {
-        return {
-          errors: [`User token not authorized to fetch repositories, please sign out and back in.\nResponse: ${raw}`],
-          repos: [],
-        };
-      }
+    // Use the appropriate provider for fetching repositories
+    const provider = gitRemoteProviderRegistry.get(credentials.provider);
+    if (!provider?.supportsFetchRepos || !provider.fetchRepositories) {
       return {
-        errors: [`Failed to fetch repositories from GitHub: ${response.statusText}\nResponse: ${raw}`],
+        errors: [`${credentials.provider} provider not available.`],
         repos: [],
       };
     }
 
-    const data = await response.json();
+    const providerRepos = await provider.fetchRepositories(credentials, refresh);
 
-    let pullableRepos = data.filter((repo: GitHubRepositoryApiResponse) => repo.permissions.pull);
-    repos.push(...pullableRepos);
-
-    const link = response.headers.get('link');
-    if (link && link.includes('rel="last"')) {
-      const last = link.match(/<([^>]+)>; rel="last"/)?.[1];
-      if (last) {
-        const lastUrl = new URL(last);
-        const lastPage = lastUrl.searchParams.get('page');
-        if (lastPage) {
-          const pages = Number(lastPage);
-          const pageList = await Promise.all(
-            Array.from({ length: pages - 1 }, (_, i) =>
-              net.fetch(`${GITHUB_USER_REPOS_URL}?per_page=100&page=${i + 2}`, opts),
-            ),
-          );
-          for (const page of pageList) {
-            const pageData = await page.json();
-            pullableRepos = pageData.filter((repo: GitHubRepositoryApiResponse) => repo.permissions.pull);
-            repos.push(...pullableRepos);
-          }
-          return { repos, errors: [] };
-        }
-      }
-    }
-    if (link && link.includes('rel="next"')) {
-      const next = link.match(/<([^>]+)>; rel="next"/)?.[1];
-      if (next) {
-        return getGitHubRepositories({ url: next, repos });
-      }
-    }
-    return { repos, errors: [] };
+    return { repos: providerRepos, errors: [] };
   } catch (error) {
-    const errorMessage = `Failed to fetch repositories from GitHub. ${getErrorMessage(error)}`;
+    const errorMessage = `Failed to fetch repositories from Git provider. ${getErrorMessage(error)}`;
     return { repos: [], errors: [errorMessage] };
   }
 }
 
-async function getGitHubRepository({ uri }: { uri: string }) {
-  try {
-    const [owner, name] = uri.replace('.git', '').split('/').slice(-2); // extracts the owner + name
-
-    const credentials = await models.gitCredentials.getByProvider('github');
-    const opts = {
-      headers: {
-        Authorization: `token ${credentials?.token}`,
-      },
-    };
-
-    const response = await net.fetch(`${getGitHubRestApiUrl()}/repos/${owner}/${name}`, opts);
-    if (!response.ok) {
-      const raw = await response.text();
-      return {
-        errors: [`Failed to fetch repository from GitHub: ${response.statusText}\nResponse: ${raw}`],
-        notFound: response.status === 404,
-      };
-    }
-
-    return { repo: (await response.json()) as GitHubRepositoryApiResponse, errors: [], notFound: false };
-  } catch (error) {
-    const errorMessage = `Failed to fetch repository from GitHub. ${getErrorMessage(error)}`;
-    return {
-      errors: [errorMessage],
-      notFound: false,
-    };
-  }
-}
-
-/**
- * This cache stores the states that are generated for the OAuth flow.
- * This is used to check if a command to exchange a code for a token has been initiated by the app or not.
- */
-const gitLabStatesCache = new Map<string, string>();
-
-// GitLab API config
-const getGitLabConfig = async () => {
-  // Validate and use the environment variables if provided
-  if (
-    (INSOMNIA_GITLAB_REDIRECT_URI && !INSOMNIA_GITLAB_CLIENT_ID) ||
-    (!INSOMNIA_GITLAB_REDIRECT_URI && INSOMNIA_GITLAB_CLIENT_ID)
-  ) {
-    throw new Error('GitLab Client ID and Redirect URI must both be set.');
-  }
-
-  if (INSOMNIA_GITLAB_REDIRECT_URI && INSOMNIA_GITLAB_CLIENT_ID) {
-    return {
-      clientId: INSOMNIA_GITLAB_CLIENT_ID,
-      redirectUri: INSOMNIA_GITLAB_REDIRECT_URI,
-    };
-  }
-
-  const configResponse = await net.fetch(getApiBaseURL() + '/v1/oauth/gitlab/config', {
-    method: 'GET',
-  });
-
-  const { applicationId: clientId, redirectUri } = (await configResponse.json()) as {
-    applicationId: string;
-    redirectUri: string;
-  };
-
-  return {
-    clientId,
-    redirectUri,
-  };
-};
-
-function base64URLEncode(buffer: Buffer) {
-  return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
-
 export const getGitLabOauthApiURL = () => INSOMNIA_GITLAB_API_URL || 'https://gitlab.com';
-
-async function initSignInToGitLab() {
-  try {
-    const state = v4();
-
-    const verifier = base64URLEncode(randomBytes(32));
-    gitLabStatesCache.set(state, verifier);
-
-    const scopes = [
-      // Needed to read the user's email address, username and avatar_url from the /user GitLab API
-      'read_user',
-      // Read/Write access to the user's projects to allow for syncing (push/pull etc.)
-      'write_repository',
-    ];
-
-    const scope = scopes.join(' ');
-
-    function sha256(str: string) {
-      return createHash('sha256').update(str).digest();
-    }
-
-    const challenge = base64URLEncode(sha256(verifier));
-
-    const gitlabURL = new URL(`${getGitLabOauthApiURL()}/oauth/authorize`);
-    const { clientId, redirectUri } = await getGitLabConfig();
-    gitlabURL.search = new URLSearchParams({
-      client_id: clientId,
-      scope,
-      state,
-      response_type: 'code',
-      redirect_uri: redirectUri,
-      code_challenge: challenge,
-      code_challenge_method: 'S256',
-    }).toString();
-
-    await shell.openExternal(gitlabURL.toString());
-
-    return {};
-  } catch (err) {
-    console.error('Failed to initiate the GitLab OAuth flow:\n', err);
-    return {
-      errors: [`Failed to initiate the the GitLab OAuth flow. ${getErrorMessage(err)}`],
-    };
-  }
-}
-
-async function completeSignInToGitLab({ code, state }: { code: string; state: string }) {
-  try {
-    let verifier = gitLabStatesCache.get(state);
-
-    if (PLAYWRIGHT) {
-      verifier = 'test-verifier';
-    }
-    if (!verifier) {
-      throw new Error('Invalid state parameter. It looks like the authorization flow was not initiated by the app.');
-    }
-    const { clientId, redirectUri } = await getGitLabConfig();
-    const url = new URL(`${getGitLabOauthApiURL()}/oauth/token`);
-    url.search = new URLSearchParams({
-      code,
-      state,
-      client_id: clientId,
-      grant_type: 'authorization_code',
-      redirect_uri: redirectUri,
-      code_verifier: verifier,
-    }).toString();
-
-    const gitLabResponse = await net.fetch(getGitLabOauthApiURL() + url.pathname + url.search, {
-      method: 'POST',
-    });
-
-    const { access_token, refresh_token } = (await gitLabResponse.json()) as {
-      access_token: string;
-      refresh_token: string;
-    };
-
-    gitLabStatesCache.delete(state);
-    const existingGitLabCredentials = await models.gitCredentials.getByProvider('gitlab');
-
-    const gitLabUserResponse = await net.fetch(`${getGitLabOauthApiURL()}/api/v4/user`, {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
-    });
-
-    const user = (await gitLabUserResponse.json()) as {
-      id: number;
-      username: string;
-      name: string;
-      avatar_url: string;
-      public_email: string;
-      email: string;
-      projects_limit: number;
-      commit_email: string;
-    };
-
-    if (existingGitLabCredentials) {
-      return await models.gitCredentials.update(existingGitLabCredentials, {
-        token: access_token,
-        refreshToken: refresh_token,
-        provider: 'gitlab',
-        author: {
-          email: user.commit_email ?? user.public_email ?? user.email ?? '',
-          name: user.username ?? user.name ?? '',
-          avatarUrl: user.avatar_url,
-        },
-      });
-    }
-
-    trackSegmentEvent(SegmentEvent.gitAuthenticationCompleted, { provider: 'gitlab' });
-
-    return await models.gitCredentials.create({
-      token: access_token,
-      refreshToken: refresh_token,
-      provider: 'gitlab',
-      author: {
-        email: user.commit_email ?? user.public_email ?? user.email ?? '',
-        name: user.username ?? user.name ?? '',
-        avatarUrl: user.avatar_url,
-      },
-    });
-  } catch (error) {
-    console.error('Failed to complete the GitLab OAuth flow:', error);
-    return { errors: [`Failed to complete the GitLab OAuth flow. ${getErrorMessage(error)}`] };
-  }
-}
-
-async function signOutOfGitLab() {
-  const existingGitLabCredentials = await models.gitCredentials.getByProvider('gitlab');
-
-  if (existingGitLabCredentials) {
-    await models.gitCredentials.remove(existingGitLabCredentials);
-  }
-}
 
 async function getCurrentBranchByRepositoryId({
   repositoryId,
@@ -2743,16 +2427,13 @@ export interface GitServiceAPI {
   getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
   migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
   fetchGitRemoteBranches: typeof fetchGitRemoteBranches;
-  initSignInToGitHub: typeof initSignInToGitHub;
-  completeSignInToGitHub: typeof completeSignInToGitHub;
-  signOutOfGitHub: typeof signOutOfGitHub;
-  getGitHubRepositories: typeof getGitHubRepositories;
-  getGitHubRepository: typeof getGitHubRepository;
 
-  initSignInToGitLab: typeof initSignInToGitLab;
-  completeSignInToGitLab: typeof completeSignInToGitLab;
-  signOutOfGitLab: typeof signOutOfGitLab;
+  initSignInToGitProvider: typeof initSignInToGitProvider;
+  completeSignInToGitProvider: typeof completeSignInToGitProvider;
   getCurrentBranchByRepositoryId: typeof getCurrentBranchByRepositoryId;
+
+  getGitProviderRepositories: typeof getGitProviderRepositories;
+  listGitProviders: typeof listGitProviders;
 }
 
 export const registerGitServiceAPI = () => {
@@ -2828,23 +2509,17 @@ export const registerGitServiceAPI = () => {
     (_, options: Parameters<typeof migrateLegacyInsomniaFolderToFile>[0]) => migrateLegacyInsomniaFolderToFile(options),
   );
 
-  ipcMainHandle('git.initSignInToGitHub', () => initSignInToGitHub());
-  ipcMainHandle('git.completeSignInToGitHub', (_, options: Parameters<typeof completeSignInToGitHub>[0]) =>
-    completeSignInToGitHub(options),
+  ipcMainHandle('git.initSignInToGitProvider', (_, options: Parameters<typeof initSignInToGitProvider>[0]) =>
+    initSignInToGitProvider(options),
   );
-  ipcMainHandle('git.signOutOfGitHub', () => signOutOfGitHub());
-  ipcMainHandle('git.getGitHubRepositories', (_, options: Parameters<typeof getGitHubRepositories>[0]) =>
-    getGitHubRepositories(options),
-  );
-  ipcMainHandle('git.getGitHubRepository', (_, options: Parameters<typeof getGitHubRepository>[0]) =>
-    getGitHubRepository(options),
+  ipcMainHandle('git.completeSignInToGitProvider', (_, options: Parameters<typeof completeSignInToGitProvider>[0]) =>
+    completeSignInToGitProvider(options),
   );
 
-  ipcMainHandle('git.initSignInToGitLab', () => initSignInToGitLab());
-  ipcMainHandle('git.completeSignInToGitLab', (_, options: Parameters<typeof completeSignInToGitLab>[0]) =>
-    completeSignInToGitLab(options),
+  ipcMainHandle('git.listGitProviders', () => listGitProviders());
+  ipcMainHandle('git.getGitProviderRepositories', (_, options: Parameters<typeof getGitProviderRepositories>[0]) =>
+    getGitProviderRepositories(options),
   );
-  ipcMainHandle('git.signOutOfGitLab', () => signOutOfGitLab());
   ipcMainHandle(
     'git.getCurrentBranchByRepositoryId',
     (_, options: Parameters<typeof getCurrentBranchByRepositoryId>[0]) => getCurrentBranchByRepositoryId(options),

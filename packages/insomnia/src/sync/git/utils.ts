@@ -1,9 +1,11 @@
 import type { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
-import type { GitAuthor, GitCredentials } from '~/models/git-repository';
+import { isGitCredentialsV2 } from '~/models/git-credentials';
+import type { GitAuthor } from '~/models/git-repository';
+import { gitRemoteProviderRegistry, isGitCredentialsV1 } from '~/sync/git/providers';
+import { invariant } from '~/utils/invariant';
 
 import { gitCredentials, gitRepository } from '../../models';
-import type { OauthProviderName } from '../../models/git-repository';
 
 export const addDotGit = (url: string): string => (url.endsWith('.git') ? url : `${url}.git`);
 
@@ -11,48 +13,30 @@ const onMessage: MessageCallback = message => {
   console.log(`[git-event] ${message}`);
 };
 
-const onAuthFailure = (credentials?: GitCredentials): AuthFailureCallback => {
-  let retryCount = 0;
-  const maxRetries = 2;
+const onAuthFailure = (credentialsId?: string | null): AuthFailureCallback => {
+  return async url => {
+    console.log(`[git-event] Auth Failure: ${url}`);
 
-  return async (message, auth) => {
-    console.log(`[git-event] Auth Failure: ${message}`);
+    try {
+      invariant(credentialsId, 'No credentials ID provided for auth failure handling');
+      const credentials = await gitCredentials.getById(credentialsId);
+      invariant(credentials, 'Credentials not found for auth failure handling');
+      invariant(isGitCredentialsV2(credentials), 'Legacy credentials are not supported');
 
-    // Try to refresh the token if auth failed.
-    // Whenever we return a new GitAuth object from this function
-    // isomorphic-git will retry the request with the new credentials.
-    // https://isomorphic-git.org/docs/en/onAuthFailure#docsNav
-    if (
-      credentials &&
-      'oauth2format' in credentials &&
-      credentials.oauth2format === 'gitlab' &&
-      retryCount < maxRetries
-    ) {
-      retryCount++;
-      console.log(`[git-event] Attempting to refresh token (attempt ${retryCount}/${maxRetries})`);
-      try {
-        const providerCredentials = await gitCredentials.getByProvider(credentials.oauth2format);
-        if (providerCredentials?.refreshToken) {
-          return {
-            ...auth,
-            password: providerCredentials.refreshToken,
-            headers: {
-              ...auth.headers,
-              Authorization: `Bearer ${providerCredentials.refreshToken}`,
-            },
-          };
-        }
-      } catch (error) {
-        console.warn('[git-event] Failed to refresh token', error);
+      const provider = gitRemoteProviderRegistry.get(credentials.provider);
+
+      if (!provider || !provider.authFailureCallback) {
+        console.log('[git-event] No provider or auth failure callback available');
         return;
       }
-    }
 
-    if (retryCount >= maxRetries) {
-      console.warn(`[git-event] Maximum retry attempts (${maxRetries}) reached, giving up`);
-    }
+      const authFailureCallback = provider.authFailureCallback(credentials);
 
-    return;
+      return authFailureCallback;
+    } catch (error) {
+      console.warn('[git-event] Failed to refresh token', error);
+      return;
+    }
   };
 };
 
@@ -61,9 +45,9 @@ const onAuthSuccess: AuthSuccessCallback = message => {
 };
 
 const onAuth =
-  (credentials?: GitCredentials): AuthCallback =>
+  (credentialsId?: string | null): AuthCallback =>
   async (): Promise<GitAuth> => {
-    if (!credentials) {
+    if (!credentialsId) {
       console.log('[git-event] No credentials');
       return {
         username: '',
@@ -71,92 +55,57 @@ const onAuth =
       };
     }
 
-    if ('oauth2format' in credentials && credentials.oauth2format) {
-      console.log('[git-event] Using OAuth2 credentials');
-      const providerCredentials = await gitCredentials.getByProvider(credentials.oauth2format);
+    const credentials = await gitCredentials.getById(credentialsId);
 
-      if (!providerCredentials) {
-        console.warn('[git-event] No OAuth2 credentials found');
-        return {
-          username: '',
-          password: '',
-        };
-      }
-
-      // Transform the credentials to the format expected by isomorphic-git https://isomorphic-git.org/docs/en/onAuth#oauth2-tokens
-      if (providerCredentials.provider === 'gitlab') {
-        return {
-          username: 'oauth2',
-          password: providerCredentials.token,
-        };
-      }
-
-      if (providerCredentials.provider === 'github') {
-        return {
-          username: providerCredentials.token,
-          password: 'x-oauth-basic',
-        };
-      }
-
-      if (providerCredentials.provider === 'githubapp') {
-        return {
-          username: 'x-access-token',
-          password: providerCredentials.token,
-        };
-      }
+    if (!credentials || isGitCredentialsV1(credentials)) {
+      console.log('[git-event] No credentials found or using legacy credentials');
+      return {
+        username: '',
+        password: '',
+      };
     }
 
-    console.log('[git-event] Using basic auth credentials');
+    const provider = gitRemoteProviderRegistry.get(credentials.provider);
+
+    if (provider && provider.authCallback) {
+      console.log(`[git-event] Using provider ${provider.config.type} for auth callback`);
+      const gitAuth = provider.authCallback(credentials);
+      return gitAuth;
+    }
+
     return {
-      username: credentials.username,
-      // @ts-expect-error -- TSCONVERSION this needs to be handled better if credentials is undefined or which union type
-      password: credentials.password || credentials.token,
+      username: '',
+      password: '',
     };
   };
 
 export const getAuthorFromGitRepository = async (gitRepositoryId: string): Promise<GitAuthor> => {
   const gitRepo = await gitRepository.getById(gitRepositoryId);
 
-  if (!gitRepo) {
+  if (!gitRepo || !gitRepo.credentialsId) {
     return {
       name: '',
       email: '',
     };
   }
 
-  if (!gitRepo.credentials) {
-    return gitRepo.author;
-  }
+  const credentials = await gitCredentials.getById(gitRepo.credentialsId);
 
-  if ('oauth2format' in gitRepo.credentials && gitRepo.credentials.oauth2format) {
-    console.log('[git-event] Using OAuth2 credentials');
-    const providerCredentials = await gitCredentials.getByProvider(gitRepo.credentials.oauth2format);
-
-    if (!providerCredentials) {
-      console.warn('[git-event] No OAuth2 credentials found');
-      return gitRepo.author;
-    }
-
+  if (!credentials || isGitCredentialsV1(credentials)) {
     return {
-      name: providerCredentials.author.name,
-      email: providerCredentials.author.email,
+      name: '',
+      email: '',
     };
   }
 
-  return gitRepo.author;
+  return credentials.author;
 };
 
-export const getOauth2FormatName = (credentials?: GitCredentials | null): OauthProviderName | undefined => {
-  if (credentials && 'oauth2format' in credentials) {
-    return credentials.oauth2format;
-  }
-
-  return;
+export const gitCallbacks = (credentialsId?: string | null) => {
+  return {
+    onMessage,
+    onAuthFailure: onAuthFailure(credentialsId),
+    onAuthSuccess,
+    onAuth: onAuth(credentialsId),
+  };
 };
-
-export const gitCallbacks = (credentials?: GitCredentials | null) => ({
-  onMessage,
-  onAuthFailure: onAuthFailure(credentials ?? undefined),
-  onAuthSuccess,
-  onAuth: onAuth(credentials ?? undefined),
-});

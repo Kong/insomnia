@@ -12,6 +12,7 @@ export default defineConfig({
     exclude: ['src/routes/**.*.tsx', '.react-router', 'node_modules'],
     alias: {
       '~': path.resolve(__dirname, './src'),
+      'electron/main': 'electron',
     },
     server: {
       deps: {

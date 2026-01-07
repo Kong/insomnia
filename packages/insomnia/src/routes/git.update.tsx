@@ -1,16 +1,11 @@
 import { href } from 'react-router';
 
-import type { GitCredentials } from '~/models/git-repository';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/git.update';
 
 interface UpdateGitRepoData {
-  author: {
-    email: string;
-    name: string;
-  };
-  credentials: GitCredentials;
+  credentialsId: string | null;
   uri: string;
   workspaceId?: string;
   projectId: string;

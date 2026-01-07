@@ -1,7 +1,5 @@
 import { useState } from 'react';
 
-import type { OauthProviderName } from '../../../models/git-credentials';
-
 // TODO: remove unused view value
 export type ActiveView = 'project' | 'git-results';
 
@@ -12,14 +10,9 @@ export function useActiveView() {
 
 export interface ProjectData {
   name: string;
-  authorName?: string;
-  authorEmail?: string;
   uri?: string;
   ref?: string;
-  username?: string;
-  password?: string;
-  token?: string;
-  oauth2format?: OauthProviderName;
+  credentialsId?: string;
   connectRepositoryLater?: boolean;
 }
 
