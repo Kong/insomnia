@@ -6,6 +6,7 @@ import { Button } from 'react-aria-components';
 import {
   href,
   isRouteErrorResponse,
+  Link as RouterLink,
   Links,
   matchPath,
   Meta,
@@ -13,7 +14,6 @@ import {
   Scripts,
   ScrollRestoration,
   useNavigate,
-  useNavigation,
   useParams,
   useRouteLoaderData,
 } from 'react-router';
@@ -100,8 +100,6 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
     return err?.stack;
   };
 
-  const navigate = useNavigate();
-  const navigation = useNavigation();
   const errorMessage = getErrorMessage(error);
   const logoutFetcher = useLogoutFetcher();
 
@@ -122,13 +120,13 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
         </div>
       )}
       <div className="flex items-center gap-2">
-        <Button
+        <RouterLink
+          reloadDocument
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-          onPress={() => navigate('/organization')}
+          to="/organization"
         >
-          Try to reload the app{' '}
-          <span>{navigation.state === 'loading' ? <Icon icon="spinner" className="animate-spin" /> : null}</span>
-        </Button>
+          Try to reload the app
+        </RouterLink>
         <Button
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => logoutFetcher.submit()}
@@ -157,14 +155,12 @@ export const useRootLoaderData = () => {
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await models.settings.get();
   const workspaceCount = await models.workspace.count();
-  const mcpWorkspaceCount = await models.workspace.count('mcp');
   const userSession = await models.userSession.getOrCreate();
   const cloudCredentials = await models.cloudCredential.all();
 
   return {
     settings,
     workspaceCount,
-    mcpWorkspaceCount,
     userSession,
     cloudCredentials,
   };
