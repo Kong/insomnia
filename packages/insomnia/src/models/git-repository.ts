@@ -20,6 +20,7 @@ export function init(): BaseGitRepository {
     needsFullClone: false,
     uri: '',
     credentials: null,
+    credentialsId: null,
     author: {
       name: '',
       email: '',
@@ -36,7 +37,11 @@ export function init(): BaseGitRepository {
 export interface BaseGitRepository {
   needsFullClone: boolean;
   uri: string;
+  /**
+   * @deprecated Use credentialsId instead
+   */
   credentials: GitCredentials | null;
+  credentialsId: string | null;
   author: {
     name: string;
     email: string;
@@ -64,6 +69,10 @@ export function create(patch: Partial<GitRepository> = {}) {
 
 export async function getById(id: string) {
   return db.findOne<GitRepository>(type, { _id: id });
+}
+
+export async function getAllByCredentialId(credentialsId: string) {
+  return db.find<GitRepository>(type, { credentialsId });
 }
 
 export function update(repo: GitRepository, patch: Partial<GitRepository>) {

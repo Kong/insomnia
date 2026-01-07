@@ -29,8 +29,7 @@ import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
-import { useGithubCompleteSignInFetcher } from '~/routes/git-credentials.github.complete-sign-in';
-import { useGitLabCompleteSignInFetcher } from '~/routes/git-credentials.gitlab.complete-sign-in';
+import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -40,12 +39,7 @@ import { showError, showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
-import {
-  SettingsModal,
-  TAB_CLOUD_CREDENTIAL,
-  TAB_INDEX_PLUGINS,
-  TAB_INDEX_THEMES,
-} from '~/ui/components/modals/settings-modal';
+import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import cssHref from '~/ui/css/styles.css?url';
@@ -312,9 +306,8 @@ const Root = () => {
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: logoutSubmit } = useLogoutFetcher();
-  const { submit: githubCompleteSignInSubmit } = useGithubCompleteSignInFetcher();
-  const { submit: gitLabCompleteSignInSubmit } = useGitLabCompleteSignInFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
+  const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -378,7 +371,7 @@ const Root = () => {
               try {
                 // TODO (pavkout): Remove second parameter when we will decide about the @scoped packages name validation
                 await window.main.installPlugin(params.name.trim(), true);
-                showModal(SettingsModal, { tab: TAB_INDEX_PLUGINS });
+                showModal(SettingsModal, { tab: 'plugins' });
               } catch (err) {
                 showError({
                   title: 'Plugin Install',
@@ -411,7 +404,7 @@ const Root = () => {
               });
               await reloadPlugins();
               await setTheme(parsedTheme.name);
-              showModal(SettingsModal, { tab: TAB_INDEX_THEMES });
+              showModal(SettingsModal, { tab: 'themes' });
             }
           },
         });
@@ -421,16 +414,18 @@ const Root = () => {
         urlWithoutParams === 'insomnia://oauth/github-app/authenticate'
       ) {
         const { code, state } = params;
-        return githubCompleteSignInSubmit({
+        return gitProviderCompleteSignInSubmit({
           code,
           state,
+          provider: 'github',
         });
       }
       if (urlWithoutParams === 'insomnia://oauth/gitlab/authenticate') {
         const { code, state } = params;
-        return gitLabCompleteSignInSubmit({
+        return gitProviderCompleteSignInSubmit({
           code,
           state,
+          provider: 'gitlab',
         });
       }
       if (urlWithoutParams === 'insomnia://app/auth/finish') {
@@ -488,7 +483,7 @@ const Root = () => {
               // close the modal to hint user Azure oauth url if exists
               closeModalBtn.click();
             }
-            showModal(SettingsModal, { tab: TAB_CLOUD_CREDENTIAL });
+            showModal(SettingsModal, { tab: 'credentials' });
           } else {
             showError({
               title: 'Azure Authorization Failed',
@@ -547,8 +542,7 @@ const Root = () => {
   }, [
     authorizeSubmit,
     createCloudCredentials,
-    gitLabCompleteSignInSubmit,
-    githubCompleteSignInSubmit,
+    gitProviderCompleteSignInSubmit,
     logoutSubmit,
     navigate,
     redirectToDefaultBrowserSubmit,

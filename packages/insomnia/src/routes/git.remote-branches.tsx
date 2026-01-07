@@ -1,13 +1,12 @@
 import { href } from 'react-router';
 
-import type { GitCredentials } from '~/models/git-repository';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/git.remote-branches';
 
 interface FetchRemoteBranchesData {
   uri: string;
-  credentials: GitCredentials;
+  credentialsId?: string;
 }
 
 export async function clientAction({ request }: Route.ClientActionArgs) {

@@ -4,7 +4,6 @@ import * as reactUse from 'react-use';
 import { z } from 'zod/v4';
 
 import { fuzzyMatch } from '~/common/misc';
-import type { GitCredentials } from '~/models/git-repository';
 import { useGitRemoteBranchesActionFetcher } from '~/routes/git.remote-branches';
 
 import { Icon } from '../icon';
@@ -14,22 +13,18 @@ const GitRemoteURISchema = z.url();
 export const GitRemoteBranchSelect = ({
   url,
   isDisabled,
-  credentials,
+  credentialsId,
 }: {
   url: string;
   isDisabled: boolean;
-  credentials: GitCredentials;
+  credentialsId?: string;
 }) => {
   const uri = useDeferredValue(url);
   const remoteBranchesFetcher = useGitRemoteBranchesActionFetcher({ key: `branch-select:${uri}` });
   const remoteBranches = remoteBranchesFetcher.data?.branches || [];
   const isLoadingRemoteBranches = remoteBranchesFetcher.state !== 'idle';
   const isComboboxDisabled = remoteBranches.length === 0 || isLoadingRemoteBranches || !uri || isDisabled;
-  const areEssentialInputsAvailable = Boolean(
-    uri &&
-      GitRemoteURISchema.safeParse(uri).success &&
-      ('oauth2format' in credentials || (credentials.username && 'password' in credentials && credentials.password)),
-  );
+  const areEssentialInputsAvailable = Boolean(uri && GitRemoteURISchema.safeParse(uri).success && credentialsId);
 
   const shouldFetchRemoteBranchesAutomatically =
     areEssentialInputsAvailable && !isLoadingRemoteBranches && !remoteBranchesFetcher.data;
@@ -40,12 +35,12 @@ export const GitRemoteBranchSelect = ({
       if (shouldFetchRemoteBranchesAutomatically) {
         remoteBranchesFetcher.submit({
           uri,
-          credentials,
+          credentialsId,
         });
       }
     },
     300,
-    [uri, credentials],
+    [uri, credentialsId],
   );
 
   // The re-fetch button is enabled in case of errors so user can manually recover when possible
@@ -66,6 +61,9 @@ export const GitRemoteBranchSelect = ({
         allowsCustomValue={false}
         className="w-full"
         defaultSelectedKey={remoteBranches[0]}
+        onSelectionChange={() => {
+          console.log('Stuff selected');
+        }}
         isDisabled={isComboboxDisabled}
         defaultItems={remoteBranches.map(branch => ({
           id: branch,
@@ -100,7 +98,7 @@ export const GitRemoteBranchSelect = ({
               if (uri && !isLoadingRemoteBranches) {
                 remoteBranchesFetcher.submit({
                   uri,
-                  credentials,
+                  credentialsId,
                 });
               }
             }}
