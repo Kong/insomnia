@@ -23,6 +23,7 @@ import {
 } from '~/models/git-credentials';
 import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
 import { useGitCredentialsDeleteActionFetcher } from '~/routes/git-credentials.$id.delete';
+import { useRelatedProjectsByGitCredentialsIdLoaderFetcher } from '~/routes/git-credentials.$id.related-projects';
 import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
 import { useInitSignInToGitProviderFetcher } from '~/routes/git-credentials.init-sign-in';
 import { GitCustomCredentialForm } from '~/ui/components/git-credentials/git-custom-credential-form';
@@ -212,7 +213,9 @@ const GitCredentialsList = () => {
   const [gitCredentialToEdit, setGitCredentialToEdit] = useState<GitCredentialsV2 | null>(null);
   const credentialsFetcher = useGitCredentialsLoaderFetcher();
   const deleteCredentialFetcher = useGitCredentialsDeleteActionFetcher();
+  const relatedProjectsFetcher = useRelatedProjectsByGitCredentialsIdLoaderFetcher();
   const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
+  const [pendingDeleteCredentialId, setPendingDeleteCredentialId] = useState<string | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<{
     type: GitRemoteProviderType;
     displayName: string;
@@ -234,6 +237,50 @@ const GitCredentialsList = () => {
     }
     previousCredentialsLengthRef.current = currentLength;
   }, [credentialsFetcher.data?.credentials.length]);
+
+  // Handle delete confirmation when related projects data is loaded
+  useEffect(() => {
+    if (pendingDeleteCredentialId && relatedProjectsFetcher.state === 'idle' && relatedProjectsFetcher.data) {
+      const projectNames = relatedProjectsFetcher.data.projects?.map(p => p.name) || [];
+
+      if (projectNames.length > 0) {
+        showModal(AlertModal, {
+          title: 'Cannot Delete Git Credential',
+          message: (
+            <div className="flex flex-col gap-4">
+              <p>This git credential is currently being used by the following projects:</p>
+              <ul className="flex flex-col gap-2 rounded-md border border-solid border-(--hl-md) bg-(--hl-xs) p-4">
+                {projectNames.map(name => (
+                  <li key={name} className="flex items-center gap-2">
+                    <Icon icon="folder" className="text-(--color-font)" />
+                    <span className="font-medium">{name}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-(--color-font-muted)">
+                Please disconnect or delete these projects before removing this credential.
+              </p>
+            </div>
+          ),
+          okLabel: 'OK',
+          addCancel: false,
+        });
+      } else {
+        showModal(AlertModal, {
+          title: 'Delete Git Credential',
+          message:
+            'Are you sure you want to delete this git credential? This will remove the credential from any connected repositories.',
+          okLabel: 'Delete',
+          addCancel: true,
+          onConfirm: async () => {
+            deleteCredentialFetcher.submit({ id: pendingDeleteCredentialId });
+          },
+        });
+      }
+
+      setPendingDeleteCredentialId(null);
+    }
+  }, [pendingDeleteCredentialId, relatedProjectsFetcher.state, relatedProjectsFetcher.data, deleteCredentialFetcher]);
 
   return (
     <div className="mb-4 flex flex-col gap-2 py-4">
@@ -336,16 +383,8 @@ const GitCredentialsList = () => {
                 )}
                 <Button
                   onPress={() => {
-                    showModal(AlertModal, {
-                      title: 'Delete Git Credential',
-                      message:
-                        'Are you sure you want to delete this git credential? This will remove the credential from any connected repositories.',
-                      okLabel: 'Delete',
-                      addCancel: true,
-                      onConfirm: async () => {
-                        deleteCredentialFetcher.submit({ id: item._id });
-                      },
-                    });
+                    setPendingDeleteCredentialId(item._id);
+                    relatedProjectsFetcher.load({ gitCredentialsId: item._id });
                   }}
                   className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
                 >
