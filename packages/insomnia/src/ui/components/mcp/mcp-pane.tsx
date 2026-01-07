@@ -38,6 +38,7 @@ import {
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { McpActionsDropdown } from '~/ui/components/dropdowns/mcp-actions-dropdown';
 import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
+import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
@@ -537,6 +538,8 @@ export const McpPane = () => {
               </GridList>
             </div>
           </div>
+          <WorkspaceSyncDropdown />
+
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
           {isCertificatesModalOpen && <MCPCertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
         </div>
