@@ -216,7 +216,7 @@ const GitCredentialsList = () => {
   const deleteCredentialFetcherSubmit = deleteCredentialFetcher.submit;
   const relatedProjectsFetcher = useRelatedProjectsByGitCredentialsIdLoaderFetcher();
   const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
-  const [pendingDeleteCredentialId, setPendingDeleteCredentialId] = useState<string | null>(null);
+  const pendingDeleteCredentialIdRef = useRef<string | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<{
     type: GitRemoteProviderType;
     displayName: string;
@@ -241,18 +241,23 @@ const GitCredentialsList = () => {
 
   // Handle delete confirmation when related projects data is loaded
   useEffect(() => {
-    if (pendingDeleteCredentialId && relatedProjectsFetcher.state === 'idle' && relatedProjectsFetcher.data) {
-      const projectNames = relatedProjectsFetcher.data.projects?.map(p => p.name) || [];
+    if (
+      pendingDeleteCredentialIdRef.current &&
+      relatedProjectsFetcher.state === 'idle' &&
+      relatedProjectsFetcher.data
+    ) {
+      const credentialIdToDelete = pendingDeleteCredentialIdRef.current;
+      const projects = relatedProjectsFetcher.data.projects || [];
 
-      if (projectNames.length > 0) {
+      if (projects.length > 0) {
         showModal(AlertModal, {
           title: 'Cannot Delete Git Credential',
           message: (
             <div className="flex flex-col gap-4">
               <p>This git credential is currently being used by the following projects:</p>
               <ul className="flex flex-col gap-2 rounded-md border border-solid border-(--hl-md) bg-(--hl-xs) p-4">
-                {projectNames.map(name => (
-                  <li key={name} className="flex items-center gap-2">
+                {projects.map(({ name, _id }) => (
+                  <li key={_id} className="flex items-center gap-2">
                     <Icon icon="folder" className="text-(--color-font)" />
                     <span className="font-medium">{name}</span>
                   </li>
@@ -274,19 +279,14 @@ const GitCredentialsList = () => {
           okLabel: 'Delete',
           addCancel: true,
           onConfirm: async () => {
-            deleteCredentialFetcherSubmit({ id: pendingDeleteCredentialId });
+            deleteCredentialFetcherSubmit({ id: credentialIdToDelete });
           },
         });
       }
 
-      setPendingDeleteCredentialId(null);
+      pendingDeleteCredentialIdRef.current = null;
     }
-  }, [
-    pendingDeleteCredentialId,
-    relatedProjectsFetcher.state,
-    relatedProjectsFetcher.data,
-    deleteCredentialFetcherSubmit,
-  ]);
+  }, [relatedProjectsFetcher.state, relatedProjectsFetcher.data, deleteCredentialFetcherSubmit]);
 
   return (
     <div className="mb-4 flex flex-col gap-2 py-4">
@@ -389,7 +389,7 @@ const GitCredentialsList = () => {
                 )}
                 <Button
                   onPress={() => {
-                    setPendingDeleteCredentialId(item._id);
+                    pendingDeleteCredentialIdRef.current = item._id;
                     relatedProjectsFetcher.load({ gitCredentialsId: item._id });
                   }}
                   className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
