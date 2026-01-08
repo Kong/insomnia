@@ -213,6 +213,7 @@ const GitCredentialsList = () => {
   const [gitCredentialToEdit, setGitCredentialToEdit] = useState<GitCredentialsV2 | null>(null);
   const credentialsFetcher = useGitCredentialsLoaderFetcher();
   const deleteCredentialFetcher = useGitCredentialsDeleteActionFetcher();
+  const deleteCredentialFetcherSubmit = deleteCredentialFetcher.submit;
   const relatedProjectsFetcher = useRelatedProjectsByGitCredentialsIdLoaderFetcher();
   const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
   const [pendingDeleteCredentialId, setPendingDeleteCredentialId] = useState<string | null>(null);
@@ -269,18 +270,23 @@ const GitCredentialsList = () => {
         showModal(AlertModal, {
           title: 'Delete Git Credential',
           message:
-            'Are you sure you want to delete this git credential? This will remove the credential from any connected repositories.',
+            'Are you sure you want to delete this Git credential? You won’t be able to use it to connect new Git Sync projects to the repositories it provides access to.',
           okLabel: 'Delete',
           addCancel: true,
           onConfirm: async () => {
-            deleteCredentialFetcher.submit({ id: pendingDeleteCredentialId });
+            deleteCredentialFetcherSubmit({ id: pendingDeleteCredentialId });
           },
         });
       }
 
       setPendingDeleteCredentialId(null);
     }
-  }, [pendingDeleteCredentialId, relatedProjectsFetcher.state, relatedProjectsFetcher.data, deleteCredentialFetcher]);
+  }, [
+    pendingDeleteCredentialId,
+    relatedProjectsFetcher.state,
+    relatedProjectsFetcher.data,
+    deleteCredentialFetcherSubmit,
+  ]);
 
   return (
     <div className="mb-4 flex flex-col gap-2 py-4">
