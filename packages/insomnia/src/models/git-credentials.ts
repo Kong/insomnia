@@ -1,10 +1,10 @@
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
-export type OauthProviderName = 'gitlab' | 'github';
+export type OauthProviderName = 'gitlab' | 'github' | 'bitbucket';
 
 // New unified provider types
-export type GitRemoteProviderType = 'github' | 'gitlab' | 'custom';
+export type GitRemoteProviderType = OauthProviderName | 'custom';
 
 export type GitCredentials = BaseModel & BaseGitCredentials;
 
@@ -107,6 +107,18 @@ interface GitLabCredential extends BaseCredentialData {
 }
 
 /**
+ * Bitbucket OAuth credential
+ */
+interface BitbucketCredential extends BaseCredentialData {
+  provider: 'bitbucket';
+  credentials: {
+    token: string;
+    refreshToken: string;
+    expiresAt: number;
+  };
+}
+
+/**
  * Custom PAT credential
  */
 interface CustomCredential extends BaseCredentialData {
@@ -121,7 +133,7 @@ interface CustomCredential extends BaseCredentialData {
 /**
  * Unified credential type (new structure)
  */
-export type BaseGitCredentialsV2 = GitHubCredential | GitLabCredential | CustomCredential;
+export type BaseGitCredentialsV2 = GitHubCredential | GitLabCredential | BitbucketCredential | CustomCredential;
 
 /**
  * Combined type supporting both legacy and new credential structures
@@ -180,8 +192,11 @@ export function removeAll() {
  */
 export function isOAuthCredential(
   credential: GitCredentials,
-): credential is BaseModel & (GitHubCredential | GitLabCredential) {
-  return isGitCredentialsV2(credential) && (credential.provider === 'github' || credential.provider === 'gitlab');
+): credential is BaseModel & (GitHubCredential | GitLabCredential | BitbucketCredential) {
+  return (
+    isGitCredentialsV2(credential) &&
+    (credential.provider === 'github' || credential.provider === 'gitlab' || credential.provider === 'bitbucket')
+  );
 }
 
 /**
@@ -193,6 +208,9 @@ export function supportsRenewal(gitCredential: GitCredentials): boolean {
     return !!gitCredential.credentials?.refreshToken;
   }
   if (gitCredential.provider === 'github') {
+    return !!gitCredential.credentials?.refreshToken;
+  }
+  if (gitCredential.provider === 'bitbucket') {
     return !!gitCredential.credentials?.refreshToken;
   }
   return false;

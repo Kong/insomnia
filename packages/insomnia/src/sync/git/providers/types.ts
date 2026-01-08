@@ -6,7 +6,7 @@ import type { GitCredentials } from '~/models/git-credentials';
 /**
  * Supported Git remote provider types
  */
-export type GitRemoteProviderType = 'github' | 'gitlab' | 'custom';
+export type GitRemoteProviderType = 'github' | 'gitlab' | 'custom' | 'bitbucket';
 
 /**
  * Base configuration for all providers
@@ -39,6 +39,13 @@ export interface GitLabProviderConfig extends BaseProviderConfig {
 }
 
 /**
+ * Bitbucket provider configuration
+ */
+export interface BitbucketProviderConfig extends BaseProviderConfig {
+  type: 'bitbucket';
+}
+
+/**
  * Custom PAT provider configuration
  * For any Git server with basic auth
  */
@@ -49,7 +56,11 @@ export interface CustomProviderConfig extends BaseProviderConfig {
 /**
  * Discriminated union of all provider configs
  */
-export type GitRemoteProviderConfig = GitHubProviderConfig | GitLabProviderConfig | CustomProviderConfig;
+export type GitRemoteProviderConfig =
+  | GitHubProviderConfig
+  | GitLabProviderConfig
+  | BitbucketProviderConfig
+  | CustomProviderConfig;
 
 /**
  * OAuth initialization result
@@ -133,19 +144,19 @@ export interface GitRemoteProvider<TConfig extends BaseProviderConfig = BaseProv
 
   /**
    * Fetch repositories accessible by the credential
-   * Only for providers that support it (GitHub, GitLab)
+   * Only for providers that support it (GitHub, GitLab, Bitbucket)
    */
   fetchRepositories?(credential: any, refresh?: boolean): Promise<ProviderRepository[]>;
 
   /**
    * Fetch user emails from the provider
-   * Only for providers that support it (GitHub, GitLab)
+   * Only for providers that support it (GitHub, GitLab, Bitbucket)
    */
   fetchUserEmails?(credential: any): Promise<ProviderEmail[]>;
 
   /**
    * Fetch user information from the provider
-   * Only for providers that support it (GitHub, GitLab)
+   * Only for providers that support it (GitHub, GitLab, Bitbucket)
    */
   fetchUser?(credential: any): Promise<ProviderUser>;
 

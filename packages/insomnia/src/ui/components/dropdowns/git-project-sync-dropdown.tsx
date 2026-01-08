@@ -97,6 +97,8 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
       return ['fab', 'github'];
     } else if (providerName === 'gitlab') {
       return ['fab', 'gitlab'];
+    } else if (providerName === 'bitbucket') {
+      return ['fab', 'bitbucket'];
     }
     return ['fab', 'git-alt'];
   }, [providerName]);

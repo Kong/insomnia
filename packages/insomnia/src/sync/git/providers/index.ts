@@ -2,12 +2,12 @@
  * Git Remote Providers Module
  *
  * This module provides a unified system for handling Git authentication
- * across different Git hosting providers (GitHub, GitLab, etc.)
+ * across different Git hosting providers (GitHub, GitLab, Bitbucket etc.)
  *
  * Main exports:
  * - gitRemoteProviderRegistry: Singleton registry of all providers
  * - initializeGitRemoteProviders: Initialize built-in providers
- * - Provider classes: GitHubProvider, GitLabProvider, CustomProvider, LocalProvider
+ * - Provider classes: GitHubProvider, GitLabProvider, BitbucketProvider CustomProvider, LocalProvider
  * - Types: All TypeScript interfaces and types
  */
 
@@ -17,6 +17,7 @@ export type {
   BaseProviderConfig,
   GitHubProviderConfig,
   GitLabProviderConfig,
+  BitbucketProviderConfig,
   CustomProviderConfig,
   GitRemoteProviderConfig,
   GitRemoteProvider,
@@ -40,10 +41,12 @@ export { GitRemoteProviderRegistry } from './registry';
 // Export provider implementations
 export { GitHubProvider } from './github';
 export { GitLabProvider } from './gitlab';
+export { BitbucketProvider } from './bitbucket';
 export { CustomProvider } from './custom';
 
 import { getGitHubRestApiUrl } from '~/common/constants';
 
+import { BitbucketProvider } from './bitbucket';
 // Import for initialization
 import { CustomProvider } from './custom';
 import { GitHubProvider } from './github';
@@ -86,6 +89,16 @@ export function initializeGitRemoteProviders(): void {
       iconName: ['fab', 'gitlab'],
       instanceUrl: 'https://gitlab.com',
       apiUrl: 'https://gitlab.com/api/v4',
+    }),
+  );
+
+  // Register Bitbucket provider
+  gitRemoteProviderRegistry.register(
+    new BitbucketProvider({
+      type: 'bitbucket',
+      displayName: 'Bitbucket',
+      description: 'Bitbucket.org',
+      iconName: ['fab', 'bitbucket'],
     }),
   );
 

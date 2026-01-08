@@ -428,6 +428,14 @@ const Root = () => {
           provider: 'gitlab',
         });
       }
+      if (urlWithoutParams === 'insomnia://oauth/bitbucket/authenticate') {
+        const { code, state } = params;
+        return gitProviderCompleteSignInSubmit({
+          code,
+          state,
+          provider: 'bitbucket',
+        });
+      }
       if (urlWithoutParams === 'insomnia://app/auth/finish') {
         return authorizeSubmit({
           code: params.box,

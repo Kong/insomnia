@@ -11,6 +11,12 @@ const env = process[ENV];
 export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
 export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
 export const INSOMNIA_GITLAB_API_URL = env.INSOMNIA_GITLAB_API_URL;
+
+// TODO: replace
+export const INSOMNIA_BITBUCKET_REDIRECT_URI = 'http://localhost:8080/oauth/redirect';
+export const INSOMNIA_BITBUCKET_CLIENT_ID = 'zKFPbDfgRrcceWLk2Y';
+export const INSOMNIA_BITBUCKET_API_URL = 'https://api.bitbucket.org/2.0';
+
 export const PLAYWRIGHT = env.PLAYWRIGHT;
 
 // App Stuff

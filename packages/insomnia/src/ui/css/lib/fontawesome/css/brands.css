@@ -832,6 +832,14 @@
   content: '\e5ae';
 }
 
+.fa-square-bitbucket:before {
+  content: '\e5ae';
+}
+
+.fa-bitbucket-square:before {
+  content: '\e5ae';
+}
+
 .fa-studiovinari:before {
   content: '\f3f8';
 }
@@ -1005,6 +1013,10 @@
 }
 
 .fa-gitlab:before {
+  content: '\f296';
+}
+
+.fa-bitbucket:before {
   content: '\f296';
 }
 

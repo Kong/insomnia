@@ -184,7 +184,7 @@ export const GitRepoForm: FC<Props> = ({
               </ListBox>
               <div className="w-(--trigger-width) bg-(--hl-xs) p-4 text-sm text-(--color-font)">
                 <span className="font-bold">Need to add another credential? </span>
-                <span>Login with Github or GitLab, or manually add access tokens in </span>
+                <span>Login with Github, GitLab or Bitbucket, or manually add access tokens in </span>
                 <Button
                   onPress={() => {
                     setIsCredentialSelectOpen(false);

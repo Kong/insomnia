@@ -58,8 +58,9 @@ export const LogoutModal = forwardRef<LogoutModalHandle, ModalProps>((_, ref) =>
         </label>
         <p className="mt-2 text-sm text-gray-400">
           This will remove all sensitive data, including <b>cloud provider credentials (AWS, GCP, Azure, HashiCorp)</b>,{' '}
-          <b>GitHub and GitLab provider tokens</b>, <b>authenticated proxies</b>, and <b>AI Provider API keys</b> from
-          your local storage. This will also disconnect authenticated Git repositories from your workspaces.
+          <b>GitHub, GitLab and Bitbucket provider tokens</b>, <b>authenticated proxies</b>, and{' '}
+          <b>AI Provider API keys</b> from your local storage. This will also disconnect authenticated Git repositories
+          from your workspaces.
         </p>
       </ModalBody>
       <ModalFooter>
