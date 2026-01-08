@@ -25,6 +25,7 @@
  */
 
 import { database } from '~/common/database';
+import type ElectronStorage from '~/main/electron-storage';
 import { initElectronStorage } from '~/main/window-utils';
 import { type GitRepository, isGitCredentialsOAuth } from '~/models/git-repository';
 
@@ -33,9 +34,23 @@ import { type GitCredentials, isGitCredentialsV1 } from '../../models/git-creden
 
 const MIGRATION_KEY = 'GIT_CREDENTIALS_MIGRATION';
 
-const migrationStorage = initElectronStorage();
-const hasRunMigration = () => migrationStorage.getItem(MIGRATION_KEY);
-const markMigrationComplete = () => migrationStorage.setItem(MIGRATION_KEY, 1);
+let electronStorage: ElectronStorage | null = null;
+
+const getElectronStorage = () => {
+  if (!electronStorage) {
+    electronStorage = initElectronStorage();
+  }
+  return electronStorage;
+};
+
+const hasRunMigration = () => {
+  const migrationStorage = getElectronStorage();
+  return migrationStorage.getItem(MIGRATION_KEY);
+};
+const markMigrationComplete = () => {
+  const migrationStorage = getElectronStorage();
+  migrationStorage.setItem(MIGRATION_KEY, 1);
+};
 
 async function migrateGitHubConnectedRepositories(repositories: GitRepository[]) {
   const githubCredentials = await database.findOne<GitCredentials>(models.gitCredentials.type, {
