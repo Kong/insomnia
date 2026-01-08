@@ -3,8 +3,6 @@ import { href } from 'react-router';
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
 import * as models from '~/models';
-import type { OauthProviderName } from '~/models/git-credentials';
-import type { GitCredentials } from '~/models/git-repository';
 import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
@@ -19,14 +17,9 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 interface UpdateProjectInputData {
   name: string;
   storageType: 'local' | 'remote' | 'git';
-  authorName?: string;
-  authorEmail?: string;
+  credentialsId?: string | null;
   uri?: string;
   ref?: string;
-  username?: string;
-  password?: string;
-  token?: string;
-  oauth2format?: OauthProviderName;
   connectRepositoryLater?: boolean;
 }
 
@@ -40,6 +33,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
+
+  const gitRepository = project.gitRepositoryId ? await models.gitRepository.getById(project.gitRepositoryId) : null;
 
   const user = await models.userSession.getOrCreate();
   const sessionId = user.id;
@@ -275,32 +270,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       if (projectData.connectRepositoryLater) {
         await models.project.update(project, { name, gitRepositoryId: EMPTY_GIT_PROJECT_ID });
       } else {
-        let credentials: GitCredentials | undefined;
-        if (projectData.oauth2format) {
-          credentials = {
-            oauth2format: projectData.oauth2format,
-            token: projectData.token ?? '',
-            username: projectData.username ?? '',
-          };
-        } else if (projectData.username && projectData.password) {
-          credentials = {
-            username: projectData.username,
-            password: projectData.password,
-          };
-        }
-
+        invariant(projectData.credentialsId, 'Credentials ID is required to clone git repository');
         const { errors } = await window.main.git.cloneGitRepo({
           organizationId,
           cloneIntoProjectId: project._id,
-          author: {
-            name: projectData.authorName ?? '',
-            email: projectData.authorEmail ?? '',
-          },
           uri: projectData.uri ?? '',
-          credentials: credentials || {
-            username: '',
-            password: '',
-          },
+          credentialsId: projectData.credentialsId,
           ref: projectData.ref,
           name,
         });
@@ -350,34 +325,14 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     // connect to git repo
     if (
       storageType === 'git' &&
-      project.gitRepositoryId === EMPTY_GIT_PROJECT_ID &&
+      (project.gitRepositoryId === EMPTY_GIT_PROJECT_ID || !gitRepository?.credentialsId) &&
       !projectData.connectRepositoryLater
     ) {
-      let credentials: GitCredentials | undefined;
-      if (projectData.oauth2format) {
-        credentials = {
-          oauth2format: projectData.oauth2format,
-          token: projectData.token ?? '',
-          username: projectData.username ?? '',
-        };
-      } else if (projectData.username && projectData.password) {
-        credentials = {
-          username: projectData.username,
-          password: projectData.password,
-        };
-      }
-
+      invariant(projectData.credentialsId, 'Credentials ID is required to clone git repository');
       await window.main.git.updateGitRepo({
         projectId: project._id,
-        author: {
-          name: projectData.authorName ?? '',
-          email: projectData.authorEmail ?? '',
-        },
         uri: projectData.uri ?? '',
-        credentials: credentials || {
-          username: '',
-          password: '',
-        },
+        credentialsId: projectData.credentialsId,
         ref: projectData.ref,
       });
 

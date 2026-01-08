@@ -4,6 +4,7 @@ import * as models from '~/models';
 import type { ApiSpec } from '~/models/api-spec';
 import type { Environment } from '~/models/environment';
 import type { GrpcRequest } from '~/models/grpc-request';
+import type { McpRequest } from '~/models/mcp-request';
 import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import type { Request } from '~/models/request';
@@ -49,6 +50,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     | Environment
     | ApiSpec
     | Request
+    | McpRequest
     | WebSocketRequest
     | SocketIORequest
     | GrpcRequest
@@ -106,6 +108,11 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
       parentId: mockServer._id,
     });
     mockRoutes.map(m => syncItemsList.push(m));
+  }
+
+  const mcpRequest = await models.mcpRequest.getByParentId(workspaceId);
+  if (mcpRequest) {
+    syncItemsList.push(mcpRequest);
   }
 
   const baseEnvironment = await models.environment.getByParentId(workspaceId);

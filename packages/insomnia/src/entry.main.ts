@@ -11,6 +11,7 @@ import { configureFetch } from 'insomnia-api';
 import { mainDatabase } from '~/common/database/database.main';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
+import { runGitCredentialsMigration } from '~/sync/git/migrations';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { userDataFolder } from '../config/config.json';
@@ -118,6 +119,9 @@ app.on('ready', async () => {
   sentryWatchAnalyticsEnabled();
   watchProxySettings();
   windowUtils.init();
+
+  await runGitCredentialsMigration();
+
   await _launchApp();
 
   // Init the rest

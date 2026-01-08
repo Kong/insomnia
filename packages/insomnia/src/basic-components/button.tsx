@@ -59,8 +59,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       type={raProps.type || 'button'}
       className={twMerge('inline-flex cursor-pointer items-center justify-center outline-none', classNames, className)}
     >
-      {children}
       {!isLoading && icon}
+      {children}
     </RAButton>
   );
 });

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { GitCredentials } from '~/models/git-credentials';
 import { type StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import {
@@ -10,6 +11,7 @@ import {
   useOrganizationPermissionsLoaderFetcher,
 } from '~/routes/organization.$organizationId.permissions';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
+import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
@@ -17,8 +19,9 @@ import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning
 import { type ProjectData, type ProjectType, useActiveView } from '~/ui/components/project/utils';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
-import type { OauthProviderName } from '../../../models/git-credentials';
 import { Icon } from '../icon';
+
+const FORMID = 'git-repo-form';
 
 interface Props {
   storageRules: StorageRules;
@@ -26,6 +29,8 @@ interface Props {
   defaultProjectName?: string;
   onCancel?(): void;
   activeViewObj?: ReturnType<typeof useActiveView>;
+  credentials: GitCredentials[];
+  providers: GitProviderOption[];
 }
 
 export const ProjectCreateForm: FC<Props> = ({
@@ -34,6 +39,8 @@ export const ProjectCreateForm: FC<Props> = ({
   defaultProjectName = 'My Project',
   onCancel,
   activeViewObj,
+  credentials,
+  providers,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
@@ -57,19 +64,12 @@ export const ProjectCreateForm: FC<Props> = ({
     setActiveView = activeViewObj.setActiveView;
   }
 
-  const [selectedTab, setTab] = useState<OauthProviderName>('github');
-
   const [error, setError] = useState<string | null>(null);
 
   const [projectData, setProjectData] = useState<ProjectData>({
     name: defaultProjectName,
-    authorName: '',
-    authorEmail: '',
     uri: '',
-    username: '',
-    password: '',
-    token: '',
-    oauth2format: undefined,
+    credentialsId: undefined,
     connectRepositoryLater: false,
   });
 
@@ -99,6 +99,8 @@ export const ProjectCreateForm: FC<Props> = ({
       },
     });
   };
+
+  const hideActionButtons = storageType === 'git' && !projectData.connectRepositoryLater && credentials.length === 0;
 
   return (
     <>
@@ -140,13 +142,14 @@ export const ProjectCreateForm: FC<Props> = ({
           />
           {storageType === 'git' && (
             <GitRepoForm
+              formId={FORMID}
               projectData={projectData}
               setProjectData={setProjectData}
               initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
               organizationId={organizationId}
               setActiveView={setActiveView}
-              selectedTab={selectedTab}
-              setTab={setTab}
+              credentials={credentials}
+              providers={providers}
             />
           )}
         </div>
@@ -162,7 +165,7 @@ export const ProjectCreateForm: FC<Props> = ({
 
       {/* Actions */}
 
-      {activeView === 'project' && (
+      {activeView === 'project' && !hideActionButtons && (
         <div className="flex w-full items-center justify-end gap-2 px-0.5">
           <div className="flex items-center gap-2">
             {onCancel && (
@@ -185,7 +188,7 @@ export const ProjectCreateForm: FC<Props> = ({
             ) : (
               <Button
                 type="submit"
-                form={selectedTab}
+                form={FORMID}
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 Scan for files

@@ -26,11 +26,12 @@ import { useGitProjectDiffLoaderFetcher } from '~/routes/git.diff';
 import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
+import type { GitFileType } from '~/sync/git/git-vcs';
+import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import { SegmentEvent } from '~/ui/analytics';
 import { Badge } from '~/ui/components/base/badge';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
-import { GitFileType, GitVCSOperationErrors } from '../../../sync/git/git-vcs';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 import { GitPullRequiredModal } from './git-pull-required-modal';
@@ -47,36 +48,44 @@ interface DiscardData {
   filesCount: number;
 }
 
-function getModificationClassName(type: string) {
-  switch (type) {
-    case GitFileType.Added: {
-      return 'text-[#73c991]';
-    }
-    case GitFileType.Deleted: {
-      return 'text-[#f14c4c]';
-    }
-    case GitFileType.Modified: {
-      return 'text-[#e2c08d]';
-    }
-    case GitFileType.Renamed: {
-      return 'text-[#519aba]';
-    }
-    case GitFileType.Copied: {
-      return 'text-[#4ec9b0]';
-    }
-    case GitFileType.Untracked: {
-      return 'text-[#73c991]';
-    }
-    case GitFileType.Ignored: {
-      return 'text-[#8c8c8c]';
-    }
-    case GitFileType.Conflicted: {
-      return 'text-[#d670d6]';
-    }
-    default: {
-      return '';
-    }
+function getModificationClassName(type: GitFileType) {
+  if (!type) {
+    return '';
   }
+
+  if (type === 'added') {
+    return 'text-[#73c991]';
+  }
+
+  if (type === 'deleted') {
+    return 'text-[#f14c4c]';
+  }
+
+  if (type === 'modified') {
+    return 'text-[#e2c08d]';
+  }
+
+  if (type === 'renamed') {
+    return 'text-[#519aba]';
+  }
+
+  if (type === 'copied') {
+    return 'text-[#4ec9b0]';
+  }
+
+  if (type === 'untracked') {
+    return 'text-[#73c991]';
+  }
+
+  if (type === 'ignored') {
+    return 'text-[#8c8c8c]';
+  }
+
+  if (type === 'conflicted') {
+    return 'text-[#d670d6]';
+  }
+
+  return '';
 }
 
 interface GeneratedCommitsFormProps {
@@ -613,7 +622,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               {item => {
                 return (
                   <GridListItem className="group flex w-full items-center justify-between overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
-                    <span className={`truncate ${item.entry.type === GitFileType.Deleted ? 'line-through' : ''}`}>
+                    <span className={`truncate ${item.entry.type === 'deleted' ? 'line-through' : ''}`}>
                       {item.entry.path}
                     </span>
                     <div className="flex items-center gap-1">
@@ -725,7 +734,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               {item => {
                 return (
                   <GridListItem className="group flex w-full items-center justify-between overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
-                    <span className={`truncate ${item.entry.type === GitFileType.Deleted ? 'line-through' : ''}`}>
+                    <span className={`truncate ${item.entry.type === 'deleted' ? 'line-through' : ''}`}>
                       {item.entry.path}
                     </span>
                     <div className="flex items-center gap-1">
@@ -996,18 +1005,16 @@ export const GitProjectStagingModal: FC<{
 
                     {(!generateCommitsFetcher.data ||
                       (generateCommitsFetcher.data && 'error' in generateCommitsFetcher.data)) && (
-                      <>
-                        <ManualCommitForm
-                          projectId={projectId}
-                          mode={mode}
-                          changes={changes}
-                          setShowConfirmDiscardAndPullModal={setShowConfirmDiscardAndPullModal}
-                          onCommitSuccess={handleCommitSuccess}
-                          onPullRequired={handlePullRequired}
-                          diffChanges={diffChanges}
-                          setDiscardData={setDiscardData}
-                        />
-                      </>
+                      <ManualCommitForm
+                        projectId={projectId}
+                        mode={mode}
+                        changes={changes}
+                        setShowConfirmDiscardAndPullModal={setShowConfirmDiscardAndPullModal}
+                        onCommitSuccess={handleCommitSuccess}
+                        onPullRequired={handlePullRequired}
+                        diffChanges={diffChanges}
+                        setDiscardData={setDiscardData}
+                      />
                     )}
                   </div>
                   {previewDiffItem?.diff ? (
@@ -1026,9 +1033,12 @@ export const GitProjectStagingModal: FC<{
                     <div className="flex h-full flex-col items-center justify-center gap-4 p-2">
                       <Heading className="flex items-center justify-center gap-2 text-4xl font-semibold text-(--hl-md)">
                         <Icon icon="code-compare" />
-                        Diff view
+                        View diff
                       </Heading>
-                      <p className="text-(--hl)">Select an item to compare</p>
+                      <p className="text-(--hl)">Select a file to compare changes</p>
+                      <p className="text-sm text-(--hl-md)">
+                        Changes may include modifications you made and automatic updates like timestamps
+                      </p>
                     </div>
                   )}
                 </div>

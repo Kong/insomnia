@@ -220,6 +220,8 @@ export default class BaseExtension {
           cookieJar: {
             getOrCreateForParentId: async (parentId: string) =>
               fetchFromTemplateWorkerDatabase('cookieJar.getOrCreateForParentId', { parentId }),
+            getCookiesForUrl: async (parentId: string, url: string) =>
+              fetchFromTemplateWorkerDatabase('cookieJar.getCookiesForUrl', { parentId, url }),
           },
           response: {
             getLatestForRequestId: async (requestId: string, environmentId: string | null) =>

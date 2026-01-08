@@ -20,9 +20,9 @@ import { useGitProjectPushActionFetcher } from '~/routes/git.push';
 import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProjectResetActionFetcher } from '~/routes/git.reset';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
+import { getOauth2FormatName } from '~/sync/git/get-oauth2-format-name';
 
 import type { GitRepository } from '../../../models/git-repository';
-import { getOauth2FormatName } from '../../../sync/git/utils';
 import type { MergeConflict } from '../../../sync/types';
 import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';
@@ -35,7 +35,7 @@ import { GitStagingModal } from '../modals/git-staging-modal';
 import { SyncMergeModal } from '../modals/sync-merge-modal';
 
 interface Props {
-  gitRepository: GitRepository | null;
+  gitRepository: GitRepository;
   isInsomniaSyncEnabled: boolean;
   showDeprecatedWarning: boolean;
 }
@@ -497,10 +497,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
         </Popover>
       </MenuTrigger>
       {isGitRepoSettingsModalOpen && (
-        <GitRepositorySettingsModal
-          gitRepository={gitRepository ?? undefined}
-          onHide={() => setIsGitRepoSettingsModalOpen(false)}
-        />
+        <GitRepositorySettingsModal gitRepository={gitRepository} onHide={() => setIsGitRepoSettingsModalOpen(false)} />
       )}
       {isGitBranchesModalOpen && gitRepository && (
         <GitBranchesModal

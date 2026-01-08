@@ -6089,18 +6089,11 @@ exports[`Fixtures > Import postman > scripts-import-v2_1-input.json 1`] = `
       "afterResponseScript": "console.log('after')",
       "authentication": {},
       "description": "",
-      "environment": {
-        "bob": "something",
-        "dssx": "{{_['env-var-in-global']}}",
-      },
+      "environment": {},
       "metaSortKey": -1622117984000,
       "name": "New Collection",
       "parentId": "__WORKSPACE_ID__",
       "preRequestScript": "console.log('pre')",
-      "variable": {
-        "bob": "something",
-        "dssx": "{{_['env-var-in-global']}}",
-      },
     },
     {
       "_id": "__REQ_1__",
@@ -6118,6 +6111,17 @@ exports[`Fixtures > Import postman > scripts-import-v2_1-input.json 1`] = `
       "pathParameters": [],
       "preRequestScript": "console.log('this is pre-request script');",
       "url": "httpbin.org/get",
+    },
+    {
+      "_id": "__BASE_ENVIRONMENT_ID__",
+      "_type": "environment",
+      "data": {
+        "bob": "something",
+        "dssx": "{{_['env-var-in-global']}}",
+      },
+      "metaSortKey": -1622117983998,
+      "name": "Variables",
+      "parentId": "__WORKSPACE_ID__",
     },
   ],
 }

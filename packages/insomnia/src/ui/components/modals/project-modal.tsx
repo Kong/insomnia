@@ -4,6 +4,7 @@ import { useNavigation } from 'react-router';
 
 import type { StorageRules } from '~/models/organization';
 import { useActiveView } from '~/ui/components/project/utils';
+import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 
 import type { GitRepository } from '../../../models/git-repository';
 import type { Project } from '../../../models/project';
@@ -44,6 +45,8 @@ export const ProjectModal = ({
     title = activeViewObj.activeView === 'git-results' ? 'Create Git Sync project' : 'Create project';
   }
 
+  const { credentials, providers } = useGitCredentials();
+
   return (
     <ModalOverlay
       isOpen={isOpen}
@@ -77,6 +80,8 @@ export const ProjectModal = ({
                   gitRepository={gitRepository}
                   onCancel={close}
                   onSuccessUpdate={close}
+                  credentials={credentials}
+                  providers={providers}
                 />
               ) : (
                 <ProjectCreateForm
@@ -84,6 +89,8 @@ export const ProjectModal = ({
                   isGitSyncEnabled={isGitSyncEnabled}
                   onCancel={close}
                   activeViewObj={activeViewObj}
+                  credentials={credentials}
+                  providers={providers}
                 />
               )}
             </>
