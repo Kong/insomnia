@@ -38,7 +38,7 @@ import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort, sortMethodMap } from '~/common/sorting';
 import * as models from '~/models';
 import { userSession } from '~/models';
-import { type ApiSpec } from '~/models/api-spec';
+import type { ApiSpec } from '~/models/api-spec';
 import type { GitRepository } from '~/models/git-repository';
 import { sortProjects } from '~/models/helpers/project';
 import type { MockServer } from '~/models/mock-server';
@@ -82,6 +82,7 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
+import { trackTempProjectOpened } from '~/ui/temp-segment-tracking';
 import { invariant } from '~/utils/invariant';
 
 export type ProjectScopeKeys = WorkspaceScope | 'unsynced';
@@ -527,6 +528,13 @@ const Component = () => {
       load({ organizationId });
     }
   }, [organizationId, storageRuleFetcher.load]);
+
+  // TODO(INS-1912): Remove in 12.5
+  useEffect(() => {
+    if (projectId) {
+      trackTempProjectOpened(projectId);
+    }
+  }, [projectId]);
 
   const { storagePromise } = storageRuleFetcher.data || {};
 
