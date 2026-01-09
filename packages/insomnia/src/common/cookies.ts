@@ -26,9 +26,15 @@ export const jarFromCookies = (cookies: Cookie[] | CookieModel[]) => {
   let jar: CookieJar;
 
   try {
+    const sanitizedCookies = cookies.map(cookie => ({
+      ...cookie,
+      // TODO: null will make getCookiesSync unhappy
+      // probably it should be `undefined` when types of tough cookie is updated
+      expires: cookie.expires === null || cookie.expires === undefined ? 'Infinity' : cookie.expires,
+    }));
     // For some reason, fromJSON modifies `cookies`.
     // Create a copy first just to be sure.
-    const copy = JSON.stringify({ cookies });
+    const copy = JSON.stringify({ cookies: sanitizedCookies });
     jar = CookieJar.fromJSON(copy);
   } catch (error) {
     console.log('[cookies] Failed to initialize cookie jar', error);

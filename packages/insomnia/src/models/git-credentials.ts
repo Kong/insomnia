@@ -3,7 +3,14 @@ import type { BaseModel } from './index';
 
 export type OauthProviderName = 'gitlab' | 'github';
 
+// New unified provider types
+export type GitRemoteProviderType = 'github' | 'gitlab' | 'custom';
+
 export type GitCredentials = BaseModel & BaseGitCredentials;
+
+export type GitCredentialsV1 = BaseModel & BaseGitCredentialsV1;
+export type GitCredentialsV2 = BaseModel & BaseGitCredentialsV2;
+export type CustomGitCredentialV2 = BaseModel & CustomCredential;
 
 export const name = 'Git Credentials';
 
@@ -15,21 +22,30 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
-export function init(): BaseGitCredentials {
+export function init(): Partial<BaseGitCredentials> {
   return {
-    token: '',
-    refreshToken: '',
-    provider: 'github',
+    name: '',
+    provider: undefined,
+    credentials: undefined,
     author: {
       email: '',
       name: '',
       avatarUrl: '',
     },
+    // Legacy fields: token and refreshToken for backward compatibility
+    token: undefined,
+    refreshToken: undefined,
   };
 }
 
-interface BaseGitCredentials {
+/**
+ * Legacy git credentials interface (for backward compatibility)
+ * @deprecated Use the new provider-specific credential types
+ */
+interface BaseGitCredentialsV1 {
+  /** @deprecated Use provider-specific credentials.token instead */
   token: string;
+  /** @deprecated Use provider-specific credentials.refreshToken instead */
   refreshToken?: string;
   provider: 'githubapp' | 'github' | 'gitlab' | 'custom';
   author: {
@@ -39,34 +55,145 @@ interface BaseGitCredentials {
   };
 }
 
-export function migrate(doc: GitCredentials) {
+/**
+ * Email from provider
+ */
+export interface ProviderEmail {
+  email: string;
+  primary: boolean;
+  verified: boolean;
+}
+
+/**
+ * Base credential data for all providers
+ */
+interface BaseCredentialData {
+  name: string; // User-friendly name, e.g., "Work GitHub"
+  provider: GitRemoteProviderType;
+  author: {
+    name: string;
+    email: string;
+    avatarUrl?: string;
+  };
+}
+
+/**
+ * GitHub OAuth credential
+ */
+interface GitHubCredential extends BaseCredentialData {
+  provider: 'github';
+  credentials: {
+    token: string;
+    refreshToken?: string;
+    expiresAt?: number;
+    scopes?: string[];
+    emails?: ProviderEmail[];
+    selectedEmail?: string;
+  };
+}
+
+/**
+ * GitLab OAuth credential
+ */
+interface GitLabCredential extends BaseCredentialData {
+  provider: 'gitlab';
+  credentials: {
+    token: string;
+    refreshToken: string;
+    expiresAt?: number;
+    emails?: ProviderEmail[];
+    selectedEmail?: string;
+  };
+}
+
+/**
+ * Custom PAT credential
+ */
+interface CustomCredential extends BaseCredentialData {
+  provider: 'custom';
+  credentials: {
+    username: string;
+    password: string; // Personal access token
+    baseURI?: string; // For custom providers
+  };
+}
+
+/**
+ * Unified credential type (new structure)
+ */
+export type BaseGitCredentialsV2 = GitHubCredential | GitLabCredential | CustomCredential;
+
+/**
+ * Combined type supporting both legacy and new credential structures
+ */
+type BaseGitCredentials = BaseGitCredentialsV1 | BaseGitCredentialsV2;
+
+/**
+ * Type guard to check if credential is using new unified structure
+ */
+export function isGitCredentialsV2(gitCredential: GitCredentials): gitCredential is GitCredentialsV2 {
+  return 'credentials' in gitCredential && gitCredential.credentials && typeof gitCredential.credentials === 'object';
+}
+
+/**
+ * Type guard to check if credential is legacy structure
+ */
+export function isGitCredentialsV1(credential: GitCredentials): credential is GitCredentialsV1 {
+  return !isGitCredentialsV2(credential);
+}
+
+/**
+ * Migrate legacy credential to new unified structure
+ */
+export function migrate(doc: GitCredentials): GitCredentials {
   return doc;
 }
 
-export function create(patch: Partial<GitCredentials> = {}) {
-  return db.docCreate<GitCredentials>(type, patch);
+export function create(patch: BaseGitCredentialsV2) {
+  return db.docCreate<GitCredentialsV2>(type, patch);
 }
 
 export async function getById(id: string) {
-  return db.findOne<GitCredentials>(type, { _id: id });
+  const doc = await db.findOne<GitCredentials>(type, { _id: id });
+  return doc ? migrate(doc) : null;
 }
 
-export async function getByProvider(provider: OauthProviderName) {
-  return db.findOne<GitCredentials>(type, provider === 'github' ? { provider: 'githubapp' } : { provider: 'gitlab' });
-}
-
-export function update(credentials: GitCredentials, patch: Partial<GitCredentials>) {
-  return db.docUpdate<GitCredentials>(credentials, patch);
+export function update(credentials: GitCredentialsV2, patch: Partial<GitCredentialsV2>) {
+  return db.docUpdate<GitCredentialsV2>(credentials, patch);
 }
 
 export function remove(credentials: GitCredentials) {
   return db.remove(credentials);
 }
 
-export function all() {
-  return db.find<GitCredentials>(type);
+export async function all() {
+  const docs = await db.find<GitCredentials>(type);
+  return docs.map(migrate);
 }
 
 export function removeAll() {
   return db.removeWhere<GitCredentials>(type, {});
+}
+
+/**
+ * Type guard for OAuth credentials
+ */
+export function isOAuthCredential(
+  credential: GitCredentials,
+): credential is BaseModel & (GitHubCredential | GitLabCredential) {
+  return isGitCredentialsV2(credential) && (credential.provider === 'github' || credential.provider === 'gitlab');
+}
+
+/**
+ * Type guard for credentials that support renewal
+ */
+export function supportsRenewal(gitCredential: GitCredentials): boolean {
+  if (!isGitCredentialsV2(gitCredential)) return false;
+  if (gitCredential.provider === 'gitlab') {
+    return !!gitCredential.credentials?.refreshToken;
+  }
+  if (gitCredential.provider === 'github') {
+    return !!gitCredential.credentials?.refreshToken;
+  }
+  return false;
 }

@@ -6,13 +6,13 @@ import { getBundlePlugins } from '~/plugins';
 import { useRootLoaderData } from '~/root';
 import { SegmentEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
+import { CredentialsSettings } from '~/ui/components/settings/credentials';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { BooleanSetting } from '../settings/boolean-setting';
-import { CloudServiceCredentialList } from '../settings/cloud-service-credentials';
 import { General } from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import { MaskedSetting } from '../settings/masked-setting';
@@ -24,15 +24,10 @@ import { showModal } from './index';
 
 export interface SettingsModalHandle {
   hide: () => void;
-  show: (options?: { tab?: string }) => void;
+  show: (options?: { tab?: SettingsModalTabKey }) => void;
 }
 
-export const TAB_INDEX_EXPORT = 'data';
-export const TAB_INDEX_SHORTCUTS = 'keyboard';
-export const TAB_INDEX_THEMES = 'themes';
-export const TAB_INDEX_PLUGINS = 'plugins';
-export const TAB_INDEX_AI = 'ai';
-export const TAB_CLOUD_CREDENTIAL = 'cloudCred';
+type SettingsModalTabKey = 'data' | 'keyboard' | 'themes' | 'plugins' | 'general' | 'proxy' | 'credentials' | 'ai';
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
@@ -130,14 +125,14 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             </Tab>
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="cloudCred"
+              id="credentials"
             >
-              Cloud Credentials
+              Credentials
             </Tab>
             {shouldShowAiSettingsTab && (
               <Tab
                 className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-                id="aiSettings"
+                id="ai"
               >
                 AI Settings
               </Tab>
@@ -194,11 +189,11 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="plugins">
             <Plugins />
           </TabPanel>
-          <TabPanel className="h-full w-full overflow-y-auto p-4" id="cloudCred">
-            <CloudServiceCredentialList />
+          <TabPanel className="h-full w-full overflow-y-auto p-4" id="credentials">
+            <CredentialsSettings />
           </TabPanel>
           {shouldShowAiSettingsTab && (
-            <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="aiSettings">
+            <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="ai">
               <AISettings />
             </TabPanel>
           )}
@@ -207,8 +202,10 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
     </Modal>
   );
 });
+
 SettingsModal.displayName = 'SettingsModal';
-export const showSettingsModal = (options?: { tab?: string }) => {
+
+export const showSettingsModal = (options?: { tab?: SettingsModalTabKey }) => {
   showModal(SettingsModal, options);
 
   window.main.trackSegmentEvent({

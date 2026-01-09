@@ -348,11 +348,13 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           throw new Error(`Workspace not found for ${meta.workspaceId}`);
         }
 
-        const cookieJar = await context.util.models.cookieJar.getOrCreateForParentId(workspace._id);
-        const found = cookieJar.cookies.find(cookie => cookie.key === name);
+        const cookies = url
+          ? await context.util.models.cookieJar.getCookiesForUrl(workspace._id, url)
+          : (await context.util.models.cookieJar.getOrCreateForParentId(workspace._id)).cookies;
+        const found = cookies.find(cookie => cookie.key === name);
         invariant(
           found,
-          `No cookie with name "${name}" found in cookie jar for url "${url}"\nChoices are [\n\t${cookieJar.cookies.map(c => c.key)}\n] for`,
+          `No cookie with name "${name}" found in cookie jar for url "${url}"\nChoices are [\n\t${cookies.map(c => c.key)}\n] for`,
         );
         return found.value;
       },
@@ -900,12 +902,13 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             throw new Error('No cookie specified');
           }
 
-          const cookieJar = await context.util.models.cookieJar.getOrCreateForParentId(workspace._id);
-
-          const found = cookieJar.cookies.find(cookie => cookie.key === name);
+          const cookies = request.url
+            ? await context.util.models.cookieJar.getCookiesForUrl(workspace._id, request.url)
+            : (await context.util.models.cookieJar.getOrCreateForParentId(workspace._id)).cookies;
+          const found = cookies.find(cookie => cookie.key === name);
           invariant(
             found,
-            `No cookie with name "${name}" found in cookie jar for url "${request.url}"\nChoices are [\n\t${cookieJar.cookies.map(c => c.key)}\n] for`,
+            `No cookie with name "${name}" found in cookie jar for url "${request.url}"\nChoices are [\n\t${cookies.map(c => c.key)}\n] for`,
           );
           return found.value;
         }

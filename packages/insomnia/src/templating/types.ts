@@ -1,5 +1,7 @@
 import type { BinaryToTextEncoding } from 'node:crypto';
 
+import type { Cookie } from 'tough-cookie';
+
 import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
@@ -29,6 +31,7 @@ export type PluginToMainAPIPaths =
   | 'workspace.getById'
   | 'oAuth2Token.getByRequestId'
   | 'cookieJar.getOrCreateForParentId'
+  | 'cookieJar.getCookiesForUrl'
   | 'response.getLatestForRequestId'
   | 'response.getBodyBuffer'
   | 'pluginData.hasItem'
@@ -281,7 +284,10 @@ export interface PluginTemplateTagContext {
       };
       workspace: { getById: (id: string) => Promise<Workspace | undefined> };
       oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | undefined> };
-      cookieJar: { getOrCreateForParentId: (parentId: string) => Promise<CookieJar> };
+      cookieJar: {
+        getOrCreateForParentId: (parentId: string) => Promise<CookieJar>;
+        getCookiesForUrl: (parentId: string, url: string) => Promise<Cookie[]>;
+      };
       response: {
         getLatestForRequestId: typeof getLatestForRequestId;
         getBodyBuffer: typeof getBodyBuffer;
