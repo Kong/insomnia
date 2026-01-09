@@ -12,7 +12,7 @@ import {
   userSession,
   workspaceMeta,
 } from '../models';
-import { type GitRepository, isGitCredentialsOAuth } from '../models/git-repository';
+import { type GitRepository } from '../models/git-repository';
 import { EMPTY_GIT_PROJECT_ID, type Project } from '../models/project';
 import type { WorkspaceMeta } from '../models/workspace-meta';
 import * as crypt from './crypt';
