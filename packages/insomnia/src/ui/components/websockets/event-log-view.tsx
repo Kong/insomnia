@@ -15,7 +15,7 @@ import { type IconId, SvgIcon } from '../svg-icon';
 
 type EventTypes = WebSocketEvent | CurlEvent | SocketIOEvent | McpEvent;
 const Timestamp: FC<{ time: Date | number }> = ({ time }) => {
-  const date = format(time, 'HH:mm:ss');
+  const date = format(time, 'HH:mm:ss.SSS');
   return <>{date}</>;
 };
 
@@ -236,13 +236,13 @@ export const EventLogView: FC<Props> = ({
                   : 'focus-within:bg-(--hl-sm) focus:outline-hidden';
               return (
                 <Row className={`group transition-colors ${rowExtraClasses}`}>
-                  <Cell className="border-b border-solid border-(--hl-sm) p-2 text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
+                  <Cell className="border-b border-solid border-(--hl-sm) align-middle text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
                     <SvgIcon icon={getIcon(event)} />
                   </Cell>
-                  <Cell className="border-b border-solid border-(--hl-sm) text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
+                  <Cell className="border-b border-solid border-(--hl-sm) align-middle text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
                     {getMessage(event, isLoading)}
                   </Cell>
-                  <Cell className="border-b border-solid border-(--hl-sm) text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
+                  <Cell className="border-b border-solid border-(--hl-sm) align-middle text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
                     <Timestamp time={event.timestamp} />
                   </Cell>
                 </Row>
