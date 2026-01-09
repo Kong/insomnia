@@ -303,7 +303,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID ||
               !gitRepository?.credentialsId) ? (
               <Button
-                isDisabled={!isGitSyncEnabled}
+                isDisabled={!isGitSyncEnabled && isSwitchingStorageType(project!, storageType)}
                 form={FORMID}
                 type="submit"
                 className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
