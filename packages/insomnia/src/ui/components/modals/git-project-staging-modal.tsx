@@ -988,7 +988,7 @@ export const GitProjectStagingModal: FC<{
                           className="flex h-8 items-center gap-2 self-start rounded-md border border-solid border-(--hl-md) px-3 py-1 text-sm"
                           onPress={() => {
                             onClose();
-                            showSettingsModal({ tab: 'aiSettings' });
+                            showSettingsModal({ tab: 'ai' });
                           }}
                         >
                           Enable AI to Try
