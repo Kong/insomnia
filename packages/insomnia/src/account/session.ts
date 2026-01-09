@@ -209,14 +209,8 @@ async function _removeAllCredentials() {
 
   const customGitRepos = await gitRepository.all();
   for (const repo of customGitRepos) {
-    if (!repo.credentials) continue; // unauthenticated git repositories need not be removed
-    if (isGitCredentialsOAuth(repo.credentials)) {
-      if (repo.credentials.token) {
-        removals.push(_removeGitRepository(repo));
-      }
-    } else if (repo.credentials.password) {
-      removals.push(_removeGitRepository(repo));
-    }
+    if (!repo.credentialsId) continue; // unauthenticated git repositories need not be removed
+    removals.push(_removeGitRepository(repo));
   }
 
   const proxySettings = await settings.get();
