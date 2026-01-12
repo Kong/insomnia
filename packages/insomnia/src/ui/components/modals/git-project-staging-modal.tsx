@@ -26,7 +26,7 @@ import { useGitProjectDiffLoaderFetcher } from '~/routes/git.diff';
 import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
-import type { GitFileType } from '~/sync/git/git-vcs';
+import { GitFileType } from '~/sync/git/git-vcs';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import { SegmentEvent } from '~/ui/analytics';
 import { Badge } from '~/ui/components/base/badge';
@@ -232,7 +232,9 @@ const CommitSection = (props: {
                   </TooltipTrigger>
                 )}
                 <TooltipTrigger>
-                  <Button className={`cursor-default text-sm ${getModificationClassName(fileItem.type)}`}>
+                  <Button
+                    className={`cursor-default text-sm ${getModificationClassName(fileItem.type as GitFileType)}`}
+                  >
                     {fileItem.symbol}
                   </Button>
                   <Tooltip
