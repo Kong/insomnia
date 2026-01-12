@@ -139,15 +139,10 @@ const git: GitServiceAPI = {
   getRepositoryDirectoryTree: options => ipcRenderer.invoke('git.getRepositoryDirectoryTree', options),
   migrateLegacyInsomniaFolderToFile: options => ipcRenderer.invoke('git.migrateLegacyInsomniaFolderToFile', options),
 
-  initSignInToGitHub: () => ipcRenderer.invoke('git.initSignInToGitHub'),
-  completeSignInToGitHub: options => ipcRenderer.invoke('git.completeSignInToGitHub', options),
-  signOutOfGitHub: () => ipcRenderer.invoke('git.signOutOfGitHub'),
-  getGitHubRepositories: options => ipcRenderer.invoke('git.getGitHubRepositories', options),
-  getGitHubRepository: options => ipcRenderer.invoke('git.getGitHubRepository', options),
-
-  initSignInToGitLab: () => ipcRenderer.invoke('git.initSignInToGitLab'),
-  completeSignInToGitLab: options => ipcRenderer.invoke('git.completeSignInToGitLab', options),
-  signOutOfGitLab: () => ipcRenderer.invoke('git.signOutOfGitLab'),
+  listGitProviders: () => ipcRenderer.invoke('git.listGitProviders'),
+  initSignInToGitProvider: options => ipcRenderer.invoke('git.initSignInToGitProvider', options),
+  completeSignInToGitProvider: options => ipcRenderer.invoke('git.completeSignInToGitProvider', options),
+  getGitProviderRepositories: options => ipcRenderer.invoke('git.getGitProviderRepositories', options),
   getCurrentBranchByRepositoryId: options => ipcRenderer.invoke('git.getCurrentBranchByRepositoryId', options),
 };
 

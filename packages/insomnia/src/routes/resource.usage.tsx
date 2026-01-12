@@ -1,8 +1,7 @@
-import type { CurrentPlan } from 'insomnia-api';
+import { type CurrentPlan, getTrialEligibility } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { userSession } from '~/models';
-import { getTrialEligibility } from '~/routes/trial.check';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherLoadHook } from '~/utils/router';
 
@@ -98,7 +97,7 @@ export async function clientLoader() {
   const [resourceUsage, licenseUsage, trialEligibility] = await Promise.allSettled([
     getResourceUsage(sessionId),
     getLicenseUsage(sessionId, enterpriseId),
-    getTrialEligibility(sessionId),
+    getTrialEligibility({ sessionId }),
   ]);
 
   return {

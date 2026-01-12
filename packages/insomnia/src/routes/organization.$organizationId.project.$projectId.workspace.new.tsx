@@ -146,7 +146,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     await database.flushChanges(flushId);
 
     const { id } = await models.userSession.getOrCreate();
-    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project) && scope !== 'mcp') {
+    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project)) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs,
@@ -220,7 +220,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         parentId: workspace._id,
         transportType: 'streamable-http',
         url: '',
-        name: 'My first MCP Client',
+        name: 'MCP Client',
         headers: defaultHeaders,
         description: '',
       });

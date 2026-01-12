@@ -2,7 +2,7 @@ import { href, redirect } from 'react-router';
 
 import * as models from '~/models';
 import { isRemoteProject, type Project } from '~/models/project';
-import { isMcp, type Workspace } from '~/models/workspace';
+import { type Workspace } from '~/models/workspace';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
@@ -14,7 +14,7 @@ async function deleteWorkspaceFromCloud(workspace: Workspace, project: Project) 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
   const isGitSync = !!workspaceMeta.gitRepositoryId;
 
-  if (isRemoteProject(project) && !isGitSync && !isMcp(workspace)) {
+  if (isRemoteProject(project) && !isGitSync) {
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);

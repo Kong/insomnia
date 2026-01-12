@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { Environment, Variables } from '../environments';
 import { Folder, ParentFolders } from '../folders';
+import { Url } from '../urls';
 
 describe('test Variables object', () => {
   it('test basic operations', () => {
@@ -93,6 +94,9 @@ describe('test Variables object', () => {
     expect(variablesWithLocalData.get('value')).toEqual('local-value');
 
     expect(variablesWithFolderLevelData.replaceIn('{{ value}}')).toEqual('folderLevel2-value');
+
+    const urlObj = new Url('http://x/{{ value }}');
+    expect(variablesWithFolderLevelData.replaceIn(urlObj)).toEqual('http://x/folderLevel2-value');
   });
 
   it('variables operations', () => {

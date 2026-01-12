@@ -83,6 +83,12 @@ export function getByRemoteId(remoteId: string) {
   return db.findOne<Project>(type, { remoteId });
 }
 
+export function getAllByGitRepositoryIds(gitRepositoryIds: string[]) {
+  return db.find<Project>(type, {
+    gitRepositoryId: { $in: gitRepositoryIds },
+  });
+}
+
 export function remove(project: Project) {
   return db.remove(project);
 }

@@ -1,18 +1,38 @@
-import { type FC, useEffect } from 'react';
-import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
+import { type FC, Fragment, useEffect, useState } from 'react';
+import {
+  Button,
+  Form,
+  Label,
+  ListBox,
+  ListBoxItem,
+  Popover,
+  Select,
+  SelectValue,
+  Separator,
+} from 'react-aria-components';
 
-import { isGitCredentialsOAuth } from '~/models/git-repository';
+import { Icon } from '~/basic-components/icon';
 import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
+import type { GitProviderOption } from '~/sync/git/providers/types';
 import { Checkbox } from '~/ui/components/base/checkbox';
+import { Input } from '~/ui/components/base/input';
+import { GitCredentialSetup } from '~/ui/components/git-credentials/credential-setup';
+import { GitRemoteBranchSelect } from '~/ui/components/git-credentials/git-remote-branch-select';
+import { GitRepositorySelect } from '~/ui/components/git-credentials/git-repository-select';
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
-import type { OauthProviderName } from '../../../models/git-credentials';
-import type { GitRepository } from '../../../models/git-repository';
+import { type GitCredentials, isGitCredentialsV2 } from '../../../models/git-credentials';
 import { ErrorBoundary } from '../error-boundary';
-import { CustomRepositorySettingsFormGroup } from '../git-credentials/custom-repository-settings-form';
-import { GitHubRepositorySetupFormGroup } from '../git-credentials/github-repository-settings-form';
-import { GitLabRepositorySetupFormGroup } from '../git-credentials/gitlab-repository-settings-form';
 import type { ActiveView, ProjectData } from './utils';
+
+const getDisplayValue = (fullUri: string | undefined, prefix: string | undefined) => {
+  if (!fullUri) return '';
+  if (prefix && fullUri.startsWith(prefix)) {
+    return fullUri.slice(prefix.length);
+  }
+  return fullUri;
+};
 
 interface Props {
   setProjectData: React.Dispatch<React.SetStateAction<ProjectData>>;
@@ -20,8 +40,9 @@ interface Props {
   initCloneGitRepositoryFetcher: ReturnType<typeof useGitProjectInitCloneActionFetcher>;
   organizationId: string;
   setActiveView: React.Dispatch<React.SetStateAction<ActiveView>>;
-  selectedTab: OauthProviderName;
-  setTab: React.Dispatch<React.SetStateAction<OauthProviderName>>;
+  credentials: GitCredentials[];
+  providers: GitProviderOption[];
+  formId: string;
 }
 
 export const GitRepoForm: FC<Props> = ({
@@ -30,56 +51,32 @@ export const GitRepoForm: FC<Props> = ({
   initCloneGitRepositoryFetcher,
   organizationId,
   setActiveView,
-  selectedTab,
-  setTab,
+  credentials,
+  providers,
+  formId,
 }) => {
-  const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository & { ref?: string }>) => {
-    const { author, credentials, created, modified, isPrivate, needsFullClone, uriNeedsMigration, ...repoPatch } =
-      gitRepositoryPatch;
-
-    setProjectData({
-      ...projectData,
-      ...credentials,
-      authorName: author?.name || '',
-      authorEmail: author?.email || '',
-      uri: repoPatch.uri,
-      ref: repoPatch.ref,
-    });
-
-    initCloneGitRepositoryFetcher.submit({
-      ...repoPatch,
-      authorName: author?.name || '',
-      authorEmail: author?.email || '',
-      ...(credentials
-        ? isGitCredentialsOAuth(credentials)
-          ? {
-              credentials: {
-                token: credentials.token || '',
-                oauth2format: credentials.oauth2format || 'github',
-                username: credentials.username || '',
-              },
-            }
-          : {
-              credentials,
-            }
-        : {
-            credentials: {
-              password: '',
-              username: '',
-            },
-          }),
-      uri: repoPatch.uri || '',
-      organizationId,
-    });
-
-    setActiveView('git-results');
-  };
   const allConnectedReposLoaderFetcher = useAllConnectedReposLoaderFetcher();
   const allConnectedReposLoaderFetcherLoad = allConnectedReposLoaderFetcher.load;
+
   useEffect(() => {
     allConnectedReposLoaderFetcherLoad();
   }, [allConnectedReposLoaderFetcherLoad]);
+
   const allConnectedRepoURIProjectNameMap = allConnectedReposLoaderFetcher.data;
+
+  const [isCredentialSelectOpen, setIsCredentialSelectOpen] = useState(false);
+
+  const selectedCredentialsId = projectData.credentialsId || credentials?.[0]?._id;
+  const selectedCredential = credentials.find(c => c._id === selectedCredentialsId);
+  const selectedProvider = providers.find(p => p.type === selectedCredential?.provider);
+  const needToSetupCredentials = credentials.length === 0;
+  const baseURI =
+    (selectedCredential &&
+      isGitCredentialsV2(selectedCredential) &&
+      selectedCredential.provider === 'custom' &&
+      selectedCredential.credentials?.baseURI) ||
+    '';
+
   return (
     <ErrorBoundary>
       <Checkbox
@@ -89,57 +86,153 @@ export const GitRepoForm: FC<Props> = ({
       >
         Connect repository later
       </Checkbox>
-      {!projectData.connectRepositoryLater && (
-        <Tabs
-          selectedKey={selectedTab}
-          onSelectionChange={key => {
-            setTab(key as OauthProviderName);
+
+      {needToSetupCredentials && !projectData.connectRepositoryLater && <GitCredentialSetup providers={providers} />}
+
+      {!needToSetupCredentials && !projectData.connectRepositoryLater && (
+        <Form
+          id={formId}
+          className="flex flex-col gap-4"
+          onSubmit={async e => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            const credentialsId = formData.get('credentialsId') as string;
+            const uri = formData.get('uri') as string;
+            const ref = formData.get('branch') as string;
+            const prefix = baseURI ? baseURI.replace(/\/+$/, '') + '/' : '';
+            const fullUri = prefix ? `${prefix}${uri}` : uri;
+            setProjectData({
+              ...projectData,
+              credentialsId,
+              uri: fullUri,
+              ref,
+            });
+            initCloneGitRepositoryFetcher.submit({
+              credentialsId,
+              uri: fullUri || '',
+              ref,
+              organizationId,
+            });
+
+            setActiveView('git-results');
           }}
-          aria-label="Git repository settings tabs"
-          className="flex h-full w-full flex-col"
         >
-          <TabList
-            className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
-            aria-label="Request pane tabs"
+          {/* TODO support custom children in base select component and replace this one */}
+          <Select
+            onOpenChange={setIsCredentialSelectOpen}
+            isOpen={isCredentialSelectOpen}
+            aria-label="Git Credentials"
+            name="credentialsId"
+            onSelectionChange={id => {
+              setProjectData(prev => ({
+                ...prev,
+                credentialsId: id as string,
+              }));
+            }}
+            defaultSelectedKey={credentials?.[0]?._id}
           >
-            <Tab
-              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="github"
-            >
-              <div className="flex items-center gap-2">
-                <i className="fa fa-github" /> GitHub
+            <Label className="mb-2 px-0.5 pt-0 text-sm">Authorized as</Label>
+            <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
+              <SelectValue<GitCredentials> className="flex items-center justify-center gap-2 truncate">
+                {({ selectedItem }) => {
+                  if (selectedItem) {
+                    const provider = providers.find(p => p.type === selectedItem.provider);
+
+                    return (
+                      <Fragment>
+                        {provider?.iconName && <Icon icon={provider.iconName} className="size-4" />}
+                        <span>{provider?.displayName}</span>
+                        <Separator orientation="vertical" className="mx-2 h-4 border-l border-(--color-font)" />
+                        <span className="truncate">{selectedItem.author.name}</span>
+                        <span className="truncate">{selectedItem.author.email}</span>
+                      </Fragment>
+                    );
+                  }
+
+                  return 'Select a Credential';
+                }}
+              </SelectValue>
+              <Icon icon="caret-down" />
+            </Button>
+            <Popover className="isolate flex w-(--trigger-width) min-w-max flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none">
+              <ListBox items={credentials} className="min-w-max overflow-y-auto py-2 focus:outline-hidden">
+                {item => (
+                  <ListBoxItem
+                    id={item._id}
+                    key={item._id}
+                    className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                    aria-label={item.name}
+                    textValue={item.name}
+                    value={item}
+                  >
+                    {({ isSelected }) => {
+                      const provider = providers.find(p => p.type === item.provider);
+
+                      return (
+                        <Fragment>
+                          {provider?.iconName && <Icon icon={provider.iconName} className="size-4" />}
+                          <span>{provider?.displayName}</span>
+                          <Separator orientation="vertical" className="mx-2 h-4 border-l border-(--color-font)" />
+                          <span className="truncate">{item.author.name}</span>
+                          <span className="truncate">{item.author.email}</span>
+                          {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
+                        </Fragment>
+                      );
+                    }}
+                  </ListBoxItem>
+                )}
+              </ListBox>
+              <div className="w-(--trigger-width) bg-(--hl-xs) p-4 text-sm text-(--color-font)">
+                <span className="font-bold">Need to add another credential? </span>
+                <span>Login with Github or GitLab, or manually add access tokens in </span>
+                <Button
+                  onPress={() => {
+                    setIsCredentialSelectOpen(false);
+                    showSettingsModal({ tab: 'credentials' });
+                  }}
+                  className="underline"
+                >
+                  {'Preferences > Credentials.'}
+                </Button>
               </div>
-            </Tab>
-            <Tab
-              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="gitlab"
-            >
-              <div className="flex items-center gap-2">
-                <i className="fa fa-gitlab" /> GitLab
-              </div>
-            </Tab>
-            <Tab
-              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="custom"
-            >
-              <div className="flex items-center gap-2">
-                <i className="fa fa-code-fork" /> Git
-              </div>
-            </Tab>
-          </TabList>
-          <TabPanel className="h-full w-full overflow-y-auto py-2" id="github">
-            <GitHubRepositorySetupFormGroup
-              onSubmit={onGitRepoFormSubmit}
-              allConnectedRepoURIProjectNameMap={allConnectedRepoURIProjectNameMap}
-            />
-          </TabPanel>
-          <TabPanel className="h-full w-full overflow-y-auto py-2" id="gitlab">
-            <GitLabRepositorySetupFormGroup onSubmit={onGitRepoFormSubmit} />
-          </TabPanel>
-          <TabPanel className="h-full w-full overflow-y-auto py-2" id="custom">
-            <CustomRepositorySettingsFormGroup onSubmit={onGitRepoFormSubmit} />
-          </TabPanel>
-        </Tabs>
+            </Popover>
+          </Select>
+          {selectedProvider && (
+            <>
+              {selectedProvider.supportsFetchRepos ? (
+                <GitRepositorySelect
+                  allConnectedRepoURIProjectNameMap={allConnectedRepoURIProjectNameMap}
+                  uri={projectData.uri || ''}
+                  onSelect={(uri: string) =>
+                    setProjectData(prev => ({
+                      ...prev,
+                      uri,
+                    }))
+                  }
+                  credentialsId={selectedCredentialsId}
+                />
+              ) : (
+                <Input
+                  label="Path to Repository"
+                  description="Note: Some repo should include “.git” at the end of the path."
+                  prefix={baseURI}
+                  key={selectedCredentialsId}
+                  defaultValue={getDisplayValue(projectData.uri, baseURI)}
+                  name="uri"
+                  type={baseURI ? 'text' : 'url'}
+                  isRequired
+                  onChange={async v => {
+                    const prefix = baseURI ? baseURI.replace(/\/+$/, '') + '/' : '';
+                    const fullUri = prefix ? `${prefix}${v}` : v;
+                    setProjectData(prev => ({ ...prev, uri: fullUri }));
+                  }}
+                />
+              )}
+            </>
+          )}
+
+          <GitRemoteBranchSelect credentialsId={selectedCredentialsId} url={projectData.uri || ''} isDisabled={false} />
+        </Form>
       )}
     </ErrorBoundary>
   );
