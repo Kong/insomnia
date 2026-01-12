@@ -9,10 +9,6 @@ import { LearnMoreLink } from '~/basic-components/link';
 import type { GitCredentials } from '~/models/git-credentials';
 import type { StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import {
-  fallbackFeatures,
-  useOrganizationPermissionsLoaderFetcher,
-} from '~/routes/organization.$organizationId.permissions';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
@@ -21,7 +17,7 @@ import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
-import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 
 import type { GitRepository } from '../../../models/git-repository';
 import {
@@ -54,7 +50,6 @@ function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote
 
 interface Props {
   storageRules: StorageRules;
-  isGitSyncEnabled: boolean;
   project?: Project;
   gitRepository?: GitRepository;
   defaultProjectName?: string;
@@ -66,7 +61,6 @@ interface Props {
 
 export const ProjectSettingsForm: FC<Props> = ({
   storageRules,
-  isGitSyncEnabled,
   project,
   gitRepository,
   defaultProjectName = 'My Project',
@@ -77,16 +71,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
-  const permissionsFetcher = useOrganizationPermissionsLoaderFetcher({ key: `permissions:${organizationId}` });
-  const permissionsFetcherLoad = permissionsFetcher.load;
-  useEffect(() => {
-    permissionsFetcherLoad({
-      organizationId,
-    });
-  }, [organizationId, permissionsFetcherLoad]);
-  const { featuresPromise } = permissionsFetcher.data || {};
-  const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise, organizationId);
-  isGitSyncEnabled = features.gitSync.enabled;
+  const isGitSyncEnabled = useIsGitSyncEnabled(organizationId);
 
   const isLightTheme = useIsLightTheme();
 

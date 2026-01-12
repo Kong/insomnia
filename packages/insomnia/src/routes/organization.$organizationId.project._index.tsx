@@ -901,7 +901,6 @@ const Component = () => {
                               organizationId={organizationId}
                               project={item}
                               storageRules={storageRules}
-                              isGitSyncEnabled={isGitSyncEnabled}
                             />
                           )}
                         </div>
@@ -1297,7 +1296,7 @@ const Component = () => {
                 </div>
               </div>
             ) : (
-              <NoProjectView isGitSyncEnabled={isGitSyncEnabled} storageRules={storageRules} />
+              <NoProjectView storageRules={storageRules} />
             )}
           </Panel>
         </PanelGroup>
@@ -1306,7 +1305,6 @@ const Component = () => {
             isOpen={isNewProjectModalOpen}
             onOpenChange={setIsNewProjectModalOpen}
             storageRules={storageRules}
-            isGitSyncEnabled={isGitSyncEnabled}
           />
         )}
         {isUpdateProjectModalOpen && (
@@ -1316,7 +1314,6 @@ const Component = () => {
             project={activeProject}
             gitRepository={activeProjectGitRepository || undefined}
             storageRules={storageRules}
-            isGitSyncEnabled={isGitSyncEnabled}
           />
         )}
         {activeProject && newWorkspaceModalState?.isOpen && (
