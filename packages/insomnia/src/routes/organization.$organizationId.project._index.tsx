@@ -497,7 +497,7 @@ const Component = () => {
   const { presence } = useInsomniaEventStreamContext();
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
-  const { billing, features } = useOrganizationPermissions();
+  const { billing } = useOrganizationPermissions();
 
   useEffect(() => {
     if (!isScratchpadOrganizationId(organizationId)) {
@@ -651,7 +651,6 @@ const Component = () => {
   };
 
   const canCreateMockServer = activeProject?._id;
-  const isGitSyncEnabled = features.gitSync.enabled;
 
   const createInProjectActionList: {
     id: string;
