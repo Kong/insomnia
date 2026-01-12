@@ -119,10 +119,7 @@ npm run app-package
 npm run test:smoke:package
 ```
 
-> Note: for local testing of the packaged app on macOS you need to change the entitlements temporarily to allow unsigned apps to run. You can do this by changing the `com.apple.security.cs.disable-library-validation` key in `entitlements.mac.inherit.plist` file to
-> to ` <key>com.apple.security.cs.disable-library-validation</key>
-
-    <false/>`
+> Note: for local testing of the packaged app on macOS you need to change the entitlements temporarily to allow unsigned apps to run. You can do this by changing the `com.apple.security.cs.disable-library-validation` key in `entitlements.mac.inherit.plist` file to `true`. (Remember do not commit to the origin repo!)
 
 Each of the above commands will automatically run the Express server, so you do not need to take any extra steps.
 
