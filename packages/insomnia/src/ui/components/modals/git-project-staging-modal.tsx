@@ -26,7 +26,7 @@ import { useGitProjectDiffLoaderFetcher } from '~/routes/git.diff';
 import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
-import { GitFileType } from '~/sync/git/git-vcs';
+import type { GitFileType } from '~/sync/git/git-vcs';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import { SegmentEvent } from '~/ui/analytics';
 import { Badge } from '~/ui/components/base/badge';
@@ -51,35 +51,43 @@ interface DiscardData {
 }
 
 function getModificationClassName(type: GitFileType) {
-  switch (type) {
-    case GitFileType.Added: {
-      return 'text-[#73c991]';
-    }
-    case GitFileType.Deleted: {
-      return 'text-[#f14c4c]';
-    }
-    case GitFileType.Modified: {
-      return 'text-[#e2c08d]';
-    }
-    case GitFileType.Renamed: {
-      return 'text-[#519aba]';
-    }
-    case GitFileType.Copied: {
-      return 'text-[#4ec9b0]';
-    }
-    case GitFileType.Untracked: {
-      return 'text-[#73c991]';
-    }
-    case GitFileType.Ignored: {
-      return 'text-[#8c8c8c]';
-    }
-    case GitFileType.Conflicted: {
-      return 'text-[#d670d6]';
-    }
-    default: {
-      return '';
-    }
+  if (!type) {
+    return '';
   }
+
+  if (type === 'added') {
+    return 'text-[#73c991]';
+  }
+
+  if (type === 'deleted') {
+    return 'text-[#f14c4c]';
+  }
+
+  if (type === 'modified') {
+    return 'text-[#e2c08d]';
+  }
+
+  if (type === 'renamed') {
+    return 'text-[#519aba]';
+  }
+
+  if (type === 'copied') {
+    return 'text-[#4ec9b0]';
+  }
+
+  if (type === 'untracked') {
+    return 'text-[#73c991]';
+  }
+
+  if (type === 'ignored') {
+    return 'text-[#8c8c8c]';
+  }
+
+  if (type === 'conflicted') {
+    return 'text-[#d670d6]';
+  }
+
+  return '';
 }
 
 interface GeneratedCommitsFormProps {
@@ -199,9 +207,7 @@ const CommitSection = (props: {
               <Icon icon="grip-vertical" className="size-4" />
             </Button>
             <div className="flex w-full items-center justify-between overflow-hidden">
-              <span className={`truncate ${fileItem.type === GitFileType.Deleted ? 'line-through' : ''}`}>
-                {fileItem.name}
-              </span>
+              <span className={`truncate ${fileItem.type === 'deleted' ? 'line-through' : ''}`}>{fileItem.name}</span>
               <div className="flex items-center gap-1">
                 {!props.isDoNotCommitSection && (
                   <TooltipTrigger>
@@ -289,7 +295,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
         files: commit.files.map(file => ({
           id: `${commit.id}:${file}`,
           name: file,
-          type: changes.staged.find(change => change.path === file)?.type || GitFileType.Modified,
+          type: changes.staged.find(change => change.path === file)?.type || 'modified',
           symbol: changes.staged.find(change => change.path === file)?.symbol || 'M',
         })),
       }))
