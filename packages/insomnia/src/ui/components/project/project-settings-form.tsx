@@ -153,6 +153,18 @@ export const ProjectSettingsForm: FC<Props> = ({
 
   const hideActionButtons = storageType === 'git' && !projectData.connectRepositoryLater && credentials.length === 0;
 
+  const showGitConnectionInfo =
+    storageType === 'git' &&
+    !isSwitchingStorageType(project!, storageType) &&
+    project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID &&
+    gitRepository?.credentialsId &&
+    selectedProvider;
+
+  const showGitRepoForm =
+    storageType === 'git' &&
+    ((isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) ||
+      (!isSwitchingStorageType(project!, storageType) && project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID));
+
   return (
     <>
       {/* Content */}
@@ -238,31 +250,29 @@ export const ProjectSettingsForm: FC<Props> = ({
               }
             />
           )}
-          {storageType === 'git' &&
-            (!isSwitchingStorageType(project!, storageType) &&
-            project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID &&
-            gitRepository?.credentialsId &&
-            selectedProvider ? (
-              <>
-                <Divider />
-                <GitConnectionInfo
-                  gitRepository={gitRepository}
-                  providerInfo={selectedProvider}
-                  projectId={project!._id}
-                />
-              </>
-            ) : (
-              <GitRepoForm
-                projectData={projectData}
-                setProjectData={setProjectData}
-                initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
-                organizationId={organizationId}
-                setActiveView={setActiveView}
-                credentials={credentials}
-                providers={providers}
-                formId={FORMID}
+
+          {showGitConnectionInfo && (
+            <>
+              <Divider />
+              <GitConnectionInfo
+                gitRepository={gitRepository}
+                providerInfo={selectedProvider}
+                projectId={project!._id}
               />
-            ))}
+            </>
+          )}
+          {showGitRepoForm && (
+            <GitRepoForm
+              projectData={projectData}
+              setProjectData={setProjectData}
+              initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
+              organizationId={organizationId}
+              setActiveView={setActiveView}
+              credentials={credentials}
+              providers={providers}
+              formId={FORMID}
+            />
+          )}
         </div>
 
         <div className={activeView === 'git-results' ? '' : 'hidden'}>
@@ -293,7 +303,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID ||
               !gitRepository?.credentialsId) ? (
               <Button
-                isDisabled={!isGitSyncEnabled}
+                isDisabled={!isGitSyncEnabled && isSwitchingStorageType(project!, storageType)}
                 form={FORMID}
                 type="submit"
                 className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
