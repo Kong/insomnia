@@ -16,14 +16,12 @@ export const ProjectModal = ({
   isOpen,
   onOpenChange,
   storageRules,
-  isGitSyncEnabled,
   project,
   gitRepository,
 }: {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   storageRules: StorageRules;
-  isGitSyncEnabled: boolean;
   project?: Project;
   gitRepository?: GitRepository;
 }) => {
@@ -75,7 +73,6 @@ export const ProjectModal = ({
               {project ? (
                 <ProjectSettingsForm
                   storageRules={storageRules}
-                  isGitSyncEnabled={isGitSyncEnabled}
                   project={project}
                   gitRepository={gitRepository}
                   onCancel={close}
@@ -86,7 +83,6 @@ export const ProjectModal = ({
               ) : (
                 <ProjectCreateForm
                   storageRules={storageRules}
-                  isGitSyncEnabled={isGitSyncEnabled}
                   onCancel={close}
                   activeViewObj={activeViewObj}
                   credentials={credentials}
