@@ -67,7 +67,7 @@ const organizations = [
   },
 ];
 
-const organizationFeatures = {
+let organizationFeatures = {
   features: {
     gitSync: {
       enabled: true,
@@ -453,6 +453,12 @@ export default function setup(app: Application) {
 
   app.get('/v1/organizations/:orgId/features', (_req, res) => {
     res.status(200).send(organizationFeatures);
+  });
+
+  // Test Utility Endpoint - Allows altering features at runtime
+  app.post('/v1/test-utils/organizations/features', json(), (req, res) => {
+    organizationFeatures = req.body;
+    res.status(200).send();
   });
 
   // Projects

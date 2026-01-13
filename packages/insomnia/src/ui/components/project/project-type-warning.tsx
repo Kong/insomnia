@@ -36,6 +36,7 @@ export const ProjectTypeWarning = ({ isGitSyncEnabled, storageType, storageRules
           <Banner
             type="info"
             title="Git Sync limited to organizations of 3 or fewer users"
+            aria-label="Git Sync Feature Disabled Banner"
             className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
             message={
               <div>
@@ -56,6 +57,7 @@ export const ProjectTypeWarning = ({ isGitSyncEnabled, storageType, storageRules
         ) : (
           <Banner
             type="info"
+            aria-label="Git Sync Feature Disabled Banner"
             title="Git Sync limited to organizations of 3 or fewer users"
             className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
             message={

@@ -12,7 +12,12 @@ export const ModalHeader: FC<Props> = memo(({ hideCloseButton, className, childr
 
   if (!hideCloseButton) {
     closeButton = (
-      <button type="button" className="btn btn--compact modal__close-btn" data-close-modal="true">
+      <button
+        aria-label="Modal Close Button"
+        type="button"
+        className="btn btn--compact modal__close-btn"
+        data-close-modal="true"
+      >
         <i className="fa fa-times" />
       </button>
     );

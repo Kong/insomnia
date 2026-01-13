@@ -4,11 +4,12 @@ import { twMerge } from 'tailwind-merge';
 import { Icon } from './icon';
 
 interface BannerProps {
-  type: 'info' | 'warning';
-  message: React.ReactNode;
-  footer?: React.ReactNode;
-  title?: string;
-  className?: string;
+  'type': 'info' | 'warning';
+  'message': React.ReactNode;
+  'footer'?: React.ReactNode;
+  'title'?: string;
+  'className'?: string;
+  'aria-label'?: string;
 }
 const bannerTypeToIconName: Record<BannerProps['type'], IconProp> = {
   info: 'circle-info',
@@ -18,9 +19,12 @@ const bannerTypeToBgColor: Record<BannerProps['type'], string> = {
   info: 'bg-(--color-surprise)',
   warning: 'bg-(--color-warning)/50',
 };
-export const Banner = ({ type, title, message, footer, className }: BannerProps) => {
+export const Banner = ({ type, title, message, footer, className, 'aria-label': ariaLabel }: BannerProps) => {
   return (
-    <div className={twMerge(`flex gap-4 rounded-sm p-4 leading-5 ${bannerTypeToBgColor[type]}`, className)}>
+    <div
+      className={twMerge(`flex gap-4 rounded-sm p-4 leading-5 ${bannerTypeToBgColor[type]}`, className)}
+      aria-label={ariaLabel}
+    >
       <Icon icon={bannerTypeToIconName[type]} className="mt-1" />
       <div className="flex flex-col gap-3">
         {title && <div className="text-base font-semibold">{title}</div>}
