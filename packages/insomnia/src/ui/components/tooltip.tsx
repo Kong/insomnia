@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import React, { type CSSProperties, type ReactNode } from 'react';
 import { mergeProps, OverlayContainer, useOverlayPosition, useTooltip, useTooltipTrigger } from 'react-aria';
+import { createPortal } from 'react-dom';
 import { useTooltipTriggerState } from 'react-stately';
 
 interface Props {
@@ -13,10 +14,11 @@ interface Props {
   wide?: boolean;
   style?: CSSProperties;
   onClick?: () => void;
+  portalContainer?: HTMLElement | null;
 }
 
 export const Tooltip = (props: Props) => {
-  const { children, message, className, wide, selectable, delay = 400, position, style } = props;
+  const { children, message, className, wide, selectable, delay = 400, position, style, portalContainer } = props;
   const triggerRef = React.useRef(null);
   const overlayRef = React.useRef(null);
 
@@ -39,6 +41,17 @@ export const Tooltip = (props: Props) => {
     selectable,
   });
 
+  const overlayContent = (
+    <div
+      ref={overlayRef}
+      onClick={e => e.stopPropagation()}
+      {...mergeProps(tooltip.tooltipProps, positionProps)}
+      className={bubbleClasses}
+    >
+      {message}
+    </div>
+  );
+
   return (
     <>
       <div
@@ -50,18 +63,13 @@ export const Tooltip = (props: Props) => {
       >
         {children}
       </div>
-      {state.isOpen && (
-        <OverlayContainer>
-          <div
-            ref={overlayRef}
-            onClick={e => e.stopPropagation()}
-            {...mergeProps(tooltip.tooltipProps, positionProps)}
-            className={bubbleClasses}
-          >
-            {message}
-          </div>
-        </OverlayContainer>
-      )}
+      {state.isOpen &&
+        (portalContainer ? (
+          // Render tooltip inside customized portal(used in modal); otherwise the overlay container becomes inert and breaks hover
+          createPortal(overlayContent, portalContainer)
+        ) : (
+          <OverlayContainer>{overlayContent}</OverlayContainer>
+        ))}
     </>
   );
 };

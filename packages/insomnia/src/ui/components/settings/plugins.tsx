@@ -1,4 +1,4 @@
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import {
   Button,
   Checkbox,
@@ -40,6 +40,7 @@ interface State {
 export const Plugins: FC = () => {
   const { settings } = useRootLoaderData()!;
   const [showCreatePluginModal, setShowCreatePluginModal] = useState(false);
+  const containerRef = useRef(null);
 
   const [
     {
@@ -92,7 +93,7 @@ export const Plugins: FC = () => {
   const patchSettings = useSettingsPatcher();
 
   return (
-    <div>
+    <div ref={containerRef}>
       <p className="notice info no-margin-top">
         Plugins is still an experimental feature. See <Link href={docsPlugins}>Documentation</Link> for more info.
       </p>
@@ -231,6 +232,7 @@ export const Plugins: FC = () => {
 
               <Tooltip
                 className="cursor-pointer pt-2"
+                portalContainer={containerRef.current}
                 message={
                   <span>
                     You can bundle multiple root certificates into a single file.{' '}
