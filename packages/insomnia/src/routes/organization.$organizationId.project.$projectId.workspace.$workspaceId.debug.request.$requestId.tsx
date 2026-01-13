@@ -6,6 +6,7 @@ import * as models from '~/models';
 import { type GrpcRequest, isGrpcRequestId } from '~/models/grpc-request';
 import type { GrpcRequestMeta } from '~/models/grpc-request-meta';
 import * as requestOperations from '~/models/helpers/request-operations';
+import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { isMcpRequest, type McpRequest } from '~/models/mcp-request';
 import type { McpPayload } from '~/models/mcp-request-payload';
 import type { McpResponse } from '~/models/mcp-response';
@@ -128,7 +129,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     const isOversizedResponse = length > 5 * 1024 * 1024; // 5MB
     // Oversized repsonses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
-      const buffer = await models.response.getBodyBuffer(activeResponse);
+      const buffer = await getBodyBuffer(activeResponse);
       activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
     }
   }

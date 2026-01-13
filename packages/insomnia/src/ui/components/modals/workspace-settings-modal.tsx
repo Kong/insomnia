@@ -97,6 +97,10 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
   const fileName = gitFilePath?.split('/').pop() || '';
   const selectedFolderChildren = gitRepoTreeFetcher.data?.folderList[selectedFolder] || [];
 
+  function removeForRequest(_id: string) {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <ModalOverlay
       isOpen
@@ -208,7 +212,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                             const docs = await db.getWithDescendants(workspace, [models.request.type]);
                             const requests = docs.filter(isRequest);
                             for (const req of requests) {
-                              await models.response.removeForRequest(req._id);
+                              await removeForRequest(req._id);
                             }
                             close();
                           }}
