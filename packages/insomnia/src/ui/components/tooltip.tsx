@@ -65,7 +65,8 @@ export const Tooltip = (props: Props) => {
       </div>
       {state.isOpen &&
         (portalContainer ? (
-          // Render tooltip inside customized portal(used in modal); otherwise the overlay container becomes inert and breaks hover
+          // Render tooltip inside customized portal,
+          // Mainly used in when render in modal, the overlayContainer becomes inert and breaks hover
           createPortal(overlayContent, portalContainer)
         ) : (
           <OverlayContainer>{overlayContent}</OverlayContainer>
