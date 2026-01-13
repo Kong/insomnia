@@ -2,7 +2,7 @@ import type { Merge } from 'type-fest';
 
 import { database as db } from '../common/database';
 import { strings } from '../common/strings';
-import * as models from './index';
+import * as clientCertificate from './client-certificate';
 import { isProjectId } from './project';
 import type { BaseModel } from './types';
 
@@ -101,7 +101,7 @@ function _migrateExtractClientCertificates(workspace: Workspace) {
   }
 
   for (const cert of certificates) {
-    models.clientCertificate.create({
+    clientCertificate.create({
       parentId: workspace._id,
       host: cert.host || '',
       passphrase: cert.passphrase || null,
