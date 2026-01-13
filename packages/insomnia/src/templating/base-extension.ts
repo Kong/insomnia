@@ -5,6 +5,7 @@ import os from 'node:os';
 import iconv from 'iconv-lite';
 
 import { jarFromCookies } from '~/common/cookies';
+import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import { database as db } from '../common/database';
 import { secureReadFile } from '../main/secure-read-file';
@@ -165,7 +166,7 @@ export default class BaseExtension {
           },
           response: {
             getLatestForRequestId: models.response.getLatestForRequestId,
-            getBodyBuffer: models.response.getBodyBuffer,
+            getBodyBuffer,
           },
           settings: {
             get: models.settings.get,

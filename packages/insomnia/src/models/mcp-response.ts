@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import { database as db } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
 import type { BaseModel } from './index';
@@ -69,34 +67,6 @@ export function findByParentId(parentId: string) {
 
 export async function all() {
   return db.find<McpResponse>(type);
-}
-
-export async function removeForRequest(parentId: string, environmentId?: string | null) {
-  const settings = await models.settings.get();
-  const query: Record<string, any> = {
-    parentId,
-  };
-
-  // Only add if not undefined. null is not the same as undefined
-  //  null: find responses sent from base environment
-  //  undefined: find all responses
-  if (environmentId !== undefined && settings.filterResponsesByEnv) {
-    query.environmentId = environmentId;
-  }
-  const toDelete = await db.find<McpResponse>(type, query);
-  for (const doc of toDelete) {
-    fs.promises.unlink(doc.eventLogPath);
-    fs.promises.unlink(doc.timelinePath);
-  }
-  // Also delete legacy responses here or else the user will be confused as to
-  // why some responses are still showing in the UI.
-  await db.removeWhere(type, query);
-}
-
-export function remove(response: McpResponse) {
-  fs.promises.unlink(response.eventLogPath);
-  fs.promises.unlink(response.timelinePath);
-  return db.remove(response);
 }
 
 export async function create(patch: Partial<McpResponse> = {}, maxResponses = 20) {

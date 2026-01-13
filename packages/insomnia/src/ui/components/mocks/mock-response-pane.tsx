@@ -3,6 +3,7 @@ import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
+import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
@@ -67,7 +68,7 @@ export const MockResponsePane = () => {
   useEffect(() => {
     const fn = async () => {
       if (activeResponse) {
-        const timeline = await models.response.getTimeline(activeResponse, true);
+        const timeline = await getTimeline(activeResponse, true);
         setTimeline(timeline);
       }
     };
@@ -150,7 +151,7 @@ export const MockResponsePane = () => {
               filter={''}
               filterHistory={[]}
               bodyBuffer={activeResponse.bodyBuffer}
-              getBody={() => models.response.getBodyBuffer(activeResponse)}
+              getBody={() => getBodyBuffer(activeResponse)}
               previewMode={previewMode}
               responseId={activeResponse._id}
               updateFilter={activeResponse.error ? undefined : () => {}}
@@ -322,7 +323,7 @@ const PreviewModeDropdown = ({
             icon="copy"
             label="Copy raw response"
             onClick={async () => {
-              const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
+              const bodyBuffer = await getBodyBuffer(activeResponse);
               bodyBuffer && window.clipboard.writeText(bodyBuffer.toString('utf8'));
             }}
           />
@@ -354,7 +355,7 @@ const PreviewModeDropdown = ({
               icon="save"
               label="Export prettified response"
               onClick={async () => {
-                const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
+                const bodyBuffer = await getBodyBuffer(activeResponse);
                 const { canceled, filePath } = await window.dialog.showSaveDialog({
                   title: 'Save Full Response',
                   buttonLabel: 'Save',
@@ -386,7 +387,7 @@ const PreviewModeDropdown = ({
               if (canceled || !filePath) {
                 return;
               }
-              const timeline = models.response.getTimeline(activeResponse);
+              const timeline = getTimeline(activeResponse);
               const headers = timeline
                 .filter(v => v.name === 'HeaderIn')
                 .map(v => v.value)

@@ -1,10 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import { getBodyBuffer } from '~/models/helpers/response-operations';
+
 import type { BaseModel } from '../models';
 import * as models from '../models';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
-import { getBodyBuffer } from '../models/response';
 import type { Settings } from '../models/settings';
 import {
   defaultSendActionRuntime,

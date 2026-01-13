@@ -1,9 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import { readCurlResponse } from '~/models/helpers/response-operations';
+
 import { RESPONSE_CODE_REASONS } from '../../common/constants';
 import * as models from '../../models';
 import type { Request } from '../../models/request';
-import { readCurlResponse, type ResponseHeader } from '../../models/response';
+import { type ResponseHeader } from '../../models/response';
 import {
   fetchRequestData,
   responseTransform,
