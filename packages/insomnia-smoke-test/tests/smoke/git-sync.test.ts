@@ -27,14 +27,10 @@ test.describe('Git Sync', () => {
     await page.getByRole('tab', { name: 'Credentials' }).click();
     await page.getByRole('button', { name: 'Create Git Credential' }).click();
     await page.getByText('Access Token').click();
-    await page.getByRole('textbox', { name: 'Your Email' }).click();
-    await page.getByRole('textbox', { name: 'Your Email' }).fill(mockCredentials.email);
-    await page.getByRole('textbox', { name: 'Your Git Username' }).fill(mockCredentials.gitUsername);
-    await page.getByRole('textbox', { name: 'Username', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Author Email' }).fill(mockCredentials.email);
+    await page.getByRole('textbox', { name: 'Author Name' }).fill(mockCredentials.gitUsername);
     await page.getByRole('textbox', { name: 'Username', exact: true }).fill(mockCredentials.username);
-    await page.getByRole('textbox', { name: 'Git Access Token' }).click();
     await page.getByRole('textbox', { name: 'Git Access Token' }).fill(mockCredentials.token);
-    await page.getByRole('textbox', { name: 'Repository base URL' }).click();
     await page.getByRole('textbox', { name: 'Repository base URL' }).fill(mockCredentials.baseUrl);
     await page.getByRole('button', { name: 'Save Credential' }).click();
     await page.getByRole('button', { name: 'Modal Close Button' }).click();
