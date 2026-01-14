@@ -63,12 +63,15 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     const newAuthentication = {
       ...mcpRequest.authentication,
       ...auth,
-    } as RequestAuthentication;
+    };
     await models.mcpRequest.update(mcpRequest, {
       authentication: newAuthentication,
     });
     // update local authentication copy
-    this.authentication = newAuthentication;
+    this.authentication = {
+      ...this.authentication,
+      ...auth,
+    } as RequestAuthentication;
   }
   // It's called when auth tries to get client information for authorization, use as a starting point for MCP Auth Flow
   // See: https://github.com/modelcontextprotocol/typescript-sdk/blob/1d475bb3f75674a46d81dba881ea743a763cbc12/src/client/auth.ts#L349
@@ -109,6 +112,7 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     return;
   }
   async saveClientInformation(clientInformation: OAuthClientInformationFull) {
+    console.log('saveClientInformation called with', clientInformation);
     const parsedClientInformation = OAuthClientInformationSchema.parse(clientInformation);
     await this.updateAuthentication({
       clientId: parsedClientInformation.client_id,

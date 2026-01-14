@@ -16,7 +16,6 @@ import * as models from '~/models';
 import { TRANSPORT_TYPES } from '~/models/mcp-request';
 import type { McpResponse } from '~/models/mcp-response';
 import type { RequestHeader } from '~/models/request';
-import { invariant } from '~/utils/invariant';
 
 // Extend undici RequestInit to include dispatcher, it's in node.js fetch but not in dom fetch.
 interface NodeRequestInit extends RequestInit {

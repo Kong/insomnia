@@ -241,7 +241,7 @@ const createTransportAndConnect = async (context: ConnectionContext, mcpClient: 
   } else {
     const authProvider = new McpOAuthClientProvider(
       connectionOptions.requestId,
-      // deep clone the origin authentication
+      // Clone the origin authentication object
       { ...connectionOptions.authentication },
       context,
     );
