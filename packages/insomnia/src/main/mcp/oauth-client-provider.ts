@@ -143,7 +143,6 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     });
     await this.updateAuthentication({
       tokenPrefix: tokens.token_type,
-      scope: tokens.scope,
     });
   }
   // add state parameter to authorization url if present in authentication
