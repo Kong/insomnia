@@ -37,7 +37,7 @@ test.describe('Git Sync', () => {
     await page.getByRole('textbox', { name: 'Repository base URL' }).click();
     await page.getByRole('textbox', { name: 'Repository base URL' }).fill(mockCredentials.baseUrl);
     await page.getByRole('button', { name: 'Save Credential' }).click();
-    await page.getByLabel('Modal Close Button').click();
+    await page.getByRole('button', { name: 'Modal Close Button' }).click();
     await page.getByRole('button', { name: 'Create new Project' }).click();
     await page.getByLabel('Project Type Item: git').click();
     await expect.soft(page.getByLabel('Git Sync Feature Disabled Banner')).toBeVisible();
