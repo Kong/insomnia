@@ -95,7 +95,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
     if (!allEnvironment.find(env => env._id === selectedEnvironmentId)) {
       setSelectedEnvironmentId(activeEnvironment._id);
     }
-  }, [allEnvironment, selectedEnvironmentId, activeEnvironment._id]);
+  }, [baseEnvironment, subEnvironments, selectedEnvironmentId, activeEnvironment._id]);
   const selectedEnvironment = allEnvironment.find(env => env._id === selectedEnvironmentId);
   // Do not allowed to switch to json environment if contains secret item
   const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(
