@@ -24,7 +24,7 @@ export const deleteTeamProject = ({
   organizationId: string;
   projectRemoteId: string;
 }) => {
-  return fetch<{ error: string; message?: string }>({
+  return fetch<void | { error: string; message?: string }>({
     method: 'DELETE',
     path: `/v1/organizations/${organizationId}/team-projects/${projectRemoteId}`,
     sessionId,
@@ -51,12 +51,12 @@ export const createTeamProject = ({
 };
 
 export const updateTeamProject = ({
-  parentId,
+  organizationId,
   projectRemoteId,
   sessionId,
   name,
 }: {
-  parentId: string;
+  organizationId: string;
   projectRemoteId: string;
   sessionId: string;
   name: string;
@@ -66,7 +66,7 @@ export const updateTeamProject = ({
     message?: string;
   }>({
     method: 'PATCH',
-    path: `/v1/organizations/${parentId}/team-projects/${projectRemoteId}`,
+    path: `/v1/organizations/${organizationId}/team-projects/${projectRemoteId}`,
     sessionId,
     data: {
       name,

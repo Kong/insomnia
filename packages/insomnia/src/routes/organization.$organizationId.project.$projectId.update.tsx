@@ -9,7 +9,6 @@ import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -45,7 +44,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     // If its a cloud project, and we are renaming, then patch
     if (sessionId && project.remoteId && storageType === 'remote' && name !== project.name) {
       const response = await updateTeamProject({
-        parentId: project.parentId,
+        organizationId: project.parentId,
         projectRemoteId: project.remoteId,
         sessionId,
         name,

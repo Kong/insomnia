@@ -8,7 +8,6 @@ import * as models from '~/models';
 import { EMPTY_GIT_PROJECT_ID, type Project } from '~/models/project';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 

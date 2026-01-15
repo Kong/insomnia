@@ -6,7 +6,6 @@ import {
   pushSnapshotOnInitialize,
 } from '../../sync/vcs/initialize-backend-project';
 import type { VCS } from '../../sync/vcs/vcs';
-import { insomniaFetch } from '../../ui/insomnia-fetch';
 import { invariant } from '../../utils/invariant';
 import { isDefaultOrganizationProject, type Project, update as updateProject } from '../project';
 import { type Workspace } from '../workspace';
