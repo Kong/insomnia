@@ -72,6 +72,7 @@ export const ProjectTypeWarning = ({ isGitSyncEnabled, storageType, storageRules
       {showStorageRestrictionMessage && (
         <Banner
           type="warning"
+          aria-label="Project Storage Restriction Banner"
           message={
             <span>
               The organization owner mandates that projects must be created and stored using{' '}

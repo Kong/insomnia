@@ -189,7 +189,7 @@ const currentRole = {
   description: 'Owner can manage the organization and also delete it.',
 };
 
-const storageRule = {
+let storageRule = {
   enableCloudSync: true,
   enableGitSync: true,
   enableLocalVault: true,
@@ -556,6 +556,11 @@ export default function setup(app: Application) {
 
   app.get('/v1/organizations/:organizationId/storage-rule', (_req, res) => {
     res.json(storageRule);
+  });
+
+  app.post('/v1/test-utils/organizations/storage-rule', json(), (_req, res) => {
+    storageRule = _req.body;
+    res.status(200).send();
   });
 
   app.get('/v1/organizations/:organizationId/members', (_req, res) => {
