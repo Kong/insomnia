@@ -1,10 +1,10 @@
+import { deleteTeamProject } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
 import * as models from '~/models';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';
 
@@ -25,12 +25,9 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     await projectLock.lock();
     const bufferId = await database.bufferChanges();
     if (project.remoteId) {
-      const response = await insomniaFetch<void | {
-        error: string;
-        message?: string;
-      }>({
-        path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
-        method: 'DELETE',
+      const response = await deleteTeamProject({
+        organizationId,
+        projectRemoteId: project.remoteId,
         sessionId,
       });
 

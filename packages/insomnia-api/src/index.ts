@@ -1,5 +1,6 @@
 export * from './user';
 export * from './vault';
 export * from './trial';
+export * from './project';
 
 export { configureFetch, type FetchConfig } from './fetch';

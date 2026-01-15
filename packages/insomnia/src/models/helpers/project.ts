@@ -1,3 +1,5 @@
+import { createTeamProject } from 'insomnia-api';
+
 import { database } from '../../common/database';
 import {
   initializeLocalBackendProjectAndMarkForSync,
@@ -25,22 +27,10 @@ export async function updateLocalProjectToRemote({
   sessionId: string;
   organizationId: string;
 }) {
-  const newCloudProject = await insomniaFetch<
-    | {
-        id: string;
-        name: string;
-      }
-    | {
-        error: string;
-        message?: string;
-      }
-  >({
-    path: `/v1/organizations/${organizationId}/team-projects`,
-    method: 'POST',
-    data: {
-      name: project.name,
-    },
+  const newCloudProject = await createTeamProject({
     sessionId,
+    organizationId,
+    name: project.name,
   });
 
   if (!newCloudProject || 'error' in newCloudProject) {

@@ -1,3 +1,4 @@
+import { createTeamProject, updateGitProjectCount } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
@@ -35,14 +36,10 @@ export const reportGitProjectCount = async (organizationId: string, sessionId: s
   const gitProjectsCount = gitRepositoryIds.length;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      await insomniaFetch({
-        method: 'PATCH',
-        path: `/v1/organizations/${organizationId}/git-projects`,
+      await updateGitProjectCount({
+        organizationId,
         sessionId,
-        onlyResolveOnSuccess: true,
-        data: {
-          count: gitProjectsCount,
-        },
+        gitProjectsCount,
       });
       return;
     } catch {
@@ -98,23 +95,10 @@ export const createProject = async (organizationId: string, newProjectData: Crea
 
       return projectId;
     }
-
-    const newCloudProject = await insomniaFetch<
-      | {
-          id: string;
-          name: string;
-        }
-      | {
-          error: string;
-          message?: string;
-        }
-    >({
-      path: `/v1/organizations/${organizationId}/team-projects`,
-      method: 'POST',
-      data: {
-        name: newProjectData.name,
-      },
+    const newCloudProject = await createTeamProject({
       sessionId,
+      organizationId,
+      name: newProjectData.name,
     });
 
     if (!newCloudProject || 'error' in newCloudProject) {

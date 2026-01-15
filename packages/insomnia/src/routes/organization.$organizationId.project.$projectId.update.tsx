@@ -1,3 +1,4 @@
+import { createTeamProject, deleteTeamProject, updateTeamProject } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
@@ -43,16 +44,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     await projectLock.lock();
     // If its a cloud project, and we are renaming, then patch
     if (sessionId && project.remoteId && storageType === 'remote' && name !== project.name) {
-      const response = await insomniaFetch<void | {
-        error: string;
-        message?: string;
-      }>({
-        path: `/v1/organizations/${project.parentId}/team-projects/${project.remoteId}`,
-        method: 'PATCH',
+      const response = await updateTeamProject({
+        parentId: project.parentId,
+        projectRemoteId: project.remoteId,
         sessionId,
-        data: {
-          name,
-        },
+        name,
       });
 
       if (response && 'error' in response) {
@@ -95,12 +91,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     // convert from cloud to local
     if (storageType === 'local' && project.remoteId) {
-      const response = await insomniaFetch<void | {
-        error: string;
-        message?: string;
-      }>({
-        path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
-        method: 'DELETE',
+      const response = await deleteTeamProject({
+        organizationId,
+        projectRemoteId: project.remoteId,
         sessionId,
       });
 
@@ -149,22 +142,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
     // convert from local/git to cloud
     if (storageType === 'remote' && !project.remoteId) {
-      const newCloudProject = await insomniaFetch<
-        | {
-            id: string;
-            name: string;
-          }
-        | {
-            error: string;
-            message?: string;
-          }
-      >({
-        path: `/v1/organizations/${organizationId}/team-projects`,
-        method: 'POST',
-        data: {
-          name,
-        },
+      const newCloudProject = await createTeamProject({
         sessionId,
+        organizationId,
+        name,
       });
 
       if (newCloudProject && !('error' in newCloudProject)) {
@@ -225,12 +206,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     // convert to git
     if (storageType === 'git' && !project.gitRepositoryId) {
       if (project.remoteId) {
-        const response = await insomniaFetch<void | {
-          error: string;
-          message?: string;
-        }>({
-          path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
-          method: 'DELETE',
+        const response = await deleteTeamProject({
+          organizationId,
+          projectRemoteId: project.remoteId,
           sessionId,
         });
 
