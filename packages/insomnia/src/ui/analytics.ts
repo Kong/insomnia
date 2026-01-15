@@ -65,7 +65,6 @@ export enum SegmentEvent {
   responseToMockClicked = 'Response To Mock Clicked',
   gitSyncButtonClicked = 'Git Sync Button Clicked',
   preferencesViewed = 'Preferences Viewed',
-  installPlugin = 'Plugin Installed',
   copyAsCurl = 'Copied As cURL',
   themeChanged = 'Theme Changed',
   generateCodeClicked = 'Generate Code Clicked',

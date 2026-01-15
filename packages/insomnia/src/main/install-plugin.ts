@@ -6,7 +6,7 @@ import { promisify } from 'node:util';
 
 import { app, net } from 'electron';
 
-import { SegmentEvent } from '~/ui/analytics';
+import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 
 import { isDevelopment } from '../common/constants';
 import * as models from '../models';
@@ -157,12 +157,9 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
         }),
     );
 
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.installPlugin,
-      properties: {
-        pluginName: moduleName,
-        pluginVersion: info.version,
-      },
+    trackSegmentEvent(SegmentEvent.installPlugin, {
+      pluginName: moduleName,
+      pluginVersion: info.version,
     });
   } catch (err) {
     // Log and rethrow any installation errors
