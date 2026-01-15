@@ -239,12 +239,7 @@ const createTransportAndConnect = async (context: ConnectionContext, mcpClient: 
     wrapTransport();
     await mcpClient.connect(transport);
   } else {
-    const authProvider = new McpOAuthClientProvider(
-      connectionOptions.requestId,
-      // Clone the origin authentication object
-      { ...connectionOptions.authentication },
-      context,
-    );
+    const authProvider = new McpOAuthClientProvider(context);
     transport = await createStreamableHTTPTransport(context, connectionOptions, authProvider);
     wrapTransport();
     // Use a longer timeout for initial connection to allow for auth flow to complete

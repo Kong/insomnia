@@ -30,12 +30,18 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
   private _codeVerifier?: string;
   private _resourceMetadataUrl?: URL;
   private _redirectEndListener: ((authorizationCode: string) => void) | null = null;
-  constructor(
-    private requestId: string,
-    // Use rendered authentication value from connection options: INS-1942
-    private authentication: RequestAuthentication,
-    private context: ConnectionContext,
-  ) {}
+  private context: ConnectionContext;
+  private authentication: RequestAuthentication;
+  constructor(context: ConnectionContext) {
+    this.context = context;
+    const { options } = context;
+    if ('authentication' in options) {
+      // clone the origin authentication
+      this.authentication = { ...options.authentication };
+    } else {
+      throw new Error('McpOAuthClientProvider requires request authentication in context');
+    }
+  }
   get redirectUrl() {
     return getOauthRedirectUrl();
   }
@@ -58,7 +64,7 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     );
   }
   private async updateAuthentication(auth: Partial<RequestAuthentication>) {
-    const mcpRequest = await models.mcpRequest.getById(this.requestId);
+    const mcpRequest = await models.mcpRequest.getById(this.context.requestId);
     invariant(mcpRequest, 'MCP Request not found');
     await models.mcpRequest.update(mcpRequest, {
       authentication: {
@@ -122,7 +128,7 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
   async tokens(): Promise<OAuthTokens | undefined> {
     // Don't return tokens if not using MCP Auth Flow or if disabled
     if (this.isUsingMcpAuthFlow()) {
-      const token = await models.oAuth2Token.getOrCreateByParentId(this.requestId);
+      const token = await models.oAuth2Token.getOrCreateByParentId(this.context.requestId);
       if (token.accessToken) {
         return {
           access_token: token.accessToken,
@@ -136,7 +142,7 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     return undefined;
   }
   async saveTokens(tokens: OAuthTokens) {
-    const token = await models.oAuth2Token.getOrCreateByParentId(this.requestId);
+    const token = await models.oAuth2Token.getOrCreateByParentId(this.context.requestId);
     await models.oAuth2Token.update(token, {
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token || '',
