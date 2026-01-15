@@ -1,0 +1,28 @@
+// tsconfig for renderer process
+{
+  "extends": "./tsconfig.base.json",
+  "include": [
+    "**/*",
+    //react router dynamic types
+    ".react-router/types/**/*"
+  ],
+  "exclude": [
+    // exclude main process files
+    "./src/main/**/*",
+    "./src/__mocks__/@getinsomnia/node-libcurl.ts",
+    "**/__mocks__",
+    "**/__snapshots__",
+    "**/__tests__",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.min.js",
+    "assets",
+    "bin",
+    "build",
+    "dist",
+    "config",
+    "node_modules",
+    "src/coverage",
+    "svgr.config.js"
+  ]
+}
