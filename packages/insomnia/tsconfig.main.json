@@ -1,6 +1,5 @@
 // tsconfig for main process, including all files under src/main and exclude the renderer global types
 {
   "extends": "./tsconfig.base.json",
-  "include": ["./src/main/**/*"],
-  "exclude": ["./types/renderer-global.d.ts"]
+  "include": ["./src/main/**/*"]
 }
