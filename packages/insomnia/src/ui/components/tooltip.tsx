@@ -14,13 +14,12 @@ interface Props {
   wide?: boolean;
   style?: CSSProperties;
   onClick?: () => void;
-  portalContainer?: HTMLElement | null;
 }
 
 export const Tooltip = (props: Props) => {
-  const { children, message, className, wide, selectable, delay = 400, position, style, portalContainer } = props;
-  const triggerRef = React.useRef(null);
-  const overlayRef = React.useRef(null);
+  const { children, message, className, wide, selectable, delay = 400, position, style } = props;
+  const triggerRef = React.useRef<HTMLDivElement>(null);
+  const overlayRef = React.useRef<HTMLDivElement>(null);
 
   const state = useTooltipTriggerState({ delay });
   const trigger = useTooltipTrigger(props, state, triggerRef);
@@ -52,6 +51,8 @@ export const Tooltip = (props: Props) => {
     </div>
   );
 
+  const modalContainer = triggerRef.current?.closest('[aria-label="Modal"]');
+
   return (
     <>
       <div
@@ -64,10 +65,10 @@ export const Tooltip = (props: Props) => {
         {children}
       </div>
       {state.isOpen &&
-        (portalContainer ? (
-          // Render tooltip inside customized portal,
-          // Mainly used in when render in modal, the overlayContainer becomes inert and breaks hover
-          createPortal(overlayContent, portalContainer)
+        (modalContainer ? (
+          // Render tooltip inside modal if exists.
+          // Otherwise OverlayContainer becomes inert and breaks hover event listener: INS-1930
+          createPortal(overlayContent, modalContainer)
         ) : (
           <OverlayContainer>{overlayContent}</OverlayContainer>
         ))}
