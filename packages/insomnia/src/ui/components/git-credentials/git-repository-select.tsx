@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button, ComboBox, FieldError, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 
 import { fuzzyMatch } from '~/common/misc';
@@ -18,13 +18,15 @@ export const GitRepositorySelect = ({
   allConnectedRepoURIProjectNameMap?: Record<string, string> | undefined;
 }) => {
   const getGitProviderRepositoriesFetcher = useGitProviderRepositoriesLoaderFetcher();
+  const lastLoadedCredentialsIdRef = useRef<string | undefined>();
 
   useEffect(() => {
-    if (
-      getGitProviderRepositoriesFetcher.state === 'idle' &&
-      !getGitProviderRepositoriesFetcher.data &&
-      credentialsId
-    ) {
+    const hasData = getGitProviderRepositoriesFetcher.data;
+    const credentialsChanged = lastLoadedCredentialsIdRef.current !== credentialsId;
+    const shouldLoad = credentialsId && (credentialsChanged || !hasData);
+
+    if (getGitProviderRepositoriesFetcher.state === 'idle' && shouldLoad) {
+      lastLoadedCredentialsIdRef.current = credentialsId;
       getGitProviderRepositoriesFetcher.load({ credentialsId });
     }
   }, [credentialsId, getGitProviderRepositoriesFetcher]);

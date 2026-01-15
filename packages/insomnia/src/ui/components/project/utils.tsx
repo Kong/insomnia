@@ -14,6 +14,7 @@ export interface ProjectData {
   ref?: string;
   credentialsId?: string;
   connectRepositoryLater?: boolean;
+  selectedAuthorEmail?: string | null;
 }
 
 export type ProjectType = 'local' | 'remote' | 'git';

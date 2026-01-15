@@ -21,6 +21,7 @@ interface UpdateProjectInputData {
   uri?: string;
   ref?: string;
   connectRepositoryLater?: boolean;
+  selectedAuthorEmail?: string | null;
 }
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
@@ -259,6 +260,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           credentialsId: projectData.credentialsId,
           ref: projectData.ref,
           name,
+          selectedAuthorEmail: projectData.selectedAuthorEmail,
         });
 
         const projectWorkspaces = await models.workspace.findByParentId(project._id);
@@ -315,6 +317,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         uri: projectData.uri ?? '',
         credentialsId: projectData.credentialsId,
         ref: projectData.ref,
+        selectedAuthorEmail: projectData.selectedAuthorEmail,
       });
 
       showToast({
@@ -335,6 +338,29 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       await models.project.update(project, { name, gitRepositoryId: null });
 
       reportGitProjectCount(organizationId, sessionId);
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
+
+      return {
+        success: true,
+      };
+    }
+
+    // update existing git repository settings (author email override)
+    if (storageType === 'git' && gitRepository?.credentialsId) {
+      await window.main.git.updateGitRepo({
+        projectId: project._id,
+        uri: gitRepository.uri,
+        credentialsId: gitRepository.credentialsId,
+        selectedAuthorEmail: projectData.selectedAuthorEmail ?? null,
+      });
+
+      if (name !== project.name) {
+        await models.project.update(project, { name });
+      }
 
       showToast({
         title: 'Project updated',
