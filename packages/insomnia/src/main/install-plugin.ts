@@ -435,6 +435,12 @@ export async function getYarnEnvValues(): Promise<Record<string, string>> {
     Object.assign(yarnEnv, buildProxyEnv(settings));
   }
 
+  if (isDevelopment()) {
+    const NODE_AUTH_TOKEN = process.env['NODE_AUTH_TOKEN'];
+    // In development, set a default NODE_AUTH_TOKEN for .npmrc if not exists
+    yarnEnv.NODE_AUTH_TOKEN = NODE_AUTH_TOKEN || 'PLACEHOLDER_TOKEN_VALUE';
+  }
+
   return yarnEnv;
 }
 
