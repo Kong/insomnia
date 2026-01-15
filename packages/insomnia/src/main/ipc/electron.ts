@@ -1,3 +1,5 @@
+import { mkdirSync } from 'node:fs';
+
 import type {
   IpcMainEvent,
   IpcMainInvokeEvent,
@@ -22,65 +24,103 @@ export type HandleChannels =
   | 'authorizeUserInWindow'
   | 'backup'
   | 'cancelAuthorizationInDefaultBrowser'
+  | 'generateMockRouteDataFromSpec'
+  | 'generateCommitsFromDiff'
+  | 'generateMcpSamplingResponse'
   | 'curl.event.findMany'
   | 'curl.open'
   | 'curl.readyState'
   | 'curlRequest'
   | 'database.caCertificate.create'
   | 'extractJsonFileFromPostmanDataDumpArchive'
+  | 'generateCommitsFromDiff'
+  | 'generateMockRouteDataFromSpec'
   | 'getExecution'
   | 'getLocalStorageDataFromFileOrigin'
+  | 'git.abortMerge'
   | 'git.canPushLoader'
   | 'git.checkoutGitBranch'
   | 'git.cloneGitRepo'
   | 'git.commitAndPushToGitRepo'
   | 'git.commitToGitRepo'
-  | 'git.completeSignInToGitHub'
-  | 'git.completeSignInToGitLab'
   | 'git.continueMerge'
   | 'git.createNewGitBranch'
   | 'git.deleteGitBranch'
+  | 'git.diff'
   | 'git.diffFileLoader'
   | 'git.discardChanges'
-  | 'git.abortMerge'
   | 'git.fetchGitRemoteBranches'
   | 'git.getGitBranches'
-  | 'git.getGitHubRepositories'
-  | 'git.getGitHubRepository'
   | 'git.getRepositoryDirectoryTree'
   | 'git.gitChangesLoader'
   | 'git.gitFetchAction'
   | 'git.gitLogLoader'
   | 'git.gitStatus'
   | 'git.initGitRepoClone'
-  | 'git.initSignInToGitHub'
-  | 'git.initSignInToGitLab'
   | 'git.loadGitRepository'
   | 'git.mergeGitBranch'
   | 'git.migrateLegacyInsomniaFolderToFile'
+  | 'git.multipleCommitToGitRepo'
   | 'git.pullFromGitRemote'
   | 'git.pushToGitRemote'
   | 'git.resetGitRepo'
-  | 'git.signOutOfGitHub'
-  | 'git.signOutOfGitLab'
+  | 'git.getCurrentBranchByRepositoryId'
   | 'git.stageChanges'
   | 'git.unstageChanges'
   | 'git.updateGitRepo'
+  | 'git.listGitProviders'
+  | 'git.initSignInToGitProvider'
+  | 'git.completeSignInToGitProvider'
+  | 'git.getGitProviderRepositories'
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'
+  | 'insecureReadFile'
+  | 'insecureReadFileWithEncoding'
   | 'installPlugin'
   | 'lintSpec'
+  | 'llm.clearActiveBackend'
+  | 'llm.getActiveBackend'
+  | 'llm.getAIFeatureEnabled'
+  | 'llm.getAllConfigurations'
+  | 'llm.getBackendConfig'
+  | 'llm.getCurrentConfig'
+  | 'llm.setActiveBackend'
+  | 'llm.setAIFeatureEnabled'
+  | 'llm.updateBackendConfig'
+  | 'mcp.client.cancelRequest'
+  | 'mcp.client.hasRequestResponded'
+  | 'mcp.close'
+  | 'mcp.connect'
+  | 'mcp.event.findMany'
+  | 'mcp.event.findNotifications'
+  | 'mcp.event.findPendingEvents'
+  | 'mcp.notification.rootListChange'
+  | 'mcp.notification.rootListChange'
+  | 'mcp.primitive.callTool'
+  | 'mcp.primitive.getPrompt'
+  | 'mcp.primitive.listPrompts'
+  | 'mcp.primitive.listResources'
+  | 'mcp.primitive.listResourceTemplates'
+  | 'mcp.primitive.listTools'
+  | 'mcp.primitive.readResource'
+  | 'mcp.primitive.subscribeResource'
+  | 'mcp.primitive.unsubscribeResource'
+  | 'mcp.readyState'
+  | 'multipartBufferToArray'
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
+  | 'openPath'
+  | 'parseImport'
   | 'readCurlResponse'
   | 'readDir'
-  | 'readFile'
+  | 'readOrCreateDataDir'
   | 'restoreBackup'
   | 'secretStorage.decryptString'
   | 'secretStorage.deleteSecret'
   | 'secretStorage.encryptString'
   | 'secretStorage.getSecret'
   | 'secretStorage.setSecret'
+  | 'secureReadFile'
   | 'showOpenDialog'
   | 'showSaveDialog'
   | 'socketIO.event.findMany'
@@ -115,6 +155,10 @@ export type MainOnChannels =
   | 'manualUpdateCheck'
   | 'openDeepLink'
   | 'openInBrowser'
+  | 'path.basename'
+  | 'path.dirname'
+  | 'path.join'
+  | 'path.resolve'
   | 'readText'
   | 'restart'
   | 'set-hidden-window-busy-status'
@@ -134,6 +178,10 @@ export type MainOnChannels =
   | 'updateLatestStepName'
   | 'webSocket.close'
   | 'webSocket.closeAll'
+  | 'mcp.closeAll'
+  | 'mcp.client.responseElicitationRequest'
+  | 'mcp.client.responseSamplingRequest'
+  | 'mcp.sendMCPRequest'
   | 'writeText';
 
 export type RendererOnChannels =
@@ -151,10 +199,13 @@ export type RendererOnChannels =
   | 'reload-plugins'
   | 'shell:open'
   | 'show-notification'
+  | 'show-toast'
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
   | 'toggle-sidebar'
-  | 'updaterStatus';
+  | 'show-oauth-authorization-modal'
+  | 'hide-oauth-authorization-modal'
+  | 'mcp-auth-confirmation';
 
 export const ipcMainOn = (
   channel: MainOnChannels,
@@ -175,6 +226,7 @@ const getTemplateValue = (arg: NunjucksParsedTagArg) => {
   }
   return arg.defaultValue;
 };
+
 export function registerElectronHandlers() {
   ipcMainOn(
     'show-nunjucks-context-menu',
@@ -301,6 +353,11 @@ export function registerElectronHandlers() {
 
   ipcMainOn('showItemInFolder', (_, name: string) => {
     shell.showItemInFolder(name);
+  });
+
+  ipcMainHandle('openPath', async (_, name: string) => {
+    mkdirSync(name, { recursive: true });
+    return shell.openPath(name);
   });
 
   ipcMainOn('readText', event => {

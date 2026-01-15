@@ -2,9 +2,12 @@ import { randomUUID } from 'node:crypto';
 
 import type { Application } from 'express';
 import { json } from 'express';
+import { type CurrentPlan } from 'insomnia-api';
 
-import type { CurrentPlan } from '../../insomnia/src/ui/organization-utils';
-import type { Collaborator, CollaboratorType } from '../../insomnia/src/ui/routes/$organizationId.collaborators';
+import type {
+  Collaborator,
+  CollaboratorType,
+} from '../../insomnia/src/routes/organization.$organizationId.collaborators';
 import { getRandomId, getTeamName, getUserEmail } from '../tests/smoke/test-utils';
 
 const currentPlan: CurrentPlan = {
@@ -64,7 +67,7 @@ const organizations = [
   },
 ];
 
-const organizationFeatures = {
+let organizationFeatures = {
   features: {
     gitSync: {
       enabled: true,
@@ -87,7 +90,7 @@ const user = {
 };
 
 const whoami = {
-  sessionExpiry: 4838400,
+  sessionExpiry: 4_838_400,
   publicKey: {
     alg: 'RSA-OAEP-256',
     e: 'AQAB',
@@ -186,7 +189,7 @@ const currentRole = {
   description: 'Owner can manage the organization and also delete it.',
 };
 
-const storageRule = {
+let storageRule = {
   enableCloudSync: true,
   enableGitSync: true,
   enableLocalVault: true,
@@ -408,7 +411,7 @@ emailsAndGroupsToInvite.forEach((collaborator, index) => {
 
 collaboratorsList.total = collaboratorsList.collaborators.length + emailsAndGroupsToInvite.length;
 
-export default (app: Application) => {
+export default function setup(app: Application) {
   // User
   app.get('/v1/user/profile', (_req, res) => {
     console.log('GET *');
@@ -450,6 +453,12 @@ export default (app: Application) => {
 
   app.get('/v1/organizations/:orgId/features', (_req, res) => {
     res.status(200).send(organizationFeatures);
+  });
+
+  // Test Utility Endpoint - Allows altering features at runtime
+  app.post('/v1/test-utils/organizations/features', json(), (req, res) => {
+    organizationFeatures = req.body;
+    res.status(200).send();
   });
 
   // Projects
@@ -549,6 +558,11 @@ export default (app: Application) => {
     res.json(storageRule);
   });
 
+  app.post('/v1/test-utils/organizations/storage-rule', json(), (_req, res) => {
+    storageRule = _req.body;
+    res.status(200).send();
+  });
+
   app.get('/v1/organizations/:organizationId/members', (_req, res) => {
     res.json(members);
   });
@@ -635,4 +649,10 @@ export default (app: Application) => {
   app.delete('/v1/desktop/organizations/:organizationId/collaborators/:collaboratorId/unlink', (_req, res) => {
     res.json(null);
   });
-};
+
+  app.post('/v1/organizations/:organizationId/check-seats', (_req, res) => {
+    res.json({
+      isAllowed: true,
+    });
+  });
+}

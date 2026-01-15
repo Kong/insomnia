@@ -30,6 +30,7 @@ export const projectHasSettings = (project: Pick<Project, '_id'>) => !isScratchp
 
 interface CommonProject {
   name: string;
+  mcpStdioAccess?: boolean;
 }
 
 export interface RemoteProject extends BaseModel, CommonProject {
@@ -58,6 +59,7 @@ export function init(): Partial<Project> {
     name: 'My Project',
     remoteId: null, // `null` is necessary for the model init logic to work properly
     gitRepositoryId: null,
+    mcpStdioAccess: false,
   };
 }
 
@@ -79,6 +81,12 @@ export function getById(_id: string) {
 
 export function getByRemoteId(remoteId: string) {
   return db.findOne<Project>(type, { remoteId });
+}
+
+export function getAllByGitRepositoryIds(gitRepositoryIds: string[]) {
+  return db.find<Project>(type, {
+    gitRepositoryId: { $in: gitRepositoryIds },
+  });
 }
 
 export function remove(project: Project) {
@@ -151,22 +159,6 @@ export function getDefaultProjectStorageType(
   }
 
   return 'local';
-}
-
-export function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
-  if (storageType === 'git' && !isGitProject(project)) {
-    return true;
-  }
-
-  if (storageType === 'local' && (isRemoteProject(project) || isGitProject(project))) {
-    return true;
-  }
-
-  if (storageType === 'remote' && !isRemoteProject(project)) {
-    return true;
-  }
-
-  return false;
 }
 
 export function getProjectStorageTypeLabel(storageRules: StorageRules): string {

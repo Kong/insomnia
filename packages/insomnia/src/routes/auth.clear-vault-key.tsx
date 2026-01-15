@@ -1,10 +1,9 @@
 import electron from 'electron';
+import { getVault } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';
 import { removeAllSecrets } from '~/models/environment';
-import type { ToastNotification } from '~/ui/components/toast';
-import { insomniaFetch } from '~/ui/insomniaFetch';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/auth.clear-vault-key';
@@ -15,14 +14,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const userSession = await sessionModel.getOrCreate();
   const { id: sessionId } = userSession;
   const { salt: newVaultSalt } =
-    (await insomniaFetch<{
-      salt?: string;
-      error?: string;
-    }>({
-      method: 'GET',
-      path: '/v1/user/vault',
-      sessionId,
-    }).catch(error => {
+    (await getVault({ sessionId }).catch(error => {
       console.error(`failed to get vault salt ${error.toString()}`);
     })) || {};
   // User on other device has reset the vault key.
@@ -32,11 +24,12 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     // Update vault salt and delete vault key from session
     sessionModel.update(userSession, { vaultSalt: newVaultSalt, vaultKey: '' });
     // show notification
-    const notification: ToastNotification = {
-      key: 'Vault key reset',
-      message: 'Your vault key has been reset, all you local secrets have been deleted.',
-    };
-    electron.ipcRenderer.emit('show-notification', null, notification);
+    electron.ipcRenderer.emit('show-toast', null, {
+      content: {
+        title: 'Your vault key has been reset, all you local secrets have been deleted.',
+        status: 'info',
+      },
+    });
     return true;
   }
   return false;

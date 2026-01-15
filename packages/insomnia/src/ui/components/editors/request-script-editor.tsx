@@ -12,8 +12,8 @@ import {
   Toolbar,
 } from 'react-aria-components';
 
+import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
-import { translateHandlersInScript } from '~/utils/importers/importers/translate-postman-script';
 
 import {
   CookieObject,
@@ -142,7 +142,8 @@ const lintOptions = {
   undef: true,
   // Prevent undefined usages
   node: true,
-  esversion: 8, // ES8 syntax (async/await, etc)
+  // https://jshint.com/docs/options/#esversion
+  esversion: 11,
 };
 
 // TODO: We probably don't want to expose every property like .toObject() so we need a way to filter those out
@@ -615,7 +616,7 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
   );
 
   return (
-    <div className="flex h-full flex-col divide-y divide-solid divide-[--hl-md]">
+    <div className="flex h-full flex-col divide-y divide-solid divide-(--hl-md)">
       <CodeEditor
         id={`script-editor-${uniquenessKey}`}
         key={uniquenessKey}
@@ -631,10 +632,10 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
         getAutocompleteSnippets={() => requestScriptSnippets}
         onPaste={translateHandlersInScript}
       />
-      <Toolbar className="box-border flex h-[--line-height-sm] flex-shrink-0 flex-row items-center overflow-x-auto text-[var(--font-size-sm)]">
+      <Toolbar className="box-border flex h-(--line-height-sm) shrink-0 flex-row items-center overflow-x-auto text-(--font-size-sm)">
         {snippetsMenus.map(menu => (
           <MenuTrigger key={menu.id}>
-            <Button className="flex h-full items-center justify-center gap-2 px-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+            <Button className="flex h-full items-center justify-center gap-2 px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
               <Icon icon="code" />
               {menu.name}
             </Button>
@@ -642,19 +643,19 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
               <Menu
                 aria-label="Create a new request"
                 selectionMode="single"
-                className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
                 items={menu.items}
               >
                 {section => {
                   if ('items' in section) {
                     return (
                       <MenuSection>
-                        <Header className="py-1 pl-2 text-xs uppercase text-[--hl]">{section.name}</Header>
+                        <Header className="py-1 pl-2 text-xs text-(--hl) uppercase">{section.name}</Header>
                         <Collection items={section.items}>
                           {item => (
                             <MenuItem
                               onAction={() => addSnippet(item.snippet)}
-                              className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                               key={item.name}
                             >
                               {item.name}
@@ -668,7 +669,7 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
                   return (
                     <MenuItem
                       onAction={() => addSnippet(section.snippet)}
-                      className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                      className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                       key={section.name}
                     >
                       {section.name}

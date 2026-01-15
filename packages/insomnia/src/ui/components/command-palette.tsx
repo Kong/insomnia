@@ -62,24 +62,24 @@ export const CommandPalette = memo(function CommandPalette({ style = {} }: { sty
       <Button
         style={{ ...style }}
         data-testid="quick-search"
-        className="flex h-[30.5px] flex-shrink-0 items-center justify-between gap-2 rounded-md bg-[--hl-xs] px-4 py-1 text-sm text-[--color-font] ring-1 ring-inset ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm]"
+        className="flex h-[30.5px] shrink-0 items-center justify-between gap-2 rounded-md bg-(--hl-xs) px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all ring-inset hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
       >
         <div>
           <Icon icon="search" className="mr-2" />
           Search..
         </div>
         {requestSwitchKeyCombination && (
-          <Keyboard className="inline-block items-center space-x-0.5 rounded-md bg-[--hl-xs] px-2 py-0.5 text-center font-sans text-sm font-normal text-[--hl] shadow-sm">
+          <Keyboard className="inline-block items-center space-x-0.5 rounded-md bg-(--hl-xs) px-2 py-0.5 text-center font-sans text-sm font-normal text-(--hl) shadow-xs">
             {constructKeyCombinationDisplay(requestSwitchKeyCombination, false)}
           </Keyboard>
         )}
       </Button>
       <ModalOverlay
         isDismissable
-        className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full justify-center bg-black/30 pt-20"
+        className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full justify-center bg-black/30 pt-20"
       >
         <Modal className="w-full max-w-3xl">
-          <Dialog aria-label="Command palette dialog" className="outline-none">
+          <Dialog aria-label="Command palette dialog" className="outline-hidden">
             {({ close }) => <CommandPaletteCombobox close={close} />}
           </Dialog>
         </Modal>
@@ -231,27 +231,27 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         id: request.item._id,
         icon: isRequest(request.item) ? (
           <span
-            className={`flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] text-[0.65rem] ${
+            className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${
               {
-                GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-[--color-font-surprise]',
-                POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-[--color-font-success]',
-                HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
-                OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
-                DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-[--color-font-danger]',
-                PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-[--color-font-warning]',
-                PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-[--color-font-notice]',
-              }[request.item.method] || 'bg-[--hl-md] text-[--color-font]'
+                GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
+                POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
+                HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
+                PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
+                PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
+              }[request.item.method] || 'bg-(--hl-md) text-(--color-font)'
             }`}
           >
             {getMethodShortHand(request.item)}
           </span>
         ) : isWebSocketRequest(request.item) ? (
-          <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-[--color-font-notice]">
+          <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
             WS
           </span>
         ) : (
           isGrpcRequest(request.item) && (
-            <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-[--color-font-info]">
+            <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
               gRPC
             </span>
           )
@@ -271,7 +271,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         id: file.id,
         icon: (
           <span
-            className={`${scopeToBgColorMap[file.item.scope]} ${scopeToTextColorMap[file.item.scope]} flex aspect-square h-6 items-center justify-center rounded`}
+            className={`${scopeToBgColorMap[file.item.scope]} ${scopeToTextColorMap[file.item.scope]} flex aspect-square h-6 items-center justify-center rounded-sm`}
           >
             <Icon icon={scopeToIconMap[file.item.scope]} className="w-4" />
           </span>
@@ -279,7 +279,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         name: file.name,
         description: (
           <span className="flex items-center gap-1">
-            <span className="px-2 text-[--hl]">{scopeToLabelMap[file.item.scope]}</span>
+            <span className="px-2 text-(--hl)">{scopeToLabelMap[file.item.scope]}</span>
           </span>
         ),
         textValue: file.name + ' ' + scopeToLabelMap[file.item.scope],
@@ -303,7 +303,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       children: currentEnvironments.map(environment => ({
         id: environment._id,
         icon: (
-          <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[--hl-md] py-1 text-[0.65rem] text-[--color-font]">
+          <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-(--hl-md) py-1 text-[0.65rem] text-(--color-font)">
             <Icon
               icon={environment.isPrivate ? 'laptop-code' : 'globe-americas'}
               className="w-5 text-xs"
@@ -328,27 +328,27 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         id: request.item._id,
         icon: isRequest(request.item) ? (
           <span
-            className={`flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] text-[0.65rem] ${
+            className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${
               {
-                GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-[--color-font-surprise]',
-                POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-[--color-font-success]',
-                HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
-                OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
-                DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-[--color-font-danger]',
-                PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-[--color-font-warning]',
-                PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-[--color-font-notice]',
-              }[request.item.method] || 'bg-[--hl-md] text-[--color-font]'
+                GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
+                POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
+                HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
+                PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
+                PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
+              }[request.item.method] || 'bg-(--hl-md) text-(--color-font)'
             }`}
           >
             {getMethodShortHand(request.item)}
           </span>
         ) : isWebSocketRequest(request.item) ? (
-          <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-[--color-font-notice]">
+          <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
             WS
           </span>
         ) : (
           isGrpcRequest(request.item) && (
-            <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-[--color-font-info]">
+            <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
               gRPC
             </span>
           )
@@ -378,7 +378,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         id: file.id,
         icon: (
           <span
-            className={`${scopeToBgColorMap[file.item.scope]} ${scopeToTextColorMap[file.item.scope]} flex aspect-square h-6 items-center justify-center rounded`}
+            className={`${scopeToBgColorMap[file.item.scope]} ${scopeToTextColorMap[file.item.scope]} flex aspect-square h-6 items-center justify-center rounded-sm`}
           >
             <Icon icon={scopeToIconMap[file.item.scope]} className="w-4" />
           </span>
@@ -386,7 +386,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         name: file.name,
         description: (
           <span className="flex items-center gap-1">
-            <span className="px-2 text-[--hl]">{scopeToLabelMap[file.item.scope]}</span>
+            <span className="px-2 text-(--hl)">{scopeToLabelMap[file.item.scope]}</span>
             {file.organizationName}
             <span>/</span>
             {file.projectName}
@@ -484,10 +484,10 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
             <Label aria-label="Filter" className="group relative flex flex-1 items-center pt-0">
               {isPullingFile ? (
                 <>
-                  <Icon icon="spinner" className="absolute left-4 animate-spin text-[--color-font]" />
+                  <Icon icon="spinner" className="absolute left-4 animate-spin text-(--color-font)" />
                   <div
                     slot="input"
-                    className="w-full rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-3 pl-10 pr-7 text-[--color-font] transition-none group-data-[open]:rounded-b-none"
+                    className="w-full rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-3 pr-7 pl-10 text-(--color-font) transition-none group-data-open:rounded-b-none"
                   >
                     Pulling: {pullingFile?.name}
                   </div>
@@ -495,9 +495,9 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
               ) : (
                 <>
                   {isLoadingComboboxItems ? (
-                    <Icon icon="spinner" className="absolute left-4 animate-spin text-[--color-font]" />
+                    <Icon icon="spinner" className="absolute left-4 animate-spin text-(--color-font)" />
                   ) : (
-                    <Icon icon="search" className="absolute left-4 text-[--color-font]" />
+                    <Icon icon="search" className="absolute left-4 text-(--color-font)" />
                   )}
                   <Input
                     slot="input"
@@ -507,31 +507,31 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                         ? 'Loading...'
                         : 'Search and switch between requests, collections and documents'
                     }
-                    className="w-full rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-3 pl-10 pr-7 text-[--color-font] transition-none group-data-[open]:rounded-b-none"
+                    className="w-full rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-3 pr-7 pl-10 text-(--color-font) transition-none group-data-open:rounded-b-none"
                   />
                 </>
               )}
             </Label>
             <Popover
               offset={0}
-              className={`relative w-[--trigger-width] flex-1 overflow-y-auto rounded-b-md border bg-[--color-bg] text-[--color-font] outline-none ${isOpen ? 'border-solid' : ''} border-[--hl-sm]`}
+              className={`relative w-(--trigger-width) flex-1 overflow-y-auto rounded-b-md border bg-(--color-bg) text-(--color-font) outline-hidden ${isOpen ? 'border-solid' : ''} border-(--hl-sm)`}
             >
               <ListBox
                 aria-label="Commands"
-                className="relative flex-1 overflow-y-auto outline-none"
+                className="relative flex-1 overflow-y-auto outline-hidden"
                 items={comboboxSections}
               >
                 {section => (
                   <ListBoxSection className="flex flex-1 flex-col">
-                    <Header className="select-none p-2 text-xs uppercase text-[--hl]">{section.name}</Header>
+                    <Header className="p-2 text-xs text-(--hl) uppercase select-none">{section.name}</Header>
                     <Collection items={section.children}>
                       {item => (
-                        <ListBoxItem textValue={item.textValue} className="group select-none outline-none">
+                        <ListBoxItem textValue={item.textValue} className="group outline-hidden select-none">
                           <div
-                            className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'font-bold text-[--color-font]' : 'text-[--hl]'} relative h-[--line-height-xs] w-full items-center gap-2 overflow-hidden px-4 transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:text-[--color-font] group-data-[focused]:bg-[--hl-sm]`}
+                            className={`flex outline-hidden select-none ${item.id === workspaceId || item.id === requestId ? 'font-bold text-(--color-font)' : 'text-(--hl)'} relative h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 transition-colors group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font) group-data-focused:bg-(--hl-sm)`}
                           >
                             {item.icon}
-                            <Text className="flex-shrink-0 truncate px-1" slot="label">
+                            <Text className="shrink-0 truncate px-1" slot="label">
                               {item.name}
                             </Text>
                             {item.presence.length > 0 && (
@@ -539,7 +539,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                                 <AvatarGroup size="small" maxAvatars={3} items={item.presence} />
                               </span>
                             )}
-                            <Text className="flex-1 truncate px-1 text-sm text-[--hl-md]" slot="description">
+                            <Text className="flex-1 truncate px-1 text-sm text-(--hl-md)" slot="description">
                               {item.description}
                             </Text>
                           </div>

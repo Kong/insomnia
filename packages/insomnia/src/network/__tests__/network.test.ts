@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { join as pathJoin, resolve as pathResolve } from 'node:path';
+import nodePath from 'node:path';
 
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -93,7 +93,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -127,7 +127,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         POSTFIELDS: 'foo=bar',
         POST: 1,
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
         USERAGENT: '',
         VERBOSE: true,
@@ -172,7 +172,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -200,7 +200,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         NOPROGRESS: true,
         POSTFIELDS: 'foo=bar&bar=&=value',
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://localhost/',
         USERAGENT: '',
         VERBOSE: true,
@@ -276,7 +276,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -304,7 +304,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         NOPROGRESS: true,
         POSTFIELDS: 'foo=bar',
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
         USERAGENT: '',
         VERBOSE: true,
@@ -315,11 +315,12 @@ describe('sendCurlAndWriteTimeline()', () => {
 
   it('sends a file', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    let settings = await models.settings.getOrCreate();
+    settings = await models.settings.update(settings, { dataFolders: [nodePath.resolve(__dirname)] });
     await models.cookieJar.create({
       parentId: workspace._id,
     });
-    const fileName = pathResolve(pathJoin(__dirname, './testfile.txt'));
+    const fileName = nodePath.resolve(nodePath.join(__dirname, './testfile.txt'));
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -340,7 +341,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -370,7 +371,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         INFILESIZE_LARGE: 26,
         PROXY: '',
         READDATA: fs.readFileSync(fileName, 'utf8'),
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         UPLOAD: 1,
         URL: 'http://localhost/',
         USERAGENT: '',
@@ -386,7 +387,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     await models.cookieJar.create({
       parentId: workspace._id,
     });
-    const fileName = pathResolve(pathJoin(__dirname, './testfile.txt'));
+    const fileName = nodePath.resolve(nodePath.join(__dirname, './testfile.txt'));
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -424,7 +425,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -466,7 +467,7 @@ describe('sendCurlAndWriteTimeline()', () => {
           '',
         ].join('\r\n'),
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://localhost/',
         UPLOAD: 1,
         USERAGENT: '',
@@ -489,7 +490,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -510,7 +511,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         MAXREDIRS: 10,
         NOPROGRESS: true,
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://my/path',
         UNIX_SOCKET_PATH: '/my/socket',
         USERAGENT: '',
@@ -533,7 +534,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -554,7 +555,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         MAXREDIRS: 10,
         NOPROGRESS: true,
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://localhost:3000/foo/bar',
         USERAGENT: '',
         VERBOSE: true,
@@ -576,7 +577,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -597,7 +598,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         MAXREDIRS: 10,
         NOPROGRESS: true,
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://unix:3000/my/path',
         USERAGENT: '',
         VERBOSE: true,
@@ -620,7 +621,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       settings,
       '/tmp/res_id',
       'res_id',
@@ -641,7 +642,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         MAXREDIRS: 10,
         NOPROGRESS: true,
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         NETRC: CurlNetrc.Required,
         URL: '',
         USERAGENT: '',
@@ -725,7 +726,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       { ...settings, validateSSL: false },
       '/tmp/res_id',
       'res_id',
@@ -761,7 +762,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         SSL_VERIFYHOST: 0, // should disable SSL
         SSL_VERIFYPEER: 0, // should disable SSL
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
         USERAGENT: '',
         VERBOSE: true,
@@ -781,7 +782,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const responseV1 = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
-      null,
+      undefined,
       {
         ...settings,
         preferredHttpVersion: HttpVersions.V1_0,

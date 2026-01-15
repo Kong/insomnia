@@ -71,6 +71,13 @@ vi.mock('../main/install-plugin', async () => {
   };
 });
 
+vi.mock('../main/analytics', () => ({
+  trackSegmentEvent: vi.fn(),
+  SegmentEvent: {
+    installPlugin: 'Plugin Installed',
+  },
+}));
+
 import installPlugin, {
   buildProxyEnv,
   containsOnlyDeprecationWarnings,
@@ -96,11 +103,11 @@ describe('Plugin Installation', () => {
     });
 
     vi.mocked(hasUnexpectedBinaryData).mockImplementation(output => {
-      return output.includes('\x00');
+      return output.includes('\u0000');
     });
 
     vi.mocked(safeTrim).mockImplementation(value => {
-      if (typeof value !== 'string') return undefined;
+      if (typeof value !== 'string') return;
       const trimmed = value.trim();
       return trimmed || undefined;
     });

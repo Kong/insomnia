@@ -10,7 +10,7 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
 
 const Component = () => {
-  const { userSession, settings } = useRootLoaderData()!;
+  const { settings } = useRootLoaderData()!;
   const [status, setStatus] = useState<'online' | 'offline'>('online');
   useEffect(() => {
     const handleOnline = () => setStatus('online');
@@ -25,11 +25,11 @@ const Component = () => {
   }, []);
 
   return (
-    <div className="grid h-full w-full [grid-template-rows:1fr_30px]">
-      <div className="relative flex h-full w-full bg-[--color-bg] text-center">
+    <div className="grid h-full w-full grid-rows-[1fr_30px]">
+      <div className="relative flex h-full w-full bg-(--color-bg) text-center">
         <TrailLinesContainer>
           <div className="flex h-full min-h-[450px] flex-col items-center justify-center">
-            <div className="relative m-0 flex min-w-[400px] max-w-lg flex-col items-center justify-center gap-[--padding-sm] rounded-md bg-[--hl-sm] p-[--padding-lg] pt-[32px]">
+            <div className="relative m-0 flex max-w-lg min-w-[400px] flex-col items-center justify-center gap-(--padding-sm) rounded-md bg-(--hl-sm) p-(--padding-lg) pt-[32px]">
               <InsomniaLogo
                 width={64}
                 height={64}
@@ -51,7 +51,7 @@ const Component = () => {
             <TooltipTrigger>
               <Button
                 data-testid="settings-button"
-                className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 onPress={() => showSettingsModal()}
               >
                 <Icon icon="gear" /> Preferences
@@ -59,17 +59,17 @@ const Component = () => {
               <Tooltip
                 placement="top"
                 offset={8}
-                className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
               >
                 Preferences
                 <Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
               </Tooltip>
             </TooltipTrigger>
           </div>
-          <div className="divide flex items-center gap-2 divide-y-[--hl-sm]">
+          <div className="divide flex items-center gap-2 divide-y-(--hl-sm)">
             <TooltipTrigger>
               <Button
-                className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) capitalize ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 onPress={() => {
                   if (settings.proxyEnabled) {
                     showSettingsModal({
@@ -80,35 +80,30 @@ const Component = () => {
               >
                 <Icon
                   icon="circle"
-                  className={
-                    userSession ? (status === 'online' ? 'text-[--color-success]' : 'text-[--color-danger]') : ''
-                  }
+                  className={status === 'online' ? 'text-(--color-success)' : 'text-(--color-danger)'}
                 />{' '}
-                {userSession ? status.charAt(0).toUpperCase() + status.slice(1) : 'Log in to see your projects'}
+                {status}
                 {settings.proxyEnabled ? ' via proxy' : ''}
               </Button>
               <Tooltip
                 placement="top"
                 offset={8}
-                className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
               >
-                {userSession
-                  ? status === 'online'
-                    ? 'You have connectivity to the Internet' +
-                      (settings.proxyEnabled ? ' via the configured proxy' : '') +
-                      '.'
-                    : 'You are offline. Connect to sync your data.'
-                  : 'Login to Insomnia to unlock the full product experience.'}
+                {status === 'online'
+                  ? 'You have connectivity to the Internet' +
+                    (settings.proxyEnabled ? ' via the configured proxy' : '') +
+                    '.'
+                  : 'You are offline. Connect to sync your data.'}
               </Tooltip>
             </TooltipTrigger>
-            <span className="h-full w-[1px] bg-[--hl-sm]" />
             <Link>
               <a
-                className="flex items-center gap-1 px-[--padding-md] text-xs text-[--color-font] focus:underline focus:outline-none"
+                className="flex items-center gap-1 px-(--padding-md) text-xs text-(--color-font) focus:underline focus:outline-hidden"
                 href="https://konghq.com/"
               >
                 Made with
-                <Icon className="text-[--color-surprise-font]" icon="heart" /> by Kong
+                <Icon className="text-(--color-surprise-font)" icon="heart" /> by Kong
               </a>
             </Link>
           </div>

@@ -39,7 +39,7 @@ type FSEntry = FSDir | FSFile | FSLink;
  */
 export class MemClient {
   __fs: FSEntry;
-  __ino: 0;
+  __ino = 0;
 
   static createClient(): PromiseFsClient {
     return {
@@ -48,7 +48,6 @@ export class MemClient {
   }
 
   constructor() {
-    this.__ino = 0;
     this.__fs = {
       type: 'dir',
       path: path.normalize('/'),
@@ -69,7 +68,7 @@ export class MemClient {
         return toPrint;
       }
 
-      const indent = new Array((dir.match(/\//g) || []).length).join('|   ');
+      const indent = Array.from({ length: (dir.match(/\//g) || []).length }).join('|   ');
 
       if (entry.type === 'dir') {
         if (entry.path !== baseDir) {
@@ -168,7 +167,7 @@ export class MemClient {
     }
 
     file.contents = newContents.toString('base64');
-    return Promise.resolve();
+    return;
   }
 
   async unlink(filePath: string) {
@@ -426,7 +425,7 @@ export class MemClient {
 
     const index = parentEntry.children.indexOf(entry);
 
-    if (index < 0) {
+    if (index === -1) {
       // Should never happen so w/e
       return;
     }

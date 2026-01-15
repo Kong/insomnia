@@ -1,10 +1,10 @@
-import fs from 'node:fs';
-
 import { extension as mimeExtension } from 'mime-types';
-import React, { type FC, useCallback, useMemo } from 'react';
+import { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
 import { useRootLoaderData } from '~/root';
+import { SegmentEvent } from '~/ui/analytics';
+import { jsonPrettify } from '~/utils/prettify/json';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -14,14 +14,12 @@ import {
   type RequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { MockResponseExtractor } from '../editors/mock-response-extractor';
 import { ErrorBoundary } from '../error-boundary';
-import { showError } from '../modals';
 import { ResponseTimer } from '../response-timer';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
@@ -39,7 +37,8 @@ interface Props {
   activeRequestId: string;
 }
 export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
-  const { activeRequest, activeRequestMeta, activeResponse } = useRequestLoaderData() as RequestLoaderData;
+  const { activeRequest, activeRequestMeta, activeResponse, responses, requestVersions } =
+    useRequestLoaderData() as RequestLoaderData;
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
   const filter = activeRequestMeta.responseFilter || '';
   const patchRequestMeta = useRequestMetaPatcher();
@@ -84,34 +83,14 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
       if (canceled) {
         return;
       }
-
-      const readStream = models.response.getBodyStream(activeResponse);
-      const dataBuffers: any[] = [];
-
-      if (readStream && outputPath && typeof readStream !== 'string') {
-        readStream.on('data', data => {
-          dataBuffers.push(data);
+      if (prettify && contentType.includes('json')) {
+        await window.main.writeFile({
+          path: outputPath,
+          content: jsonPrettify(activeResponse.bodyBuffer?.toString('utf8')) || '',
         });
-        readStream.on('end', () => {
-          const to = fs.createWriteStream(outputPath);
-          const finalBuffer = Buffer.concat(dataBuffers);
-          to.on('error', err => {
-            showError({
-              title: 'Save Failed',
-              message: 'Failed to save response body',
-              error: err,
-            });
-          });
-
-          if (prettify && contentType.includes('json')) {
-            to.write(jsonPrettify(finalBuffer.toString('utf8')));
-          } else {
-            to.write(finalBuffer);
-          }
-
-          to.end();
-        });
+        return;
       }
+      await window.main.writeFile({ path: outputPath, content: activeResponse.bodyBuffer?.toString('utf8') || '' });
     },
     [activeRequest, activeResponse],
   );
@@ -128,7 +107,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
     return { passedTestCount, totalTestCount };
   }, [activeResponse]);
   const testResultCountTagColor =
-    totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-[var(--hl-sm)]';
+    totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-(--hl-sm)';
 
   if (!activeRequest) {
     return <BlankPane type="response" />;
@@ -161,68 +140,85 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             <TimeTag milliseconds={activeResponse.elapsedTime} steps={steps} />
             <SizeTag bytesRead={activeResponse.bytesRead} bytesContent={activeResponse.bytesContent} />
           </div>
-          <ResponseHistoryDropdown activeResponse={activeResponse} />
+          <ResponseHistoryDropdown
+            activeResponse={activeResponse}
+            responses={responses}
+            requestVersions={requestVersions}
+          />
         </PaneHeader>
       )}
-      <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
+      <Tabs
+        aria-label="Request group tabs"
+        className="flex h-full w-full flex-1 flex-col"
+        onSelectionChange={key => {
+          if (key === 'mock-response') {
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.responseToMockClicked,
+              properties: {
+                source: 'Response Pane Tab',
+              },
+            });
+          }
+        }}
+      >
         <TabList
-          className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+          className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
           aria-label="Request pane tabs"
         >
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="preview"
           >
             Preview
           </Tab>
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="headers"
           >
             Headers
             {activeResponse.headers.length > 0 && (
-              <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+              <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
                 {activeResponse.headers.length}
               </span>
             )}
           </Tab>
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="cookies"
           >
             Cookies
             {cookieHeaders.length > 0 && (
-              <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+              <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
                 {cookieHeaders.length}
               </span>
             )}
           </Tab>
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="test-results"
           >
             <div>
               <span>Tests</span>
-              <span className={`ml-1 rounded-sm px-1 ${testResultCountTagColor}`} style={{ color: 'white' }}>
+              <span className={`ml-1 rounded-xs px-1 ${testResultCountTagColor}`} style={{ color: 'white' }}>
                 {`${passedTestCount} / ${totalTestCount}`}
               </span>
             </div>
           </Tab>
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="mock-response"
           >
             → Mock
           </Tab>
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="timeline"
           >
             Console
           </Tab>
         </TabList>
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="preview">
-          <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
+          <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
               copyToClipboard={async () => {

@@ -4,8 +4,8 @@ import { type ActionFunctionArgs, href } from 'react-router';
 
 import type { ScanResult } from '~/common/import';
 import { fetchImportContentFromURI, getFilesFromPostmanExportedDataDump, scanResources } from '~/common/import';
+import type { ImportEntry } from '~/main/importers/entities';
 import { SegmentEvent } from '~/ui/analytics';
-import type { ImportEntry } from '~/utils/importers/entities';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -44,7 +44,7 @@ export const scanImportResources = async (data: {
     try {
       filePaths = typeof data.filePaths === 'string' ? JSON.parse(data.filePaths) : data.filePaths;
       if (!Array.isArray(filePaths)) {
-        throw new Error('filePaths is not an array');
+        throw new TypeError('filePaths is not an array');
       }
       filePaths = filePaths.filter(filePath => typeof filePath === 'string' && filePath);
       if (filePaths.length === 0) {
@@ -79,9 +79,11 @@ export const scanImportResources = async (data: {
     let postmanArchiveJsonData: { environment?: Record<string, boolean> } | null = null;
     if (postmanArchiveFile) {
       try {
-        const postmanArchiveFileContent = await window.main.readFile({ path: postmanArchiveFile });
-        postmanArchiveJsonData = JSON.parse(postmanArchiveFileContent.content);
-      } catch (err) {
+        const postmanArchiveFileContent = await window.main.insecureReadFile({
+          path: postmanArchiveFile,
+        });
+        postmanArchiveJsonData = JSON.parse(postmanArchiveFileContent);
+      } catch {
         return [
           {
             oriFileName: postmanArchiveFile,
@@ -102,7 +104,7 @@ export const scanImportResources = async (data: {
             jsonData._postman_variable_scope = 'environment';
             contentStr = JSON.stringify(jsonData);
           }
-        } catch (error) {
+        } catch {
           // It's not a valid JSON, shouldn't be a postman environment
         }
       }

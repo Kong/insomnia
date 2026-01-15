@@ -1,11 +1,12 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
+import { SegmentEvent } from '~/ui/analytics';
 
 import type { ThemeSettings } from '../../models/settings';
 import { type ColorScheme, getThemes } from '../../plugins';
-import { applyColorScheme, type PluginTheme } from '../../plugins/misc';
+import { applyColorScheme, getColorScheme, type PluginTheme } from '../../plugins/misc';
 import { useSettingsPatcher } from './use-request';
 
 export const useThemes = () => {
@@ -54,6 +55,11 @@ export const useThemes = () => {
   // Activate the theme for the selected color scheme
   const activate = useCallback(
     async (themeName: string, colorScheme: ColorScheme) => {
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.themeChanged,
+        properties: { themeName, colorScheme },
+      });
+
       switch (colorScheme) {
         case 'light': {
           await apply({ lightTheme: themeName });
@@ -87,4 +93,58 @@ export const useThemes = () => {
     changeAutoDetect,
     autoDetectColorScheme,
   };
+};
+
+export const useIsLightTheme = () => {
+  const rootLoaderData = useRootLoaderData();
+
+  let lightTheme = 'default';
+  let darkTheme = 'default';
+  let theme = 'default';
+  let autoDetectColorScheme = false;
+  if (rootLoaderData?.settings) {
+    lightTheme = rootLoaderData.settings.lightTheme;
+    darkTheme = rootLoaderData.settings.darkTheme;
+    theme = rootLoaderData.settings.theme;
+    autoDetectColorScheme = rootLoaderData.settings.autoDetectColorScheme;
+  }
+
+  const calcIsLightTheme = useCallback(() => {
+    let isLightTheme = false;
+    const colorScheme = getColorScheme({
+      autoDetectColorScheme,
+      darkTheme,
+      lightTheme,
+      theme,
+    });
+    if (colorScheme === 'light') {
+      isLightTheme = lightTheme.includes('light');
+    } else if (colorScheme === 'dark') {
+      isLightTheme = darkTheme.includes('light');
+    } else {
+      // check if user has selected a light theme
+      isLightTheme = theme.includes('light');
+    }
+    return isLightTheme;
+  }, [lightTheme, darkTheme, theme, autoDetectColorScheme]);
+
+  const [isLightTheme, setIsLightTheme] = useState<boolean>(calcIsLightTheme);
+
+  // Listen to system theme changes
+  useEffect(() => {
+    const matches = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = () => {
+      setIsLightTheme(calcIsLightTheme());
+    };
+    matches.addEventListener('change', onChange);
+    return () => {
+      matches.removeEventListener('change', onChange);
+    };
+  }, [calcIsLightTheme]);
+
+  // Listen to settings changes
+  useEffect(() => {
+    setIsLightTheme(calcIsLightTheme());
+  }, [calcIsLightTheme, lightTheme, darkTheme, theme, autoDetectColorScheme]);
+  return isLightTheme;
 };

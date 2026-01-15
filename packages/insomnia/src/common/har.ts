@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import clone from 'clone';
 import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
@@ -150,15 +148,9 @@ export async function exportHar(exportRequests: ExportRequest[]) {
       continue;
     }
 
-    let response;
-    if (exportRequest.responseId) {
-      response = await models.response.getById(exportRequest.responseId);
-    } else {
-      response = await models.response.getLatestForRequestId(
-        exportRequest.requestId,
-        exportRequest.environmentId || null,
-      );
-    }
+    const response = await (exportRequest.responseId
+      ? models.response.getById(exportRequest.responseId)
+      : models.response.getLatestForRequestId(exportRequest.requestId, exportRequest.environmentId || null));
 
     const harResponse = await exportHarResponse(response);
 
@@ -248,11 +240,11 @@ export async function exportHarWithRequest(request: Request, environmentId?: str
     parseGraphQLReqeustBody(renderedRequest);
     return exportHarWithRenderedRequest(renderedRequest, addContentLength);
   } catch (err) {
-    if (err instanceof RenderError) {
-      throw new Error(`Failed to render "${request.name}:${err.path}"\n ${err.message}`);
-    } else {
-      throw new Error(`Failed to export request "${request.name}"\n ${err.message}`);
-    }
+    const error =
+      err instanceof RenderError
+        ? new Error(`Failed to render "${request.name}:${err.path}"\n ${err.message}`)
+        : new Error(`Failed to export request "${request.name}"\n ${err.message}`);
+    throw error;
   }
 }
 
@@ -316,7 +308,7 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
     cookies: getRequestCookies(renderedRequest),
     headers: getRequestHeaders(renderedRequest),
     queryString: getRequestQueryString(renderedRequest),
-    postData: getRequestPostData(renderedRequest),
+    postData: await getRequestPostData(renderedRequest),
     headersSize: -1,
     bodySize: -1,
   };
@@ -325,16 +317,7 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
 
 function getRequestCookies(renderedRequest: RenderedRequest) {
   // filter out invalid cookies to avoid getCookiesSync complaining
-  const sanitized = renderedRequest.cookieJar.cookies.map(cookie => {
-    if (!cookie.expires) {
-      // TODO: null will make getCookiesSync unhappy
-      // probably it should be `undefined` when types of tough cookie is updated
-      cookie.expires = 'Infinity';
-    }
-    return cookie;
-  });
-
-  const jar = jarFromCookies(sanitized);
+  const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
   const domainCookies = renderedRequest.url ? jar.getCookiesSync(renderedRequest.url) : [];
   const harCookies: Har.Cookie[] = domainCookies.map(mapCookie);
   return harCookies;
@@ -346,7 +329,7 @@ export function getResponseCookiesFromHeaders(headers: Har.Cookie[]) {
 
     try {
       cookie = ToughCookie.parse(harCookie.value || '', { loose: true });
-    } catch (error) {}
+    } catch {}
 
     if (cookie === null || cookie === undefined) {
       return accumulator;
@@ -387,7 +370,7 @@ function mapCookie(cookie: ToughCookie) {
       expires.setTime(cookie.expires);
     }
 
-    if (expires && !isNaN(expires.getTime())) {
+    if (expires && !Number.isNaN(expires.getTime())) {
       harCookie.expires = expires.toISOString();
     }
   }
@@ -442,12 +425,14 @@ function getRequestQueryString(renderedRequest: RenderedRequest): Har.QueryStrin
   }));
 }
 
-function getRequestPostData(renderedRequest: RenderedRequest): Har.PostData | undefined {
+async function getRequestPostData(renderedRequest: RenderedRequest): Promise<Har.PostData | undefined> {
   let body;
   if (renderedRequest.body.fileName) {
     try {
+      const text = await window.main.secureReadFile({ path: renderedRequest.body.fileName });
+
       body = {
-        text: fs.readFileSync(renderedRequest.body.fileName, 'base64'),
+        text,
       };
     } catch (error) {
       console.warn('[code gen] Failed to read file', error);

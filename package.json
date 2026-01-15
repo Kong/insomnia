@@ -11,12 +11,13 @@
   },
   "homepage": "https://github.com/kong/insomnia#readme",
   "engines": {
-    "node": ">=22.17.1",
+    "node": ">=22",
     "npm": ">=10"
   },
   "workspaces": [
     "packages/insomnia-testing",
     "packages/insomnia",
+    "packages/insomnia-api",
     "packages/insomnia-inso",
     "packages/insomnia-smoke-test",
     "packages/insomnia-scripting-environment"
@@ -38,7 +39,9 @@
     "test:smoke:build": "npm run test:build -w insomnia-smoke-test -- --project=Smoke",
     "test:smoke:package": "npm run test:package -w insomnia-smoke-test -- --project=Smoke",
     "test:crit:package": "npm run test:package -w insomnia-smoke-test -- --project=Critical",
-    "postinstall": "patch-package && npm run verify-bundle-plugins -w insomnia"
+    "test:crit:dev": "npm run test:dev -w insomnia-smoke-test -- --project=Critical",
+    "postinstall": "patch-package && npm run verify-bundle-plugins -w insomnia",
+    "check-cycle-references": "madge --circular --extensions ts,tsx packages"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
@@ -48,19 +51,20 @@
     "@types/node": "^24.2.1",
     "@typescript-eslint/eslint-plugin": "^8.29.0",
     "@typescript-eslint/parser": "^8.29.0",
-    "esbuild": "^0.24.0",
+    "esbuild": "^0.25.10",
     "esbuild-runner": "^2.2.2",
-    "eslint": "^9.23.0",
-    "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-playwright": "^2.2.0",
-    "eslint-plugin-react": "^7.37.4",
-    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-playwright": "^2.3.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "eslint-plugin-unicorn": "^59.0.1",
-    "globals": "^16.3.0",
+    "eslint-plugin-unicorn": "^62.0.0",
+    "globals": "^16.5.0",
+    "madge": "^8.0.0",
     "patch-package": "^8.0.0",
-    "prettier": "3.5.3",
-    "prettier-plugin-tailwindcss": "^0.6.11",
+    "prettier": "3.6.2",
+    "prettier-plugin-tailwindcss": "^0.7.1",
     "tslib": "2.0.1",
     "type-fest": "^4.15.0",
     "typescript": "5.8.3",
@@ -68,6 +72,6 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@getinsomnia/node-libcurl": "3.0.0"
+    "@getinsomnia/node-libcurl": "3.1.0"
   }
 }

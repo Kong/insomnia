@@ -1,6 +1,3 @@
-import { mkdir, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-
 import { format } from 'date-fns';
 import { getProductName } from 'insomnia/src/common/constants';
 import { database } from 'insomnia/src/common/database';
@@ -108,7 +105,7 @@ const showSaveExportedFileDialog = async ({
   const options = {
     title: 'Export Insomnia Data',
     buttonLabel: 'Export',
-    defaultPath: `${path.join(dir, `${name}_${date}`)}.${selectedFormat}`,
+    defaultPath: `${window.path.join(dir, `${name}_${date}`)}.${selectedFormat}`,
   };
   const { filePath } = await window.dialog.showSaveDialog(options);
   return filePath || null;
@@ -131,8 +128,11 @@ const showSaveExportedFolderDialog = async () => {
 
 async function writeExportedFileToFileSystem(filename: string, data: string) {
   // Remember last exported path
-  window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
-  await writeFile(filename, data);
+  window.localStorage.setItem('insomnia.lastExportPath', window.path.dirname(filename));
+  await window.main.writeFile({
+    path: filename,
+    content: data,
+  });
 }
 
 export const exportProjectToFile = (activeProjectName: string, workspacesForActiveProject: Workspace[]) => {
@@ -196,12 +196,14 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             }
 
             const projectName = activeProjectName.replace(/ /g, '-');
-            const insomniaProjectExportFolder = path.join(dirPath, `insomnia-export.${projectName}.${Date.now()}`);
-            await mkdir(insomniaProjectExportFolder);
+            const insomniaProjectExportFolder = window.path.join(
+              dirPath,
+              `insomnia-export.${projectName}.${Date.now()}`,
+            );
 
             for (const workspace of workspacesForActiveProject) {
               const workspaceName = workspace.name.replace(/ /g, '-');
-              const fileName = path.join(insomniaProjectExportFolder, `${workspaceName}-${workspace._id}.yaml`);
+              const fileName = window.path.join(insomniaProjectExportFolder, `${workspaceName}-${workspace._id}.yaml`);
               const stringifiedExport = await getInsomniaV5DataExport({
                 workspaceId: workspace._id,
                 includePrivateEnvironments: shouldExportPrivateEnvironments,
@@ -366,6 +368,35 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
   });
 };
 
+export const exportMcpClientToFile = async (workspace: Workspace) => {
+  const fileName = await showSaveExportedFileDialog({
+    exportedFileNamePrefix: workspace.name,
+    selectedFormat: 'yaml',
+  });
+  if (!fileName) {
+    return;
+  }
+
+  try {
+    const stringifiedExport = await getInsomniaV5DataExport({
+      workspaceId: workspace._id,
+      includePrivateEnvironments: false,
+    });
+    await writeExportedFileToFileSystem(fileName, stringifiedExport);
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.dataExport,
+      properties: { type: 'yaml', scope: 'mcp' },
+    });
+  } catch (err) {
+    showError({
+      title: 'Export Failed',
+      error: err,
+      message: 'Export failed due to an unexpected error',
+    });
+    return;
+  }
+};
+
 export async function exportWorkspaceData({
   workspace,
   dirPath,
@@ -379,7 +410,7 @@ export async function exportWorkspaceData({
 
   try {
     const workspaceName = workspace.name.replace(/ /g, '-');
-    const filePath = path.join(dirPath, `${workspaceName}-${workspace._id}.yaml`);
+    const filePath = window.path.join(dirPath, `${workspaceName}-${workspace._id}.yaml`);
     await writeExportedFileToFileSystem(filePath, insomniaExport);
   } catch (error) {
     console.error(error);
@@ -402,8 +433,7 @@ export async function exportAllData({ dirPath }: { dirPath: string }): Promise<v
     includePrivateEnvironments = await showExportPrivateEnvironmentsModal();
   }
 
-  const insomniaExportFolder = path.join(dirPath, `insomnia-export.${Date.now()}`);
-  await mkdir(insomniaExportFolder);
+  const insomniaExportFolder = window.path.join(dirPath, `insomnia-export.${Date.now()}`);
 
   for (const workspace of workspaces) {
     await exportWorkspaceData({
@@ -431,7 +461,7 @@ const UntrackedProject = ({
       <div className="flex flex-col gap-1">
         <Heading className="flex items-center gap-2 text-base font-semibold">
           {project.name}
-          <span className="text-xs text-[--hl]">Id: {project._id}</span>
+          <span className="text-xs text-(--hl)">Id: {project._id}</span>
         </Heading>
         <p className="text-sm">
           This project contains {project.workspacesCount} {project.workspacesCount === 1 ? 'file' : 'files'}.
@@ -449,12 +479,12 @@ const UntrackedProject = ({
           aria-label="Select an organization"
           name="organizationId"
           onSelectionChange={key => {
-            setSelectedOrganizationId(key.toString());
+            key && setSelectedOrganizationId(key.toString());
           }}
           selectedKey={selectedOrganizationId}
           isDisabled={organizations.length === 0}
         >
-          <Button className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:cursor-not-allowed disabled:bg-[--hl-xs] aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-xs]">
+          <Button className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:cursor-not-allowed disabled:bg-(--hl-xs) aria-pressed:bg-(--hl-sm) data-pressed:bg-(--hl-xs)">
             <SelectValue<Organization> className="flex items-center justify-center gap-2 truncate">
               {({ selectedItem }) => {
                 if (!selectedItem) {
@@ -473,13 +503,13 @@ const UntrackedProject = ({
           <Popover className="flex min-w-max flex-col overflow-y-hidden">
             <ListBox
               items={organizations}
-              className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+              className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
             >
               {item => (
                 <ListBoxItem
                   id={item.id}
                   key={item.id}
-                  className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                  className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                   aria-label={item.name}
                   textValue={item.name}
                   value={item}
@@ -487,7 +517,7 @@ const UntrackedProject = ({
                   {({ isSelected }) => (
                     <Fragment>
                       {item.display_name}
-                      {isSelected && <Icon icon="check" className="justify-self-end text-[--color-success]" />}
+                      {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                     </Fragment>
                   )}
                 </ListBoxItem>
@@ -498,7 +528,7 @@ const UntrackedProject = ({
         <Button
           isDisabled={organizations.length === 0 || !selectedOrganizationId || moveProjectFetcher.state !== 'idle'}
           type="submit"
-          className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:cursor-not-allowed disabled:bg-[--hl-xs] group-invalid:opacity-30 aria-pressed:bg-[--hl-sm]"
+          className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all group-invalid:opacity-30 hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:cursor-not-allowed disabled:bg-(--hl-xs) aria-pressed:bg-(--hl-sm)"
         >
           Move
         </Button>
@@ -524,7 +554,7 @@ const UntrackedWorkspace = ({
       <div className="flex flex-col gap-1">
         <Heading className="flex items-center gap-2 text-base font-semibold">
           {workspace.name}
-          <span className="text-xs text-[--hl]">Id: {workspace._id}</span>
+          <span className="text-xs text-(--hl)">Id: {workspace._id}</span>
         </Heading>
       </div>
       <moveWorkspaceFetcher.Form
@@ -540,12 +570,12 @@ const UntrackedWorkspace = ({
           aria-label="Select a project"
           name="projectId"
           onSelectionChange={key => {
-            setSelectedProjectId(key.toString());
+            key && setSelectedProjectId(key.toString());
           }}
           selectedKey={selectedProjectId}
           isDisabled={projects.length === 0}
         >
-          <Button className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:cursor-not-allowed disabled:bg-[--hl-xs] aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-xs]">
+          <Button className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:cursor-not-allowed disabled:bg-(--hl-xs) aria-pressed:bg-(--hl-sm) data-pressed:bg-(--hl-xs)">
             <SelectValue<Project> className="flex items-center justify-center gap-2 truncate">
               {({ selectedItem }) => {
                 if (!selectedItem) {
@@ -563,7 +593,7 @@ const UntrackedWorkspace = ({
           </Button>
           <Popover className="flex min-w-max flex-col overflow-y-hidden">
             <ListBox
-              className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+              className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
               items={projects.map(project => ({
                 ...project,
                 id: project._id,
@@ -573,7 +603,7 @@ const UntrackedWorkspace = ({
                 <ListBoxItem
                   id={item.id}
                   key={item.id}
-                  className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                  className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                   aria-label={item.name}
                   textValue={item.name}
                   value={item}
@@ -581,7 +611,7 @@ const UntrackedWorkspace = ({
                   {({ isSelected }) => (
                     <Fragment>
                       {item.name}
-                      {isSelected && <Icon icon="check" className="justify-self-end text-[--color-success]" />}
+                      {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                     </Fragment>
                   )}
                 </ListBoxItem>
@@ -592,7 +622,7 @@ const UntrackedWorkspace = ({
         <Button
           isDisabled={projects.length === 0 || !selectedProjectId || moveWorkspaceFetcher.state !== 'idle'}
           type="submit"
-          className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:cursor-not-allowed disabled:bg-[--hl-xs] group-invalid:opacity-30 aria-pressed:bg-[--hl-sm]"
+          className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all group-invalid:opacity-30 hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:cursor-not-allowed disabled:bg-(--hl-xs) aria-pressed:bg-(--hl-sm)"
         >
           Move
         </Button>
@@ -672,7 +702,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   if (!isScratchPadWorkspace && !isLoggedIn) {
     return (
       <Button
-        className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+        className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         onPress={async () => {
           const { filePaths, canceled } = await window.dialog.showOpenDialog({
             properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
@@ -718,7 +748,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   return (
     <Fragment>
       <div data-testid="import-export-tab" className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2 rounded-md border border-solid border-[--hl-md] p-4">
+        <div className="flex flex-col gap-2 rounded-md border border-solid border-(--hl-md) p-4">
           <Heading className="flex items-center gap-2 text-lg font-bold">
             <Icon icon="file-export" /> Export
           </Heading>
@@ -733,14 +763,14 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                 />
               ) : (
                 <Button
-                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={handleExportProjectToFile}
                 >
                   {`Export files from the "${projectName}" ${strings.project.singular}`}
                 </Button>
               ))}
             <Button
-              className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+              className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               onPress={async () => {
                 const { filePaths, canceled } = await window.dialog.showOpenDialog({
                   properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
@@ -782,7 +812,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
             </Button>
 
             <Button
-              className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+              className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               isDisabled={!userSession.id}
               onPress={() => window.main.openInBrowser('https://insomnia.rest/create-run-button')}
             >
@@ -792,14 +822,14 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
           </div>
         </div>
         {showImportButtons && (
-          <div className="flex flex-col gap-2 rounded-md border border-solid border-[--hl-md] p-4">
+          <div className="flex flex-col gap-2 rounded-md border border-solid border-(--hl-md) p-4">
             <Heading className="flex items-center gap-2 text-lg font-bold">
               <Icon icon="file-import" /> Import
             </Heading>
             <div className="flex flex-wrap gap-2">
               {activeProject && (
                 <Button
-                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
                   onPress={() => setIsImportModalOpen(true)}
                 >
@@ -809,7 +839,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
               )}
               {features.bulkImport.enabled ? (
                 <Button
-                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
                   onPress={() => setIsImportProjectsModalOpen(true)}
                 >
@@ -819,7 +849,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
               ) : isEnterprisePlan ? (
                 <p className="text-sm">
                   Need to import many projects at once? Reach out to{' '}
-                  <a className="text-[--color-surprise]" href="mailto:support@insomnia.rest">
+                  <a className="text-(--color-surprise)" href="mailto:support@insomnia.rest">
                     support@insomnia.rest
                   </a>{' '}
                   to have multi-project import enabled.
@@ -829,17 +859,17 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
           </div>
         )}
         {hasUntrackedProjects && (
-          <div className="flex flex-col gap-2 rounded-md border border-solid border-[--hl-md] p-4">
+          <div className="flex flex-col gap-2 rounded-md border border-solid border-(--hl-md) p-4">
             <div className="flex flex-col gap-1">
               <Heading className="flex items-center gap-2 text-lg font-bold">
                 <Icon icon="cancel" /> Orphaned projects ({untrackedProjects.length})
               </Heading>
-              <p className="text-sm text-[--hl]">
+              <p className="text-sm text-(--hl)">
                 <Icon icon="info-circle" /> These projects are not associated to your current logged-in account. You can
                 move them to an organization below.
               </p>
             </div>
-            <div className="flex flex-col gap-1 divide-y divide-solid divide-[--hl-md] overflow-y-auto">
+            <div className="flex flex-col gap-1 divide-y divide-solid divide-(--hl-md) overflow-y-auto">
               {untrackedProjects.map(project => (
                 <UntrackedProject
                   key={project._id}
@@ -852,17 +882,17 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
           </div>
         )}
         {hasUntrackedWorkspaces && projects.length > 0 && (
-          <div className="flex flex-col gap-2 rounded-md border border-solid border-[--hl-md] p-4">
+          <div className="flex flex-col gap-2 rounded-md border border-solid border-(--hl-md) p-4">
             <div className="flex flex-col gap-1">
               <Heading className="flex items-center gap-2 text-lg font-bold">
                 <Icon icon="cancel" /> Untracked files ({untrackedWorkspaces.length})
               </Heading>
-              <p className="text-sm text-[--hl]">
+              <p className="text-sm text-(--hl)">
                 <Icon icon="info-circle" /> These files are not associated with any project in your account. You can
                 move them to a project in your current organization below.
               </p>
             </div>
-            <div className="flex flex-col gap-1 divide-y divide-solid divide-[--hl-md] overflow-y-auto">
+            <div className="flex flex-col gap-1 divide-y divide-solid divide-(--hl-md) overflow-y-auto">
               {untrackedWorkspaces.map(workspace => (
                 <UntrackedWorkspace
                   key={workspace._id}
@@ -913,7 +943,7 @@ const ExportSection = ({
   if (isScratchpad(workspace)) {
     return (
       <Button
-        className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+        className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         onPress={() => setIsExportModalOpen(true)}
       >
         Export the "{workspace.name}" {getWorkspaceLabel(workspace).singular}
@@ -924,13 +954,13 @@ const ExportSection = ({
   return (
     <>
       <Button
-        className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+        className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         onPress={() => setIsExportModalOpen(true)}
       >
         Export the "{workspace.name}" {getWorkspaceLabel(workspace).singular}
       </Button>
       <Button
-        className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+        className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         onPress={handleExportProjectToFile}
       >
         Export the "{projectName}" ${strings.project.singular}

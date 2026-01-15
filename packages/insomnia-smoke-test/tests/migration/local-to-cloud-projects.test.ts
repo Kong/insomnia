@@ -20,7 +20,7 @@ testWithLegacyDatabase('Run data migration to version 8', async ({ page, userCon
   // Migration takes a while, adding this to avoid test timeout before it ends
   test.slow();
 
-  await page.getByLabel('Continue with Google').click(), await page.locator('input[name="code"]').click();
+  (await page.getByLabel('Continue with Google').click(), await page.locator('input[name="code"]').click());
   await page.locator('input[name="code"]').fill(userConfig.code);
 
   await page.getByRole('button', { name: 'Log in' }).click();
@@ -32,7 +32,7 @@ testWithLegacyDatabase('Run data migration to version 8', async ({ page, userCon
   await page.getByLabel('Local Collection').click();
   await page.getByRole('button', { name: 'Manage Environments' }).click();
   await page.getByLabel('Select a Collection').getByRole('option', { name: 'Mars' }).press('Enter');
-  await page.getByTestId('underlay').click();
+  await page.locator('body').click();
   // The collection is moved to a local project
   await page.getByLabel('Git Sync').isVisible();
   await page.getByText('Get list of rockets').click();

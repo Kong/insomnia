@@ -1,9 +1,12 @@
 import type { BinaryToTextEncoding } from 'node:crypto';
 
+import type { Cookie } from 'tough-cookie';
+
 import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
 import type { GrpcRequest } from '../models/grpc-request';
+import type { McpRequest } from '../models/mcp-request';
 import type { OAuth2Token } from '../models/o-auth-2-token';
 import type { Project } from '../models/project';
 import type { Request } from '../models/request';
@@ -28,6 +31,7 @@ export type PluginToMainAPIPaths =
   | 'workspace.getById'
   | 'oAuth2Token.getByRequestId'
   | 'cookieJar.getOrCreateForParentId'
+  | 'cookieJar.getCookiesForUrl'
   | 'response.getLatestForRequestId'
   | 'response.getBodyBuffer'
   | 'pluginData.hasItem'
@@ -83,10 +87,13 @@ export type RenderContextAncestor =
   | SocketIORequest
   | RequestGroup
   | Workspace
+  | McpRequest
   | Project;
 
 export type RenderContextOptions = BaseRenderContextOptions &
-  Partial<BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest | SocketIORequest }> & {
+  Partial<
+    BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest }
+  > & {
     ancestors?: RenderContextAncestor[];
   };
 
@@ -258,7 +265,7 @@ export interface PluginTemplateTagContext {
       platform: NodeJS.Platform;
       release: string;
     }>;
-    readFile: (path: string, encoding?: string) => Promise<string | Buffer>;
+    readFile: (path: string) => Promise<string>;
     decode: (buffer: Buffer, encoding?: string) => Promise<string>;
     encode: (input: string, encoding: BinaryToTextEncoding) => Promise<string>;
     render: (str: string) => string | Promise<string | null>;
@@ -277,7 +284,10 @@ export interface PluginTemplateTagContext {
       };
       workspace: { getById: (id: string) => Promise<Workspace | undefined> };
       oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | undefined> };
-      cookieJar: { getOrCreateForParentId: (parentId: string) => Promise<CookieJar> };
+      cookieJar: {
+        getOrCreateForParentId: (parentId: string) => Promise<CookieJar>;
+        getCookiesForUrl: (parentId: string, url: string) => Promise<Cookie[]>;
+      };
       response: {
         getLatestForRequestId: typeof getLatestForRequestId;
         getBodyBuffer: typeof getBodyBuffer;

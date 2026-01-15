@@ -155,7 +155,6 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
       },
     });
 
-    const isConnectingOrClosed = !readyState;
     const getRequestLabel = () => {
       let requestTypeLabel = '';
       if (request.type === 'WebSocketRequest') {
@@ -169,30 +168,29 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
     return (
       <>
         {!isOpen && (
-          <span className="flex items-center pl-[--padding-md] text-[--color-notice]">{getRequestLabel()}</span>
+          <span className="flex items-center pl-(--padding-md) text-(--color-notice)">{getRequestLabel()}</span>
         )}
         {isOpen && (
-          <span className="text-success flex items-center pl-[--padding-md]">
-            <span className="mr-[--padding-sm] h-2.5 w-2.5 rounded-[50%] bg-[--color-success]" />
+          <span className="text-success flex items-center pl-(--padding-md)">
+            <span className="mr-(--padding-sm) h-2.5 w-2.5 rounded-[50%] bg-(--color-success)" />
             CONNECTED
           </span>
         )}
         <form
           className="flex flex-1"
-          aria-disabled={isOpen}
           onSubmit={event => {
             event.preventDefault();
             handleSubmit();
           }}
         >
-          <div className="box-border h-full w-full px-[--padding-md]">
+          <div className="box-border h-full w-full px-(--padding-md)">
             <OneLineEditor
               id="websocket-url-bar"
               ref={oneLineEditorRef}
               onKeyDown={createKeybindingsHandler({
                 Enter: () => handleSubmit(),
               })}
-              readOnly={readyState}
+              readOnly={isOpen}
               placeholder="wss://example.com/chat"
               defaultValue={defaultValue}
               onChange={onChange}
@@ -200,15 +198,15 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
             />
           </div>
           <div className="flex p-1">
-            {isConnectingOrClosed ? (
+            {isOpen ? (
+              <DisconnectButton requestId={request._id} />
+            ) : (
               <button
-                className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
+                className="rounded-xs bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise) hover:brightness-75"
                 type="submit"
               >
                 Connect
               </button>
-            ) : (
-              <DisconnectButton requestId={request._id} />
             )}
           </div>
         </form>

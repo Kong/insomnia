@@ -35,7 +35,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
         <div className="timer-list mx-auto">
           {steps.map((record: TimingStep) => (
             <div key={`${activeRequestId}-${record.stepName}`} className="flex w-full leading-8">
-              <div className="text-md ml-1 w-3/4 content-center text-left leading-8">
+              <div className="ml-1 w-3/4 content-center text-left leading-8">
                 <span className="w-1/5 leading-8">
                   {record.duration !== undefined ? (
                     <i className="fa fa-circle-check fa-1x mr-2 text-green-500" />
@@ -43,7 +43,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
                     <i className="fa fa-spinner fa-spin fa-1x mr-2" />
                   )}
                 </span>
-                <span className="inline-block w-4/5 text-clip align-top">{record.stepName}</span>
+                <span className="inline-block w-4/5 align-top text-clip">{record.stepName}</span>
               </div>
               <div className="mr-1 w-1/4 text-right leading-8">
                 {record.duration !== undefined ? (

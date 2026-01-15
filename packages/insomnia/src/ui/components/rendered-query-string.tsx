@@ -1,8 +1,9 @@
 import classNames from 'classnames';
-import React, { type FC, useCallback, useEffect, useState } from 'react';
+import { type FC, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-aria-components';
 
-import { buildInteractiveMessage } from '~/common/interactive-messages';
+import { SegmentEvent } from '~/ui/analytics';
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -137,31 +138,31 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         title: 'URL Too Long',
         message: `Your URL is quite long, so only the first ${MAX_URL_LENGTH} characters were copied.`,
       });
+    } else {
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.requestUrlCopied,
+      });
     }
   }, [tooLong]);
 
   const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
-  // naive way to detect the access file error
-  const messages = previewString.includes('Insomnia cannot access')
-    ? buildInteractiveMessage(previewString)
-    : [{ text: previewString }];
+
+  // detects a string to replace with a link to settings
+  const linkText = 'Insomnia Preferences → Security';
+  const hasLink = previewString.endsWith(linkText);
+  const modifiedString = hasLink ? previewString.slice(0, previewString.length - linkText.length) : previewString;
 
   return (
-    <div className="relative flex h-full w-full justify-between gap-[var(--padding-sm)] overflow-auto">
+    <div className="relative flex h-full w-full justify-between gap-(--padding-sm) overflow-auto">
       <span className={classNames('my-auto', className)}>
-        {messages.map(({ text, handler }, index) =>
-          handler ? (
-            <Link
-              className="cursor-pointer text-[--color-surprise]"
-              // eslint-disable-next-line react/no-array-index-key
-              key={index}
-              onPress={handler}
-            >
-              {text}
-            </Link>
-          ) : (
-            text
-          ),
+        {modifiedString}
+        {hasLink && (
+          <Link
+            className="cursor-pointer text-(--color-surprise)"
+            onPress={() => showSettingsModal({ tab: 'general' })}
+          >
+            {linkText}
+          </Link>
         )}
       </span>
 

@@ -1,11 +1,12 @@
 import type { BinaryToTextEncoding } from 'node:crypto';
 import crypto from 'node:crypto';
-import fs from 'node:fs';
 import os from 'node:os';
 
 import { shell } from 'electron';
 import iconv from 'iconv-lite';
 import { v4 as uuidv4 } from 'uuid';
+
+import { jarFromCookies } from '~/common/cookies';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
@@ -21,6 +22,7 @@ import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } f
 import { getPluginCommonContext, type Plugin, type TemplateTag } from '../plugins';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
 import { curlRequest } from './network/libcurl-promise';
+import { secureReadFile } from './secure-read-file';
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
@@ -67,8 +69,8 @@ const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
 
 // These are exposed to the templating worker and can be used by plugins from context.util
 const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
-  'readFile': async (body: { path: string; encoding: 'utf8' }) => {
-    return await fs.promises.readFile(body.path, { encoding: body.encoding || 'utf8' });
+  'readFile': async (body: { path: string }) => {
+    return secureReadFile(body.path);
   },
   'nodeOS': async () => {
     return {
@@ -101,6 +103,11 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
   },
   'cookieJar.getOrCreateForParentId': async (body: { parentId: string }) => {
     return await models.cookieJar.getOrCreateForParentId(body.parentId);
+  },
+  'cookieJar.getCookiesForUrl': async (body: { parentId: string; url: string }) => {
+    const cookies = await models.cookieJar.getOrCreateForParentId(body.parentId);
+    const jar = jarFromCookies(cookies.cookies);
+    return jar.getCookiesSync(body.url);
   },
   'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
     return await models.response.getLatestForRequestId(body.requestId, body.environmentId);

@@ -24,6 +24,7 @@ import type { Response } from '~/models/response';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
+import { SegmentEvent } from '~/ui/analytics';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 import { Dropdown, DropdownItem, ItemContent } from '~/ui/components/base/dropdown';
 import { MockResponseHeadersEditor } from '~/ui/components/editors/mock-response-headers-editor';
@@ -34,11 +35,10 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { EmptyStatePane } from '~/ui/components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
 import { SvgIcon } from '~/ui/components/svg-icon';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
-import { useMockServerLoaderData } from './organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server';
 
 export interface MockRouteLoaderData {
   mockServer: MockServer;
@@ -151,7 +151,6 @@ export function useMockRouteLoaderData() {
 
 export const MockRouteRoute = () => {
   const { mockServer, mockRoute } = useMockRouteLoaderData()!;
-  const { mockRoutes } = useMockServerLoaderData()!;
 
   const { userSession } = useRootLoaderData()!;
   const patchMockRoute = useMockRoutePatcher();
@@ -213,23 +212,6 @@ export const MockRouteRoute = () => {
       patch,
     });
   const upsertMockbinHar = async (pathInput?: string) => {
-    const hasRouteInServer = mockRoutes
-      .filter(m => m._id !== mockRoute._id)
-      .find(m => m.name === pathInput && m.method.toUpperCase() === mockRoute.method.toUpperCase());
-    if (hasRouteInServer) {
-      showModal(AlertModal, {
-        title: 'Error',
-        message: `Path "${pathInput}" and method must be unique. Please enter a different name.`,
-      });
-      return;
-    }
-    if (pathInput?.[0] !== '/') {
-      showModal(AlertModal, {
-        title: 'Error',
-        message: 'Path must begin with a /',
-      });
-      return;
-    }
     const compoundId = mockRoute.parentId + pathInput;
     const error = await upsertBinOnRemoteFromResponse(compoundId);
     if (error) {
@@ -245,28 +227,8 @@ export const MockRouteRoute = () => {
       });
       return;
     }
-    patchMockRoute(mockRoute._id, {
-      name: pathInput,
-    });
   };
   const onSend = async (pathInput: string) => {
-    const hasRouteInServer = mockRoutes
-      .filter(m => m._id !== mockRoute._id)
-      .find(m => m.name === pathInput && m.method.toUpperCase() === mockRoute.method.toUpperCase());
-    if (hasRouteInServer) {
-      showModal(AlertModal, {
-        title: 'Error',
-        message: `Path "${pathInput}" and method must be unique. Please enter a different name.`,
-      });
-      return;
-    }
-    if (pathInput[0] !== '/') {
-      showModal(AlertModal, {
-        title: 'Error',
-        message: 'Path must begin with a /',
-      });
-      return;
-    }
     await upsertMockbinHar(pathInput);
     createAndSendPrivateRequest({
       url: getMockServiceBinURL(mockServer, pathInput),
@@ -281,40 +243,40 @@ export const MockRouteRoute = () => {
   return (
     <Pane type="request">
       <PaneHeader>
-        <MockUrlBar key={mockRoute._id + mockRoute.name} onSend={onSend} onPathUpdate={upsertMockbinHar} />
+        <MockUrlBar key={mockRoute._id + mockRoute.name} onSend={onSend} />
       </PaneHeader>
       <PaneBody>
         <Tabs aria-label="Mock response config" className="flex h-full w-full flex-1 flex-col">
           <TabList
-            className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+            className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
             aria-label="Request pane tabs"
           >
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="content-type"
             >
               Mock Body
             </Tab>
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="headers"
             >
               Mock Headers{' '}
               {headersCount > 0 && (
-                <span className="color-inherit shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                <span className="color-inherit flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
                   {headersCount}
                 </span>
               )}
             </Tab>
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="status"
             >
               Mock Status
             </Tab>
           </TabList>
           <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="content-type">
-            <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
+            <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
               <Dropdown
                 aria-label="Change Body Type"
                 triggerButton={
@@ -344,6 +306,14 @@ export const MockRouteRoute = () => {
                 onBlur={onBlurTriggerUpsert}
                 mode={mockRoute.mimeType}
                 placeholder="..."
+                noLint={mockRoute.body?.includes('{{') && mockRoute.body?.includes('}}')}
+                updateFilter={filter => {
+                  if (filter) {
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.filterCreatedResponseBody,
+                    });
+                  }
+                }}
               />
             ) : (
               <EmptyStatePane
@@ -368,7 +338,9 @@ export const MockRouteRoute = () => {
                       id="mock-response-status-code-editor"
                       type="number"
                       defaultValue={mockRoute.statusCode}
-                      onChange={e => patchMockRoute(mockRoute._id, { statusCode: parseInt(e.currentTarget.value, 10) })}
+                      onChange={e =>
+                        patchMockRoute(mockRoute._id, { statusCode: Number.parseInt(e.currentTarget.value, 10) })
+                      }
                       onBlur={onBlurTriggerUpsert}
                       placeholder="200"
                     />

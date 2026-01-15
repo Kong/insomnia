@@ -2,7 +2,6 @@
 // Related issue https://github.com/JCMais/node-libcurl/issues/155
 import { invariant } from '../../utils/invariant';
 invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
-
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Readable, Writable } from 'node:stream';
@@ -24,10 +23,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../../package.json';
 import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
-import { describeByteSize, hasAuthHeader } from '../../common/misc';
+import { cannotAccessPathError, describeByteSize, hasAuthHeader } from '../../common/misc';
 import type { ClientCertificate } from '../../models/client-certificate';
 import type { RequestHeader } from '../../models/request';
 import type { ResponseHeader } from '../../models/response';
+import { insecureReadFile, isPathAllowed } from '../secure-read-file';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
 export interface CurlRequestOptions {
@@ -66,6 +66,7 @@ interface SettingsUsedHere {
   httpProxy: string;
   httpsProxy: string;
   noProxy: string;
+  dataFolders: string[];
 }
 
 export interface ResponseTimelineEntry {
@@ -102,7 +103,6 @@ export interface ResponsePatch {
   timelinePath?: string;
   url?: string;
 }
-const getDataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
 
 // NOTE: this is a dictionary of functions to close open listeners
 const cancelCurlRequestHandlers: Record<string, () => void> = {};
@@ -110,7 +110,8 @@ export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]()
 export const curlRequest = (options: CurlRequestOptions) =>
   new Promise<CurlRequestOutput>(async resolve => {
     try {
-      const responsesDir = path.join(getDataDirectory(), 'responses');
+      const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
+      const responsesDir = path.join(userdataDirectory, 'responses');
       // TODO: remove this check, its only used for network.test.ts
       await fs.promises.mkdir(responsesDir, { recursive: true });
       const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
@@ -126,7 +127,8 @@ export const curlRequest = (options: CurlRequestOptions) =>
         authHeader,
         noDecompress = false,
       } = options;
-      const caCert = caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString();
+      // allow reading the file as the caCert is chosen by user
+      const caCert = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
       const { curl, debugTimeline } = createConfiguredCurlInstance({
         req,
@@ -157,16 +159,19 @@ export const curlRequest = (options: CurlRequestOptions) =>
       let requestFileDescriptor: number | undefined;
       const { authentication } = req;
       if (requestBodyPath) {
+        const { isAllowed, securedPath } = isPathAllowed(requestBodyPath, settings.dataFolders);
+        invariant(isAllowed, cannotAccessPathError(securedPath));
+
         // AWS IAM file upload not supported
         const isAWSIAM = 'type' in authentication && authentication.type === 'iam';
         invariant(!isAWSIAM, 'AWS authentication not supported for provided body type');
-        const { size: contentLength } = fs.statSync(requestBodyPath);
+        const { size: contentLength } = fs.statSync(securedPath);
         curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
         curl.setOpt(Curl.option.UPLOAD, 1);
         // We need this, otherwise curl will send it as a POST
         curl.setOpt(Curl.option.CUSTOMREQUEST, method);
         // read file into request and close file descriptor
-        requestFileDescriptor = fs.openSync(requestBodyPath, 'r');
+        requestFileDescriptor = fs.openSync(securedPath, 'r');
         curl.setOpt(Curl.option.READDATA, requestFileDescriptor);
         curl.on('end', () => closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath));
         curl.on('error', () => closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath));
@@ -267,7 +272,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
         }
         const patch = {
           statusMessage,
-          error: error || 'Something went wrong',
+          error: error || 'Something went wrong inside libcurl',
           elapsedTime,
         };
 
@@ -279,7 +284,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       console.error(error);
       const patch = {
         statusMessage: 'Error',
-        error: error.message || 'Something went wrong',
+        error: error.toString() || 'Something went wrong performing curl',
         elapsedTime: 0,
       };
       resolve({ patch, debugTimeline: [], headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });
@@ -325,16 +330,25 @@ export const createConfiguredCurlInstance = ({
   certificates.forEach(validCert => {
     const { passphrase, cert, key, pfx } = validCert;
     if (cert) {
+      const { isAllowed, securedPath } = isPathAllowed(cert, settings.dataFolders);
+      invariant(isAllowed, cannotAccessPathError(securedPath));
+
       curl.setOpt(Curl.option.SSLCERT, cert);
       curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
       debugTimeline.push({ value: 'Adding SSL PEM certificate', name: 'Text', timestamp: Date.now() });
     }
     if (pfx) {
+      const { isAllowed, securedPath } = isPathAllowed(pfx, settings.dataFolders);
+      invariant(isAllowed, cannotAccessPathError(securedPath));
+
       curl.setOpt(Curl.option.SSLCERT, pfx);
       curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
       debugTimeline.push({ value: 'Adding SSL P12 certificate', name: 'Text', timestamp: Date.now() });
     }
     if (key) {
+      const { isAllowed, securedPath } = isPathAllowed(key, settings.dataFolders);
+      invariant(isAllowed, cannotAccessPathError(securedPath));
+
       curl.setOpt(Curl.option.SSLKEY, key);
       debugTimeline.push({ value: 'Adding SSL KEY certificate', name: 'Text', timestamp: Date.now() });
     }
@@ -361,8 +375,8 @@ export const createConfiguredCurlInstance = ({
     const { protocol } = urlParse(req.url);
     const { httpProxy, httpsProxy, noProxy } = settings;
     const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
-    const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-    debugTimeline.push({ value: `Enable network proxy for ${protocol || ''}`, name: 'Text', timestamp: Date.now() });
+    const proxy = proxyHost ? setDefaultProtocol(proxyHost) : '';
+    debugTimeline.push({ value: `Using proxy: ${proxy}`, name: 'Text', timestamp: Date.now() });
     if (proxy) {
       curl.setOpt(Curl.option.PROXY, proxy);
       curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
@@ -494,7 +508,7 @@ export function _parseHeaders(buffer: Buffer): HeaderResult[] {
       const [version, code, ...other] = first.split(/ +/g);
       return {
         version,
-        code: parseInt(code, 10),
+        code: Number.parseInt(code, 10),
         reason: other.join(' '),
         headers,
       };
@@ -536,7 +550,7 @@ const parseRequestBody = ({ body, method }: { body: any; method: string }) => {
     return body.text || '';
   }
 
-  return undefined;
+  return;
 };
 const parseRequestBodyPath = async (body: any) => {
   const isMultipartForm = body.mimeType === CONTENT_TYPE_FORM_DATA;

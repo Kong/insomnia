@@ -109,7 +109,6 @@ const recursiveRender = (
           <Button
             variant="text"
             title="Delete Proto File"
-            bg="danger"
             onClick={event => {
               event.stopPropagation();
               handleDelete(f);
@@ -136,7 +135,7 @@ const recursiveRender = (
 ];
 
 export const ProtoFileList: FunctionComponent<Props> = props => (
-  <ul className="divide-y divide-solid divide-[--hl]">
+  <ul className="divide-y divide-solid divide-(--hl)">
     {!props.protoDirectories.length && <li>No proto files exist for this workspace</li>}
     {props.protoDirectories.map(dir =>
       recursiveRender(

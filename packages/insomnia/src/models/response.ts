@@ -234,6 +234,7 @@ export const getBodyBuffer = async (
     return Buffer.alloc(0);
   }
   try {
+    // TODO: unpick theis read buffer so it can be used as a simple string reader
     const rawBuffer = await fs.promises.readFile(response?.bodyPath);
     if (response?.bodyCompression === 'zip') {
       return new Promise((resolve, reject) =>
@@ -258,10 +259,7 @@ export function getTimeline(response: Response, showBody?: boolean) {
   try {
     const rawBuffer = fs.readFileSync(timelinePath);
     const timelineString = rawBuffer.toString();
-    const isLegacyTimelineFormat = timelineString.startsWith('[');
-    const timeline = isLegacyTimelineFormat
-      ? (JSON.parse(timelineString) as ResponseTimelineEntry[])
-      : deserializeNDJSON(timelineString);
+    const timeline = deserializeNDJSON(timelineString);
 
     const body: ResponseTimelineEntry[] = showBody
       ? [

@@ -1,4 +1,5 @@
-import fs from 'node:fs';
+import fs, { mkdirSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
@@ -15,6 +16,18 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
+import { AI_PLUGIN_NAME } from '~/common/constants';
+import { convert } from '~/main/importers/convert';
+import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
+import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
+import { insecureReadFile, insecureReadFileWithEncoding, secureReadFile } from '~/main/secure-read-file';
+import type {
+  GenerateCommitsFromDiffFunction,
+  GenerateMcpSamplingResponseFunction,
+  MockRouteData,
+  ModelConfig,
+} from '~/plugins/types';
+
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
 import type { PluginTemplateTag } from '../../templating/types';
@@ -24,13 +37,14 @@ import {
   authorizeUserInDefaultBrowser,
   cancelAuthorizationInDefaultBrowser,
   onDefaultBrowserOAuthRedirect,
-} from '../authorizeUserInDefaultBrowser';
-import { authorizeUserInWindow } from '../authorizeUserInWindow';
+} from '../authorize-user-in-default-browser';
+import { authorizeUserInWindow } from '../authorize-user-in-window';
 import { backup, restoreBackup } from '../backup';
 import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';
 import type { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
+import type { McpBridgeAPI } from '../network/mcp';
 import {
   addExecutionStep,
   completeExecutionStep,
@@ -42,11 +56,36 @@ import {
 import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
-import extractPostmanDataDumpHandler from './extractPostmanDataDump';
+import extractPostmanDataDumpHandler from './extract-postman-data-dump';
 import type { gRPCBridgeAPI } from './grpc';
 import type { secretStorageBridgeAPI } from './secret-storage';
 
 let lintProcess: Electron.UtilityProcess | null = null;
+
+export const openInBrowser = (href: string) => {
+  const { protocol } = new URL(href);
+  if (protocol === 'http:' || protocol === 'https:') {
+    shell.openExternal(href);
+  }
+};
+
+const readDir = async (_: unknown, options: { path: string }) => {
+  try {
+    const files = await fs.promises.readdir(options.path);
+    return files
+      .map(file => {
+        const filePath = path.join(options.path, file);
+        return {
+          type: fs.statSync(filePath).isDirectory() ? 'directory' : fs.statSync(filePath).isFile() ? 'file' : 'other',
+          name: file,
+          path: filePath,
+        };
+      })
+      .filter(file => file.type !== 'other');
+  } catch (err) {
+    throw new Error(`Failed to read directory: ${err}`);
+  }
+};
 
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
@@ -63,17 +102,29 @@ export interface RendererToMainBridgeAPI {
   cancelAuthorizationInDefaultBrowser: typeof cancelAuthorizationInDefaultBrowser;
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
+  parseImport: typeof convert;
+  multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
-  readFile: (options: { path: string; encoding?: string }) => Promise<{ content: string; encoding: string }>;
+  secureReadFile: (options: { path: string }) => Promise<string>;
+  insecureReadFile: (options: { path: string }) => Promise<string>;
+  insecureReadFileWithEncoding: (options: {
+    path: string;
+    encoding?: string;
+  }) => Promise<{ content: string; encoding: string; error: string | undefined }>;
   readDir: (options: { path: string }) => Promise<{ type: 'file' | 'directory'; name: string; path: string }[]>;
+  readOrCreateDataDir: (options: {
+    folder: string;
+  }) => Promise<{ type: 'file' | 'directory'; name: string; path: string }[]>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
   webSocket: WebSocketBridgeAPI;
   socketIO: SocketIOBridgeAPI;
+  mcp: McpBridgeAPI;
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
   git: GitServiceAPI;
+  llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
@@ -104,6 +155,26 @@ export interface RendererToMainBridgeAPI {
   updateLatestStepName: (options: { requestId: string; stepName: string }) => void;
   extractJsonFileFromPostmanDataDumpArchive: (archivePath: string) => Promise<any>;
   getLocalStorageDataFromFileOrigin: () => Promise<Record<string, any>>;
+  generateMockRouteDataFromSpec: (
+    openApiSpec: string | undefined,
+    specUrl: string | undefined,
+    specText: string | undefined,
+    modelConfig: any,
+    useDynamicMockResponses: boolean,
+    mockServerAdditionalFiles: string[],
+  ) => Promise<{ error: string; routes: MockRouteData[] }>;
+  generateCommitsFromDiff: (
+    input: Parameters<GenerateCommitsFromDiffFunction>[0],
+  ) => Promise<
+    | { commits: Awaited<ReturnType<GenerateCommitsFromDiffFunction>>; error: undefined }
+    | { commits: undefined; error: string }
+  >;
+  generateMcpSamplingResponse: (
+    input: Parameters<GenerateMcpSamplingResponseFunction>[0],
+  ) => Promise<
+    | { response: Awaited<ReturnType<GenerateMcpSamplingResponseFunction>>; error: undefined }
+    | { response: undefined; error: string }
+  >;
 }
 
 export function registerMainHandlers() {
@@ -124,6 +195,9 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
     return models.caCertificate.create(options);
+  });
+  ipcMainHandle('multipartBufferToArray', async (_, options) => {
+    return multipartBufferToArray(options);
   });
   ipcMainOn('loginStateChange', async () => {
     BrowserWindow.getAllWindows().forEach(w => {
@@ -153,7 +227,9 @@ export function registerMainHandlers() {
       return cancelAuthorizationInDefaultBrowser(options);
     },
   );
-
+  ipcMainHandle('parseImport', async (_, ...args: Parameters<typeof convert>) => {
+    return convert(...args);
+  });
   ipcMainHandle('writeFile', async (_, options: { path: string; content: string }) => {
     try {
       await fs.promises.writeFile(options.path, options.content);
@@ -196,50 +272,44 @@ export function registerMainHandlers() {
       process.postMessage({ documentContent, rulesetPath });
     });
   });
+  ipcMainHandle('insecureReadFile', async (_, options: { path: string }) => {
+    return insecureReadFile(options.path);
+  });
+  ipcMainHandle('secureReadFile', async (_, options: { path: string; encoding?: string }) => {
+    return secureReadFile(options.path);
+  });
+  ipcMainHandle('insecureReadFileWithEncoding', async (_, options: { path: string; encoding: string }) => {
+    try {
+      const contentBuffer = await insecureReadFileWithEncoding(options.path);
+      if (typeof contentBuffer === 'string') {
+        return { content: contentBuffer, encoding: 'utf8' };
+      }
 
-  ipcMainHandle('readFile', async (_, options: { path: string; encoding?: string }) => {
-    const defaultEncoding = 'utf8';
-    const contentBuffer = await fs.promises.readFile(options.path);
-    const { encoding } = options;
-    if (encoding) {
-      if (iconv.encodingExists(encoding)) {
-        const content = iconv.decode(contentBuffer, encoding);
-        return { content, encoding };
+      const encoding = options.encoding || (await chardet.detectFile(options.path));
+
+      if (encoding) {
+        if (iconv.encodingExists(encoding)) {
+          const content = iconv.decode(contentBuffer, encoding);
+          return { content, encoding };
+        }
+        throw new Error(`Unsupported encoding: ${encoding} to read file`);
       }
-      throw new Error(`Unsupported encoding: ${encoding} to read file`);
+      return {
+        content: iconv.decode(contentBuffer, 'utf8'),
+        encoding: 'utf8',
+      };
+    } catch (err) {
+      return { content: '', encoding: '', error: err };
     }
-    // using chardet to detect encoding
-    const detecedEncoding = chardet.detect(contentBuffer);
-    if (detecedEncoding) {
-      if (iconv.encodingExists(detecedEncoding)) {
-        const content = iconv.decode(contentBuffer, detecedEncoding);
-        return { content, encoding: detecedEncoding };
-      }
-      throw new Error(`Unsupported encoding: ${detecedEncoding} to read file`);
-    }
-    // failed to detect encoding, use default utf-8 as fallback
-    return {
-      content: iconv.decode(contentBuffer, defaultEncoding),
-      encoding: defaultEncoding,
-    };
   });
 
-  ipcMainHandle('readDir', async (_, options: { path: string }) => {
-    try {
-      const files = await fs.promises.readdir(options.path);
-      return files
-        .map(file => {
-          const filePath = path.join(options.path, file);
-          return {
-            type: fs.statSync(filePath).isDirectory() ? 'directory' : fs.statSync(filePath).isFile() ? 'file' : 'other',
-            name: file,
-            path: filePath,
-          };
-        })
-        .filter(file => file.type !== 'other');
-    } catch (err) {
-      throw new Error(`Failed to read directory: ${err}`);
-    }
+  ipcMainHandle('readDir', readDir);
+
+  ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
+    const dataPath = app.getPath('userData');
+    const folderPath = path.join(dataPath, options.folder);
+    mkdirSync(folderPath, { recursive: true });
+    return readDir(_, { path: folderPath });
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
@@ -266,11 +336,8 @@ export function registerMainHandlers() {
     app.exit();
   });
 
-  ipcMainOn('openInBrowser', (_, href: string) => {
-    const { protocol } = new URL(href);
-    if (protocol === 'http:' || protocol === 'https:') {
-      shell.openExternal(href);
-    }
+  ipcMainOn('openInBrowser', async (_, href: string) => {
+    return openInBrowser(href);
   });
 
   ipcMainHandle('extractJsonFileFromPostmanDataDumpArchive', extractPostmanDataDumpHandler);
@@ -315,6 +382,174 @@ export function registerMainHandlers() {
         fileOriginWindow.close();
         tmpHTMLFile && fs.unlinkSync(tmpHTMLFile);
         reject(new Error('Failed to load file:// origin to get localStorage data'));
+      });
+    });
+  });
+
+  ipcMainHandle(
+    'generateMockRouteDataFromSpec',
+    async (
+      _,
+      openApiSpec: string | undefined,
+      specUrl: string | undefined,
+      specText: string | undefined,
+      modelConfig: any,
+      useDynamicMockResponses: boolean,
+      mockServerAdditionalFiles: string[],
+    ) => {
+      return new Promise((resolve, reject) => {
+        const process = utilityProcess.fork(path.join(__dirname, 'main/mock-generation-process.mjs'));
+
+        process.on('exit', code => {
+          console.log('[mock-generation-process] exited with code:', code);
+          let errorMessage: string;
+
+          const signals = os.constants.signals;
+          if (code === 0) {
+            errorMessage = 'Mock generation process exited with code 0.';
+          } else if (code === signals.SIGSEGV) {
+            errorMessage = `Mock generation process crashed with a segmentation fault (SIGSEGV). This may be due to system compatibility when running a GGUF model.`;
+          } else if (code === signals.SIGKILL) {
+            errorMessage = `Mock generation process was killed (SIGKILL). This may be due to memory limits or system resources.`;
+          } else if (code === signals.SIGTERM) {
+            errorMessage = `Mock generation process was terminated (SIGTERM).`;
+          } else if (code === signals.SIGABRT) {
+            errorMessage = `Mock generation process aborted (SIGABRT). This usually indicates an internal error.`;
+          } else {
+            errorMessage = `Mock generation process exited unexpectedly with code ${code}.`;
+          }
+
+          resolve({ error: errorMessage, routes: [] });
+        });
+
+        process.on('message', msg => {
+          console.log('[mock-generation-process] received message');
+          resolve(msg);
+          process.kill();
+        });
+
+        process.on('error', err => {
+          console.error('[mock-generation-process] error:', err);
+          reject({ error: err.toString() });
+        });
+
+        process.postMessage({
+          openApiSpec,
+          specUrl,
+          specText,
+          modelConfig,
+          useDynamicMockResponses,
+          mockServerAdditionalFiles,
+          aiPluginName: AI_PLUGIN_NAME,
+        });
+      });
+    },
+  );
+
+  ipcMainHandle('generateCommitsFromDiff', async (_, input) => {
+    return new Promise(async (resolve, reject) => {
+      const modelConfig = (await getCurrentConfig()) as ModelConfig | null;
+      if (!modelConfig) {
+        reject(new Error('No LLM model configured'));
+      }
+      const process = utilityProcess.fork(path.join(__dirname, 'main/git-commit-generation-process.mjs'));
+
+      process.on('exit', code => {
+        console.log('[git-commit-generation-process] exited with code:', code);
+        let errorMessage: string;
+
+        const signals = os.constants.signals;
+        if (code === 0) {
+          errorMessage = 'Git commit generation process exited with code 0.';
+        } else if (code === signals.SIGSEGV) {
+          errorMessage = `Git commit generation process crashed with a segmentation fault (SIGSEGV). This may be due to system compatibility when running a GGUF model.`;
+        } else if (code === signals.SIGKILL) {
+          errorMessage = `Git commit generation process was killed (SIGKILL). This may be due to memory limits or system resources.`;
+        } else if (code === signals.SIGTERM) {
+          errorMessage = `Git commit generation process was terminated (SIGTERM).`;
+        } else if (code === signals.SIGABRT) {
+          errorMessage = `Git commit generation process aborted (SIGABRT). This usually indicates an internal error.`;
+        } else {
+          errorMessage = `Git commit generation process exited unexpectedly with code ${code}.`;
+        }
+
+        resolve({ error: errorMessage });
+      });
+
+      process.on('message', msg => {
+        console.log('[git-commit-generation-process] received message');
+        resolve(msg);
+        process.kill();
+      });
+
+      process.on('error', err => {
+        console.error('[git-commit-generation-process] error:', err);
+        reject({ error: err.toString() });
+      });
+
+      process.postMessage({
+        input,
+        modelConfig,
+        aiPluginName: AI_PLUGIN_NAME,
+      });
+    });
+  });
+
+  ipcMainHandle('generateMcpSamplingResponse', async (_, input: Parameters<GenerateMcpSamplingResponseFunction>[0]) => {
+    return new Promise(async (resolve, reject) => {
+      const modelConfig = (await getCurrentConfig()) as ModelConfig | null;
+      if (!modelConfig) {
+        reject(new Error('No LLM model configured'));
+      }
+      const process = utilityProcess.fork(path.join(__dirname, 'main/mcp-generate-sampling-response.mjs'));
+
+      process.on('exit', code => {
+        console.log('[mcp-generate-sampling-response-process] exited with code:', code);
+        let errorMessage: string;
+
+        const signals = os.constants.signals;
+        if (code === 0) {
+          errorMessage = 'MCP sampling response generation process exited with code 0.';
+        } else if (code === signals.SIGSEGV) {
+          errorMessage = `MCP sampling response generation process crashed with a segmentation fault (SIGSEGV). This may be due to system compatibility when running a GGUF model.`;
+        } else if (code === signals.SIGKILL) {
+          errorMessage = `MCP sampling response generation process was killed (SIGKILL). This may be due to memory limits or system resources.`;
+        } else if (code === signals.SIGTERM) {
+          errorMessage = `MCP sampling response generation process was terminated (SIGTERM).`;
+        } else if (code === signals.SIGABRT) {
+          errorMessage = `MCP sampling response generation process aborted (SIGABRT). This usually indicates an internal error.`;
+        } else {
+          errorMessage = `MCP sampling response generation process exited unexpectedly with code ${code}.`;
+        }
+
+        resolve({ error: errorMessage });
+      });
+
+      process.on('message', msg => {
+        console.log('[mcp-generate-sampling-response-process] received message');
+        resolve({
+          response: {
+            content: msg,
+            modelConfig,
+          },
+        });
+        process.kill();
+      });
+
+      process.on('error', err => {
+        console.error('[mcp-generate-sampling-response-process] error:', err);
+        reject({ error: err.toString() });
+      });
+      const { systemPrompt, messages, modelConfig: modelConfigFromSamplingRequest } = input;
+
+      process.postMessage({
+        messages,
+        systemPrompt,
+        modelConfig: {
+          ...modelConfig,
+          ...modelConfigFromSamplingRequest,
+        },
+        aiPluginName: AI_PLUGIN_NAME,
       });
     });
   });

@@ -1,14 +1,18 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
+import { AI_PLUGIN_NAME } from '~/common/constants';
+import { getBundlePlugins } from '~/plugins';
 import { useRootLoaderData } from '~/root';
+import { SegmentEvent } from '~/ui/analytics';
+import { AISettings } from '~/ui/components/settings/ai-settings';
+import { CredentialsSettings } from '~/ui/components/settings/credentials';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { BooleanSetting } from '../settings/boolean-setting';
-import { CloudServiceCredentialList } from '../settings/cloud-service-credentials';
 import { General } from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import { MaskedSetting } from '../settings/masked-setting';
@@ -20,21 +24,27 @@ import { showModal } from './index';
 
 export interface SettingsModalHandle {
   hide: () => void;
-  show: (options?: { tab?: string }) => void;
+  show: (options?: { tab?: SettingsModalTabKey }) => void;
 }
 
-export const TAB_INDEX_EXPORT = 'data';
-export const TAB_INDEX_SHORTCUTS = 'keyboard';
-export const TAB_INDEX_THEMES = 'themes';
-export const TAB_INDEX_PLUGINS = 'plugins';
-export const TAB_INDEX_AI = 'ai';
-export const TAB_CLOUD_CREDENTIAL = 'cloudCred';
+type SettingsModalTabKey = 'data' | 'keyboard' | 'themes' | 'plugins' | 'general' | 'proxy' | 'credentials' | 'ai';
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
   const { userSession, settings } = useRootLoaderData()!;
   const modalRef = useRef<ModalHandle>(null);
   const [keyboardClosable, setKeyboardClosable] = useState(true);
+
+  const [shouldShowAiSettingsTab, setShouldShowAiSettingsTab] = useState(false);
+
+  useEffect(() => {
+    const checkAiPlugin = async () => {
+      const plugins = await getBundlePlugins();
+      const aiPlugin = plugins.find(p => p.name === AI_PLUGIN_NAME);
+      setShouldShowAiSettingsTab(!!aiPlugin && !!userSession.id);
+    };
+    checkAiPlugin();
+  }, [userSession.id]);
 
   useImperativeHandle(
     ref,
@@ -51,7 +61,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   );
 
   return (
-    <Modal className="!z-10" ref={modalRef} tall keyboardClosable={keyboardClosable} {...props}>
+    <Modal className="z-10!" ref={modalRef} tall keyboardClosable={keyboardClosable} {...props}>
       <ModalHeader>
         {getProductName()} Preferences
         <span className="faint txt-sm">
@@ -64,62 +74,75 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           selectedKey={defaultTabKey}
           onSelectionChange={key => {
             setDefaultTabKey(key.toString());
+
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.preferencesViewed,
+              properties: { tab: key.toString() },
+            });
           }}
           aria-label="Settings"
           className="flex h-full w-full flex-1 flex-col"
         >
           <TabList
-            className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+            className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
             aria-label="Request pane tabs"
           >
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="general"
             >
               General
             </Tab>
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="proxy"
             >
               Proxy
             </Tab>
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="data"
             >
               Data
             </Tab>
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="themes"
             >
               Themes
             </Tab>
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="keyboard"
             >
               Keyboard
             </Tab>
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="plugins"
             >
               Plugins
             </Tab>
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
-              id="cloudCred"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+              id="credentials"
             >
-              Cloud Credentials
+              Credentials
             </Tab>
+            {shouldShowAiSettingsTab && (
+              <Tab
+                className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+                id="ai"
+              >
+                AI Settings
+              </Tab>
+            )}
           </TabList>
           <TabPanel className="h-full w-full overflow-y-auto" id="general">
             <General />
           </TabPanel>
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="proxy">
-            <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-2 text-lg font-bold">Network Proxy</h2>
+            <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-2 pb-2 text-lg font-bold">Network Proxy</h2>
 
             <BooleanSetting
               label="Enable proxy"
@@ -166,13 +189,27 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="plugins">
             <Plugins />
           </TabPanel>
-          <TabPanel className="h-full w-full overflow-y-auto p-4" id="cloudCred">
-            <CloudServiceCredentialList />
+          <TabPanel className="h-full w-full overflow-y-auto p-4" id="credentials">
+            <CredentialsSettings />
           </TabPanel>
+          {shouldShowAiSettingsTab && (
+            <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="ai">
+              <AISettings />
+            </TabPanel>
+          )}
         </Tabs>
       </ModalBody>
     </Modal>
   );
 });
+
 SettingsModal.displayName = 'SettingsModal';
-export const showSettingsModal = (options?: { tab?: string }) => showModal(SettingsModal, options);
+
+export const showSettingsModal = (options?: { tab?: SettingsModalTabKey }) => {
+  showModal(SettingsModal, options);
+
+  window.main.trackSegmentEvent({
+    event: SegmentEvent.preferencesViewed,
+    properties: { tab: options?.tab || 'general' },
+  });
+};

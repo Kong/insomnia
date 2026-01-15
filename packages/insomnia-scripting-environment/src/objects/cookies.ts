@@ -197,11 +197,7 @@ export class CookieObject extends CookieList {
       ? cookieJar.cookies.map((cookie: InsomniaCookie): Cookie => {
           let expires: string | Date | null = null;
           if (cookie.expires || cookie.expires === 0) {
-            if (typeof cookie.expires === 'number') {
-              expires = new Date(cookie.expires);
-            } else {
-              expires = cookie.expires;
-            }
+            expires = typeof cookie.expires === 'number' ? new Date(cookie.expires) : cookie.expires;
           }
 
           return new Cookie({
@@ -306,16 +302,16 @@ export class CookieJar {
   unset(url: string, name: string, cb: (error?: Error | null) => void) {
     const domainCookies = this.jar.get(url);
     if (!domainCookies) {
-      cb(undefined);
+      cb();
     } else {
       domainCookies.delete(name);
-      cb(undefined);
+      cb();
     }
   }
 
   clear(url: string, cb: (error?: Error | null) => void) {
     this.jar.delete(url);
-    cb(undefined);
+    cb();
   }
 
   toInsomniaCookieJar() {

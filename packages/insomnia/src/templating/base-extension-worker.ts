@@ -9,8 +9,6 @@ import type { Plugin } from '../plugins/index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';
 import * as templating from './worker';
 
-const PREF_SECURITY = 'Insomnia’s Preferences → Security';
-
 export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
     return value;
@@ -22,7 +20,7 @@ export function decodeEncoding<T>(value: T) {
     const base64 = results[1];
     try {
       const binary = atob(base64);
-      const bytes = new Uint8Array([...binary].map(char => char.charCodeAt(0)));
+      const bytes = new Uint8Array([...binary].map(char => char?.codePointAt(0) || 0));
       return new TextDecoder().decode(bytes);
     } catch (e) {
       console.error('Invalid base64 string:', e);
@@ -124,7 +122,7 @@ export default class BaseExtension {
     const renderPurpose = renderContext.getPurpose?.();
     // Extract the rest of the args
     const args = runArgs
-      .slice(0, runArgs.length - 1)
+      .slice(0, -1)
       .filter(a => a !== EMPTY_ARG)
       .map(decodeEncoding);
     const platform = ({ MacIntel: 'darwin', Win32: 'win32' }[globalThis.navigator.platform] ||
@@ -187,12 +185,6 @@ export default class BaseExtension {
       renderPurpose,
       util: {
         readFile: async (path: string, encoding?: string) => {
-          const allowed = renderContext
-            ?.getSettings()
-            .dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
-          if (!allowed) {
-            throw `Insomnia cannot access the file ‘${path}’. You must specify which directories Insomnia can access in ${PREF_SECURITY}.`;
-          }
           return fetchFromTemplateWorkerDatabase('readFile', { path, encoding });
         },
         nodeOS: async () => fetchFromTemplateWorkerDatabase('nodeOS', {}),
@@ -228,6 +220,8 @@ export default class BaseExtension {
           cookieJar: {
             getOrCreateForParentId: async (parentId: string) =>
               fetchFromTemplateWorkerDatabase('cookieJar.getOrCreateForParentId', { parentId }),
+            getCookiesForUrl: async (parentId: string, url: string) =>
+              fetchFromTemplateWorkerDatabase('cookieJar.getCookiesForUrl', { parentId, url }),
           },
           response: {
             getLatestForRequestId: async (requestId: string, environmentId: string | null) =>

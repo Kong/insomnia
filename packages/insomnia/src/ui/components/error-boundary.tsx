@@ -34,7 +34,7 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
 
     try {
       componentName = firstChild.type.name;
-    } catch (err) {
+    } catch {
       // It's okay
     }
 
@@ -50,7 +50,7 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
             </p>
           ),
         });
-      } catch (err) {
+      } catch {
         // UI is so broken that we can't even show an alert
       }
     }

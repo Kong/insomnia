@@ -200,7 +200,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
     const allConfigs: PluginConfigMap = settings.pluginConfig;
     const extraPaths = settings.pluginPath
       .split(':')
-      .filter(p => p)
+      .filter(Boolean)
       .map(p => {
         // Ensure proper resolution of paths and avoid path traversal
         if (p.indexOf('~/') === 0) {
@@ -260,6 +260,7 @@ export function getBundlePluginMap() {
       if (isDevelopment()) {
         console.warn(
           `[plugin] Failed to load bundled plugin ${pluginName}. You can ignore this warning if you not developing external vault feature.`,
+          err,
         );
       } else {
         console.error(`Failed to load bundled plugin ${pluginName}`, err);

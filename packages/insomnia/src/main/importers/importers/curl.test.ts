@@ -1,0 +1,263 @@
+import { quote } from 'shell-quote';
+import { describe, expect, it } from 'vitest';
+
+import type { Parameter } from '../entities';
+import { convert } from './curl';
+
+describe('curl', () => {
+  describe("cURL --data flags -H 'Content-Type: application/x-www-form-urlencoded'", () => {
+    it.each([
+      // -d
+      { flag: '-d', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
+      { flag: '-d', inputs: ['value'], expected: [{ name: '', value: 'value' }] },
+      { flag: '-d', inputs: ['@filename'], expected: [{ name: '', fileName: 'filename', type: 'file' }] },
+      {
+        flag: '-d',
+        inputs: ['first=1', 'second=2', 'third'],
+        expected: [
+          { name: 'first', value: '1' },
+          {
+            name: 'second',
+            value: '2',
+          },
+          { name: '', value: 'third' },
+        ],
+      },
+      {
+        flag: '-d',
+        inputs: ['first=1&second=2'],
+        expected: [
+          { name: 'first', value: '1' },
+          { name: 'second', value: '2' },
+        ],
+      },
+      { flag: '-d', inputs: ['%3D'], expected: [{ name: '', value: '=' }] },
+      { flag: '--d', inputs: ['%3D=%3D'], expected: [{ name: '=', value: '=' }] },
+
+      // --data
+      { flag: '--data', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
+      { flag: '--data', inputs: ['value'], expected: [{ name: '', value: 'value' }] },
+      { flag: '--data', inputs: ['@filename'], expected: [{ name: '', fileName: 'filename' }] },
+      {
+        flag: '--data',
+        inputs: ['first=1', 'second=2', 'third'],
+        expected: [
+          { name: 'first', value: '1' },
+          {
+            name: 'second',
+            value: '2',
+          },
+          { name: '', value: 'third' },
+        ],
+      },
+      {
+        flag: '--data',
+        inputs: ['first=1&second=2'],
+        expected: [
+          { name: 'first', value: '1' },
+          { name: 'second', value: '2' },
+        ],
+      },
+      { flag: '--data', inputs: ['%3D'], expected: [{ name: '', value: '=' }] },
+      { flag: '--data', inputs: ['%3D=%3D'], expected: [{ name: '=', value: '=' }] },
+      { flag: '--data', inputs: ['base64=SGVsbG8='], expected: [{ name: 'base64', value: 'SGVsbG8=' }] },
+
+      // --data-ascii
+      { flag: '--data-ascii', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
+      { flag: '--data-ascii', inputs: ['value'], expected: [{ name: '', value: 'value' }] },
+      { flag: '--data-ascii', inputs: ['@filename'], expected: [{ name: '', fileName: 'filename', type: 'file' }] },
+      {
+        flag: '--data-ascii',
+        inputs: ['first=1', 'second=2', 'third'],
+        expected: [
+          { name: 'first', value: '1' },
+          {
+            name: 'second',
+            value: '2',
+          },
+          { name: '', value: 'third' },
+        ],
+      },
+      {
+        flag: '--data-ascii',
+        inputs: ['first=1&second=2'],
+        expected: [
+          { name: 'first', value: '1' },
+          { name: 'second', value: '2' },
+        ],
+      },
+
+      // --data-binary
+      { flag: '--data-binary', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
+      { flag: '--data-binary', inputs: ['value'], expected: [{ name: '', value: 'value' }] },
+      { flag: '--data-binary', inputs: ['@filename'], expected: [{ name: '', fileName: 'filename', type: 'file' }] },
+      {
+        flag: '--data-binary',
+        inputs: ['first=1', 'second=2', 'third'],
+        expected: [
+          { name: 'first', value: '1' },
+          {
+            name: 'second',
+            value: '2',
+          },
+          { name: '', value: 'third' },
+        ],
+      },
+      {
+        flag: '--data-binary',
+        inputs: ['first=1&second=2'],
+        expected: [
+          { name: 'first', value: '1' },
+          { name: 'second', value: '2' },
+        ],
+      },
+      {
+        flag: '--data-binary',
+        inputs: ['{"foo":"sGrG5sXDP5vX=p41h9tBcaQ==","bar":"123"}'],
+        expected: [{ name: '{"foo":"sGrG5sXDP5vX', value: 'p41h9tBcaQ==","bar":"123"}' }],
+      },
+      {
+        flag: '--data-binary',
+        inputs: ['key=value=with=equals'],
+        expected: [{ name: 'key', value: 'value=with=equals' }],
+      },
+
+      // --data-raw
+      { flag: '--data-raw', inputs: ['@filename'], expected: [{ name: '', value: '@filename' }] },
+      { flag: '--data-raw', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
+      {
+        flag: '--data-raw',
+        inputs: ['first=1', 'second=2', 'third'],
+        expected: [
+          { name: 'first', value: '1' },
+          {
+            name: 'second',
+            value: '2',
+          },
+          { name: '', value: 'third' },
+        ],
+      },
+      {
+        flag: '--data-raw',
+        inputs: ['first=1&second=2'],
+        expected: [
+          { name: 'first', value: '1' },
+          { name: 'second', value: '2' },
+        ],
+      },
+
+      // --data-urlencode
+      { flag: '--data-urlencode', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
+      {
+        flag: '--data-urlencode',
+        inputs: ['key@filename'],
+        expected: [{ name: 'key', fileName: 'filename', type: 'file' }],
+      },
+      {
+        flag: '--data-urlencode',
+        inputs: ['first=1', 'second=2', 'third'],
+        expected: [
+          { name: 'first', value: '1' },
+          {
+            name: 'second',
+            value: '2',
+          },
+          { name: '', value: 'third' },
+        ],
+      },
+      {
+        flag: '--data-urlencode',
+        inputs: ['first=1&second=2'],
+        expected: [
+          { name: 'first', value: '1' },
+          { name: 'second', value: '2' },
+        ],
+      },
+      { flag: '--data-urlencode', inputs: ['=value'], expected: [{ name: '', value: 'value' }] },
+
+      // --data-urlencode URI encoding
+      { flag: '--data-urlencode', inputs: ['a='], expected: [{ name: 'a', value: '' }] },
+      { flag: '--data-urlencode', inputs: [' '], expected: [{ name: '', value: ' ' }] },
+      { flag: '--data-urlencode', inputs: ['<'], expected: [{ name: '', value: '<' }] },
+      { flag: '--data-urlencode', inputs: ['>'], expected: [{ name: '', value: '>' }] },
+      { flag: '--data-urlencode', inputs: ['?'], expected: [{ name: '', value: '?' }] },
+      { flag: '--data-urlencode', inputs: ['['], expected: [{ name: '', value: '[' }] },
+      { flag: '--data-urlencode', inputs: [']'], expected: [{ name: '', value: ']' }] },
+      { flag: '--data-urlencode', inputs: ['|'], expected: [{ name: '', value: '|' }] },
+      { flag: '--data-urlencode', inputs: ['^'], expected: [{ name: '', value: '^' }] },
+      { flag: '--data-urlencode', inputs: ['"'], expected: [{ name: '', value: '"' }] },
+      { flag: '--data-urlencode', inputs: ['='], expected: [{ name: '', value: '' }] },
+      { flag: '--data-urlencode', inputs: ['%3D'], expected: [{ name: '', value: '%3D' }] },
+    ])(
+      'handles %p correctly',
+      async ({ flag, inputs, expected }: { flag: string; inputs: string[]; expected: Parameter[] }) => {
+        const flaggedInputs = inputs.map(input => `${flag} ${quote([input])}`).join(' ');
+        const rawData = `curl -X POST https://example.com 
+      -H 'Content-Type: application/x-www-form-urlencoded'
+      ${flaggedInputs}
+      `;
+
+        expect(convert(rawData)).toMatchObject([
+          {
+            body: {
+              params: expected,
+            },
+          },
+        ]);
+      },
+    );
+  });
+
+  describe('cURL --data flags', () => {
+    it.each([{ flag: '-d', inputs: ['key=value'], expected: 'key=value' }])(
+      'handles %p correctly',
+      async ({ flag, inputs, expected }: { flag: string; inputs: string[]; expected: string }) => {
+        const flaggedInputs = inputs.map(input => `${flag} ${quote([input])}`).join(' ');
+        const rawData = `curl -X POST https://example.com 
+      ${flaggedInputs}
+      `;
+
+        expect(convert(rawData)).toMatchObject([
+          {
+            body: {
+              text: expected,
+            },
+          },
+        ]);
+      },
+    );
+  });
+
+  describe('cURL -H flags', () => {
+    it.each([
+      { flag: '-H', inputs: ['X-Host: example.com'], expected: [{ name: 'X-Host', value: 'example.com' }] },
+      { flag: '-H', inputs: ['X-Host:example.com'], expected: [{ name: 'X-Host', value: 'example.com' }] },
+      {
+        flag: '-H',
+        inputs: ['Content-Type:application/x-www-form-urlencoded'],
+        expected: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }],
+      },
+      {
+        flag: '   -H',
+        inputs: ['Content-Type:application/x-www-form-urlencoded'],
+        expected: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }],
+      },
+      {
+        flag: ' -H',
+        inputs: ['Content-Type:application/x-www-form-urlencoded'],
+        expected: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }],
+      },
+    ])(
+      'handles %p correctly',
+      async ({ flag, inputs, expected }: { flag: string; inputs: string[]; expected: Parameter[] }) => {
+        const flaggedInputs = inputs.map(input => `${flag} ${quote([input])}`).join(' ');
+        const rawData = `curl https://example.com ${flaggedInputs}`;
+        expect(convert(rawData)).toMatchObject([
+          {
+            headers: expected,
+          },
+        ]);
+      },
+    );
+  });
+});

@@ -6,6 +6,7 @@ import { href, redirect } from 'react-router';
 import { importResourcesToWorkspace, scanResources } from '~/common/import';
 import * as models from '~/models';
 import { isGitProject } from '~/models/project';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -43,7 +44,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     throw new Error('Error Generating Configuration');
   }
 
-  await scanResources([
+  const scannedResources = await scanResources([
     {
       contentStr: apiSpec.contents,
     },
@@ -51,6 +52,13 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   await importResourcesToWorkspace({
     workspaceId,
+  });
+
+  window.main.trackSegmentEvent({
+    event: SegmentEvent.generateCollection,
+    properties: {
+      count_requests: scannedResources.map(r => r.requests?.length ?? 0).reduce((a, b) => a + b, 0),
+    },
   });
 
   return redirect(

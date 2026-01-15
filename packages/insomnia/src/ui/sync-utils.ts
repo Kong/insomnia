@@ -4,6 +4,7 @@ import * as models from '~/models';
 import type { ApiSpec } from '~/models/api-spec';
 import type { Environment } from '~/models/environment';
 import type { GrpcRequest } from '~/models/grpc-request';
+import type { McpRequest } from '~/models/mcp-request';
 import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import type { Request } from '~/models/request';
@@ -49,6 +50,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     | Environment
     | ApiSpec
     | Request
+    | McpRequest
     | WebSocketRequest
     | SocketIORequest
     | GrpcRequest
@@ -108,6 +110,11 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     mockRoutes.map(m => syncItemsList.push(m));
   }
 
+  const mcpRequest = await models.mcpRequest.getByParentId(workspaceId);
+  if (mcpRequest) {
+    syncItemsList.push(mcpRequest);
+  }
+
   const baseEnvironment = await models.environment.getByParentId(workspaceId);
   invariant(baseEnvironment, 'Base environment not found');
 
@@ -117,8 +124,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
   allRequests.map(r => syncItemsList.push(r));
   tests.map(t => syncItemsList.push(t));
   testSuites.map(t => syncItemsList.push(t));
-  syncItemsList.push(activeWorkspace);
-  syncItemsList.push(baseEnvironment);
+  syncItemsList.push(activeWorkspace, baseEnvironment);
   subEnvironments.forEach(e => syncItemsList.push(e));
   if (activeApiSpec) {
     syncItemsList.push(activeApiSpec);

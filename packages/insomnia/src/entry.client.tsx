@@ -1,12 +1,14 @@
-import './ui/rendererListeners';
+import './ui/renderer-listeners';
 import './ui/log';
 
+import { configureFetch } from 'insomnia-api';
 import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
-import type { SessionData } from 'react-router';
 import { HydratedRouter } from 'react-router/dom';
 
-import { migrateFromLocalStorage, setSessionData, setVaultSessionData } from './account/session';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
+
+import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
 import { settings } from './models';
 import { initNewOAuthSession } from './network/o-auth-2/get-token';
@@ -21,6 +23,9 @@ import { initializeSentry } from './ui/sentry';
 import { getInitialEntry } from './utils/router';
 
 initializeSentry();
+
+// Force onlyResolveOnSuccess to true, will be removed after all usages are updated
+configureFetch(options => insomniaFetch({ ...options, onlyResolveOnSuccess: true }));
 
 await initPlugins();
 
@@ -44,12 +49,45 @@ try {
   // we need to inject state into localStorage
   const skipOnboarding = getSkipOnboarding();
   if (skipOnboarding) {
-    window.localStorage.setItem('hasSeenOnboardingV11', skipOnboarding.toString());
+    window.localStorage.setItem('hasSeenOnboardingV12', skipOnboarding.toString());
     window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
   }
 } catch (e) {
   console.log('[onboarding] Failed to parse session data', e);
 }
+
+// Workaround for iframe redirect issue caused by api.protocol.ts
+// Problem: The https protocol handler (registerInsomniaProtocols) intercepts all https requests
+// to solve CORS issues. However, when an iframe redirects from https://renderer.gist.build to
+// https://code.gist.build, the protocol handler auto-follows the redirect but the iframe's
+// location doesn't update. This causes the Customer.io SDK to fail origin validation.
+//
+// Solution: Intercept postMessage events from renderer.gist.build in the capture phase,
+// stop propagation, and re-dispatch with origin changed to code.gist.build. This makes
+// the SDK think the message came from the expected redirected URL.
+window.addEventListener(
+  'message',
+  (event: MessageEvent) => {
+    // If origin is renderer.gist.build (original URL), stop propagation and dispatch a new event
+    if (event.origin === 'https://renderer.gist.build') {
+      // Stop the original event from reaching other listeners
+      event.stopImmediatePropagation();
+
+      // Create and dispatch a new MessageEvent with modified origin
+      // Note: 'ports' property is read-only and cannot be set, but the SDK doesn't use it
+      const newEvent = new MessageEvent('message', {
+        data: event.data,
+        origin: 'https://code.gist.build',
+        lastEventId: event.lastEventId,
+        source: event.source,
+      });
+
+      window.dispatchEvent(newEvent);
+      return;
+    }
+  },
+  true, // Use capture phase to intercept before other listeners
+);
 
 // Check if there is a Session provided by an env variable and use this
 const insomniaSession = getInsomniaSession();

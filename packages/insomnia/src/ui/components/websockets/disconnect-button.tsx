@@ -1,6 +1,7 @@
 import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
 
+import { isMcpRequestId } from '../../../models/mcp-request';
 import { isSocketIORequestId } from '../../../models/socket-io-request';
 import { isWebSocketRequestId } from '../../../models/websocket-request';
 import { Dropdown as OriginalDropdown, DropdownItem, ItemContent } from '../base/dropdown';
@@ -11,6 +12,8 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
       window.main.webSocket.close({ requestId });
     } else if (isSocketIORequestId(requestId)) {
       window.main.socketIO.close({ requestId });
+    } else if (isMcpRequestId(requestId)) {
+      window.main.mcp.close({ requestId });
     }
   };
   const handleCloseAllRequests = () => {
@@ -18,6 +21,8 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
       window.main.webSocket.closeAll();
     } else if (isSocketIORequestId(requestId)) {
       window.main.socketIO.closeAll();
+    } else if (isMcpRequestId(requestId)) {
+      window.main.mcp.closeAll();
     }
   };
   return (
@@ -68,7 +73,7 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
             <div className="flex w-[25px] justify-evenly">
               <div className="bg-success h-[10px] w-[10px] rounded-[50%]" />
             </div>
-            <div className="w-full pl-[--padding-xs] text-left">Disconnect this request</div>
+            <div className="w-full pl-(--padding-xs) text-left">Disconnect this request</div>
           </ItemContent>
         </DropdownItem>
         <DropdownItem aria-label="Disconnect all requests">
@@ -78,7 +83,7 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
               <div className="bg-success h-[5px] w-[5px] rounded-[50%]" />
               <div className="bg-success h-[5px] w-[5px] rounded-[50%]" />
             </div>
-            <div className="w-full pl-[--padding-xs] text-left">Disconnect all requests</div>
+            <div className="w-full pl-(--padding-xs) text-left">Disconnect all requests</div>
           </ItemContent>
         </DropdownItem>
       </OriginalDropdown>

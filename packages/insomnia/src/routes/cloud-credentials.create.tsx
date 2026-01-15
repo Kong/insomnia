@@ -23,11 +23,9 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   if (isAuthenticated) {
     // find credential with same name for oauth authenticated cloud service
     const existingCredential = await models.cloudCredential.getByName(name, provider);
-    if (existingCredential.length === 0) {
-      await models.cloudCredential.create(patch);
-    } else {
-      await models.cloudCredential.update(existingCredential[0], patch);
-    }
+    await (existingCredential.length === 0
+      ? models.cloudCredential.create(patch)
+      : models.cloudCredential.update(existingCredential[0], patch));
     return credentials;
   }
   const authenticateResponse = await executePluginMainAction({

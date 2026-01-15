@@ -52,29 +52,28 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           placeholder: 'My text',
         },
       ],
-      run(_context, action: 'encode' | 'decode', kind: 'normal' | 'url' | 'hex', text) {
-        text = text || '';
+      run(_context, action: 'encode' | 'decode', kind: 'normal' | 'url' | 'hex', text = '') {
         invariant(action === 'encode' || action === 'decode', 'invalid action');
         invariant(kind === 'normal' || kind === 'url' || kind === 'hex', 'invalid kind');
         if (action === 'encode') {
           if (kind === 'normal') {
-            return btoa(new TextEncoder().encode(text).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+            return btoa(new TextEncoder().encode(text).reduce((data, byte) => data + String.fromCodePoint(byte), ''));
           }
 
           if (kind === 'hex') {
-            const bytes = new Uint8Array(text.match(/.{1,2}/g).map((byte: string) => parseInt(byte, 16)));
-            return btoa(String.fromCharCode(...bytes));
+            const bytes = new Uint8Array(text.match(/.{1,2}/g).map((byte: string) => Number.parseInt(byte, 16)));
+            return btoa(String.fromCodePoint(...bytes));
           }
 
           if (kind === 'url') {
             const base64 = btoa(
-              new TextEncoder().encode(text).reduce((data, byte) => data + String.fromCharCode(byte), ''),
+              new TextEncoder().encode(text).reduce((data, byte) => data + String.fromCodePoint(byte), ''),
             );
             return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
           }
         }
         const binary = atob(text);
-        const bytes = new Uint8Array([...binary].map(char => char.charCodeAt(0)));
+        const bytes = new Uint8Array([...binary].map(char => char?.codePointAt(0) || 0));
 
         if (kind === 'hex') {
           return [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('');
@@ -101,7 +100,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           ],
         },
         {
-          help: 'moment.js format string',
+          help: 'date-fns format string',
           displayName: 'Custom Format Template',
           type: 'string',
           placeholder: 'MMMM Do YYYY, h:mm:ss a',
@@ -251,7 +250,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         const hashArray = Array.from(new Uint8Array(buffer));
 
         if (encoding === 'base64') {
-          return btoa(String.fromCharCode.apply(null, hashArray));
+          return btoa(String.fromCodePoint.apply(null, hashArray));
         }
         // hex
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -274,7 +273,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           throw new Error('No file selected');
         }
 
-        return await context.util.readFile(path, 'utf8');
+        return await context.util.readFile(path);
       },
     },
   },
@@ -308,7 +307,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           if (!Array.isArray(results)) {
             results = [results];
           }
-        } catch (err) {
+        } catch {
           throw new Error(`Invalid JSONPath query: ${filter}`);
         }
 
@@ -349,11 +348,13 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           throw new Error(`Workspace not found for ${meta.workspaceId}`);
         }
 
-        const cookieJar = await context.util.models.cookieJar.getOrCreateForParentId(workspace._id);
-        const found = cookieJar.cookies.find(cookie => cookie.key === name);
+        const cookies = url
+          ? await context.util.models.cookieJar.getCookiesForUrl(workspace._id, url)
+          : (await context.util.models.cookieJar.getOrCreateForParentId(workspace._id)).cookies;
+        const found = cookies.find(cookie => cookie.key === name);
         invariant(
           found,
-          `No cookie with name "${name}" found in cookie jar for url "${url}"\nChoices are [\n\t${cookieJar.cookies.map(c => c.key)}\n] for`,
+          `No cookie with name "${name}" found in cookie jar for url "${url}"\nChoices are [\n\t${cookies.map(c => c.key)}\n] for`,
         );
         return found.value;
       },
@@ -583,13 +584,10 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         switch (resendBehavior) {
           case 'no-history': {
-            if (!response) {
-              shouldResend = true;
-            } else {
-              // if either global environment or collection environment changed, resend the request
-              shouldResend =
-                response.environmentId !== environmentId || response.globalEnvironmentId !== globalEnvironmentId;
-            }
+            // if either global environment or collection environment changed, resend the request
+            shouldResend = !response
+              ? true
+              : response.environmentId !== environmentId || response.globalEnvironmentId !== globalEnvironmentId;
             break;
           }
 
@@ -614,7 +612,6 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             break;
           }
 
-          case 'never':
           default: {
             shouldResend = false;
             break;
@@ -659,14 +656,14 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         const sanitizedFilter = filter.trim();
         const bodyBuffer = await context.util.models.response.getBodyBuffer(response, '');
         const match = response.contentType && response.contentType.match(/charset=([\w-]+)/);
-        const charset = match && match.length >= 2 ? match[1] : 'utf-8';
+        const charset = match && match.length >= 2 ? match[1] : 'utf8';
         if (field === 'url') {
           return response.url;
         }
         if (field === 'raw' && bodyBuffer !== null) {
           // Sometimes iconv conversion fails so fallback to regular buffer
           if (typeof bodyBuffer === 'string') {
-            throw new Error(bodyBuffer);
+            throw new TypeError(bodyBuffer);
           }
           try {
             return context.util.decode(bodyBuffer, charset);
@@ -691,7 +688,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           // Sometimes iconv conversion fails so fallback to regular buffer
           let body;
           if (typeof bodyBuffer === 'string') {
-            throw new Error(bodyBuffer);
+            throw new TypeError(bodyBuffer);
           }
           try {
             body = await context.util.decode(bodyBuffer, charset);
@@ -715,7 +712,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
               if (!Array.isArray(results)) {
                 results = [results];
               }
-            } catch (err) {
+            } catch {
               throw new Error(`Invalid JSONPath query: ${sanitizedFilter}`);
             }
 
@@ -775,7 +772,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             }
 
             return results[0].inner;
-          } catch (err) {
+          } catch {
             throw new Error(`Invalid XPath query: ${sanitizedFilter}`);
           }
         }
@@ -905,12 +902,13 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             throw new Error('No cookie specified');
           }
 
-          const cookieJar = await context.util.models.cookieJar.getOrCreateForParentId(workspace._id);
-
-          const found = cookieJar.cookies.find(cookie => cookie.key === name);
+          const cookies = request.url
+            ? await context.util.models.cookieJar.getCookiesForUrl(workspace._id, request.url)
+            : (await context.util.models.cookieJar.getOrCreateForParentId(workspace._id)).cookies;
+          const found = cookies.find(cookie => cookie.key === name);
           invariant(
             found,
-            `No cookie with name "${name}" found in cookie jar for url "${request.url}"\nChoices are [\n\t${cookieJar.cookies.map(c => c.key)}\n] for`,
+            `No cookie with name "${name}" found in cookie jar for url "${request.url}"\nChoices are [\n\t${cookies.map(c => c.key)}\n] for`,
           );
           return found.value;
         }

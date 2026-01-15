@@ -12,7 +12,7 @@ export const getFixturePath = (fixturePath: string) => path.join(__dirname, '..'
 
 export const loadFixture = async (fixturePath: string) => {
   const buffer = await fs.promises.readFile(path.join(__dirname, '..', 'fixtures', fixturePath));
-  return buffer.toString('utf-8');
+  return buffer.toString('utf8');
 };
 
 export const copyFixtureDatabase = async (fixturePath: string, dataPath: string) => {

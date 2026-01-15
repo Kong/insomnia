@@ -1,9 +1,8 @@
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { buildInteractiveMessage } from '~/common/interactive-messages';
 import { useRootLoaderData } from '~/root';
 import {
   type ConnectActionParams,
@@ -14,6 +13,7 @@ import {
   useDebugRequestSendActionFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -29,12 +29,10 @@ import {
 } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
-import { SegmentEvent } from '../analytics';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import { useReadyState } from '../hooks/use-ready-state';
-import { useRequestPatcher } from '../hooks/use-request';
-import { useRequestMetaPatcher } from '../hooks/use-request';
-import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
+import { useRequestMetaPatcher, useRequestPatcher } from '../hooks/use-request';
+import { useTimeoutWhen } from '../hooks/use-timeout-when';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
@@ -73,9 +71,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       } else {
         // only for request render error
         const errorMessage = searchParams.get('error') || '';
-        const messages = errorMessage.includes('Insomnia cannot access')
-          ? buildInteractiveMessage(errorMessage)
-          : [{ text: errorMessage }];
+        // detects a string to replace with a link to settings
+        const linkText = 'Insomnia Preferences → Security';
+        const hasLink = errorMessage.endsWith(linkText);
+
+        const modifiedString = hasLink ? errorMessage.slice(0, errorMessage.length - linkText.length) : errorMessage;
         const close = showModal(AlertModal, {
           title: 'Unexpected Request Failure',
           message: (
@@ -83,22 +83,17 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
               <p>The request failed due to an unhandled error:</p>
               <code className="wide selectable">
                 <div className="w-full overflow-y-auto text-wrap">
-                  {messages.map(({ text, handler }, index) =>
-                    handler ? (
-                      <Link
-                        className="cursor-pointer text-[--color-surprise]"
-                        // eslint-disable-next-line react/no-array-index-key
-                        key={index}
-                        onPress={() => {
-                          close();
-                          handler();
-                        }}
-                      >
-                        {text}
-                      </Link>
-                    ) : (
-                      text
-                    ),
+                  {modifiedString}
+                  {hasLink && (
+                    <Link
+                      className="cursor-pointer text-(--color-surprise)"
+                      onPress={() => {
+                        close();
+                        showSettingsModal({ tab: 'general' });
+                      }}
+                    >
+                      {linkText}
+                    </Link>
                   )}
                 </div>
               </code>
@@ -144,7 +139,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     useImperativeHandle(ref, () => ({ focusInput, setUrl }), [focusInput, setUrl]);
 
     const [currentInterval, setCurrentInterval] = useState<number | null>(null);
-    const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
+    const [currentTimeout, setCurrentTimeout] = useState<number | undefined>();
     const connectRequestFetcher = useRequestConnectActionFetcher();
     const sendRequestFetcher = useDebugRequestSendActionFetcher();
 
@@ -187,15 +182,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       async (shouldPromptForPathAfterResponse?: boolean, ignoreUndefinedEnvVariable?: boolean) => {
         updateTabById?.(requestId, { temporary: false });
         models.stats.incrementExecutedRequests();
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.requestExecute,
-          properties: {
-            preferredHttpVersion: settings.preferredHttpVersion,
-            // @ts-expect-error -- who cares
-            authenticationType: activeRequest.authentication?.type,
-            mimeType: activeRequest.body.mimeType,
-          },
-        });
         // reset timeout
         setCurrentTimeout(undefined);
 
@@ -252,16 +238,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           });
         }
       },
-      [
-        activeEnvironment._id,
-        activeRequest,
-        activeWorkspace._id,
-        connect,
-        requestId,
-        send,
-        settings.preferredHttpVersion,
-        updateTabById,
-      ],
+      [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, updateTabById],
     );
 
     useEffect(() => {
@@ -306,7 +283,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     });
 
     const buttonText = isRealtimeRequest ? 'Connect' : downloadPath ? 'Download' : 'Send';
-    const borderRadius = isRealtimeRequest ? 'rounded-sm' : 'rounded-l-sm';
+    const borderRadius = isRealtimeRequest ? 'rounded-xs' : 'rounded-l-sm';
     const { url, method } = activeRequest;
     const isEventStreamOpen = useReadyState({ requestId: activeRequest._id, protocol: 'curl' });
     const isGraphQLSubscriptionOpen = useReadyState({ requestId: activeRequest._id, protocol: 'webSocket' });
@@ -339,7 +316,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             {isCancellable ? (
               <button
                 type="button"
-                className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-[--color-font-surprise]"
+                className="rounded-xs bg-(--color-surprise) px-(--padding-md) text-(--color-font-surprise)"
                 onClick={() => {
                   if (isEventStreamRequest(activeRequest)) {
                     window.main.curl.close({ requestId: activeRequest._id });
@@ -358,7 +335,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
               <>
                 <button
                   onClick={() => sendOrConnect()}
-                  className={`bg-[--color-surprise] px-[--padding-md] text-[--color-font-surprise] ${borderRadius}`}
+                  className={`bg-(--color-surprise) px-(--padding-md) text-(--color-font-surprise) ${borderRadius}`}
                   type="button"
                 >
                   {buttonText}
@@ -372,7 +349,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                     closeOnSelect={false}
                     triggerButton={
                       <Button
-                        className="rounded-r-sm bg-[--color-surprise] px-1 text-[--color-font-surprise]"
+                        className="rounded-r-sm bg-(--color-surprise) px-1 text-(--color-font-surprise)"
                         style={{
                           borderTopRightRadius: '0.125rem',
                           borderBottomRightRadius: '0.125rem',
@@ -481,7 +458,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
               ? '1 environment variable is missing'
               : `${undefinedEnvironmentVariableList?.length} environment variables are missing`
           }
-          okText="Execute anyways"
+          okText="Execute anyway"
           onOk={() => {
             setShowEnvVariableMissingModal(false);
             sendOrConnect(false, true);
@@ -489,14 +466,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           onCancel={() => setShowEnvVariableMissingModal(false)}
         >
           <div>
-            These environment variables have been defined, but have not been valued with in the currently active
-            environment:
+            These environment variables have been defined, but have not been assigned a value within the currently
+            active environment:
             <div className="flex max-h-80 flex-wrap gap-2 overflow-y-auto">
               {undefinedEnvironmentVariableList?.map(item => {
                 return (
                   <div
                     key={item}
-                    className="mr-3 mt-3 rounded-sm bg-[--color-surprise] px-3 py-1 text-[--color-font-surprise]"
+                    className="mt-3 mr-3 rounded-xs bg-(--color-surprise) px-3 py-1 text-(--color-font-surprise)"
                   >
                     {item}
                   </div>
@@ -513,7 +490,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                   These are secret environment variables. However, the required vault key has not been provided yet.
                 </p>
                 <Button
-                  className="cursor- py-1 text-[--color-info] underline ring-1 ring-transparent focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="cursor- py-1 text-(--color-info) underline ring-1 ring-transparent focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={() => {
                     setShowInputVaultKeyModal(true);
                     setShowEnvVariableMissingModal(false);
@@ -528,7 +505,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                       return (
                         <div
                           key={item}
-                          className="mr-3 mt-3 rounded-sm bg-[--color-surprise] px-3 py-1 text-[--color-font-surprise]"
+                          className="mt-3 mr-3 rounded-xs bg-(--color-surprise) px-3 py-1 text-(--color-font-surprise)"
                         >
                           {item}
                         </div>

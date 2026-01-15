@@ -5,7 +5,10 @@ import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import {
   href,
+  isRouteErrorResponse,
+  Link as RouterLink,
   Links,
+  matchPath,
   Meta,
   Outlet,
   Scripts,
@@ -14,7 +17,6 @@ import {
   useParams,
   useRouteLoaderData,
 } from 'react-router';
-import { isRouteErrorResponse, useNavigation } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import * as models from '~/models';
@@ -27,24 +29,17 @@ import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
-import { useGithubCompleteSignInFetcher } from '~/routes/git-credentials.github.complete-sign-in';
-import { useGitLabCompleteSignInFetcher } from '~/routes/git-credentials.gitlab.complete-sign-in';
+import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { Link } from '~/ui/components/base/link';
-import { ErrorBoundary as ErrorView } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
-import {
-  SettingsModal,
-  TAB_CLOUD_CREDENTIAL,
-  TAB_INDEX_PLUGINS,
-  TAB_INDEX_THEMES,
-} from '~/ui/components/modals/settings-modal';
+import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import cssHref from '~/ui/css/styles.css?url';
@@ -63,17 +58,32 @@ export const links: Route.LinksFunction = () => {
   ];
 };
 
+const locationHistoryMiddleware: Route.ClientMiddlewareFunction = async ({ request }, next) => {
+  await next();
+
+  try {
+    const url = new URL(request.url);
+    const match = matchPath('/organization/:organizationId/*', url.pathname);
+
+    if (!match || !match.params.organizationId) {
+      return;
+    }
+
+    const organizationId = match.params.organizationId;
+    window.localStorage.setItem(`locationHistoryEntry:${organizationId}`, url.pathname);
+    window.localStorage.setItem('lastVisitedOrganizationId', organizationId);
+  } catch (err) {
+    console.log('[locationHistoryMiddleware] Failed to store location history entry', err);
+  }
+};
+
+export const clientMiddleware: Route.ClientMiddlewareFunction[] = [locationHistoryMiddleware];
+
 export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
-      return err.data;
+      return typeof err.data === 'string' ? err.data : (err.data?.message ?? 'Unknown error');
     }
-
-    if (err?.message) {
-      return err?.message;
-    }
-
-    return 'Unknown error';
   };
 
   const getErrorStack = (err: any) => {
@@ -84,43 +94,43 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
     return err?.stack;
   };
 
-  const navigate = useNavigate();
-  const navigation = useNavigation();
   const errorMessage = getErrorMessage(error);
   const logoutFetcher = useLogoutFetcher();
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden">
-      <h1 className="flex items-center gap-2 text-2xl text-[--color-font]">
-        <Icon className="text-[--color-danger]" icon="exclamation-triangle" /> Application Error
+      <h1 className="flex items-center gap-2 text-2xl text-(--color-font)">
+        <Icon className="text-(--color-danger)" icon="exclamation-triangle" /> Application Error
       </h1>
-      <p className="text-[--color-font]">
+      <p className="text-(--color-font)">
         Failed to render. Please report to{' '}
         <a className="font-bold underline" href="https://github.com/Kong/insomnia/issues">
           our Github Issues
         </a>
       </p>
-      <div className="p-6 text-[--color-font]">
-        <code className="break-words p-2">{errorMessage}</code>
-      </div>
+      {errorMessage && (
+        <div className="p-6 text-(--color-font)">
+          <code className="p-2 wrap-break-word">{errorMessage}</code>
+        </div>
+      )}
       <div className="flex items-center gap-2">
-        <Button
-          className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-base font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-          onPress={() => navigate('/organization')}
+        <RouterLink
+          reloadDocument
+          className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+          to="/organization"
         >
-          Try to reload the app{' '}
-          <span>{navigation.state === 'loading' ? <Icon icon="spinner" className="animate-spin" /> : null}</span>
-        </Button>
+          Try to reload the app
+        </RouterLink>
         <Button
-          className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-base font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => logoutFetcher.submit()}
         >
           Logout{' '}
           <span>{logoutFetcher.state === 'loading' ? <Icon icon="spinner" className="animate-spin" /> : null}</span>
         </Button>
       </div>
-      <div className="overflow-y-auto p-6 text-[--color-font]">
-        <code className="break-all p-2">{getErrorStack(error)}</code>
+      <div className="overflow-y-auto p-6 text-(--color-font)">
+        <code className="p-2 break-all">{getErrorStack(error)}</code>
       </div>
     </div>
   );
@@ -215,7 +225,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
 export const HydrateFallback = () => {
   return (
-    <div id="app-loading-indicator" className="fixed left-0 top-0 flex h-full w-full items-center justify-center">
+    <div id="app-loading-indicator" className="fixed top-0 left-0 flex h-full w-full items-center justify-center">
       <div className="relative">
         <svg viewBox="0 0 378 378" xmlns="http://www.w3.org/2000/svg" fillRule="evenodd" clipRule="evenodd" width="100">
           <circle
@@ -296,9 +306,8 @@ const Root = () => {
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: logoutSubmit } = useLogoutFetcher();
-  const { submit: githubCompleteSignInSubmit } = useGithubCompleteSignInFetcher();
-  const { submit: gitLabCompleteSignInSubmit } = useGitLabCompleteSignInFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
+  const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -351,8 +360,8 @@ const Root = () => {
         return showModal(AskModal, {
           title: 'Plugin Install',
           message: (
-            <p className="text-[--hl]">
-              Do you want to install <i className="font-bold text-[--hl]">{params.name}</i>?
+            <p className="text-(--hl)">
+              Do you want to install <i className="font-bold text-(--hl)">{params.name}</i>?
             </p>
           ),
           yesText: 'Install',
@@ -362,7 +371,7 @@ const Root = () => {
               try {
                 // TODO (pavkout): Remove second parameter when we will decide about the @scoped packages name validation
                 await window.main.installPlugin(params.name.trim(), true);
-                showModal(SettingsModal, { tab: TAB_INDEX_PLUGINS });
+                showModal(SettingsModal, { tab: 'plugins' });
               } catch (err) {
                 showError({
                   title: 'Plugin Install',
@@ -395,7 +404,7 @@ const Root = () => {
               });
               await reloadPlugins();
               await setTheme(parsedTheme.name);
-              showModal(SettingsModal, { tab: TAB_INDEX_THEMES });
+              showModal(SettingsModal, { tab: 'themes' });
             }
           },
         });
@@ -405,16 +414,18 @@ const Root = () => {
         urlWithoutParams === 'insomnia://oauth/github-app/authenticate'
       ) {
         const { code, state } = params;
-        return githubCompleteSignInSubmit({
+        return gitProviderCompleteSignInSubmit({
           code,
           state,
+          provider: 'github',
         });
       }
       if (urlWithoutParams === 'insomnia://oauth/gitlab/authenticate') {
         const { code, state } = params;
-        return gitLabCompleteSignInSubmit({
+        return gitProviderCompleteSignInSubmit({
           code,
           state,
+          provider: 'gitlab',
         });
       }
       if (urlWithoutParams === 'insomnia://app/auth/finish') {
@@ -435,10 +446,19 @@ const Root = () => {
         return navigate(`/organization/${params.organizationId}`);
       }
       if (urlWithoutParams === 'insomnia://system-browser-oauth/redirect') {
-        const { url: redirectUrl } = params;
-        return redirectToDefaultBrowserSubmit({
-          redirectUrl,
-        });
+        const { url: redirectUrl, encryptedUrl: encryptedRedirectUrl, encryptedKey, iv } = params;
+        if (redirectUrl) {
+          return redirectToDefaultBrowserSubmit({
+            redirectUrl,
+          });
+        } else if (encryptedRedirectUrl && encryptedKey && iv) {
+          return redirectToDefaultBrowserSubmit({
+            encryptedRedirectUrl,
+            encryptedKey,
+            iv,
+          });
+        }
+        return;
       }
       if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
         const { code, ...restParams } = params;
@@ -463,7 +483,7 @@ const Root = () => {
               // close the modal to hint user Azure oauth url if exists
               closeModalBtn.click();
             }
-            showModal(SettingsModal, { tab: TAB_CLOUD_CREDENTIAL });
+            showModal(SettingsModal, { tab: 'credentials' });
           } else {
             showError({
               title: 'Azure Authorization Failed',
@@ -489,7 +509,7 @@ const Root = () => {
                   )}
                   <CopyButton
                     size="small"
-                    className="absolute right-[--padding-sm] top-[--padding-sm]"
+                    className="absolute top-(--padding-sm) right-(--padding-sm)"
                     content={error_description}
                     title="Copy Description"
                     style={{ borderWidth: 0 }}
@@ -522,15 +542,14 @@ const Root = () => {
   }, [
     authorizeSubmit,
     createCloudCredentials,
-    gitLabCompleteSignInSubmit,
-    githubCompleteSignInSubmit,
+    gitProviderCompleteSignInSubmit,
     logoutSubmit,
     navigate,
     redirectToDefaultBrowserSubmit,
   ]);
 
   return (
-    <ErrorView>
+    <>
       <div className="app">
         <Outlet />
         <Toaster />
@@ -547,7 +566,7 @@ const Root = () => {
           from={{ type: 'uri', defaultValue: importUri }}
         />
       )}
-    </ErrorView>
+    </>
   );
 };
 

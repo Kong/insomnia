@@ -16,7 +16,7 @@ export interface BaseWorkspace {
   name: string;
   description: string;
   certificates?: any; // deprecated
-  scope: 'design' | 'collection' | 'mock-server' | 'environment';
+  scope: 'design' | 'collection' | 'mock-server' | 'environment' | 'mcp';
 }
 
 export type WorkspaceScope = BaseWorkspace['scope'];
@@ -26,6 +26,7 @@ export const WorkspaceScopeKeys = {
   collection: 'collection',
   mockServer: 'mock-server',
   environment: 'environment',
+  mcp: 'mcp',
 } as const;
 
 export type Workspace = BaseModel & BaseWorkspace;
@@ -40,6 +41,8 @@ export const isMockServer = (workspace: Pick<Workspace, 'scope'>) => workspace.s
 
 export const isEnvironment = (workspace: Pick<Workspace, 'scope'>) =>
   workspace.scope === WorkspaceScopeKeys.environment;
+
+export const isMcp = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.mcp;
 
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,
@@ -140,16 +143,16 @@ function _migrateScope(workspace: MigrationWorkspace) {
     workspace.scope === WorkspaceScopeKeys.design ||
     workspace.scope === WorkspaceScopeKeys.collection ||
     workspace.scope === WorkspaceScopeKeys.mockServer ||
-    workspace.scope === WorkspaceScopeKeys.environment
+    workspace.scope === WorkspaceScopeKeys.environment ||
+    workspace.scope === WorkspaceScopeKeys.mcp
   ) {
     return workspace as Workspace;
   }
   // designer and spec => design, unset => collection
-  if (workspace.scope === 'designer' || workspace.scope === 'spec') {
-    workspace.scope = WorkspaceScopeKeys.design;
-  } else {
-    workspace.scope = WorkspaceScopeKeys.collection;
-  }
+  workspace.scope =
+    workspace.scope === 'designer' || workspace.scope === 'spec'
+      ? WorkspaceScopeKeys.design
+      : WorkspaceScopeKeys.collection;
   return workspace as Workspace;
 }
 
@@ -178,6 +181,9 @@ export const scopeToActivity = (scope: WorkspaceScope) => {
     }
     case WorkspaceScopeKeys.environment: {
       return 'environment';
+    }
+    case WorkspaceScopeKeys.mcp: {
+      return 'mcp';
     }
     default: {
       return 'debug';

@@ -1,14 +1,14 @@
 {
   "private": true,
   "name": "insomnia-scripting-environment",
-  "version": "11.6.0",
+  "version": "12.3.0",
   "description": "",
   "main": "src/objects/index.ts",
   "types": "src/objects/index.ts",
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "test": "vitest run",
-    "type-check": "tsc --noEmit --project tsconfig.json"
+    "type-check": "tsc --project tsconfig.json"
   },
   "repository": {
     "type": "git",

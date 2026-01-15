@@ -14,6 +14,7 @@ import type { Workspace } from './workspace';
 export const name = 'Environment';
 export const type = 'Environment';
 export const prefix = 'env';
+export const prefixEnvPair = 'envPair';
 // vault environment path when saved in environment data
 export const vaultEnvironmentPath = '__insomnia_vault';
 // vault environment path when used in runtime rendering
@@ -146,7 +147,7 @@ export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWeb
   try {
     const jsonWebKey = base64decode(encryptedValue, true) as crypt.AESMessage;
     return crypt.decryptAES(symmetricKey, jsonWebKey);
-  } catch (error) {
+  } catch {
     // return origin value if failed to decrypt
     return encryptedValue;
   }

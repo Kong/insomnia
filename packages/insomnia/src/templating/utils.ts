@@ -4,7 +4,7 @@ import { userSession } from '../models';
 import { decryptSecretValue, vaultEnvironmentMaskValue } from '../models/environment';
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
-import objectPath from './third_party/objectPath';
+import objectPath from './third_party/object-path';
 
 /**
  * Get list of paths to all primitive types in nested object
@@ -188,7 +188,7 @@ export function getDefaultFill(name: string, args: NunjucksParsedTagArg[]) {
       return `'${value}'`;
     }
     if (argDefinition.type === 'number') {
-      return `${parseFloat(argDefinition.defaultValue + '') || 0}`;
+      return `${Number.parseFloat(argDefinition.defaultValue + '') || 0}`;
     }
     if (argDefinition.type === 'boolean') {
       return argDefinition.defaultValue ? 'true' : 'false';
@@ -287,7 +287,3 @@ export function extractNunjucksTagFromCoords(
 }
 
 export const responseTagRegex = new RegExp('{% *response *.* %}');
-
-export function sanitizeStrForWin32(str: string) {
-  return str.replace(/\\/g, '\\\\\\\\');
-}

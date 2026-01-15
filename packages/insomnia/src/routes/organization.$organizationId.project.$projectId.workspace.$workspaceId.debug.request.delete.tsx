@@ -2,6 +2,7 @@ import { href, redirect } from 'react-router';
 
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -18,8 +19,14 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   await requestOperations.remove(req);
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
   invariant(workspaceMeta, 'Workspace meta not found');
+
+  window.main.trackSegmentEvent({
+    event: SegmentEvent.requestDeleted,
+  });
+
   if (workspaceMeta.activeRequestId === id) {
     await models.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: null });
+
     if (request.url.includes(id)) {
       return redirect(
         href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {

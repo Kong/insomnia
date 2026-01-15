@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
-import * as reactUse from 'react-use';
+import { useCallback, useEffect, useState } from 'react';
 
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+
+import type { McpEvent } from '../../main/mcp/types';
 import type { CurlEvent } from '../../main/network/curl';
 import type { SocketIOEvent } from '../../main/network/socket-io';
 import type { WebSocketEvent } from '../../main/network/websocket';
@@ -10,28 +12,28 @@ export function useRealtimeConnectionEvents({
   protocol,
 }: {
   responseId: string;
-  protocol: 'curl' | 'webSocket' | 'socketIO';
+  protocol: 'curl' | 'webSocket' | 'socketIO' | 'mcp';
 }) {
-  const [events, setEvents] = useState<CurlEvent[] | WebSocketEvent[] | SocketIOEvent[]>([]);
+  const [events, setEvents] = useState<CurlEvent[] | WebSocketEvent[] | SocketIOEvent[] | McpEvent[]>([]);
+  const updateEvents = useCallback(async () => {
+    const allEvents = await window.main[protocol].event.findMany({ responseId });
+    setEvents(allEvents);
+  }, [responseId, protocol]);
 
   useEffect(() => {
-    setEvents([]);
-  }, [responseId]);
+    updateEvents();
+  }, [updateEvents]);
 
-  // TODO: use main process events instead of polling
-  reactUse.useInterval(() => {
-    let isMounted = true;
-    const fn = async () => {
-      const allEvents = await window.main[protocol].event.findMany({ responseId });
-      if (isMounted) {
-        setEvents(allEvents);
-      }
-    };
-    fn();
+  useEffect(() => {
+    // @ts-expect-error -- we use a dynamic channel here
+    const unsubscribe = window.main.on(`${protocol}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`, () => {
+      // update events when new event message is received
+      updateEvents();
+    });
     return () => {
-      isMounted = false;
+      unsubscribe();
     };
-  }, 500);
+  }, [protocol, responseId, updateEvents]);
 
   return events;
 }

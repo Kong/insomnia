@@ -14,7 +14,7 @@ import { useOrganizationSyncProjectsActionFetcher } from '~/routes/organization.
 import { useOrganizationSyncActionFetcher } from '~/routes/organization.sync';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { avatarImageCache } from '~/ui/hooks/image-cache';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];
@@ -239,11 +239,9 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                   projectId: latestProjectId.current,
                   workspaceId: latestWorkspaceId.current,
                 });
-              } else if (event.type === 'FileChanged' && !latestWorkspaceId.current) {
                 // FileChanged could be a new file has been added, we need to revalidate the workspace list
-                if (!latestInSubmission.current) {
-                  revalidate();
-                }
+              } else if (event.type === 'FileChanged' && !latestWorkspaceId.current && !latestInSubmission.current) {
+                revalidate();
               }
             }
           } catch (e) {

@@ -8,6 +8,8 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
 import { v4 as uuidV4 } from 'uuid';
 
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
@@ -20,6 +22,7 @@ import { filterClientCertificates } from '../../network/certificate';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
+import { insecureReadFile, secureReadFile } from '../secure-read-file';
 
 export interface SocketIOpenEvent {
   _id: string;
@@ -82,8 +85,38 @@ export type SocketIOEvent =
 export type SocketIOEventLog = SocketIOEvent[];
 
 const SocketIOConnections = new Map<string, Socket>();
+const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
+
+const protocolName = 'socketIO';
+const getEventNotificationChannel = (responseId: string) =>
+  `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
+
+const writeEventLogAndNotify = ({
+  requestId,
+  data,
+  clearRequestIdMap = false,
+}: {
+  requestId: string;
+  data: any;
+  clearRequestIdMap?: boolean;
+}) => {
+  eventLogFileStreams.get(requestId)?.write(data, () => {
+    // notify all renderers of new event has been received
+    for (const window of BrowserWindow.getAllWindows()) {
+      const resId = requestIdToResponseIdMap.get(requestId);
+      if (resId) {
+        const notifyChannel = getEventNotificationChannel(resId);
+        notifyChannel && window.webContents.send(notifyChannel);
+        if (clearRequestIdMap) {
+          // clean up maps after last event has been written to file
+          requestIdToResponseIdMap.delete(requestId);
+        }
+      }
+    }
+  });
+};
 
 const buildTimeline = (url: string) => {
   const timeline = [
@@ -117,8 +150,9 @@ const getCertificates = async ({
   const caCert = await models.caCertificate.findByParentId(workspaceId);
   const caCertficatePath = !caCert?.disabled ? caCert?.path : '';
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
+  // allow to read the file as it is chosen by user
   const caCertificate =
-    (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
+    (caCertficatePath && (await insecureReadFile(caCertficatePath))) || tls.rootCertificates.join('\n');
 
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const filteredClientCertificates = filterClientCertificates(clientCertificates, url, 'wss:');
@@ -135,7 +169,7 @@ const getCertificates = async ({
         ?.write(
           JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      pemCertificates.push(fs.readFileSync(cert, 'utf-8'));
+      pemCertificates.push(fs.readFileSync(cert, 'utf8'));
     }
 
     if (key) {
@@ -144,7 +178,7 @@ const getCertificates = async ({
         ?.write(
           JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      pemCertificateKeys.push(fs.readFileSync(key, 'utf-8'));
+      pemCertificateKeys.push(fs.readFileSync(key, 'utf8'));
     }
 
     if (pfx) {
@@ -153,7 +187,7 @@ const getCertificates = async ({
         ?.write(
           JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      pfxCertificates.push(fs.readFileSync(pfx, 'utf-8'));
+      pfxCertificates.push(fs.readFileSync(pfx, 'utf8'));
     }
   });
 
@@ -210,13 +244,13 @@ const openSocketIOConnection = async (
   if (!request) {
     return;
   }
-
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
 
   const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
+  requestIdToResponseIdMap.set(options.requestId, responseId);
 
   // fallback to base environment
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
@@ -230,7 +264,7 @@ const openSocketIOConnection = async (
     if (!options.url) {
       throw new Error('URL is required');
     }
-    const readyStateChannel = `socketIO.${request._id}.readyState`;
+    const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
     const reduceArrayToLowerCaseKeyedDictionary = (
       acc: Record<string, string>,
@@ -294,8 +328,7 @@ const openSocketIOConnection = async (
         type: 'open',
         timestamp: Date.now(),
       };
-
-      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
+      writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(openEvent) + '\n' });
 
       if (!openedEvents.length) {
         const infoEvent: SocketIOInfoEvent = {
@@ -305,7 +338,7 @@ const openSocketIOConnection = async (
           message: 'Add event listeners to receive messages',
           timestamp: Date.now(),
         };
-        eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(infoEvent) + '\n');
+        writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(infoEvent) + '\n' });
       }
 
       const timeline = buildTimeline(url);
@@ -400,7 +433,11 @@ const deleteRequestMaps = async (
   event?: SocketIOCloseEvent | SocketIOErrorEvent,
 ) => {
   if (event) {
-    eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
+    writeEventLogAndNotify({
+      requestId: requestId,
+      data: JSON.stringify(event) + '\n',
+      clearRequestIdMap: true,
+    });
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);
@@ -435,7 +472,7 @@ const sendPayload = async (
         timestamp: Date.now(),
         eventName,
       };
-      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(ackEvent) + '\n');
+      writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(ackEvent) + '\n' });
     });
   }
 
@@ -448,8 +485,7 @@ const sendPayload = async (
     timestamp: Date.now(),
     eventName,
   };
-
-  eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
+  writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(lastMessage) + '\n' });
 };
 
 const sendWebSocketEvent = async (options: {
@@ -494,7 +530,7 @@ const addSocketIOListener = (options: { eventName: string; requestId: string }) 
     timestamp: Date.now(),
     eventName: options.eventName,
   };
-  eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(onEvent) + '\n');
+  writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(onEvent) + '\n' });
 
   socket.on(options.eventName, (...message: any[]) => {
     console.log('received message', message);
@@ -507,8 +543,7 @@ const addSocketIOListener = (options: { eventName: string; requestId: string }) 
       timestamp: Date.now(),
       eventName: options.eventName,
     };
-
-    eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
+    writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(messageEvent) + '\n' });
   });
 };
 
@@ -527,8 +562,7 @@ const removeSocketIOListener = (options: { eventName: string; requestId: string 
     timestamp: Date.now(),
     eventName: options.eventName,
   };
-  eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(offEvent) + '\n');
-
+  writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(offEvent) + '\n' });
   socket.off(options.eventName);
 };
 
@@ -537,10 +571,9 @@ const findMany = async (options: { responseId: string }): Promise<SocketIOEvent[
   if (!response || !response.eventLogPath) {
     return [];
   }
-  const body = await fs.promises.readFile(response.eventLogPath);
+  const body = await secureReadFile(response.eventLogPath);
   return (
     body
-      .toString()
       .split('\n')
       .filter(e => e?.trim())
       // Parse the message

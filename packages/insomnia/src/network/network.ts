@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { join as pathJoin } from 'node:path';
+import nodePath from 'node:path';
 
 import clone from 'clone';
 import orderedJSON from 'json-order';
@@ -154,11 +154,11 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await models.caCertificate.findByParentId(workspaceId);
   const responseId = generateId('res');
-  const responsesDir = pathJoin(
+  const responsesDir = nodePath.join(
     (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
     'responses',
   );
-  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
   return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
@@ -200,8 +200,8 @@ export const fetchRequestData = async (
 
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
-  let activeGlobalEnvironment: Environment | undefined = undefined;
-  let activeGlobalBaseEnvironment: Environment | undefined = undefined;
+  let activeGlobalEnvironment: Environment | undefined;
+  let activeGlobalBaseEnvironment: Environment | undefined;
   if (workspaceMeta?.activeGlobalEnvironmentId) {
     activeGlobalEnvironment = (await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId)) || undefined;
     const activeGlobalEnvironmentParentId = activeGlobalEnvironment?.parentId || '';
@@ -220,12 +220,12 @@ export const fetchRequestData = async (
   const caCert = await models.caCertificate.findByParentId(workspaceId);
 
   const responseId = generateId('res');
-  const responsesDir = pathJoin(
+  const responsesDir = nodePath.join(
     process.env['INSOMNIA_DATA_PATH'] ||
       (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
     'responses',
   );
-  const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
+  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
 
   return {
     request,
@@ -242,6 +242,43 @@ export const fetchRequestData = async (
     timelinePath,
     responseId,
     ancestors,
+  };
+};
+
+export const fetchMcpRequestData = async (mcpRequestId: string) => {
+  const mcpRequest = await models.mcpRequest.getById(mcpRequestId);
+  invariant(mcpRequest, 'failed to find MCP request ' + mcpRequestId);
+
+  const workspace = await models.workspace.getById(mcpRequest.parentId);
+  invariant(workspace, 'failed to find workspace');
+  const workspaceId = workspace._id;
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
+  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  // no active environment in workspaceMeta, fallback to workspace root environment as active environment
+  const environment = activeEnvironment || baseEnvironment;
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
+
+  const settings = await models.settings.get();
+  invariant(settings, 'failed to create settings');
+
+  const responseId = generateId('res');
+  const responsesDir = nodePath.join(
+    process.env['INSOMNIA_DATA_PATH'] ||
+      (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
+    'responses',
+  );
+  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
+
+  return {
+    environment,
+    settings,
+    clientCertificates: [] as ClientCertificate[],
+    caCert: undefined,
+    activeEnvironmentId,
+    timelinePath,
+    responseId,
   };
 };
 
@@ -347,6 +384,10 @@ export const tryToExecutePreRequestScript = async (
     originalRequestGroups,
   });
 
+  const preTestResults: RequestTestResult[] = (mutatedContext.requestTestResults || []).map(result => ({
+    ...result,
+    category: 'pre-request',
+  }));
   return {
     request: mutatedContext.request,
     environment: mutatedContext.environment,
@@ -356,7 +397,7 @@ export const tryToExecutePreRequestScript = async (
     globals: mutatedContext.globals,
     baseGlobals: mutatedContext.baseGlobals,
     cookieJar: mutatedContext.cookieJar,
-    requestTestResults: mutatedContext.requestTestResults,
+    requestTestResults: preTestResults,
     userUploadEnvironment: mutatedContext.userUploadEnvironment,
     execution: mutatedContext.execution,
     transientVariables: mutatedContext.transientVariables,
@@ -446,13 +487,12 @@ export async function savePatchesMadeByScript(patches: {
   });
 }
 
-export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
+const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
   const {
     script,
     request,
     environment,
     timelinePath,
-    responseId,
     baseEnvironment,
     clientCertificates,
     cookieJar,
@@ -477,7 +517,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || isProject(doc))
     .reverse()
     .map(doc => doc.name);
-  let vault = undefined;
+  let vault;
   if (globals && vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
     // decrypt and set vault in insomnia sdk if necessary
     globals.data[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(
@@ -626,21 +666,8 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       timelinePath,
       serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
     );
-
-    const requestId = request._id;
     // stack trace is ignored as it is always from preload
     const errMessage = err.message ? err.message : err;
-    const responsePatch = {
-      _id: responseId,
-      parentId: requestId,
-      environemntId: environment._id,
-      globalEnvironmentId: globals?._id,
-      timelinePath,
-      statusMessage: 'Error',
-      error: errMessage,
-    };
-    const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
-    models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
     return { error: errMessage };
   }
 };
@@ -734,7 +761,12 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
     });
   }
 
-  return postMutatedContext;
+  const postTestResults: RequestTestResult[] = (postMutatedContext?.requestTestResults || []).map(result => ({
+    ...result,
+    category: 'after-response',
+  }));
+
+  return { ...postMutatedContext, requestTestResults: postTestResults };
 }
 
 export const tryToInterpolateRequest = async ({
@@ -828,13 +860,15 @@ export async function sendCurlAndWriteTimeline(
     authentication,
     renderedRequest.settingEncodeUrl,
   );
-  timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
-  timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
-  timeline.push({
-    value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`,
-    name: 'Text',
-    timestamp: Date.now(),
-  });
+  timeline.push(
+    { value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() },
+    { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
+    {
+      value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`,
+      name: 'Text',
+      timestamp: Date.now(),
+    },
+  );
 
   if (!renderedRequest.settingSendCookies) {
     timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
@@ -914,6 +948,7 @@ export async function sendCurlAndWriteTimeline(
   };
 }
 
+// Apply plugins to response
 export const responseTransform = async (
   patch: ResponsePatch,
   environmentId: string | null,

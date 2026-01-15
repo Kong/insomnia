@@ -9,9 +9,10 @@ export default defineConfig({
     env: {
       INSOMNIA_DATA_PATH: tmpdir(),
     },
-    exclude: ['src/routes/**.*.tsx', '.react-router'],
+    exclude: ['src/routes/**.*.tsx', '.react-router', 'node_modules'],
     alias: {
       '~': path.resolve(__dirname, './src'),
+      'electron/main': 'electron',
     },
     server: {
       deps: {

@@ -1,7 +1,7 @@
 import { unlink, writeFileSync } from 'node:fs';
 import fs from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import nodePath from 'node:path';
 
 import chai from 'chai';
 import type { Reporter, ReporterConstructor } from 'mocha';
@@ -126,10 +126,10 @@ const runInternal = async <TReturn, TNetworkResponse>(
  * Copy test to tmp dir and return the file path
  */
 const writeTempFile = (sourceCode: string) => {
-  const root = join(tmpdir(), 'insomnia-testing');
+  const root = nodePath.join(tmpdir(), 'insomnia-testing');
   fs.mkdirSync(root, { recursive: true });
 
-  const path = join(root, `${crypto.randomUUID()}-test.ts`);
+  const path = nodePath.join(root, `${crypto.randomUUID()}-test.ts`);
   writeFileSync(path, sourceCode);
   return path;
 };

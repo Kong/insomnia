@@ -472,7 +472,7 @@ describe('render tests', () => {
         .data({
           hash_input: '{{ orderId }}{{ secret }}',
           hash_input_expected: '123456789012345ThisIsATopSecretValue',
-          orderId: 123456789012345,
+          orderId: 123_456_789_012_345,
           password: "{% hash 'sha512', 'hex', hash_input %}",
           password_expected: "{% hash 'sha512', 'hex', hash_input_expected %}",
           secret: 'ThisIsATopSecretValue',
@@ -482,7 +482,7 @@ describe('render tests', () => {
       expect(context).toEqual({
         hash_input: '123456789012345ThisIsATopSecretValue',
         hash_input_expected: '123456789012345ThisIsATopSecretValue',
-        orderId: 123456789012345,
+        orderId: 123_456_789_012_345,
         password:
           'ea84d15f33d3f9e9098fe01659b1ea0599d345770bba20ba98bf9056676a83ffe6b5528b2451ad04badbf690cf3009a94c510121cc6897045f8bb4ba0826134c',
         password_expected:

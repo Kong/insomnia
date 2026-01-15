@@ -1,14 +1,22 @@
-import { readFile } from 'node:fs/promises';
-
+import orderedJSON from 'json-order';
 import { z, type ZodError } from 'zod/v4';
 
-import type { CurrentPlan } from '~/models/organization';
+import { insecureReadFile } from '~/main/secure-read-file';
+import { isMcpRequest, type McpRequest } from '~/models/mcp-request';
 
+import { type InsomniaImporter } from '../main/importers/convert';
+import type { ImportEntry } from '../main/importers/entities';
+import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';
-import { type BaseEnvironment, type Environment, isEnvironment } from '../models/environment';
+import {
+  type Environment,
+  type EnvironmentKvPairData,
+  EnvironmentKvPairDataType,
+  isEnvironment,
+} from '../models/environment';
 import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
-import { type AllTypes, type BaseModel, getModel, userSession } from '../models/index';
+import { type AllTypes, type BaseModel, getModel } from '../models/index';
 import * as models from '../models/index';
 import { isMockRoute, type MockRoute } from '../models/mock-route';
 import { isGitProject } from '../models/project';
@@ -19,16 +27,15 @@ import { isUnitTest, type UnitTest } from '../models/unit-test';
 import { isUnitTestSuite, type UnitTestSuite } from '../models/unit-test-suite';
 import { isWebSocketRequest, type WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
-import { convert, type InsomniaImporter } from '../utils/importers/convert';
-import type { ImportEntry } from '../utils/importers/entities';
-import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
+import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
 
 export type AllExportTypes =
   | 'request'
+  | 'mcp_request'
   | 'grpc_request'
   | 'websocket_request'
   | 'websocket_payload'
@@ -80,9 +87,8 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     return content;
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
-    const content = await readFile(path, 'utf8');
-
-    return content;
+    // allow reading the file as it is chosen by user
+    return insecureReadFile(path);
   }
   // Treat everything else as raw text
   const content = decodeURIComponent(uri);
@@ -114,12 +120,13 @@ export async function getFilesFromPostmanExportedDataDump(filePath: string): Pro
 export interface ScanResult {
   requests?: (Request | WebSocketRequest | GrpcRequest | SocketIORequest)[];
   workspaces?: Workspace[];
-  environments?: BaseEnvironment[];
+  environments?: Environment[];
   apiSpecs?: ApiSpec[];
   cookieJars?: CookieJar[];
   unitTests?: UnitTest[];
   unitTestSuites?: UnitTestSuite[];
   mockRoutes?: MockRoute[];
+  mcpRequests?: McpRequest[];
   type?: InsomniaImporter;
   oriFileName?: string;
   errors: string[];
@@ -133,8 +140,10 @@ interface ResourceCacheType {
 
 let resourceCacheList: ResourceCacheType[] = [];
 
+// All models that can be exported should be listed here
 export const MODELS_BY_EXPORT_TYPE: Record<AllExportTypes, AllTypes> = {
   request: 'Request',
+  mcp_request: 'McpRequest',
   websocket_payload: 'WebSocketPayload',
   websocket_request: 'WebSocketRequest',
   socketio_payload: 'SocketIOPayload',
@@ -179,7 +188,9 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
             },
           };
         } else {
-          result = (await convert(importEntry)) as unknown as ConvertResult;
+          const processFork =
+            process.type === 'renderer' ? window.main.parseImport : (await import('../main/importers/convert')).convert;
+          result = (await processFork(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {
         if (v5Error) {
@@ -233,6 +244,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
       const workspaces = resources.filter(isWorkspace);
       const cookieJars = resources.filter(isCookieJar);
       const mockRoutes = resources.filter(isMockRoute);
+      const mcpRequests = resources.filter(isMcpRequest);
 
       return {
         type,
@@ -244,6 +256,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
         apiSpecs,
         cookieJars,
         mockRoutes,
+        mcpRequests,
         oriFileName,
         errors: [],
       };
@@ -404,11 +417,6 @@ function filterResourcesInWorkspace(resources: BaseModel[], workspace: Workspace
   return resources.filter(resource => findRootId(resource._id, new Set()) === workspaceId);
 }
 
-const isTeamOrAbove = async () => {
-  const { accountId } = await userSession.getOrCreate();
-  const currentPlan = (JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan) || {};
-  return ['team', 'enterprise', 'enterprise-member'].includes(currentPlan?.type);
-};
 const updateIdsInString = (str: string, ResourceIdMap: Map<string, string>) => {
   let newString = str;
   for (const [idA, idB] of ResourceIdMap.entries()) {
@@ -416,12 +424,8 @@ const updateIdsInString = (str: string, ResourceIdMap: Map<string, string>) => {
   }
   return newString;
 };
-const importRequestWithNewIds = (request: Request, ResourceIdMap: Map<string, string>, canTransform: boolean) => {
-  let transformedRequest = request;
-  if (canTransform) {
-    // if not logged in, this wont run
-    transformedRequest = JSON.parse(updateIdsInString(JSON.stringify(request), ResourceIdMap));
-  }
+const importRequestWithNewIds = (request: Request, ResourceIdMap: Map<string, string>) => {
+  const transformedRequest = JSON.parse(updateIdsInString(JSON.stringify(request), ResourceIdMap));
   return {
     ...transformedRequest,
     _id: ResourceIdMap.get(request._id),
@@ -429,7 +433,13 @@ const importRequestWithNewIds = (request: Request, ResourceIdMap: Map<string, st
   };
 };
 
-export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId: string }) => {
+export const importResourcesToWorkspace = async ({
+  workspaceId,
+  overrideBaseEnvironmentData = true,
+}: {
+  workspaceId: string;
+  overrideBaseEnvironmentData?: boolean;
+}) => {
   invariant(resourceCacheList.length > 0, 'No resources to import');
   for (const resourceCacheItem of resourceCacheList) {
     const resources = resourceCacheItem.resources;
@@ -455,7 +465,55 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
       .filter(isEnvironment)
       .find(env => env.parentId && env.parentId.startsWith('__WORKSPACE_ID__'));
     if (baseEnvironmentFromResources) {
-      await models.environment.update(baseEnvironment, { data: baseEnvironmentFromResources.data });
+      const environmentType = baseEnvironment.environmentType;
+      const originalEnvironmentData = baseEnvironment.data || {};
+      const baseEnvironmentDataFromResources = baseEnvironmentFromResources.data;
+      const newData = overrideBaseEnvironmentData
+        ? {
+            ...originalEnvironmentData,
+            ...baseEnvironmentDataFromResources,
+          }
+        : {
+            ...baseEnvironmentDataFromResources,
+            ...originalEnvironmentData,
+          };
+      const { object, map } = orderedJSON.parse(JSON.stringify(newData), JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR);
+      if (environmentType === 'kv') {
+        const originKVPairData = baseEnvironment.kvPairData || [];
+        const originKVPairDataNames = originKVPairData.map(pair => pair.name);
+        const newKvPairs: EnvironmentKvPairData[] = [...originKVPairData];
+        Object.keys(newData).forEach(key => {
+          if (originKVPairDataNames.includes(key)) {
+            // update existing kv pair value
+            const originValue = originalEnvironmentData[key];
+            // find the kv pair with the same name and value in case duplicate names with different values exist
+            const index = newKvPairs.findIndex(pair => pair.name === key && pair.value === originValue);
+            newKvPairs[index] = {
+              ...newKvPairs[index],
+              value: newData[key],
+            };
+          } else {
+            // Create new kv pair since it does not exist in origin
+            newKvPairs.push({
+              id: generateId(models.environment.prefixEnvPair),
+              name: key,
+              value: newData[key],
+              type: EnvironmentKvPairDataType.STRING,
+              enabled: true,
+            });
+          }
+        });
+        await models.environment.update(baseEnvironment, {
+          kvPairData: newKvPairs,
+          data: object,
+          dataPropertyOrder: map || null,
+        });
+      } else {
+        await models.environment.update(baseEnvironment, {
+          data: object,
+          dataPropertyOrder: map || null,
+        });
+      }
     }
     const subEnvironments = resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
 
@@ -475,7 +533,6 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
       model && ResourceIdMap.set(resource._id, generateId(model.prefix));
     }
 
-    const canTransform = await isTeamOrAbove();
     // Preserve optionalResource relationships
     for (const resource of optionalResources) {
       const model = getModel(resource.type);
@@ -498,7 +555,7 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
             parentId: ResourceIdMap.get(resource.parentId),
           });
         } else if (isRequest(resource)) {
-          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap, canTransform));
+          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap));
         } else {
           await db.docCreate(model.type, {
             ...resource,
@@ -594,7 +651,6 @@ export const importResourcesToNewWorkspace = async ({
       model && ResourceIdMap.set(resource._id, generateId(model.prefix));
     }
 
-    const canTransform = await isTeamOrAbove();
     for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
       const model = getModel(resource.type);
 
@@ -619,7 +675,7 @@ export const importResourcesToNewWorkspace = async ({
             parentId: newParentId,
           });
         } else if (isRequest(resource)) {
-          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap, canTransform));
+          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap));
         } else {
           await db.docCreate(model.type, {
             ...resource,

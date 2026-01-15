@@ -44,8 +44,8 @@ export enum SegmentEvent {
   kongConnected = 'Kong Connected',
   kongSync = 'Kong Synced',
   requestBodyTypeSelect = 'Request Body Type Selected',
-  requestCreate = 'Request Created',
-  requestExecute = 'Request Executed',
+  requestCreated = 'Request Created',
+  requestExecuted = 'Request Executed',
   collectionRunExecute = 'Collection Run Executed',
   projectLocalCreate = 'Local Project Created',
   projectLocalDelete = 'Local Project Deleted',
@@ -58,7 +58,19 @@ export enum SegmentEvent {
   vcsSyncStart = 'VCS Sync Started',
   vcsSyncComplete = 'VCS Sync Completed',
   vcsAction = 'VCS Action Executed',
+  gitAuthenticationCompleted = 'Git Authentication Completed',
   buttonClick = 'Button Clicked',
+  aiFeatureEnabled = 'AI Feature Enabled',
+  aiFeatureDisabled = 'AI Feature Disabled',
+  mcpClientConnected = 'MCP Client Connected',
+  mcpClientDisconnected = 'MCP Client Disconnected',
+  mcpToolCalled = 'MCP Tool Called',
+  mcpResourceRead = 'MCP Resource Read',
+  mcpPromptCalled = 'MCP Prompt Called',
+  // TODO(INS-1912): Remove in 12.5
+  tempOrganizationOpened = 'temp_organization_opened',
+  tempProjectOpened = 'temp_project_opened',
+  installPlugin = 'Plugin Installed',
 }
 
 function hashString(input: string) {

@@ -4,10 +4,10 @@ import {
   pushSnapshotOnInitialize,
 } from '../../sync/vcs/initialize-backend-project';
 import type { VCS } from '../../sync/vcs/vcs';
-import { insomniaFetch } from '../../ui/insomniaFetch';
+import { insomniaFetch } from '../../ui/insomnia-fetch';
 import { invariant } from '../../utils/invariant';
 import { isDefaultOrganizationProject, type Project, update as updateProject } from '../project';
-import type { Workspace } from '../workspace';
+import { type Workspace } from '../workspace';
 import { getOrCreateByParentId as getOrCreateWorkspaceMeta } from '../workspace-meta';
 export const sortProjects = (projects: Project[]) => [
   ...projects.filter(p => isDefaultOrganizationProject(p)).sort((a, b) => a.name.localeCompare(b.name)),

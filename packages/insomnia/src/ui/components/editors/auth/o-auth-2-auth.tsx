@@ -11,6 +11,7 @@ import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,
   GRANT_TYPE_IMPLICIT,
+  GRANT_TYPE_MCP_AUTH_FLOW,
   GRANT_TYPE_PASSWORD,
   PKCE_CHALLENGE_PLAIN,
   PKCE_CHALLENGE_S256,
@@ -55,6 +56,14 @@ const grantTypeOptions = [
   {
     name: 'Client Credentials',
     value: GRANT_TYPE_CLIENT_CREDENTIALS,
+  },
+];
+
+const grantTypeOptionsWithMcpAuthFlow = [
+  ...grantTypeOptions,
+  {
+    name: 'MCP Auth Flow',
+    value: GRANT_TYPE_MCP_AUTH_FLOW,
   },
 ];
 
@@ -126,21 +135,28 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
       getAutocompleteConstants={getAccessTokenUrls}
     />
   );
-  const redirectUri = (
+  const defaultRedirectUri = (
     <AuthInputRow
       label="Redirect URL"
       property="redirectUrl"
       key="redirectUrl"
       help={
-        authentication.useDefaultBrowser
-          ? 'The callback URL is provided by Insomnia and cannot be modified when authorizing via the default browser.'
-          : 'This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL.'
+        'This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL.'
       }
-      disabled={authentication.useDefaultBrowser}
-      overrideValueWhenDisabled={getOauthRedirectUrl()}
-      copyBtn={authentication.useDefaultBrowser}
     />
   );
+  const readonlyRedirectUri = (
+    <AuthInputRow
+      label="Redirect URL"
+      property="redirectUrl"
+      key="redirectUrl"
+      help={'The callback URL is provided by Insomnia and cannot be modified when authorizing via the default browser.'}
+      disabled
+      overrideValueWhenDisabled={getOauthRedirectUrl()}
+      copyBtn
+    />
+  );
+  const redirectUri = authentication.useDefaultBrowser ? readonlyRedirectUri : defaultRedirectUri;
   const useDefaultBrowser = (
     <AuthToggleRow
       label="Using default browser"
@@ -204,6 +220,8 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
     authorizationUrl,
     accessTokenUrl,
     redirectUri,
+    defaultRedirectUri,
+    readonlyRedirectUri,
     useDefaultBrowser,
     state,
     scope,
@@ -227,6 +245,8 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
     authorizationUrl,
     accessTokenUrl,
     redirectUri,
+    defaultRedirectUri,
+    readonlyRedirectUri,
     useDefaultBrowser,
     state,
     scope,
@@ -267,9 +287,12 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
 
     advanced = [scope, credentialsInBody, tokenPrefix, audience];
   } else if (grantType === GRANT_TYPE_IMPLICIT) {
-    basic = [authorizationUrl, clientId, redirectUri];
+    basic = [authorizationUrl, clientId, defaultRedirectUri];
 
     advanced = [responseType, scope, state, tokenPrefix, audience];
+  } else if (grantType === GRANT_TYPE_MCP_AUTH_FLOW) {
+    basic = [clientId, clientSecret, readonlyRedirectUri];
+    advanced = [state, scope];
   }
 
   return {
@@ -278,18 +301,46 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
   };
 };
 
-export const OAuth2Auth: FC = () => {
+export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: boolean; disabled?: boolean }) => {
   const reqData = useRequestLoaderData() as RequestLoaderData;
   const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const { authentication } = reqData?.activeRequest || groupData.activeRequestGroup;
 
   const { basic, advanced } = getFieldsForGrantType(authentication as AuthTypeOAuth2);
 
+  if ('grantType' in authentication && authentication.grantType === GRANT_TYPE_MCP_AUTH_FLOW) {
+    return (
+      <>
+        <AuthTableBody>
+          <AuthToggleRow label="Enabled" property="disabled" invert disabled={disabled} />
+          <AuthSelectRow
+            label="Grant Type"
+            property="grantType"
+            disabled={disabled}
+            options={showMcpAuthFlow ? grantTypeOptionsWithMcpAuthFlow : grantTypeOptions}
+          />
+          {basic}
+          <AuthAccordion accordionKey="OAuth2AdvancedOptions" label="Advanced Options">
+            {advanced}
+          </AuthAccordion>
+        </AuthTableBody>
+        <div className="pad">
+          <OAuth2Tokens hideRefresh />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <AuthTableBody>
-        <AuthToggleRow label="Enabled" property="disabled" invert />
-        <AuthSelectRow label="Grant Type" property="grantType" options={grantTypeOptions} />
+        <AuthToggleRow label="Enabled" property="disabled" invert disabled={disabled} />
+        <AuthSelectRow
+          label="Grant Type"
+          property="grantType"
+          disabled={disabled}
+          options={showMcpAuthFlow ? grantTypeOptionsWithMcpAuthFlow : grantTypeOptions}
+        />
         {basic}
         <AuthAccordion accordionKey="OAuth2AdvancedOptions" label="Advanced Options">
           {advanced}
@@ -299,7 +350,7 @@ export const OAuth2Auth: FC = () => {
               <td className="wide">
                 <div className="pad-top text-right">
                   <button
-                    className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                    className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                     onClick={initNewOAuthSession}
                   >
                     Clear OAuth 2 session
@@ -321,8 +372,9 @@ export const OAuth2Auth: FC = () => {
   Which is the epoch millisecond representation. (trims last 2 digits)
 */
 export function convertEpochToMilliseconds(epoch: number) {
+  epoch = Math.floor(epoch);
   const expDigitCount = epoch.toString().length;
-  return parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
+  return Number.parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
 }
 const renderIdentityTokenExpiry = (token?: Pick<OAuth2Token, 'identityToken'>) => {
   if (!token || !token.identityToken) {
@@ -334,7 +386,7 @@ const renderIdentityTokenExpiry = (token?: Pick<OAuth2Token, 'identityToken'>) =
 
   try {
     decodedString = window.atob(base64Url);
-  } catch (error) {
+  } catch {
     return;
   }
 
@@ -382,11 +434,9 @@ const OAuth2TokenInput: FC<{
   const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const { _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const onChange = async ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => {
-    if (token) {
-      await models.oAuth2Token.update(token, { [property]: value });
-    } else {
-      await models.oAuth2Token.create({ [property]: value, parentId: _id });
-    }
+    await (token
+      ? models.oAuth2Token.update(token, { [property]: value })
+      : models.oAuth2Token.create({ [property]: value, parentId: _id }));
   };
 
   const expiryLabel = useMemo(() => {
@@ -455,7 +505,7 @@ const OAuth2Error: FC<{ token?: OAuth2Token }> = ({ token }) => {
   return debugButton;
 };
 
-const OAuth2Tokens: FC = () => {
+const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
   const reqData = useRequestLoaderData() as RequestLoaderData;
   const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
@@ -486,7 +536,7 @@ const OAuth2Tokens: FC = () => {
       <div className="pad-top text-right">
         {token ? (
           <button
-            className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+            className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
             disabled={!token}
             onClick={() => {
               if (token) {
@@ -498,32 +548,33 @@ const OAuth2Tokens: FC = () => {
             Clear
           </button>
         ) : null}
-        &nbsp;&nbsp;
-        <button
-          className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
-          onClick={async () => {
-            setError('');
-            setLoading(true);
+        {!hideRefresh && (
+          <button
+            className="ml-2 h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
+            onClick={async () => {
+              setError('');
+              setLoading(true);
 
-            try {
-              const renderedAuthentication = (await handleRender(authentication)) as AuthTypeOAuth2;
-              const t = await getOAuth2Token(_id, renderedAuthentication, true);
-              setToken(t);
-              setLoading(false);
-            } catch (err) {
-              // Clear existing tokens if there's an error
-              if (token) {
-                setToken(undefined);
-                models.oAuth2Token.remove(token);
+              try {
+                const renderedAuthentication = (await handleRender(authentication)) as AuthTypeOAuth2;
+                const t = await getOAuth2Token(_id, renderedAuthentication, true);
+                setToken(t);
+                setLoading(false);
+              } catch (err) {
+                // Clear existing tokens if there's an error
+                if (token) {
+                  setToken(undefined);
+                  models.oAuth2Token.remove(token);
+                }
+                setError(err.message);
+                setLoading(false);
               }
-              setError(err.message);
-              setLoading(false);
-            }
-          }}
-          disabled={loading}
-        >
-          {loading ? (token ? 'Refreshing...' : 'Fetching...') : token ? 'Refresh Token' : 'Fetch Tokens'}
-        </button>
+            }}
+            disabled={loading}
+          >
+            {loading ? (token ? 'Refreshing...' : 'Fetching...') : token ? 'Refresh Token' : 'Fetch Tokens'}
+          </button>
+        )}
       </div>
     </div>
   );

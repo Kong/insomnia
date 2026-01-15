@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
 import { analyzeMetafile, build, type BuildOptions, context } from 'esbuild';
+
 const isProd = Boolean(process.env.NODE_ENV === 'production');
 const watch = Boolean(process.env.ESBUILD_WATCH);
 const isDebug = Boolean(process.env.DEBUG);
@@ -15,6 +16,9 @@ const config: BuildOptions = {
   sourcemap: true,
   format: 'cjs',
   tsconfig: 'tsconfig.json',
+  alias: {
+    electron: '../insomnia/send-request/electron',
+  },
   plugins: [
     // taken from https://github.com/tjx666/awesome-vscode-extension-boilerplate/blob/main/scripts/esbuild.ts
     {
@@ -36,6 +40,7 @@ const config: BuildOptions = {
     'process.env.VERSION': JSON.stringify(isProd ? version : 'dev'),
     '__DEV__': JSON.stringify(!isProd),
   },
+  // node-llama-cpp is not included here because inso does not need it
   external: ['@getinsomnia/node-libcurl', 'fsevents', 'mocha'],
   entryPoints: ['./src/index.ts'],
 };

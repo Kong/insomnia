@@ -1,6 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import {
   exportGlobalEnvironmentToFile,
+  exportMcpClientToFile,
   exportMockServerToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
 import { type FC, type ReactNode, useCallback, useEffect, useState } from 'react';
@@ -31,7 +32,7 @@ import * as models from '../../../models';
 import { isRemoteProject } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
-import { isScratchpad, type Workspace } from '../../../models/workspace';
+import { isMcp, isScratchpad, type Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -39,6 +40,7 @@ import * as pluginData from '../../../plugins/context/data';
 import * as pluginNetwork from '../../../plugins/context/network';
 import * as pluginStore from '../../../plugins/context/store';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useMockServerGenerateRequestCollectionActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.generate-request-collection';
 import { invariant } from '../../../utils/invariant';
 import { SegmentEvent } from '../../analytics';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -71,6 +73,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
+  const generateCollectionFetcher = useMockServerGenerateRequestCollectionActionFetcher();
 
   // after duplicate workspace, close the modal
   useEffect(() => {
@@ -187,55 +190,63 @@ export const WorkspaceDropdown: FC<{}> = () => {
       action: () => void;
     }[];
   }[] = [
-    {
-      name: 'Import',
-      id: 'import',
-      icon: 'cog',
-      items: [
-        {
-          id: 'from-file',
-          name: 'From File',
-          icon: <Icon icon="file-import" />,
-          action: () => {
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.importStarted,
-              properties: {
-                source: `${activeWorkspace.scope}-menu`,
+    ...(isMcp(activeWorkspace)
+      ? []
+      : [
+          {
+            name: 'Import',
+            id: 'import',
+            icon: 'cog' as IconName,
+            items: [
+              {
+                id: 'from-file',
+                name: 'From File',
+                icon: <Icon icon="file-import" />,
+                action: () => {
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.importStarted,
+                    properties: {
+                      source: `${activeWorkspace.scope}-menu`,
+                    },
+                  });
+                  setIsImportModalOpen(true);
+                },
               },
-            });
-            setIsImportModalOpen(true);
+            ],
           },
-        },
-      ],
-    },
-    {
-      name: 'Runner',
-      id: 'runner',
-      icon: 'circle-play',
-      items: [
-        {
-          id: 'run',
-          name: 'Run Collection',
-          icon: <Icon icon="circle-play" />,
-          action: () => {
-            navigate(
-              `/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner?folder=`,
-            );
+          {
+            name: 'Runner',
+            id: 'runner',
+            icon: 'circle-play' as const,
+            items: [
+              {
+                id: 'run',
+                name: 'Run Collection',
+                icon: <Icon icon="circle-play" />,
+                action: () => {
+                  navigate(
+                    `/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner?folder=`,
+                  );
+                },
+              },
+            ],
           },
-        },
-      ],
-    },
+        ]),
     {
       name: 'Actions',
       id: 'actions',
       icon: 'cog',
       items: [
-        {
-          id: 'duplicate',
-          name: 'Duplicate',
-          icon: <Icon icon="bars" />,
-          action: () => setIsDuplicateModalOpen(true),
-        },
+        ...(isMcp(activeWorkspace)
+          ? []
+          : [
+              {
+                id: 'duplicate',
+                name: 'Duplicate',
+                icon: <Icon icon="bars" />,
+                action: () => setIsDuplicateModalOpen(true),
+              },
+            ]),
         {
           id: 'rename',
           name: 'Rename',
@@ -275,9 +286,29 @@ export const WorkspaceDropdown: FC<{}> = () => {
               return exportGlobalEnvironmentToFile(activeWorkspace);
             }
 
+            if (activeWorkspace.scope === 'mcp') {
+              return exportMcpClientToFile(activeWorkspace);
+            }
+
             return setIsExportModalOpen(true);
           },
         },
+        ...(activeWorkspace.scope === 'mock-server'
+          ? [
+              {
+                id: 'generate-collection',
+                name: 'Generate Collection',
+                icon: <Icon icon="code" />,
+                action: () => {
+                  generateCollectionFetcher.submit({
+                    organizationId,
+                    projectId: activeWorkspace.parentId,
+                    workspaceId: activeWorkspace._id,
+                  });
+                },
+              },
+            ]
+          : []),
         {
           id: 'settings',
           name: 'Settings',
@@ -315,7 +346,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
         <Button
           aria-label="Workspace actions"
           data-testid="workspace-context-dropdown"
-          className="flex h-7 flex-1 items-center justify-center gap-2 truncate rounded-sm px-3 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="flex h-7 flex-1 items-center justify-center gap-2 truncate rounded-xs px-3 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
           <span className="truncate" title={activeWorkspace.name}>
             {activeWorkspace.name}
@@ -333,11 +364,11 @@ export const WorkspaceDropdown: FC<{}> = () => {
                 ?.action()
             }
             items={actionlist}
-            className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
           >
             {section => (
               <MenuSection className="flex flex-1 flex-col">
-                <Header className="flex items-center gap-2 py-1 pl-2 text-xs uppercase text-[--hl]">
+                <Header className="flex items-center gap-2 py-1 pl-2 text-xs text-(--hl) uppercase">
                   <Icon icon={section.icon} /> <span>{section.name}</span>
                 </Header>
                 <Collection items={section.items}>
@@ -345,7 +376,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
                     <MenuItem
                       key={item.id}
                       id={item.id}
-                      className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                      className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                       aria-label={item.name}
                     >
                       {item.icon}
@@ -392,21 +423,21 @@ export const WorkspaceDropdown: FC<{}> = () => {
             setIsDeleteRemoteWorkspaceModalOpen(false);
           }}
           isDismissable
-          className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+          className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
         >
           <Modal
             onOpenChange={() => {
               setIsDeleteRemoteWorkspaceModalOpen(false);
             }}
-            className="max-h-full w-full max-w-2xl rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
+            className="max-h-full w-full max-w-2xl rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
           >
-            <Dialog className="outline-none">
+            <Dialog className="outline-hidden">
               {({ close }) => (
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between gap-2">
                     <Heading className="text-2xl">Delete {getWorkspaceLabel(activeWorkspace).singular}</Heading>
                     <Button
-                      className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                       onPress={close}
                     >
                       <Icon icon="x" />
@@ -432,7 +463,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
                     <div className="flex justify-end">
                       <Button
                         type="submit"
-                        className="rounded-sm border border-solid border-[--hl-md] bg-[--color-danger] px-3 py-2 text-[--color-font-danger] transition-colors hover:bg-opacity-90 hover:no-underline"
+                        className="rounded-xs border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90 hover:no-underline"
                       >
                         Delete
                       </Button>

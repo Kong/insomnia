@@ -1,0 +1,59 @@
+/* 
+Some extral elements are added by the merge addon of codemirror,
+but the addon only provides a light theme, so we add a dark theme here.
+*/
+.dark-merge-editor .CodeMirror-merge {
+  border: 1px solid #444;
+}
+.dark-merge-editor .CodeMirror-merge-gap {
+  border-left: 1px solid #333;
+  border-right: 1px solid #333;
+  background: #252526;
+}
+.dark-merge-editor .CodeMirror-merge-scrolllock {
+  color: #888;
+}
+.dark-merge-editor .CodeMirror-merge-copy,
+.dark-merge-editor .CodeMirror-merge-copy-reverse {
+  color: #5cb6ff;
+}
+.dark-merge-editor .CodeMirror-merge-r-chunk {
+  background: rgba(255, 255, 0, 0.1);
+}
+.dark-merge-editor .CodeMirror-merge-r-chunk-start {
+  border-top: 1px solid #c9b458;
+}
+.dark-merge-editor .CodeMirror-merge-r-chunk-end {
+  border-bottom: 1px solid #c9b458;
+}
+.dark-merge-editor .CodeMirror-merge-r-connect {
+  fill: rgba(255, 255, 0, 0.1);
+  stroke: #c9b458;
+}
+.dark-merge-editor .CodeMirror-merge-l-chunk {
+  background: rgba(100, 149, 237, 0.15);
+}
+.dark-merge-editor .CodeMirror-merge-l-chunk-start {
+  border-top: 1px solid #6495ed;
+}
+.dark-merge-editor .CodeMirror-merge-l-chunk-end {
+  border-bottom: 1px solid #6495ed;
+}
+.dark-merge-editor .CodeMirror-merge-l-connect {
+  fill: rgba(100, 149, 237, 0.15);
+  stroke: #6495ed;
+}
+.dark-merge-editor .CodeMirror-merge-l-chunk.CodeMirror-merge-r-chunk {
+  background: rgba(76, 175, 80, 0.15);
+}
+.dark-merge-editor .CodeMirror-merge-l-chunk-start.CodeMirror-merge-r-chunk-start {
+  border-top: 1px solid #4caf50;
+}
+.dark-merge-editor .CodeMirror-merge-l-chunk-end.CodeMirror-merge-r-chunk-end {
+  border-bottom: 1px solid #4caf50;
+}
+.dark-merge-editor .CodeMirror-merge-collapsed-widget {
+  color: #aab;
+  background: #2a2d2e;
+  border: 1px solid #3a3d3e;
+}

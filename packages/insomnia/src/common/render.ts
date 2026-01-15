@@ -9,6 +9,7 @@ import {
   vaultEnvironmentRuntimePath,
 } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
+import type { McpRequest } from '../models/mcp-request';
 import { isProject } from '../models/project';
 import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
@@ -140,20 +141,13 @@ export async function buildRenderContext({
       if (Object.prototype.toString.call(subObject[key]) === '[object String]') {
         const isSelfRecursive = subObject[key].match(`{{ ?${key}[ |][^}]*}}`);
 
-        if (isSelfRecursive) {
-          // If we're overwriting a variable that contains itself, make sure we
-          // render it first
-          subContext[key] = await render(
-            subObject[key],
-            subContext, // Only render with key being overwritten
-            null,
-            'keep',
-            'Environment',
-          );
-        } else {
-          // Otherwise it's just a regular replacement
-          subContext[key] = subObject[key];
-        }
+        // If we're overwriting a variable that contains itself, make sure we
+        // render it first
+        // Only render with key being overwritten
+        // Otherwise it's just a regular replacement
+        subContext[key] = isSelfRecursive
+          ? await render(subObject[key], subContext, null, 'keep', 'Environment')
+          : subObject[key];
       } else if (Object.prototype.toString.call(subContext[key]) === '[object Object]') {
         // Context is of Type object, Call this function recursively to handle nested objects.
         subContext[key] = await renderSubContext(subObject[key], subContext[key]);
@@ -580,7 +574,7 @@ export async function getRenderedRequestAndContext({
       o.query = o.query.replace(/#}/g, '# }');
       request.body.text = JSON.stringify(o);
     }
-  } catch (err) {}
+  } catch {}
 
   // Render description separately because it's lower priority
   const description = request.description;
@@ -704,12 +698,13 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): st
 }
 
 export async function getRenderContextAncestors(
-  base?: Request | GrpcRequest | WebSocketRequest | SocketIORequest | RequestGroup | Workspace,
+  base?: Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest | RequestGroup | Workspace,
 ): Promise<RenderContextAncestor[]> {
   return await db.withAncestors<RenderContextAncestor>(base, [
     models.request.type,
     models.grpcRequest.type,
     models.webSocketRequest.type,
+    models.mcpRequest.type,
     models.requestGroup.type,
     models.workspace.type,
     models.project.type,

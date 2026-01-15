@@ -1,11 +1,13 @@
 import { href, redirect } from 'react-router';
 
+import { database } from '~/common/database';
+import { isNotNullOrUndefined } from '~/common/misc';
 import { projectLock } from '~/common/project';
 import * as models from '~/models';
-import type { GitCredentials, OauthProviderName } from '~/models/git-repository';
-import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
+import { EMPTY_GIT_PROJECT_ID, type Project } from '~/models/project';
 import { SegmentEvent } from '~/ui/analytics';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { showToast } from '~/ui/components/toast-notification';
+import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -19,15 +21,39 @@ export interface CreateProjectActionResult {
 export interface CreateProjectData {
   name: string;
   storageType: 'local' | 'remote' | 'git';
-  authorName?: string;
-  authorEmail?: string;
   uri?: string;
-  username?: string;
-  password?: string;
-  token?: string;
-  oauth2format?: OauthProviderName;
+  credentialsId?: string | null;
   connectRepositoryLater?: boolean;
+  ref?: string;
 }
+
+export const reportGitProjectCount = async (organizationId: string, sessionId: string, maxRetries = 3) => {
+  const projects = await database.find<Project>(models.project.type, {
+    parentId: organizationId,
+  });
+  const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
+  const gitProjectsCount = gitRepositoryIds.length;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await insomniaFetch({
+        method: 'PATCH',
+        path: `/v1/organizations/${organizationId}/git-projects`,
+        sessionId,
+        onlyResolveOnSuccess: true,
+        data: {
+          count: gitProjectsCount,
+        },
+      });
+      return;
+    } catch {
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+      }
+    }
+  }
+
+  console.warn('Report git project count failed');
+};
 
 export const createProject = async (organizationId: string, newProjectData: CreateProjectData) => {
   const createProjectImpl = async (organizationId: string, newProjectData: CreateProjectData) => {
@@ -51,46 +77,24 @@ export const createProject = async (organizationId: string, newProjectData: Crea
           parentId: organizationId,
           gitRepositoryId: EMPTY_GIT_PROJECT_ID,
         });
+        reportGitProjectCount(organizationId, sessionId);
 
         return project._id;
       }
 
-      let credentials: GitCredentials | undefined = undefined;
-      if (newProjectData.oauth2format === 'custom') {
-        credentials = {
-          username: newProjectData.username || '',
-          password: newProjectData.token || '',
-        };
-      } else if (newProjectData.oauth2format) {
-        credentials = {
-          oauth2format: newProjectData.oauth2format,
-          token: newProjectData.token || '',
-          username: newProjectData.username || '',
-        };
-      } else if (newProjectData.username && newProjectData.password) {
-        credentials = {
-          username: newProjectData.username,
-          password: newProjectData.password,
-        };
-      }
-
+      invariant(newProjectData.credentialsId, 'Credentials ID is required for Git project creation');
       const { projectId, errors } = await window.main.git.cloneGitRepo({
         organizationId,
         uri: newProjectData.uri || '',
-        author: {
-          name: newProjectData.authorName || '',
-          email: newProjectData.authorEmail || '',
-        },
+        credentialsId: newProjectData.credentialsId,
         name: newProjectData.name,
-        credentials: credentials || {
-          username: '',
-          password: '',
-        },
+        ref: newProjectData.ref || '',
       });
 
       if (errors) {
         throw new Error(errors.join(', '));
       }
+      reportGitProjectCount(organizationId, sessionId);
 
       return projectId;
     }
@@ -141,13 +145,28 @@ export const createProject = async (organizationId: string, newProjectData: Crea
   };
 
   const newProjectId = await projectLock.wrapWithLock(createProjectImpl)(organizationId, newProjectData);
+
+  let git_provider = 'none';
+
+  if (newProjectData.credentialsId) {
+    const credentials = await models.gitCredentials.getById(newProjectData.credentialsId);
+    if (credentials) {
+      git_provider = credentials.provider;
+    }
+  }
+
   window.main.trackSegmentEvent({
     event: SegmentEvent.projectCreated,
     properties: {
       storage: newProjectData.storageType,
+      git_provider,
     },
   });
 
+  showToast({
+    title: 'Project created',
+    status: 'success',
+  });
   return newProjectId;
 };
 

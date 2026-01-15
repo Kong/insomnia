@@ -381,6 +381,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           event.preventDefault();
           const pluginTemplateTags = (await getTemplateTags()).map(tag => ({
             // Skip unsupported objects like functions in template tag to send in IPC
+            // eslint-disable-next-line unicorn/prefer-structured-clone
             templateTag: JSON.parse(JSON.stringify(tag.templateTag)),
           }));
           const target = event.target as HTMLElement;
