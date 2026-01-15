@@ -60,12 +60,11 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
   private async updateAuthentication(auth: Partial<RequestAuthentication>) {
     const mcpRequest = await models.mcpRequest.getById(this.requestId);
     invariant(mcpRequest, 'MCP Request not found');
-    const newAuthentication = {
-      ...mcpRequest.authentication,
-      ...auth,
-    };
     await models.mcpRequest.update(mcpRequest, {
-      authentication: newAuthentication,
+      authentication: {
+        ...mcpRequest.authentication,
+        ...auth,
+      },
     });
     // update local authentication copy
     this.authentication = {
@@ -112,7 +111,6 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     return;
   }
   async saveClientInformation(clientInformation: OAuthClientInformationFull) {
-    console.log('saveClientInformation called with', clientInformation);
     const parsedClientInformation = OAuthClientInformationSchema.parse(clientInformation);
     await this.updateAuthentication({
       clientId: parsedClientInformation.client_id,
