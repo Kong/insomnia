@@ -121,9 +121,7 @@ export default class BaseExtension {
             userInfo: os.userInfo(),
           };
         },
-        readFile: async (path: string) => {
-          return window.main.secureReadFile({ path });
-        },
+        readFile: async (path: string) => window.main.secureReadFile({ path }),
         decode: async (buffer: Buffer, encoding = 'utf8') => iconv.decode(buffer, encoding),
         encode: async (input: string, encoding: BinaryToTextEncoding) =>
           crypto.createHash('md5').update(input).digest(encoding),
