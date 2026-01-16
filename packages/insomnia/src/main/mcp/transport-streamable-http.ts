@@ -45,7 +45,7 @@ export const createStreamableHTTPTransport = async (
     requestInit: {
       headers: lowerCasedEnabledHeaders,
     },
-    fetch: (url, init) => wrappedFetch(url, init || {}, context, options, authProvider),
+    fetch: (url, init) => wrappedFetch(url, init || {}, context, authProvider),
     reconnectionOptions: {
       maxReconnectionDelay: 30_000,
       initialReconnectionDelay: 1000,
@@ -79,11 +79,10 @@ const wrappedFetch = async (
   url: string | URL,
   init: RequestInit,
   context: ConnectionContext,
-  connectionOptions: OpenMcpHTTPClientConnectionOptions,
   authProvider: McpOAuthClientProvider,
   calledByAuth?: boolean,
 ) => {
-  const { requestId, responseId, environmentId, timelinePath, eventLogPath } = context;
+  const { requestId, responseId, environmentId, timelinePath, eventLogPath, options } = context;
   const { method = 'GET' } = init;
 
   const reqHeader = new Headers(init?.headers || {});
@@ -146,8 +145,8 @@ const wrappedFetch = async (
   // DELETE method is used to terminate the MCP request, it should not trigger auth flow to keep consistent with the SDK behavior.
   // See: https://github.com/modelcontextprotocol/typescript-sdk/blob/058b87c163996b31d5cda744085ecf3c13c5c56a/src/client/streamableHttp.ts#L529-L537
   if (!calledByAuth && statusCode === 401 && method !== 'DELETE') {
+    const { authentication } = options as OpenMcpHTTPClientConnectionOptions;
     // use authentication from connection options rather than from db directly to get rendered values
-    const { authentication } = connectionOptions;
     // By default no authentication is set, authentication is an empty object. Proceed to oauth workflow.
     const isDefaultAuth = !('type' in authentication);
     // Continue to oauth workflow only when the auth type is mcp oauth and enable it.
@@ -278,7 +277,7 @@ const wrappedFetch = async (
       // cleanup the oauth client provider listener
       unsubscribe();
     }
-    return await wrappedFetch(url, init, context, connectionOptions, authProvider, true);
+    return await wrappedFetch(url, init, context, authProvider, true);
   }
   return response;
 };
