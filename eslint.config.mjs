@@ -237,14 +237,6 @@ export default defineConfig([
           name: 'document',
           message: '"document" is not available in main process.',
         },
-        {
-          name: 'navigator',
-          message: '"navigator" is not available in main process.',
-        },
-        {
-          name: 'localStorage',
-          message: '"localStorage" is not available in main process.',
-        },
       ],
     },
   },
