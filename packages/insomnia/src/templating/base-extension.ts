@@ -8,7 +8,6 @@ import { jarFromCookies } from '~/common/cookies';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import { database as db } from '../common/database';
-import { secureReadFile } from '../main/secure-read-file';
 import * as models from '../models/index';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
@@ -123,7 +122,7 @@ export default class BaseExtension {
           };
         },
         readFile: async (path: string) => {
-          return secureReadFile(path);
+          return window.main.secureReadFile({ path });
         },
         decode: async (buffer: Buffer, encoding = 'utf8') => iconv.decode(buffer, encoding),
         encode: async (input: string, encoding: BinaryToTextEncoding) =>

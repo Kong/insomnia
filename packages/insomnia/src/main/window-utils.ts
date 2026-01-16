@@ -610,6 +610,7 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `R${MNEMONIC_SYM}estart`,
+        // eslint-disable-next-line no-restricted-globals
         click: window?.main.restart,
       },
       {
