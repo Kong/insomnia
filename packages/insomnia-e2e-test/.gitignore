@@ -1,0 +1,23 @@
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Screenshots and videos
+screenshots/
+videos/
+traces/
+
+# Node modules
+node_modules/
+
+# Test artifacts
+*.png
+*.mp4
+*.webm
+*.zip
+
+# Logs
+*.log
+npm-debug.log*
+
