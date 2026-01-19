@@ -6,10 +6,6 @@ import { useParams } from 'react-router';
 import type { GitCredentials } from '~/models/git-credentials';
 import { type StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import {
-  fallbackFeatures,
-  useOrganizationPermissionsLoaderFetcher,
-} from '~/routes/organization.$organizationId.permissions';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
@@ -17,7 +13,7 @@ import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result'
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 import { type ProjectData, type ProjectType, useActiveView } from '~/ui/components/project/utils';
-import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 
 import { Icon } from '../icon';
 
@@ -25,7 +21,6 @@ const FORMID = 'git-repo-form';
 
 interface Props {
   storageRules: StorageRules;
-  isGitSyncEnabled: boolean;
   defaultProjectName?: string;
   onCancel?(): void;
   activeViewObj?: ReturnType<typeof useActiveView>;
@@ -35,7 +30,6 @@ interface Props {
 
 export const ProjectCreateForm: FC<Props> = ({
   storageRules,
-  isGitSyncEnabled,
   defaultProjectName = 'My Project',
   onCancel,
   activeViewObj,
@@ -44,17 +38,7 @@ export const ProjectCreateForm: FC<Props> = ({
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
-  // Reload isGitSyncEnabled everytime this component is mounted
-  const permissionsFetcher = useOrganizationPermissionsLoaderFetcher({ key: `permissions:${organizationId}` });
-  const permissionsFetcherLoad = permissionsFetcher.load;
-  useEffect(() => {
-    permissionsFetcherLoad({
-      organizationId,
-    });
-  }, [organizationId, permissionsFetcherLoad]);
-  const { featuresPromise } = permissionsFetcher.data || {};
-  const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise, organizationId);
-  isGitSyncEnabled = features.gitSync.enabled;
+  const isGitSyncEnabled = useIsGitSyncEnabled(organizationId);
 
   const [storageType, setStorageType] = useState<ProjectType>();
 
@@ -140,7 +124,7 @@ export const ProjectCreateForm: FC<Props> = ({
             storageType={storageType}
             storageRules={storageRules}
           />
-          {storageType === 'git' && (
+          {storageType === 'git' && isGitSyncEnabled && (
             <GitRepoForm
               formId={FORMID}
               projectData={projectData}
@@ -189,6 +173,7 @@ export const ProjectCreateForm: FC<Props> = ({
               <Button
                 type="submit"
                 form={FORMID}
+                isDisabled={!isGitSyncEnabled}
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 Scan for files

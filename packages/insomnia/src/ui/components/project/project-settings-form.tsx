@@ -9,10 +9,6 @@ import { LearnMoreLink } from '~/basic-components/link';
 import type { GitCredentials } from '~/models/git-credentials';
 import type { StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import {
-  fallbackFeatures,
-  useOrganizationPermissionsLoaderFetcher,
-} from '~/routes/organization.$organizationId.permissions';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
@@ -21,7 +17,7 @@ import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
-import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 
 import type { GitRepository } from '../../../models/git-repository';
 import {
@@ -54,7 +50,6 @@ function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote
 
 interface Props {
   storageRules: StorageRules;
-  isGitSyncEnabled: boolean;
   project?: Project;
   gitRepository?: GitRepository;
   defaultProjectName?: string;
@@ -66,7 +61,6 @@ interface Props {
 
 export const ProjectSettingsForm: FC<Props> = ({
   storageRules,
-  isGitSyncEnabled,
   project,
   gitRepository,
   defaultProjectName = 'My Project',
@@ -77,16 +71,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
-  const permissionsFetcher = useOrganizationPermissionsLoaderFetcher({ key: `permissions:${organizationId}` });
-  const permissionsFetcherLoad = permissionsFetcher.load;
-  useEffect(() => {
-    permissionsFetcherLoad({
-      organizationId,
-    });
-  }, [organizationId, permissionsFetcherLoad]);
-  const { featuresPromise } = permissionsFetcher.data || {};
-  const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise, organizationId);
-  isGitSyncEnabled = features.gitSync.enabled;
+  const isGitSyncEnabled = useIsGitSyncEnabled(organizationId);
 
   const isLightTheme = useIsLightTheme();
 
@@ -152,6 +137,18 @@ export const ProjectSettingsForm: FC<Props> = ({
   const selectedProvider = providers.find(p => p.type === selectedCredential?.provider);
 
   const hideActionButtons = storageType === 'git' && !projectData.connectRepositoryLater && credentials.length === 0;
+
+  const showGitConnectionInfo =
+    storageType === 'git' &&
+    !isSwitchingStorageType(project!, storageType) &&
+    project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID &&
+    gitRepository?.credentialsId &&
+    selectedProvider;
+
+  const showGitRepoForm =
+    storageType === 'git' &&
+    ((isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) ||
+      (!isSwitchingStorageType(project!, storageType) && project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID));
 
   return (
     <>
@@ -238,31 +235,29 @@ export const ProjectSettingsForm: FC<Props> = ({
               }
             />
           )}
-          {storageType === 'git' &&
-            (!isSwitchingStorageType(project!, storageType) &&
-            project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID &&
-            gitRepository?.credentialsId &&
-            selectedProvider ? (
-              <>
-                <Divider />
-                <GitConnectionInfo
-                  gitRepository={gitRepository}
-                  providerInfo={selectedProvider}
-                  projectId={project!._id}
-                />
-              </>
-            ) : (
-              <GitRepoForm
-                projectData={projectData}
-                setProjectData={setProjectData}
-                initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
-                organizationId={organizationId}
-                setActiveView={setActiveView}
-                credentials={credentials}
-                providers={providers}
-                formId={FORMID}
+
+          {showGitConnectionInfo && (
+            <>
+              <Divider />
+              <GitConnectionInfo
+                gitRepository={gitRepository}
+                providerInfo={selectedProvider}
+                projectId={project!._id}
               />
-            ))}
+            </>
+          )}
+          {showGitRepoForm && (
+            <GitRepoForm
+              projectData={projectData}
+              setProjectData={setProjectData}
+              initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
+              organizationId={organizationId}
+              setActiveView={setActiveView}
+              credentials={credentials}
+              providers={providers}
+              formId={FORMID}
+            />
+          )}
         </div>
 
         <div className={activeView === 'git-results' ? '' : 'hidden'}>
@@ -293,7 +288,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID ||
               !gitRepository?.credentialsId) ? (
               <Button
-                isDisabled={!isGitSyncEnabled}
+                isDisabled={!isGitSyncEnabled && isSwitchingStorageType(project!, storageType)}
                 form={FORMID}
                 type="submit"
                 className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"

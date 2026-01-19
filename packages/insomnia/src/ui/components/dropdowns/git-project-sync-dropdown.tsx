@@ -28,7 +28,6 @@ import { SegmentEvent } from '~/ui/analytics';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
-import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 
 import type { GitRepository } from '../../../models/git-repository';
@@ -69,9 +68,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
   const gitIntervalFetchFetcher = useGitProjectFetchActionFetcher();
   const gitStatusFetcher = useGitProjectStatusActionFetcher();
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
-
-  const { features } = useOrganizationPermissions();
-  const isGitSyncEnabled = features.gitSync.enabled;
 
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   useEffect(() => {
@@ -652,7 +648,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
           project={activeProject}
           gitRepository={gitRepository || undefined}
           storageRules={storageRules}
-          isGitSyncEnabled={isGitSyncEnabled}
         />
       )}
       {isGitBranchesModalOpen && gitRepository && currentBranch && (

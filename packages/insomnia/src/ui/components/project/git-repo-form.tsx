@@ -91,6 +91,7 @@ export const GitRepoForm: FC<Props> = ({
 
       {!needToSetupCredentials && !projectData.connectRepositoryLater && (
         <Form
+          aria-label="Git Setup Form"
           id={formId}
           className="flex flex-col gap-4"
           onSubmit={async e => {
