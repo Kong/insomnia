@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import type { HiddenBrowserWindowToMainBridgeAPI } from '../src/hidden-window-preload';
 import type { RendererToMainBridgeAPI } from '../src/main/ipc/main';
-import type { DatabaseBridgeAPI } from '../src/main/network/database';
+import type { DatabaseBridgeAPI } from '../src/main/ipc/database';
 import type { DiffMatchPatch, DiffOp } from 'diff-match-patch-ts';
 
 declare global {
