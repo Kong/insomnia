@@ -54,16 +54,16 @@ export const GitCustomCredentialForm = ({
             type="email"
             isRequired
             className="w-1/2"
-            label="Your Email"
-            placeholder="e.g. your-name@acme.com"
+            label="Author Email"
+            placeholder="e.g. john.doe@acme.com"
             defaultValue={gitCredentialToEdit?.author.email}
           />
           <Input
             isRequired
             name="authorName"
             className="w-1/2"
-            label="Your Git Username"
-            placeholder="e.g. git-user"
+            label="Author Name"
+            placeholder="e.g. John Doe"
             defaultValue={gitCredentialToEdit?.author.name}
           />
         </div>
@@ -81,7 +81,7 @@ export const GitCustomCredentialForm = ({
             name="password"
             isRequired
             label="Git Access Token"
-            placeholder="e.g. github_pat_11A11AAAAa111Aa11a1AA11"
+            placeholder="e.g. git_pat_11A11AAAAa111Aa11a1AA11"
             defaultValue={gitCredentialToEdit?.credentials?.password}
           />
         </div>

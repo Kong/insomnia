@@ -71,6 +71,13 @@ vi.mock('../main/install-plugin', async () => {
   };
 });
 
+vi.mock('../main/analytics', () => ({
+  trackSegmentEvent: vi.fn(),
+  SegmentEvent: {
+    installPlugin: 'Plugin Installed',
+  },
+}));
+
 import installPlugin, {
   buildProxyEnv,
   containsOnlyDeprecationWarnings,

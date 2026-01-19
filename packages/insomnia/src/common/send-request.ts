@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import { database, initDatabase } from '~/common/database';
+import { nedbDatabase } from '~/common/database/database-nedb';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { BaseModel } from '../models';
@@ -16,7 +18,6 @@ import {
   tryToExecutePreRequestScript,
   tryToInterpolateRequest,
 } from '../network/network';
-import { database } from './database';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
@@ -47,7 +48,8 @@ export async function getSendRequestCallbackMemDb(
   iterationCount?: number,
 ) {
   // Initialize the DB in-memory and fill it with data if we're given one
-  await database.init(
+  await initDatabase(
+    nedbDatabase,
     {
       inMemoryOnly: true,
     },

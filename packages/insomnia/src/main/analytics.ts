@@ -70,6 +70,7 @@ export enum SegmentEvent {
   // TODO(INS-1912): Remove in 12.5
   tempOrganizationOpened = 'temp_organization_opened',
   tempProjectOpened = 'temp_project_opened',
+  installPlugin = 'Plugin Installed',
 }
 
 function hashString(input: string) {
