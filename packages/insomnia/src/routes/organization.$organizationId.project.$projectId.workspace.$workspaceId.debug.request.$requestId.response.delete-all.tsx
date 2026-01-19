@@ -17,7 +17,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
   invariant(workspaceMeta, 'Active workspace meta not found');
 
-  await removeResponsesForRequest(req.type, requestId, workspaceMeta.activeEnvironmentId);
+  await removeResponsesForRequest(requestId, workspaceMeta.activeEnvironmentId);
 
   return null;
 }

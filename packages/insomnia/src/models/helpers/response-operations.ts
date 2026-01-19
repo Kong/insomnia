@@ -6,20 +6,19 @@ import { database as db } from '~/common/database';
 import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import * as models from '~/models/index';
 import { isMcpRequestId } from '~/models/mcp-request';
-import { isMcpResponse, type McpResponse } from '~/models/mcp-response';
-import { isRequestId } from '~/models/request';
-import { type Compression, isResponse, type Response } from '~/models/response';
+import { isMcpResponse, type McpResponse, type as mcpResponseType } from '~/models/mcp-response';
+import { type Compression, isResponse, type Response, type as responseType } from '~/models/response';
 import { isSocketIORequestId } from '~/models/socket-io-request';
-import { isSocketIOResponse, type SocketIOResponse } from '~/models/socket-io-response';
+import { isSocketIOResponse, type SocketIOResponse, type as socketIOResponseType } from '~/models/socket-io-response';
 import { isWebSocketRequestId } from '~/models/websocket-request';
-import { isWebSocketResponse, type WebSocketResponse } from '~/models/websocket-response';
+import {
+  isWebSocketResponse,
+  type as webSocketResponseType,
+  type WebSocketResponse,
+} from '~/models/websocket-response';
 import { deserializeNDJSON } from '~/utils/ndjson';
 
-export async function removeResponsesForRequest(
-  type: models.AllTypes,
-  requestId: string,
-  environmentId?: string | null,
-) {
+export async function removeResponsesForRequest(requestId: string, environmentId?: string | null) {
   const settings = await models.settings.get();
   const query: Record<string, any> = {
     parentId: requestId,
@@ -32,13 +31,21 @@ export async function removeResponsesForRequest(
     query.environmentId = environmentId;
   }
 
-  if (isWebSocketRequestId(requestId) || isSocketIORequestId(requestId) || isMcpRequestId(requestId)) {
+  const type = isWebSocketRequestId(requestId)
+    ? webSocketResponseType
+    : isSocketIORequestId(requestId)
+      ? socketIOResponseType
+      : isMcpRequestId(requestId)
+        ? mcpResponseType
+        : responseType;
+
+  if (type === webSocketResponseType || type === socketIOResponseType || type === mcpResponseType) {
     const toDelete = await db.find<WebSocketResponse | SocketIOResponse | McpResponse>(type, query);
     for (const doc of toDelete) {
       fs.promises.unlink(doc.eventLogPath);
       fs.promises.unlink(doc.timelinePath);
     }
-  } else if (isRequestId(requestId)) {
+  } else if (type === responseType) {
     const toDelete = await db.find<Response>(type, query);
     for (const doc of toDelete) {
       fs.promises.unlink(doc.bodyPath);
@@ -136,7 +143,7 @@ export const getBodyBuffer = async (
     return Buffer.alloc(0);
   }
   try {
-    // TODO: unpick theis read buffer so it can be used as a simple string reader
+    // TODO: unpick this read buffer so it can be used as a simple string reader
     const rawBuffer = await fs.promises.readFile(response?.bodyPath);
     if (response?.bodyCompression === 'zip') {
       return new Promise((resolve, reject) =>

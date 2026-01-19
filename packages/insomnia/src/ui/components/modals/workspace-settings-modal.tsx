@@ -15,6 +15,7 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { removeResponsesForRequest } from '~/models/helpers/response-operations';
 import type { StorageRules } from '~/models/organization';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useOrganizationLoaderData } from '~/routes/organization';
@@ -96,10 +97,6 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
   const selectedFolder = gitFilePath?.split('/').slice(1).join('/') || '';
   const fileName = gitFilePath?.split('/').pop() || '';
   const selectedFolderChildren = gitRepoTreeFetcher.data?.folderList[selectedFolder] || [];
-
-  function removeForRequest(_id: string) {
-    throw new Error('Function not implemented.');
-  }
 
   return (
     <ModalOverlay
@@ -212,7 +209,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                             const docs = await db.getWithDescendants(workspace, [models.request.type]);
                             const requests = docs.filter(isRequest);
                             for (const req of requests) {
-                              await removeForRequest(req._id);
+                              await removeResponsesForRequest(req._id);
                             }
                             close();
                           }}
