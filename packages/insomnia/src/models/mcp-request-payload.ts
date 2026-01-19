@@ -1,5 +1,5 @@
 import { database } from '../common/database';
-import type { BaseModel } from '.';
+import type { BaseModel } from './types';
 
 export const name = 'MCP Payload';
 

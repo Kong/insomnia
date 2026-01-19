@@ -1,8 +1,8 @@
 import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import { database as db } from '../common/database';
 import * as requestOperations from '../models/helpers/request-operations';
-import type { BaseModel } from './index';
 import * as models from './index';
+import type { BaseModel } from './types';
 
 export const name = 'Response';
 

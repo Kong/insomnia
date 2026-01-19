@@ -1,5 +1,6 @@
 import { database as db } from '../common/database';
-import { type BaseModel, workspace } from './index';
+import type { BaseModel } from './types';
+import * as workspace from './workspace';
 
 export const name = 'Mock Server';
 
