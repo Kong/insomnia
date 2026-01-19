@@ -9,6 +9,7 @@ import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
+import { parseInsomniaFetchError } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -43,36 +44,37 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     await projectLock.lock();
     // If its a cloud project, and we are renaming, then patch
     if (sessionId && project.remoteId && storageType === 'remote' && name !== project.name) {
-      const response = await updateTeamProject({
-        organizationId: project.parentId,
-        projectRemoteId: project.remoteId,
-        sessionId,
-        name,
-      });
-
-      if (response && 'error' in response) {
-        let error = 'An unexpected error occurred while updating your project. Please try again.';
-        if (response.error === 'FORBIDDEN') {
-          error = 'You do not have permission to create a cloud project in this organization.';
+      try {
+        await updateTeamProject({
+          organizationId: project.parentId,
+          projectRemoteId: project.remoteId,
+          sessionId,
+          name,
+        });
+      } catch (error: unknown) {
+        const parsedError = parseInsomniaFetchError(error);
+        let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
+        if (parsedError.name === 'FORBIDDEN') {
+          errorMessage = 'You do not have permission to create a cloud project in this organization.';
         }
 
-        if (response.error === 'NEEDS_TO_UPGRADE') {
-          error = 'Upgrade your account in order to create new Cloud Projects.';
+        if (parsedError.name === 'NEEDS_TO_UPGRADE') {
+          errorMessage = 'Upgrade your account in order to create new Cloud Projects.';
         }
 
-        if (response.error === 'PROJECT_STORAGE_RESTRICTION') {
-          error = 'The owner of the organization allows only Local Vault project creation, please try again.';
+        if (parsedError.name === 'PROJECT_STORAGE_RESTRICTION') {
+          errorMessage = 'The owner of the organization allows only Local Vault project creation, please try again.';
         }
 
         showToast({
           title: 'Error updating project',
-          description: error,
+          description: errorMessage,
           icon: 'warning',
           status: 'error',
         });
 
         return {
-          error,
+          error: errorMessage,
         };
       }
 
@@ -90,41 +92,40 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     // convert from cloud to local
     if (storageType === 'local' && project.remoteId) {
-      const response = await deleteTeamProject({
-        organizationId,
-        projectRemoteId: project.remoteId,
-        sessionId,
-      });
+      try {
+        await deleteTeamProject({
+          organizationId,
+          projectRemoteId: project.remoteId,
+          sessionId,
+        });
 
-      if (response && !response.error) {
         window.main.trackSegmentEvent({
           event: SegmentEvent.projectUpdated,
           properties: {
             storage: 'local',
           },
         });
-      }
+      } catch (error: unknown) {
+        const parsedError = parseInsomniaFetchError(error);
+        let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
 
-      if (response && 'error' in response) {
-        let error = 'An unexpected error occurred while updating your project. Please try again.';
-
-        if (response.error === 'FORBIDDEN') {
-          error = 'You do not have permission to change this project.';
+        if (parsedError.name === 'FORBIDDEN') {
+          errorMessage = 'You do not have permission to change this project.';
         }
 
-        if (response.error === 'PROJECT_STORAGE_RESTRICTION') {
-          error = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
+        if (parsedError.name === 'PROJECT_STORAGE_RESTRICTION') {
+          errorMessage = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
         }
 
         showToast({
           title: 'Error updating project',
-          description: error,
+          description: errorMessage,
           icon: 'warning',
           status: 'error',
         });
 
         return {
-          error,
+          error: errorMessage,
         };
       }
 
@@ -141,105 +142,101 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
     // convert from local/git to cloud
     if (storageType === 'remote' && !project.remoteId) {
-      const newCloudProject = await createTeamProject({
-        sessionId,
-        organizationId,
-        name,
-      });
+      try {
+        const newCloudProject = await createTeamProject({
+          sessionId,
+          organizationId,
+          name,
+        });
 
-      if (newCloudProject && !('error' in newCloudProject)) {
         window.main.trackSegmentEvent({
           event: SegmentEvent.projectUpdated,
           properties: {
             storage: 'remote',
           },
         });
-      }
 
-      if (!newCloudProject || 'error' in newCloudProject) {
-        let error = 'An unexpected error occurred while updating your project. Please try again.';
-        if (newCloudProject.error === 'FORBIDDEN') {
-          error = newCloudProject.error;
+        if (project.gitRepositoryId) {
+          const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
+
+          gitRepository && (await models.gitRepository.remove(gitRepository));
         }
 
-        if (newCloudProject.error === 'NEEDS_TO_UPGRADE') {
-          error = 'Upgrade your account in order to create new Cloud Projects.';
+        await models.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
+
+        project.gitRepositoryId && reportGitProjectCount(organizationId, sessionId);
+
+        showToast({
+          title: 'Project updated',
+          status: 'success',
+        });
+
+        return {
+          success: true,
+        };
+      } catch (error: unknown) {
+        const parsedError = parseInsomniaFetchError(error);
+        let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
+        if (parsedError.name === 'FORBIDDEN') {
+          errorMessage = parsedError.message;
         }
 
-        if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
-          error = 'The owner of the organization allows only Local Vault project creation, please try again.';
+        if (parsedError.name === 'NEEDS_TO_UPGRADE') {
+          errorMessage = 'Upgrade your account in order to create new Cloud Projects.';
+        }
+        if (parsedError.name === 'PROJECT_STORAGE_RESTRICTION') {
+          errorMessage = 'The owner of the organization allows only Local Vault project creation, please try again.';
         }
 
         showToast({
           title: 'Error updating project',
-          description: error,
+          description: errorMessage,
           icon: 'warning',
           status: 'error',
         });
 
         return {
-          error,
+          error: errorMessage,
         };
       }
-
-      if (project.gitRepositoryId) {
-        const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
-
-        gitRepository && (await models.gitRepository.remove(gitRepository));
-      }
-
-      await models.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
-
-      project.gitRepositoryId && reportGitProjectCount(organizationId, sessionId);
-
-      showToast({
-        title: 'Project updated',
-        status: 'success',
-      });
-
-      return {
-        success: true,
-      };
     }
 
     // convert to git
     if (storageType === 'git' && !project.gitRepositoryId) {
       if (project.remoteId) {
-        const response = await deleteTeamProject({
-          organizationId,
-          projectRemoteId: project.remoteId,
-          sessionId,
-        });
+        try {
+          await deleteTeamProject({
+            organizationId,
+            projectRemoteId: project.remoteId,
+            sessionId,
+          });
 
-        if (response && !response.error) {
           window.main.trackSegmentEvent({
             event: SegmentEvent.projectUpdated,
             properties: {
               storage: 'git',
             },
           });
-        }
-
-        if (response && 'error' in response) {
-          let error = 'An unexpected error occurred while updating your project. Please try again.';
-
-          if (response.error === 'FORBIDDEN') {
-            error = 'You do not have permission to change this project.';
+        } catch (error: unknown) {
+          let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
+          const parsedError = parseInsomniaFetchError(error);
+          if (parsedError.name === 'FORBIDDEN') {
+            errorMessage = 'You do not have permission to change this project.';
           }
 
-          if (response.error === 'PROJECT_STORAGE_RESTRICTION') {
-            error = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
+          if (parsedError.name === 'PROJECT_STORAGE_RESTRICTION') {
+            errorMessage = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
           }
 
           showToast({
             title: 'Error updating project',
-            description: error,
+            description: errorMessage,
             icon: 'warning',
             status: 'error',
           });
 
           return {
-            error,
+            error: errorMessage,
           };
         }
       }

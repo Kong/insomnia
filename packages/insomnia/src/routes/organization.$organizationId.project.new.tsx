@@ -8,6 +8,7 @@ import * as models from '~/models';
 import { EMPTY_GIT_PROJECT_ID, type Project } from '~/models/project';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
+import { parseInsomniaFetchError } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -51,71 +52,55 @@ export const reportGitProjectCount = async (organizationId: string, sessionId: s
   console.warn('Report git project count failed');
 };
 
-export const createProject = async (organizationId: string, newProjectData: CreateProjectData) => {
-  const createProjectImpl = async (organizationId: string, newProjectData: CreateProjectData) => {
-    const user = await models.userSession.getOrCreate();
-    const sessionId = user.id;
-    invariant(sessionId, 'User must be logged in to create a project');
+const createProjectImpl = async (organizationId: string, newProjectData: CreateProjectData) => {
+  const user = await models.userSession.getOrCreate();
+  const sessionId = user.id;
+  invariant(sessionId, 'User must be logged in to create a project');
 
-    if (newProjectData.storageType === 'local') {
+  if (newProjectData.storageType === 'local') {
+    const project = await models.project.create({
+      name: newProjectData.name,
+      parentId: organizationId,
+    });
+
+    return project._id;
+  }
+
+  if (newProjectData.storageType === 'git') {
+    if (newProjectData.connectRepositoryLater) {
       const project = await models.project.create({
         name: newProjectData.name,
         parentId: organizationId,
+        gitRepositoryId: EMPTY_GIT_PROJECT_ID,
       });
+      reportGitProjectCount(organizationId, sessionId);
 
       return project._id;
     }
 
-    if (newProjectData.storageType === 'git') {
-      if (newProjectData.connectRepositoryLater) {
-        const project = await models.project.create({
-          name: newProjectData.name,
-          parentId: organizationId,
-          gitRepositoryId: EMPTY_GIT_PROJECT_ID,
-        });
-        reportGitProjectCount(organizationId, sessionId);
+    invariant(newProjectData.credentialsId, 'Credentials ID is required for Git project creation');
+    const { projectId, errors } = await window.main.git.cloneGitRepo({
+      organizationId,
+      uri: newProjectData.uri || '',
+      credentialsId: newProjectData.credentialsId,
+      name: newProjectData.name,
+      ref: newProjectData.ref || '',
+    });
 
-        return project._id;
-      }
-
-      invariant(newProjectData.credentialsId, 'Credentials ID is required for Git project creation');
-      const { projectId, errors } = await window.main.git.cloneGitRepo({
-        organizationId,
-        uri: newProjectData.uri || '',
-        credentialsId: newProjectData.credentialsId,
-        name: newProjectData.name,
-        ref: newProjectData.ref || '',
-      });
-
-      if (errors) {
-        throw new Error(errors.join(', '));
-      }
-      reportGitProjectCount(organizationId, sessionId);
-
-      return projectId;
+    if (errors) {
+      throw new Error(errors.join(', '));
     }
+    reportGitProjectCount(organizationId, sessionId);
+
+    return projectId;
+  }
+
+  try {
     const newCloudProject = await createTeamProject({
       sessionId,
       organizationId,
       name: newProjectData.name,
     });
-
-    if (!newCloudProject || 'error' in newCloudProject) {
-      let error = 'An unexpected error occurred while creating the project. Please try again.';
-      if (newCloudProject.error === 'FORBIDDEN') {
-        error = 'You do not have permission to create a cloud project in this organization.';
-      }
-
-      if (newCloudProject.error === 'NEEDS_TO_UPGRADE') {
-        error = 'Upgrade your account in order to create new Cloud Projects.';
-      }
-
-      if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
-        error = newCloudProject.message ?? 'The owner of the organization allows only Local Vault project creation.';
-      }
-
-      throw new Error(error);
-    }
 
     const project = await models.project.create({
       _id: newCloudProject.id,
@@ -125,8 +110,23 @@ export const createProject = async (organizationId: string, newProjectData: Crea
     });
 
     return project._id;
-  };
+  } catch (error: unknown) {
+    const parsedError = parseInsomniaFetchError(error);
+    let errMessage = 'An unexpected error occurred while creating the project. Please try again.';
 
+    if (parsedError.name === 'FORBIDDEN') {
+      errMessage = 'You do not have permission to create a cloud project in this organization.';
+    } else if (parsedError.name === 'NEEDS_TO_UPGRADE') {
+      errMessage = 'Upgrade your account in order to create new Cloud Projects.';
+    } else if (parsedError.name === 'PROJECT_STORAGE_RESTRICTION') {
+      errMessage = parsedError.message ?? 'The owner of the organization allows only Local Vault project creation.';
+    }
+
+    throw new Error(errMessage);
+  }
+};
+
+export const createProject = async (organizationId: string, newProjectData: CreateProjectData) => {
   const newProjectId = await projectLock.wrapWithLock(createProjectImpl)(organizationId, newProjectData);
 
   let git_provider = 'none';

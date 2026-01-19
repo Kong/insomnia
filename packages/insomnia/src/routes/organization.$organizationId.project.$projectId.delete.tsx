@@ -5,6 +5,7 @@ import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
 import * as models from '~/models';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
+import { parseInsomniaFetchError } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';
 
@@ -25,20 +26,11 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     await projectLock.lock();
     const bufferId = await database.bufferChanges();
     if (project.remoteId) {
-      const response = await deleteTeamProject({
+      await deleteTeamProject({
         organizationId,
         projectRemoteId: project.remoteId,
         sessionId,
       });
-
-      if (response && 'error' in response) {
-        return {
-          error:
-            response.error === 'FORBIDDEN'
-              ? 'You do not have permission to delete this project.'
-              : 'An unexpected error occurred while deleting the project. Please try again.',
-        };
-      }
     }
 
     if (project.gitRepositoryId) {
@@ -56,13 +48,16 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     // When redirect to `/organizations/:organizationId`, it sometimes doesn't reload the index loader, so manually redirect to the initial route for the organization
     const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });
     return redirect(initialOrganizationRoute);
-  } catch (err) {
-    console.log(err);
+  } catch (err: unknown) {
+    const parsedError = parseInsomniaFetchError(err);
+    console.log(parsedError);
+    let errorMessage = '';
+    errorMessage =
+      parsedError.name === 'FORBIDDEN'
+        ? 'You do not have permission to delete this project.'
+        : `An unexpected error occurred while deleting the project. Please try again.${parsedError?.message}`;
     return {
-      error:
-        err instanceof Error
-          ? err.message
-          : `An unexpected error occurred while deleting the project. Please try again. ${err}`,
+      error: errorMessage,
     };
   } finally {
     await projectLock.unlock();

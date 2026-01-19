@@ -11,7 +11,27 @@ export class ResponseFailError extends Error {
     this.response = response;
   }
   response;
+  payload?: any;
 }
+
+export const parseInsomniaFetchError = (error: unknown) => {
+  if (error instanceof ResponseFailError) {
+    return {
+      name: error.name,
+      message: error.message,
+      response: error.response,
+    };
+  } else if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+    };
+  }
+  return {
+    name: 'Unknown',
+    message: String(error),
+  };
+};
 
 // Adds headers, retries and opens deep links returned from the api
 export async function insomniaFetch<T = void>({
@@ -56,8 +76,8 @@ export async function insomniaFetch<T = void>({
     }
     const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
     if (onlyResolveOnSuccess && !response.ok) {
-      let errName = `CODE-${response.status}`,
-        errMsg = response.statusText;
+      let errName = `CODE-${response.status}`;
+      let errMsg = response.statusText;
       if (isJson) {
         try {
           const json = await response.json();

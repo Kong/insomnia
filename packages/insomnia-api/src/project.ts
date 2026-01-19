@@ -40,7 +40,7 @@ export const createTeamProject = ({
   organizationId: string;
   name: string;
 }) => {
-  return fetch<{ id: string; name: string } | { error: string; message?: string }>({
+  return fetch<{ id: string; name: string }>({
     method: 'POST',
     path: `/v1/organizations/${organizationId}/team-projects`,
     data: {
