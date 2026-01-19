@@ -7,9 +7,11 @@ import { JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
 import { base64decode, base64encode } from '../utils/vault';
-import { type BaseModel, project, workspace } from './index';
 import type { Project } from './project';
+import * as project from './project';
+import { type BaseModel } from './types';
 import type { Workspace } from './workspace';
+import * as workspace from './workspace';
 
 export const name = 'Environment';
 export const type = 'Environment';

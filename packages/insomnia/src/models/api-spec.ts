@@ -1,6 +1,6 @@
 import { database as db } from '../common/database';
 import { strings } from '../common/strings';
-import type { BaseModel } from './index';
+import type { BaseModel } from './types';
 
 export const name = 'ApiSpec';
 

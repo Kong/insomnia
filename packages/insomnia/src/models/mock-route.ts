@@ -1,6 +1,6 @@
 import { database as db } from '../common/database';
-import type { BaseModel } from './index';
 import type { RequestHeader } from './request';
+import type { BaseModel } from './types';
 
 export const name = 'Mock Route';
 

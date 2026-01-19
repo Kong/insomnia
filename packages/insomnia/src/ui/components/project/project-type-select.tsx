@@ -73,7 +73,7 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
               aria-label={`Project Type: ${item.type}`}
               className="w-full rounded-sm border border-transparent pt-0 transition-colors hover:border-transparent hover:bg-(--hl-xs) data-disabled:cursor-not-allowed data-disabled:opacity-50 data-selected:border-(--color-surprise)"
             >
-              <div className="flex gap-2 p-2">
+              <div aria-label={`Project Type Item: ${item.type}`} className="flex gap-2 p-2">
                 <Icon icon={item.icon} className="mt-1" />
                 <div>
                   <div>{item.name}</div>

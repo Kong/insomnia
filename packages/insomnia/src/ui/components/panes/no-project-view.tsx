@@ -8,10 +8,9 @@ import { ProjectCreateForm } from '../project/project-create-form';
 
 interface Props {
   storageRules: StorageRules;
-  isGitSyncEnabled: boolean;
 }
 
-export const NoProjectView: FC<Props> = ({ storageRules, isGitSyncEnabled }) => {
+export const NoProjectView: FC<Props> = ({ storageRules }) => {
   const { credentials, providers } = useGitCredentials();
   return (
     <div className="grid grid-rows-[min-content_1fr_min-content] place-items-stretch items-stretch gap-4 self-center overflow-hidden p-16">
@@ -21,7 +20,6 @@ export const NoProjectView: FC<Props> = ({ storageRules, isGitSyncEnabled }) => 
       </div>
       <ProjectCreateForm
         storageRules={storageRules}
-        isGitSyncEnabled={isGitSyncEnabled}
         defaultProjectName="My first project"
         credentials={credentials}
         providers={providers}

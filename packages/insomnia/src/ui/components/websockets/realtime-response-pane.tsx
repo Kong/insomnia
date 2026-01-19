@@ -317,7 +317,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
               <ResponseErrorViewer url={response.url} error={response.error} isMcpResponse={isMcpResponse(response)} />
             ) : (
               <>
-                <Panel minSize={10} defaultSize={50} className="box-border flex w-full flex-1 flex-col overflow-hidden">
+                <Panel minSize={10} defaultSize={36} className="box-border flex w-full flex-1 flex-col overflow-hidden">
                   <div
                     style={{
                       display: 'flex',

@@ -1,11 +1,11 @@
 import { database as db } from '../common/database';
 import { isGrpcRequest } from './grpc-request';
-import type { BaseModel } from './index';
 import * as models from './index';
 import type { Project } from './project';
 import { isRequest } from './request';
 import type { RequestGroup } from './request-group';
 import { isSocketIORequest } from './socket-io-request';
+import type { BaseModel } from './types';
 import { isWebSocketRequest } from './websocket-request';
 import type { Workspace } from './workspace';
 

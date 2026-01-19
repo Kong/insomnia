@@ -2,8 +2,8 @@ import fs from 'node:fs';
 
 import { database as db } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
-import type { BaseModel } from './index';
 import * as models from './index';
+import type { BaseModel } from './types';
 
 export const name = 'SocketIO Response';
 

@@ -65,7 +65,6 @@ export enum SegmentEvent {
   responseToMockClicked = 'Response To Mock Clicked',
   gitSyncButtonClicked = 'Git Sync Button Clicked',
   preferencesViewed = 'Preferences Viewed',
-  installPlugin = 'Plugin Installed',
   copyAsCurl = 'Copied As cURL',
   themeChanged = 'Theme Changed',
   generateCodeClicked = 'Generate Code Clicked',
@@ -74,6 +73,9 @@ export enum SegmentEvent {
   filterCreatedProjects = 'Filter Created Projects',
   filterCreatedRequests = 'Filter Created Requests',
   filterCreatedResponseBody = 'Filter Created Response Body',
+  // TODO(INS-1912): Remove in 12.5
+  tempOrganizationOpened = 'temp_organization_opened',
+  tempProjectOpened = 'temp_project_opened',
 }
 
 type PushPull = 'push' | 'pull';
