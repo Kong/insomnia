@@ -79,8 +79,8 @@ export async function all() {
   return await db.find<Workspace>(type);
 }
 
-export function count(scope?: WorkspaceScope) {
-  return db.count<Workspace>(type, scope ? { scope } : {});
+export function count() {
+  return db.count(type);
 }
 
 export function update(workspace: Workspace, patch: Partial<Workspace>) {

@@ -11,7 +11,6 @@ import { getOauthRedirectUrl } from '~/common/constants';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import type { ConnectionContext } from '~/main/mcp/common';
 import * as models from '~/models';
-import type { McpRequest } from '~/models/mcp-request';
 import type { RequestAuthentication } from '~/models/request';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 import { invariant } from '~/utils/invariant';
@@ -31,10 +30,18 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
   private _codeVerifier?: string;
   private _resourceMetadataUrl?: URL;
   private _redirectEndListener: ((authorizationCode: string) => void) | null = null;
-  constructor(
-    private mcpRequest: McpRequest,
-    private context: ConnectionContext,
-  ) {}
+  private context: ConnectionContext;
+  private authentication: RequestAuthentication;
+  constructor(context: ConnectionContext) {
+    this.context = context;
+    const { options } = context;
+    if ('authentication' in options) {
+      // clone the origin authentication
+      this.authentication = { ...options.authentication };
+    } else {
+      throw new Error('McpOAuthClientProvider requires request authentication in context');
+    }
+  }
   get redirectUrl() {
     return getOauthRedirectUrl();
   }
@@ -46,26 +53,30 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
       response_types: ['code'],
       client_name: 'Insomnia MCP Client',
       client_uri: 'https://github.com/Kong/insomnia',
-      scope: 'scope' in this.mcpRequest.authentication ? this.mcpRequest.authentication.scope : undefined,
+      scope: 'scope' in this.authentication ? this.authentication.scope : undefined,
     };
   }
-  private async refreshMcpRequest() {
-    const _mcpRequest = await models.mcpRequest.getById(this.mcpRequest._id);
-    invariant(_mcpRequest, 'MCP Request not found');
-    this.mcpRequest = _mcpRequest;
-  }
   private isUsingMcpAuthFlow() {
-    const { authentication } = this.mcpRequest;
-    return 'grantType' in authentication && authentication.grantType === 'mcp_auth_flow' && !authentication.disabled;
+    return (
+      'grantType' in this.authentication &&
+      this.authentication.grantType === 'mcp_auth_flow' &&
+      !this.authentication.disabled
+    );
   }
   private async updateAuthentication(auth: Partial<RequestAuthentication>) {
-    await models.mcpRequest.update(this.mcpRequest, {
+    const mcpRequest = await models.mcpRequest.getById(this.context.requestId);
+    invariant(mcpRequest, 'MCP Request not found');
+    await models.mcpRequest.update(mcpRequest, {
       authentication: {
-        ...this.mcpRequest.authentication,
+        ...mcpRequest.authentication,
         ...auth,
       },
     });
-    await this.refreshMcpRequest();
+    // update local authentication copy
+    this.authentication = {
+      ...this.authentication,
+      ...auth,
+    } as RequestAuthentication;
   }
   // It's called when auth tries to get client information for authorization, use as a starting point for MCP Auth Flow
   // See: https://github.com/modelcontextprotocol/typescript-sdk/blob/1d475bb3f75674a46d81dba881ea743a763cbc12/src/client/auth.ts#L349
@@ -90,9 +101,8 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
         });
       });
     }
-
-    if ('clientId' in this.mcpRequest.authentication && this.mcpRequest.authentication.clientId) {
-      const { clientId, clientSecret, clientIdIssuedAt, clientSecretExpiresAt } = this.mcpRequest.authentication;
+    if ('clientId' in this.authentication && this.authentication.clientId) {
+      const { clientId, clientSecret, clientIdIssuedAt, clientSecretExpiresAt } = this.authentication;
 
       // https://github.com/modelcontextprotocol/typescript-sdk/blob/6b4d99f10b975d65392bb777cc8cb1151c20c972/packages/client/src/client/auth.ts#L223%20
       // Set client_secret to undefined if it's not set or empty string
@@ -108,55 +118,45 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
   }
   async saveClientInformation(clientInformation: OAuthClientInformationFull) {
     const parsedClientInformation = OAuthClientInformationSchema.parse(clientInformation);
-    await models.mcpRequest.update(this.mcpRequest, {
-      authentication: {
-        ...this.mcpRequest.authentication,
-        clientId: parsedClientInformation.client_id,
-        clientSecret: parsedClientInformation.client_secret,
-        clientIdIssuedAt: parsedClientInformation.client_id_issued_at,
-        clientSecretExpiresAt: parsedClientInformation.client_secret_expires_at,
-      },
+    await this.updateAuthentication({
+      clientId: parsedClientInformation.client_id,
+      clientSecret: parsedClientInformation.client_secret,
+      clientIdIssuedAt: parsedClientInformation.client_id_issued_at,
+      clientSecretExpiresAt: parsedClientInformation.client_secret_expires_at,
     });
-    await this.refreshMcpRequest();
   }
   async tokens(): Promise<OAuthTokens | undefined> {
-    const { authentication } = this.mcpRequest;
     // Don't return tokens if not using MCP Auth Flow or if disabled
     if (this.isUsingMcpAuthFlow()) {
-      const token = await models.oAuth2Token.getOrCreateByParentId(this.mcpRequest._id);
+      const token = await models.oAuth2Token.getOrCreateByParentId(this.context.requestId);
       if (token.accessToken) {
         return {
           access_token: token.accessToken,
           refresh_token: token.refreshToken,
           id_token: token.identityToken,
           expires_in: token.expiresAt ? Math.floor(token.expiresAt / 1000) : undefined,
-          token_type: ('tokenPrefix' in authentication && authentication.tokenPrefix) || 'Bearer',
+          token_type: ('tokenPrefix' in this.authentication && this.authentication.tokenPrefix) || 'Bearer',
         };
       }
     }
     return undefined;
   }
   async saveTokens(tokens: OAuthTokens) {
-    const token = await models.oAuth2Token.getOrCreateByParentId(this.mcpRequest._id);
+    const token = await models.oAuth2Token.getOrCreateByParentId(this.context.requestId);
     await models.oAuth2Token.update(token, {
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token || '',
       identityToken: tokens.id_token || '',
       expiresAt: tokens.expires_in ? Date.now() + tokens.expires_in * 1000 : null,
     });
-    await models.mcpRequest.update(this.mcpRequest, {
-      authentication: {
-        ...this.mcpRequest.authentication,
-        scope: tokens.scope,
-        tokenPrefix: tokens.token_type,
-      },
+    await this.updateAuthentication({
+      tokenPrefix: tokens.token_type,
     });
-    await this.refreshMcpRequest();
   }
   // add state parameter to authorization url if present in authentication
   async state() {
-    if ('state' in this.mcpRequest.authentication && this.mcpRequest.authentication.state) {
-      return this.mcpRequest.authentication.state;
+    if ('state' in this.authentication && this.authentication.state) {
+      return this.authentication.state;
     }
     return '';
   }

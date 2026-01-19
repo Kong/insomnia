@@ -10,6 +10,7 @@ import YAML from 'yaml';
 
 import { INSOMNIA_SCHEMA_VERSION } from '../../common/insomnia-schema-migrations/schema-version';
 import * as models from '../../models';
+import { EnvironmentKvPairDataType } from '../../models/environment';
 import type { Request } from '../../models/request';
 import { database as db } from '../database';
 import {
@@ -47,6 +48,7 @@ describe('Insomnia v5 Import/Export - Comprehensive Tests', () => {
       expect(insomniaSchemaTypeToScope('environment.insomnia.rest/5.0')).toBe('environment');
       expect(insomniaSchemaTypeToScope('spec.insomnia.rest/5.0')).toBe('design');
       expect(insomniaSchemaTypeToScope('mock.insomnia.rest/5.0')).toBe('mock-server');
+      expect(insomniaSchemaTypeToScope('mcpClient.insomnia/5.0')).toBe('mcp');
     });
   });
 
@@ -322,6 +324,76 @@ collection: []
       const parsed = YAML.parse(result);
       expect(parsed.type).toBe('mock.insomnia.rest/5.0');
       expect(parsed.server.url).toBe('http://localhost:3000');
+    });
+
+    it('handles mcp client scope', async () => {
+      const workspace = await models.workspace.create({
+        _id: 'wrk_mcp',
+        name: 'MCP Workspace',
+        parentId: 'proj_test',
+        scope: 'mcp',
+      });
+
+      await models.environment.create({
+        _id: 'env_mcp',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      const mcpRequest = await models.mcpRequest.create({
+        _id: 'mcp-request_test',
+        name: 'Test MCP client',
+        parentId: workspace._id,
+        url: 'http://mcp.test.com/mcp',
+        transportType: 'streamable-http',
+      });
+
+      let result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      let parsed = YAML.parse(result);
+      expect(parsed.type).toBe('mcpClient.insomnia/5.0');
+      expect(parsed.mcpRequest.url).toBe('http://mcp.test.com/mcp');
+      expect(parsed.mcpRequest.transportType).toBe('streamable-http');
+
+      await models.mcpRequest.update(mcpRequest, {
+        transportType: 'stdio',
+        url: 'npx mcp-client stdio',
+        env: [
+          {
+            id: 'var1',
+            name: 'foo',
+            value: 'bar',
+            type: EnvironmentKvPairDataType.STRING,
+          },
+          {
+            id: 'var2',
+            name: 'foo1',
+            value: 'bar1',
+            type: EnvironmentKvPairDataType.STRING,
+          },
+        ],
+        roots: [
+          {
+            uri: 'file:///path/to/root',
+          },
+        ],
+      });
+
+      result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      parsed = YAML.parse(result);
+      expect(parsed.type).toBe('mcpClient.insomnia/5.0');
+      expect(parsed.mcpRequest.url).toBe('npx mcp-client stdio');
+      expect(parsed.mcpRequest.transportType).toBe('stdio');
+      expect(parsed.mcpRequest.env).toHaveLength(2);
+      expect(parsed.mcpRequest.roots).toHaveLength(1);
     });
 
     it('returns empty string for unknown workspace', async () => {

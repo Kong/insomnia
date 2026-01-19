@@ -18,10 +18,10 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await page.getByLabel('Template Tag Collection').click();
   // Nav to cloud credentials page
   await page.getByTestId('settings-button').click();
-  await page.getByRole('tab', { name: 'Cloud Credentials' }).click();
+  await page.getByRole('tab', { name: 'Credentials' }).click();
   // create aws credential
   const awsCredentialName = 'smoke-test-aws';
-  await page.getByRole('button', { name: 'Create Credential' }).click();
+  await page.getByRole('button', { name: 'Create Cloud Credential' }).click();
   await page.getByRole('menuitemradio', { name: 'AWS' }).click();
   await page.getByRole('textbox', { name: 'Credential Name:' }).fill(awsCredentialName);
   await page.getByRole('radio', { name: 'Credential File' }).check();
@@ -31,7 +31,7 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await expect.soft(page.getByRole('cell', { name: awsCredentialName })).toBeVisible();
   // create gcp credential
   const gcpCredentialName = 'smoke-test-gcp';
-  await page.getByRole('button', { name: 'Create Credential' }).click();
+  await page.getByRole('button', { name: 'Create Cloud Credential' }).click();
   await page.getByRole('menuitemradio', { name: 'GCP' }).click();
   await page.getByRole('textbox', { name: 'Credential Name:' }).fill(gcpCredentialName);
   await page.getByRole('textbox', { name: 'Input Service Account Key Path' }).fill('gcp-path');
@@ -39,7 +39,7 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await expect.soft(page.getByRole('cell', { name: gcpCredentialName })).toBeVisible();
   // create hashicorp credential
   const hashicorpCredentialName = 'smoke-test-hashicorp';
-  await page.getByRole('button', { name: 'Create Credential' }).click();
+  await page.getByRole('button', { name: 'Create Cloud Credential' }).click();
   await page.getByRole('menuitemradio', { name: 'HashiCorp' }).click();
   await page.getByRole('textbox', { name: 'Credential Name:' }).fill(hashicorpCredentialName);
   await page.getByRole('textbox', { name: 'Server Address:' }).fill('http://127.0.0.1');

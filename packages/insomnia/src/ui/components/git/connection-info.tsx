@@ -1,16 +1,20 @@
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { useEffect, useState } from 'react';
 
+import { Icon } from '~/basic-components/icon';
 import type { GitRepository } from '~/models/git-repository';
-import { getDefaultOAuthProvider } from '~/ui/components/modals/git-repository-settings-modal/git-repository-settings-modal';
-
-import { GitProviderTag } from './git-provider-tag';
 
 export const GitConnectionInfo = ({
   gitRepository,
+  providerInfo,
   projectId,
 }: {
-  gitRepository?: GitRepository;
   projectId?: string;
+  gitRepository?: GitRepository;
+  providerInfo: {
+    iconName?: IconProp;
+    displayName: string;
+  };
 }) => {
   const [branch, setBranch] = useState('');
   useEffect(() => {
@@ -26,12 +30,8 @@ export const GitConnectionInfo = ({
     })();
   }, [gitRepository, projectId]);
 
-  if (!gitRepository) {
-    return null;
-  }
+  const repoUrl = gitRepository?.uri;
 
-  const provider = getDefaultOAuthProvider(gitRepository.credentials);
-  const repoUrl = gitRepository.uri;
   return (
     <div className="text-[12px]">
       <div className="mb-6 font-semibold text-(--hl)">Connection Info</div>
@@ -39,7 +39,10 @@ export const GitConnectionInfo = ({
         <dl className="flex">
           <dt className="w-[110px] font-semibold">Provider</dt>
           <dd>
-            <GitProviderTag provider={provider} />
+            <div>
+              {providerInfo.iconName && <Icon className="mr-1" icon={providerInfo.iconName} />}
+              {providerInfo.displayName}
+            </div>
           </dd>
         </dl>
         <dl className="flex">

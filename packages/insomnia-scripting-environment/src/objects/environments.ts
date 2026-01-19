@@ -1,6 +1,7 @@
 import { getExistingConsole } from './console';
 import { getInterpolator } from './interpolator';
 
+
 /**
  * Represents an environment object that stores key-value pairs and provides methods to interact with them.
  *
@@ -120,8 +121,16 @@ export class Environment {
    *
    * @param template - The template string containing placeholders to be replaced.
    * @returns The rendered string with placeholders replaced by their corresponding values.
+   * 
+   * @throws Will throw an error if template is not a string or object.
    */
-  replaceIn = (template: string) => {
+  replaceIn = (template: string | object) => {
+    if (typeof template === 'object') {
+      template = template.toString();
+    } else if (typeof template !== 'string') {
+      throw new TypeError('The template must be a string or an object');
+    }
+    
     return getInterpolator().render(template, this.toObject());
   };
 
@@ -317,8 +326,16 @@ export class Variables {
    *
    * @param template - The template string containing placeholders to be replaced.
    * @returns The rendered string with placeholders replaced by their corresponding values.
+   * 
+   * @throws Will throw an error if template is not a string or object.
    */
-  replaceIn = (template: string) => {
+  replaceIn = (template: string | object) => {
+    if (typeof template === 'object') {
+      template = template.toString();
+    } else if (typeof template !== 'string') {
+      throw new TypeError('The template must be a string or an object');
+    }
+
     const context = this.toObject();
     return getInterpolator().render(template, context);
   };

@@ -1,7 +1,6 @@
 import type NeDB from '@seald-io/nedb';
 import electron from 'electron';
 
-import { database } from '~/common/database';
 import { flushChangesImpl, nedbDatabase } from '~/common/database/database-nedb';
 import type { IDatabase } from '~/common/database/types';
 
@@ -18,13 +17,12 @@ export const mainDatabase: IDatabase = {
     );
 
     // Register IPC handler for renderer process bridge calls
-    electron.ipcMain.handle('database.invoke', async (_e, fnName: string, ...args: any[]) => {
-      // @ts-expect-error -- dynamic method invocation
-      const fn = database[fnName];
+    electron.ipcMain.handle('database.invoke', async (_e, fnName: string, ...args: unknown[]) => {
+      const fn = mainDatabase[fnName as keyof IDatabase] as (...args: unknown[]) => unknown;
       if (typeof fn !== 'function') {
         throw new TypeError(`Unknown database method: ${fnName}`);
       }
-      return fn.apply(database, args);
+      return fn(...args);
     });
   },
   flushChanges: async function (id = 0, fake = false) {

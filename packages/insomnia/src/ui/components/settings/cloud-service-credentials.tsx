@@ -6,7 +6,6 @@ import { useDeleteCloudCredentialActionFetcher } from '~/routes/cloud-credential
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../common/constants';
 import {
-  type AzureOAuthCredential,
   type CloudProviderCredential,
   type CloudProviderName,
   getProviderDisplayName,
@@ -137,7 +136,7 @@ export const CloudServiceCredentialList = () => {
         <h2 className="z-10 bg-(--color-bg) text-lg font-bold">Service Provider Credential List</h2>
         <MenuTrigger>
           <Button
-            aria-label="Create Credential"
+            aria-label="Create Cloud Credential"
             className="flex h-full items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 py-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             <Icon icon="plus-circle" /> Add Credential
@@ -179,9 +178,9 @@ export const CloudServiceCredentialList = () => {
           <tbody>
             {cloudCredentials.map(cloudCred => {
               const { _id, name, provider, credentials } = cloudCred;
-              let isAzureTokenExpired = false;
-              if (provider === 'azure') {
-                const tokenExpiresOn = (credentials as AzureOAuthCredential).expiresOn;
+              let isAzureTokenExpired = !credentials;
+              if (credentials && provider === 'azure') {
+                const tokenExpiresOn = 'expiresOn' in credentials ? credentials.expiresOn : null;
                 if (tokenExpiresOn && new Date() >= new Date(tokenExpiresOn)) {
                   isAzureTokenExpired = true;
                 }

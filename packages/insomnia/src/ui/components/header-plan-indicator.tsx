@@ -8,6 +8,7 @@ import { getAppWebsiteBaseURL } from '~/common/constants';
 import { useResourceUsageFetcher } from '~/routes/resource.usage';
 import { useTrialStartActionFetcher } from '~/routes/trial.start';
 import { Icon } from '~/ui/components/icon';
+import { TrialConfirmationModal } from '~/ui/components/modals/trial-confirmation-modal';
 import { Tooltip } from '~/ui/components/tooltip';
 import { usePlanData } from '~/ui/hooks/use-plan';
 import { useUserService } from '~/ui/hooks/use-user-service';
@@ -24,6 +25,7 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
     useUserService();
   const [open, _setOpen] = useState(false);
   const [canTrial, setCanTrial] = useState(false);
+  const [showTrialModal, setShowTrialModal] = useState(false);
   const planName = `${planDisplayName} Plan`;
 
   const startFetcher = useTrialStartActionFetcher();
@@ -33,12 +35,14 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
     if (startFetcher.state === 'idle') {
       startFetcher.submit();
     }
+    setShowTrialModal(false);
   }
 
   const checked = useRef(false);
   const setOpen = (value: boolean) => {
     if (!value) {
       checked.current = false;
+      setShowTrialModal(false);
     }
     _setOpen(value);
   };
@@ -202,7 +206,10 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
               <div className="my-[8px] px-[12px]">
                 <Button
                   className="h-[22px] rounded-sm bg-(--color-surprise) px-[12px] text-center text-sm text-(--color-font-surprise)"
-                  onPress={() => handleStartTrial()}
+                  onPress={() => {
+                    _setOpen(false);
+                    setShowTrialModal(true);
+                  }}
                 >
                   Free Enterprise Trial
                 </Button>
@@ -211,6 +218,12 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
           </div>
         </Dialog>
       </Popover>
+      <TrialConfirmationModal
+        isOpen={showTrialModal}
+        onClose={() => setShowTrialModal(false)}
+        onStartTrial={handleStartTrial}
+        isLoading={startFetcher.state !== 'idle'}
+      />
     </DialogTrigger>
   );
 };

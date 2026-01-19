@@ -7,6 +7,7 @@ import { useRootLoaderData } from '~/root';
 import { useTrialCheckLoaderFetcher } from '~/routes/trial.check';
 import { useTrialStartActionFetcher } from '~/routes/trial.start';
 import { Icon } from '~/ui/components/icon';
+import { TrialConfirmationModal } from '~/ui/components/modals/trial-confirmation-modal';
 import { usePlanData } from '~/ui/hooks/use-plan';
 
 export interface UpgradeModalOptions extends Partial<any> {
@@ -26,6 +27,7 @@ export const UpgradePlanModal = () => {
   const { isFreePlan } = usePlanData();
   const { firstName, email, accountId } = userSession;
   const [open, setOpen] = useState(false);
+  const [showTrialConfirmation, setShowTrialConfirmation] = useState(false);
   const { load: checkerLoad, data: checkerData } = useTrialCheckLoaderFetcher();
   const startFetcher = useTrialStartActionFetcher();
 
@@ -35,6 +37,7 @@ export const UpgradePlanModal = () => {
 
   const handleClose = () => {
     window.localStorage.setItem(`upgrade-modal-dismissed:${accountId}`, new Date().toISOString());
+    setShowTrialConfirmation(false);
     setOpen(false);
   };
 
@@ -42,6 +45,7 @@ export const UpgradePlanModal = () => {
     if (startFetcher.state === 'idle') {
       startFetcher.submit();
     }
+    setShowTrialConfirmation(false);
     setOpen(false);
   };
 
@@ -145,8 +149,7 @@ export const UpgradePlanModal = () => {
                 {checkerData?.isEligible && (
                   <Button
                     className="h-[30px] rounded-sm border border-solid border-(--hl-md)! px-[12px] text-sm text-(--color-font) hover:bg-(--hl-xs)"
-                    isDisabled={startFetcher.state !== 'idle'}
-                    onPress={handleStartTrial}
+                    onPress={() => setShowTrialConfirmation(true)}
                   >
                     Try Free for 14 Days
                   </Button>
@@ -162,6 +165,12 @@ export const UpgradePlanModal = () => {
           )}
         </Dialog>
       </Modal>
+      <TrialConfirmationModal
+        isOpen={showTrialConfirmation}
+        onClose={() => setShowTrialConfirmation(false)}
+        onStartTrial={handleStartTrial}
+        isLoading={startFetcher.state !== 'idle'}
+      />
     </ModalOverlay>
   );
 };

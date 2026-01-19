@@ -14,7 +14,9 @@
 
 @import './lib/codemirror/codemirror.css' layer(base);
 @import './lib/codemirror/material.css' layer(base);
+@import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon-modifiers.css' layer(base);
 @import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css' layer(base);
+@import 'monaco-editor/min/vs/editor/editor.main.css' layer(base);
 @import './main.css' layer(base);
 
 @plugin '@tailwindcss/typography';

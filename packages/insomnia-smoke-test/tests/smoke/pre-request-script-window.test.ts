@@ -57,7 +57,7 @@ test.describe('test hidden window handling', () => {
 
     await page.getByTestId('settings-button').click();
     await page.getByLabel('Request timeout (ms)').fill('1000');
-    await page.getByRole('button', { name: '' }).click();
+    await page.getByRole('button', { name: 'Modal Close Button' }).click();
 
     await page.getByText('Pre-request Scripts').click();
     await page.getByLabel('Request Collection').getByTestId('Long running task - post').press('Enter');
@@ -73,7 +73,7 @@ test.describe('test hidden window handling', () => {
 
     await page.getByTestId('settings-button').click();
     await page.getByLabel('Request timeout (ms)').fill('6000');
-    await page.getByRole('button', { name: '' }).click();
+    await page.getByRole('button', { name: 'Modal Close Button' }).click();
 
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
@@ -97,7 +97,7 @@ test.describe('test hidden window handling', () => {
     // update timeout
     await page.getByTestId('settings-button').click();
     await page.getByLabel('Request timeout (ms)').fill('5000');
-    await page.getByRole('button', { name: '' }).click();
+    await page.getByRole('button', { name: 'Modal Close Button' }).click();
 
     // send the request with infinite loop script
     await page.getByText('Pre-request Scripts').click();

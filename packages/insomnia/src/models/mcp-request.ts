@@ -11,7 +11,7 @@ export const name = 'MCP Request';
 export const type = 'McpRequest';
 export const prefix = 'mcp-req';
 export const canDuplicate = true;
-export const canSync = false;
+export const canSync = true;
 
 export const TRANSPORT_TYPES = {
   STDIO: 'stdio',
@@ -20,7 +20,6 @@ export const TRANSPORT_TYPES = {
 export type TransportType = (typeof TRANSPORT_TYPES)[keyof typeof TRANSPORT_TYPES];
 
 export interface BaseMcpRequest {
-  name: string;
   url: string;
   transportType: TransportType;
   description: string;
@@ -48,7 +47,6 @@ export function init(): BaseMcpRequest {
   return {
     url: '',
     transportType: TRANSPORT_TYPES.HTTP,
-    name: 'New MCP Client',
     description: '',
     headers: [],
     authentication: {},

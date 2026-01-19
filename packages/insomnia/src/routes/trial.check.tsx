@@ -1,22 +1,10 @@
+import { getTrialEligibility } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { userSession } from '~/models';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/settings.update';
-
-interface Eligible {
-  isEligible: boolean;
-}
-
-export function getTrialEligibility(sessionId: string) {
-  return insomniaFetch<Eligible | { error: string }>({
-    method: 'GET',
-    path: '/v1/trials/eligibility',
-    sessionId,
-  });
-}
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const { id: sessionId } = await userSession.get();
@@ -28,9 +16,9 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
   }
 
   try {
-    const check = await getTrialEligibility(sessionId);
+    const check = await getTrialEligibility({ sessionId });
     return {
-      isEligible: 'isEligible' in check ? check.isEligible : false,
+      isEligible: check.isEligible,
     };
   } catch {
     return {

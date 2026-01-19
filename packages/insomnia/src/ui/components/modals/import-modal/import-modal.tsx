@@ -5,6 +5,7 @@ import { Heading } from 'react-aria-components';
 
 import { useImportResourcesFetcher } from '~/routes/import.resources';
 import { useScanResourcesFetcher } from '~/routes/import.scan';
+import { Checkbox } from '~/ui/components/base/checkbox';
 
 import type { ScanResult } from '../../../../common/import';
 import { isScratchpadProject } from '../../../../models/project';
@@ -12,6 +13,7 @@ import { invariant } from '../../../../utils/invariant';
 import { SegmentEvent } from '../../../analytics';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
 import { ModalHeader } from '../../base/modal-header';
+import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { Button } from '../../themed-button';
 import { disclaimer, ScanResultsTable, SupportedFormats, validImportExtensions } from './shared';
@@ -224,6 +226,12 @@ export const ImportModal: FC<ImportModalProps> = ({
     );
   }, [scanResourcesFetcherData]);
   const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspacesCount <= 1;
+  // Check if base environment is being imported to existing workspace
+  const isImportingBaseEnvironmentToWorkspace =
+    shouldImportToWorkspace &&
+    scanResourcesFetcherData?.some(data =>
+      data.environments?.some(env => env.parentId && env.parentId.startsWith('__WORKSPACE_ID__')),
+    );
   // TODO: need to add a more strong way to inform users that resources will be imported into project rather than current workspace
   const header = shouldImportToWorkspace
     ? `Import to "${workspaceName}" Workspace`
@@ -257,13 +265,17 @@ export const ImportModal: FC<ImportModalProps> = ({
             errors={importErrors}
             loading={importFetcher.state !== 'idle'}
             disabled={importErrors.length > 0}
-            onImport={() => {
+            isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
+            onImport={(overrideBaseEnvironmentData: boolean) => {
               invariant(Array.isArray(scanResourcesFetcherData));
 
               importFetcher.submit({
                 organizationId,
                 projectId: defaultProjectId || '',
                 workspaceId: shouldImportToWorkspace ? defaultWorkspaceId : undefined,
+                options: {
+                  overrideBaseEnvironmentData,
+                },
               });
               scanResourcesFetcherData
                 .filter(({ errors }) => errors.length === 0)
@@ -376,19 +388,35 @@ const ImportResourcesForm = ({
   errors,
   disabled,
   loading,
+  isImportingBaseEnvironmentToWorkspace,
 }: {
   scanResults: ScanResult[];
   errors?: string[];
-  onImport: () => void;
+  onImport: (overrideBaseEnvironmentData: boolean) => void;
   disabled: boolean;
   loading: boolean;
+  isImportingBaseEnvironmentToWorkspace: boolean;
 }) => {
+  const [overrideBaseEnvironmentData, setOverrideBaseEnvironmentData] = useState(true);
   return (
     <Fragment>
       <div className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto">
         <div className="overflow-y-auto">
           <ScanResultsTable scanResults={scanResults} />
+          {isImportingBaseEnvironmentToWorkspace && (
+            <Checkbox
+              isSelected={overrideBaseEnvironmentData}
+              onChange={checked => setOverrideBaseEnvironmentData(checked)}
+              className="mt-1"
+            >
+              Override Base Environment On Name Conflict
+              <HelpTooltip className="space-left">
+                Override existing variables in the base environment if the same variable names are found during import.
+              </HelpTooltip>
+            </Checkbox>
+          )}
         </div>
+
         <div>
           {errors && errors.length > 0 && (
             <div className="notice error margin-top-sm">
@@ -407,7 +435,7 @@ const ImportResourcesForm = ({
           variant="contained"
           bg="surprise"
           disabled={disabled}
-          onClick={onImport}
+          onClick={() => onImport(overrideBaseEnvironmentData)}
           className="btn h-10 gap-(--padding-sm)"
         >
           {loading ? (

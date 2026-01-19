@@ -7,9 +7,11 @@ describe('postman', () => {
   const postmanSchema = ({
     requests = [],
     version = 'v2.0.0',
+    variables = {},
   }: {
     requests?: Request1[];
     version?: string;
+    variables?: Record<string, any>;
   } = {}) =>
     structuredClone({
       info: {
@@ -29,6 +31,10 @@ describe('postman', () => {
           ],
         },
       ],
+      variable: Object.entries(variables).map(([key, value]) => ({
+        key,
+        value,
+      })),
     }) as HttpsSchemaGetpostmanComJsonCollectionV210;
 
   describe('transformPostmanToNunjucksString', () => {
@@ -533,6 +539,30 @@ describe('postman', () => {
           value: "{% faker 'guid' %}",
         },
       ]);
+    });
+
+    it('should import collection variable as Insomnia base environment', () => {
+      const request: Request1 = {
+        method: 'GET',
+        header: [],
+        url: {
+          raw: 'https://httpbin.org/anything/:path',
+          protocol: 'https',
+          host: ['httpbin', 'org'],
+          path: ['anything', ':path'],
+        },
+      };
+      const variables = {
+        key: 'path',
+        foo: 'bar',
+      };
+      const schema = postmanSchema({ requests: [request], version: 'v2.1.0', variables });
+      const postman = new ImportPostman(schema);
+      const result = postman.importCollection();
+
+      const baseEnvironment = result.find(i => i._type === 'environment' && i.parentId !== null);
+      expect(baseEnvironment).toBeDefined();
+      expect(baseEnvironment?.data).toEqual(variables);
     });
   });
 });

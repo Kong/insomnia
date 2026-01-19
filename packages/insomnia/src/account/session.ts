@@ -12,7 +12,7 @@ import {
   userSession,
   workspaceMeta,
 } from '../models';
-import { type GitRepository, isGitCredentialsOAuth } from '../models/git-repository';
+import { type GitRepository } from '../models/git-repository';
 import { EMPTY_GIT_PROJECT_ID, type Project } from '../models/project';
 import type { WorkspaceMeta } from '../models/workspace-meta';
 import * as crypt from './crypt';
@@ -193,34 +193,7 @@ async function _removeAllCredentials() {
   const cloudCredentials = await cloudCredential.all();
   for (const cred of cloudCredentials) {
     if ('credentials' in cred) {
-      if ('secretAccessKey' in cred.credentials) {
-        removals.push(
-          cloudCredential.update(cred, {
-            // AWS
-            credentials: { ...cred.credentials, secretAccessKey: '', sessionToken: '' },
-          }),
-        );
-        continue;
-      }
-      // hashicorp
-      if ('access_token' in cred.credentials) {
-        removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, access_token: '' } }));
-        continue;
-      }
-      if ('client_secret' in cred.credentials) {
-        removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, client_secret: '' } }));
-        continue;
-      }
-      if ('secret_id' in cred.credentials) {
-        removals.push(
-          cloudCredential.update(cred, { credentials: { ...cred.credentials, secret_id: '', role_id: '' } }),
-        );
-        continue;
-      }
-      // azure
-      if ('accessToken' in cred.credentials) {
-        removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, accessToken: '' } }));
-      }
+      removals.push(cloudCredential.update(cred, { credentials: undefined }));
     }
   }
 
@@ -236,14 +209,8 @@ async function _removeAllCredentials() {
 
   const customGitRepos = await gitRepository.all();
   for (const repo of customGitRepos) {
-    if (!repo.credentials) continue; // unauthenticated git repositories need not be removed
-    if (isGitCredentialsOAuth(repo.credentials)) {
-      if (repo.credentials.token) {
-        removals.push(_removeGitRepository(repo));
-      }
-    } else if (repo.credentials.password) {
-      removals.push(_removeGitRepository(repo));
-    }
+    if (!repo.credentialsId) continue; // unauthenticated git repositories need not be removed
+    removals.push(_removeGitRepository(repo));
   }
 
   const proxySettings = await settings.get();

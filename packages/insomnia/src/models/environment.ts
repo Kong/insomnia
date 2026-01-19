@@ -16,6 +16,7 @@ import * as workspace from './workspace';
 export const name = 'Environment';
 export const type = 'Environment';
 export const prefix = 'env';
+export const prefixEnvPair = 'envPair';
 // vault environment path when saved in environment data
 export const vaultEnvironmentPath = '__insomnia_vault';
 // vault environment path when used in runtime rendering
