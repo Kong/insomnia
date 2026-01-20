@@ -8,6 +8,7 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
 
+import { getCurrentSessionId } from '~/account/session';
 import { mainDatabase } from '~/common/database/database.main';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
@@ -236,7 +237,7 @@ const _launchApp = async () => {
         window.webContents.send('shell:open', lastArg);
       });
       window = windowUtils.createWindowsAndReturnMain();
-      const openDeepLinkUrl = (url: string) => {
+      const openDeepLinkUrl = async (url: string) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {
@@ -247,7 +248,18 @@ const _launchApp = async () => {
         } else {
           window = windowUtils.createWindowsAndReturnMain();
         }
-        window.webContents.send('shell:open', url);
+        const isLoggedIn = (await getCurrentSessionId()) ? true : false;
+        if (isLoggedIn) {
+          return window.webContents.send('shell:open', url);
+        }
+        for (const window of BrowserWindow.getAllWindows()) {
+          window.webContents.send('show-toast', {
+            content: {
+              title: `You must be logged in to open this link`,
+              status: 'info',
+            },
+          });
+        }
       };
       app.on('open-url', (_event, url) => {
         openDeepLinkUrl(url);
