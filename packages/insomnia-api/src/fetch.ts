@@ -28,8 +28,7 @@ export class ResponseFailError extends Error {
   response: Response;
   constructor(name: string, msg: string, response: Response) {
     super(msg);
-    this.name = 'ResponseFailError';
-    if (name) this.name += `: ${name}`;
+    this.name = name || 'ResponseFailError';
     this.response = response;
   }
 }
