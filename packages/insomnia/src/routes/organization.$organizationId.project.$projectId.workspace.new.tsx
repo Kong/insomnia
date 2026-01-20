@@ -138,6 +138,26 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       await models.apiSpec.getOrCreateForParentId(workspace._id);
     }
 
+    if (workspaceData.scope === 'mcp') {
+      const settings = await models.settings.getOrCreate();
+      const defaultHeaders = settings.disableAppVersionUserAgent
+        ? []
+        : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
+      // Create mcp request when MCP workspace is created
+      await models.mcpRequest.create({
+        parentId: workspace._id,
+        transportType: 'streamable-http',
+        url: '',
+        name: 'MCP Client',
+        headers: defaultHeaders,
+        description: '',
+      });
+
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.mcpClientAdded,
+      });
+    }
+
     // Create default env, cookie jar, and meta
     await models.environment.getOrCreateForParentId(workspace._id);
     await models.cookieJar.getOrCreateForParentId(workspace._id);
@@ -206,36 +226,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           projectId,
           workspaceId: workspace._id,
           requestId: activeRequestId,
-        }),
-      );
-    }
-
-    if (workspaceData.scope === 'mcp') {
-      const settings = await models.settings.getOrCreate();
-      const defaultHeaders = settings.disableAppVersionUserAgent
-        ? []
-        : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
-      // Create mcp request when MCP workspace is created
-      const newMcpRequest = await models.mcpRequest.create({
-        parentId: workspace._id,
-        transportType: 'streamable-http',
-        url: '',
-        name: 'MCP Client',
-        headers: defaultHeaders,
-        description: '',
-      });
-      const requestId = newMcpRequest._id;
-
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.mcpClientAdded,
-      });
-
-      return redirect(
-        href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId', {
-          organizationId,
-          projectId,
-          workspaceId: workspace._id,
-          requestId,
         }),
       );
     }
