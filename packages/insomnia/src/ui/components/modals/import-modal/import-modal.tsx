@@ -16,7 +16,7 @@ import { ModalHeader } from '../../base/modal-header';
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { Button } from '../../themed-button';
-import { disclaimer, ScanResultsTable, SupportedFormats, validImportExtensions } from './shared';
+import { CurlIcon, disclaimer, ScanResultsTable, SupportedFormats, validImportExtensions } from './shared';
 
 export const Radio: FC<{
   name: string;
@@ -176,6 +176,10 @@ interface ImportModalProps extends ModalProps {
       }
     | {
         type: 'uri';
+        defaultValue?: string;
+      }
+    | {
+        type: 'curl';
         defaultValue?: string;
       }
     | {
@@ -339,6 +343,10 @@ const ScanResourcesForm = ({
                 <i className="fa fa-link" />
                 Url
               </Radio>
+              <Radio onChange={() => setImportFrom('curl')} name="source" value="curl" checked={importFrom === 'curl'}>
+                <CurlIcon />
+                cURL
+              </Radio>
               <Radio
                 onChange={() => setImportFrom('clipboard')}
                 name="source"
@@ -360,6 +368,19 @@ const ScanResourcesForm = ({
                   name="uri"
                   defaultValue={from?.type === 'uri' ? from.defaultValue : undefined}
                   placeholder="https://website.com/insomnia-import.json"
+                />
+              </label>
+            </div>
+          )}
+          {importFrom === 'curl' && (
+            <div className="form-control form-control--outlined">
+              <label>
+                cURL:
+                <input
+                  type="text"
+                  name="curl"
+                  defaultValue={from?.type === 'curl' ? from.defaultValue : undefined}
+                  placeholder="curl --request GET --url http://insomnia.rest/"
                 />
               </label>
             </div>
