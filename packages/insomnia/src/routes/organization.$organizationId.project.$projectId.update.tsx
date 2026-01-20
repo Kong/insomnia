@@ -1,4 +1,4 @@
-import { createTeamProject, deleteTeamProject, updateTeamProject } from 'insomnia-api';
+import { createTeamProject, deleteTeamProject, isApiError, updateTeamProject } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
@@ -9,7 +9,6 @@ import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { parseInsomniaFetchError } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -52,30 +51,32 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           name,
         });
       } catch (error: unknown) {
-        const parsedError = parseInsomniaFetchError(error);
-        let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
-        if (parsedError.name === 'FORBIDDEN') {
-          errorMessage = 'You do not have permission to create a cloud project in this organization.';
+        if (isApiError(error)) {
+          let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
+          if (error.name === 'FORBIDDEN') {
+            errorMessage = 'You do not have permission to create a cloud project in this organization.';
+          }
+
+          if (error.name === 'NEEDS_TO_UPGRADE') {
+            errorMessage = 'Upgrade your account in order to create new Cloud Projects.';
+          }
+
+          if (error.name === 'PROJECT_STORAGE_RESTRICTION') {
+            errorMessage = 'The owner of the organization allows only Local Vault project creation, please try again.';
+          }
+
+          showToast({
+            title: 'Error updating project',
+            description: errorMessage,
+            icon: 'warning',
+            status: 'error',
+          });
+
+          return {
+            error: errorMessage,
+          };
         }
-
-        if (parsedError.name === 'NEEDS_TO_UPGRADE') {
-          errorMessage = 'Upgrade your account in order to create new Cloud Projects.';
-        }
-
-        if (parsedError.name === 'PROJECT_STORAGE_RESTRICTION') {
-          errorMessage = 'The owner of the organization allows only Local Vault project creation, please try again.';
-        }
-
-        showToast({
-          title: 'Error updating project',
-          description: errorMessage,
-          icon: 'warning',
-          status: 'error',
-        });
-
-        return {
-          error: errorMessage,
-        };
+        throw error;
       }
 
       await models.project.update(project, { name });
@@ -106,27 +107,29 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           },
         });
       } catch (error: unknown) {
-        const parsedError = parseInsomniaFetchError(error);
-        let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
+        if (isApiError(error)) {
+          let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
 
-        if (parsedError.name === 'FORBIDDEN') {
-          errorMessage = 'You do not have permission to change this project.';
+          if (error.name === 'FORBIDDEN') {
+            errorMessage = 'You do not have permission to change this project.';
+          }
+
+          if (error.name === 'PROJECT_STORAGE_RESTRICTION') {
+            errorMessage = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
+          }
+
+          showToast({
+            title: 'Error updating project',
+            description: errorMessage,
+            icon: 'warning',
+            status: 'error',
+          });
+
+          return {
+            error: errorMessage,
+          };
         }
-
-        if (parsedError.name === 'PROJECT_STORAGE_RESTRICTION') {
-          errorMessage = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
-        }
-
-        showToast({
-          title: 'Error updating project',
-          description: errorMessage,
-          icon: 'warning',
-          status: 'error',
-        });
-
-        return {
-          error: errorMessage,
-        };
+        throw error;
       }
 
       await models.project.update(project, { name, remoteId: null });
@@ -175,29 +178,31 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           success: true,
         };
       } catch (error: unknown) {
-        const parsedError = parseInsomniaFetchError(error);
-        let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
-        if (parsedError.name === 'FORBIDDEN') {
-          errorMessage = parsedError.message;
-        }
+        if (isApiError(error)) {
+          let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
+          if (error.name === 'FORBIDDEN') {
+            errorMessage = error.message;
+          }
 
-        if (parsedError.name === 'NEEDS_TO_UPGRADE') {
-          errorMessage = 'Upgrade your account in order to create new Cloud Projects.';
-        }
-        if (parsedError.name === 'PROJECT_STORAGE_RESTRICTION') {
-          errorMessage = 'The owner of the organization allows only Local Vault project creation, please try again.';
-        }
+          if (error.name === 'NEEDS_TO_UPGRADE') {
+            errorMessage = 'Upgrade your account in order to create new Cloud Projects.';
+          }
+          if (error.name === 'PROJECT_STORAGE_RESTRICTION') {
+            errorMessage = 'The owner of the organization allows only Local Vault project creation, please try again.';
+          }
 
-        showToast({
-          title: 'Error updating project',
-          description: errorMessage,
-          icon: 'warning',
-          status: 'error',
-        });
+          showToast({
+            title: 'Error updating project',
+            description: errorMessage,
+            icon: 'warning',
+            status: 'error',
+          });
 
-        return {
-          error: errorMessage,
-        };
+          return {
+            error: errorMessage,
+          };
+        }
+        throw error;
       }
     }
 
@@ -218,26 +223,28 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             },
           });
         } catch (error: unknown) {
-          let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
-          const parsedError = parseInsomniaFetchError(error);
-          if (parsedError.name === 'FORBIDDEN') {
-            errorMessage = 'You do not have permission to change this project.';
+          if (isApiError(error)) {
+            let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
+            if (error.name === 'FORBIDDEN') {
+              errorMessage = 'You do not have permission to change this project.';
+            }
+
+            if (error.name === 'PROJECT_STORAGE_RESTRICTION') {
+              errorMessage = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
+            }
+
+            showToast({
+              title: 'Error updating project',
+              description: errorMessage,
+              icon: 'warning',
+              status: 'error',
+            });
+
+            return {
+              error: errorMessage,
+            };
           }
-
-          if (parsedError.name === 'PROJECT_STORAGE_RESTRICTION') {
-            errorMessage = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
-          }
-
-          showToast({
-            title: 'Error updating project',
-            description: errorMessage,
-            icon: 'warning',
-            status: 'error',
-          });
-
-          return {
-            error: errorMessage,
-          };
+          throw error;
         }
       }
 

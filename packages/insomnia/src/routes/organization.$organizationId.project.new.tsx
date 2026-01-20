@@ -1,4 +1,4 @@
-import { createTeamProject, updateGitProjectCount } from 'insomnia-api';
+import { createTeamProject, isApiError, updateGitProjectCount } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
@@ -8,7 +8,6 @@ import * as models from '~/models';
 import { EMPTY_GIT_PROJECT_ID, type Project } from '~/models/project';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { parseInsomniaFetchError } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -111,18 +110,20 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
 
     return project._id;
   } catch (error: unknown) {
-    const parsedError = parseInsomniaFetchError(error);
-    let errMessage = 'An unexpected error occurred while creating the project. Please try again.';
+    if (isApiError(error)) {
+      let errMessage = 'An unexpected error occurred while creating the project. Please try again.';
 
-    if (parsedError.name === 'FORBIDDEN') {
-      errMessage = 'You do not have permission to create a cloud project in this organization.';
-    } else if (parsedError.name === 'NEEDS_TO_UPGRADE') {
-      errMessage = 'Upgrade your account in order to create new Cloud Projects.';
-    } else if (parsedError.name === 'PROJECT_STORAGE_RESTRICTION') {
-      errMessage = parsedError.message ?? 'The owner of the organization allows only Local Vault project creation.';
+      if (error.name === 'FORBIDDEN') {
+        errMessage = 'You do not have permission to create a cloud project in this organization.';
+      } else if (error.name === 'NEEDS_TO_UPGRADE') {
+        errMessage = 'Upgrade your account in order to create new Cloud Projects.';
+      } else if (error.name === 'PROJECT_STORAGE_RESTRICTION') {
+        errMessage = error.message ?? 'The owner of the organization allows only Local Vault project creation.';
+      }
+      throw new Error(errMessage);
     }
 
-    throw new Error(errMessage);
+    throw error;
   }
 };
 

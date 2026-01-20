@@ -1,37 +1,7 @@
-import type { FetchConfig } from 'insomnia-api';
+import { type FetchConfig, ResponseFailError } from 'insomnia-api';
 
 import { getApiBaseURL, getClientString, INSOMNIA_FETCH_TIME_OUT, PLAYWRIGHT } from '../common/constants';
 import { generateId } from '../common/misc';
-
-export class ResponseFailError extends Error {
-  constructor(name: string, msg: string, response: Response) {
-    super(msg);
-    this.name = 'ResponseFailError';
-    if (name) this.name += `: ${name}`;
-    this.response = response;
-  }
-  response;
-  payload?: any;
-}
-
-export const parseInsomniaFetchError = (error: unknown) => {
-  if (error instanceof ResponseFailError) {
-    return {
-      name: error.name,
-      message: error.message,
-      response: error.response,
-    };
-  } else if (error instanceof Error) {
-    return {
-      name: error.name,
-      message: error.message,
-    };
-  }
-  return {
-    name: 'Unknown',
-    message: String(error),
-  };
-};
 
 // Adds headers, retries and opens deep links returned from the api
 export async function insomniaFetch<T = void>({

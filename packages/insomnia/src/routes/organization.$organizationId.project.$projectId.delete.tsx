@@ -1,11 +1,10 @@
-import { deleteTeamProject } from 'insomnia-api';
+import { deleteTeamProject, isApiError } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
 import * as models from '~/models';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
-import { parseInsomniaFetchError } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';
 
@@ -49,15 +48,20 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });
     return redirect(initialOrganizationRoute);
   } catch (err: unknown) {
-    const parsedError = parseInsomniaFetchError(err);
-    console.log(parsedError);
-    let errorMessage = '';
-    errorMessage =
-      parsedError.name === 'FORBIDDEN'
-        ? 'You do not have permission to delete this project.'
-        : `An unexpected error occurred while deleting the project. Please try again.${parsedError?.message}`;
+    console.log(err);
+    if (isApiError(err)) {
+      return {
+        error:
+          err.name === 'FORBIDDEN'
+            ? 'You do not have permission to delete this project.'
+            : `An unexpected error occurred while deleting the project. Please try again.`,
+      };
+    }
     return {
-      error: errorMessage,
+      error:
+        err instanceof Error
+          ? err.message
+          : `An unexpected error occurred while deleting the project. Please try again. ${err}`,
     };
   } finally {
     await projectLock.unlock();
