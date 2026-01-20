@@ -54,7 +54,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
         error:
           err.name === 'FORBIDDEN'
             ? 'You do not have permission to delete this project.'
-            : `An unexpected error occurred while deleting the project. Please try again.`,
+            : 'An unexpected error occurred while deleting the project. Please try again.',
       };
     }
     return {
