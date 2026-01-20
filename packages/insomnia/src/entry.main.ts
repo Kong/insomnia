@@ -237,6 +237,7 @@ const _launchApp = async () => {
         window.webContents.send('shell:open', lastArg);
       });
       window = windowUtils.createWindowsAndReturnMain();
+
       const openDeepLinkUrl = async (url: string) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.createWindowsAndReturnMain();
@@ -252,15 +253,12 @@ const _launchApp = async () => {
         if (isLoggedIn) {
           return window.webContents.send('shell:open', url);
         }
-        for (const window of BrowserWindow.getAllWindows()) {
-          window.webContents.send('show-toast', {
-            content: {
-              title: `You must be logged in to open this link`,
-              status: 'info',
-            },
-          });
-        }
+        return window.webContents.send(
+          'shell:open',
+          'insomnia://app/alert?title=You%20must%20be%20logged%20in%20to%20open%20this%20link&message=Please%20log%20in%20and%20try%20again.&button=OK',
+        );
       };
+
       app.on('open-url', (_event, url) => {
         openDeepLinkUrl(url);
       });
