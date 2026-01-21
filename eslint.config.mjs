@@ -154,6 +154,16 @@ export default defineConfig([
               group: ['**/*/insomnia-api/**'],
               message: "Please use 'insomnia-api' instead of relative paths",
             },
+            // Block relative paths to insomnia-data
+            {
+              group: ['./**/insomnia-data', './**/insomnia-data/**', '../**/insomnia-data', '../**/insomnia-data/**'],
+              message: "Please use '~/insomnia-data' instead of relative paths",
+            },
+            // Only allow ~/insomnia-data and ~/insomnia-data/node
+            {
+              regex: '^~/insomnia-data/(?!node($|/)).+',
+              message: "Only '~/insomnia-data' and '~/insomnia-data/node' are allowed",
+            },
           ],
         },
       ],

@@ -1,9 +1,21 @@
 // Database interfaces and types for IoC pattern
 // This file defines the abstract interface that different database implementations must adhere to.
 
-import type NeDB from '@seald-io/nedb';
-
 import type { AllTypes, BaseModel } from '~/models/types';
+
+// Avoid import nedb here to prevent it injecting the node types into renderer process
+export interface DataStoreOptions {
+  filename?: string;
+  timestampData?: boolean;
+  inMemoryOnly?: boolean;
+  autoload?: boolean;
+  onload?(error: Error | null): any;
+  beforeDeserialization?(line: string): string | Promise<string>;
+  afterSerialization?(line: string): string | Promise<string>;
+  corruptAlertThreshold?: number;
+  compareStrings?(a: string, b: string): number;
+  modes?: { fileMode: number; dirMode: number };
+}
 
 export interface Operation {
   upsert?: BaseModel[];
@@ -31,7 +43,7 @@ export type ChangeListener = (changes: ChangeBufferEvent[]) => void;
  * Database interface for IoC pattern.
  * Main process uses NeDBDatabaseImpl, renderer uses BridgeDatabaseImpl.
  */
-export interface IDatabase {
+export interface IDatabase<O = DataStoreOptions> {
   /**
    * Batch modify documents (upsert and remove)
    */
@@ -95,7 +107,7 @@ export interface IDatabase {
   /**
    * Initialize the database.
    */
-  init(config?: NeDB.DataStoreOptions, forceReset?: boolean): Promise<void>;
+  init(config?: O, forceReset?: boolean): Promise<void>;
 
   /**
    * Insert a new document.

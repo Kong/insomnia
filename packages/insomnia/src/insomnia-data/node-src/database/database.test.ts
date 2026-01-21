@@ -1,10 +1,10 @@
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { BaseModel } from '../../models';
-import * as models from '../../models';
-import type { ChangeBufferEvent } from '../database';
-import { database as db } from '../database';
-import { _repairDatabase } from '../database/database-nedb';
+import type { BaseModel } from '../../../models';
+import * as models from '../../../models';
+import type { ChangeBufferEvent } from '../..';
+import { database as db } from '../..';
+import { _repairDatabase } from './database-nedb';
 
 describe('init()', () => {
   it('handles being initialized twice', async () => {
@@ -202,7 +202,7 @@ describe('requestCreate()', () => {
   });
 });
 
-describe('_repairDatabase()', async () => {
+describe('repairDatabase()', async () => {
   beforeEach(async () => {
     await db.init({ inMemoryOnly: true }, true);
   });
@@ -321,7 +321,7 @@ describe('_repairDatabase()', async () => {
     ]);
 
     // Run the fix algorithm
-    await _repairDatabase();
+    await repairDatabase();
 
     // Make sure things get adjusted
     const descendants2 = (await db.getWithDescendants(workspace)).map(d => ({
@@ -472,7 +472,7 @@ describe('_repairDatabase()', async () => {
       },
     ]);
     // Run the fix algorithm
-    await _repairDatabase();
+    await repairDatabase();
     // Make sure things get adjusted
     const descendants2 = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
@@ -538,7 +538,7 @@ describe('_repairDatabase()', async () => {
     expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('New Document');
     expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name');
     // Run the fix algorithm
-    await _repairDatabase();
+    await repairDatabase();
     // Make sure things get adjusted
     expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe('Workspace 1'); // Should fix
     expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('Workspace 2'); // Should fix
@@ -560,7 +560,7 @@ describe('_repairDatabase()', async () => {
     const newRepoWithoutSuffix = await models.gitRepository.create({
       uri: 'https://github.com/foo/bar',
     });
-    await _repairDatabase();
+    await repairDatabase();
     expect(await db.findOne(models.gitRepository.type, { _id: oldRepoWithSuffix._id })).toEqual(
       expect.objectContaining({
         uri: 'https://github.com/foo/bar.git',
