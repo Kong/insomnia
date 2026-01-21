@@ -1,6 +1,10 @@
+import React, { useState } from 'react';
 import type { TextFieldProps, TextProps, ValidationResult } from 'react-aria-components';
 import { FieldError, Input as RaInput, Label, Text, TextField as RaTextField } from 'react-aria-components';
 import { twMerge } from 'tailwind-merge';
+
+import { Button } from '~/basic-components/button';
+import { Icon } from '~/basic-components/icon';
 
 interface CustomInputFieldProps extends TextFieldProps {
   label?: string;
@@ -15,10 +19,22 @@ export function Description(props: TextProps) {
   return <Text {...props} slot="description" className={twMerge('text-xs', props.className)} />;
 }
 
-export const Input = ({ label, errorMessage, className, description, prefix, ...props }: CustomInputFieldProps) => {
+export const Input = ({
+  label,
+  errorMessage,
+  className,
+  description,
+  prefix,
+  type,
+  ...props
+}: CustomInputFieldProps) => {
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const isPassword = type === 'password';
+  const effectiveType = isPassword ? (isPasswordVisible ? 'text' : 'password') : type;
+
   return (
-    <RaTextField className={twMerge('flex flex-col text-(--color-font)', className)} {...props}>
-      {({ isInvalid }) => (
+    <RaTextField className={twMerge('flex flex-col text-(--color-font)', className)} {...props} type={effectiveType}>
+      {({ isInvalid, isDisabled }) => (
         <>
           {label && <Label className="mb-2 pt-0 text-sm">{label}</Label>}
           {description && <Description className="mb-1.5">{description}</Description>}
@@ -30,6 +46,7 @@ export const Input = ({ label, errorMessage, className, description, prefix, ...
               'has-focus:border-(--hl-lg)',
               // 'has-focus-visible:ring-2 has-focus-visible:ring-(--hl-md) has-focus-visible:ring-offset-1',
               isInvalid && 'border-(--color-danger)',
+              isDisabled && 'cursor-not-allowed opacity-50',
             )}
           >
             {prefix && (
@@ -38,6 +55,11 @@ export const Input = ({ label, errorMessage, className, description, prefix, ...
               </span>
             )}
             <RaInput className={twMerge('h-full w-full rounded-sm p-2')} />
+            {isPassword && (
+              <Button onPress={() => setIsPasswordVisible(!isPasswordVisible)} variant="text">
+                <Icon icon={`eye${isPasswordVisible ? '-slash' : ''}`} />
+              </Button>
+            )}
           </div>
 
           <FieldError className="text-xs text-(--color-danger)">{errorMessage}</FieldError>
