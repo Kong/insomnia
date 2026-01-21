@@ -11,6 +11,7 @@ import { _buildBearerHeader } from '~/network/authentication';
 import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
 import { getBearerAuthHeader } from '~/network/bearer-auth/get-header';
 import { getOAuth2Token } from '~/network/o-auth-2/get-token';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
   type ConnectActionParams,
   useRequestConnectActionFetcher,
@@ -23,6 +24,7 @@ import { ModalHeader } from '~/ui/components/base/modal-header';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { Button } from '~/ui/components/themed-button';
+import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 
 import { getDataFromKVPair } from '../../../models/environment';
 import { MCP_TRANSPORT_TYPES, type McpRequest, TRANSPORT_TYPES } from '../../../models/mcp-request';
@@ -63,6 +65,10 @@ export const McpUrlActionBar = ({
   const requestTransportType = request.transportType;
   const requestTransportTypeLabel = getTransportLabel(requestTransportType);
   const modalRef = useRef<MCPStdioAccessModalHandle>(null);
+  const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
+  const gitVersion = useGitVCSVersion();
+  // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
+  const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
 
   useLayoutEffect(() => {
     oneLineEditorRef.current?.focusEnd();
@@ -255,7 +261,8 @@ export const McpUrlActionBar = ({
       >
         <div className="box-border h-full w-full px-(--padding-md)">
           <OneLineEditor
-            id="websocket-url-bar"
+            id="mcp-url-bar"
+            key={uniqueKey}
             ref={oneLineEditorRef}
             onKeyDown={createKeybindingsHandler({
               Enter: () => handleSubmitRef.current(),
