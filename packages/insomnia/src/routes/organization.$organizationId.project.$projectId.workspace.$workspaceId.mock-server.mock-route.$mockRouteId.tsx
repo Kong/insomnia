@@ -17,6 +17,7 @@ import {
 import { database as db } from '~/common/database';
 import { getResponseCookiesFromHeaders } from '~/common/har';
 import * as models from '~/models';
+import { getBodyBuffer } from '~/models/helpers/response-operations';
 import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import type { Request, RequestHeader } from '~/models/request';
@@ -68,7 +69,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     const isOversizedResponse = length > 5 * 1024 * 1024; // 5MB
     // Oversized responses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
-      const buffer = await models.response.getBodyBuffer(activeResponse);
+      const buffer = await getBodyBuffer(activeResponse);
       activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
     }
   }

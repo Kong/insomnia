@@ -4,8 +4,8 @@ import { invariant } from '~/utils/invariant';
 
 import { database as db } from '../common/database';
 import { type EnvironmentKvPairData } from './environment';
-import type { BaseModel } from './index';
 import type { RequestAuthentication, RequestHeader } from './request';
+import type { BaseModel } from './types';
 
 export const name = 'MCP Request';
 export const type = 'McpRequest';

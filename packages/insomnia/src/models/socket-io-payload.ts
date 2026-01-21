@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { CONTENT_TYPE_JSON } from '../common/constants';
 import { database } from '../common/database';
-import type { BaseModel } from '.';
+import type { BaseModel } from './types';
 
 export const name = 'SocketIO Payload';
 

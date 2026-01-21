@@ -3,6 +3,8 @@ import path from 'node:path';
 
 import electron from 'electron';
 
+import { getBodyBuffer } from '~/models/helpers/response-operations';
+
 import type { ParsedApiSpec } from '../common/api-specs';
 import { getAppBundlePlugins, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
@@ -409,7 +411,7 @@ export function getPluginCommonContext({
         },
         response: {
           getLatestForRequestId: models.response.getLatestForRequestId,
-          getBodyBuffer: models.response.getBodyBuffer,
+          getBodyBuffer,
         },
         settings: {
           get: models.settings.get,

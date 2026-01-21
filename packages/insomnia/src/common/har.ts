@@ -2,6 +2,8 @@ import clone from 'clone';
 import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
+import { getBodyBuffer } from '~/models/helpers/response-operations';
+
 import type { BaseModel } from '../models';
 import * as models from '../models';
 import { isRequest, type Request } from '../models/request';
@@ -387,7 +389,7 @@ function mapCookie(cookie: ToughCookie) {
 }
 
 async function getResponseContent(response: Response) {
-  let body = await models.response.getBodyBuffer(response);
+  let body = await getBodyBuffer(response);
 
   if (body === null) {
     body = Buffer.alloc(0);

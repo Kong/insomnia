@@ -1,6 +1,6 @@
 import { database as db } from '../common/database';
 import { isGrpcRequestId } from './grpc-request';
-import type { BaseModel } from './index';
+import type { BaseModel } from './types';
 
 export const name = 'gRPC Request Meta';
 

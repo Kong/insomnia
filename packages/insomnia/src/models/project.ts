@@ -2,7 +2,7 @@ import type { StorageRules } from '~/models/organization';
 
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
-import { type BaseModel } from './index';
+import type { BaseModel } from './types';
 
 export const name = 'Project';
 export const type = 'Project';

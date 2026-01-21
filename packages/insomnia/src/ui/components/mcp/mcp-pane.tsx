@@ -681,5 +681,3 @@ const CollectionGridListItem = (props: {
     </GridListItem>
   );
 };
-
-export default McpPane;

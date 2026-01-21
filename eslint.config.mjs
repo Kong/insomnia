@@ -222,4 +222,22 @@ export default defineConfig([
       '**/.react-router/*',
     ],
   },
+  // Main process ESLint rules
+  {
+    files: ['packages/insomnia/src/main/**/*.{ts,tsx,js,mjs}'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        // block usage of browser globals in main process code
+        {
+          name: 'window',
+          message: '"window" is not available in main process.',
+        },
+        {
+          name: 'document',
+          message: '"document" is not available in main process.',
+        },
+      ],
+    },
+  },
 ]);

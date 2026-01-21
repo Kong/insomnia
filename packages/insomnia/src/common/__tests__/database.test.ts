@@ -3,7 +3,8 @@ import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
 import type { ChangeBufferEvent } from '../database';
-import { _repairDatabase, database as db } from '../database';
+import { database as db } from '../database';
+import { _repairDatabase } from '../database/database-nedb';
 
 describe('init()', () => {
   it('handles being initialized twice', async () => {

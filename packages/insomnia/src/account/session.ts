@@ -17,8 +17,6 @@ import { EMPTY_GIT_PROJECT_ID, type Project } from '../models/project';
 import type { WorkspaceMeta } from '../models/workspace-meta';
 import * as crypt from './crypt';
 
-type LoginCallback = (isLoggedIn: boolean) => void;
-
 export interface SessionData {
   accountId: string;
   id: string;
@@ -28,11 +26,6 @@ export interface SessionData {
   symmetricKey: JsonWebKey;
   publicKey: JsonWebKey;
   encPrivateKey: crypt.AESMessage;
-}
-export function onLoginLogout(loginCallback: LoginCallback) {
-  window.main.on('loggedIn', async () => {
-    loginCallback(await isLoggedIn());
-  });
 }
 
 /** Creates a session from a sessionId and derived symmetric key. */
@@ -56,10 +49,6 @@ export async function absorbKey(sessionId: string, key: string) {
   );
 
   window.main.loginStateChange();
-}
-
-export async function getPublicKey() {
-  return (await getUserSession())?.publicKey;
 }
 
 export async function getPrivateKey() {
