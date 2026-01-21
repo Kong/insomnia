@@ -202,7 +202,7 @@ describe('requestCreate()', () => {
   });
 });
 
-describe('repairDatabase()', async () => {
+describe('_repairDatabase()', async () => {
   beforeEach(async () => {
     await db.init({ inMemoryOnly: true }, true);
   });
@@ -265,7 +265,6 @@ describe('repairDatabase()', async () => {
     const descendants = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
       parentId: d.parentId,
-      // @ts-expect-error -- TSCONVERSION appears to be genuine
       data: d.data || null,
     }));
     expect(descendants).toEqual([
@@ -321,13 +320,12 @@ describe('repairDatabase()', async () => {
     ]);
 
     // Run the fix algorithm
-    await repairDatabase();
+    await _repairDatabase();
 
     // Make sure things get adjusted
     const descendants2 = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
       parentId: d.parentId,
-      // @ts-expect-error -- TSCONVERSION appears to be genuine
       data: d.data || null,
     }));
     expect(descendants2).toEqual([
@@ -428,7 +426,6 @@ describe('repairDatabase()', async () => {
     expect((await db.getWithDescendants(workspace)).length).toBe(3);
     const descendants = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
-      // @ts-expect-error -- TSCONVERSION
       cookies: d.cookies || null,
       parentId: d.parentId,
     }));
@@ -472,11 +469,10 @@ describe('repairDatabase()', async () => {
       },
     ]);
     // Run the fix algorithm
-    await repairDatabase();
+    await _repairDatabase();
     // Make sure things get adjusted
     const descendants2 = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
-      // @ts-expect-error -- TSCONVERSION
       cookies: d.cookies || null,
       parentId: d.parentId,
     }));
@@ -538,7 +534,7 @@ describe('repairDatabase()', async () => {
     expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('New Document');
     expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name');
     // Run the fix algorithm
-    await repairDatabase();
+    await _repairDatabase();
     // Make sure things get adjusted
     expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe('Workspace 1'); // Should fix
     expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('Workspace 2'); // Should fix
@@ -560,7 +556,7 @@ describe('repairDatabase()', async () => {
     const newRepoWithoutSuffix = await models.gitRepository.create({
       uri: 'https://github.com/foo/bar',
     });
-    await repairDatabase();
+    await _repairDatabase();
     expect(await db.findOne(models.gitRepository.type, { _id: oldRepoWithSuffix._id })).toEqual(
       expect.objectContaining({
         uri: 'https://github.com/foo/bar.git',
@@ -603,9 +599,7 @@ describe('duplicate()', () => {
     });
     expect(duplicated._id).not.toEqual(workspace._id);
     expect(duplicated._id).toMatch(/^wrk_[a-z0-9]{32}$/);
-    // @ts-expect-error -- TSCONVERSION
     delete workspace._id;
-    // @ts-expect-error -- TSCONVERSION
     delete duplicated._id;
     expect(duplicated).toEqual({
       ...workspace,
