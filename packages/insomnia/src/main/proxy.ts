@@ -34,7 +34,7 @@ async function updateProxy() {
         // @TODO Add all our API urls here to bypass the proxy to work as before with axios.
         // We can add an option in settings to use the proxy for insomnia API requests and not include them here.
       ].join(','),
-      mode: 'system',
+      mode: 'fixed_servers',
     });
     return;
   }

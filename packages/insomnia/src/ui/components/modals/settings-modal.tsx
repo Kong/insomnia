@@ -151,14 +151,14 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             />
 
             <div className="form-row pad-top-sm">
-              <MaskedSetting
+              <TextSetting
                 label="Proxy for HTTP"
                 setting="httpProxy"
                 help="Enter a HTTP or SOCKS4/5 proxy starting with appropriate prefix from the following (http://, socks4://, socks5://)"
                 placeholder="localhost:8005"
                 disabled={!settings.proxyEnabled}
               />
-              <MaskedSetting
+              <TextSetting
                 label="Proxy for HTTPS"
                 setting="httpsProxy"
                 help="Enter a HTTPS or SOCKS4/5 proxy starting with appropriate prefix from the following (https://, socks4://, socks5://)"
