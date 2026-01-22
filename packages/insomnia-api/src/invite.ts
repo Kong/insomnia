@@ -9,7 +9,7 @@ export const reinvite = ({
   invitationId: string;
   sessionId: string;
 }) => {
-  return fetch<{ enabled: boolean }>({
+  return fetch({
     method: 'POST',
     path: `/v1/organizations/${organizationId}/invites/${invitationId}/reinvite`,
     sessionId,
