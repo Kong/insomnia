@@ -103,11 +103,25 @@ export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: 
       payload: requestPayload?.args.map(item => item.value),
     });
 
+    // Parse JSON content type args before sending
+    const parsedArgs = requestPayload?.args.map((item, index) => {
+      const renderedValue = renderedArgs[index];
+      if (item.mode === CONTENT_TYPE_JSON && typeof renderedValue === 'string') {
+        try {
+          return JSON.parse(renderedValue);
+        } catch {
+          // If parsing fails, send as string
+          return renderedValue;
+        }
+      }
+      return renderedValue;
+    });
+
     window.main.socketIO.event.send({
       requestId: request._id,
       eventName: requestPayload?.eventName || 'message',
       ack: requestPayload?.ack,
-      args: renderedArgs,
+      args: parsedArgs,
     });
   };
 
