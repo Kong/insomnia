@@ -249,14 +249,16 @@ const _launchApp = async () => {
         } else {
           window = windowUtils.createWindowsAndReturnMain();
         }
+        // Block imports when not logged in
+        const isImportDeeplink = url.includes('://app/import');
         const isLoggedIn = (await getCurrentSessionId()) ? true : false;
-        if (isLoggedIn) {
-          return window.webContents.send('shell:open', url);
+        const shouldShowLoginPrompt = isImportDeeplink && !isLoggedIn;
+        if (shouldShowLoginPrompt) {
+          const title = encodeURIComponent('You must be logged in to open this link');
+          const message = encodeURIComponent('Please log in and try again.');
+          return window.webContents.send('shell:open', `insomnia://app/alert?title=${title}&message=${message}`);
         }
-        return window.webContents.send(
-          'shell:open',
-          'insomnia://app/alert?title=You%20must%20be%20logged%20in%20to%20open%20this%20link&message=Please%20log%20in%20and%20try%20again.&button=OK',
-        );
+        return window.webContents.send('shell:open', url);
       };
 
       app.on('open-url', (_event, url) => {
