@@ -4,7 +4,7 @@ import {
   exportMockServerToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
 import React, { type FC, Fragment, useCallback, useState } from 'react';
-import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
+import { Button, Dialog, Heading, Label, Modal, ModalOverlay, Radio, RadioGroup } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
@@ -302,7 +302,34 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                     <p>
                       This will permanently delete the{' '}
                       {<strong style={{ whiteSpace: 'pre-wrap' }}>{workspace?.name}</strong>}{' '}
-                      {getWorkspaceLabel(workspace).singular} {isRemoteProject(project) ? 'remotely' : ''}.
+                      {getWorkspaceLabel(workspace).singular}
+                      {isRemoteProject(project) && (
+                        <RadioGroup name="localOnly" defaultValue="false" className="mb-2 flex flex-col gap-2">
+                          <Label className="text-sm text-(--hl)">How do you want to delete it?</Label>
+                          <div className="flex gap-2">
+                            <Radio
+                              value="true"
+                              className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Heading className="text-lg font-bold">Delete Local File</Heading>
+                              </div>
+                              <p className="pt-2">Delete only the local file.</p>
+                            </Radio>
+                            <Radio
+                              value="false"
+                              className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Heading className="text-lg font-bold">
+                                  <span>Delete Local & Remote File</span>
+                                </Heading>
+                              </div>
+                              <p className="pt-2">Permanently removes from everywhere - local file and the cloud.</p>
+                            </Radio>
+                          </div>
+                        </RadioGroup>
+                      )}
                     </p>
                     {deleteWorkspaceFetcher.data && deleteWorkspaceFetcher.data.error && (
                       <p className="notice error margin-bottom-sm no-margin-top">{deleteWorkspaceFetcher.data.error}</p>
