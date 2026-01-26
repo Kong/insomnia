@@ -58,7 +58,8 @@ test.describe('Vault key actions', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByText('Global env with secret vault').click();
+    await page.getByTestId('project').click();
+    await page.getByText('Global env workspace with secret vault').click();
     await page.getByRole('dialog').getByText('Reset Vault Key').dblclick();
     const vaultKeyValueInModal = await page.getByTestId('VaultKeyDisplayPanel').innerText();
     expect.soft(vaultKeyValueInModal.length).toBeGreaterThan(0);
@@ -89,6 +90,8 @@ test.describe('Check vault used in environment', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    await page.getByTestId('project').click();
+
     // import global environment
     const vaultEnvText = await loadFixture('vault-environment.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), vaultEnvText);
@@ -96,6 +99,7 @@ test.describe('Check vault used in environment', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    await page.getByTestId('project').click();
 
     // create new global private environment
     await page.getByLabel('Create in project').click();
