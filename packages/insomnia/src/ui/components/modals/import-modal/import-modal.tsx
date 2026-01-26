@@ -168,8 +168,8 @@ interface ImportModalProps extends ModalProps {
   projectName: string;
   // undefined when not using preferences
   workspaceName?: string;
-  // undefined when using insomnia://app/import
-  defaultProjectId?: string;
+  // undefined when logged out, should not happen
+  defaultProjectId: string;
   // undefined when in workspace selection page
   defaultWorkspaceId?: string;
   from:
@@ -218,12 +218,11 @@ export const ImportModal: FC<ImportModalProps> = ({
         },
       });
       const workspace = importFetcher?.data?.workspace;
-      const projectId = defaultProjectId || '';
       workspace
         ? navigate(
-            `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+            `/organization/${organizationId}/project/${defaultProjectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
           )
-        : navigate(`/organization/${organizationId}/project/${projectId}`);
+        : navigate(`/organization/${organizationId}/project/${defaultProjectId}`);
       modalRef.current?.hide();
     }
   }, [defaultProjectId, defaultWorkspaceId, importFetcher?.data, navigate, organizationId, scanResourcesFetcherData]);
