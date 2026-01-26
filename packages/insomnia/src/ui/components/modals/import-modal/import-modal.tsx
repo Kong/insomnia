@@ -469,7 +469,7 @@ const ImportResourcesForm = ({
             </div>
           ) : (
             <div>
-              <i className="fa fa-file-import" /> Import to new Workspace
+              <i className="fa fa-file-import" /> Import
             </div>
           )}
         </Button>
