@@ -4,6 +4,7 @@ import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } 
 import { Heading } from 'react-aria-components';
 import { useNavigate } from 'react-router';
 
+import { scopeToActivity } from '~/models/workspace';
 import { useImportResourcesFetcher } from '~/routes/import.resources';
 import { useScanResourcesFetcher } from '~/routes/import.scan';
 import { Checkbox } from '~/ui/components/base/checkbox';
@@ -216,10 +217,12 @@ export const ImportModal: FC<ImportModalProps> = ({
           requests: scanResourcesFetcherData.map(scanResult => scanResult.requests?.length || 0),
         },
       });
-      const workspaceId = importFetcher?.data?.workspaceId;
+      const workspace = importFetcher?.data?.workspace;
       const projectId = defaultProjectId || '';
-      workspaceId
-        ? navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`)
+      workspace
+        ? navigate(
+            `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+          )
         : navigate(`/organization/${organizationId}/project/${projectId}`);
       modalRef.current?.hide();
     }

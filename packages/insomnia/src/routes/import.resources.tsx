@@ -66,8 +66,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       options,
     });
     // Ignore multiple workspace imports
-    const singleImportedWorkspaceId = Array.isArray(result) && result.length === 1 && result[0]?._id;
-    return { done: true, workspaceId: singleImportedWorkspaceId };
+    const singleImportedWorkspace = Array.isArray(result) && result.length === 1 && result[0];
+    return { done: true, workspace: singleImportedWorkspace };
   } catch (error) {
     console.error('Failed to import resources:', error);
     return {
