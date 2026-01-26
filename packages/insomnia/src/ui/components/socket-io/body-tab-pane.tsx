@@ -97,14 +97,20 @@ export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: 
   };
 
   const handleSend = async () => {
+    const args = requestPayload?.args ?? [];
     const renderedArgs = await tryToInterpolateRequestOrShowRenderErrorModal({
       request,
       environmentId,
-      payload: requestPayload?.args.map(item => item.value),
+      payload: args.map(item => item.value),
     });
 
+    // Return early if rendering failed (e.g., RenderError was caught and modal shown)
+    if (!renderedArgs) {
+      return;
+    }
+
     // Parse JSON content type args before sending
-    const parsedArgs = requestPayload?.args.map((item, index) => {
+    const parsedArgs = args.map((item, index) => {
       const renderedValue = renderedArgs[index];
       if (item.mode === CONTENT_TYPE_JSON && typeof renderedValue === 'string') {
         try {
