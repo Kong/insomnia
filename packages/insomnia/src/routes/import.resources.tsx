@@ -36,7 +36,7 @@ export const importScannedResources = async ({
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found.');
 
-  await (typeof workspaceId === 'string' && workspaceId
+  return await (typeof workspaceId === 'string' && workspaceId
     ? importResourcesToWorkspace({
         workspaceId: workspaceId,
         overrideBaseEnvironmentData: options?.overrideBaseEnvironmentData ?? true,
@@ -59,13 +59,13 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(typeof organizationId === 'string', 'OrganizationId is required.');
     invariant(typeof projectId === 'string', 'ProjectId is required.');
 
-    await importScannedResources({
+    const result = await importScannedResources({
       organizationId,
       projectId,
       workspaceId,
       options,
     });
-    return { done: true };
+    return { done: true, workspaceId: result?.[0]._id };
   } catch (error) {
     console.error('Failed to import resources:', error);
     return {

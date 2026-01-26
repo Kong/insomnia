@@ -309,8 +309,9 @@ export async function importResourcesToProject({
 }: {
   projectId: string;
   syncNewWorkspaceIfNeeded?: (workspace: Workspace) => Promise<void>;
-}) {
+}): Promise<Workspace[]> {
   invariant(resourceCacheList.length > 0, 'No resources to import');
+  const importedWorkspaces: Workspace[] = [];
   for (const resourceCacheItem of resourceCacheList) {
     const { resources, importer } = resourceCacheItem;
     const bufferId = await db.bufferChanges();
@@ -320,18 +321,19 @@ export async function importResourcesToProject({
       resource => isRequestGroup(resource) && resource.parentId === '__WORKSPACE_ID__',
     ) as Workspace | undefined;
     if (importer.id === 'postman' && postmanTopLevelFolder) {
-      await importResourcesToNewWorkspace({
+      const newWorkspace = await importResourcesToNewWorkspace({
         projectId,
         resourceCacheItem,
         workspaceToImport: postmanTopLevelFolder,
         syncNewWorkspaceIfNeeded,
       });
+      importedWorkspaces.push(newWorkspace);
       continue;
     }
 
     // if the resource is postman environment,
     if (importer.id === postmanEnvImporterId && resources.find(isEnvironment)) {
-      await Promise.all(
+      const newWorkspaces = await Promise.all(
         resources.filter(isEnvironment).map(resource =>
           importResourcesToNewWorkspace({
             projectId,
@@ -346,6 +348,7 @@ export async function importResourcesToProject({
           }),
         ),
       );
+      importedWorkspaces.push(...newWorkspaces);
       continue;
     }
 
@@ -353,16 +356,17 @@ export async function importResourcesToProject({
 
     // No workspace, so create one
     if (workspaceResources.length === 0) {
-      await importResourcesToNewWorkspace({
+      const newWorkspace = await importResourcesToNewWorkspace({
         projectId,
         resourceCacheItem,
         syncNewWorkspaceIfNeeded,
       });
+      importedWorkspaces.push(newWorkspace);
       continue;
     }
 
     // One or more workspaces in one resourceCacheItem(A resourceCacheItem corresponds to an import file), filter in the resources that belong to each workspace and then import to new workspaces respectively
-    await Promise.all(
+    const newWorkspaces = await Promise.all(
       workspaceResources.map(workspace => {
         if (workspaceResources.filter(({ _id }) => _id === '__WORKSPACE_ID__').length > 1) {
           console.warn(
@@ -386,9 +390,10 @@ export async function importResourcesToProject({
         });
       }),
     );
-
+    importedWorkspaces.push(...newWorkspaces);
     await db.flushChanges(bufferId);
   }
+  return importedWorkspaces;
 }
 
 // Filter resources that belong to the workspace, including the workspace itself
@@ -582,7 +587,7 @@ export const importResourcesToNewWorkspace = async ({
   resourceCacheItem: ResourceCacheType;
   workspaceToImport?: Workspace;
   syncNewWorkspaceIfNeeded?: (workspace: Workspace) => Promise<void>;
-}) => {
+}): Promise<Workspace> => {
   invariant(resourceCacheItem, 'No resources to import');
 
   const project = await models.project.getById(projectId);

@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import React, { type FC, Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Heading } from 'react-aria-components';
+import { useNavigate } from 'react-router';
 
 import { useImportResourcesFetcher } from '~/routes/import.resources';
 import { useScanResourcesFetcher } from '~/routes/import.scan';
@@ -200,26 +201,29 @@ export const ImportModal: FC<ImportModalProps> = ({
   const scanResourcesFetcher = useScanResourcesFetcher();
   const scanResourcesFetcherData = scanResourcesFetcher.data;
   const importFetcher = useImportResourcesFetcher();
+  const navigate = useNavigate();
   useEffect(() => {
     modalRef.current?.show();
   }, []);
 
+  // Track the import completion event, redirect to the new workspace and close the modal
   useEffect(() => {
-    if (importFetcher?.data?.done === true) {
-      // Track the import completion event
-      if (scanResourcesFetcherData?.length) {
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.importCompleted,
-          properties: {
-            workspaces: scanResourcesFetcherData.map(scanResult => scanResult.workspaces?.length || 0),
-            requests: scanResourcesFetcherData.map(scanResult => scanResult.requests?.length || 0),
-          },
-        });
-      }
-
+    if (importFetcher?.data?.done === true && scanResourcesFetcherData?.length) {
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.importCompleted,
+        properties: {
+          workspaces: scanResourcesFetcherData.map(scanResult => scanResult.workspaces?.length || 0),
+          requests: scanResourcesFetcherData.map(scanResult => scanResult.requests?.length || 0),
+        },
+      });
+      const workspaceId = importFetcher?.data?.workspaceId;
+      const projectId = defaultProjectId || '';
+      workspaceId
+        ? navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`)
+        : navigate(`/organization/${organizationId}/project/${projectId}`);
       modalRef.current?.hide();
     }
-  }, [importFetcher.data, scanResourcesFetcherData]);
+  }, [defaultProjectId, defaultWorkspaceId, importFetcher?.data, navigate, organizationId, scanResourcesFetcherData]);
   // allow workspace import if there is only one workspace
   const totalWorkspacesCount = useMemo(() => {
     return (
@@ -465,7 +469,7 @@ const ImportResourcesForm = ({
             </div>
           ) : (
             <div>
-              <i className="fa fa-file-import" /> Import
+              <i className="fa fa-file-import" /> Import to new Workspace
             </div>
           )}
         </Button>
