@@ -19,7 +19,6 @@ test('can send request with custom ca root certificate', async ({ app, page }) =
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('Smoke tests').click();
 
   await page.getByLabel('Request Collection').getByTestId('sends request with certs').press('Enter');
 

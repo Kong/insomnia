@@ -13,7 +13,6 @@ test.describe('Debug-Sidebar', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByLabel('simple').click();
     //Open Properties in Request Sidebar
     await page.getByLabel('Request Collection').getByRole('row', { name: 'example http' }).click();
     await page

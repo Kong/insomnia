@@ -14,7 +14,7 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-
+  await page.getByTestId('project').click();
   // Import a document
   const swaggerDoc = await loadFixture('swagger2.yaml');
   await app.evaluate(async ({ clipboard }, swaggerDoc) => clipboard.writeText(swaggerDoc), swaggerDoc);
@@ -23,7 +23,7 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-
+  await page.getByTestId('project').click();
   await page.getByLabel('Smoke tests').click();
   await page
     .getByTestId('sends request with cookie and get cookie in response')
