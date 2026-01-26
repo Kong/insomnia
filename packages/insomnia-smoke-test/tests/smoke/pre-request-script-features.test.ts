@@ -521,6 +521,9 @@ test.describe('pre-request features tests', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    await page.getByTestId('project').click();
+
+    await page.getByLabel('Pre-request Scripts', { exact: true }).click();
     // go to request collection
     await page.getByLabel('Request Collection').getByTestId('persist global environment').press('Enter');
     // activate global environment
@@ -630,8 +633,6 @@ test.describe('unhappy paths', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-
-    await page.getByLabel('Pre-request Scripts').click();
   });
 
   test('custom errors are returned', async ({ page }) => {

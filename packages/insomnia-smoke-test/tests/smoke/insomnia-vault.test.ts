@@ -171,7 +171,7 @@ test.describe('Check vault used in environment', () => {
     // activate global private vault environment from import
     await page.getByLabel('Manage Environments').click();
     await page.getByPlaceholder('Choose a global environment').click();
-    await page.getByRole('option', { name: 'Global env with secret vault' }).click();
+    await page.getByRole('option', { name: 'Global env workspace with secret vault' }).click();
     await page.getByText('global vault env with secret').click();
 
     // activate legacy array vault environment
