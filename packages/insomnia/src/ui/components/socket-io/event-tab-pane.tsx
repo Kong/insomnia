@@ -187,9 +187,9 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
                   return (
                     <div
                       className={classNames(
-                        "h-4.5 w-[30px] rounded-full border border-solid border-(--hl) bg-(--color-bg) transition-all duration-200 before:m-0.5 before:block before:h-3.5 before:w-3.5 before:rounded-full before:transition-all before:duration-200 before:content-['']",
+                        "flex h-4.5 w-[30px] items-center rounded-full border border-solid border-(--hl) bg-(--color-bg) transition-all duration-200 before:m-0.5 before:block before:h-3.5 before:w-3.5 before:rounded-full before:transition-all before:duration-200 before:content-['']",
                         {
-                          'bg-(--color-surprise) before:translate-x-full before:bg-(--color-bg)': isSelected,
+                          'bg-(--color-surprise) before:translate-x-full before:bg-white': isSelected,
                           'before:bg-(--color-surprise)': !isSelected,
                           'cursor-not-allowed border-(--hl) before:bg-(--hl)': isDisabled,
                         },

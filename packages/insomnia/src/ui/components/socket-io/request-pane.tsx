@@ -288,6 +288,7 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
         </TabPanel>
         <TabPanel className="flex h-full w-full flex-1 flex-col" id="body">
           <SocketIOBodyTabPane
+            key={uniqueKey}
             request={activeRequest}
             requestPayload={requestPayload}
             environmentId={environment?._id || ''}

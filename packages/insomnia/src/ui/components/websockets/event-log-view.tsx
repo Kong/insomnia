@@ -236,8 +236,11 @@ export const EventLogView: FC<Props> = ({
                   : 'focus-within:bg-(--hl-sm) focus:outline-hidden';
               return (
                 <Row className={`group transition-colors ${rowExtraClasses}`}>
-                  <Cell className="border-b border-solid border-(--hl-sm) align-middle text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
-                    <SvgIcon icon={getIcon(event)} />
+                  <Cell className="border-b border-solid border-(--hl-sm) pl-2 align-middle text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
+                    <SvgIcon
+                      icon={getIcon(event)}
+                      style={getIcon(event) === 'info' ? { fill: 'var(--color-font)' } : {}}
+                    />
                   </Cell>
                   <Cell className="border-b border-solid border-(--hl-sm) align-middle text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
                     {getMessage(event, isLoading)}
