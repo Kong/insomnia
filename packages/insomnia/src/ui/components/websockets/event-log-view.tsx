@@ -69,6 +69,21 @@ function getIcon(event: EventTypes): IconId {
   }
 }
 
+// Helper function to stringify event data for display in list view
+const stringifyEventData = (data: unknown): string => {
+  if (typeof data === 'object' && data !== null) {
+    try {
+      return JSON.stringify(data);
+    } catch {
+      return String(data);
+    }
+  }
+  if (typeof data === 'string') {
+    return data;
+  }
+  return String(data);
+};
+
 const getMessage = (event: EventTypes, isLoading: boolean): string | JSX.Element => {
   switch (event.type) {
     case 'message': {
@@ -76,7 +91,7 @@ const getMessage = (event: EventTypes, isLoading: boolean): string | JSX.Element
         return (
           <div className="flex items-center">
             <span className="bg-success mr-2 rounded-xs px-2 py-1">{event.eventName}</span>
-            <span className="shrink">{event?.data?.[0]?.toString()}</span>
+            <span className="shrink">{stringifyEventData(event?.data?.[0])}</span>
             {event?.data?.length > 1 && (
               <span className="bg-info ml-2 rounded-md px-2 py-1">
                 +{event.data.length - 1} {event.data.length - 1 > 1 ? 'Args' : 'Arg'}
