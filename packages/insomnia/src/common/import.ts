@@ -446,11 +446,12 @@ export const importResourcesToWorkspace = async ({
   overrideBaseEnvironmentData?: boolean;
 }) => {
   invariant(resourceCacheList.length > 0, 'No resources to import');
+  const existingWorkspace = await models.workspace.getById(workspaceId);
+
   for (const resourceCacheItem of resourceCacheList) {
     const resources = resourceCacheItem.resources;
     const bufferId = await db.bufferChanges();
     const ResourceIdMap = new Map();
-    const existingWorkspace = await models.workspace.getById(workspaceId);
 
     invariant(existingWorkspace, `Could not find workspace with id ${workspaceId}`);
     // Map new IDs
@@ -573,6 +574,7 @@ export const importResourcesToWorkspace = async ({
 
     await db.flushChanges(bufferId);
   }
+  return [existingWorkspace];
 };
 
 export const isApiSpecImport = ({ id }: Pick<InsomniaImporter, 'id'>) => id === 'openapi3' || id === 'swagger2';
