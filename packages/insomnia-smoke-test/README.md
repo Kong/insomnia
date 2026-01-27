@@ -17,6 +17,7 @@ This project contains the smoke testing suite for Insomnia App.
     - [Getting traces from CI](#getting-traces-from-ci)
     - [Build and package methods](#build-and-package-methods)
     - [Non recurring tests](#non-recurring-tests)
+    - [Refresh certs](#refresh-certs)
 
 ## Quick-start
 
@@ -27,12 +28,13 @@ Prerequisites:
 
 To run all tests:
 
-- In one terminal run: `npm run watch:app`
+- In one terminal run: `npm run watch:app` OR `npm run dev`
 - In another terminal run: `npm run test:smoke:dev`
 
 To run single tests:
 
 - Filter by the file or test title, e.g. `npm run test:smoke:dev -- oauth`
+- Use playwright UI `npm run test:dev -w insomnia-smoke-test -- --project=Smoke --ui` to show all tests by project
 
 ## Debugging and Developing Tests locally
 
@@ -119,10 +121,7 @@ npm run app-package
 npm run test:smoke:package
 ```
 
-> Note: for local testing of the packaged app on macOS you need to change the entitlements temporarily to allow unsigned apps to run. You can do this by changing the `com.apple.security.cs.disable-library-validation` key in `entitlements.mac.inherit.plist` file to
-> to ` <key>com.apple.security.cs.disable-library-validation</key>
-
-    <false/>`
+> Note: for local testing of the packaged app on macOS you need to change the entitlements temporarily to allow unsigned apps to run. You can do this by changing the `com.apple.security.cs.disable-library-validation` key in `entitlements.mac.inherit.plist` file to `true`. (Remember do not commit to the origin repo!)
 
 Each of the above commands will automatically run the Express server, so you do not need to take any extra steps.
 

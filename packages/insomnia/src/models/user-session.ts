@@ -1,6 +1,6 @@
 import type { AESMessage } from '../account/crypt';
 import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import type { BaseModel } from './types';
 
 export interface BaseUserSession {
   accountId: string;

@@ -287,7 +287,3 @@ export function extractNunjucksTagFromCoords(
 }
 
 export const responseTagRegex = new RegExp('{% *response *.* %}');
-
-export function sanitizeStrForWin32(str: string) {
-  return str.replace(/\\/g, '\\\\\\\\');
-}

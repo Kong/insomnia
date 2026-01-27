@@ -1,7 +1,7 @@
 import {
   auth,
   type AuthResult,
-  extractResourceMetadataUrl,
+  extractWWWAuthenticateParams,
   UnauthorizedError,
 } from '@modelcontextprotocol/sdk/client/auth.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
@@ -16,7 +16,6 @@ import * as models from '~/models';
 import { TRANSPORT_TYPES } from '~/models/mcp-request';
 import type { McpResponse } from '~/models/mcp-response';
 import type { RequestHeader } from '~/models/request';
-import { invariant } from '~/utils/invariant';
 
 // Extend undici RequestInit to include dispatcher, it's in node.js fetch but not in dom fetch.
 interface NodeRequestInit extends RequestInit {
@@ -83,7 +82,7 @@ const wrappedFetch = async (
   authProvider: McpOAuthClientProvider,
   calledByAuth?: boolean,
 ) => {
-  const { requestId, responseId, environmentId, timelinePath, eventLogPath } = context;
+  const { requestId, responseId, environmentId, timelinePath, eventLogPath, options } = context;
   const { method = 'GET' } = init;
 
   const reqHeader = new Headers(init?.headers || {});
@@ -146,9 +145,8 @@ const wrappedFetch = async (
   // DELETE method is used to terminate the MCP request, it should not trigger auth flow to keep consistent with the SDK behavior.
   // See: https://github.com/modelcontextprotocol/typescript-sdk/blob/058b87c163996b31d5cda744085ecf3c13c5c56a/src/client/streamableHttp.ts#L529-L537
   if (!calledByAuth && statusCode === 401 && method !== 'DELETE') {
-    const mcpRequest = await models.mcpRequest.getById(requestId);
-    invariant(mcpRequest, 'MCP Request not found');
-    const { authentication } = mcpRequest;
+    const { authentication } = options as OpenMcpHTTPClientConnectionOptions;
+    // use authentication from connection options rather than from db directly to get rendered values
     // By default no authentication is set, authentication is an empty object. Proceed to oauth workflow.
     const isDefaultAuth = !('type' in authentication);
     // Continue to oauth workflow only when the auth type is mcp oauth and enable it.
@@ -160,7 +158,12 @@ const wrappedFetch = async (
       }
     }
 
-    const resourceMetadataUrl = extractResourceMetadataUrl(response);
+    const { resourceMetadataUrl, scope: scopeFromWWWAuthenticate } = extractWWWAuthenticateParams(response);
+    // Use scope from authenticate config if available, otherwise use scope from WWW-Authenticate header
+    const scope =
+      'scope' in authentication && authentication.scope && authentication.scope.trim().length > 0
+        ? authentication.scope
+        : scopeFromWWWAuthenticate;
     if (resourceMetadataUrl) {
       authProvider.saveResourceMetadataUrl(resourceMetadataUrl);
     }
@@ -183,6 +186,7 @@ const wrappedFetch = async (
     const redirectPromise = new Promise<string>(res => (authPromiseResolve = res));
     const unsubscribe = authProvider.onRedirectEnd(async (authorizationCode: string) => {
       // Resolve the promise to continue the auth flow after user has completed authorization in default browser
+      // Will be triggered when `redirectToAuthorization` completes in the oauth client provider
       authPromiseResolve(authorizationCode);
     });
 
@@ -243,6 +247,7 @@ const wrappedFetch = async (
         serverUrl: url,
         resourceMetadataUrl,
         fetchFn: authFetchFn,
+        scope,
       });
       // Wait for user to complete authorization in default browser and get authorization code
       if (authResult === 'REDIRECT') {
@@ -252,6 +257,7 @@ const wrappedFetch = async (
         authResult = await auth(authProvider, {
           serverUrl: url,
           resourceMetadataUrl,
+          scope,
           authorizationCode,
           fetchFn: authFetchFn,
         });
@@ -268,6 +274,7 @@ const wrappedFetch = async (
       BrowserWindow.getAllWindows().forEach(window => {
         window.webContents.send('hide-oauth-authorization-modal');
       });
+      // cleanup the oauth client provider listener
       unsubscribe();
     }
     return await wrappedFetch(url, init, context, authProvider, true);

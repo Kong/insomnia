@@ -1,6 +1,6 @@
 import { PREVIEW_MODE_FRIENDLY, type PreviewMode } from '../common/constants';
 import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import type { BaseModel } from './types';
 
 export const name = 'Request Meta';
 export const type = 'RequestMeta';

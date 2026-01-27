@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import inspector from 'node:inspector';
+import { arch, release } from 'node:os';
 import path from 'node:path';
 
 import electron, { app, BrowserWindow, session } from 'electron';
@@ -7,13 +8,16 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
 
+import { getCurrentSessionId } from '~/account/session';
+import { mainDatabase } from '~/common/database/database.main';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
+import { runGitCredentialsMigration } from '~/sync/git/migrations';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
-import { database } from './common/database';
+import { database, initDatabase } from './common/database';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
@@ -109,13 +113,16 @@ app.on('ready', async () => {
   }
 
   // Init some important things first
-  await database.init();
+  await initDatabase(mainDatabase);
   await _createModelInstances();
   // backup needs the channel from settings which needs the database
   await backupIfNewerVersionAvailable();
   sentryWatchAnalyticsEnabled();
   watchProxySettings();
   windowUtils.init();
+
+  await runGitCredentialsMigration();
+
   await _launchApp();
 
   // Init the rest
@@ -230,7 +237,8 @@ const _launchApp = async () => {
         window.webContents.send('shell:open', lastArg);
       });
       window = windowUtils.createWindowsAndReturnMain();
-      const openDeepLinkUrl = (url: string) => {
+
+      const openDeepLinkUrl = async (url: string) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {
@@ -241,8 +249,18 @@ const _launchApp = async () => {
         } else {
           window = windowUtils.createWindowsAndReturnMain();
         }
-        window.webContents.send('shell:open', url);
+        // Block imports when not logged in
+        const isImportDeeplink = url.includes('://app/import');
+        const isLoggedIn = (await getCurrentSessionId()) ? true : false;
+        const shouldShowLoginPrompt = isImportDeeplink && !isLoggedIn;
+        if (shouldShowLoginPrompt) {
+          const title = encodeURIComponent('You must be logged in to open this link');
+          const message = encodeURIComponent('Please log in and try again.');
+          return window.webContents.send('shell:open', `insomnia://app/alert?title=${title}&message=${message}`);
+        }
+        return window.webContents.send('shell:open', url);
       };
+
       app.on('open-url', (_event, url) => {
         openDeepLinkUrl(url);
       });
@@ -299,6 +317,32 @@ async function _createModelInstances() {
   }
 }
 
+function getOperatingSystem(): string {
+  switch (process.platform) {
+    case 'darwin': {
+      return 'macOS';
+    }
+    case 'win32': {
+      return 'Windows';
+    }
+    case 'linux': {
+      return 'Linux';
+    }
+    case 'freebsd': {
+      return 'FreeBSD';
+    }
+    case 'openbsd': {
+      return 'OpenBSD';
+    }
+    case 'aix': {
+      return 'AIX';
+    }
+    default: {
+      return process.platform;
+    }
+  }
+}
+
 async function _trackStats() {
   // Handle the stats
   const oldStats = await models.stats.get();
@@ -321,12 +365,18 @@ async function _trackStats() {
     parentId: { $ne: null },
   });
 
+  const settings = await models.settings.get();
+
   trackSegmentEvent(SegmentEvent.appStarted, {
     localProjects,
     remoteProjects,
     createdRequests: stats.createdRequests,
     deletedRequests: stats.deletedRequests,
     executedRequests: stats.executedRequests,
+    themeName: settings.theme,
+    operatingSystem: getOperatingSystem(),
+    osVersion: release(),
+    architecture: arch(),
   });
 
   ipcMainOnce('halfSecondAfterAppStart', async () => {

@@ -52,4 +52,5 @@ async function loadFixtureFile(fixture: string, app, page) {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  await page.getByTestId('project').click();
 }

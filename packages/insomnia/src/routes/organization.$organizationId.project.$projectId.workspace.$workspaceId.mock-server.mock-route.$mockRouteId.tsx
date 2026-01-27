@@ -17,6 +17,7 @@ import {
 import { database as db } from '~/common/database';
 import { getResponseCookiesFromHeaders } from '~/common/har';
 import * as models from '~/models';
+import { getBodyBuffer } from '~/models/helpers/response-operations';
 import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import type { Request, RequestHeader } from '~/models/request';
@@ -24,6 +25,7 @@ import type { Response } from '~/models/response';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
+import { SegmentEvent } from '~/ui/analytics';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 import { Dropdown, DropdownItem, ItemContent } from '~/ui/components/base/dropdown';
 import { MockResponseHeadersEditor } from '~/ui/components/editors/mock-response-headers-editor';
@@ -67,7 +69,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     const isOversizedResponse = length > 5 * 1024 * 1024; // 5MB
     // Oversized responses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
-      const buffer = await models.response.getBodyBuffer(activeResponse);
+      const buffer = await getBodyBuffer(activeResponse);
       activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
     }
   }
@@ -306,6 +308,13 @@ export const MockRouteRoute = () => {
                 mode={mockRoute.mimeType}
                 placeholder="..."
                 noLint={mockRoute.body?.includes('{{') && mockRoute.body?.includes('}}')}
+                updateFilter={filter => {
+                  if (filter) {
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.filterCreatedResponseBody,
+                    });
+                  }
+                }}
               />
             ) : (
               <EmptyStatePane

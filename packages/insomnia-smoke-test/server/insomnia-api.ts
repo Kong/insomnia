@@ -67,7 +67,7 @@ const organizations = [
   },
 ];
 
-const organizationFeatures = {
+let organizationFeatures = {
   features: {
     gitSync: {
       enabled: true,
@@ -189,7 +189,7 @@ const currentRole = {
   description: 'Owner can manage the organization and also delete it.',
 };
 
-const storageRule = {
+let storageRule = {
   enableCloudSync: true,
   enableGitSync: true,
   enableLocalVault: true,
@@ -455,6 +455,12 @@ export default function setup(app: Application) {
     res.status(200).send(organizationFeatures);
   });
 
+  // Test Utility Endpoint - Allows altering features at runtime
+  app.post('/v1/test-utils/organizations/features', json(), (req, res) => {
+    organizationFeatures = req.body;
+    res.status(200).send();
+  });
+
   // Projects
   app.get('/v1/organizations/:orgId/team-projects', (_req, res) => {
     res.status(200).send({
@@ -550,6 +556,11 @@ export default function setup(app: Application) {
 
   app.get('/v1/organizations/:organizationId/storage-rule', (_req, res) => {
     res.json(storageRule);
+  });
+
+  app.post('/v1/test-utils/organizations/storage-rule', json(), (_req, res) => {
+    storageRule = _req.body;
+    res.status(200).send();
   });
 
   app.get('/v1/organizations/:organizationId/members', (_req, res) => {

@@ -1,4 +1,4 @@
-import { href, Outlet, useRouteLoaderData } from 'react-router';
+import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 
 import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
@@ -21,7 +21,7 @@ import type { RequestGroupMeta } from '~/models/request-group-meta';
 import type { RequestMeta } from '~/models/request-meta';
 import type { SocketIORequest } from '~/models/socket-io-request';
 import type { WebSocketRequest } from '~/models/websocket-request';
-import { isMcp, type Workspace } from '~/models/workspace';
+import { type Workspace } from '~/models/workspace';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
@@ -68,6 +68,10 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   const { organizationId, projectId, workspaceId } = params;
 
   const activeWorkspace = await models.workspace.getById(workspaceId);
+
+  if (!activeWorkspace) {
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+  }
 
   invariant(activeWorkspace, 'Workspace not found');
 
@@ -253,8 +257,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   const userSession = await models.userSession.getOrCreate();
   const isLoggedInIsCloudProjectAndIsNotGitRepo = userSession.id && activeProject.remoteId && !gitRepository;
   let vcsVersion = null;
-  // Mcp workspace do not support cloud sync for now
-  if (isLoggedInIsCloudProjectAndIsNotGitRepo && !isMcp(activeWorkspace)) {
+  if (isLoggedInIsCloudProjectAndIsNotGitRepo) {
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);

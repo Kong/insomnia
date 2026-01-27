@@ -1,10 +1,12 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
+import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
 
 import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
+import type { AIFeatureNames } from './main/llm-config-service';
 import type { CurlBridgeAPI } from './main/network/curl';
 import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
@@ -76,6 +78,7 @@ const mcp: McpBridgeAPI = {
   },
   client: {
     responseElicitationRequest: options => ipcRenderer.send('mcp.client.responseElicitationRequest', options),
+    responseSamplingRequest: options => ipcRenderer.send('mcp.client.responseSamplingRequest', options),
     hasRequestResponded: options => ipcRenderer.invoke('mcp.client.hasRequestResponded', options),
     cancelRequest: options => ipcRenderer.invoke('mcp.client.cancelRequest', options),
   },
@@ -136,15 +139,12 @@ const git: GitServiceAPI = {
   getRepositoryDirectoryTree: options => ipcRenderer.invoke('git.getRepositoryDirectoryTree', options),
   migrateLegacyInsomniaFolderToFile: options => ipcRenderer.invoke('git.migrateLegacyInsomniaFolderToFile', options),
 
-  initSignInToGitHub: () => ipcRenderer.invoke('git.initSignInToGitHub'),
-  completeSignInToGitHub: options => ipcRenderer.invoke('git.completeSignInToGitHub', options),
-  signOutOfGitHub: () => ipcRenderer.invoke('git.signOutOfGitHub'),
-  getGitHubRepositories: options => ipcRenderer.invoke('git.getGitHubRepositories', options),
-  getGitHubRepository: options => ipcRenderer.invoke('git.getGitHubRepository', options),
-
-  initSignInToGitLab: () => ipcRenderer.invoke('git.initSignInToGitLab'),
-  completeSignInToGitLab: options => ipcRenderer.invoke('git.completeSignInToGitLab', options),
-  signOutOfGitLab: () => ipcRenderer.invoke('git.signOutOfGitLab'),
+  listGitProviders: () => ipcRenderer.invoke('git.listGitProviders'),
+  initSignInToGitProvider: options => ipcRenderer.invoke('git.initSignInToGitProvider', options),
+  completeSignInToGitProvider: options => ipcRenderer.invoke('git.completeSignInToGitProvider', options),
+  getGitProviderRepositories: options => ipcRenderer.invoke('git.getGitProviderRepositories', options),
+  getGitProviderEmails: options => ipcRenderer.invoke('git.getGitProviderEmails', options),
+  getCurrentBranchByRepositoryId: options => ipcRenderer.invoke('git.getCurrentBranchByRepositoryId', options),
 };
 
 const llm: LLMConfigServiceAPI = {
@@ -156,9 +156,8 @@ const llm: LLMConfigServiceAPI = {
     ipcRenderer.invoke('llm.updateBackendConfig', backend, config),
   getAllConfigurations: () => ipcRenderer.invoke('llm.getAllConfigurations'),
   getCurrentConfig: () => ipcRenderer.invoke('llm.getCurrentConfig'),
-  getAIFeatureEnabled: (feature: 'aiMockServers' | 'aiCommitMessages') =>
-    ipcRenderer.invoke('llm.getAIFeatureEnabled', feature),
-  setAIFeatureEnabled: (feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean) =>
+  getAIFeatureEnabled: (feature: AIFeatureNames) => ipcRenderer.invoke('llm.getAIFeatureEnabled', feature),
+  setAIFeatureEnabled: (feature: AIFeatureNames, enabled: boolean) =>
     ipcRenderer.invoke('llm.setAIFeatureEnabled', feature, enabled),
 };
 
@@ -257,6 +256,8 @@ const main: Window['main'] = {
     ),
   generateCommitsFromDiff: (input: { diff: string; recent_commits: string }) =>
     ipcRenderer.invoke('generateCommitsFromDiff', input),
+  generateMcpSamplingResponse: (parameters: Parameters<GenerateMcpSamplingResponseFunction>[0]) =>
+    ipcRenderer.invoke('generateMcpSamplingResponse', parameters),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {
@@ -290,6 +291,9 @@ const clipboard: Window['clipboard'] = {
 const webUtils: Window['webUtils'] = {
   getPathForFile: (file: File) => webUtilities.getPathForFile(file),
 };
+const database: Window['database'] = {
+  invoke: (fnName, ...args) => ipcRenderer.invoke('database.invoke', fnName, ...args),
+};
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);
   contextBridge.exposeInMainWorld('dialog', dialog);
@@ -298,6 +302,7 @@ if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('clipboard', clipboard);
   contextBridge.exposeInMainWorld('webUtils', webUtils);
   contextBridge.exposeInMainWorld('path', path);
+  contextBridge.exposeInMainWorld('database', database);
 } else {
   window.main = main;
   window.dialog = dialog;
@@ -306,4 +311,5 @@ if (process.contextIsolated) {
   window.clipboard = clipboard;
   window.webUtils = webUtils;
   window.path = path;
+  window.database = database;
 }

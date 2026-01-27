@@ -1,5 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { Fragment, useEffect, useRef, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -88,7 +88,16 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
-  const allEnvironment = [baseEnvironment, ...subEnvironments];
+  const allEnvironment = useMemo(() => {
+    return [baseEnvironment, ...subEnvironments];
+  }, [baseEnvironment, subEnvironments]);
+
+  // Keep selectedEnvironmentId in sync when navigating between different environment workspaces/tabs.
+  useEffect(() => {
+    if (!allEnvironment.find(env => env._id === selectedEnvironmentId)) {
+      setSelectedEnvironmentId(activeEnvironment._id);
+    }
+  }, [selectedEnvironmentId, activeEnvironment._id, allEnvironment]);
   const selectedEnvironment = allEnvironment.find(env => env._id === selectedEnvironmentId);
   // Do not allowed to switch to json environment if contains secret item
   const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(

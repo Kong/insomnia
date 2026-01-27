@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import React, { type CSSProperties, type ReactNode } from 'react';
 import { mergeProps, OverlayContainer, useOverlayPosition, useTooltip, useTooltipTrigger } from 'react-aria';
+import { createPortal } from 'react-dom';
 import { useTooltipTriggerState } from 'react-stately';
 
 interface Props {
@@ -17,8 +18,8 @@ interface Props {
 
 export const Tooltip = (props: Props) => {
   const { children, message, className, wide, selectable, delay = 400, position, style } = props;
-  const triggerRef = React.useRef(null);
-  const overlayRef = React.useRef(null);
+  const triggerRef = React.useRef<HTMLDivElement>(null);
+  const overlayRef = React.useRef<HTMLDivElement>(null);
 
   const state = useTooltipTriggerState({ delay });
   const trigger = useTooltipTrigger(props, state, triggerRef);
@@ -39,6 +40,19 @@ export const Tooltip = (props: Props) => {
     selectable,
   });
 
+  const overlayContent = (
+    <div
+      ref={overlayRef}
+      onClick={e => e.stopPropagation()}
+      {...mergeProps(tooltip.tooltipProps, positionProps)}
+      className={bubbleClasses}
+    >
+      {message}
+    </div>
+  );
+
+  const modalContainer = triggerRef.current?.closest('[aria-label="Modal"]');
+
   return (
     <>
       <div
@@ -50,18 +64,14 @@ export const Tooltip = (props: Props) => {
       >
         {children}
       </div>
-      {state.isOpen && (
-        <OverlayContainer>
-          <div
-            ref={overlayRef}
-            onClick={e => e.stopPropagation()}
-            {...mergeProps(tooltip.tooltipProps, positionProps)}
-            className={bubbleClasses}
-          >
-            {message}
-          </div>
-        </OverlayContainer>
-      )}
+      {state.isOpen &&
+        (modalContainer ? (
+          // Render tooltip inside modal if exists.
+          // Otherwise OverlayContainer becomes inert and breaks hover event listener: INS-1930
+          createPortal(overlayContent, modalContainer)
+        ) : (
+          <OverlayContainer>{overlayContent}</OverlayContainer>
+        ))}
     </>
   );
 };

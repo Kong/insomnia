@@ -1,9 +1,11 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import type { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import type { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import type { AnySchema } from '@modelcontextprotocol/sdk/server/zod-compat.js';
 import type { RequestOptions } from '@modelcontextprotocol/sdk/shared/protocol.js';
 import {
   CancelledNotificationSchema,
+  CreateMessageRequestSchema,
   ElicitRequestSchema,
   EmptyResultSchema,
   JSONRPCErrorSchema,
@@ -15,7 +17,6 @@ import {
   ServerNotificationSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import electron from 'electron';
-import type { ZodType } from 'zod';
 
 import { getAppVersion, getProductName, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { getMcpMethodFromMessage, METHOD_NOTIFICATION_CANCELLED } from '~/common/mcp-utils';
@@ -29,6 +30,7 @@ import {
   listTools,
   readResource,
   responseElicitationRequest,
+  responseSamplingRequest,
   sendRootListChangeNotification,
   subscribeResource,
   unsubscribeResource,
@@ -237,10 +239,7 @@ const createTransportAndConnect = async (context: ConnectionContext, mcpClient: 
     wrapTransport();
     await mcpClient.connect(transport);
   } else {
-    const mcpRequest = await models.mcpRequest.getById(connectionOptions.requestId);
-    invariant(mcpRequest, 'MCP Request not found');
-
-    const authProvider = new McpOAuthClientProvider(mcpRequest, context);
+    const authProvider = new McpOAuthClientProvider(context);
     transport = await createStreamableHTTPTransport(context, connectionOptions, authProvider);
     wrapTransport();
     // Use a longer timeout for initial connection to allow for auth flow to complete
@@ -296,7 +295,7 @@ const openMcpClientConnection = async (options: OpenMcpClientConnectionOptions) 
 };
 
 const performConnection = async (context: ConnectionContext) => {
-  const { abortController, options, requestId, mcpServerElicitationRequests } = context;
+  const { abortController, options, requestId, mcpServerElicitationRequests, mcpServerSamplingRequests } = context;
   // Check if the connection has been aborted before proceeding
   if (abortController.signal.aborted) {
     clearConnectionContext(context);
@@ -318,6 +317,8 @@ const performConnection = async (context: ConnectionContext) => {
 
         // declare the client to support elicitation
         elicitation: {},
+        // declare the client to support sampling
+        sampling: {},
       },
     },
   ) as McpClient;
@@ -361,16 +362,28 @@ const performConnection = async (context: ConnectionContext) => {
     });
   });
 
+  // add sampling request handler to indicate the client supports it
+  mcpClient.setRequestHandler(CreateMessageRequestSchema, async (_request, extra) => {
+    return new Promise((resolve, reject) => {
+      const serverRequestId = extra.requestId;
+      mcpServerSamplingRequests.set(serverRequestId, { resolve, reject });
+    });
+  });
+
   mcpClient.setNotificationHandler(CancelledNotificationSchema, notification => {
     const serverRequestId = notification.params.requestId;
     // handle server request cancellation
     if (mcpServerElicitationRequests.has(serverRequestId)) {
-      console.log('Received server request cancellation notification', serverRequestId);
+      console.log('Received server request cancellation notification for elicitation request', serverRequestId);
       mcpServerElicitationRequests.delete(serverRequestId);
+    }
+    if (mcpServerSamplingRequests.has(serverRequestId)) {
+      console.log('Received server request cancellation notification for sampling request', serverRequestId);
+      mcpServerSamplingRequests.delete(serverRequestId);
     }
   });
   const originClientRequest = mcpClient.request.bind(mcpClient);
-  mcpClient.request = <T extends ZodType<object>>(request: Request, resultSchema: T, options?: RequestOptions) => {
+  mcpClient.request = <T extends AnySchema>(request: Request, resultSchema: T, options?: RequestOptions) => {
     // @ts-expect-error - need to access private property _requestMessageId to get message id
     const messageId = mcpClient._requestMessageId.toString();
     // add abort controller for each MCP client request
@@ -468,6 +481,7 @@ export interface McpBridgeAPI {
   };
   client: {
     responseElicitationRequest: typeof responseElicitationRequest;
+    responseSamplingRequest: typeof responseSamplingRequest;
     hasRequestResponded: typeof hasRequestResponded;
     cancelRequest: typeof cancelRequest;
   };
@@ -522,6 +536,9 @@ export const registerMcpHandlers = () => {
   );
   ipcMainOn('mcp.client.responseElicitationRequest', (_, options: Parameters<typeof responseElicitationRequest>[0]) =>
     responseElicitationRequest(options),
+  );
+  ipcMainOn('mcp.client.responseSamplingRequest', (_, options: Parameters<typeof responseSamplingRequest>[0]) =>
+    responseSamplingRequest(options),
   );
   ipcMainHandle('mcp.client.hasRequestResponded', (_, options: Parameters<typeof hasRequestResponded>[0]) =>
     hasRequestResponded(options),

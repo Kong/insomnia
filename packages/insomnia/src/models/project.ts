@@ -2,7 +2,7 @@ import type { StorageRules } from '~/models/organization';
 
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
-import { type BaseModel } from './index';
+import type { BaseModel } from './types';
 
 export const name = 'Project';
 export const type = 'Project';
@@ -83,6 +83,12 @@ export function getByRemoteId(remoteId: string) {
   return db.findOne<Project>(type, { remoteId });
 }
 
+export function getAllByGitRepositoryIds(gitRepositoryIds: string[]) {
+  return db.find<Project>(type, {
+    gitRepositoryId: { $in: gitRepositoryIds },
+  });
+}
+
 export function remove(project: Project) {
   return db.remove(project);
 }
@@ -153,22 +159,6 @@ export function getDefaultProjectStorageType(
   }
 
   return 'local';
-}
-
-export function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
-  if (storageType === 'git' && !isGitProject(project)) {
-    return true;
-  }
-
-  if (storageType === 'local' && (isRemoteProject(project) || isGitProject(project))) {
-    return true;
-  }
-
-  if (storageType === 'remote' && !isRemoteProject(project)) {
-    return true;
-  }
-
-  return false;
 }
 
 export function getProjectStorageTypeLabel(storageRules: StorageRules): string {

@@ -15,7 +15,6 @@ test.describe('gRPC interactions', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByLabel('PreRelease gRPC').click();
 
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {

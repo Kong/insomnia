@@ -6,6 +6,9 @@ import { shell } from 'electron';
 import iconv from 'iconv-lite';
 import { v4 as uuidv4 } from 'uuid';
 
+import { jarFromCookies } from '~/common/cookies';
+import { getBodyBuffer, readCurlResponse } from '~/models/helpers/response-operations';
+
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
@@ -14,7 +17,6 @@ import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { Request as DBRequest } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
-import { readCurlResponse } from '../models/response';
 import type { Workspace } from '../models/workspace';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
 import { getPluginCommonContext, type Plugin, type TemplateTag } from '../plugins';
@@ -102,11 +104,16 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
   'cookieJar.getOrCreateForParentId': async (body: { parentId: string }) => {
     return await models.cookieJar.getOrCreateForParentId(body.parentId);
   },
+  'cookieJar.getCookiesForUrl': async (body: { parentId: string; url: string }) => {
+    const cookies = await models.cookieJar.getOrCreateForParentId(body.parentId);
+    const jar = jarFromCookies(cookies.cookies);
+    return jar.getCookiesSync(body.url);
+  },
   'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
     return await models.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
   'response.getBodyBuffer': async (body: { response: Response; readFailureValue: string }) => {
-    return await models.response.getBodyBuffer(body.response, body.readFailureValue);
+    return await getBodyBuffer(body.response, body.readFailureValue);
   },
   'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
     const doc = await models.pluginData.getByKey(body.pluginName, body.key);

@@ -123,7 +123,33 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   invariant(typeof activeRequestId === 'string', 'Request ID is required');
   models.stats.incrementCreatedRequests();
-  window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType } });
+
+  const certificates = await models.clientCertificate.findByParentId(workspaceId);
+
+  window.main.trackSegmentEvent({
+    event: SegmentEvent.requestCreated,
+    properties: {
+      requestType,
+      protocol: requestType,
+      has_prescript: !!req?.preRequestScript,
+      has_postscript: !!req?.afterResponseScript,
+      request_header_names: req?.headers?.map(h => h.name) || [],
+      count_cookies: req?.headers.find(h => h.name.toLowerCase() === 'cookie')
+        ? req.headers.find(h => h.name.toLowerCase() === 'cookie')?.value.split(';').length
+        : 0,
+      count_certificates: certificates.length,
+      count_headers: req?.headers?.length || 0,
+      count_query_parameters: req?.parameters?.length || 0,
+      count_path_parameters: req?.pathParameters?.length || 0,
+      count_prescript_lines: req?.preRequestScript ? req.preRequestScript.split('\n').length : 0,
+      count_postscript_lines: req?.afterResponseScript ? req.afterResponseScript.split('\n').length : 0,
+      auth_type:
+        req?.authentication && typeof req.authentication === 'object' && 'type' in req.authentication
+          ? req.authentication.type
+          : 'none',
+      has_docs: !!req?.description,
+    },
+  });
 
   // add a created query param to the URL to indicate that the request was just created, this is for distinguishing if we will create a temporary or permanent tab
   return redirect(

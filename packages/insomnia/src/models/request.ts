@@ -20,7 +20,7 @@ import { database as db } from '../common/database';
 import type { OAuth1SignatureMethod } from '../network/o-auth-1/constants';
 import { getOperationType } from '../utils/graph-ql';
 import { deconstructQueryStringToParams } from '../utils/url/querystring';
-import type { BaseModel } from './index';
+import type { BaseModel } from './types';
 
 export const name = 'Request';
 

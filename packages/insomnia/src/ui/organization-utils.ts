@@ -1,4 +1,5 @@
 import { type CurrentPlan, getCurrentPlan, getUserProfile } from 'insomnia-api';
+import { fetchTeamProjects } from 'insomnia-api';
 
 import { projectLock } from '~/common/project';
 
@@ -180,18 +181,9 @@ async function getAllTeamProjects(organizationId: string) {
   }
 
   console.log('[project] Fetching', organizationId);
-  const response = await insomniaFetch<{
-    data: {
-      id: string;
-      name: string;
-    }[];
-  }>({
-    path: `/v1/organizations/${organizationId}/team-projects`,
-    method: 'GET',
-    sessionId,
-  });
+  const response = await fetchTeamProjects({ sessionId, organizationId });
 
-  return response.data as TeamProject[];
+  return response.data;
 }
 
 async function syncTeamProjects({

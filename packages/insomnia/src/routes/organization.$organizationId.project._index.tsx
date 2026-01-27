@@ -1,6 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import { getLearningFeature as getLearningFeatureAPI, type LearningFeature } from 'insomnia-api';
-import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   GridList,
@@ -70,7 +70,6 @@ import { ProjectDropdown } from '~/ui/components/dropdowns/project-dropdown';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
-import { GitRepositoryCloneModal } from '~/ui/components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
@@ -498,7 +497,7 @@ const Component = () => {
   const { presence } = useInsomniaEventStreamContext();
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
-  const { billing, features } = useOrganizationPermissions();
+  const { billing } = useOrganizationPermissions();
 
   useEffect(() => {
     if (!isScratchpadOrganizationId(organizationId)) {
@@ -621,8 +620,6 @@ const Component = () => {
       };
     });
 
-  const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] = useState(false);
-
   const navigate = useNavigate();
 
   const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
@@ -654,7 +651,6 @@ const Component = () => {
   };
 
   const canCreateMockServer = activeProject?._id;
-  const isGitSyncEnabled = features.gitSync.enabled;
 
   const createInProjectActionList: {
     id: string;
@@ -828,7 +824,15 @@ const Component = () => {
                     className="group relative flex-1"
                     isDisabled={activeProject === undefined}
                     value={projectListFilter}
-                    onChange={setProjectListFilter}
+                    onChange={value => {
+                      setProjectListFilter(value);
+
+                      if (value.trim() !== '') {
+                        window.main.trackSegmentEvent({
+                          event: SegmentEvent.filterCreatedHomePage,
+                        });
+                      }
+                    }}
                   >
                     <Input
                       placeholder="Filter"
@@ -896,7 +900,6 @@ const Component = () => {
                               organizationId={organizationId}
                               project={item}
                               storageRules={storageRules}
-                              isGitSyncEnabled={isGitSyncEnabled}
                             />
                           )}
                         </div>
@@ -950,6 +953,7 @@ const Component = () => {
                     <GitProjectSyncDropdown
                       key={activeProjectGitRepository?._id}
                       gitRepository={activeProjectGitRepository}
+                      activeProject={activeProject}
                     />
                   )}
                   {isLocalProject(activeProject) && !isGitProject(activeProject) && <LocalProjectBar />}
@@ -1291,20 +1295,15 @@ const Component = () => {
                 </div>
               </div>
             ) : (
-              <NoProjectView isGitSyncEnabled={isGitSyncEnabled} storageRules={storageRules} />
+              <NoProjectView storageRules={storageRules} />
             )}
           </Panel>
         </PanelGroup>
-
-        {isGitRepositoryCloneModalOpen && (
-          <GitRepositoryCloneModal onHide={() => setIsGitRepositoryCloneModalOpen(false)} />
-        )}
         {isNewProjectModalOpen && (
           <ProjectModal
             isOpen={isNewProjectModalOpen}
             onOpenChange={setIsNewProjectModalOpen}
             storageRules={storageRules}
-            isGitSyncEnabled={isGitSyncEnabled}
           />
         )}
         {isUpdateProjectModalOpen && (
@@ -1314,7 +1313,6 @@ const Component = () => {
             project={activeProject}
             gitRepository={activeProjectGitRepository || undefined}
             storageRules={storageRules}
-            isGitSyncEnabled={isGitSyncEnabled}
           />
         )}
         {activeProject && newWorkspaceModalState?.isOpen && (

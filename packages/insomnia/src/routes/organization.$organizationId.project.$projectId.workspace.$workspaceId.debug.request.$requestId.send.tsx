@@ -11,6 +11,7 @@ import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
 import type { Environment, UserUploadEnvironment } from '~/models/environment';
+import { getBodyStream } from '~/models/helpers/response-operations';
 import type { RequestMeta } from '~/models/request-meta';
 import type { ResponseInfo, RunnerResultPerRequestPerIteration } from '~/models/runner-test-result';
 import {
@@ -24,6 +25,7 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '~/network/network';
+import { SegmentEvent } from '~/ui/analytics';
 import { parseGraphQLReqeustBody } from '~/utils/graph-ql';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -71,7 +73,7 @@ const writeToDownloadPath = (
   invariant(downloadPathAndName, 'filename should be set by now');
 
   const to = createWriteStream(downloadPathAndName);
-  const readStream = models.response.getBodyStream(responsePatch);
+  const readStream = getBodyStream(responsePatch);
   if (!readStream || typeof readStream === 'string') {
     return null;
   }
@@ -343,6 +345,34 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       shouldPromptForPathAfterResponse,
       ignoreUndefinedEnvVariable,
     });
+
+    const requestMeta = await models.requestMeta.getByParentId(requestId);
+
+    if (requestMeta?.activeResponseId) {
+      const response = await models.response.getById(requestMeta.activeResponseId);
+      if (response) {
+        const settings = await models.settings.getOrCreate();
+        const activeRequest = await models.request.getById(requestId);
+
+        if (activeRequest) {
+          window.main.trackSegmentEvent({
+            event: SegmentEvent.requestExecuted,
+            properties: {
+              preferredHttpVersion: settings.preferredHttpVersion,
+              // @ts-expect-error -- who cares
+              authenticationType: activeRequest.authentication?.type,
+              mimeType: activeRequest.body.mimeType,
+              protocol: activeRequest.type,
+              response_header_names: activeRequest.headers.map(h => h.name),
+              count_headers: response.headers.length,
+              count_cookies: response.headers.find(h => h.name === 'set-cookie')?.value.split(',').length || 0,
+              count_tests: response.requestTestResults?.length || 0,
+            },
+          });
+        }
+      }
+    }
+
     return null;
   } catch (error) {
     console.error('[request] Failed to send request', error);

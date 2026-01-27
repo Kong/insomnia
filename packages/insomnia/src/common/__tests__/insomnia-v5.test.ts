@@ -10,6 +10,8 @@ import YAML from 'yaml';
 
 import { INSOMNIA_SCHEMA_VERSION } from '../../common/insomnia-schema-migrations/schema-version';
 import * as models from '../../models';
+import { EnvironmentKvPairDataType } from '../../models/environment';
+import type { Request } from '../../models/request';
 import { database as db } from '../database';
 import {
   getInsomniaV5DataExport,
@@ -46,6 +48,7 @@ describe('Insomnia v5 Import/Export - Comprehensive Tests', () => {
       expect(insomniaSchemaTypeToScope('environment.insomnia.rest/5.0')).toBe('environment');
       expect(insomniaSchemaTypeToScope('spec.insomnia.rest/5.0')).toBe('design');
       expect(insomniaSchemaTypeToScope('mock.insomnia.rest/5.0')).toBe('mock-server');
+      expect(insomniaSchemaTypeToScope('mcpClient.insomnia/5.0')).toBe('mcp');
     });
   });
 
@@ -98,12 +101,39 @@ invalid: [unclosed array
       expect(result.data).toEqual([]);
       expect(result.error).toBeDefined();
     });
+
+    it('handles unsupported or future schema gracefully', () => {
+      const futureSchemaData = `
+type: futureCollection.insomnia.rest/5.0
+name: Future Schema Collection
+meta:
+  id: wrk_test
+  created: 1234567890
+  modified: 1234567890
+`;
+      const result = tryImportV5Data(futureSchemaData);
+      expect(result.data).toEqual([]);
+      expect(result.error).toBeDefined();
+    });
   });
 
   describe('importInsomniaV5Data', () => {
     it('returns empty array on invalid data', () => {
       const invalidData = 'invalid yaml content';
       const result = importInsomniaV5Data(invalidData);
+      expect(result).toEqual([]);
+    });
+
+    it('returns empty array on unsupported or future data', () => {
+      const futureSchemaData = `
+type: futureCollection.insomnia.rest/5.0
+name: Future Schema Collection
+meta:
+  id: wrk_test
+  created: 1234567890
+  modified: 1234567890
+`;
+      const result = importInsomniaV5Data(futureSchemaData);
       expect(result).toEqual([]);
     });
 
@@ -296,6 +326,76 @@ collection: []
       expect(parsed.server.url).toBe('http://localhost:3000');
     });
 
+    it('handles mcp client scope', async () => {
+      const workspace = await models.workspace.create({
+        _id: 'wrk_mcp',
+        name: 'MCP Workspace',
+        parentId: 'proj_test',
+        scope: 'mcp',
+      });
+
+      await models.environment.create({
+        _id: 'env_mcp',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      const mcpRequest = await models.mcpRequest.create({
+        _id: 'mcp-request_test',
+        name: 'Test MCP client',
+        parentId: workspace._id,
+        url: 'http://mcp.test.com/mcp',
+        transportType: 'streamable-http',
+      });
+
+      let result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      let parsed = YAML.parse(result);
+      expect(parsed.type).toBe('mcpClient.insomnia/5.0');
+      expect(parsed.mcpRequest.url).toBe('http://mcp.test.com/mcp');
+      expect(parsed.mcpRequest.transportType).toBe('streamable-http');
+
+      await models.mcpRequest.update(mcpRequest, {
+        transportType: 'stdio',
+        url: 'npx mcp-client stdio',
+        env: [
+          {
+            id: 'var1',
+            name: 'foo',
+            value: 'bar',
+            type: EnvironmentKvPairDataType.STRING,
+          },
+          {
+            id: 'var2',
+            name: 'foo1',
+            value: 'bar1',
+            type: EnvironmentKvPairDataType.STRING,
+          },
+        ],
+        roots: [
+          {
+            uri: 'file:///path/to/root',
+          },
+        ],
+      });
+
+      result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      parsed = YAML.parse(result);
+      expect(parsed.type).toBe('mcpClient.insomnia/5.0');
+      expect(parsed.mcpRequest.url).toBe('npx mcp-client stdio');
+      expect(parsed.mcpRequest.transportType).toBe('stdio');
+      expect(parsed.mcpRequest.env).toHaveLength(2);
+      expect(parsed.mcpRequest.roots).toHaveLength(1);
+    });
+
     it('returns empty string for unknown workspace', async () => {
       const result = await getInsomniaV5DataExport({
         workspaceId: 'missing',
@@ -331,6 +431,40 @@ collection: []
       const result = tryImportV5Data(invalid);
       expect(result.data).toEqual([]);
       expect(result.error).toBeDefined();
+    });
+  });
+
+  describe('Handle legacy Insomnia files', () => {
+    it('imports collection with incomplete header', () => {
+      const yaml = `
+type: collection.insomnia.rest/5.0
+name: Test Collection
+meta:
+  id: wrk_legacy_insomnia_file
+  created: 1234567890
+  modified: 1234567890
+collection:
+  - name: Test Request
+    url: https://api.example.com/test
+    method: GET
+    meta:
+      id: req_test
+      created: 1234567890
+      modified: 1234567890
+    headers:
+      - name: missing_value_header
+      - name: number
+        value: "100"
+      - name: offset
+        value: "0"
+`;
+      const result = tryImportV5Data(yaml);
+      expect(result.error).toBeUndefined();
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0]._id).toBe('wrk_legacy_insomnia_file');
+      expect(result.data[1].type).toBe('Request');
+      const requestData = result.data[1] as Request;
+      expect(requestData.headers).toHaveLength(3);
     });
   });
 });

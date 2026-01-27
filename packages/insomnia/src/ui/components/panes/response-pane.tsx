@@ -1,8 +1,10 @@
 import { extension as mimeExtension } from 'mime-types';
-import React, { type FC, useCallback, useMemo } from 'react';
+import { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
+import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
 import { useRootLoaderData } from '~/root';
+import { SegmentEvent } from '~/ui/analytics';
 import { jsonPrettify } from '~/utils/prettify/json';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
@@ -127,7 +129,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
     );
   }
 
-  const timeline = models.response.getTimeline(activeResponse);
+  const timeline = getTimeline(activeResponse);
   const cookieHeaders = getSetCookieHeaders(activeResponse.headers);
 
   return (
@@ -146,7 +148,20 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
           />
         </PaneHeader>
       )}
-      <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
+      <Tabs
+        aria-label="Request group tabs"
+        className="flex h-full w-full flex-1 flex-col"
+        onSelectionChange={key => {
+          if (key === 'mock-response') {
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.responseToMockClicked,
+              properties: {
+                source: 'Response Pane Tab',
+              },
+            });
+          }
+        }}
+      >
         <TabList
           className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
           aria-label="Request pane tabs"
@@ -208,7 +223,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
               copyToClipboard={async () => {
-                const bodyBuffer = activeResponse ? await models.response.getBodyBuffer(activeResponse) : null;
+                const bodyBuffer = activeResponse ? await getBodyBuffer(activeResponse) : null;
                 if (bodyBuffer) {
                   window.clipboard.writeText(bodyBuffer.toString('utf8'));
                 }
@@ -227,7 +242,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             filter={filter}
             filterHistory={filterHistory}
             bodyBuffer={activeResponse.bodyBuffer}
-            getBody={() => models.response.getBodyBuffer(activeResponse)}
+            getBody={() => getBodyBuffer(activeResponse)}
             previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
             responseId={activeResponse._id}
             updateFilter={activeResponse.error ? undefined : handleSetFilter}

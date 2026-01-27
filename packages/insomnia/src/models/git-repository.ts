@@ -1,5 +1,5 @@
 import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import type { BaseModel } from './types';
 
 export type OauthProviderName = 'gitlab' | 'github' | 'custom';
 
@@ -20,6 +20,8 @@ export function init(): BaseGitRepository {
     needsFullClone: false,
     uri: '',
     credentials: null,
+    credentialsId: null,
+    selectedAuthorEmail: null,
     author: {
       name: '',
       email: '',
@@ -36,7 +38,19 @@ export function init(): BaseGitRepository {
 export interface BaseGitRepository {
   needsFullClone: boolean;
   uri: string;
+  /**
+   * @deprecated Use credentialsId instead
+   */
   credentials: GitCredentials | null;
+  credentialsId: string | null;
+  /**
+   * Optional override for the author email address used for commits
+   * Must be a value from the emails list of the corresponding credential
+   */
+  selectedAuthorEmail: string | null;
+  /**
+   * @deprecated Use the author in the corresponding credential
+   */
   author: {
     name: string;
     email: string;
@@ -64,6 +78,10 @@ export function create(patch: Partial<GitRepository> = {}) {
 
 export async function getById(id: string) {
   return db.findOne<GitRepository>(type, { _id: id });
+}
+
+export async function getAllByCredentialId(credentialsId: string) {
+  return db.find<GitRepository>(type, { credentialsId });
 }
 
 export function update(repo: GitRepository, patch: Partial<GitRepository>) {

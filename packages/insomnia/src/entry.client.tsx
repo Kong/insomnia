@@ -6,6 +6,8 @@ import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
+import { initDatabase } from '~/common/database';
+import { database as clientDatabase } from '~/common/database/database.client';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
@@ -23,6 +25,9 @@ import { initializeSentry } from './ui/sentry';
 import { getInitialEntry } from './utils/router';
 
 initializeSentry();
+
+// Initialize database for renderer process
+await initDatabase(clientDatabase);
 
 // Force onlyResolveOnSuccess to true, will be removed after all usages are updated
 configureFetch(options => insomniaFetch({ ...options, onlyResolveOnSuccess: true }));
@@ -55,6 +60,39 @@ try {
 } catch (e) {
   console.log('[onboarding] Failed to parse session data', e);
 }
+
+// Workaround for iframe redirect issue caused by api.protocol.ts
+// Problem: The https protocol handler (registerInsomniaProtocols) intercepts all https requests
+// to solve CORS issues. However, when an iframe redirects from https://renderer.gist.build to
+// https://code.gist.build, the protocol handler auto-follows the redirect but the iframe's
+// location doesn't update. This causes the Customer.io SDK to fail origin validation.
+//
+// Solution: Intercept postMessage events from renderer.gist.build in the capture phase,
+// stop propagation, and re-dispatch with origin changed to code.gist.build. This makes
+// the SDK think the message came from the expected redirected URL.
+window.addEventListener(
+  'message',
+  (event: MessageEvent) => {
+    // If origin is renderer.gist.build (original URL), stop propagation and dispatch a new event
+    if (event.origin === 'https://renderer.gist.build') {
+      // Stop the original event from reaching other listeners
+      event.stopImmediatePropagation();
+
+      // Create and dispatch a new MessageEvent with modified origin
+      // Note: 'ports' property is read-only and cannot be set, but the SDK doesn't use it
+      const newEvent = new MessageEvent('message', {
+        data: event.data,
+        origin: 'https://code.gist.build',
+        lastEventId: event.lastEventId,
+        source: event.source,
+      });
+
+      window.dispatchEvent(newEvent);
+      return;
+    }
+  },
+  true, // Use capture phase to intercept before other listeners
+);
 
 // Check if there is a Session provided by an env variable and use this
 const insomniaSession = getInsomniaSession();

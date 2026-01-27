@@ -6,6 +6,8 @@ import { promisify } from 'node:util';
 
 import { app, net } from 'electron';
 
+import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
+
 import { isDevelopment } from '../common/constants';
 import * as models from '../models';
 import { validatePluginName } from '../utils/plugin';
@@ -154,6 +156,11 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
           await cp(src, dest, { recursive: true, verbatimSymlinks: true });
         }),
     );
+
+    trackSegmentEvent(SegmentEvent.installPlugin, {
+      pluginName: moduleName,
+      pluginVersion: info.version,
+    });
   } catch (err) {
     // Log and rethrow any installation errors
     console.error(`[plugins] Failed to install plugin ${pluginName}:`, err);
@@ -423,6 +430,12 @@ export async function getYarnEnvValues(): Promise<Record<string, string>> {
   // Add proxy settings if enabled
   if (settings.proxyEnabled === true) {
     Object.assign(yarnEnv, buildProxyEnv(settings));
+  }
+
+  if (isDevelopment()) {
+    const NODE_AUTH_TOKEN = process.env['NODE_AUTH_TOKEN'];
+    // In development, set a default NODE_AUTH_TOKEN for .npmrc if not exists
+    yarnEnv.NODE_AUTH_TOKEN = NODE_AUTH_TOKEN || 'PLACEHOLDER_TOKEN_VALUE';
   }
 
   return yarnEnv;

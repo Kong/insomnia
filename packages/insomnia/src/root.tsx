@@ -6,6 +6,7 @@ import { Button } from 'react-aria-components';
 import {
   href,
   isRouteErrorResponse,
+  Link as RouterLink,
   Links,
   matchPath,
   Meta,
@@ -13,7 +14,6 @@ import {
   Scripts,
   ScrollRestoration,
   useNavigate,
-  useNavigation,
   useParams,
   useRouteLoaderData,
 } from 'react-router';
@@ -29,8 +29,8 @@ import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
-import { useGithubCompleteSignInFetcher } from '~/routes/git-credentials.github.complete-sign-in';
-import { useGitLabCompleteSignInFetcher } from '~/routes/git-credentials.gitlab.complete-sign-in';
+import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
+import type { SourceType } from '~/routes/import.scan';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -40,12 +40,7 @@ import { showError, showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
-import {
-  SettingsModal,
-  TAB_CLOUD_CREDENTIAL,
-  TAB_INDEX_PLUGINS,
-  TAB_INDEX_THEMES,
-} from '~/ui/components/modals/settings-modal';
+import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import cssHref from '~/ui/css/styles.css?url';
@@ -100,8 +95,6 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
     return err?.stack;
   };
 
-  const navigate = useNavigate();
-  const navigation = useNavigation();
   const errorMessage = getErrorMessage(error);
   const logoutFetcher = useLogoutFetcher();
 
@@ -122,13 +115,13 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
         </div>
       )}
       <div className="flex items-center gap-2">
-        <Button
+        <RouterLink
+          reloadDocument
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-          onPress={() => navigate('/organization')}
+          to="/organization"
         >
-          Try to reload the app{' '}
-          <span>{navigation.state === 'loading' ? <Icon icon="spinner" className="animate-spin" /> : null}</span>
-        </Button>
+          Try to reload the app
+        </RouterLink>
         <Button
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => logoutFetcher.submit()}
@@ -157,14 +150,12 @@ export const useRootLoaderData = () => {
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await models.settings.get();
   const workspaceCount = await models.workspace.count();
-  const mcpWorkspaceCount = await models.workspace.count('mcp');
   const userSession = await models.userSession.getOrCreate();
   const cloudCredentials = await models.cloudCredential.all();
 
   return {
     settings,
     workspaceCount,
-    mcpWorkspaceCount,
     userSession,
     cloudCredentials,
   };
@@ -312,13 +303,15 @@ const Root = () => {
     projectId: string;
   };
 
-  const [importUri, setImportUri] = useState('');
+  const [importObject, setImportObject] = useState({ type: 'clipboard', defaultValue: '' } as {
+    type: SourceType;
+    defaultValue: string;
+  });
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: logoutSubmit } = useLogoutFetcher();
-  const { submit: githubCompleteSignInSubmit } = useGithubCompleteSignInFetcher();
-  const { submit: gitLabCompleteSignInSubmit } = useGitLabCompleteSignInFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
+  const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -357,8 +350,12 @@ const Root = () => {
             source: 'import-url',
           },
         });
-
-        return setImportUri(params.uri);
+        if (params.uri) {
+          return setImportObject({ type: 'uri', defaultValue: params.uri });
+        }
+        if (params.curl) {
+          return setImportObject({ type: 'curl', defaultValue: params.curl });
+        }
       }
       if (urlWithoutParams === 'insomnia://plugins/install') {
         if (!params.name || params.name.trim() === '') {
@@ -382,7 +379,7 @@ const Root = () => {
               try {
                 // TODO (pavkout): Remove second parameter when we will decide about the @scoped packages name validation
                 await window.main.installPlugin(params.name.trim(), true);
-                showModal(SettingsModal, { tab: TAB_INDEX_PLUGINS });
+                showModal(SettingsModal, { tab: 'plugins' });
               } catch (err) {
                 showError({
                   title: 'Plugin Install',
@@ -415,7 +412,7 @@ const Root = () => {
               });
               await reloadPlugins();
               await setTheme(parsedTheme.name);
-              showModal(SettingsModal, { tab: TAB_INDEX_THEMES });
+              showModal(SettingsModal, { tab: 'themes' });
             }
           },
         });
@@ -425,16 +422,18 @@ const Root = () => {
         urlWithoutParams === 'insomnia://oauth/github-app/authenticate'
       ) {
         const { code, state } = params;
-        return githubCompleteSignInSubmit({
+        return gitProviderCompleteSignInSubmit({
           code,
           state,
+          provider: 'github',
         });
       }
       if (urlWithoutParams === 'insomnia://oauth/gitlab/authenticate') {
         const { code, state } = params;
-        return gitLabCompleteSignInSubmit({
+        return gitProviderCompleteSignInSubmit({
           code,
           state,
+          provider: 'gitlab',
         });
       }
       if (urlWithoutParams === 'insomnia://app/auth/finish') {
@@ -492,7 +491,7 @@ const Root = () => {
               // close the modal to hint user Azure oauth url if exists
               closeModalBtn.click();
             }
-            showModal(SettingsModal, { tab: TAB_CLOUD_CREDENTIAL });
+            showModal(SettingsModal, { tab: 'credentials' });
           } else {
             showError({
               title: 'Azure Authorization Failed',
@@ -551,8 +550,7 @@ const Root = () => {
   }, [
     authorizeSubmit,
     createCloudCredentials,
-    gitLabCompleteSignInSubmit,
-    githubCompleteSignInSubmit,
+    gitProviderCompleteSignInSubmit,
     logoutSubmit,
     navigate,
     redirectToDefaultBrowserSubmit,
@@ -567,13 +565,13 @@ const Root = () => {
       <Modals />
       <AppHooks />
       {/* triggered by insomnia://app/import */}
-      {importUri && (
+      {importObject.defaultValue && (
         <ImportModal
-          onHide={() => setImportUri('')}
+          onHide={() => setImportObject({ type: 'clipboard', defaultValue: '' })}
           projectName="Insomnia"
           defaultProjectId={projectId}
           organizationId={organizationId}
-          from={{ type: 'uri', defaultValue: importUri }}
+          from={importObject}
         />
       )}
     </>

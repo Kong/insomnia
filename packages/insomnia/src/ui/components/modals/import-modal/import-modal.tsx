@@ -2,9 +2,12 @@ import classNames from 'classnames';
 import React, { type FC, Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Heading } from 'react-aria-components';
+import { useNavigate } from 'react-router';
 
+import { scopeToActivity } from '~/models/workspace';
 import { useImportResourcesFetcher } from '~/routes/import.resources';
 import { useScanResourcesFetcher } from '~/routes/import.scan';
+import { Checkbox } from '~/ui/components/base/checkbox';
 
 import type { ScanResult } from '../../../../common/import';
 import { isScratchpadProject } from '../../../../models/project';
@@ -12,9 +15,10 @@ import { invariant } from '../../../../utils/invariant';
 import { SegmentEvent } from '../../../analytics';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
 import { ModalHeader } from '../../base/modal-header';
+import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { Button } from '../../themed-button';
-import { disclaimer, ScanResultsTable, SupportedFormats, validImportExtensions } from './shared';
+import { CurlIcon, disclaimer, ScanResultsTable, SupportedFormats, validImportExtensions } from './shared';
 
 export const Radio: FC<{
   name: string;
@@ -164,8 +168,8 @@ interface ImportModalProps extends ModalProps {
   projectName: string;
   // undefined when not using preferences
   workspaceName?: string;
-  // undefined when using insomnia://app/import
-  defaultProjectId?: string;
+  // undefined when logged out, should not happen
+  defaultProjectId: string;
   // undefined when in workspace selection page
   defaultWorkspaceId?: string;
   from:
@@ -174,6 +178,10 @@ interface ImportModalProps extends ModalProps {
       }
     | {
         type: 'uri';
+        defaultValue?: string;
+      }
+    | {
+        type: 'curl';
         defaultValue?: string;
       }
     | {
@@ -194,26 +202,30 @@ export const ImportModal: FC<ImportModalProps> = ({
   const scanResourcesFetcher = useScanResourcesFetcher();
   const scanResourcesFetcherData = scanResourcesFetcher.data;
   const importFetcher = useImportResourcesFetcher();
+  const navigate = useNavigate();
   useEffect(() => {
     modalRef.current?.show();
   }, []);
 
+  // Track the import completion event, redirect to the new workspace and close the modal
   useEffect(() => {
-    if (importFetcher?.data?.done === true) {
-      // Track the import completion event
-      if (scanResourcesFetcherData?.length) {
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.importCompleted,
-          properties: {
-            workspaces: scanResourcesFetcherData.map(scanResult => scanResult.workspaces?.length || 0),
-            requests: scanResourcesFetcherData.map(scanResult => scanResult.requests?.length || 0),
-          },
-        });
-      }
-
+    if (importFetcher?.data?.done === true && scanResourcesFetcherData?.length) {
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.importCompleted,
+        properties: {
+          workspaces: scanResourcesFetcherData.map(scanResult => scanResult.workspaces?.length || 0),
+          requests: scanResourcesFetcherData.map(scanResult => scanResult.requests?.length || 0),
+        },
+      });
+      const workspace = importFetcher?.data?.workspace;
+      workspace
+        ? navigate(
+            `/organization/${organizationId}/project/${defaultProjectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+          )
+        : navigate(`/organization/${organizationId}/project/${defaultProjectId}`);
       modalRef.current?.hide();
     }
-  }, [importFetcher.data, scanResourcesFetcherData]);
+  }, [defaultProjectId, defaultWorkspaceId, importFetcher?.data, navigate, organizationId, scanResourcesFetcherData]);
   // allow workspace import if there is only one workspace
   const totalWorkspacesCount = useMemo(() => {
     return (
@@ -224,6 +236,12 @@ export const ImportModal: FC<ImportModalProps> = ({
     );
   }, [scanResourcesFetcherData]);
   const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspacesCount <= 1;
+  // Check if base environment is being imported to existing workspace
+  const isImportingBaseEnvironmentToWorkspace =
+    shouldImportToWorkspace &&
+    scanResourcesFetcherData?.some(data =>
+      data.environments?.some(env => env.parentId && env.parentId.startsWith('__WORKSPACE_ID__')),
+    );
   // TODO: need to add a more strong way to inform users that resources will be imported into project rather than current workspace
   const header = shouldImportToWorkspace
     ? `Import to "${workspaceName}" Workspace`
@@ -257,13 +275,17 @@ export const ImportModal: FC<ImportModalProps> = ({
             errors={importErrors}
             loading={importFetcher.state !== 'idle'}
             disabled={importErrors.length > 0}
-            onImport={() => {
+            isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
+            onImport={(overrideBaseEnvironmentData: boolean) => {
               invariant(Array.isArray(scanResourcesFetcherData));
 
               importFetcher.submit({
                 organizationId,
                 projectId: defaultProjectId || '',
                 workspaceId: shouldImportToWorkspace ? defaultWorkspaceId : undefined,
+                options: {
+                  overrideBaseEnvironmentData,
+                },
               });
               scanResourcesFetcherData
                 .filter(({ errors }) => errors.length === 0)
@@ -327,6 +349,10 @@ const ScanResourcesForm = ({
                 <i className="fa fa-link" />
                 Url
               </Radio>
+              <Radio onChange={() => setImportFrom('curl')} name="source" value="curl" checked={importFrom === 'curl'}>
+                <CurlIcon />
+                cURL
+              </Radio>
               <Radio
                 onChange={() => setImportFrom('clipboard')}
                 name="source"
@@ -348,6 +374,19 @@ const ScanResourcesForm = ({
                   name="uri"
                   defaultValue={from?.type === 'uri' ? from.defaultValue : undefined}
                   placeholder="https://website.com/insomnia-import.json"
+                />
+              </label>
+            </div>
+          )}
+          {importFrom === 'curl' && (
+            <div className="form-control form-control--outlined">
+              <label>
+                cURL:
+                <input
+                  type="text"
+                  name="curl"
+                  defaultValue={from?.type === 'curl' ? from.defaultValue : undefined}
+                  placeholder="curl --request GET --url http://insomnia.rest/"
                 />
               </label>
             </div>
@@ -376,19 +415,35 @@ const ImportResourcesForm = ({
   errors,
   disabled,
   loading,
+  isImportingBaseEnvironmentToWorkspace,
 }: {
   scanResults: ScanResult[];
   errors?: string[];
-  onImport: () => void;
+  onImport: (overrideBaseEnvironmentData: boolean) => void;
   disabled: boolean;
   loading: boolean;
+  isImportingBaseEnvironmentToWorkspace: boolean;
 }) => {
+  const [overrideBaseEnvironmentData, setOverrideBaseEnvironmentData] = useState(true);
   return (
     <Fragment>
       <div className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto">
         <div className="overflow-y-auto">
           <ScanResultsTable scanResults={scanResults} />
+          {isImportingBaseEnvironmentToWorkspace && (
+            <Checkbox
+              isSelected={overrideBaseEnvironmentData}
+              onChange={checked => setOverrideBaseEnvironmentData(checked)}
+              className="mt-1"
+            >
+              Override Base Environment On Name Conflict
+              <HelpTooltip className="space-left">
+                Override existing variables in the base environment if the same variable names are found during import.
+              </HelpTooltip>
+            </Checkbox>
+          )}
         </div>
+
         <div>
           {errors && errors.length > 0 && (
             <div className="notice error margin-top-sm">
@@ -407,7 +462,7 @@ const ImportResourcesForm = ({
           variant="contained"
           bg="surprise"
           disabled={disabled}
-          onClick={onImport}
+          onClick={() => onImport(overrideBaseEnvironmentData)}
           className="btn h-10 gap-(--padding-sm)"
         >
           {loading ? (

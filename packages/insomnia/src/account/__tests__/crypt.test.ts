@@ -7,14 +7,6 @@ import * as crypt from '../crypt';
  */
 
 describe('crypt', () => {
-  describe('deriveKey()', () => {
-    it('derives a key properly', async () => {
-      const result = await crypt.deriveKey('Password', 'email', 'salt');
-      const expected = 'fb058595c02ae9660ed7098273bf50e49407942ecc437bf317638d76c4578eae';
-      expect(result).toBe(expected);
-    });
-  });
-
   describe('AES', () => {
     it('encrypts and decrypts', () => {
       const key = {

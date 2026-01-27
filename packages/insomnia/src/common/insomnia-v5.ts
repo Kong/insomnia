@@ -17,11 +17,13 @@ import { parse, stringify } from 'yaml';
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
+import type { McpRequest } from '~/models/mcp-request';
 import { invariant } from '~/utils/invariant';
 
 import * as models from '../models';
 import type { ApiSpec } from '../models/api-spec';
 import type { CookieJar } from '../models/cookie-jar';
+import type { EnvironmentKvPairData } from '../models/environment';
 import { type Environment, maskVaultEnvironmentData } from '../models/environment';
 import type { GrpcRequest } from '../models/grpc-request';
 import type { MockRoute } from '../models/mock-route';
@@ -42,6 +44,7 @@ import {
   type Insomnia_WebsocketRequest,
   type InsomniaFile,
   InsomniaFileSchema,
+  McpRequestSchema,
   type Meta,
   SocketIORequestSchema,
   WebsocketRequestSchema,
@@ -279,6 +282,8 @@ export function insomniaSchemaTypeToScope(type: InsomniaFile['type']): Workspace
     return 'environment';
   } else if (type === 'spec.insomnia.rest/5.0') {
     return 'design';
+  } else if (type === 'mcpClient.insomnia/5.0') {
+    return 'mcp';
   }
   return 'mock-server';
 }
@@ -642,30 +647,89 @@ function getCollection(
   return [];
 }
 
+function getMcpRequest(file: InsomniaFile): WithExportType<McpRequest>[] {
+  const commonProps: WithExportType<McpRequest> = {
+    ...mapMetaToInsomniaMeta({
+      id: '__MCP_CLIENT_ID__',
+    }),
+    parentId: file.meta?.id || '__WORKSPACE_ID__',
+    name: file.name || 'MCP Client',
+    type: 'McpRequest',
+    _type: 'mcp_request',
+    url: '',
+    transportType: 'streamable-http',
+    description: '',
+    authentication: {},
+    headers: [],
+    env: [],
+    connected: false,
+    mcpStdioAccess: false,
+    roots: [],
+    subscribeResources: [],
+    sslValidation: true,
+  };
+
+  if ('mcpRequest' in file && file.mcpRequest) {
+    const mcpRequestParser = McpRequestSchema.safeParse(file.mcpRequest);
+    if (mcpRequestParser.success) {
+      const data = mcpRequestParser.data;
+      return [
+        {
+          ...commonProps,
+          ...mapMetaToInsomniaMeta(
+            data.meta || {
+              id: '__MCP_CLIENT_ID__',
+            },
+          ),
+          url: data.url,
+          transportType: data.transportType,
+          authentication: data.authentication || {},
+          headers: mapHeaders(data.headers),
+          env: (data.env as EnvironmentKvPairData[]) || [],
+        },
+      ];
+    }
+  }
+
+  return [commonProps];
+}
+
 function importData(rawData: string) {
   // Apply schema migration before parsing to handle older schema versions
   const migratedData = migrateToLatestYaml(rawData);
-  const file = InsomniaFileSchema.parse(parse(migratedData));
+  const fileSchemaParser = InsomniaFileSchema.safeParse(parse(migratedData));
 
-  if (file.type === 'collection.insomnia.rest/5.0') {
-    return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
-  }
+  if (fileSchemaParser.success) {
+    const file = fileSchemaParser.data;
+    if (file.type === 'collection.insomnia.rest/5.0') {
+      return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
+    }
 
-  if (file.type === 'spec.insomnia.rest/5.0') {
-    return [
-      getWorkspace(file),
-      ...getEnvironments(file),
-      ...getCookieJar(file),
-      ...getCollection(file),
-      ...getApiSpec(file),
-      ...getTestSuites(file),
-    ];
-  }
+    if (file.type === 'spec.insomnia.rest/5.0') {
+      return [
+        getWorkspace(file),
+        ...getEnvironments(file),
+        ...getCookieJar(file),
+        ...getCollection(file),
+        ...getApiSpec(file),
+        ...getTestSuites(file),
+      ];
+    }
 
-  if (file.type === 'environment.insomnia.rest/5.0') {
-    return [getWorkspace(file), ...getEnvironments(file)];
+    if (file.type === 'environment.insomnia.rest/5.0') {
+      return [getWorkspace(file), ...getEnvironments(file)];
+    }
+
+    if (file.type === 'mock.insomnia.rest/5.0') {
+      return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
+    }
+    if (file.type === 'mcpClient.insomnia/5.0') {
+      return [getWorkspace(file), ...getEnvironments(file), ...getMcpRequest(file)];
+    }
+    // @ts-expect-error: Exhaustiveness check
+    throw new Error(`No import handler found for type ${file.type}`);
   }
-  return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
+  throw new Error(`Failed to parse yaml file to Insomnia schema ${fileSchemaParser.error?.toString()}`);
 }
 
 /**
@@ -1042,6 +1106,33 @@ export async function getInsomniaV5DataExport({
       }));
     }
 
+    function getMcpRequestFromResources(
+      resource: McpRequest,
+    ): Extract<InsomniaFile, { type: 'mcpClient.insomnia/5.0' }>['mcpRequest'] {
+      return {
+        name: resource.name,
+        url: resource.url,
+        transportType: resource.transportType,
+        headers: resource.headers,
+        authentication: resource.authentication,
+        meta: {
+          id: resource._id,
+          created: resource.created,
+          modified: resource.modified,
+        },
+        env: resource.env.map(envVar => ({
+          id: envVar.id,
+          name: envVar.name,
+          value: envVar.value,
+          type: 'str',
+          enabled: !!envVar.enabled,
+        })),
+        roots: resource.roots.map(root => ({
+          uri: root.uri,
+        })),
+      };
+    }
+
     if (workspace.scope === 'collection') {
       const collection: InsomniaFile = {
         type: 'collection.insomnia.rest/5.0',
@@ -1139,6 +1230,25 @@ export async function getInsomniaV5DataExport({
 
       const parsedMockServer = InsomniaFileSchema.parse(mockServer);
       return stringify(removeEmptyFields(parsedMockServer), {});
+    } else if (workspace.scope === 'mcp') {
+      const mcpRequest = exportableResources.find(models.mcpRequest.isMcpRequest);
+      invariant(mcpRequest, 'No MCP Request found in MCP workspace');
+      const mcpClient: InsomniaFile = {
+        type: 'mcpClient.insomnia/5.0',
+        schema_version: INSOMNIA_SCHEMA_VERSION,
+        name: workspace.name,
+        meta: mapWorkspaceMeta(workspace),
+        // each mcp workspace has exactly one mcpRequest
+        mcpRequest: getMcpRequestFromResources(mcpRequest),
+        environments: getEnvironmentsFromResources(
+          exportableResources.filter(models.environment.isEnvironment),
+          includePrivateEnvironments,
+        ),
+      };
+
+      const parsedMcpClient = InsomniaFileSchema.parse(mcpClient);
+
+      return stringify(removeEmptyFields(parsedMcpClient));
     }
     throw new Error('Unknown workspace scope');
   } catch (err) {

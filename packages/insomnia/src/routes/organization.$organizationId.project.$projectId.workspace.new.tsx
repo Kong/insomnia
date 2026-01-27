@@ -138,6 +138,26 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       await models.apiSpec.getOrCreateForParentId(workspace._id);
     }
 
+    if (workspaceData.scope === 'mcp') {
+      const settings = await models.settings.getOrCreate();
+      const defaultHeaders = settings.disableAppVersionUserAgent
+        ? []
+        : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
+      // Create mcp request when MCP workspace is created
+      await models.mcpRequest.create({
+        parentId: workspace._id,
+        transportType: 'streamable-http',
+        url: '',
+        name: 'MCP Client',
+        headers: defaultHeaders,
+        description: '',
+      });
+
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.mcpClientAdded,
+      });
+    }
+
     // Create default env, cookie jar, and meta
     await models.environment.getOrCreateForParentId(workspace._id);
     await models.cookieJar.getOrCreateForParentId(workspace._id);
@@ -146,7 +166,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     await database.flushChanges(flushId);
 
     const { id } = await models.userSession.getOrCreate();
-    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project) && scope !== 'mcp') {
+    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project)) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs,
@@ -155,17 +175,25 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     let event = SegmentEvent.documentCreate;
+    let environmentType: string | undefined;
 
     if (isCollection(workspace)) {
       event = SegmentEvent.collectionCreate;
     } else if (isEnvironment(workspace)) {
-      event = SegmentEvent.environmentWorkspaceCreate;
+      event = SegmentEvent.environmentCreate;
+      const environment = await models.environment.getById(workspace._id);
+      environmentType = environment?.isPrivate ? 'private' : 'global';
     } else if (scope === 'mcp') {
       event = SegmentEvent.mcpClientWorkspaceCreate;
     }
 
     window.main.trackSegmentEvent({
       event: event,
+      ...(environmentType && {
+        properties: {
+          type: environmentType,
+        },
+      }),
     });
 
     if (workspaceData.withRequest) {
@@ -190,7 +218,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         })
       )._id;
 
-      window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType: 'HTTP' } });
+      window.main.trackSegmentEvent({ event: SegmentEvent.requestCreated, properties: { requestType: 'HTTP' } });
 
       return redirect(
         href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
@@ -198,36 +226,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           projectId,
           workspaceId: workspace._id,
           requestId: activeRequestId,
-        }),
-      );
-    }
-
-    if (workspaceData.scope === 'mcp') {
-      const settings = await models.settings.getOrCreate();
-      const defaultHeaders = settings.disableAppVersionUserAgent
-        ? []
-        : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
-      // Create mcp request when MCP workspace is created
-      const newMcpRequest = await models.mcpRequest.create({
-        parentId: workspace._id,
-        transportType: 'streamable-http',
-        url: '',
-        name: 'My first MCP Client',
-        headers: defaultHeaders,
-        description: '',
-      });
-      const requestId = newMcpRequest._id;
-
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.mcpClientAdded,
-      });
-
-      return redirect(
-        href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId', {
-          organizationId,
-          projectId,
-          workspaceId: workspace._id,
-          requestId,
         }),
       );
     }
@@ -362,6 +360,7 @@ async function createMockServer(
         generation_from: workspaceData.apiSpecContents ? 'design_doc' : workspaceData.mockServerSpecSource || '',
         dynamic_responses: workspaceData.mockServerDynamicResponses ? 'yes' : 'no',
         generation_duration_seconds: generationDurationMs / 1000,
+        source: 'menu',
       },
     });
 

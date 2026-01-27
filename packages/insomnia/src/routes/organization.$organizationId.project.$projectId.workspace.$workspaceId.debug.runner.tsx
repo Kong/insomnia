@@ -26,6 +26,7 @@ import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
 import type { UserUploadEnvironment } from '~/models/environment';
+import { getTimeline } from '~/models/helpers/response-operations';
 import type { RunnerResultPerRequest, RunnerTestResult } from '~/models/runner-test-result';
 import { cancelRequestById } from '~/network/cancellation';
 import { defaultSendActionRuntime } from '~/network/network';
@@ -70,7 +71,7 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
     const resp = await models.response.getById(respInfo.responseId);
 
     if (resp) {
-      const timeline = models.response.getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
+      const timeline = getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
       timelines = [
         ...timelines,
         {

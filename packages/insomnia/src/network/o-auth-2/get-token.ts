@@ -3,6 +3,7 @@ import querystring from 'node:querystring';
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { isMcpRequestId } from '~/models/mcp-request';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 
@@ -195,7 +196,6 @@ export const getOAuth2Token = async (
         { name: 'grant_type', value: GRANT_TYPE_AUTHORIZATION_CODE },
         { name: 'code', value: redirectParams.code },
         ...insertAuthKeyIf('redirect_uri', redirectUrl),
-        ...insertAuthKeyIf('state', authentication.state),
         ...insertAuthKeyIf('audience', authentication.audience),
         ...insertAuthKeyIf('resource', authentication.resource),
         ...insertAuthKeyIf('code_verifier', codeVerifier),
@@ -313,7 +313,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
 
   const statusCode = response.statusCode || 0;
-  const bodyBuffer = await models.response.getBodyBuffer(response);
+  const bodyBuffer = await getBodyBuffer(response);
 
   if (statusCode === 401) {
     // If the refresh token was rejected due an unauthorized request, we will
@@ -358,7 +358,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
 }
 
 export const oauthResponseToAccessToken = async (accessTokenUrl: string, response: Response) => {
-  const bodyBuffer = await models.response.getBodyBuffer(response);
+  const bodyBuffer = await getBodyBuffer(response);
   if (!bodyBuffer) {
     return {
       xResponseId: response._id,
