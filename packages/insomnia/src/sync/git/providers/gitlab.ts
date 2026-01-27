@@ -134,8 +134,6 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
   readonly supportsFetchEmails = true;
   readonly supportsAutoRenew = true; // GitLab supports refresh tokens
 
-  private repositoryCache = new Map<string, ProviderRepository[]>();
-
   constructor(config: GitLabProviderConfig) {
     this.config = config;
   }
@@ -169,14 +167,9 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
   /**
    * Fetch projects (repositories) accessible by the credential
    */
-  async fetchRepositories(credential: GitCredentials, refresh?: boolean): Promise<ProviderRepository[]> {
+  async fetchRepositories(credential: GitCredentials): Promise<ProviderRepository[]> {
     if (!isGitCredentialsV2(credential) || credential.provider !== 'gitlab') {
       throw new Error('Invalid credential type for GitLab provider');
-    }
-
-    const cachedRepos = this.repositoryCache.get(credential._id);
-    if (!refresh && cachedRepos && cachedRepos.length > 0) {
-      return cachedRepos;
     }
 
     const repos: ProviderRepository[] = [];
@@ -217,8 +210,6 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
       if (data.length < perPage) break;
       page++;
     }
-
-    this.repositoryCache.set(credential._id, repos);
 
     return repos;
   }
@@ -267,6 +258,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
     });
 
     if (!response.ok) {
+      console.error('[gitlab] Failed to fetch gitlab user with token:', response.statusText);
       throw new Error(`GitLab API error: ${response.statusText}`);
     }
 
@@ -284,6 +276,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
     });
 
     if (!emailsResponse.ok) {
+      console.error('[gitlab] Failed to fetch gitlab user emails:', emailsResponse.statusText);
       return [
         {
           email: userData.commit_email || userData.email,

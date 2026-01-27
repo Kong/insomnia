@@ -14,7 +14,7 @@ import {
 import { Icon } from '~/basic-components/icon';
 import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import type { GitProviderOption } from '~/sync/git/providers/types';
+import type { GitProviderOption, ProviderEmail } from '~/sync/git/providers/types';
 import { Checkbox } from '~/ui/components/base/checkbox';
 import { Input } from '~/ui/components/base/input';
 import { GitCredentialSetup } from '~/ui/components/git-credentials/credential-setup';
@@ -104,7 +104,7 @@ export const GitRepoForm: FC<Props> = ({
         <Form
           aria-label="Git Setup Form"
           id={formId}
-          className="flex flex-col gap-4"
+          className="flex flex-col gap-3"
           onSubmit={async e => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
@@ -215,21 +215,19 @@ export const GitRepoForm: FC<Props> = ({
               onSelectionChange={email => {
                 setProjectData(prev => ({
                   ...prev,
-                  selectedAuthorEmail: email as string,
+                  selectedAuthorEmail: email,
                 }));
               }}
             >
               <Label className="mb-2 px-0.5 pt-0 text-sm">Author Email</Label>
               <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
-                <SelectValue className="flex items-center justify-center gap-2 truncate">
+                <SelectValue<ProviderEmail> className="flex items-center justify-center gap-2 truncate">
                   {({ selectedItem }) => {
                     if (selectedItem) {
                       return (
                         <Fragment>
-                          <span>{(selectedItem as { email: string }).email}</span>
-                          {(selectedItem as { primary?: boolean }).primary && (
-                            <span className="text-xs text-(--hl-lg)">(primary)</span>
-                          )}
+                          <span>{selectedItem.email}</span>
+                          {selectedItem.primary && <span className="text-xs text-(--hl-lg)">(primary)</span>}
                         </Fragment>
                       );
                     }
@@ -274,7 +272,7 @@ export const GitRepoForm: FC<Props> = ({
                       uri,
                     }))
                   }
-                  credentialsId={projectData.credentialsId || selectedCredentialsId}
+                  credentialsId={selectedCredentialsId}
                 />
               ) : (
                 <Input

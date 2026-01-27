@@ -11,7 +11,7 @@ import {
   SelectValue,
   TextField,
 } from 'react-aria-components';
-import { useParams, useRevalidator } from 'react-router';
+import { useParams } from 'react-router';
 
 import { Banner } from '~/basic-components/banner';
 import { Divider } from '~/basic-components/divider';
@@ -120,7 +120,6 @@ export const ProjectSettingsForm: FC<Props> = ({
 
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
   const updateProjectFetcher = useProjectUpdateActionFetcher();
-  const revalidator = useRevalidator();
 
   const insomniaFiles =
     initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data
@@ -128,13 +127,10 @@ export const ProjectSettingsForm: FC<Props> = ({
       : [];
 
   useEffect(() => {
-    if (updateProjectFetcher?.data && updateProjectFetcher?.data?.success) {
-      revalidator.revalidate();
-      if (onSuccessUpdate) {
-        onSuccessUpdate();
-      }
+    if (updateProjectFetcher?.data && updateProjectFetcher?.data?.success && onSuccessUpdate) {
+      onSuccessUpdate();
     }
-  }, [onSuccessUpdate, updateProjectFetcher.data, revalidator]);
+  }, [onSuccessUpdate, updateProjectFetcher.data]);
 
   useEffect(() => {
     if (updateProjectFetcher.state === 'idle' && updateProjectFetcher.data && updateProjectFetcher.data?.error) {
@@ -150,7 +146,6 @@ export const ProjectSettingsForm: FC<Props> = ({
         projectData: {
           ...projectData,
           storageType,
-          selectedAuthorEmail: projectData.selectedAuthorEmail,
         },
       });
     }
@@ -201,15 +196,6 @@ export const ProjectSettingsForm: FC<Props> = ({
       emailsFetcher.load({ credentialsId: selectedCredential._id });
     }
   }, [canFetchEmails, selectedCredential, emailsFetcher]);
-
-  useEffect(() => {
-    if (gitRepository && project?._id) {
-      setProjectData(prev => ({
-        ...prev,
-        selectedAuthorEmail: gitRepository.selectedAuthorEmail ?? null,
-      }));
-    }
-  }, [project?._id, gitRepository]);
 
   return (
     <>
@@ -321,7 +307,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                       onSelectionChange={email => {
                         setProjectData(prev => ({
                           ...prev,
-                          selectedAuthorEmail: email as string,
+                          selectedAuthorEmail: email,
                         }));
                       }}
                     >

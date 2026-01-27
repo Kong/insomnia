@@ -25,7 +25,12 @@ interface UpdateProjectInputData {
 }
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
-  const { name, storageType, ...projectData } = (await request.json()) as UpdateProjectInputData;
+  const {
+    name,
+    storageType,
+    selectedAuthorEmail = null,
+    ...projectData
+  } = (await request.json()) as UpdateProjectInputData;
 
   invariant(typeof name === 'string', 'Name is required');
   invariant(storageType === 'local' || storageType === 'remote' || storageType === 'git', 'Project type is required');
@@ -260,7 +265,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           credentialsId: projectData.credentialsId,
           ref: projectData.ref,
           name,
-          selectedAuthorEmail: projectData.selectedAuthorEmail,
+          selectedAuthorEmail,
         });
 
         const projectWorkspaces = await models.workspace.findByParentId(project._id);
@@ -317,7 +322,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         uri: projectData.uri ?? '',
         credentialsId: projectData.credentialsId,
         ref: projectData.ref,
-        selectedAuthorEmail: projectData.selectedAuthorEmail,
+        selectedAuthorEmail,
       });
 
       showToast({
@@ -351,12 +356,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     // update existing git repository settings (author email override)
     if (storageType === 'git' && gitRepository?.credentialsId) {
-      await window.main.git.updateGitRepo({
-        projectId: project._id,
-        uri: gitRepository.uri,
-        credentialsId: gitRepository.credentialsId,
-        selectedAuthorEmail: projectData.selectedAuthorEmail ?? null,
-      });
+      models.gitRepository.update(gitRepository, { selectedAuthorEmail });
 
       if (name !== project.name) {
         await models.project.update(project, { name });
