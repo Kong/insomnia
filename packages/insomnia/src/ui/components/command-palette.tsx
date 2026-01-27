@@ -177,7 +177,10 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
             'collection': 'collection',
           } as const
         )[scope];
-        const url = file.item.scope === 'collection' ? (file.url += '?doNotSkipToActiveRequest=true') : file.url;
+        const url =
+          file.item.scope === 'collection'
+            ? `${file.url}${file.url.includes('?') ? '&' : '?'}doNotSkipToActiveRequest=true`
+            : file.url;
         addTab(
           {
             type: type,
@@ -246,13 +249,18 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     currentRemoteFilesData?.map(file => ({
       ...file,
       action: () => {
-        pullFileFetcher.submit({
-          backendProjectId: file.item.projectId,
-          remoteId: file.item.teamProjectId,
-          organizationId: file.item.organizationId,
-        });
+        if (file.pullUrl) {
+          pullFileFetcher.submit({
+            backendProjectId: file.item.projectId,
+            remoteId: file.item.teamProjectId,
+            organizationId: file.item.organizationId,
+          });
 
-        return true;
+          return true;
+        }
+
+        navigate(file.url);
+        return null;
       },
     })) || [];
 
@@ -302,13 +310,17 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     otherRemoteFilesData.map(file => ({
       ...file,
       action: () => {
-        pullFileFetcher.submit({
-          backendProjectId: file.item.projectId,
-          remoteId: file.item.teamProjectId,
-          organizationId: file.item.organizationId,
-        });
+        if (file.pullUrl) {
+          pullFileFetcher.submit({
+            backendProjectId: file.item.projectId,
+            remoteId: file.item.teamProjectId,
+            organizationId: file.item.organizationId,
+          });
 
-        return true;
+          return true;
+        }
+        navigate(file.url);
+        return null;
       },
     })) || [];
 
@@ -657,7 +669,6 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                                 onClick={() => {
                                   item.openInNewTab?.();
                                 }}
-                                tabIndex={-1}
                               >
                                 Open In New Tab <Icon icon="external-link-alt" className="w-3" />
                               </button>
