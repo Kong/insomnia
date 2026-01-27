@@ -11,7 +11,6 @@ interface UpdateInsomniaTabParams {
   organizationId: string;
   tabList: OrganizationTabs['tabList'];
   activeTabId?: string;
-  tabHistory?: string[];
 }
 
 interface ContextProps {
@@ -61,14 +60,29 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   const navigate = useNavigate();
 
   const updateInsomniaTabs = useCallback(
-    ({ organizationId, tabList, activeTabId, tabHistory }: UpdateInsomniaTabParams) => {
+    ({ organizationId, tabList, activeTabId }: UpdateInsomniaTabParams) => {
       const currentOrgTabs = appTabsRef.current?.[organizationId];
+      const currentTabHistory = currentOrgTabs?.tabHistory || [];
+      const currentActiveTabId = currentOrgTabs?.activeTabId;
+
+      // Centralized tabHistory management:
+      // 1. Remove any tab IDs that no longer exist in tabList
+      // 2. Add previous activeTabId to history if switching to a different tab
+      const tabIds = new Set(tabList.map(t => t.id));
+      let newTabHistory = currentTabHistory.filter(id => tabIds.has(id));
+
+      // If activeTabId changed, add the previous one to history
+      if (currentActiveTabId && currentActiveTabId !== activeTabId && tabIds.has(currentActiveTabId)) {
+        // Remove if already exists to avoid duplicates, then prepend
+        newTabHistory = [currentActiveTabId, ...newTabHistory.filter(id => id !== currentActiveTabId)];
+      }
+
       const newState = {
         ...appTabsRef.current,
         [organizationId]: {
           tabList,
           activeTabId,
-          tabHistory: tabHistory !== undefined ? tabHistory : currentOrgTabs?.tabHistory || [],
+          tabHistory: newTabHistory,
         },
       };
       appTabsRef.current = newState;
@@ -160,7 +174,6 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
           organizationId,
           tabList: [],
           activeTabId: '',
-          tabHistory: [],
         });
         uiEventBus.emit('CLOSE_TAB', organizationId, [id]);
         return;
@@ -171,11 +184,11 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
         return;
       }
       const newTabList = currentTabs.tabList.filter(tab => tab.id !== id);
-      const newTabHistory = (currentTabs.tabHistory || []).filter(tabId => tabId !== id);
+      const tabHistory = currentTabs.tabHistory || [];
 
       if (currentTabs.activeTabId === id) {
         // Find the last active tab from history that still exists
-        const lastActiveTabId = newTabHistory.find(tabId => newTabList.some(tab => tab.id === tabId));
+        const lastActiveTabId = tabHistory.find(tabId => newTabList.some(tab => tab.id === tabId));
         const nextActiveTab = lastActiveTabId
           ? newTabList.find(tab => tab.id === lastActiveTabId)
           : newTabList[Math.max(index - 1, 0)];
@@ -188,14 +201,12 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
           organizationId,
           tabList: newTabList,
           activeTabId: nextActiveTab?.id || '',
-          tabHistory: newTabHistory,
         });
       } else {
         updateInsomniaTabs({
           organizationId,
           tabList: newTabList,
           activeTabId: currentTabs.activeTabId as string,
-          tabHistory: newTabHistory,
         });
       }
       uiEventBus.emit('CLOSE_TAB', organizationId, [id]);
@@ -349,18 +360,10 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
         navigate(tab.url);
       }
 
-      // Update tab history - add current active tab to history before switching
-      const tabHistory = currentTabs.tabHistory || [];
-      const newTabHistory =
-        currentTabs.activeTabId && currentTabs.activeTabId !== id
-          ? [currentTabs.activeTabId, ...tabHistory.filter(tabId => tabId !== currentTabs.activeTabId)]
-          : tabHistory;
-
       updateInsomniaTabs({
         organizationId,
         tabList: currentTabs.tabList,
         activeTabId: id,
-        tabHistory: newTabHistory,
       });
     },
     [navigate, organizationId, updateInsomniaTabs],
