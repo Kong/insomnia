@@ -132,17 +132,13 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
 
       // Calculate new tabList for new tab
       let newTabList: BaseTab[];
-      if (tab.temporary) {
-        const temporaryIndex = currentTabs.tabList.findIndex(t => t.temporary);
-        if (temporaryIndex !== -1) {
-          // Replace existing temporary tab
-          newTabList = [...currentTabs.tabList];
-          newTabList[temporaryIndex] = tab;
-        } else {
-          // No existing temporary tab, just append
-          newTabList = [...currentTabs.tabList, tab];
-        }
+      const temporaryIndex = currentTabs.tabList.findIndex(t => t.temporary);
+      if (tab.temporary && temporaryIndex !== -1) {
+        // Replace existing temporary tab
+        newTabList = [...currentTabs.tabList];
+        newTabList[temporaryIndex] = tab;
       } else {
+        // No existing temporary tab or not a temporary tab, just append
         newTabList = [...currentTabs.tabList, tab];
       }
 
