@@ -36,6 +36,7 @@ import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
+import { showToast } from '../toast-notification';
 import { GitPullRequiredModal } from './git-pull-required-modal';
 
 export type StagingModalMode = 'default' | 'commit-and-pull';
@@ -96,7 +97,7 @@ interface GeneratedCommitsFormProps {
   mode: StagingModalMode;
   changes: { staged: any[]; unstaged: any[] };
   setShowConfirmDiscardAndPullModal: (show: boolean) => void;
-  onCommitSuccess: () => void;
+  onCommitSuccess: (options: { push: boolean }) => void;
   diffChanges: (params: { path: string; staged: boolean }) => void;
 }
 
@@ -266,14 +267,19 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
   const isCommitting = commitsFetcher.state !== 'idle';
   const canCommitAndPull = changes.staged.length > 0 && changes.unstaged.length === 0;
 
-  // Handle successful commits
   useEffect(() => {
-    const hasNoCommitErrors =
-      commitsFetcher.data && 'errors' in commitsFetcher.data && commitsFetcher.data.errors?.length === 0;
-    if (hasNoCommitErrors) {
-      onCommitSuccess();
+    if (!commitsFetcher.data || !committingAction || isCommitting) {
+      return;
     }
-  }, [commitsFetcher.data, onCommitSuccess]);
+    const hasErrors =
+      'errors' in commitsFetcher.data && commitsFetcher.data.errors && commitsFetcher.data.errors.length > 0;
+    const isSuccess =
+      ('success' in commitsFetcher.data && commitsFetcher.data.success) ||
+      ('errors' in commitsFetcher.data && commitsFetcher.data.errors?.length === 0);
+    if (isSuccess && !hasErrors) {
+      onCommitSuccess({ push: committingAction === 'commit-push' });
+    }
+  }, [commitsFetcher.data, onCommitSuccess, committingAction, isCommitting]);
 
   const moveFileToDoNotCommit = (fileItem: FileItem) => {
     try {
@@ -475,7 +481,7 @@ interface ManualCommitFormProps {
   mode: StagingModalMode;
   changes: { staged: any[]; unstaged: any[] };
   setShowConfirmDiscardAndPullModal: (show: boolean) => void;
-  onCommitSuccess: () => void;
+  onCommitSuccess: (options: { push: boolean }) => void;
   onPullRequired: () => void;
   diffChanges: (params: { path: string; staged: boolean }) => void;
   setDiscardData: (data: { paths: string[]; filesCount: number }) => void;
@@ -518,25 +524,23 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
     });
   }
 
-  const hasNoCommitErrors =
-    commitFetcher.data && 'errors' in commitFetcher.data && commitFetcher.data.errors?.length === 0;
-
-  // Handle commit results (errors and success)
   useEffect(() => {
-    if (commitFetcher.data) {
-      if (commitFetcher.data.errors && commitFetcher.data.errors.length > 0) {
-        if (commitFetcher.data.errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
-          onPullRequired();
-        } else {
-          setOperationError(commitFetcher.data.errors.join('\n'));
-        }
-      } else if (hasNoCommitErrors) {
-        setMessage('');
-        setOperationError(null);
-        onCommitSuccess();
-      }
+    if (!commitFetcher.data || !committingAction || isCommitting) {
+      return;
     }
-  }, [commitFetcher.data, hasNoCommitErrors, onCommitSuccess, onPullRequired]);
+    const errors = commitFetcher.data.errors;
+    if (errors && errors.length > 0) {
+      if (errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
+        onPullRequired();
+      } else {
+        setOperationError(errors.join('\n'));
+      }
+      return;
+    }
+    setMessage('');
+    setOperationError(null);
+    onCommitSuccess({ push: committingAction === 'commit-push' });
+  }, [commitFetcher.data, onCommitSuccess, onPullRequired, committingAction, isCommitting]);
 
   return (
     <>
@@ -928,16 +932,24 @@ export const GitProjectStagingModal: FC<{
   const allChanges = [...changes.staged, ...changes.unstaged];
   const allChangesLength = allChanges.length;
 
-  // Callback when commit succeeds - check if we should close the modal
-  const handleCommitSuccess = React.useCallback(() => {
-    // Check if there are no more changes left after commit
-    if (allChangesLength === 0) {
-      if (mode === StagingModalModes.commitAndPull) {
-        onPullAfterCommit();
+  const handleCommitSuccess = React.useCallback(
+    ({ push }: { push: boolean }) => {
+      if (push) {
+        showToast({
+          icon: ['fab', 'git-alt'],
+          title: 'Changes committed and pushed',
+          status: 'success',
+        });
       }
-      onClose();
-    }
-  }, [allChangesLength, mode, onPullAfterCommit, onClose]);
+      if (allChangesLength === 0) {
+        if (mode === StagingModalModes.commitAndPull) {
+          onPullAfterCommit();
+        }
+        onClose();
+      }
+    },
+    [allChangesLength, mode, onPullAfterCommit, onClose],
+  );
 
   // Callback when pull is required
   const handlePullRequired = React.useCallback(() => {
