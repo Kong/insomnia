@@ -218,17 +218,24 @@ export const useInsomniaTab = ({
       if (!type) {
         return undefined;
       }
+
+      // Get common parameters
+      const commonParams = {
+        type,
+        id: getTabId(type),
+        url: generateTabUrl(type),
+        organizationId,
+        projectId,
+        workspaceId,
+        projectName: activeProject.name,
+        workspaceName: activeWorkspace.name,
+        temporary: false,
+      };
+
       if (type === 'request') {
         return {
-          type,
+          ...commonParams,
           name: activeRequest?.name || 'New Request',
-          url: generateTabUrl(type),
-          organizationId: organizationId,
-          projectId: projectId,
-          workspaceId: workspaceId,
-          id: getTabId(type),
-          projectName: activeProject.name,
-          workspaceName: activeWorkspace.name,
           tag: getRequestMethodShortHand(activeRequest),
           method: (activeRequest as Request)?.method || '',
         };
@@ -236,74 +243,39 @@ export const useInsomniaTab = ({
 
       if (type === 'folder') {
         return {
-          type,
+          ...commonParams,
           name: activeRequestGroup?.name || 'My Folder',
-          url: generateTabUrl(type),
-          organizationId: organizationId,
-          projectId: projectId,
-          workspaceId: workspaceId,
-          id: getTabId(type),
-          projectName: activeProject.name,
-          workspaceName: activeWorkspace.name,
         };
       }
 
       const collectionTabTypes: TabType[] = ['collection', 'document', 'environment', 'mockServer', 'test'];
       if (collectionTabTypes.includes(type)) {
         return {
-          type,
+          ...commonParams,
           name: activeWorkspace.name,
-          url: generateTabUrl(type),
-          organizationId: organizationId,
-          projectId: projectId,
-          workspaceId: workspaceId,
-          id: getTabId(type),
-          projectName: activeProject.name,
-          workspaceName: activeWorkspace.name,
         };
       }
 
       if (type === 'runner') {
         return {
-          type,
+          ...commonParams,
           name: 'Runner',
-          url: generateTabUrl(type),
-          organizationId: organizationId,
-          projectId: projectId,
-          workspaceId: workspaceId,
-          id: getTabId(type),
-          projectName: activeProject.name,
-          workspaceName: activeWorkspace.name,
         };
       }
 
       if (type === 'mockRoute') {
         return {
-          type,
+          ...commonParams,
           name: activeMockRoute?.name || 'Untitled mock route',
-          url: generateTabUrl(type),
-          organizationId: organizationId,
-          projectId: projectId,
-          workspaceId: workspaceId,
-          id: getTabId(type),
           tag: formatMethodName(activeMockRoute?.method || ''),
-          projectName: activeProject.name,
-          workspaceName: activeWorkspace.name,
           method: activeMockRoute?.method || '',
         };
       }
 
       if (type === 'testSuite') {
         return {
-          type,
+          ...commonParams,
           name: unitTestSuite?.name || 'Untitled test suite',
-          url: generateTabUrl(type),
-          organizationId: organizationId,
-          projectId: projectId,
-          workspaceId: workspaceId,
-          id: getTabId(type),
-          projectName: activeProject.name,
-          workspaceName: activeWorkspace.name,
         };
       }
 

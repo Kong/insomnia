@@ -37,8 +37,8 @@ export interface OrganizationTabs {
 }
 
 export const enum TAB_CONTEXT_MENU_COMMAND {
-  CLOSE_ALL = 'Close all',
-  CLOSE_OTHERS = 'Close others',
+  CLOSE_ALL = 'Close All',
+  CLOSE_OTHERS = 'Close Other Tabs',
 }
 
 export const TAB_ROUTER_PATH: Record<TabType, string> = {
