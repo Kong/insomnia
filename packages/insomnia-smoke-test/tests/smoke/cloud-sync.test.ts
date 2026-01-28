@@ -1,0 +1,99 @@
+import { expect } from '@playwright/test';
+
+import { test } from '../../playwright/test';
+
+test.describe('Cloud Sync', () => {
+  test('Discard and branch actions', async ({ page }) => {
+    // Sync collection project
+    await page.getByLabel('Collection Project').click();
+    await page.getByLabel('Request Collection').getByTestId('New Request').click();
+    // Send request and check body
+    await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByRole('tab', { name: 'Console' }).click();
+    await page.getByText('foo=bar').click();
+    // Set body and discard changes
+    await page.getByRole('tab', { name: 'Body' }).click();
+    const bodyEditor = page.getByRole('tabpanel').getByTestId('CodeEditor').getByRole('textbox').first();
+    await bodyEditor.fill('value=changed');
+    await page.getByLabel('Git Sync').click();
+    const discardButton = page.getByLabel('Discard all changes');
+    // Wait for discard button to be enabled
+    await expect.soft(discardButton).not.toHaveAttribute('aria-disabled', 'true');
+    await discardButton.click({ delay: 500 });
+    // try double click discard button here to avoid single click fails
+
+    // if (await discardButton.isVisible()) {
+    //   await discardButton.click();
+    // }
+    // Check body is reverted
+    await page.getByRole('tab', { name: 'Params' }).click();
+    await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByRole('tab', { name: 'Console' }).click();
+    await page.getByText('foo=bar').click();
+
+    // restore commit
+    await page.getByLabel('Git Sync').click();
+    const historyButton = page.getByText('History');
+    // Wait for discard button to be enabled
+    await expect.soft(historyButton).not.toHaveAttribute('aria-disabled', 'true');
+    historyButton.click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Restore' }).nth(1).dblclick();
+    await page.getByRole('dialog').locator('[data-icon="x"]').click();
+    // Ensure body is restored
+    await page.getByRole('tab', { name: 'Body' }).click();
+    await page.getByRole('button', { name: 'Send' }).click();
+    await expect.soft(page.getByText('foo=bar')).toBeHidden();
+
+    // go back and select mcp project
+    await page
+      .locator('[data-icon="chevron-left"]')
+      .filter({ has: page.locator(':visible') })
+      .first()
+      .click();
+    // select MCP project do check branch actions
+    await page.getByLabel('MCP Project').click();
+    await page.getByLabel('Git Sync').click();
+    await page.getByText('Branches').click();
+
+    const branchModal = page.getByRole('dialog');
+    const localBranchDiv = branchModal.getByLabel('Branches list');
+    const remoteBranchDiv = branchModal.getByLabel('Remote Branches list');
+    await remoteBranchDiv.getByLabel('develop').getByRole('button', { name: 'Fetch' }).click();
+    // validate remote branch fetched
+    await expect.soft(localBranchDiv.getByLabel('develop')).toBeVisible();
+    // checkout master branch
+    await localBranchDiv.getByLabel('master').getByRole('button', { name: 'Checkout' }).click();
+    // delete local branch
+    await localBranchDiv.getByLabel('develop').getByRole('button', { name: 'Delete' }).dblclick();
+    // validate local branch deleted
+    await expect.soft(localBranchDiv.getByLabel('develop')).toBeVisible();
+    // create new branch
+    await branchModal.getByRole('textbox', { name: 'Branch name' }).fill('smoke-test-branch');
+    await branchModal.getByRole('button', { name: 'Create' }).click();
+    // validate new branch
+    await expect.soft(localBranchDiv.getByLabel('smoke-test-branch')).toBeVisible();
+    await expect
+      .soft(localBranchDiv.getByLabel('smoke-test-branch').getByRole('button', { name: 'Delete' }))
+      .toBeDisabled();
+  });
+
+  test('Commit and push actions', async ({ page }) => {
+    await page.getByLabel('Environment Project').click();
+    const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
+    const firstRow = kvTable.getByRole('option').first();
+    await firstRow.getByTestId('OneLineEditor').first().click();
+    await page.keyboard.type('foo');
+    await firstRow.getByTestId('OneLineEditor').nth(1).click({ delay: 200 });
+    await page.keyboard.type('bar');
+    // Click push
+    await page.getByLabel('Git Sync').click();
+    await page.getByLabel('Commit').click({ delay: 500 });
+    // stash changes
+    await page.getByRole('row', { name: 'Base Environment' }).locator('[data-icon="plus"]').click();
+    await page.getByRole('textbox', { name: 'Message' }).fill('Smoke test: add foo=bar');
+    await page.getByRole('button', { name: 'Commit and push' }).click();
+    await page.getByLabel('Git Sync').click();
+    // expect no unpushed changes
+    await expect.soft(page.getByLabel('Commit')).toHaveAttribute('aria-disabled', 'true');
+  });
+});

@@ -224,6 +224,8 @@ const projectSnapshots: Record<string, any[]> = {
     },
   ],
 };
+const newSnapshots: Record<string, any[]> = {};
+const newBlobs: Record<string, string> = {};
 
 const rawBlobs: Record<string, string> = {
   // request collection blobs
@@ -252,6 +254,12 @@ const rawBlobs: Record<string, string> = {
 };
 
 const defaultBranches = [{ name: 'master' }, { name: 'develop' }];
+
+const getSnapshotsForProject = (projectId: string) => {
+  const originalSnapshots = projectSnapshots[projectId];
+  const addedSnapshots = newSnapshots[projectId] || [];
+  return [...originalSnapshots, ...addedSnapshots];
+};
 
 export default function setup(app: Application) {
   // handling response for all graphql requests
@@ -285,14 +293,15 @@ export default function setup(app: Application) {
           case 'branch': {
             const projectId = variables.projectId;
             const projectBranch = variables.branch;
-            if (projectId && projectSnapshots[projectId]) {
+            const snapshots = getSnapshotsForProject(projectId);
+            if (projectId && snapshots.length > 0) {
               return res.status(200).json({
                 data: {
                   branch: {
                     created: new Date().toISOString(),
                     modified: new Date().toISOString(),
                     name: projectBranch || 'master',
-                    snapshots: projectSnapshots[projectId].map(s => s.id),
+                    snapshots: snapshots.map(s => s.id),
                   },
                 },
               });
@@ -311,10 +320,11 @@ export default function setup(app: Application) {
 
           case 'snapshots': {
             const projectId = variables.projectId;
-            if (projectId && projectSnapshots[projectId]) {
+            if (projectId) {
+              const allSnapshots = getSnapshotsForProject(projectId);
               return res.status(200).json({
                 data: {
-                  snapshots: projectSnapshots[projectId],
+                  snapshots: allSnapshots,
                 },
               });
             }
@@ -342,12 +352,11 @@ export default function setup(app: Application) {
             const blobIds = variables.ids || [];
             const blobs: { content: string; id: string }[] = [];
             blobIds.forEach((id: string) => {
-              const content = rawBlobs[id];
-              const rawContent = Buffer.from(content, 'utf8');
-              const zippedContent = zlib.gzipSync(rawContent);
-              const encryptedResult = encryptAESBuffer(symmetricKey, zippedContent);
-
+              const content = rawBlobs[id] || newBlobs[id];
               if (content) {
+                const rawContent = Buffer.from(content, 'utf8');
+                const zippedContent = zlib.gzipSync(rawContent);
+                const encryptedResult = encryptAESBuffer(symmetricKey, zippedContent);
                 blobs.push({ id, content: JSON.stringify(encryptedResult, null, 2) });
               }
             });
@@ -358,10 +367,12 @@ export default function setup(app: Application) {
           }
 
           case 'blobsMissing': {
+            const blobIds = variables.ids || [];
+            const missing = blobIds.filter((id: string) => !rawBlobs[id]);
             return res.status(200).json({
               data: {
                 blobsMissing: {
-                  missing: [],
+                  missing,
                 },
               },
             });
@@ -462,27 +473,23 @@ export default function setup(app: Application) {
           }
 
           case 'snapshotsCreate': {
-            const createdSnapshots = (variables.snapshots || []).map((s: any) => ({
-              id: s.id,
-              parent: s.parent,
-              created: s.created || new Date().toISOString(),
-              author: s.author || 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
-              authorAccount: {
-                firstName: 'Rick',
-                lastName: 'Morty',
-                email: 'insomnia-user@konghq.com',
-              },
-              name: s.name,
-              description: s.description,
-              state: s.state,
-            }));
-
+            const projectId = variables.projectId;
+            const snapshots = variables.snapshots || [];
+            if (snapshots.length > 0 && !newSnapshots[projectId]) {
+              newSnapshots[projectId] = [];
+            }
+            console.log(`Creating snapshots for project ${projectId}:`, snapshots);
+            newSnapshots[projectId].push(...snapshots);
             return res.status(200).json({
-              data: { snapshotsCreate: createdSnapshots },
+              data: { snapshotsCreate: snapshots },
             });
           }
 
           case 'blobsCreate': {
+            const blobs = variables.blobs || [];
+            blobs.forEach((blob: { id: string; content: string }) => {
+              newBlobs[blob.id] = blob.content;
+            });
             return res.status(200).json({
               data: {
                 blobsCreate: {
