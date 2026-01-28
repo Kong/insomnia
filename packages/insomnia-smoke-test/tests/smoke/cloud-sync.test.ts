@@ -1,25 +1,30 @@
 import { expect } from '@playwright/test';
 
+import playwrightConfig from '../../playwright.config';
 import { test } from '../../playwright/test';
 
+// @ts-expect-error playwrightConfig.webServer.url must exists
+const devServerUrl = playwrightConfig?.webServer?.url || 'http://127.0.0.1:4010';
+
 test.describe('Cloud Sync', () => {
-  test.beforeAll(async ({ page }) => {
-    // create and switch to new cloud sync workspace
-    await page.getByRole('button', { name: 'Create new Project' }).click();
-    await page.getByText('Cloud Sync', { exact: true }).click();
-    await page.getByPlaceholder('My Project').fill('Cloud Sync Test Project');
-    await page.getByRole('button', { name: 'Create', exact: true }).click();
+  test.beforeAll(async () => {
+    await fetch(`${devServerUrl}/__test-config/cloud-sync`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ enabled: true }),
+    });
   });
 
-  test.afterAll(async ({ page }) => {
-    await page.getByLabel('Cloud Sync Test Project').click();
-    await page.getByLabel('Cloud Sync Test Project').getByRole('button', { name: 'Project Actions' }).click();
-    await page.getByText('Delete').click();
-    await page.getByRole('button', { name: 'Delete' }).click();
+  test.afterAll(async () => {
+    await fetch(`${devServerUrl}/__test-config/cloud-sync`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ enabled: false }),
+    });
   });
 
   test('Discard and branch actions', async ({ page }) => {
-    await page.getByLabel('Cloud Sync Test Project').click();
+    // await page.getByLabel('Cloud Sync Test Project').click();
     // Sync collection project
     await page.getByLabel('Collection Project').click();
     await page.getByLabel('Request Collection').getByTestId('New Request').click();
@@ -89,7 +94,7 @@ test.describe('Cloud Sync', () => {
   });
 
   test('Commit and push actions', async ({ page }) => {
-    await page.getByLabel('Cloud Sync Test Project').click();
+    // await page.getByLabel('Cloud Sync Test Project').click();
     await page.getByLabel('Environment Project').click();
     const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
     const firstRow = kvTable.getByRole('option').first();
