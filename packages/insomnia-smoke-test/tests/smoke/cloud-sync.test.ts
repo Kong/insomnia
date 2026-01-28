@@ -3,7 +3,23 @@ import { expect } from '@playwright/test';
 import { test } from '../../playwright/test';
 
 test.describe('Cloud Sync', () => {
+  test.beforeAll(async ({ page }) => {
+    // create and switch to new cloud sync workspace
+    await page.getByRole('button', { name: 'Create new Project' }).click();
+    await page.getByText('Cloud Sync', { exact: true }).click();
+    await page.getByPlaceholder('My Project').fill('Cloud Sync Test Project');
+    await page.getByRole('button', { name: 'Create', exact: true }).click();
+  });
+
+  test.afterAll(async ({ page }) => {
+    await page.getByLabel('Cloud Sync Test Project').click();
+    await page.getByLabel('Cloud Sync Test Project').getByRole('button', { name: 'Project Actions' }).click();
+    await page.getByText('Delete').click();
+    await page.getByRole('button', { name: 'Delete' }).click();
+  });
+
   test('Discard and branch actions', async ({ page }) => {
+    await page.getByLabel('Cloud Sync Test Project').click();
     // Sync collection project
     await page.getByLabel('Collection Project').click();
     await page.getByLabel('Request Collection').getByTestId('New Request').click();
@@ -20,11 +36,6 @@ test.describe('Cloud Sync', () => {
     // Wait for discard button to be enabled
     await expect.soft(discardButton).not.toHaveAttribute('aria-disabled', 'true');
     await discardButton.click({ delay: 500 });
-    // try double click discard button here to avoid single click fails
-
-    // if (await discardButton.isVisible()) {
-    //   await discardButton.click();
-    // }
     // Check body is reverted
     await page.getByRole('tab', { name: 'Params' }).click();
     await page.getByRole('button', { name: 'Send' }).click();
@@ -78,6 +89,7 @@ test.describe('Cloud Sync', () => {
   });
 
   test('Commit and push actions', async ({ page }) => {
+    await page.getByLabel('Cloud Sync Test Project').click();
     await page.getByLabel('Environment Project').click();
     const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
     const firstRow = kvTable.getByRole('option').first();

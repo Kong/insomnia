@@ -49,14 +49,7 @@ const teams = [
     name: 'Test Team',
   },
 ];
-
-// const symmetricKey = {
-//   alg: 'A256GCM',
-//   ext: true,
-//   k: 'rNT9M_uvp9y0acwy3fNE7mioLn_lpNk6OPqZLIMxh5I',
-//   key_ops: ['encrypt', 'decrypt'],
-//   kty: 'oct',
-// };
+// symmetric key is copied from test.ts
 const symmetricKey = {
   alg: 'A256GCM',
   ext: true,
@@ -67,6 +60,7 @@ const symmetricKey = {
 
 const encryptedSymmetricKey =
   '78c1314a7be673f117872c83b0b47b6f2c1dc36081cdabc5b738f172f1082ab077e9b275c20171c45234c73f82f4dec8f5952b5399b4b05d2f8451972788aea0db43d82bb1df7e835f4becc70b68a375ba227b1f6388ff428596614c4e2c09484a1e5c4e56a82e6196de7c04ef22d958118e6b1478e7aecad2217a62e963defdfa4e0763300b9f840cf5130e6503635f835548cba317cbd1f229280fba6a906e53b35544ff5189790a45de0fc8a6a457bac8349334de9275d31cae1369c6207170128aba3db21fccc92a6d857aa3f5bc6ecbc7c42cace3df5fe5406b78e950f57918cca8983e05b93b6e6ea7a815bb3b643d0b0d7e7bb67aba440cd29c06799a';
+const defaultProjectId = 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2';
 
 const cloudSyncProject = [
   {
@@ -256,7 +250,7 @@ const rawBlobs: Record<string, string> = {
 const defaultBranches = [{ name: 'master' }, { name: 'develop' }];
 
 const getSnapshotsForProject = (projectId: string) => {
-  const originalSnapshots = projectSnapshots[projectId];
+  const originalSnapshots = projectSnapshots[projectId] || [];
   const addedSnapshots = newSnapshots[projectId] || [];
   return [...originalSnapshots, ...addedSnapshots];
 };
@@ -411,9 +405,18 @@ export default function setup(app: Application) {
           }
 
           case 'projects': {
+            const teamProjectId = variables.teamProjectId;
+            // Do not return project for defaultProjectId
+            if (teamProjectId !== defaultProjectId) {
+              return res.status(200).json({
+                data: {
+                  projects: cloudSyncProject,
+                },
+              });
+            }
             return res.status(200).json({
               data: {
-                projects: cloudSyncProject,
+                projects: [],
               },
             });
           }
