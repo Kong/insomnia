@@ -65,10 +65,10 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       workspaceId,
       options,
     });
-    // When importing single workspace and request we want to redirect straight to them
+    // When navigating, we need the workspace and last added request
     const singleImportedWorkspace = Array.isArray(result) && result.length === 1 && result[0];
-    const req = singleImportedWorkspace && (await models.request.findByParentId(singleImportedWorkspace._id));
-    const singleImportedRequest = Array.isArray(req) && req.length === 1 && req[0];
+    const requests = singleImportedWorkspace && (await models.request.findByParentId(singleImportedWorkspace._id));
+    const singleImportedRequest = Array.isArray(requests) && requests.length > 0 && requests.at(-1);
     return { done: true, singleImportedWorkspace, singleImportedRequest };
   } catch (error) {
     console.error('Failed to import resources:', error);
