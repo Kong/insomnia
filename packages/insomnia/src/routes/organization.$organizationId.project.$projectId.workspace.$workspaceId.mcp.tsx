@@ -1,24 +1,37 @@
-import { redirect } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import * as models from '~/models';
-import { invariant } from '~/utils/invariant';
+import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { projectId, workspaceId, organizationId } = params;
-  invariant(workspaceId, 'Workspace ID is required');
-  invariant(projectId, 'Project ID is required');
+
+  const project = await models.project.getById(projectId);
+  if (!project) {
+    showResourceNotFoundToast(`Project not found: ${projectId}`);
+    throw redirect(href('/organization/:organizationId/project', { organizationId }));
+  }
+
   const activeWorkspace = await models.workspace.getById(workspaceId);
-  invariant(activeWorkspace, 'Workspace not found');
+  if (!activeWorkspace) {
+    showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+  }
   // Mcp collection only have one request
   const activeRequest = await models.mcpRequest.getByParentId(workspaceId);
-  invariant(activeRequest, 'MCP Request not found');
-  // Redirect to the debug page of the only request in the MCP workspace
-  if (activeRequest) {
-    return redirect(
-      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest._id}`,
-    );
+  if (!activeRequest) {
+    showResourceNotFoundToast(`Request not found: ${workspaceId}`);
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
-  return null;
+  // Redirect to the debug page of the only request in the MCP workspace
+  return redirect(
+    href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId', {
+      organizationId,
+      projectId,
+      workspaceId,
+      requestId: activeRequest._id,
+    }),
+  );
 }
