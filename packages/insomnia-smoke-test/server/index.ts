@@ -93,7 +93,7 @@ app.get('/', (_req, res) => {
   res.status(200).send();
 });
 
-app.all('/graphql', createHandler({ schema }));
+app.all('/graphqlTest', createHandler({ schema }));
 
 app.use(express.json()); // Used to parse JSON bodies
 
