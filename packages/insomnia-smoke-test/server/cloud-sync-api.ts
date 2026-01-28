@@ -260,7 +260,6 @@ export default function setup(app: Application) {
     if (typeof enabled !== 'boolean') {
       return res.status(400).json({ error: 'enabled must be boolean value' });
     }
-    console.log(`Setting cloud-sync API enabled: ${enabled}`);
     cloudSyncApiEnabled = enabled;
     return res.status(200).send();
   });
