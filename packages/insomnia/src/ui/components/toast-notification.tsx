@@ -54,8 +54,7 @@ export const showResourceNotFoundToast = (title: string) => {
     {
       icon: 'circle-exclamation',
       title,
-      description:
-        'Please confirm that the resource still exists and has not been deleted or moved.Please confirm that the resource still exists and has not been deleted or moved.Please confirm that the resource still exists and has not been deleted or moved.Please confirm that the resource still exists and has not been deleted or moved.',
+      description: 'Please confirm that the resource still exists and has not been deleted or moved.',
       status: 'warning',
     },
     {

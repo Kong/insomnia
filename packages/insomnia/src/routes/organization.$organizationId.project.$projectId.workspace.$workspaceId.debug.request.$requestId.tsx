@@ -84,9 +84,24 @@ const getResponseModelName = (request: Request | WebSocketRequest | SocketIORequ
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, requestId, workspaceId } = params;
 
+  const activeWorkspace = await models.workspace.getById(workspaceId);
+  if (!activeWorkspace) {
+    showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+  }
+
   const activeRequest = await requestOperations.getById(requestId);
   if (!activeRequest) {
     showResourceNotFoundToast(`Request not found: ${requestId}`);
+    if (activeWorkspace.scope === 'mcp') {
+      // Redirect to the project page if it is MCP workspace, as MCP workspace only and must have one request.
+      throw redirect(
+        href('/organization/:organizationId/project/:projectId', {
+          organizationId,
+          projectId,
+        }),
+      );
+    }
     throw redirect(
       href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
         organizationId,

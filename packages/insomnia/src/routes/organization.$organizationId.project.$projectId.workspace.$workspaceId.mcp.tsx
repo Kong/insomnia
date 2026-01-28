@@ -16,13 +16,13 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const activeWorkspace = await models.workspace.getById(workspaceId);
   if (!activeWorkspace) {
-    showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
+    showResourceNotFoundToast(`MCP Client not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
   // Mcp collection only have one request
   const activeRequest = await models.mcpRequest.getByParentId(workspaceId);
   if (!activeRequest) {
-    showResourceNotFoundToast(`Request not found: ${workspaceId}`);
+    showResourceNotFoundToast(`MCP Request not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
   // Redirect to the debug page of the only request in the MCP workspace
