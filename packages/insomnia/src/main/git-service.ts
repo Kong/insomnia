@@ -23,7 +23,12 @@ import YAML, { parse } from 'yaml';
 import { type GitRemoteProviderType, isGitCredentialsV2 } from '~/models/git-credentials';
 import { EMPTY_GIT_PROJECT_ID, isEmptyGitProject } from '~/models/project';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
-import { gitRemoteProviderRegistry, initializeGitRemoteProviders, type ProviderRepository } from '~/sync/git/providers';
+import {
+  gitRemoteProviderRegistry,
+  initializeGitRemoteProviders,
+  type ProviderEmail,
+  type ProviderRepository,
+} from '~/sync/git/providers';
 
 import { INSOMNIA_GITLAB_API_URL } from '../common/constants';
 import { database } from '../common/database';
@@ -762,6 +767,7 @@ export const cloneGitRepoAction = async ({
   name,
   uri,
   ref,
+  selectedAuthorEmail,
 }: {
   organizationId: string;
   projectId?: string;
@@ -770,12 +776,16 @@ export const cloneGitRepoAction = async ({
   name?: string;
   uri: string;
   ref?: string;
+  selectedAuthorEmail?: string | null;
 }) => {
   try {
     const repoSettingsPatch: Partial<GitRepository> = {};
     repoSettingsPatch.uri = parseGitToHttpsURL(uri);
 
     repoSettingsPatch.credentialsId = credentialsId;
+    if (selectedAuthorEmail !== undefined) {
+      repoSettingsPatch.selectedAuthorEmail = selectedAuthorEmail;
+    }
 
     let provider = 'custom';
     if (credentialsId) {
@@ -1131,15 +1141,18 @@ export const updateGitRepoAction = async ({
   credentialsId,
   uri,
   ref,
+  selectedAuthorEmail,
 }: {
   projectId: string;
   workspaceId?: string;
   credentialsId: string | null;
   uri: string;
   ref?: string;
+  selectedAuthorEmail?: string | null;
 }) => {
   try {
     let gitRepositoryId: string | null | undefined = null;
+    const gitURI = parseGitToHttpsURL(uri);
 
     if (workspaceId) {
       const workspace = await models.workspace.getById(workspaceId);
@@ -1153,30 +1166,22 @@ export const updateGitRepoAction = async ({
       gitRepositoryId = project.gitRepositoryId;
     }
 
-    const repoSettingsPatch: Partial<GitRepository> = {};
+    let gitRepository: GitRepository | undefined;
 
-    // URI
-    repoSettingsPatch.uri = parseGitToHttpsURL(uri);
-
-    // Git Credentials
-    repoSettingsPatch.credentialsId = credentialsId;
-
-    async function setupGitRepository() {
-      if (gitRepositoryId && gitRepositoryId !== EMPTY_GIT_PROJECT_ID) {
-        const gitRepository = await models.gitRepository.getById(gitRepositoryId);
-        invariant(gitRepository, 'GitRepository not found');
-        await models.gitRepository.update(gitRepository, repoSettingsPatch);
-
-        return gitRepository;
+    if (gitRepositoryId && gitRepositoryId !== EMPTY_GIT_PROJECT_ID) {
+      gitRepository = await models.gitRepository.getById(gitRepositoryId);
+      invariant(gitRepository, 'GitRepository not found');
+    } else {
+      const newRepo: Partial<GitRepository> = {
+        uri: gitURI,
+        credentialsId: credentialsId,
+        needsFullClone: true,
+      };
+      if (selectedAuthorEmail !== undefined) {
+        newRepo.selectedAuthorEmail = selectedAuthorEmail;
       }
-
-      repoSettingsPatch.needsFullClone = true;
-      const gitRepository = await models.gitRepository.create(repoSettingsPatch);
-
-      return gitRepository;
+      gitRepository = await models.gitRepository.create(newRepo);
     }
-
-    const gitRepository = await setupGitRepository();
 
     if (workspaceId) {
       await models.workspaceMeta.updateByParentId(workspaceId, {
@@ -1196,7 +1201,7 @@ export const updateGitRepoAction = async ({
       directory: GIT_CLONE_DIR,
       fs: await getGitFSClient({ projectId, workspaceId, gitRepositoryId: gitRepository._id }),
       gitDirectory: GIT_INTERNAL_DIR,
-      credentialsId: gitRepository.credentialsId,
+      credentialsId: credentialsId,
       legacyDiff: Boolean(workspaceId),
       ref,
     });
@@ -1205,12 +1210,21 @@ export const updateGitRepoAction = async ({
     await GitVCS.addRemote(uri);
 
     const { hasUncommittedChanges } = await getGitChanges();
-    const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentialsId);
+    const hasUnpushedChanges = await GitVCS.canPush(credentialsId);
 
-    await models.gitRepository.update(gitRepository, {
+    const updatePatch: Partial<GitRepository> = {
+      uri: gitURI,
+      credentialsId: credentialsId,
       hasUncommittedChanges,
       hasUnpushedChanges,
-    });
+    };
+
+    if (selectedAuthorEmail !== undefined) {
+      updatePatch.selectedAuthorEmail = selectedAuthorEmail;
+    }
+
+    await models.gitRepository.update(gitRepository, updatePatch);
+    await database.flushChanges();
 
     return null;
   } catch (e) {
@@ -1262,6 +1276,7 @@ export const commitToGitRepoAction = async ({
 }): Promise<CommitToGitRepoResult> => {
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
+    await GitVCS.setAuthor();
     await GitVCS.commit(message);
 
     let providerName = 'custom';
@@ -1306,6 +1321,7 @@ export const multipleCommitToGitRepoAction = async ({
   }[];
 }) => {
   await getGitRepository({ projectId, workspaceId });
+  await GitVCS.setAuthor();
 
   for (const commit of commits) {
     // Get current git status
@@ -1374,6 +1390,7 @@ export const commitAndPushToGitRepoAction = async ({
 }): Promise<CommitToGitRepoResult> => {
   const repo = await getGitRepository({ workspaceId, projectId });
   try {
+    await GitVCS.setAuthor();
     await GitVCS.commit(message);
 
     let providerName = 'custom';
@@ -2381,6 +2398,41 @@ async function getGitProviderRepositories({
   }
 }
 
+async function getGitProviderEmails({ credentialsId }: { credentialsId: string }): Promise<{
+  emails: ProviderEmail[];
+  errors: string[];
+}> {
+  try {
+    const credentials = await models.gitCredentials.getById(credentialsId);
+    invariant(credentials, 'Git credentials not found');
+    invariant(isGitCredentialsV2(credentials), 'Invalid Git credentials');
+
+    const provider = gitRemoteProviderRegistry.get(credentials.provider);
+    if (!provider?.supportsFetchEmails || !provider.fetchUserEmails) {
+      return {
+        errors: [`${credentials.provider} provider does not support fetching emails.`],
+        emails: [],
+      };
+    }
+
+    const emails = await provider.fetchUserEmails(credentials);
+
+    if (credentials.credentials) {
+      await models.gitCredentials.update(credentials, {
+        credentials: {
+          ...credentials.credentials,
+          emails,
+        },
+      } as any);
+    }
+
+    return { emails, errors: [] };
+  } catch (error) {
+    const errorMessage = `Failed to fetch emails from Git provider. ${getErrorMessage(error)}`;
+    return { emails: [], errors: [errorMessage] };
+  }
+}
+
 export const getGitLabOauthApiURL = () => INSOMNIA_GITLAB_API_URL || 'https://gitlab.com';
 
 async function getCurrentBranchByRepositoryId({
@@ -2433,6 +2485,7 @@ export interface GitServiceAPI {
   getCurrentBranchByRepositoryId: typeof getCurrentBranchByRepositoryId;
 
   getGitProviderRepositories: typeof getGitProviderRepositories;
+  getGitProviderEmails: typeof getGitProviderEmails;
   listGitProviders: typeof listGitProviders;
 }
 
@@ -2519,6 +2572,9 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.listGitProviders', () => listGitProviders());
   ipcMainHandle('git.getGitProviderRepositories', (_, options: Parameters<typeof getGitProviderRepositories>[0]) =>
     getGitProviderRepositories(options),
+  );
+  ipcMainHandle('git.getGitProviderEmails', (_, options: Parameters<typeof getGitProviderEmails>[0]) =>
+    getGitProviderEmails(options),
   );
   ipcMainHandle(
     'git.getCurrentBranchByRepositoryId',

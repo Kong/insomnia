@@ -21,6 +21,7 @@ export function init(): BaseGitRepository {
     uri: '',
     credentials: null,
     credentialsId: null,
+    selectedAuthorEmail: null,
     author: {
       name: '',
       email: '',
@@ -42,6 +43,11 @@ export interface BaseGitRepository {
    */
   credentials: GitCredentials | null;
   credentialsId: string | null;
+  /**
+   * Optional override for the author email address used for commits
+   * Must be a value from the emails list of the corresponding credential
+   */
+  selectedAuthorEmail: string | null;
   /**
    * @deprecated Use the author in the corresponding credential
    */

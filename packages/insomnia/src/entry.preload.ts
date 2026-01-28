@@ -143,6 +143,7 @@ const git: GitServiceAPI = {
   initSignInToGitProvider: options => ipcRenderer.invoke('git.initSignInToGitProvider', options),
   completeSignInToGitProvider: options => ipcRenderer.invoke('git.completeSignInToGitProvider', options),
   getGitProviderRepositories: options => ipcRenderer.invoke('git.getGitProviderRepositories', options),
+  getGitProviderEmails: options => ipcRenderer.invoke('git.getGitProviderEmails', options),
   getCurrentBranchByRepositoryId: options => ipcRenderer.invoke('git.getCurrentBranchByRepositoryId', options),
 };
 
