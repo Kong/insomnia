@@ -23,8 +23,7 @@ test.describe('Cloud Sync', () => {
     });
   });
 
-  test('Discard and branch actions', async ({ page }) => {
-    // await page.getByLabel('Cloud Sync Test Project').click();
+  test('Discard, branch and commit actions', async ({ page }) => {
     // Sync collection project
     await page.getByLabel('Collection Project').click();
     await page.getByLabel('Request Collection').getByTestId('New Request').click();
@@ -47,13 +46,26 @@ test.describe('Cloud Sync', () => {
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('foo=bar').click();
 
-    // restore commit
+    // Set body and commit change
+    await page.getByRole('tab', { name: 'Body' }).click();
+    await page.getByRole('tabpanel').getByTestId('CodeEditor').getByRole('textbox').first().fill('value=changed');
+    // Click push
     await page.getByLabel('Git Sync').click();
+    await page.getByLabel('Commit').click({ delay: 500 });
+    // stash changes
+    await page.getByRole('row', { name: 'New Request' }).locator('[data-icon="plus"]').click();
+    await page.getByRole('textbox', { name: 'Message' }).fill('Smoke test: modify request body');
+    await page.getByRole('button', { name: 'Commit and push' }).click();
+    await page.getByLabel('Git Sync').click();
+    // expect no unpushed changes
+    await expect.soft(page.getByLabel('Commit')).toHaveAttribute('aria-disabled', 'true');
+
+    // restore commit
     const historyButton = page.getByText('History');
-    // Wait for discard button to be enabled
+    // Wait for history button to be enabled
     await expect.soft(historyButton).not.toHaveAttribute('aria-disabled', 'true');
     historyButton.click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Restore' }).nth(1).dblclick();
+    await page.getByRole('dialog').getByRole('button', { name: 'Restore' }).nth(2).dblclick();
     await page.getByRole('dialog').locator('[data-icon="x"]').click();
     // Ensure body is restored
     await page.getByRole('tab', { name: 'Body' }).click();
@@ -91,26 +103,35 @@ test.describe('Cloud Sync', () => {
     await expect
       .soft(localBranchDiv.getByLabel('smoke-test-branch').getByRole('button', { name: 'Delete' }))
       .toBeDisabled();
+    await page.getByRole('dialog').locator('[data-icon="x"]').click();
   });
 
-  test('Commit and push actions', async ({ page }) => {
-    // await page.getByLabel('Cloud Sync Test Project').click();
+  test('Push actions', async ({ page, app }) => {
     await page.getByLabel('Environment Project').click();
-    const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
-    const firstRow = kvTable.getByRole('option').first();
-    await firstRow.getByTestId('OneLineEditor').first().click();
-    await page.keyboard.type('foo');
-    await firstRow.getByTestId('OneLineEditor').nth(1).click({ delay: 200 });
-    await page.keyboard.type('bar');
-    // Click push
-    await page.getByLabel('Git Sync').click();
-    await page.getByLabel('Commit').click({ delay: 500 });
-    // stash changes
-    await page.getByRole('row', { name: 'Base Environment' }).locator('[data-icon="plus"]').click();
-    await page.getByRole('textbox', { name: 'Message' }).fill('Smoke test: add foo=bar');
-    await page.getByRole('button', { name: 'Commit and push' }).click();
-    await page.getByLabel('Git Sync').click();
-    // expect no unpushed changes
-    await expect.soft(page.getByLabel('Commit')).toHaveAttribute('aria-disabled', 'true');
+    // Wait for sync-dropdown to be mounted
+    await page.getByLabel('Git Sync').waitFor({ state: 'visible' });
+    await fetch(`${devServerUrl}/__test-config/cloud-sync/new-commit`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ enabled: true }),
+    });
+    await page.getByLabel('My Environment').first().click();
+    await app.evaluate(({ BrowserWindow }) => {
+      // Get all window and force trigger sync
+      const allWindows = BrowserWindow.getAllWindows();
+      allWindows.forEach(win => {
+        win.webContents.send('mainWindowFocusChange', true);
+      });
+    });
+    await page.getByLabel('Git Sync').click({ delay: 1000 });
+    await page.getByLabel('Pull').click();
+    // ensure value has been updated
+    await page.getByText('foo').click();
+    await page.getByText('bar').click();
+    await fetch(`${devServerUrl}/__test-config/cloud-sync/new-commit`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ enabled: false }),
+    });
   });
 });

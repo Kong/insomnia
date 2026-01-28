@@ -217,6 +217,46 @@ const projectSnapshots: Record<string, any[]> = {
     },
   ],
 };
+const environmentProjectNewCommitSnapshot = [
+  {
+    ...commonSnapshotProps,
+    created: '2026-01-22T06:20:00.759Z',
+    id: '5f0e82a5d2db062da379bf021fedae0c717fd603',
+    name: 'Initial Snapshot',
+    parent: '0000000000000000000000000000000000000000',
+    state: [
+      {
+        blob: '2588c9eeaf8c4129c5b33bbb9f77de04e8598c5e',
+        key: 'wrk_2068a8dfd6914c369073686bb92737ae',
+        name: 'My Environment',
+      },
+      {
+        blob: 'bf6064229bdaeec3bf597329c640ca2a11fd4d72',
+        key: 'env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be',
+        name: 'Base Environment',
+      },
+    ],
+  },
+  {
+    ...commonSnapshotProps,
+    created: '2026-01-22T06:20:00.759Z',
+    id: '29cc2d8b653591ad1587fc189fbe4e9c7026ea85',
+    name: 'Update key value pair',
+    parent: '5f0e82a5d2db062da379bf021fedae0c717fd603',
+    state: [
+      {
+        blob: '2588c9eeaf8c4129c5b33bbb9f77de04e8598c5e',
+        key: 'wrk_2068a8dfd6914c369073686bb92737ae',
+        name: 'My Environment',
+      },
+      {
+        blob: '966ed58bb00e1031ddd69afc171c34cbfde2b307',
+        key: 'env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be',
+        name: 'Base Environment',
+      },
+    ],
+  },
+];
 const newSnapshots: Record<string, any[]> = {};
 const newBlobs: Record<string, string> = {};
 const rawBlobs: Record<string, string> = {
@@ -234,6 +274,8 @@ const rawBlobs: Record<string, string> = {
     '{"_id":"wrk_2068a8dfd6914c369073686bb92737ae","created":1769408109261,"description":"","name":"My Environment","parentId":null,"scope":"environment","type":"Workspace"}',
   'bf6064229bdaeec3bf597329c640ca2a11fd4d72':
     '{"_id":"env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be","color":null,"created":1769408109277,"data":{},"dataPropertyOrder":null,"environmentType":"kv","isPrivate":false,"metaSortKey":1769408109277,"name":"Base Environment","parentId":"wrk_2068a8dfd6914c369073686bb92737ae","type":"Environment"}',
+  '966ed58bb00e1031ddd69afc171c34cbfde2b307':
+    '{"_id":"env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be","color":null,"created":1769408109277,"data":{"foo":"bar"},"dataPropertyOrder":null,"environmentType":"kv","isPrivate":false,"kvPairData":[{"enabled":true,"id":"envPair_6691b0028e104e499f8c4acf0a1a9e6a","name":"foo","type":"str","value":"bar"}],"metaSortKey":1769408109277,"name":"Base Environment","parentId":"wrk_2068a8dfd6914c369073686bb92737ae","type":"Environment"}',
   // mcp blobs
   'a8252b458e8a1b5f3c214e5e7f944887a142ae72':
     '{"_id":"wrk_efab8e758b97459bab2659d8fdcf8627","created":1769408435321,"description":"","name":"My MCP Client","parentId":null,"scope":"mcp","type":"Workspace"}',
@@ -245,14 +287,17 @@ const rawBlobs: Record<string, string> = {
     '{"_id":"mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0","authentication":{},"connected":false,"created":1769408435331,"description":"","env":[],"headers":[{"name":"User-Agent","value":"insomnia/12.3.0"}],"mcpStdioAccess":false,"parentId":"wrk_efab8e758b97459bab2659d8fdcf8627","roots":[],"sslValidation":true,"subscribeResources":[],"transportType":"streamable-http","type":"McpRequest","url":"http://localhost:4010/mcp"}',
 };
 const defaultBranches = [{ name: 'master' }, { name: 'develop' }];
+let cloudSyncApiEnabled = false;
+let remoteHasNewCommit = false;
 
 const getSnapshotsForProject = (projectId: string) => {
   const originalSnapshots = projectSnapshots[projectId] || [];
   const addedSnapshots = newSnapshots[projectId] || [];
+  if (projectId === 'proj_5145140e072d4007a30bfa6630ddae71' && remoteHasNewCommit) {
+    return environmentProjectNewCommitSnapshot;
+  }
   return [...originalSnapshots, ...addedSnapshots];
 };
-
-let cloudSyncApiEnabled = false;
 
 export default function setup(app: Application) {
   app.post('/__test-config/cloud-sync', json(), (req, res) => {
@@ -261,6 +306,12 @@ export default function setup(app: Application) {
       return res.status(400).json({ error: 'enabled must be boolean value' });
     }
     cloudSyncApiEnabled = enabled;
+    return res.status(200).send();
+  });
+
+  app.post('/__test-config/cloud-sync/new-commit', json(), (req, res) => {
+    const { enabled = false } = req.body ?? {};
+    remoteHasNewCommit = !!enabled;
     return res.status(200).send();
   });
 
@@ -483,7 +534,6 @@ export default function setup(app: Application) {
             if (snapshots.length > 0 && !newSnapshots[projectId]) {
               newSnapshots[projectId] = [];
             }
-            console.log(`Creating snapshots for project ${projectId}:`, snapshots);
             newSnapshots[projectId].push(...snapshots);
             return res.status(200).json({
               data: { snapshotsCreate: snapshots },
