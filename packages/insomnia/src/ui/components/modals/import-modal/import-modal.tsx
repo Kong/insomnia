@@ -217,12 +217,21 @@ export const ImportModal: FC<ImportModalProps> = ({
           requests: scanResourcesFetcherData.map(scanResult => scanResult.requests?.length || 0),
         },
       });
-      const workspace = importFetcher?.data?.workspace;
-      workspace
-        ? navigate(
-            `/organization/${organizationId}/project/${defaultProjectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
-          )
-        : navigate(`/organization/${organizationId}/project/${defaultProjectId}`);
+      const workspace = importFetcher?.data?.singleImportedWorkspace;
+      const request = importFetcher?.data?.singleImportedRequest;
+      if (workspace && request) {
+        navigate(
+          `/organization/${organizationId}/project/${defaultProjectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}/request/${request._id}`,
+        );
+        return modalRef.current?.hide();
+      }
+      if (workspace) {
+        navigate(
+          `/organization/${organizationId}/project/${defaultProjectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+        );
+        return modalRef.current?.hide();
+      }
+      navigate(`/organization/${organizationId}/project/${defaultProjectId}`);
       modalRef.current?.hide();
     }
   }, [defaultProjectId, defaultWorkspaceId, importFetcher?.data, navigate, organizationId, scanResourcesFetcherData]);

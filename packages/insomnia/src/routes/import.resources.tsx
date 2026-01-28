@@ -65,9 +65,11 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       workspaceId,
       options,
     });
-    // Ignore multiple workspace imports
+    // When importing single workspace and request we want to redirect straight to them
     const singleImportedWorkspace = Array.isArray(result) && result.length === 1 && result[0];
-    return { done: true, workspace: singleImportedWorkspace };
+    const req = singleImportedWorkspace && (await models.request.findByParentId(singleImportedWorkspace._id));
+    const singleImportedRequest = Array.isArray(req) && req.length === 1 && req[0];
+    return { done: true, singleImportedWorkspace, singleImportedRequest };
   } catch (error) {
     console.error('Failed to import resources:', error);
     return {
