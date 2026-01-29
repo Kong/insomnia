@@ -94,7 +94,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   if (!activeRequest) {
     showResourceNotFoundToast(`Request not found: ${requestId}`);
     if (activeWorkspace.scope === 'mcp') {
-      // Redirect to the project page if it is MCP workspace, as MCP workspace only and must have one request.
+      // Redirect to the project page if it is an MCP workspace, as an MCP workspace must have one request.
       throw redirect(
         href('/organization/:organizationId/project/:projectId', {
           organizationId,

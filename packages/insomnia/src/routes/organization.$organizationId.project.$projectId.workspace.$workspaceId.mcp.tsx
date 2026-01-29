@@ -19,7 +19,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     showResourceNotFoundToast(`MCP Client not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
-  // Mcp collection only have one request
+  // MCP collection only have one request
   const activeRequest = await models.mcpRequest.getByParentId(workspaceId);
   if (!activeRequest) {
     showResourceNotFoundToast(`MCP Request not found: ${workspaceId}`);
