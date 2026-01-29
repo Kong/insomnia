@@ -56,7 +56,10 @@ export type KeyboardShortcut =
   | 'environment_showVariableSourceAndValue'
   | 'beautifyRequestBody'
   | 'graphql_explorer_focus_filter'
-  | 'close_tab';
+  | 'close_tab'
+  | 'tab_nextTab'
+  | 'tab_previousTab'
+  | 'tab_reopenClosedTab';
 
 /**
  * The collection of defined hotkeys.
