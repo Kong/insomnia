@@ -424,7 +424,7 @@ export default function setup(app: Application) {
 
           case 'blobsMissing': {
             const blobIds = variables.ids || [];
-            const missing = blobIds.filter((id: string) => !rawBlobs[id]);
+            const missing = blobIds.filter((id: string) => !rawBlobs[id] && !newBlobs[id]);
             return res.status(200).json({
               data: {
                 blobsMissing: {
