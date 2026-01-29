@@ -44,7 +44,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   );
 }
 
-// This page is used to INS-1972 when no mcp request is found in the workspace
+// This page is used for INS-1972 when no mcp request is found in the workspace
 const McpWorkspace = () => {
   const { activeWorkspace } = useWorkspaceLoaderData()!;
 
