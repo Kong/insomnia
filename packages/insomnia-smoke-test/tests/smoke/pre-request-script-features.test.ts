@@ -459,7 +459,7 @@ test.describe('pre-request features tests', () => {
     await expect.soft(responsePane).toContainText('Adding SSL KEY certificate');
   });
 
-  test('pre: insomnia.test and insomnia.expect can work together', async ({ page }) => {
+  test('insomnia.test and insomnia.expect can work together', async ({ page }) => {
     await page.getByLabel('Request Collection').getByTestId('insomnia.test').press('Enter');
 
     // send
