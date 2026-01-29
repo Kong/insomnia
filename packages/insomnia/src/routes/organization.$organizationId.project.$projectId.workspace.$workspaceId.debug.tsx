@@ -132,7 +132,6 @@ import {
 } from '~/ui/hooks/use-request';
 import { scrollElementIntoView } from '~/utils';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/utils/grpc';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
 
