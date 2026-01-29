@@ -79,6 +79,7 @@ export const GitCustomCredentialForm = ({
           <Input
             className="w-1/2"
             name="password"
+            type="password"
             isRequired
             label="Git Access Token"
             placeholder="e.g. git_pat_11A11AAAAa111Aa11a1AA11"

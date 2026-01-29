@@ -25,6 +25,7 @@ export interface CreateProjectData {
   credentialsId?: string | null;
   connectRepositoryLater?: boolean;
   ref?: string;
+  selectedAuthorEmail?: string | null;
 }
 
 export const reportGitProjectCount = async (organizationId: string, sessionId: string, maxRetries = 3) => {
@@ -84,6 +85,7 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
       credentialsId: newProjectData.credentialsId,
       name: newProjectData.name,
       ref: newProjectData.ref || '',
+      selectedAuthorEmail: newProjectData.selectedAuthorEmail,
     });
 
     if (errors) {

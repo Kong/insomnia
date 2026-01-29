@@ -74,10 +74,8 @@ export const GitRemoteBranchSelect = ({
         Boolean(fuzzyMatch(inputValue, branch, { splitSpace: true, loose: false })?.indexes)
       }
     >
-      <Label className="flex flex-col pt-0">
-        <span className="text-sm">Branch</span>
-      </Label>
-      <div className="flex w-full items-center gap-2">
+      <Label className="mb-1 pt-0 text-sm">Branch</Label>
+      <div className="flex w-full items-start gap-2">
         <div className="group flex h-(--line-height-xs) flex-1 items-center gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
           <Input
             aria-label="Search branches"
@@ -94,7 +92,7 @@ export const GitRemoteBranchSelect = ({
         <button
           type="button"
           disabled={isRefetchButtonDisabled}
-          className="m-2 mr-0 flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset active:bg-(--hl-sm) disabled:opacity-30"
+          className="flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset active:bg-(--hl-sm) disabled:opacity-30"
           aria-label="Refresh repositories"
           onClick={() => {
             if (uri && !isLoadingRemoteBranches) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button, ComboBox, FieldError, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 
 import { fuzzyMatch } from '~/common/misc';
@@ -18,13 +18,15 @@ export const GitRepositorySelect = ({
   allConnectedRepoURIProjectNameMap?: Record<string, string> | undefined;
 }) => {
   const getGitProviderRepositoriesFetcher = useGitProviderRepositoriesLoaderFetcher();
+  const lastLoadedCredentialsIdRef = useRef<string | undefined>();
 
   useEffect(() => {
-    if (
-      getGitProviderRepositoriesFetcher.state === 'idle' &&
-      !getGitProviderRepositoriesFetcher.data &&
-      credentialsId
-    ) {
+    const hasData = getGitProviderRepositoriesFetcher.data;
+    const credentialsChanged = lastLoadedCredentialsIdRef.current !== credentialsId;
+    const shouldLoad = credentialsId && (credentialsChanged || !hasData);
+
+    if (getGitProviderRepositoriesFetcher.state === 'idle' && shouldLoad) {
+      lastLoadedCredentialsIdRef.current = credentialsId;
       getGitProviderRepositoriesFetcher.load({ credentialsId });
     }
   }, [credentialsId, getGitProviderRepositoriesFetcher]);
@@ -64,13 +66,9 @@ export const GitRepositorySelect = ({
           Boolean(fuzzyMatch(inputValue, repoName, { splitSpace: true, loose: false })?.indexes)
         }
       >
-        <Label className="flex flex-col">
-          <div className="flex items-center gap-2">
-            <span className="flex-1 text-sm">Repository</span>
-          </div>
-        </Label>
-        <div className="flex w-full items-center gap-2">
-          <div className="group flex h-(--line-height-xs) flex-1 items-center gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
+        <Label className="mb-1 pt-0 text-sm">Repository</Label>
+        <div className="flex w-full items-start gap-2">
+          <div className="group flex h-(--line-height-xs) flex-1 items-start gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
             <Input
               aria-label="Repository Search"
               placeholder={loading ? 'Fetching...' : 'Find a repository...'}
@@ -88,7 +86,7 @@ export const GitRepositorySelect = ({
           <button
             type="button"
             disabled={loading || !credentialsId}
-            className="m-2 mr-0 flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset active:bg-(--hl-sm)"
+            className="mr-0 flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset active:bg-(--hl-sm)"
             aria-label="Refresh repositories"
             onClick={() => {
               if (credentialsId) {

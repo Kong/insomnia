@@ -11,7 +11,6 @@ test.describe('Environment Editor', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByText('Collectionenvironments').click();
     // Create the environment (which will become active on creation)
     // await page.getByLabel("Select an environment").click();
     await page.getByRole('button', { name: 'Manage Environments' }).click();

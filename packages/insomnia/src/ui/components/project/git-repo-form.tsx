@@ -14,7 +14,7 @@ import {
 import { Icon } from '~/basic-components/icon';
 import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import type { GitProviderOption } from '~/sync/git/providers/types';
+import type { GitProviderOption, ProviderEmail } from '~/sync/git/providers/types';
 import { Checkbox } from '~/ui/components/base/checkbox';
 import { Input } from '~/ui/components/base/input';
 import { GitCredentialSetup } from '~/ui/components/git-credentials/credential-setup';
@@ -22,7 +22,7 @@ import { GitRemoteBranchSelect } from '~/ui/components/git-credentials/git-remot
 import { GitRepositorySelect } from '~/ui/components/git-credentials/git-repository-select';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
-import { type GitCredentials, isGitCredentialsV2 } from '../../../models/git-credentials';
+import { type GitCredentials, isGitCredentialsV2, isOAuthCredential } from '../../../models/git-credentials';
 import { ErrorBoundary } from '../error-boundary';
 import type { ActiveView, ProjectData } from './utils';
 
@@ -32,6 +32,13 @@ const getDisplayValue = (fullUri: string | undefined, prefix: string | undefined
     return fullUri.slice(prefix.length);
   }
   return fullUri;
+};
+
+const getCredentialEmails = (credential: GitCredentials | undefined) => {
+  if (credential && isGitCredentialsV2(credential) && isOAuthCredential(credential)) {
+    return credential.credentials?.emails || [];
+  }
+  return [];
 };
 
 interface Props {
@@ -77,6 +84,10 @@ export const GitRepoForm: FC<Props> = ({
       selectedCredential.credentials?.baseURI) ||
     '';
 
+  const availableEmails = getCredentialEmails(selectedCredential);
+  const showEmailSelector = availableEmails.length > 1;
+  const [isEmailSelectOpen, setIsEmailSelectOpen] = useState(false);
+
   return (
     <ErrorBoundary>
       <Checkbox
@@ -93,7 +104,7 @@ export const GitRepoForm: FC<Props> = ({
         <Form
           aria-label="Git Setup Form"
           id={formId}
-          className="flex flex-col gap-4"
+          className="flex flex-col gap-3"
           onSubmit={async e => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
@@ -118,7 +129,6 @@ export const GitRepoForm: FC<Props> = ({
             setActiveView('git-results');
           }}
         >
-          {/* TODO support custom children in base select component and replace this one */}
           <Select
             onOpenChange={setIsCredentialSelectOpen}
             isOpen={isCredentialSelectOpen}
@@ -145,7 +155,6 @@ export const GitRepoForm: FC<Props> = ({
                         <span>{provider?.displayName}</span>
                         <Separator orientation="vertical" className="mx-2 h-4 border-l border-(--color-font)" />
                         <span className="truncate">{selectedItem.author.name}</span>
-                        <span className="truncate">{selectedItem.author.email}</span>
                       </Fragment>
                     );
                   }
@@ -175,7 +184,6 @@ export const GitRepoForm: FC<Props> = ({
                           <span>{provider?.displayName}</span>
                           <Separator orientation="vertical" className="mx-2 h-4 border-l border-(--color-font)" />
                           <span className="truncate">{item.author.name}</span>
-                          <span className="truncate">{item.author.email}</span>
                           {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                         </Fragment>
                       );
@@ -198,6 +206,60 @@ export const GitRepoForm: FC<Props> = ({
               </div>
             </Popover>
           </Select>
+          {showEmailSelector && (
+            <Select
+              onOpenChange={setIsEmailSelectOpen}
+              isOpen={isEmailSelectOpen}
+              aria-label="Author Email"
+              selectedKey={projectData.selectedAuthorEmail || selectedCredential?.author.email}
+              onSelectionChange={email => {
+                setProjectData(prev => ({
+                  ...prev,
+                  selectedAuthorEmail: email,
+                }));
+              }}
+            >
+              <Label className="mb-2 px-0.5 pt-0 text-sm">Author Email</Label>
+              <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
+                <SelectValue<ProviderEmail> className="flex items-center justify-center gap-2 truncate">
+                  {({ selectedItem }) => {
+                    if (selectedItem) {
+                      return (
+                        <Fragment>
+                          <span>{selectedItem.email}</span>
+                          {selectedItem.primary && <span className="text-xs text-(--hl-lg)">(primary)</span>}
+                        </Fragment>
+                      );
+                    }
+                    return projectData.selectedAuthorEmail || selectedCredential?.author.email || 'Select an email';
+                  }}
+                </SelectValue>
+                <Icon icon="caret-down" />
+              </Button>
+              <Popover className="isolate flex w-(--trigger-width) min-w-max flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none">
+                <ListBox items={availableEmails} className="min-w-max overflow-y-auto py-2 focus:outline-hidden">
+                  {item => (
+                    <ListBoxItem
+                      id={item.email}
+                      key={item.email}
+                      className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                      aria-label={item.email}
+                      textValue={item.email}
+                      value={item}
+                    >
+                      {({ isSelected }) => (
+                        <Fragment>
+                          <span>{item.email}</span>
+                          {item.primary && <span className="text-xs text-(--hl-lg)">(primary)</span>}
+                          {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
+                        </Fragment>
+                      )}
+                    </ListBoxItem>
+                  )}
+                </ListBox>
+              </Popover>
+            </Select>
+          )}
           {selectedProvider && (
             <>
               {selectedProvider.supportsFetchRepos ? (
@@ -214,8 +276,8 @@ export const GitRepoForm: FC<Props> = ({
                 />
               ) : (
                 <Input
-                  label="Path to Repository"
-                  description="Note: Some repo should include “.git” at the end of the path."
+                  label="Repository URL"
+                  description={'Note: Some repo should include ".git" at the end of the path.'}
                   prefix={baseURI}
                   key={selectedCredentialsId}
                   defaultValue={getDisplayValue(projectData.uri, baseURI)}

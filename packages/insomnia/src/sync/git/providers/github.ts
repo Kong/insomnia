@@ -300,6 +300,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
         name: 'GitHub Credential',
         credentials: {
           token: data.access_token,
+          emails,
         },
         provider: 'github',
         author: {
