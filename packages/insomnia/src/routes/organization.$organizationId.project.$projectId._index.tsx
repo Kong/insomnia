@@ -1,4 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { Organization } from 'insomnia-api';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -42,7 +43,6 @@ import type { ApiSpec } from '~/models/api-spec';
 import type { GitRepository } from '~/models/git-repository';
 import { sortProjects } from '~/models/helpers/project';
 import type { MockServer } from '~/models/mock-server';
-import type { Organization } from '~/models/organization';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '~/models/organization';
 import {
   getProjectStorageTypeLabel,

@@ -1,4 +1,4 @@
-import type { StorageRules } from '~/models/organization';
+import type { StorageRules } from 'insomnia-api';
 
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';

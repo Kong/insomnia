@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { checkSeats, type CheckSeatsResponse, needsToIncreaseSeats, needsToUpgrade } from 'insomnia-api';
+import { checkSeats, type CheckSeatsResponse, needsToIncreaseSeats, needsToUpgrade, type Role } from 'insomnia-api';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -26,7 +26,7 @@ import { Icon } from '~/ui/components/icon';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 
 import { startInvite } from './encryption';
-import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
+import { OrganizationMemberRolesSelector, SELECTOR_TYPE } from './organization-member-roles-selector';
 
 export function getSearchParamsString(
   searchParams: URLSearchParams,

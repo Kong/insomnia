@@ -1,3 +1,4 @@
+import type { StorageRules } from 'insomnia-api';
 import type { FC } from 'react';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
@@ -22,7 +23,6 @@ import {
   isOAuthCredential,
   type ProviderEmail,
 } from '~/models/git-credentials';
-import type { StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
 import type { GitProviderOption } from '~/sync/git/providers/types';

@@ -1,13 +1,11 @@
-import { type FeatureList, getOrganizationFeatures, type Organization } from 'insomnia-api';
+import { type Billing, type FeatureList, getOrganizationFeatures, type Organization } from 'insomnia-api';
 import { href, redirect, type ShouldRevalidateFunctionArgs } from 'react-router';
 
 import { userSession } from '~/models';
 import { isScratchpadOrganizationId } from '~/models/organization';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.permissions';
-import type { Billing } from './organization';
 
 export const fallbackFeatures = Object.freeze<FeatureList>({
   bulkImport: { enabled: false, reason: 'Insomnia API unreachable' },
