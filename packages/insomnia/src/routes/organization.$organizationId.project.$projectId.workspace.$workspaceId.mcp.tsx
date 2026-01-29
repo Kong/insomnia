@@ -104,7 +104,7 @@ const McpWorkspace = () => {
           <PaneHeader className="h-[41px]" />
           <PaneBody placeholder>
             <div className="pane__body--placeholder__cta text-center">
-              <p>No MCP request found in this workspace.</p>
+              <p>No active request found in MCP client.</p>
               <p>Please pull to sync MCP request.</p>
             </div>
           </PaneBody>
