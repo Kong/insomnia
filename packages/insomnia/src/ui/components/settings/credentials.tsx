@@ -275,7 +275,7 @@ const GitCredentialsList = () => {
         showModal(AlertModal, {
           title: 'Delete Git Credential',
           message:
-            'Are you sure you want to delete this Git credential? You won’t be able to use it to connect new Git Sync projects to the repositories it provides access to.',
+            "Are you sure you want to delete this Git credential? You won't be able to use it to connect new Git Sync projects to the repositories it provides access to.",
           okLabel: 'Delete',
           addCancel: true,
           onConfirm: async () => {
@@ -341,61 +341,61 @@ const GitCredentialsList = () => {
       <GridList
         items={credentialsFetcher.data?.credentials || []}
         aria-label="Git credentials list"
-        className="grid grid-cols-[min-content_1fr_min-content] gap-4"
+        className="flex flex-col gap-4"
       >
         {item => {
           const provider = credentialsFetcher.data?.providers.find(p => p.type === item.provider);
           return (
             <GridListItem
               id={item._id}
-              className="col-span-full grid grid-cols-subgrid grid-rows-subgrid"
+              className="flex flex-col gap-2 rounded-md border border-solid border-(--hl-sm) p-2"
               textValue={item.name || 'Credentials Item'}
             >
-              <div className="flex items-center gap-2">
-                {provider?.iconName && <Icon icon={provider.iconName} className="size-5" />}
-                <span className="text-nowrap">{provider?.displayName}</span>
-              </div>
-              <div className="flex gap-2">
-                {item.author.avatarUrl ? (
-                  <img
-                    src={item.author.avatarUrl}
-                    alt={item.author.name || 'Avatar'}
-                    className="h-6 w-6 rounded-full"
-                  />
-                ) : (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-(--hl-sm) text-xs font-bold text-(--color-font-muted)">
-                    {item.author.name ? item.author.name.charAt(0).toUpperCase() : '?'}
-                  </div>
-                )}
-                <span>{item.author.name}</span>
-                <span>{item.author.email}</span>
-              </div>
-              <div className="flex items-center justify-end gap-2">
-                {isGitCredentialsV2(item) && provider && !provider.supportsOAuth && (
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  {provider?.iconName && <Icon icon={provider.iconName} className="size-5" />}
+                  <span className="font-semibold text-nowrap">{provider?.displayName}</span>
+                  {item.author.avatarUrl ? (
+                    <img
+                      src={item.author.avatarUrl}
+                      alt={item.author.name || 'Avatar'}
+                      className="h-6 w-6 rounded-full"
+                    />
+                  ) : (
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-(--hl-sm) text-xs font-bold text-(--color-font-muted)">
+                      {item.author.name ? item.author.name.charAt(0).toUpperCase() : '?'}
+                    </div>
+                  )}
+                  <span>{item.author.name}</span>
+                  <span>{item.author.email}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isGitCredentialsV2(item) && provider && !provider.supportsOAuth && (
+                    <Button
+                      className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
+                      onPress={() => {
+                        setSelectedProvider({
+                          type: provider.type,
+                          displayName: provider.displayName,
+                          iconName: provider.iconName,
+                        });
+                        setGitCredentialToEdit(item);
+                        setIsCredentialModalOpen(true);
+                      }}
+                    >
+                      <Icon icon="edit" /> Edit
+                    </Button>
+                  )}
                   <Button
-                    className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
                     onPress={() => {
-                      setSelectedProvider({
-                        type: provider.type,
-                        displayName: provider.displayName,
-                        iconName: provider.iconName,
-                      });
-                      setGitCredentialToEdit(item);
-                      setIsCredentialModalOpen(true);
+                      pendingDeleteCredentialIdRef.current = item._id;
+                      relatedProjectsFetcher.load({ gitCredentialsId: item._id });
                     }}
+                    className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
                   >
-                    <Icon icon="edit" /> Edit
+                    <Icon icon="trash" /> Delete
                   </Button>
-                )}
-                <Button
-                  onPress={() => {
-                    pendingDeleteCredentialIdRef.current = item._id;
-                    relatedProjectsFetcher.load({ gitCredentialsId: item._id });
-                  }}
-                  className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
-                >
-                  <Icon icon="trash" /> Delete
-                </Button>
+                </div>
               </div>
             </GridListItem>
           );

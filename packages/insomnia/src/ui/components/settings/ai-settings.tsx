@@ -23,6 +23,9 @@ export const AISettings = () => {
   const isMockServerEnabledByOrg = features.aiMockServers ? features.aiMockServers.enabled : false;
   const isCommitMessagesEnabledByOrg = features.aiCommitMessages ? features.aiCommitMessages.enabled : false;
   const isMcpClientEnabledByOrg = features.aiMcpClient ? features.aiMcpClient.enabled : false;
+  const isMockServerFeatureDisabled = !(hasActiveLLM && isMockServerEnabledByOrg);
+  const isCommitMessagesFeatureDisabled = !(hasActiveLLM && isCommitMessagesEnabledByOrg);
+  const isMcpClientFeatureDisabled = !(hasActiveLLM && isMcpClientEnabledByOrg);
 
   useEffect(() => {
     const loadConfigurations = async () => {
@@ -105,104 +108,101 @@ export const AISettings = () => {
       <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
         <div className="flex flex-col gap-4">
           <div>
-            <h3 className="mb-3 text-base font-semibold text-(--color-font)">
+            <h3 className="mb-2 text-lg font-semibold text-(--color-font)">
               <Badge color="surprise" icon="sparkles" label="AI" />
               Features
             </h3>
-            {!hasActiveLLM ? (
-              <p className="mb-4 text-sm text-(--hl)">Configure and activate an LLM below to enable AI features.</p>
-            ) : (
-              <p className="mb-4 text-sm text-(--color-font)">Enable AI-powered features in Insomnia.</p>
-            )}
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-(--color-font)">
-                Auto-generate Mock Servers from natural language
-              </span>
-              {!isMockServerEnabledByOrg ? (
-                <p className="text-xs text-(--color-danger)">
-                  Disabled by organization{features.aiMockServers?.reason ? `: ${features.aiMockServers.reason}` : ''}
-                </p>
-              ) : !hasActiveLLM ? (
-                <p className="text-xs text-(--hl)">Configure and activate an LLM to enable this feature</p>
-              ) : null}
+              <span className="text-sm font-medium text-(--color-font)">Auto-generated Mock Servers</span>
+              <p className="text-xs text-(--hl)">
+                Create mock servers from your API definition or with natural language
+              </p>
             </div>
-            <Switch
-              isSelected={mockServerEnabled && isMockServerEnabledByOrg}
-              onChange={handleMockServerToggle}
-              isDisabled={!hasActiveLLM || !isMockServerEnabledByOrg}
-              className="group flex items-center gap-2"
-            >
-              <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-disabled:opacity-50 group-data-selected:bg-(--color-surprise)">
-                <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
-              </div>
-            </Switch>
+            <span className="group relative inline-flex h-6 w-11">
+              <Switch
+                isSelected={mockServerEnabled && isMockServerEnabledByOrg}
+                onChange={handleMockServerToggle}
+                isDisabled={isMockServerFeatureDisabled}
+                className="group flex items-center gap-2"
+              >
+                <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-disabled:opacity-50 group-data-selected:bg-(--color-surprise)">
+                  <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
+                </div>
+              </Switch>
+              {isMockServerFeatureDisabled && (
+                <div className="pointer-events-none absolute top-full right-0 z-50 mt-1 hidden max-w-[1200px] min-w-[220px] rounded border border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-center text-sm wrap-break-word whitespace-normal text-(--color-font) group-hover:block">
+                  {!isMockServerEnabledByOrg
+                    ? 'Your organization admin has disabled the use of AI features'
+                    : 'Configure and activate an LLM to enable this feature'}
+                </div>
+              )}
+            </span>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-(--color-font)">Suggest comments and grouping for Commits</span>
-              {!isCommitMessagesEnabledByOrg ? (
-                <p className="text-xs text-(--color-danger)">
-                  Disabled by organization
-                  {features.aiCommitMessages?.reason ? `: ${features.aiCommitMessages.reason}` : ''}
-                </p>
-              ) : !hasActiveLLM ? (
-                <p className="text-xs text-(--hl)">Configure and activate an LLM to enable this feature</p>
-              ) : null}
+              <span className="text-sm font-medium text-(--color-font)">Smart Commits</span>
+              <p className="text-xs text-(--hl)">Suggest comments and grouping for Git Sync project commits</p>
             </div>
-            <Switch
-              isSelected={commitMessagesEnabled && isCommitMessagesEnabledByOrg}
-              onChange={handleCommitMessagesToggle}
-              isDisabled={!hasActiveLLM || !isCommitMessagesEnabledByOrg}
-              className="group flex items-center gap-2"
-            >
-              <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-disabled:opacity-50 group-data-selected:bg-(--color-surprise)">
-                <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
-              </div>
-            </Switch>
+            <span className="group relative inline-flex h-6 w-11">
+              <Switch
+                isSelected={commitMessagesEnabled && isCommitMessagesEnabledByOrg}
+                onChange={handleCommitMessagesToggle}
+                isDisabled={isCommitMessagesFeatureDisabled}
+                className="group flex items-center gap-2"
+              >
+                <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-disabled:opacity-50 group-data-selected:bg-(--color-surprise)">
+                  <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
+                </div>
+              </Switch>
+              {isCommitMessagesFeatureDisabled && (
+                <div className="pointer-events-none absolute top-full right-0 z-50 mt-1 hidden max-w-[1200px] min-w-[220px] rounded border border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-center text-sm wrap-break-word whitespace-normal text-(--color-font) group-hover:block">
+                  {!isCommitMessagesEnabledByOrg
+                    ? 'Your organization admin has disabled the use of AI features'
+                    : 'Configure and activate an LLM to enable this feature'}
+                </div>
+              )}
+            </span>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-(--color-font)">Allow MCP client to use the LLM service</span>
-              {!isMcpClientEnabledByOrg ? (
-                <p className="text-xs text-(--color-danger)">
-                  Disabled by organization
-                  {features.aiMcpClient?.reason ? `: ${features.aiMcpClient.reason}` : ''}
-                </p>
-              ) : !hasActiveLLM ? (
-                <p className="text-xs text-(--hl)">Configure and activate an LLM to enable this feature</p>
-              ) : null}
+              <span className="text-sm font-medium text-(--color-font)">Response sampling for MCP clients</span>
+              <p className="text-xs text-(--hl)">Use an LLM to generate sample data when working with an MCP server</p>
             </div>
-            <Switch
-              isSelected={mcpClientEnabled && isMcpClientEnabledByOrg}
-              onChange={handleMcpClientToggle}
-              isDisabled={!hasActiveLLM || !isMcpClientEnabledByOrg}
-              className="group flex items-center gap-2"
-            >
-              <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-disabled:opacity-50 group-data-selected:bg-(--color-surprise)">
-                <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
-              </div>
-            </Switch>
+            <span className="group relative inline-flex h-6 w-11">
+              <Switch
+                isSelected={mcpClientEnabled && isMcpClientEnabledByOrg}
+                onChange={handleMcpClientToggle}
+                isDisabled={isMcpClientFeatureDisabled}
+                className="group flex items-center gap-2"
+              >
+                <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-disabled:opacity-50 group-data-selected:bg-(--color-surprise)">
+                  <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
+                </div>
+              </Switch>
+              {isMcpClientFeatureDisabled && (
+                <div className="pointer-events-none absolute top-full right-0 z-50 mt-1 hidden max-w-[1200px] min-w-[220px] rounded border border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-center text-sm wrap-break-word whitespace-normal text-(--color-font) group-hover:block">
+                  {!isMcpClientEnabledByOrg
+                    ? 'Your organization admin has disabled the use of AI features'
+                    : 'Configure and activate an LLM to enable this feature'}
+                </div>
+              )}
+            </span>
           </div>
         </div>
       </div>
 
       <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
-        <p className="notice info mb-4 text-sm">
-          Activate a large language model here for use with Insomnia AI features.
-        </p>
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-(--color-font)">Activate an LLM</h3>
+          <p className="text-sm text-(--hl)">The LLM set to active will be used with Insomnia AI features</p>
+        </div>
         <div className="flex flex-row gap-8">
           <div className="flex flex-col gap-2">
-            <Button className={getNavStyle('gguf')} onClick={() => setSelectedBackend('gguf')}>
-              <span className="flex items-center gap-2">
-                Local LLM
-                {currentLLM?.backend === 'gguf' && activeBadge}
-              </span>
-            </Button>
             <Button className={getNavStyle('claude')} onClick={() => setSelectedBackend('claude')}>
               <span className="flex items-center gap-2">
                 Claude
@@ -221,15 +221,13 @@ export const AISettings = () => {
                 {currentLLM?.backend === 'gemini' && activeBadge}
               </span>
             </Button>
+            <Button className={getNavStyle('gguf')} onClick={() => setSelectedBackend('gguf')}>
+              <span className="flex items-center gap-2">
+                Local LLM
+                {currentLLM?.backend === 'gguf' && activeBadge}
+              </span>
+            </Button>
           </div>
-          {selectedBackend === 'gguf' && (
-            <GGUF
-              currentLLM={currentLLM}
-              saveLLMSettings={saveLLMSettings}
-              deactivateCurrentLLM={deactivateCurrentLLM}
-              configuredLLMs={configuredLLMs.filter(llm => llm.backend === 'gguf')}
-            />
-          )}
           {selectedBackend === 'claude' && (
             <Claude
               currentLLM={currentLLM}
@@ -252,6 +250,14 @@ export const AISettings = () => {
               saveLLMSettings={saveLLMSettings}
               deactivateCurrentLLM={deactivateCurrentLLM}
               configuredLLMs={configuredLLMs.filter(llm => llm.backend === 'gemini')}
+            />
+          )}
+          {selectedBackend === 'gguf' && (
+            <GGUF
+              currentLLM={currentLLM}
+              saveLLMSettings={saveLLMSettings}
+              deactivateCurrentLLM={deactivateCurrentLLM}
+              configuredLLMs={configuredLLMs.filter(llm => llm.backend === 'gguf')}
             />
           )}
         </div>

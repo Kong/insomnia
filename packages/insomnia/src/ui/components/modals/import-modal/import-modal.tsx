@@ -2,7 +2,9 @@ import classNames from 'classnames';
 import React, { type FC, Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Heading } from 'react-aria-components';
+import { useNavigate } from 'react-router';
 
+import { scopeToActivity } from '~/models/workspace';
 import { useImportResourcesFetcher } from '~/routes/import.resources';
 import { useScanResourcesFetcher } from '~/routes/import.scan';
 import { Checkbox } from '~/ui/components/base/checkbox';
@@ -166,8 +168,8 @@ interface ImportModalProps extends ModalProps {
   projectName: string;
   // undefined when not using preferences
   workspaceName?: string;
-  // undefined when using insomnia://app/import
-  defaultProjectId?: string;
+  // undefined when logged out, should not happen
+  defaultProjectId: string;
   // undefined when in workspace selection page
   defaultWorkspaceId?: string;
   from:
@@ -200,26 +202,30 @@ export const ImportModal: FC<ImportModalProps> = ({
   const scanResourcesFetcher = useScanResourcesFetcher();
   const scanResourcesFetcherData = scanResourcesFetcher.data;
   const importFetcher = useImportResourcesFetcher();
+  const navigate = useNavigate();
   useEffect(() => {
     modalRef.current?.show();
   }, []);
 
+  // Track the import completion event, redirect to the new workspace and close the modal
   useEffect(() => {
-    if (importFetcher?.data?.done === true) {
-      // Track the import completion event
-      if (scanResourcesFetcherData?.length) {
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.importCompleted,
-          properties: {
-            workspaces: scanResourcesFetcherData.map(scanResult => scanResult.workspaces?.length || 0),
-            requests: scanResourcesFetcherData.map(scanResult => scanResult.requests?.length || 0),
-          },
-        });
-      }
-
+    if (importFetcher?.data?.done === true && scanResourcesFetcherData?.length) {
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.importCompleted,
+        properties: {
+          workspaces: scanResourcesFetcherData.map(scanResult => scanResult.workspaces?.length || 0),
+          requests: scanResourcesFetcherData.map(scanResult => scanResult.requests?.length || 0),
+        },
+      });
+      const workspace = importFetcher?.data?.workspace;
+      workspace
+        ? navigate(
+            `/organization/${organizationId}/project/${defaultProjectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+          )
+        : navigate(`/organization/${organizationId}/project/${defaultProjectId}`);
       modalRef.current?.hide();
     }
-  }, [importFetcher.data, scanResourcesFetcherData]);
+  }, [defaultProjectId, defaultWorkspaceId, importFetcher?.data, navigate, organizationId, scanResourcesFetcherData]);
   // allow workspace import if there is only one workspace
   const totalWorkspacesCount = useMemo(() => {
     return (

@@ -54,11 +54,11 @@ import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 
 export const WorkspaceDropdown: FC<{}> = () => {
-  const { organizationId, projectId, workspaceId } = useParams<{
+  const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
-  }>();
+  };
   invariant(organizationId, 'Expected organizationId');
   const { activeWorkspace, activeWorkspaceMeta, activeProject, activeMockServer } = useWorkspaceLoaderData()!;
 

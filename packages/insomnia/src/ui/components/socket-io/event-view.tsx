@@ -16,12 +16,21 @@ interface Props<T> {
 
 export const MessageEventView: FC<Props<SocketIOMessageEvent>> = ({ event }) => {
   const stringify = (raw: any) => {
-    try {
-      const parsed = JSON.parse(raw);
-      return JSON.stringify(parsed, null, '\t');
-    } catch {
-      return raw;
+    // If raw is already an object or array, stringify it directly
+    if (typeof raw === 'object' && raw !== null) {
+      return JSON.stringify(raw, null, '\t');
     }
+    // If raw is a string, try to parse and re-stringify for formatting
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw);
+        return JSON.stringify(parsed, null, '\t');
+      } catch {
+        return raw;
+      }
+    }
+    // For primitives (number, boolean, etc.), convert to string
+    return String(raw);
   };
   const args = event.data.map((item, index) => ({
     id: index.toString(),

@@ -15,7 +15,6 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('Template Tag Collection').click();
   // Nav to cloud credentials page
   await page.getByTestId('settings-button').click();
   await page.getByRole('tab', { name: 'Credentials' }).click();

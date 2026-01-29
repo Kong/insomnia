@@ -33,7 +33,7 @@ export const GitConnectionInfo = ({
   const repoUrl = gitRepository?.uri;
 
   return (
-    <div className="text-[12px]">
+    <div className="rounded-xs border border-solid border-(--hl-sm) p-2">
       <div className="mb-6 font-semibold text-(--hl)">Connection Info</div>
       <div className="flex flex-col gap-4">
         <dl className="flex">

@@ -15,13 +15,11 @@ test.describe('test hidden window handling', () => {
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-    await page.getByRole('button', { name: 'Workspace actions menu button' }).click();
-    await page.getByRole('menuitem', { name: 'Export' }).click();
+    await page.getByTestId('workspace-context-dropdown').click();
+    await page.getByRole('menuitemradio', { name: 'Export' }).click();
     await page.getByRole('button', { name: 'Export' }).click();
     await page.getByText('Which format would you like to export as?').click();
     await page.locator('.app').press('Escape');
-
-    await page.getByText('Pre-request Scripts').click();
 
     await page.getByLabel('Request Collection').getByTestId('Long running task').press('Enter');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -59,7 +57,6 @@ test.describe('test hidden window handling', () => {
     await page.getByLabel('Request timeout (ms)').fill('1000');
     await page.getByRole('button', { name: 'Modal Close Button' }).click();
 
-    await page.getByText('Pre-request Scripts').click();
     await page.getByLabel('Request Collection').getByTestId('Long running task - post').press('Enter');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
 
@@ -100,7 +97,6 @@ test.describe('test hidden window handling', () => {
     await page.getByRole('button', { name: 'Modal Close Button' }).click();
 
     // send the request with infinite loop script
-    await page.getByText('Pre-request Scripts').click();
     await page.getByLabel('Request Collection').getByTestId('infinite loop').press('Enter');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
     // await page.getByText('Timeout: Hidden browser window is not responding').click();

@@ -1,4 +1,5 @@
 import { isAfter } from 'date-fns';
+import { revokeInvitation } from 'insomnia-api';
 import React, { type FC, type MutableRefObject, useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -795,12 +796,13 @@ async function unlinkTeam(organizationId: string, collaboratorId: string) {
 }
 
 async function revokeOrganizationInvite(organizationId: string, invitationId: string) {
-  return insomniaFetch<void>({
-    method: 'DELETE',
-    path: `/v1/organizations/${organizationId}/invites/${invitationId}`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(error => {
-    throw new Error(error ?? 'Failed to revoke invitation from organization');
-  });
+  try {
+    return revokeInvitation({
+      organizationId,
+      invitationId,
+      sessionId: await getCurrentSessionId(),
+    });
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : 'Failed to revoke invitation from organization');
+  }
 }

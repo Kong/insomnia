@@ -21,7 +21,6 @@ test('Check filter responses by environment preference', async ({ app, page }) =
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('simple').click();
 
   // Send a request
   await page.getByLabel('Request Collection').getByTestId('example http').press('Enter');
@@ -61,7 +60,6 @@ test('Enable http and https proxies', async ({ app, page }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('simple').click();
 
   // send the request and check timeline
   await page.getByLabel('Request Collection').getByTestId('proxyEnabled').press('Enter');
