@@ -160,10 +160,6 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     }
     return '';
   }
-  async validateResourceURL() {
-    const a = undefined;
-    return a;
-  }
   saveResourceMetadataUrl(url: URL | undefined) {
     this._resourceMetadataUrl = url;
   }
