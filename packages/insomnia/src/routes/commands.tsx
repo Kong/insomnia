@@ -3,7 +3,6 @@ import { fuzzyMatch } from '~/common/misc';
 import {
   environment,
   grpcRequest,
-  mcpRequest,
   project,
   request,
   requestGroup,
@@ -13,7 +12,6 @@ import {
 } from '~/models';
 import type { Environment } from '~/models/environment';
 import type { GrpcRequest } from '~/models/grpc-request';
-import type { McpRequest } from '~/models/mcp-request';
 import { isScratchpadOrganizationId, type Organization } from '~/models/organization';
 import { isRemoteProject, type Project } from '~/models/project';
 import type { Request } from '~/models/request';
@@ -24,10 +22,6 @@ import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/commands';
-
-type WorkspaceWithoutScope = Omit<Workspace, 'scope'>;
-type McpWorkspace = WorkspaceWithoutScope & { scope: 'mcp' } & { mcpRequest: McpRequest };
-type RegularWorkspace = WorkspaceWithoutScope & { scope: Exclude<Workspace['scope'], 'mcp'> };
 
 export async function clientLoader(args: Route.ClientLoaderArgs) {
   const searchParams = new URL(args.request.url).searchParams;
@@ -67,28 +61,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     parentId: { $in: allProjectIds },
   });
 
-  const allValidOrganizationWorkspaces: (McpWorkspace | RegularWorkspace)[] = [];
-
-  for (const ws of allOrganizationWorkspaces) {
-    if (ws.scope === 'mcp') {
-      const mcpRequestData = await database.findOne<McpRequest>(mcpRequest.type, {
-        parentId: ws._id,
-      });
-      if (mcpRequestData) {
-        allValidOrganizationWorkspaces.push({
-          ...ws,
-          mcpRequest: mcpRequestData,
-        } as McpWorkspace);
-      } else {
-        // This should not happen, for some edge case, log an error and don't show in the list
-        console.error(`MCP Request not found for MCP Workspace: ${ws._id}`);
-      }
-    } else {
-      allValidOrganizationWorkspaces.push(ws as RegularWorkspace);
-    }
-  }
-
-  const workspaceIds = allValidOrganizationWorkspaces.map(workspace => workspace._id);
+  const workspaceIds = allOrganizationWorkspaces.map(workspace => workspace._id);
 
   const parentReferences = new Map<
     string,
@@ -108,7 +81,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     });
   });
 
-  allValidOrganizationWorkspaces.forEach(workspaceId => {
+  allOrganizationWorkspaces.forEach(workspaceId => {
     parentReferences.set(workspaceId._id, {
       type: 'Workspace',
       organizationId: parentReferences.get(workspaceId.parentId)!.organizationId,
@@ -223,11 +196,11 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     return parentReferences.get(request.parentId)!.workspaceId !== workspaceId;
   });
 
-  const currentFiles = allValidOrganizationWorkspaces.filter(workspace => {
+  const currentFiles = allOrganizationWorkspaces.filter(workspace => {
     return workspace.parentId === projectId;
   });
 
-  const otherFiles = allValidOrganizationWorkspaces.filter(workspace => {
+  const otherFiles = allOrganizationWorkspaces.filter(workspace => {
     return workspace.parentId !== projectId;
   });
 
@@ -247,7 +220,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
             item,
             organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
             projectName: allProjects.find(project => project._id === projectId)?.name || '',
-            workspaceName: allValidOrganizationWorkspaces.find(workspace => workspace._id === workspaceId)?.name || '',
+            workspaceName: allOrganizationWorkspaces.find(workspace => workspace._id === workspaceId)?.name || '',
             organizationId,
             projectId,
             workspaceId,
@@ -259,11 +232,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
         const parentProject = allProjects.find(project => project._id === workspace.parentId);
         return {
           id: workspace._id,
-          url:
-            workspace.scope === 'mcp'
-              ? `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${workspace.mcpRequest._id}`
-              : `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
-          mcpRequestId: workspace.scope === 'mcp' ? workspace.mcpRequest._id : undefined,
+          url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
           name: workspace.name,
           item: {
             ...workspace,
@@ -292,7 +261,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
             item,
             organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
             projectName: allProjects.find(project => project._id === projectId)?.name || '',
-            workspaceName: allValidOrganizationWorkspaces.find(workspace => workspace._id === workspaceId)?.name || '',
+            workspaceName: allOrganizationWorkspaces.find(workspace => workspace._id === workspaceId)?.name || '',
             organizationId,
             projectId,
             workspaceId,
@@ -304,11 +273,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
         const parentProject = allProjects.find(project => project._id === workspace.parentId);
         return {
           id: workspace._id,
-          url:
-            workspace.scope === 'mcp'
-              ? `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${workspace.mcpRequest._id}`
-              : `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
-          mcpRequestId: workspace.scope === 'mcp' ? workspace.mcpRequest._id : undefined,
+          url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
           name: workspace.name,
           item: {
             ...workspace,

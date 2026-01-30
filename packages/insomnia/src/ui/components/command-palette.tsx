@@ -18,10 +18,11 @@ import {
   Popover,
   Text,
 } from 'react-aria-components';
-import { useNavigate, useParams } from 'react-router';
+import { href, useNavigate, useParams } from 'react-router';
 
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '~/common/hotkeys';
 import { fuzzyMatch } from '~/common/misc';
+import { mcpRequest } from '~/models';
 import { isGrpcRequest } from '~/models/grpc-request';
 import { isRequest, type Request } from '~/models/request';
 import { isRequestGroup } from '~/models/request-group';
@@ -44,6 +45,7 @@ import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { type TabType } from '~/ui/components/tabs/tab';
 import { getMethodShortHand, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
+import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
 
@@ -166,15 +168,30 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
 
   const getFileOpenInNewTabHandler = (file: CommandFile) => {
     if (file.organizationId === organizationId) {
-      return () => {
+      return async () => {
         const { scope } = file.item;
         if (scope === 'mcp') {
+          const mcpRequestData = await mcpRequest.getByParentId(file.id);
+
+          if (!mcpRequestData) {
+            showResourceNotFoundToast(`MCP Request not found for workspace: ${file.id}`);
+            return;
+          }
+
           addTab(
             {
               type: 'request',
-              id: file.item.mcpRequest._id,
+              id: mcpRequestData._id,
               name: file.name,
-              url: file.url,
+              url: href(
+                '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId',
+                {
+                  organizationId,
+                  projectId: file.projectId,
+                  workspaceId: file.id,
+                  requestId: mcpRequestData._id,
+                },
+              ),
               organizationId: file.organizationId,
               projectId: file.projectId,
               workspaceId: file.id,
