@@ -312,9 +312,9 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                               className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                             >
                               <div className="flex items-center gap-2">
-                                <Heading className="text-lg font-bold">Delete Local File</Heading>
+                                <Heading className="text-lg font-bold">Remove Local Copy</Heading>
                               </div>
-                              <p className="pt-2">Delete only the local file.</p>
+                              <p className="pt-2">The project will still exist on the Cloud.</p>
                             </Radio>
                             <Radio
                               value="false"
@@ -322,10 +322,12 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                             >
                               <div className="flex items-center gap-2">
                                 <Heading className="text-lg font-bold">
-                                  <span>Delete Local & Remote File</span>
+                                  <span>Delete Permanently</span>
                                 </Heading>
                               </div>
-                              <p className="pt-2">Permanently removes from everywhere - local file and the cloud.</p>
+                              <p className="pt-2">
+                                The project will be deleted everywhere. You cannot undo this action.
+                              </p>
                             </Radio>
                           </div>
                         </RadioGroup>
