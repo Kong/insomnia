@@ -168,34 +168,53 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     if (file.organizationId === organizationId) {
       return () => {
         const { scope } = file.item;
-        const type = (
-          {
-            'environment': 'environment',
-            'design': 'document',
-            'mock-server': 'mockServer',
-            'mcp': 'collection',
-            'collection': 'collection',
-          } as const
-        )[scope];
-        const url =
-          file.item.scope === 'collection'
-            ? `${file.url}${file.url.includes('?') ? '&' : '?'}doNotSkipToActiveRequest=true`
-            : file.url;
-        addTab(
-          {
-            type: type,
-            id: file.id,
-            name: file.name,
-            url: url,
-            organizationId: file.organizationId,
-            projectId: file.projectId,
-            workspaceId: file.id,
-            projectName: file.projectName,
-            workspaceName: file.name,
-            temporary: false,
-          },
-          { setActive: false },
-        );
+        if (scope === 'mcp') {
+          addTab(
+            {
+              type: 'request',
+              id: file.item.mcpRequest._id,
+              name: file.name,
+              url: file.url,
+              organizationId: file.organizationId,
+              projectId: file.projectId,
+              workspaceId: file.id,
+              projectName: file.projectName,
+              workspaceName: file.name,
+              temporary: false,
+              tag: 'MCP',
+              method: '',
+            },
+            { setActive: false },
+          );
+        } else {
+          const type = (
+            {
+              'environment': 'environment',
+              'design': 'document',
+              'mock-server': 'mockServer',
+              'collection': 'collection',
+            } as const
+          )[scope];
+          const url =
+            file.item.scope === 'collection'
+              ? `${file.url}${file.url.includes('?') ? '&' : '?'}doNotSkipToActiveRequest=true`
+              : file.url;
+          addTab(
+            {
+              type: type,
+              id: file.id,
+              name: file.name,
+              url: url,
+              organizationId: file.organizationId,
+              projectId: file.projectId,
+              workspaceId: file.id,
+              projectName: file.projectName,
+              workspaceName: file.name,
+              temporary: false,
+            },
+            { setActive: false },
+          );
+        }
       };
     }
     return;
