@@ -4,7 +4,7 @@ import path from 'node:path';
 import { importInsomniaV5Data } from 'insomnia/src/common/insomnia-v5';
 import YAML from 'yaml';
 
-import { InsoError } from '../../cli';
+import { InsoError } from '../../errors';
 import type { DbAdapter } from '../index';
 import { emptyDb } from '../index';
 import type { BaseModel } from '../models/types';

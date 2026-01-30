@@ -38,7 +38,8 @@ import type { BaseModel } from './db/models/types';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
 import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
-import { BasicReporter, LogLevel, logger } from './logger';
+import { InsoError } from './errors';
+import { BasicReporter, logger,LogLevel } from './logger';
 import { logTestResult, logTestResultSummary, reporterTypes, type TestReporter } from './reporter';
 import { generateDocumentation } from './scripts/docs';
 import { getAppDataDir, getDefaultProductName } from './util';
@@ -90,15 +91,7 @@ export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: 
   return {};
 };
 
-export class InsoError extends Error {
-  cause?: Error | null;
-
-  constructor(message: string, cause?: Error) {
-    super(message);
-    this.name = 'InsoError';
-    this.cause = cause;
-  }
-}
+export { InsoError };
 
 const localAppDir = getAppDataDir(getDefaultProductName());
 

@@ -81,6 +81,10 @@ const getOsName = (): string => {
 };
 
 export const trackInsoEvent = async (event: InsoEvent, properties?: Record<string, unknown>): Promise<void> => {
+  if (process.env.NODE_ENV === 'test') {
+    return;
+  }
+
   const client = getAnalyticsClient();
   if (!client) {
     return;
