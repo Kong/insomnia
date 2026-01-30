@@ -6,8 +6,7 @@ import type { Settings } from 'insomnia/src/models/settings';
 import { v4 as uuidv4 } from 'uuid';
 
 import packageJson from '../package.json';
-import neDbAdapter from './db/adapters/ne-db-adapter';
-import { getAppDataDir, getDefaultProductName } from './util';
+import { readLocalSettings } from './db/settings-reader';
 
 export enum InsoEvent {
   runTest = 'inso_run_test',
@@ -40,9 +39,7 @@ const getLocalSettings = async (): Promise<Settings | null> => {
   }
 
   try {
-    const appDataDir = getAppDataDir(getDefaultProductName());
-    const db = await neDbAdapter(appDataDir, ['Settings']);
-    localSettings = (db?.Settings[0] as Settings | undefined) ?? null;
+    localSettings = await readLocalSettings();
     return localSettings;
   } catch {
     return null;
