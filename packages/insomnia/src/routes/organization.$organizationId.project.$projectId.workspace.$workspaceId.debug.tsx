@@ -115,6 +115,7 @@ import { ResponsePane } from '~/ui/components/panes/response-pane';
 import { SocketIORequestPane } from '~/ui/components/socket-io/request-pane';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { getMethodShortHand } from '~/ui/components/tags/method-tag';
+import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-request-pane';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
@@ -131,7 +132,6 @@ import {
 } from '~/ui/hooks/use-request';
 import { scrollElementIntoView } from '~/utils';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/utils/grpc';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
 
@@ -163,12 +163,20 @@ const INITIAL_GRPC_REQUEST_STATE = {
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
-    invariant(workspaceId, 'Workspace ID is required');
-    invariant(projectId, 'Project ID is required');
+
+    const activeProject = await models.project.getById(projectId);
+    if (!activeProject) {
+      showResourceNotFoundToast(`Project not found: ${projectId}`);
+      throw redirect(href('/organization/:organizationId/project', { organizationId }));
+    }
+
     const activeWorkspace = await models.workspace.getById(workspaceId);
-    invariant(activeWorkspace, 'Workspace not found');
+    if (!activeWorkspace) {
+      showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
+      throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+    }
+
     const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-    invariant(activeWorkspaceMeta, 'Workspace meta not found');
     const activeRequestId = activeWorkspaceMeta.activeRequestId;
     const activeRequest = activeRequestId ? await models.request.getById(activeRequestId) : null;
     // TODO(george): we should remove this after enabling the sidebar for the runner
