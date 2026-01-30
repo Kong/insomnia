@@ -1,14 +1,30 @@
 import type { FC } from 'react';
-import { useEffect, useMemo, useState } from 'react';
-import { Button, Input, Label, TextField } from 'react-aria-components';
+import { Fragment, useEffect, useMemo, useState } from 'react';
+import {
+  Button,
+  Input,
+  Label,
+  ListBox,
+  ListBoxItem,
+  Popover,
+  Select,
+  SelectValue,
+  TextField,
+} from 'react-aria-components';
 import { useParams } from 'react-router';
 
 import { Banner } from '~/basic-components/banner';
 import { Divider } from '~/basic-components/divider';
 import { LearnMoreLink } from '~/basic-components/link';
-import type { GitCredentials } from '~/models/git-credentials';
+import {
+  type GitCredentials,
+  isGitCredentialsV2,
+  isOAuthCredential,
+  type ProviderEmail,
+} from '~/models/git-credentials';
 import type { StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
+import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
@@ -93,11 +109,13 @@ export const ProjectSettingsForm: FC<Props> = ({
     ref?: string;
     credentialsId?: string;
     connectRepositoryLater?: boolean;
+    selectedAuthorEmail?: string | null;
   }>({
     name: project?.name || defaultProjectName,
     uri: gitRepository?.uri || '',
     credentialsId: gitRepository?.credentialsId ?? undefined,
     connectRepositoryLater: false,
+    selectedAuthorEmail: gitRepository?.selectedAuthorEmail ?? null,
   });
 
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
@@ -109,7 +127,7 @@ export const ProjectSettingsForm: FC<Props> = ({
       : [];
 
   useEffect(() => {
-    if (updateProjectFetcher.data && updateProjectFetcher.data.success && onSuccessUpdate) {
+    if (updateProjectFetcher?.data && updateProjectFetcher?.data?.success && onSuccessUpdate) {
       onSuccessUpdate();
     }
   }, [onSuccessUpdate, updateProjectFetcher.data]);
@@ -149,6 +167,35 @@ export const ProjectSettingsForm: FC<Props> = ({
     storageType === 'git' &&
     ((isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) ||
       (!isSwitchingStorageType(project!, storageType) && project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID));
+
+  const emailsFetcher = useGitProviderEmailsLoaderFetcher();
+  const isLoadingEmails = emailsFetcher.state !== 'idle';
+
+  const availableEmails = useMemo(() => {
+    const fetchedEmails = emailsFetcher.data?.emails || [];
+    if (fetchedEmails.length > 0) {
+      return fetchedEmails;
+    }
+    if (selectedCredential && isGitCredentialsV2(selectedCredential) && isOAuthCredential(selectedCredential)) {
+      return selectedCredential.credentials?.emails || [];
+    }
+    return [];
+  }, [selectedCredential, emailsFetcher.data?.emails]);
+
+  const canFetchEmails =
+    selectedCredential &&
+    isGitCredentialsV2(selectedCredential) &&
+    isOAuthCredential(selectedCredential) &&
+    selectedProvider?.supportsFetchEmails;
+
+  const showEmailSelector = showGitConnectionInfo && canFetchEmails;
+  const [isEmailSelectOpen, setIsEmailSelectOpen] = useState(false);
+
+  useEffect(() => {
+    if (canFetchEmails && selectedCredential && emailsFetcher.state === 'idle' && !emailsFetcher.data) {
+      emailsFetcher.load({ credentialsId: selectedCredential._id });
+    }
+  }, [canFetchEmails, selectedCredential, emailsFetcher]);
 
   return (
     <>
@@ -244,6 +291,85 @@ export const ProjectSettingsForm: FC<Props> = ({
                 providerInfo={selectedProvider}
                 projectId={project!._id}
               />
+              {showEmailSelector && (
+                <div className="flex flex-col gap-2">
+                  {isLoadingEmails ? (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Icon icon="spinner" className="animate-spin" />
+                      <span>Loading emails...</span>
+                    </div>
+                  ) : availableEmails.length > 1 ? (
+                    <Select
+                      onOpenChange={setIsEmailSelectOpen}
+                      isOpen={isEmailSelectOpen}
+                      aria-label="Author Email"
+                      selectedKey={projectData.selectedAuthorEmail || selectedCredential?.author.email}
+                      onSelectionChange={email => {
+                        setProjectData(prev => ({
+                          ...prev,
+                          selectedAuthorEmail: email,
+                        }));
+                      }}
+                    >
+                      <Label className="mb-2 px-0.5 pt-0 text-sm">Author Email</Label>
+                      <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
+                        <SelectValue<ProviderEmail> className="flex items-center justify-center gap-2 truncate">
+                          {({ selectedItem }) => {
+                            if (selectedItem) {
+                              return (
+                                <Fragment>
+                                  <span>{selectedItem.email}</span>
+                                  {selectedItem.primary && <span className="text-xs text-(--hl-lg)">(primary)</span>}
+                                </Fragment>
+                              );
+                            }
+                            return (
+                              projectData.selectedAuthorEmail || selectedCredential?.author.email || 'Select an email'
+                            );
+                          }}
+                        </SelectValue>
+                        <Icon icon="caret-down" />
+                      </Button>
+                      <Popover className="isolate flex w-(--trigger-width) min-w-max flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none">
+                        <ListBox
+                          items={availableEmails}
+                          className="min-w-max overflow-y-auto py-2 focus:outline-hidden"
+                        >
+                          {item => (
+                            <ListBoxItem
+                              id={item.email}
+                              key={item.email}
+                              className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                              aria-label={item.email}
+                              textValue={item.email}
+                              value={item}
+                            >
+                              {({ isSelected }) => (
+                                <Fragment>
+                                  <span>{item.email}</span>
+                                  {item.primary && <span className="text-xs text-(--hl-lg)">(primary)</span>}
+                                  {isSelected && (
+                                    <Icon icon="check" className="justify-self-end text-(--color-success)" />
+                                  )}
+                                </Fragment>
+                              )}
+                            </ListBoxItem>
+                          )}
+                        </ListBox>
+                      </Popover>
+                    </Select>
+                  ) : (
+                    <div className="text-[12px]">
+                      <div className="flex">
+                        <div className="w-[110px] font-semibold">Author Email</div>
+                        <div>
+                          {projectData.selectedAuthorEmail || selectedCredential?.author.email || 'No email available'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
           {showGitRepoForm && (
@@ -300,7 +426,9 @@ export const ProjectSettingsForm: FC<Props> = ({
                 onPress={onUpsertProject}
                 isDisabled={
                   updateProjectFetcher.state !== 'idle' ||
-                  (!isSwitchingStorageType(project!, storageType) && project?.name.trim() === projectData.name.trim())
+                  (!isSwitchingStorageType(project!, storageType) &&
+                    project?.name.trim() === projectData.name.trim() &&
+                    (gitRepository?.selectedAuthorEmail ?? null) === (projectData.selectedAuthorEmail ?? null))
                 }
                 className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >

@@ -65,6 +65,7 @@ export class GitRemoteProviderRegistry {
       iconName: provider.config.iconName,
       supportsOAuth: provider.supportsOAuth,
       supportsFetchRepos: provider.supportsFetchRepos,
+      supportsFetchEmails: provider.supportsFetchEmails,
       supportsAutoRenew: provider.supportsAutoRenew,
     }));
   }

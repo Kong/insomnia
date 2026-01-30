@@ -9,6 +9,7 @@ interface UpdateGitRepoData {
   uri: string;
   workspaceId?: string;
   projectId: string;
+  selectedAuthorEmail?: string | null;
 }
 
 export async function clientAction({ request }: Route.ClientActionArgs) {

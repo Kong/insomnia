@@ -27,7 +27,6 @@ test('can use client certificate for mTLS', async ({ app, page }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('client-certs').click();
 
   await page.getByLabel('Request Collection').getByTestId('pet 2 with url var').press('Enter');
 

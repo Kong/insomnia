@@ -30,6 +30,7 @@ import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-br
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
+import type { SourceType } from '~/routes/import.scan';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -302,7 +303,10 @@ const Root = () => {
     projectId: string;
   };
 
-  const [importUri, setImportUri] = useState('');
+  const [importObject, setImportObject] = useState({ type: 'clipboard', defaultValue: '' } as {
+    type: SourceType;
+    defaultValue: string;
+  });
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: logoutSubmit } = useLogoutFetcher();
@@ -346,8 +350,12 @@ const Root = () => {
             source: 'import-url',
           },
         });
-
-        return setImportUri(params.uri);
+        if (params.uri) {
+          return setImportObject({ type: 'uri', defaultValue: params.uri });
+        }
+        if (params.curl) {
+          return setImportObject({ type: 'curl', defaultValue: params.curl });
+        }
       }
       if (urlWithoutParams === 'insomnia://plugins/install') {
         if (!params.name || params.name.trim() === '') {
@@ -557,13 +565,13 @@ const Root = () => {
       <Modals />
       <AppHooks />
       {/* triggered by insomnia://app/import */}
-      {importUri && (
+      {importObject.defaultValue && (
         <ImportModal
-          onHide={() => setImportUri('')}
+          onHide={() => setImportObject({ type: 'clipboard', defaultValue: '' })}
           projectName="Insomnia"
           defaultProjectId={projectId}
           organizationId={organizationId}
-          from={{ type: 'uri', defaultValue: importUri }}
+          from={importObject}
         />
       )}
     </>

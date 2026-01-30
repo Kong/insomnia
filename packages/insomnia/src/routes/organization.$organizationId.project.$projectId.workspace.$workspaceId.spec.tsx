@@ -22,7 +22,7 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { NavLink, useLoaderData } from 'react-router';
+import { href, NavLink, redirect, useLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
@@ -54,27 +54,36 @@ import { CertificatesModal } from '~/ui/components/modals/workspace-certificates
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
+import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  const { projectId, workspaceId } = params;
+  const { organizationId, projectId, workspaceId } = params;
 
   const project = await models.project.getById(projectId);
-  invariant(project, 'Project not found');
-
-  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
-  invariant(apiSpec, 'API spec not found');
+  if (!project) {
+    showResourceNotFoundToast(`Project not found: ${projectId}`);
+    throw redirect(href('/organization/:organizationId/project', { organizationId }));
+  }
 
   const workspace = await models.workspace.getById(workspaceId);
-  invariant(workspace, 'Workspace not found');
+  if (!workspace) {
+    showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+  }
+
+  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  if (!apiSpec) {
+    showResourceNotFoundToast(`API Specification not found for workspace: ${workspaceId}`);
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+  }
 
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
 

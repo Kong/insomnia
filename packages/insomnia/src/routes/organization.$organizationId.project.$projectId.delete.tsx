@@ -1,10 +1,10 @@
+import { deleteTeamProject, isApiError } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
 import * as models from '~/models';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';
 
@@ -25,23 +25,11 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     await projectLock.lock();
     const bufferId = await database.bufferChanges();
     if (project.remoteId) {
-      const response = await insomniaFetch<void | {
-        error: string;
-        message?: string;
-      }>({
-        path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
-        method: 'DELETE',
+      await deleteTeamProject({
+        organizationId,
+        projectRemoteId: project.remoteId,
         sessionId,
       });
-
-      if (response && 'error' in response) {
-        return {
-          error:
-            response.error === 'FORBIDDEN'
-              ? 'You do not have permission to delete this project.'
-              : 'An unexpected error occurred while deleting the project. Please try again.',
-        };
-      }
     }
 
     if (project.gitRepositoryId) {
@@ -59,8 +47,16 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     // When redirect to `/organizations/:organizationId`, it sometimes doesn't reload the index loader, so manually redirect to the initial route for the organization
     const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });
     return redirect(initialOrganizationRoute);
-  } catch (err) {
+  } catch (err: unknown) {
     console.log(err);
+    if (isApiError(err)) {
+      return {
+        error:
+          err.name === 'FORBIDDEN'
+            ? 'You do not have permission to delete this project.'
+            : 'An unexpected error occurred while deleting the project. Please try again.',
+      };
+    }
     return {
       error:
         err instanceof Error

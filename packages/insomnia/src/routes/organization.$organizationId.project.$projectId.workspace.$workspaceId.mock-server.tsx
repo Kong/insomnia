@@ -13,7 +13,9 @@ import {
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
+  href,
   NavLink,
+  redirect,
   Route as RouteComponent,
   Routes,
   useLoaderData,
@@ -39,9 +41,9 @@ import { EmptyStatePane } from '~/ui/components/panes/empty-state-pane';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
+import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server';
 import {
@@ -55,12 +57,25 @@ export interface MockServerLoaderData {
 }
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  const { workspaceId } = params;
+  const { workspaceId, projectId, organizationId } = params;
+
+  const project = await models.project.getById(projectId);
+  if (!project) {
+    showResourceNotFoundToast(`Project not found: ${projectId}`);
+    throw redirect(href('/organization/:organizationId/project', { organizationId }));
+  }
 
   const activeWorkspace = await models.workspace.getById(workspaceId);
-  invariant(activeWorkspace, 'Workspace not found');
+  if (!activeWorkspace) {
+    showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+  }
+
   const activeMockServer = await models.mockServer.getByParentId(workspaceId);
-  invariant(activeMockServer, 'Mock Server not found');
+  if (!activeMockServer) {
+    showResourceNotFoundToast(`Mock Server not found: ${workspaceId}`);
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+  }
   const mockRoutes = await models.mockRoute.findByParentId(activeMockServer._id);
 
   return {

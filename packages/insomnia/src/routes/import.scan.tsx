@@ -9,18 +9,19 @@ import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
-type SourceType = 'file' | 'uri' | 'clipboard';
+export type SourceType = 'file' | 'uri' | 'curl' | 'clipboard';
 
 export const scanImportResources = async (data: {
   source: SourceType;
   uri?: string;
+  curl?: string;
   filePaths?: string | string[];
   postmanArchiveFile?: string | null;
 }): Promise<ScanResult[]> => {
   const { source, postmanArchiveFile } = data;
 
   invariant(typeof source === 'string', 'Source is required.');
-  invariant(['file', 'uri', 'clipboard'].includes(source), 'Unsupported import type');
+  invariant(['file', 'uri', 'curl', 'clipboard'].includes(source), 'Unsupported import type');
 
   window.main.trackSegmentEvent({
     event: SegmentEvent.importScanned,
@@ -39,6 +40,20 @@ export const scanImportResources = async (data: {
       contentStr: await fetchImportContentFromURI({ uri }),
       oriFileName: uri,
     });
+  } else if (source === 'curl') {
+    const { curl } = data;
+    invariant(typeof curl === 'string' && curl.length, 'cURL command is required');
+    contentList.push({
+      contentStr: curl,
+    });
+    // const { data } = await window.main.parseImport(
+    //   {
+    //     contentStr: curl || '',
+    //   },
+    //   {
+    //     importerId: 'curl',
+    //   },
+    // );
   } else if (source === 'file') {
     let filePaths: string[];
     try {

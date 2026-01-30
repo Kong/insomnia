@@ -75,7 +75,6 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('Template Tag Collection').click();
 
   await page.getByTestId('settings-button').click();
   await page.getByTestId('dataFolders').fill(getFixturePath('files/template-file.txt'));

@@ -25,7 +25,7 @@ import { type Workspace } from '~/models/workspace';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
-import { invariant } from '~/utils/invariant';
+import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -67,30 +67,26 @@ export interface Child {
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const activeWorkspace = await models.workspace.getById(workspaceId);
+  const activeProject = await models.project.getById(projectId);
+  if (!activeProject) {
+    showResourceNotFoundToast(`Project not found: ${projectId}`);
+    throw redirect(href('/organization/:organizationId/project', { organizationId }));
+  }
 
+  const activeWorkspace = await models.workspace.getById(workspaceId);
   if (!activeWorkspace) {
+    showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
 
-  invariant(activeWorkspace, 'Workspace not found');
-
-  // I don't know what to say man, this is just how it is
-  await models.environment.getOrCreateForParentId(workspaceId);
-  await models.cookieJar.getOrCreateForParentId(workspaceId);
-
-  const activeProject = await models.project.getById(projectId);
-  invariant(activeProject, 'Project not found');
-
   const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-  invariant(activeWorkspaceMeta, 'Workspace meta not found');
+
   const gitRepositoryId = isGitProject(activeProject)
     ? activeProject.gitRepositoryId
     : activeWorkspaceMeta.gitRepositoryId;
   const gitRepository = await models.gitRepository.getById(gitRepositoryId || '');
 
-  const baseEnvironment = await models.environment.getByParentId(workspaceId);
-  invariant(baseEnvironment, 'Base environment not found');
+  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
 
   const subEnvironments = (await models.environment.findByParentId(baseEnvironment._id)).sort(
     (e1, e2) => e1.metaSortKey - e2.metaSortKey,
@@ -131,7 +127,6 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   });
 
   const activeCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-  invariant(activeCookieJar, 'Cookie jar not found');
 
   const activeApiSpec = await models.apiSpec.getByParentId(workspaceId);
   const activeMockServer = await models.mockServer.getByParentId(workspaceId);
