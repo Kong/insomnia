@@ -87,6 +87,11 @@ const mcp: McpBridgeAPI = {
     findNotifications: options => ipcRenderer.invoke('mcp.event.findNotifications', options),
     findPendingEvents: options => ipcRenderer.invoke('mcp.event.findPendingEvents', options),
   },
+  ext: {
+    app: {
+      getResourceData: options => ipcRenderer.invoke('mcp.ext.app.getResourceData', options),
+    },
+  },
 };
 
 const grpc: gRPCBridgeAPI = {

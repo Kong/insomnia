@@ -106,6 +106,7 @@ export type HandleChannels =
   | 'mcp.primitive.readResource'
   | 'mcp.primitive.subscribeResource'
   | 'mcp.primitive.unsubscribeResource'
+  | 'mcp.ext.app.getResourceData'
   | 'mcp.readyState'
   | 'multipartBufferToArray'
   | 'onDefaultBrowserOAuthRedirect'

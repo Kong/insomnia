@@ -1,3 +1,4 @@
+import type { McpUiResourceCsp, McpUiResourcePermissions } from '@modelcontextprotocol/ext-apps';
 import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import type { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import type { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
@@ -86,6 +87,12 @@ export interface OpenMcpHTTPClientConnectionOptions extends CommonMcpOptions {
   transportType: typeof TRANSPORT_TYPES.HTTP;
   headers: RequestHeader[];
   authentication: RequestAuthentication;
+}
+
+export interface McpAppResourceData {
+  html: string;
+  csp?: McpUiResourceCsp;
+  permissions?: McpUiResourcePermissions;
 }
 
 export type OpenMcpClientConnectionOptions = OpenMcpHTTPClientConnectionOptions | OpenMcpStdioClientConnectionOptions;
