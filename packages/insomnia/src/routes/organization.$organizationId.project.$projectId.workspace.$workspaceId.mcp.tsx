@@ -7,7 +7,6 @@ import * as models from '~/models';
 import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
-import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp';
 import { useWorkspaceLoaderData } from './organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -64,7 +63,7 @@ const McpWorkspace = () => {
       <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
         <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
           <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
-            <div className={`flex w-full h-[${INSOMNIA_TAB_HEIGHT}px]`}>
+            <div className={`flex w-full`}>
               <Breadcrumbs className="m-0 flex h-(--line-height-sm) w-full list-none items-center gap-2 px-(--padding-sm) font-bold">
                 <Breadcrumb className="flex h-full items-center gap-2 text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
                   <NavLink
@@ -101,7 +100,7 @@ const McpWorkspace = () => {
 
       <Panel className="flex flex-col">
         <Pane type="request">
-          <PaneHeader className="h-[41px]" />
+          <PaneHeader />
           <PaneBody placeholder>
             <div className="pane__body--placeholder__cta text-center">
               <p className="font-bold">Your local version of this MCP Client contains errors and cannot be opened.</p>
