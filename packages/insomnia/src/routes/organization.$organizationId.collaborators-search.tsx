@@ -31,7 +31,7 @@ export const useCollaboratorsSearchLoaderFetcher = createFetcherLoadHook(
   load =>
     ({ organizationId, query }: { organizationId: string; query?: string }) => {
       return load(
-        `${href(`/organization/:organizationId/collaborators-search`, { organizationId })}?${encodeURIComponent(query || '')}`,
+        `${href(`/organization/:organizationId/collaborators-search`, { organizationId })}?query=${encodeURIComponent(query || '')}`,
       );
     },
   clientLoader,
