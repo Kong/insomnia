@@ -786,7 +786,7 @@ async function deleteMember(organizationId: string, userId: string) {
 
 async function unlinkTeam(organizationId: string, collaboratorId: string) {
   try {
-    return unlinkCollaborator({
+    return await unlinkCollaborator({
       organizationId,
       collaboratorId,
       sessionId: await getCurrentSessionId(),

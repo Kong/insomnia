@@ -1,5 +1,6 @@
 import { fetch } from './fetch';
 
+type CollaboratorType = 'invite' | 'member' | 'group';
 interface CollaboratorMetadata {
   groupId?: string;
   invitationId?: string;
@@ -27,11 +28,9 @@ interface PaginatedList {
   next: string;
 }
 
-type CollaboratorsListResult =
-  | (PaginatedList & {
-      collaborators: Collaborator[];
-    })
-  | Error;
+type CollaboratorsListResult = PaginatedList & {
+  collaborators: Collaborator[];
+};
 
 export const getCollaborators = ({
   sessionId,
@@ -46,14 +45,20 @@ export const getCollaborators = ({
   pageLimit?: number;
   page?: number;
 }) => {
+  const params = new URLSearchParams();
+  params.set('per_page', String(pageLimit));
+  if (page !== undefined) {
+    params.set('page', String(page));
+  }
+  if (filter !== undefined) {
+    params.set('filter', filter);
+  }
   return fetch<CollaboratorsListResult>({
     method: 'GET',
-    path: `/v1/desktop/organizations/${organizationId}/collaborators?per_page=${pageLimit}&page=${page}&filter=${filter}`,
+    path: `/v1/desktop/organizations/${organizationId}/collaborators?${params.toString()}`,
     sessionId,
   });
 };
-
-type CollaboratorType = 'invite' | 'member' | 'group';
 
 interface CollaboratorSearchResultItem {
   id: string;
