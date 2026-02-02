@@ -131,7 +131,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
   readonly config: GitLabProviderConfig;
   readonly supportsOAuth = true;
   readonly supportsFetchRepos = false;
-  readonly supportsFetchEmails = false;
+  readonly supportsFetchEmails = true;
   readonly supportsAutoRenew = true; // GitLab supports refresh tokens
 
   constructor(config: GitLabProviderConfig) {
@@ -222,44 +222,9 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
       throw new Error('Invalid credential type for GitLab provider');
     }
 
-    // Fetch current user to get emails
-    const userResponse = await net.fetch(`${this.config.apiUrl}/user`, {
-      headers: {
-        Authorization: `Bearer ${credential.credentials?.token}`,
-      },
-    });
+    const userData = await this.fetchUserWithToken(credential.credentials?.token);
 
-    if (!userResponse.ok) {
-      throw new Error(`GitLab API error: ${userResponse.statusText}`);
-    }
-
-    const userData = await userResponse.json();
-
-    // Fetch all emails for the user
-    const emailsResponse = await net.fetch(`${this.config.apiUrl}/user/emails`, {
-      headers: {
-        Authorization: `Bearer ${credential.credentials?.token}`,
-      },
-    });
-
-    if (!emailsResponse.ok) {
-      // If emails endpoint fails, return the commit_email from user profile
-      return [
-        {
-          email: userData.commit_email || userData.email,
-          primary: true,
-          verified: true,
-        },
-      ];
-    }
-
-    const emailsData = (await emailsResponse.json()) as GitLabEmailApiResponse[];
-
-    return emailsData.map(email => ({
-      email: email.email,
-      primary: email.email === userData.email,
-      verified: true, // GitLab doesn't provide verified status via API
-    }));
+    return this.fetchEmailsWithToken(credential.credentials?.token, userData);
   }
 
   /**
@@ -284,7 +249,6 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
 
   /**
    * Fetch user info with token directly
-   * Convenience method for OAuth completion
    */
   async fetchUserWithToken(token: string): Promise<GitLabUserApiResponse> {
     const response = await net.fetch(`${this.config.apiUrl}/user`, {
@@ -294,10 +258,41 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
     });
 
     if (!response.ok) {
+      console.error('[gitlab] Failed to fetch gitlab user with token:', response.statusText);
       throw new Error(`GitLab API error: ${response.statusText}`);
     }
 
     return response.json() as Promise<GitLabUserApiResponse>;
+  }
+
+  /**
+   * Fetch user's email addresses with token directly
+   */
+  async fetchEmailsWithToken(token: string, userData: GitLabUserApiResponse): Promise<ProviderEmail[]> {
+    const emailsResponse = await net.fetch(`${this.config.apiUrl}/user/emails`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!emailsResponse.ok) {
+      console.error('[gitlab] Failed to fetch gitlab user emails:', emailsResponse.statusText);
+      return [
+        {
+          email: userData.commit_email || userData.email,
+          primary: true,
+          verified: true,
+        },
+      ];
+    }
+
+    const emailsData = (await emailsResponse.json()) as GitLabEmailApiResponse[];
+
+    return emailsData.map(email => ({
+      email: email.email,
+      primary: email.email === userData.email,
+      verified: true,
+    }));
   }
 
   /**
@@ -387,8 +382,9 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
 
       gitlabStatesCache.delete(state);
 
-      // Fetch user details
+      // Fetch user details and emails
       const user = await this.fetchUserWithToken(access_token);
+      const emails = await this.fetchEmailsWithToken(access_token, user);
 
       // Create or update credential in database
       const credentialData = {
@@ -396,12 +392,13 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
         provider: 'gitlab',
         author: {
           email: user.commit_email ?? user.public_email ?? user.email ?? '',
-          name: user.username ?? user.name ?? '',
+          name: user.name || user.username || '',
           avatarUrl: user.avatar_url,
         },
         credentials: {
           token: access_token,
           refreshToken: refresh_token,
+          emails,
         },
       } satisfies BaseGitCredentialsV2;
 

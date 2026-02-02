@@ -18,12 +18,13 @@ import {
   Popover,
   Text,
 } from 'react-aria-components';
-import { useNavigate, useParams } from 'react-router';
+import { href, useNavigate, useParams } from 'react-router';
 
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '~/common/hotkeys';
 import { fuzzyMatch } from '~/common/misc';
+import { mcpRequest } from '~/models';
 import { isGrpcRequest } from '~/models/grpc-request';
-import { isRequest } from '~/models/request';
+import { isRequest, type Request } from '~/models/request';
 import { isRequestGroup } from '~/models/request-group';
 import { isWebSocketRequest } from '~/models/websocket-request';
 import { useRootLoaderData } from '~/root';
@@ -42,8 +43,11 @@ import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
-import { getMethodShortHand } from '~/ui/components/tags/method-tag';
+import { type TabType } from '~/ui/components/tabs/tab';
+import { getMethodShortHand, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
+import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
+import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
 
 export const CommandPalette = memo(function CommandPalette({ style = {} }: { style?: React.CSSProperties }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -101,6 +105,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const pullFileFetcher = useInsomniaSyncPullRemoteFileActionFetcher();
   const setActiveEnvironmentFetcher = useSetActiveEnvironmentFetcher();
   const navigate = useNavigate();
+  const { addTab } = useInsomniaTabContext();
 
   const accountId = userSession.accountId;
 
@@ -126,6 +131,112 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
 
   const isLoadingComboboxItems = commandsLoader.state !== 'idle' || remoteFilesLoader.state !== 'idle';
 
+  type CommandRequest = NonNullable<typeof commandsLoader.data>['current']['requests'][number];
+
+  const getRequestOpenInNewTabHandler = (request: CommandRequest) => {
+    if (request.organizationId === organizationId) {
+      return () => {
+        const tabType: TabType = isRequestGroup(request.item) ? 'folder' : 'request';
+
+        addTab(
+          {
+            type: tabType,
+            id: request.item._id,
+            name: request.name,
+            url: request.url,
+            organizationId: request.organizationId,
+            projectId: request.projectId,
+            workspaceId: request.workspaceId,
+            projectName: request.projectName,
+            workspaceName: request.workspaceName,
+            temporary: false,
+            ...(tabType === 'request'
+              ? {
+                  tag: getRequestMethodShortHand(request.item),
+                  method: (request.item as Request)?.method || '',
+                }
+              : {}),
+          },
+          { setActive: false },
+        );
+      };
+    }
+    return;
+  };
+
+  type CommandFile = NonNullable<typeof commandsLoader.data>['current']['files'][number];
+
+  const getFileOpenInNewTabHandler = (file: CommandFile) => {
+    if (file.organizationId === organizationId) {
+      return async () => {
+        const { scope } = file.item;
+        if (scope === 'mcp') {
+          const mcpRequestData = await mcpRequest.getByParentId(file.id);
+
+          if (!mcpRequestData) {
+            showResourceNotFoundToast(`MCP Request not found for workspace: ${file.id}`);
+            return;
+          }
+
+          addTab(
+            {
+              type: 'request',
+              id: mcpRequestData._id,
+              name: file.name,
+              url: href(
+                '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId',
+                {
+                  organizationId,
+                  projectId: file.projectId,
+                  workspaceId: file.id,
+                  requestId: mcpRequestData._id,
+                },
+              ),
+              organizationId: file.organizationId,
+              projectId: file.projectId,
+              workspaceId: file.id,
+              projectName: file.projectName,
+              workspaceName: file.name,
+              temporary: false,
+              tag: 'MCP',
+              method: '',
+            },
+            { setActive: false },
+          );
+        } else {
+          const type = (
+            {
+              'environment': 'environment',
+              'design': 'document',
+              'mock-server': 'mockServer',
+              'collection': 'collection',
+            } as const
+          )[scope];
+          const url =
+            file.item.scope === 'collection'
+              ? `${file.url}${file.url.includes('?') ? '&' : '?'}doNotSkipToActiveRequest=true`
+              : file.url;
+          addTab(
+            {
+              type: type,
+              id: file.id,
+              name: file.name,
+              url: url,
+              organizationId: file.organizationId,
+              projectId: file.projectId,
+              workspaceId: file.id,
+              projectName: file.projectName,
+              workspaceName: file.name,
+              temporary: false,
+            },
+            { setActive: false },
+          );
+        }
+      };
+    }
+    return;
+  };
+
   const comboboxSections: {
     id: string;
     name: string;
@@ -140,6 +251,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       }[];
       description: React.ReactNode;
       textValue: string;
+      openInNewTab?: () => void;
     }[];
   }[] = [];
 
@@ -149,6 +261,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       action: () => {
         navigate(request.url);
       },
+      openInNewTab: getRequestOpenInNewTabHandler(request),
     })) || [];
 
   const remoteFiles = remoteFilesLoader.data?.files || [];
@@ -158,11 +271,21 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     .filter(file => file.item.teamProjectLocalId === projectId)
     .filter(file => !currentFilesData.some(f => f.id === file.item.id));
 
-  const currentFiles =
-    [...currentFilesData, ...currentRemoteFilesData]?.map(file => ({
+  const currentLocalFiles =
+    currentFilesData?.map(file => ({
       ...file,
       action: () => {
-        if ('pullUrl' in file && file.pullUrl) {
+        navigate(file.url);
+        return null;
+      },
+      openInNewTab: getFileOpenInNewTabHandler(file),
+    })) || [];
+
+  const currentRemoteFiles =
+    currentRemoteFilesData?.map(file => ({
+      ...file,
+      action: () => {
+        if (file.pullUrl) {
           pullFileFetcher.submit({
             backendProjectId: file.item.projectId,
             remoteId: file.item.teamProjectId,
@@ -171,10 +294,13 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
 
           return true;
         }
+
         navigate(file.url);
         return null;
       },
     })) || [];
+
+  const currentFiles = [...currentLocalFiles, ...currentRemoteFiles];
 
   const currentEnvironments =
     commandsLoader.data?.current.environments.map(environment => ({
@@ -198,6 +324,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       action: () => {
         navigate(request.url);
       },
+      openInNewTab: getRequestOpenInNewTabHandler(request),
     })) || [];
 
   const otherFilesData = commandsLoader.data?.other.files || [];
@@ -205,11 +332,21 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     .filter(file => file.item.teamProjectLocalId !== projectId)
     .filter(file => !otherFilesData.some(f => f.id === file.item.id));
 
-  const otherFiles =
-    [...otherFilesData, ...otherRemoteFilesData].map(file => ({
+  const otherLocalFiles =
+    otherFilesData.map(file => ({
       ...file,
       action: () => {
-        if ('pullUrl' in file && file.pullUrl) {
+        navigate(file.url);
+        return null;
+      },
+      openInNewTab: getFileOpenInNewTabHandler(file),
+    })) || [];
+
+  const otherRemoteFiles =
+    otherRemoteFilesData.map(file => ({
+      ...file,
+      action: () => {
+        if (file.pullUrl) {
           pullFileFetcher.submit({
             backendProjectId: file.item.projectId,
             remoteId: file.item.teamProjectId,
@@ -222,6 +359,8 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         return null;
       },
     })) || [];
+
+  const otherFiles = [...otherLocalFiles, ...otherRemoteFiles];
 
   currentRequests.length > 0 &&
     comboboxSections.push({
@@ -260,6 +399,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         presence: [],
         description: request.item.url,
         textValue: `${isRequest(request.item) ? request.item.method : isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name} ${request.url}`,
+        openInNewTab: request.openInNewTab,
       })),
     });
 
@@ -293,6 +433,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
               src: user.avatar,
             };
           }),
+        openInNewTab: 'openInNewTab' in file ? file.openInNewTab : undefined,
       })),
     });
 
@@ -367,6 +508,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         textValue: !isRequestGroup(request.item)
           ? `${isRequest(request.item) ? request.item.method : isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name} ${request.url}`
           : '',
+        openInNewTab: 'openInNewTab' in request ? request.openInNewTab : undefined,
       })),
     });
 
@@ -403,6 +545,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
               src: user.avatar,
             };
           }),
+        openInNewTab: 'openInNewTab' in file ? file.openInNewTab : undefined,
       })),
     });
 
@@ -454,6 +597,12 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           workspaceId,
           filter,
         });
+      }}
+      // By default, Escape would just clear the input field. We need to press twice to close the dialog.
+      onKeyDown={e => {
+        if (e.key === 'Escape') {
+          close();
+        }
       }}
       defaultFilter={(textValue, filter) => {
         return Boolean(fuzzyMatch(filter, textValue, { splitSpace: false, loose: true })?.indexes);
@@ -542,6 +691,24 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                             <Text className="flex-1 truncate px-1 text-sm text-(--hl-md)" slot="description">
                               {item.description}
                             </Text>
+                            {item.openInNewTab && (
+                              <button
+                                // Avoid ListBoxItem onSelect getting triggered and focus stealing by the button
+                                onMouseDownCapture={e => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                }}
+                                onPointerDown={e => e.stopPropagation()}
+                                onPointerUp={e => e.stopPropagation()}
+                                aria-label="Open in New Tab"
+                                className="shrink-0 rounded-sm bg-(--hl-xs) px-2 py-1 text-xs opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-sm)"
+                                onClick={() => {
+                                  item.openInNewTab?.();
+                                }}
+                              >
+                                Open In New Tab <Icon icon="external-link-alt" className="w-3" />
+                              </button>
+                            )}
                           </div>
                         </ListBoxItem>
                       )}

@@ -18,7 +18,6 @@ test('can requests that contain templated header keys and values', async ({ app,
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('headerTemplates').click();
 
   await page.getByLabel('Request Collection').getByTestId('pet2').press('Enter');
 

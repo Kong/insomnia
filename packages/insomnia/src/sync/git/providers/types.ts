@@ -188,5 +188,6 @@ export interface GitProviderOption {
   iconName?: IconProp;
   supportsOAuth: boolean;
   supportsFetchRepos: boolean;
+  supportsFetchEmails: boolean;
   supportsAutoRenew: boolean;
 }

@@ -6,6 +6,16 @@ import { test } from '../../playwright/test';
 test('Command palette - can switch between requests and workspaces', async ({ app, page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
+  // Import a document
+  const swaggerDoc = await loadFixture('swagger2.yaml');
+  await app.evaluate(async ({ clipboard }, swaggerDoc) => clipboard.writeText(swaggerDoc), swaggerDoc);
+
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  await page.getByTestId('project').click();
+
   // Import a collection
   const text = await loadFixture('smoke-test-collection.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
@@ -15,16 +25,6 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-  // Import a document
-  const swaggerDoc = await loadFixture('swagger2.yaml');
-  await app.evaluate(async ({ clipboard }, swaggerDoc) => clipboard.writeText(swaggerDoc), swaggerDoc);
-
-  await page.getByLabel('Import').click();
-  await page.locator('[data-test-id="import-from-clipboard"]').click();
-  await page.getByRole('button', { name: 'Scan' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-
-  await page.getByLabel('Smoke tests').click();
   await page
     .getByTestId('sends request with cookie and get cookie in response')
     .getByText('GET', { exact: true })
@@ -39,6 +39,7 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   await page.getByText('200 OK').click();
 
   await page.locator('body').press(process.platform === 'darwin' ? 'Meta+p' : 'Control+p');
+  await page.getByPlaceholder('Search and switch between').press('ArrowUp');
   await page.getByPlaceholder('Search and switch between').press('ArrowUp');
   await page.getByPlaceholder('Search and switch between').press('ArrowUp');
   await page.getByPlaceholder('Search and switch between').press('Enter');

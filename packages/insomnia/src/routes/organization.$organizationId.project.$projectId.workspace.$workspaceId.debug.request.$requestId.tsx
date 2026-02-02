@@ -1,4 +1,4 @@
-import { Outlet, redirect, useRouteLoaderData } from 'react-router';
+import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
 import type { BaseModel } from '~/models';
@@ -22,7 +22,7 @@ import { isSocketIORequest, type SocketIORequest } from '~/models/socket-io-requ
 import type { SocketIOResponse } from '~/models/socket-io-response';
 import { isWebSocketRequest, type WebSocketRequest } from '~/models/websocket-request';
 import { isWebSocketResponse, type WebSocketResponse } from '~/models/websocket-response';
-import { invariant } from '~/utils/invariant';
+import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 export default Outlet;
@@ -84,12 +84,33 @@ const getResponseModelName = (request: Request | WebSocketRequest | SocketIORequ
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, requestId, workspaceId } = params;
 
+  const activeWorkspace = await models.workspace.getById(workspaceId);
+  if (!activeWorkspace) {
+    showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+  }
+
   const activeRequest = await requestOperations.getById(requestId);
   if (!activeRequest) {
-    throw redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
+    showResourceNotFoundToast(`Request not found: ${requestId}`);
+    if (activeWorkspace.scope === 'mcp') {
+      // Redirect to the project page if it is an MCP workspace, as an MCP workspace must have one request.
+      throw redirect(
+        href('/organization/:organizationId/project/:projectId', {
+          organizationId,
+          projectId,
+        }),
+      );
+    }
+    throw redirect(
+      href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
+        organizationId,
+        projectId,
+        workspaceId,
+      }),
+    );
   }
-  const activeWorkspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-  invariant(activeWorkspaceMeta, 'Active workspace meta not found');
+  const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
   // NOTE: loaders shouldnt mutate data, this should be moved somewhere else
   await models.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: requestId });
   if (isGrpcRequestId(requestId)) {
@@ -102,7 +123,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     } as GrpcRequestLoaderData;
   }
   const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
-  invariant(activeRequestMeta, 'Request meta not found');
   const { filterResponsesByEnv } = await models.settings.get();
   const isGraphqlWsRequest = isGraphqlSubscriptionRequest(activeRequest);
 
