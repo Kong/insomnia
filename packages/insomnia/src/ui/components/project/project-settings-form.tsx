@@ -290,6 +290,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 gitRepository={gitRepository}
                 providerInfo={selectedProvider}
                 projectId={project!._id}
+                authorEmail={showEmailSelector ? undefined : selectedCredential?.author.email}
               />
               {showEmailSelector && (
                 <div className="flex flex-col gap-2">

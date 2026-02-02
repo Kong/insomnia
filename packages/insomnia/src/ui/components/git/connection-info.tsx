@@ -8,6 +8,7 @@ export const GitConnectionInfo = ({
   gitRepository,
   providerInfo,
   projectId,
+  authorEmail,
 }: {
   projectId?: string;
   gitRepository?: GitRepository;
@@ -15,6 +16,7 @@ export const GitConnectionInfo = ({
     iconName?: IconProp;
     displayName: string;
   };
+  authorEmail?: string;
 }) => {
   const [branch, setBranch] = useState('');
   useEffect(() => {
@@ -55,6 +57,12 @@ export const GitConnectionInfo = ({
           <div className="flex">
             <div className="w-[110px] font-semibold">Base Branch</div>
             <div>{branch}</div>
+          </div>
+        )}
+        {authorEmail && (
+          <div className="flex">
+            <div className="w-[110px] font-semibold">Author Email</div>
+            <div>{authorEmail}</div>
           </div>
         )}
       </div>
