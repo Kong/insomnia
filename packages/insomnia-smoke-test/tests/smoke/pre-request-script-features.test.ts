@@ -240,7 +240,6 @@ test.describe('pre-request features tests', () => {
     const responseBody = page.getByTestId('response-pane').getByTestId('CodeEditor').locator('.CodeMirror-line');
 
     await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
-    await page.getByTestId('request-pane').locator('header').getByText('http://127.0.0.1:4010/echo').click();
 
     // set request body
     await page.getByRole('tab', { name: 'Body' }).click();
@@ -393,7 +392,6 @@ test.describe('pre-request features tests', () => {
     await page.getByLabel('Request Collection').getByTestId('test proxies manipulation').press('Enter');
     await page.getByRole('tab', { name: 'Body' }).click();
     // send
-    await page.getByTestId('request-pane').locator('header').getByText('/foo').click();
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify
@@ -436,7 +434,6 @@ test.describe('pre-request features tests', () => {
       .press('Enter');
 
     // send
-    await page.getByTestId('request-pane').locator('header').getByText('http://127.0.0.1:4010/echo').click();
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     // verify
     await page.getByRole('tab', { name: 'Console' }).click();
@@ -466,7 +463,6 @@ test.describe('pre-request features tests', () => {
     await page.getByLabel('Request Collection').getByTestId('insomnia.test').press('Enter');
 
     // send
-    await page.getByTestId('request-pane').locator('header').getByText('http://127.0.0.1:4010/echo').click();
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify
@@ -486,7 +482,6 @@ test.describe('pre-request features tests', () => {
     await page.getByLabel('Request Collection').getByTestId('persist environment').press('Enter');
 
     // send
-    await page.getByTestId('request-pane').locator('header').getByText('http://127.0.0.1:4010/echo').click();
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify response
@@ -611,7 +606,6 @@ test.describe('pre-request features tests', () => {
     await page.getByLabel('Request Collection').getByTestId('testQueryParams').press('Enter');
 
     // send
-    await page.getByTestId('request-pane').locator('header').getByText('http://127.0.0.1:4010/echo').click();
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify response

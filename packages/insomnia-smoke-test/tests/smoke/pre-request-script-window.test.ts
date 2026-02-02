@@ -22,8 +22,6 @@ test.describe('test hidden window handling', () => {
     await page.locator('.app').press('Escape');
 
     await page.getByLabel('Request Collection').getByTestId('Long running task').press('Enter');
-
-    await page.getByTestId('request-pane').locator('header').getByText('http://127.0.0.1:4010/echo').click();
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     await page.getByRole('button', { name: 'Cancel Request' }).click();
@@ -60,7 +58,6 @@ test.describe('test hidden window handling', () => {
     await page.getByRole('button', { name: 'Modal Close Button' }).click();
 
     await page.getByLabel('Request Collection').getByTestId('Long running task - post').press('Enter');
-    await page.getByTestId('request-pane').locator('header').getByText('http://127.0.0.1:4010/echo').click();
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
 
     await page.getByText('Executing script timeout').click();
@@ -101,7 +98,6 @@ test.describe('test hidden window handling', () => {
 
     // send the request with infinite loop script
     await page.getByLabel('Request Collection').getByTestId('infinite loop').press('Enter');
-    await page.getByTestId('request-pane').locator('header').getByText('http://127.0.0.1:4010/echo').click();
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
     // await page.getByText('Timeout: Hidden browser window is not responding').click();
 

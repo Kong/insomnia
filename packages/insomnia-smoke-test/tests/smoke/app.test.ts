@@ -24,7 +24,7 @@ test('can send requests', async ({ app, page }) => {
 
   await page.getByLabel('Create in collection').click();
   await page.getByRole('menuitemradio', { name: 'From Curl' }).click();
-  await page.locator('.CodeMirror textarea').last().fill('curl --request GET --url http://127.0.0.1:4010/echo');
+  await page.locator('.CodeMirror textarea').fill('curl --request GET --url http://127.0.0.1:4010/echo');
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
   await expect
