@@ -104,8 +104,8 @@ const McpWorkspace = () => {
           <PaneHeader className="h-[41px]" />
           <PaneBody placeholder>
             <div className="pane__body--placeholder__cta text-center">
-              <p>No active request found in MCP client.</p>
-              <p>Please pull to sync MCP request.</p>
+              <p className="font-bold">Your local version of this MCP Client contains errors and cannot be opened.</p>
+              <p>Pull to see if there is a newer version on the Cloud, or create a new MCP Client.</p>
             </div>
           </PaneBody>
         </Pane>
