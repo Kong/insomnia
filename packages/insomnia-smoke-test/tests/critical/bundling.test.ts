@@ -58,7 +58,7 @@ test('can use external modules in scripts', async ({ app, page }) => {
 
   // select request
   await page.getByLabel('Request Collection').getByTestId('use external modules').press('Enter');
-
+  await page.getByTestId('request-pane').locator('header').getByText('http://127.0.0.1:4010/echo').click();
   // send
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
