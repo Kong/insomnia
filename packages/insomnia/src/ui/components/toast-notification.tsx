@@ -49,6 +49,20 @@ export const showToast = (content: RAToastContent, options?: { timeout?: number 
   return key;
 };
 
+export const showResourceNotFoundToast = (title: string) => {
+  showToast(
+    {
+      icon: 'circle-exclamation',
+      title,
+      description: 'Please confirm that the resource still exists and has not been deleted or moved.',
+      status: 'warning',
+    },
+    {
+      timeout: 5000,
+    },
+  );
+};
+
 const IconBorderStyleMap: Record<Status, string> = {
   info: 'border-(--color-bg)',
   success: 'border-[rgba(var(--color-success-rgb),1)]',
@@ -100,7 +114,7 @@ export const Toaster = () => (
                 {toast.content.time && <span className="text-xs text-(--hl)">{toast.content.time}</span>}
               </Text>
               {toast.content.description && (
-                <Text slot="description" className="text-xs">
+                <Text slot="description" className="max-w-md text-xs">
                   {toast.content.description}
                 </Text>
               )}

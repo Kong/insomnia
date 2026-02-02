@@ -50,7 +50,7 @@ export const Input = ({
             )}
           >
             {prefix && (
-              <span className="flex h-full items-center border-r border-(--hl-sm) bg-(--hl-xs) px-2 text-sm text-(--hl)">
+              <span className="flex h-full shrink-0 items-center whitespace-nowrap border-r border-(--hl-sm) bg-(--hl-xs) px-2 text-sm text-(--hl)">
                 {prefix}
               </span>
             )}

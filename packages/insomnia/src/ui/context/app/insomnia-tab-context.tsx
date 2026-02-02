@@ -17,7 +17,7 @@ interface ContextProps {
   currentOrgTabs: OrganizationTabs;
   appTabsRef?: React.MutableRefObject<InsomniaTabs | undefined>;
   closeTabById: (id: string) => void;
-  addTab: (tab: BaseTab) => void;
+  addTab: (tab: BaseTab, options?: { setActive?: boolean }) => void;
   changeActiveTab: (id: string, options?: { navigate: boolean }) => void;
   closeAllTabsUnderWorkspace?: (workspaceId: string) => void;
   closeAllTabsUnderProject?: (projectId: string) => void;
@@ -42,7 +42,7 @@ const InsomniaTabContext = createContext<ContextProps>({
   changeActiveTab: () => {},
 });
 
-type InsomniaTabs = Record<string, OrganizationTabs>;
+type InsomniaTabs = Record<string, OrganizationTabs & { tabHistory?: string[] }>;
 
 export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   const { organizationId, projectId } = useParams() as {
@@ -61,11 +61,28 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const updateInsomniaTabs = useCallback(
     ({ organizationId, tabList, activeTabId }: UpdateInsomniaTabParams) => {
+      const currentOrgTabs = appTabsRef.current?.[organizationId];
+      const currentTabHistory = currentOrgTabs?.tabHistory || [];
+      const currentActiveTabId = currentOrgTabs?.activeTabId;
+
+      // Centralized tabHistory management:
+      // 1. Remove any tab IDs that no longer exist in tabList
+      // 2. Add previous activeTabId to history if switching to a different tab
+      const tabIds = new Set(tabList.map(t => t.id));
+      let newTabHistory = currentTabHistory.filter(id => tabIds.has(id));
+
+      // If activeTabId changed, add the previous one to history
+      if (currentActiveTabId && currentActiveTabId !== activeTabId && tabIds.has(currentActiveTabId)) {
+        // Remove if already exists to avoid duplicates, then prepend
+        newTabHistory = [currentActiveTabId, ...newTabHistory.filter(id => id !== currentActiveTabId)];
+      }
+
       const newState = {
         ...appTabsRef.current,
         [organizationId]: {
           tabList,
           activeTabId,
+          tabHistory: newTabHistory,
         },
       };
       appTabsRef.current = newState;
@@ -75,27 +92,63 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   );
 
   const addTab = useCallback(
-    (tab: BaseTab) => {
+    (tab: BaseTab, options: { setActive?: boolean } = { setActive: true }) => {
       const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
+      const existingTabIndex = currentTabs.tabList.findIndex(t => t.id === tab.id);
 
-      if (tab.temporary) {
-        // If the tab is temporary, replace the existing temporary tab
-        const temporaryIndex = currentTabs.tabList.findIndex(t => t.temporary);
-        if (temporaryIndex !== -1) {
-          const newTabList = [...currentTabs.tabList];
-          newTabList.splice(temporaryIndex, 1, tab);
+      // If tab already exists, update its properties if needed
+      if (existingTabIndex !== -1) {
+        const existingTab = currentTabs.tabList[existingTabIndex];
+
+        // Only allow temporary to change from true -> false (make permanent), never false -> true
+        // This prevents a permanent tab from accidentally becoming temporary again
+        const shouldUpdateTemporary = existingTab.temporary === true && tab.temporary === false;
+        const shouldUpdateName = existingTab.name !== tab.name;
+        const needsUpdate = shouldUpdateTemporary || shouldUpdateName;
+        const needsActivate = options.setActive && currentTabs.activeTabId !== tab.id;
+
+        if (needsUpdate || needsActivate) {
+          const newTabList = needsUpdate
+            ? currentTabs.tabList.map((t, i) =>
+                i === existingTabIndex
+                  ? {
+                      ...t,
+                      name: tab.name,
+                      // Only update temporary if changing from true to false
+                      temporary: shouldUpdateTemporary ? false : t.temporary,
+                    }
+                  : t,
+              )
+            : currentTabs.tabList;
+
           updateInsomniaTabs({
             organizationId,
             tabList: newTabList,
-            activeTabId: tab.id,
+            activeTabId: needsActivate ? tab.id : currentTabs.activeTabId,
           });
-          return;
         }
+        return;
       }
+
+      // Calculate new tabList for new tab
+      let newTabList: BaseTab[];
+      const temporaryIndex = currentTabs.tabList.findIndex(t => t.temporary);
+      if (tab.temporary && temporaryIndex !== -1) {
+        // Replace existing temporary tab
+        newTabList = [...currentTabs.tabList];
+        newTabList[temporaryIndex] = tab;
+      } else {
+        // No existing temporary tab or not a temporary tab, just append
+        newTabList = [...currentTabs.tabList, tab];
+      }
+
+      // Calculate activeTabId
+      const activeTabId = options.setActive ? tab.id : currentTabs.activeTabId;
+
       updateInsomniaTabs({
         organizationId,
-        tabList: [...currentTabs.tabList, tab],
-        activeTabId: tab.id,
+        tabList: newTabList,
+        activeTabId,
       });
     },
     [organizationId, updateInsomniaTabs],
@@ -127,16 +180,31 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
         return;
       }
       const newTabList = currentTabs.tabList.filter(tab => tab.id !== id);
+      const tabHistory = currentTabs.tabHistory || [];
+
       if (currentTabs.activeTabId === id) {
-        const url = newTabList[Math.max(index - 1, 0)]?.url;
-        navigate(url);
+        // Find the last active tab from history that still exists
+        const lastActiveTabId = tabHistory.find(tabId => newTabList.some(tab => tab.id === tabId));
+        const nextActiveTab = lastActiveTabId
+          ? newTabList.find(tab => tab.id === lastActiveTabId)
+          : newTabList[Math.max(index - 1, 0)];
+
+        if (nextActiveTab?.url) {
+          navigate(nextActiveTab.url);
+        }
+
+        updateInsomniaTabs({
+          organizationId,
+          tabList: newTabList,
+          activeTabId: nextActiveTab?.id || '',
+        });
+      } else {
+        updateInsomniaTabs({
+          organizationId,
+          tabList: newTabList,
+          activeTabId: currentTabs.activeTabId as string,
+        });
       }
-      updateInsomniaTabs({
-        organizationId,
-        tabList: newTabList,
-        activeTabId:
-          currentTabs.activeTabId === id ? newTabList[Math.max(index - 1, 0)]?.id : (currentTabs.activeTabId as string),
-      });
       uiEventBus.emit('CLOSE_TAB', organizationId, [id]);
     },
     [navigate, organizationId, projectId, updateInsomniaTabs],
@@ -283,9 +351,6 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   const changeActiveTab = useCallback(
     (id: string, options = { navigate: true }) => {
       const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
-      if (!currentTabs) {
-        return;
-      }
       const tab = currentTabs?.tabList.find(tab => tab.id === id);
       if (options?.navigate && tab?.url) {
         navigate(tab.url);
