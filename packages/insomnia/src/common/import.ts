@@ -603,8 +603,8 @@ export const importResourcesToNewWorkspace = async ({
   const resources = resourceCacheItem.resources;
   const ResourceIdMap = new Map();
   let newWorkspace: Workspace;
-  // in order to support import from api spec yaml
-  if (resources.find(isApiSpec)) {
+  // support import from both insomnia export and api spec yaml
+  if (resources.find(isApiSpec) || isApiSpecImport(resourceCacheItem.importer)) {
     newWorkspace = await models.workspace.create({
       name: workspaceToImport?.name,
       scope: 'design',
