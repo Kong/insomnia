@@ -604,28 +604,18 @@ export const importResourcesToNewWorkspace = async ({
   const ResourceIdMap = new Map();
   let newWorkspace: Workspace;
   // in order to support import from api spec yaml
-  if (resourceCacheItem?.importer?.id && isApiSpecImport(resourceCacheItem.importer)) {
+  if (resources.find(isApiSpec)) {
     newWorkspace = await models.workspace.create({
       name: workspaceToImport?.name,
       scope: 'design',
       parentId: projectId,
     });
 
-    const apiSpec = await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
+    await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
       contents: resourceCacheItem.content as string | undefined,
       contentType: 'yaml',
       fileName: workspaceToImport?.name,
     });
-    const hasApiSpec = newWorkspace.scope === 'design' && isApiSpec(apiSpec);
-    // if workspace is not in the resources, there will be no apiSpec, if resource type is set to api spec this could cause a bug
-    if (hasApiSpec) {
-      // TODO: will overwrite existing api spec, not needed after migrate hack is removed
-      await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
-        contents: apiSpec.contents,
-        contentType: apiSpec.contentType,
-        fileName: workspaceToImport?.name,
-      });
-    }
   } else {
     newWorkspace = await models.workspace.create({
       name: workspaceToImport?.name || 'Imported Workspace',
@@ -700,8 +690,13 @@ export const importResourcesToNewWorkspace = async ({
 
   // Make sure the new workspace has required resources like base environment, cookie jar and workspaceMeta
   await models.environment.getOrCreateForParentId(newWorkspace._id);
-  await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
 
+  if (isGitProject(project)) {
+    await models.workspaceMeta.update(workspaceMeta, {
+      gitFilePath: `${newWorkspace.name}-${newWorkspace._id}.yaml`,
+    });
+  }
   // we sync the new workspace to the cloud in workspaceLoader when user enters the workspace
   // since we won't navigate to the workspace automatically after import
   // here we push to the cloud programmatically

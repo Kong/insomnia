@@ -42,6 +42,7 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   await page.getByPlaceholder('Search and switch between').press('ArrowUp');
   await page.getByPlaceholder('Search and switch between').press('ArrowUp');
   await page.getByPlaceholder('Search and switch between').press('ArrowUp');
+  await page.getByPlaceholder('Search and switch between').press('ArrowUp');
   await page.getByPlaceholder('Search and switch between').press('Enter');
   await expect
     .soft(page.getByTestId('workspace-context-dropdown').locator('span'))
