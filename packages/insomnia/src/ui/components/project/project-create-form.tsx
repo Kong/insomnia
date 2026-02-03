@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { GitCredentials } from '~/models/git-credentials';
+import type { GitCredentialsV2 } from '~/models/git-credentials';
 import { type StorageRules } from '~/models/organization';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
@@ -24,7 +24,7 @@ interface Props {
   defaultProjectName?: string;
   onCancel?(): void;
   activeViewObj?: ReturnType<typeof useActiveView>;
-  credentials: GitCredentials[];
+  credentials: GitCredentialsV2[];
   providers: GitProviderOption[];
 }
 
