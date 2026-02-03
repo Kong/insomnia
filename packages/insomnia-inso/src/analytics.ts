@@ -6,7 +6,8 @@ import type { Settings } from 'insomnia/src/models/settings';
 import { v4 as uuidv4 } from 'uuid';
 
 import packageJson from '../package.json';
-import { readLocalSettings } from './db/settings-reader';
+import neDbAdapter from './db/adapters/ne-db-adapter';
+import { getAppDataDir, getDefaultProductName } from './util';
 
 export enum InsoEvent {
   runTest = 'inso_run_test',
@@ -16,22 +17,9 @@ export enum InsoEvent {
   script = 'inso_script',
 }
 
-let analyticsClient: Analytics | null = null;
+const analyticsClient = new Analytics({ writeKey: getSegmentWriteKey() });
 let deviceId: string | null = null;
 let localSettings: Settings | null = null;
-
-const getAnalyticsClient = (): Analytics | null => {
-  if (analyticsClient) {
-    return analyticsClient;
-  }
-
-  try {
-    analyticsClient = new Analytics({ writeKey: getSegmentWriteKey() });
-    return analyticsClient;
-  } catch {
-    return null;
-  }
-};
 
 const getLocalSettings = async (): Promise<Settings | null> => {
   if (localSettings) {
@@ -39,7 +27,9 @@ const getLocalSettings = async (): Promise<Settings | null> => {
   }
 
   try {
-    localSettings = await readLocalSettings();
+    const appDataDir = getAppDataDir(getDefaultProductName());
+    const db = await neDbAdapter(appDataDir, ['Settings']);
+    localSettings = db?.Settings?.[0] ?? null;
     return localSettings;
   } catch {
     return null;
@@ -82,11 +72,6 @@ export const trackInsoEvent = async (event: InsoEvent, properties?: Record<strin
     return;
   }
 
-  const client = getAnalyticsClient();
-  if (!client) {
-    return;
-  }
-
   const settings = await getLocalSettings();
   if (settings && !settings.enableAnalytics) {
     return;
@@ -96,7 +81,7 @@ export const trackInsoEvent = async (event: InsoEvent, properties?: Record<strin
     const anonymousId = await getDeviceId();
     const version = process.env.VERSION || packageJson.version;
 
-    client.track(
+    analyticsClient.track(
       {
         event,
         anonymousId,
@@ -125,13 +110,8 @@ export const trackInsoEvent = async (event: InsoEvent, properties?: Record<strin
 };
 
 export const flushAnalytics = async (): Promise<void> => {
-  const client = getAnalyticsClient();
-  if (!client) {
-    return;
-  }
-
   try {
-    await client.closeAndFlush({ timeout: 5000 });
+    await analyticsClient.closeAndFlush({ timeout: 5000 });
   } catch {
     // Silently fail
   }

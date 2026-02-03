@@ -91,8 +91,6 @@ export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: 
   return {};
 };
 
-export { InsoError };
-
 const localAppDir = getAppDataDir(getDefaultProductName());
 
 export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string; file: string }) => {

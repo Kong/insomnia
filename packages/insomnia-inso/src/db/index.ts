@@ -7,8 +7,7 @@ import neDbAdapter from './adapters/ne-db-adapter';
 import type { Database } from './types';
 import { emptyDb } from './types';
 
-export type { Database, DbAdapter } from './types';
-export { emptyDb };
+export type { Database } from './types';
 
 interface Options {
   pathToSearch: string;
