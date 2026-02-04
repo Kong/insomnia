@@ -249,11 +249,11 @@ const importFolderItem =
   };
 
 /**
- * Return path with parameters replaced by insomnia variables
+ * Return path with parameters replaced by insomnia path parameters
  *
- * I.e. "/foo/:bar" => "/foo/{{ bar }}"
+ * I.e. "/foo/{bar}" => "/foo/:bar"
  */
-const pathWithParamsAsVariables = (path?: string) => path?.replace(VARIABLE_SEARCH_VALUE, '{{ _.$1 }}') ?? '';
+const pathWithParamsAsPathParameters = (path?: string) => path?.replace(VARIABLE_SEARCH_VALUE, ':$1') ?? '';
 
 /**
  * Return Insomnia request
@@ -279,7 +279,7 @@ const importRequest = (
     parentId: parentId,
     name,
     method: endpointSchema.method?.toUpperCase(),
-    url: `{{ _.base_url }}${pathWithParamsAsVariables(endpointSchema.path)}`,
+    url: `{{ _.base_url }}${pathWithParamsAsPathParameters(endpointSchema.path)}`,
     body: body,
     description: endpointSchema.description || '',
     headers: [...paramHeaders, ...securityHeaders],
