@@ -394,8 +394,8 @@ const ScanResourcesForm = ({
             <div className="form-control form-control--outlined">
               <label>
                 cURL:
-                <input
-                  type="text"
+                <textarea
+                  className="h-[200px] resize-none font-mono"
                   name="curl"
                   defaultValue={from?.type === 'curl' ? from.defaultValue : undefined}
                   placeholder="curl --request GET --url http://insomnia.rest/"
