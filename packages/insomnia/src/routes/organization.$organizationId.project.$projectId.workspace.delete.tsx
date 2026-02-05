@@ -67,7 +67,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   const workspaceId = formData.get('workspaceId');
   const localOnly = formData.get('localOnly') === 'true';
-  console.log(`localOnly: ${localOnly}`);
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
   const workspace = await models.workspace.getById(workspaceId);
