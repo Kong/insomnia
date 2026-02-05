@@ -4,13 +4,28 @@ import { Button, Input, Text } from 'react-aria-components';
 import type { LLMBackend, LLMConfig } from '~/main/llm-config-service';
 import { Icon } from '~/ui/components/icon';
 
-interface AnthropicModelData {
-  type: string;
+const URL_BACKEND: LLMBackend = 'url';
+
+interface LLMModelData {
   id: string;
-  display_name: string;
-  created_at: string;
+  object: string;
+  created?: number;
+  owned_by?: string;
 }
-export const Claude = ({
+
+const validateUrl = (urlString: string): boolean => {
+  if (!urlString) {
+    return false;
+  }
+  try {
+    const parsedUrl = new URL(urlString);
+    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+export const Url = ({
   saveLLMSettings,
   configuredLLMs,
   currentLLM,
@@ -21,68 +36,111 @@ export const Claude = ({
   deactivateCurrentLLM: () => Promise<void>;
   configuredLLMs: LLMConfig[];
 }) => {
-  const apiKeyId = useId();
-  const [apiKey, setApiKey] = useState('');
+  const urlId = useId();
+  const [url, setUrl] = useState('');
   const [isLoadingModels, setIsLoadingModels] = useState(false);
-  const [availableModels, setAvailableModels] = useState<AnthropicModelData[]>([]);
+  const [availableModels, setAvailableModels] = useState<LLMModelData[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAnthropicAvailableModels = useCallback(
-    async (apiKeyOverride?: string) => {
-      const realApiKey = apiKeyOverride || apiKey;
+  const fetchAvailableModels = useCallback(
+    async (urlOverride?: string) => {
+      const realUrl = urlOverride || url;
+      if (!validateUrl(realUrl)) {
+        setError('Please enter a valid HTTP or HTTPS URL.');
+        return;
+      }
+
       try {
         setIsLoadingModels(true);
         setError(null);
-        const response = await fetch('https://api.anthropic.com/v1/models', {
-          headers: {
-            'x-api-key': realApiKey,
-            'anthropic-version': '2023-06-01',
-          },
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10_000);
+        const modelsUrl = new URL('models', realUrl.endsWith('/') ? realUrl : `${realUrl}/`);
+        const response = await fetch(modelsUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
         if (!response.ok) {
-          // 400, 401, 403 typically indicate invalid credentials
           if (response.status === 400 || response.status === 401 || response.status === 403) {
-            setError('The API token you have entered is invalid.');
+            setError('Failed to authenticate with the LLM URL.');
           } else {
             setError('Failed to load models. Please try again.');
           }
           return;
         }
-        const data = await response.json();
-
-        if (data?.data?.length) {
-          setAvailableModels(data.data as AnthropicModelData[]);
-          if (configuredLLMs.length === 1 && configuredLLMs[0].apiKey !== realApiKey) {
-            saveLLMSettings(false, 'claude', { apiKey: realApiKey });
-          }
+        let data: any;
+        try {
+          data = await response.json();
+        } catch {
+          setError('Invalid response from server. Expected JSON.');
+          return;
         }
+
+        if (!data?.data?.length) {
+          setError('No models found at this URL.');
+          return;
+        }
+
+        const models = (data.data as LLMModelData[]).filter(model => model.object === 'model');
+        setAvailableModels(models);
+        saveLLMSettings(false, URL_BACKEND, { url: realUrl, model: 'default' });
       } catch (error) {
-        console.error('Error fetching Claude models:', error);
-        setError('Network error. Please check your connection and try again.');
+        console.error('Error fetching models:', error);
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          setError('Request timed out. Please check the URL and try again.');
+        } else {
+          setError('Network error. Please check your connection and try again.');
+        }
       } finally {
         setIsLoadingModels(false);
       }
     },
-    [saveLLMSettings, apiKey, configuredLLMs],
+    [saveLLMSettings, url],
   );
 
   useEffect(() => {
-    if (configuredLLMs.length === 1) {
-      setSelectedModel(configuredLLMs[0].model);
-      const key = configuredLLMs[0].apiKey || '';
-      setApiKey(key);
+    if (configuredLLMs.length > 0) {
+      if (configuredLLMs[0].url) {
+        setUrl(configuredLLMs[0].url);
+      }
+      if (configuredLLMs[0].model) {
+        setSelectedModel(configuredLLMs[0].model);
+      }
     }
-  }, [configuredLLMs]);
+    // Also check currentLLM
+    if (currentLLM?.backend === URL_BACKEND) {
+      if (currentLLM.url) {
+        setUrl(currentLLM.url);
+      }
+      if (currentLLM.model) {
+        setSelectedModel(currentLLM.model);
+      }
+    }
+  }, [configuredLLMs, currentLLM]);
 
   const hasChanges = useMemo(() => {
-    return selectedModel !== currentLLM?.model || apiKey !== currentLLM?.apiKey;
-  }, [selectedModel, currentLLM, apiKey]);
+    return url !== currentLLM?.url || selectedModel !== currentLLM?.model;
+  }, [url, selectedModel, currentLLM]);
 
   const modelsId = useId();
 
+  const handleActivate = () => {
+    setError(null);
+
+    if (!validateUrl(url)) {
+      setError('Please enter a valid HTTP or HTTPS URL.');
+      return;
+    }
+
+    if (!selectedModel) {
+      setError('Please select a model.');
+      return;
+    }
+
+    saveLLMSettings(true, URL_BACKEND, { url, model: selectedModel } as Partial<LLMConfig>);
+  };
+
   // Extracted conditions for clearer rendering logic
-  const isCurrentBackend = currentLLM?.backend === 'claude';
+  const isCurrentBackend = currentLLM?.backend === URL_BACKEND;
   const hasLoadedModels = availableModels.length > 0;
   const showActiveModel = isCurrentBackend && !hasLoadedModels;
   const showModelSelector = hasLoadedModels;
@@ -91,26 +149,20 @@ export const Claude = ({
   return (
     <div className="flex w-full flex-col gap-2">
       <div className="form-control form-control--outlined">
-        <label htmlFor={apiKeyId}>API Token</label>
-        <p className="text-xs text-(--hl)">
-          You can retrieve a token from Anthropic{' '}
-          <a href="https://platform.claude.com/docs/en/api/overview#prerequisites" className="underline">
-            here
-          </a>
-          .
-        </p>
+        <label htmlFor={urlId}>LLM URL</label>
+        <p className="text-xs text-(--hl)">Specify a URL to a public or self-hosted LLM endpoint.</p>
         <div className="flex flex-row gap-2">
           <Input
-            id={apiKeyId}
-            type="password"
-            placeholder="sk-ant-FAKE1234EXAMPLEKEYNOTREAL987654321"
-            value={apiKey}
-            onChange={e => setApiKey(e.target.value)}
+            id={urlId}
+            type="text"
+            placeholder="https://your-llm.example/v1"
+            value={url}
+            onChange={e => setUrl(e.target.value)}
           />
           <Button
             className="border-md rounded-md border border-solid border-(--hl-md) px-4 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
-            isDisabled={isLoadingModels || !apiKey}
-            onPress={() => fetchAnthropicAvailableModels()}
+            isDisabled={isLoadingModels || !url}
+            onPress={() => fetchAvailableModels()}
           >
             {isLoadingModels ? (
               <span className="flex items-center gap-2">
@@ -136,7 +188,7 @@ export const Claude = ({
             <Button
               className="border-md m-0 rounded-md border border-solid border-(--hl-md) px-3 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
               isDisabled={isLoadingModels}
-              onPress={() => fetchAnthropicAvailableModels(currentLLM.apiKey)}
+              onPress={() => fetchAvailableModels(currentLLM.url)}
             >
               {isLoadingModels ? (
                 <span className="flex items-center gap-2">
@@ -156,7 +208,7 @@ export const Claude = ({
               <option value="">Select a model</option>
               {availableModels.map(model => (
                 <option key={model.id} value={model.id}>
-                  {model.display_name}
+                  {model.id}
                 </option>
               ))}
             </select>
@@ -167,7 +219,7 @@ export const Claude = ({
             <>
               <Button
                 isDisabled={!hasLoadedModels || !selectedModel || (isCurrentBackend && !hasChanges)}
-                onPress={() => saveLLMSettings(true, 'claude', { model: selectedModel, apiKey })}
+                onPress={handleActivate}
                 className={`border-md rounded-md border border-solid border-(--hl-md) px-4 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset ${!hasLoadedModels || (isCurrentBackend && !hasChanges) ? 'opacity-50' : ''}`}
               >
                 Activate

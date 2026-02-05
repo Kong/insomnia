@@ -81,7 +81,7 @@ export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 24;
 
 export const ACCEPTED_NODE_CA_FILE_EXTS = ['.pem', '.crt', '.cer', '.p12'];
 
-export const LLM_BACKENDS = ['gguf', 'claude', 'openai', 'gemini'] as const;
+export const LLM_BACKENDS = ['gguf', 'claude', 'openai', 'gemini', 'url'] as const;
 
 // Available editor key map
 export enum EditorKeyMap {
