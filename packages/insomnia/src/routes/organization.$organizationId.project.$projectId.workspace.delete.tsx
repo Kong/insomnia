@@ -10,7 +10,7 @@ import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.delete';
 
-async function deleteCloudSyncWorkspaceCloud(workspace: Workspace, project: Project, localOnly: boolean) {
+async function deleteCloudSyncWorkspace(workspace: Workspace, project: Project, localOnly: boolean) {
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
   const isGitSync = !!workspaceMeta.gitRepositoryId;
 
@@ -42,7 +42,7 @@ async function deleteWorkspace(workspace: Workspace | null, project: Project | n
   invariant(workspace, 'Workspace not found');
   invariant(project, 'Project not found');
 
-  const ret = await deleteCloudSyncWorkspaceCloud(workspace, project, localOnly);
+  const ret = await deleteCloudSyncWorkspace(workspace, project, localOnly);
   if (ret?.error) {
     return ret;
   }
