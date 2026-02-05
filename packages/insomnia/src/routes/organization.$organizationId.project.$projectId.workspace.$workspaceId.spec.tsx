@@ -353,6 +353,18 @@ const Component = ({ params }: Route.ComponentProps) => {
     showCookiesEditor: () => setIsCookieModalOpen(true),
   });
 
+  const specFormat = useMemo((): 'json' | 'yaml' | null => {
+    if (!apiSpec.contents?.trim() || !parsedSpec) {
+      return null;
+    }
+    try {
+      JSON.parse(apiSpec.contents);
+      return 'json';
+    } catch {
+      return 'yaml';
+    }
+  }, [apiSpec.contents, parsedSpec]);
+
   const specActionList: SpecActionItem[] = [
     {
       id: 'generate-request-collection',
@@ -380,6 +392,25 @@ const Component = ({ params }: Route.ComponentProps) => {
         setIsSpecPaneOpen(!isSpecPaneOpen);
       },
     },
+    ...(specFormat === 'json' ? [{
+      id: 'convert-to-yaml',
+      name: 'Convert to YAML',
+      icon: <Icon className="w-3" icon="sync-alt" />,
+      action: () => {
+        const contents = YAML.stringify(JSON.parse(apiSpec.contents));
+        editor.current?.setValue(contents);
+        updateApiSpec({ organizationId, projectId, workspaceId, contents });
+      },
+    }] : specFormat === 'yaml' ? [{
+      id: 'convert-to-json',
+      name: 'Convert to JSON',
+      icon: <Icon className="w-3" icon="sync-alt" />,
+      action: () => {
+        const contents = JSON.stringify(YAML.parse(apiSpec.contents), null, 2);
+        editor.current?.setValue(contents);
+        updateApiSpec({ organizationId, projectId, workspaceId, contents });
+      },
+    }] : []),
   ];
 
   const disabledKeys = specActionList.filter(item => item.isDisabled).map(item => item.id);
