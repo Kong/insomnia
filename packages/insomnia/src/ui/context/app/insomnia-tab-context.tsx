@@ -2,10 +2,10 @@ import React, { createContext, type FC, type PropsWithChildren, useCallback, use
 import { useNavigate, useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { isScratchpadOrganizationId } from '../../../models/organization';
-import type { BaseTab } from '../../components/tabs/tab';
-import type { OrganizationTabs } from '../../components/tabs/tab-list';
-import uiEventBus from '../../event-bus';
+import { isScratchpadOrganizationId } from '~/models/organization';
+import type { BaseTab } from '~/ui/components/tabs/tab';
+import type { OrganizationTabs } from '~/ui/components/tabs/tab-list';
+import uiEventBus from '~/ui/event-bus';
 
 interface UpdateInsomniaTabParams {
   organizationId: string;
@@ -96,59 +96,44 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
       const existingTabIndex = currentTabs.tabList.findIndex(t => t.id === tab.id);
 
-      // If tab already exists, update its properties if needed
+      // If tab already exists, just activate it if needed (no duplicate tabs)
       if (existingTabIndex !== -1) {
         const existingTab = currentTabs.tabList[existingTabIndex];
-
-        // Only allow temporary to change from true -> false (make permanent), never false -> true
-        // This prevents a permanent tab from accidentally becoming temporary again
-        const shouldUpdateTemporary = existingTab.temporary === true && tab.temporary === false;
         const shouldUpdateName = existingTab.name !== tab.name;
-        const needsUpdate = shouldUpdateTemporary || shouldUpdateName;
         const needsActivate = options.setActive && currentTabs.activeTabId !== tab.id;
 
-        if (needsUpdate || needsActivate) {
-          const newTabList = needsUpdate
-            ? currentTabs.tabList.map((t, i) =>
-                i === existingTabIndex
-                  ? {
-                      ...t,
-                      name: tab.name,
-                      // Only update temporary if changing from true to false
-                      temporary: shouldUpdateTemporary ? false : t.temporary,
-                    }
-                  : t,
-              )
-            : currentTabs.tabList;
+        let newTabList = currentTabs.tabList;
+        let newActiveTabId = currentTabs.activeTabId;
 
-          updateInsomniaTabs({
-            organizationId,
-            tabList: newTabList,
-            activeTabId: needsActivate ? tab.id : currentTabs.activeTabId,
-          });
+        if (shouldUpdateName) {
+          newTabList = currentTabs.tabList.map((t, i) =>
+            i === existingTabIndex
+              ? {
+                  ...t,
+                  name: tab.name,
+                }
+              : t,
+          );
         }
+
+        if (needsActivate) {
+          newActiveTabId = tab.id;
+        }
+
+        updateInsomniaTabs({
+          organizationId,
+          tabList: newTabList,
+          activeTabId: newActiveTabId,
+        });
         return;
       }
 
-      // Calculate new tabList for new tab
-      let newTabList: BaseTab[];
-      const temporaryIndex = currentTabs.tabList.findIndex(t => t.temporary);
-      if (tab.temporary && temporaryIndex !== -1) {
-        // Replace existing temporary tab
-        newTabList = [...currentTabs.tabList];
-        newTabList[temporaryIndex] = tab;
-      } else {
-        // No existing temporary tab or not a temporary tab, just append
-        newTabList = [...currentTabs.tabList, tab];
-      }
-
-      // Calculate activeTabId
-      const activeTabId = options.setActive ? tab.id : currentTabs.activeTabId;
+      // Append new tab to the list
+      const newTabList = [...currentTabs.tabList, tab];
 
       updateInsomniaTabs({
         organizationId,
         tabList: newTabList,
-        activeTabId,
       });
     },
     [organizationId, updateInsomniaTabs],

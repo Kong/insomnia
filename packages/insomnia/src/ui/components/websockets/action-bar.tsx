@@ -12,7 +12,6 @@ import type { SocketIORequest } from '../../../models/socket-io-request';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
-import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { DisconnectButton } from './disconnect-button';
 
@@ -43,8 +42,6 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
       workspaceId: string;
       requestId: string;
     };
-
-    const { updateTabById } = useInsomniaTabContext();
 
     const connect = useCallback(
       (connectParams: ConnectActionParams) => {
@@ -107,7 +104,6 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
     }, [environmentId, request, workspaceId]);
 
     const handleSubmit = useCallback(async () => {
-      updateTabById?.(request._id, { temporary: false });
       if (isOpen) {
         if (request.type === 'WebSocketRequest') {
           // If the request is already open, close it
@@ -119,7 +115,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
       }
       const connectParams = await generateConnectParams();
       connectParams && connect(connectParams);
-    }, [connect, generateConnectParams, isOpen, request._id, request.type, updateTabById]);
+    }, [connect, generateConnectParams, isOpen, request._id, request.type]);
 
     const setUrl = useCallback(
       (url: string) => {

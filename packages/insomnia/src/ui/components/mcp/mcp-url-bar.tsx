@@ -29,7 +29,6 @@ import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { getDataFromKVPair } from '../../../models/environment';
 import { MCP_TRANSPORT_TYPES, type McpRequest, TRANSPORT_TYPES } from '../../../models/mcp-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
-import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { DisconnectButton } from '../websockets/disconnect-button';
@@ -80,8 +79,6 @@ export const McpUrlActionBar = ({
     projectId: string;
     workspaceId: string;
   };
-
-  const { updateTabById } = useInsomniaTabContext();
 
   const connect = useCallback(
     (connectParams: ConnectActionParams) => {
@@ -154,7 +151,6 @@ export const McpUrlActionBar = ({
       return;
     }
 
-    updateTabById?.(request._id, { temporary: false });
     if (isConnected) {
       window.main.mcp.close({ requestId: request._id });
       return;
@@ -171,7 +167,7 @@ export const McpUrlActionBar = ({
     }
 
     connectParams && connect(connectParams);
-  }, [connect, generateConnectParams, isConnected, isConnecting, project, request, updateTabById]);
+  }, [connect, generateConnectParams, isConnected, isConnecting, project, request]);
 
   const handleSubmitRef = useLatest(handleSubmit);
 

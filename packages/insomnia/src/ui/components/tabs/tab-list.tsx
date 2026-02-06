@@ -16,6 +16,7 @@ import { isGrpcRequest } from '~/models/grpc-request';
 import { isSocketIORequest } from '~/models/socket-io-request';
 import { isWebSocketRequest } from '~/models/websocket-request';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
+import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
@@ -29,7 +30,7 @@ import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';
 import { Icon } from '../icon';
 import { AddRequestToCollectionModal } from '../modals/add-request-to-collection-modal';
 import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
-import { type BaseTab, InsomniaTab, type TabType } from './tab';
+import { type BaseTab, InsomniaTab } from './tab';
 
 export interface OrganizationTabs {
   tabList: BaseTab[];
@@ -41,20 +42,6 @@ export const enum TAB_CONTEXT_MENU_COMMAND {
   CLOSE_OTHERS = 'Close Other Tabs',
 }
 
-export const TAB_ROUTER_PATH: Record<TabType, string> = {
-  collection: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug',
-  folder: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request-group/:requestGroupId',
-  request: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId',
-  environment: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment',
-  mockServer: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server',
-  runner: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/runner',
-  document: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/spec',
-  mockRoute:
-    '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId',
-  test: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test',
-  testSuite: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/*',
-};
-
 export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' }) => {
   const [showAddRequestModal, setShowAddRequestModal] = useState(false);
   const [isOverFlow, setIsOverFlow] = useState(false);
@@ -63,6 +50,8 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
   const newRequestFetcher = useRequestNewActionFetcher();
   const { organizationId, projectId } = useParams();
+
+  useInsomniaTab({ organizationId: organizationId || '' });
 
   const {
     changeActiveTab,

@@ -15,15 +15,7 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import {
-  NavLink,
-  Route as RouteComponent,
-  Routes,
-  useFetchers,
-  useLoaderData,
-  useNavigate,
-  useParams,
-} from 'react-router';
+import { NavLink, Route as RouteComponent, Routes, useFetchers, useLoaderData, useParams } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { database } from '~/common/database';
@@ -52,14 +44,12 @@ import { CertificatesModal } from '~/ui/components/modals/workspace-certificates
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
-import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
+import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test';
 import { useWorkspaceLoaderData } from './organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import TestSuiteComponent, {
-  useUnitTestSuiteLoaderData,
-} from './organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId';
+import TestSuiteComponent from './organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { workspaceId } = params;
@@ -95,8 +85,7 @@ const Component = () => {
 
   const { activeProject, activeWorkspace, activeCookieJar, caCertificate, clientCertificates } =
     useWorkspaceLoaderData()!;
-
-  const { unitTestSuite } = useUnitTestSuiteLoaderData() || {};
+  const tabNavigate = useTabNavigate();
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
@@ -111,8 +100,24 @@ const Component = () => {
     .filter(fetcher => fetcher.formAction?.includes('run-all-tests') || fetcher.formAction?.includes('run'))
     .some(({ state }) => state !== 'idle');
 
-  const navigate = useNavigate();
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
+
+  const navigateToTestSuite = (suiteId: string, withTab?: boolean) => {
+    const suite = unitTestSuites.find(s => s._id === suiteId);
+    if (!suite) {
+      return;
+    }
+
+    tabNavigate(
+      {
+        organization: organizationId,
+        project: activeProject,
+        workspace: activeWorkspace,
+        item: suite,
+      },
+      { withTab, navigateTo: true },
+    );
+  };
 
   function toggleSidebar() {
     const layout = sidebarPanelRef.current?.getLayout();
@@ -145,6 +150,14 @@ const Component = () => {
     icon: IconName;
     action: (suiteId: string, suiteName: string) => void;
   }[] = [
+    {
+      id: 'open-in-new-tab',
+      name: 'Open in New Tab',
+      icon: 'external-link-alt',
+      action: suiteId => {
+        navigateToTestSuite(suiteId, true);
+      },
+    },
     {
       id: 'run-tests',
       name: 'Run tests',
@@ -267,15 +280,6 @@ const Component = () => {
     };
   }, [settings.forceVerticalLayout, direction]);
 
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    unitTestSuite,
-    activeProject,
-  });
-
   return (
     <PanelGroup
       ref={sidebarPanelRef}
@@ -379,9 +383,7 @@ const Component = () => {
               onSelectionChange={keys => {
                 if (keys !== 'all') {
                   const value = keys.values().next().value;
-                  navigate({
-                    pathname: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${value}`,
-                  });
+                  value && navigateToTestSuite(value.toString(), true);
                 }
               }}
             >
