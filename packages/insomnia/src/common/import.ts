@@ -618,7 +618,7 @@ export const importResourcesToNewWorkspace = async ({
     });
   } else {
     newWorkspace = await models.workspace.create({
-      name: workspaceToImport?.name || 'Imported Workspace',
+      name: workspaceToImport?.name || 'Imported Collection',
       scope: workspaceToImport?.scope || 'collection',
       parentId: projectId,
     });
