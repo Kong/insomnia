@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import { formatDistanceToNowStrict } from 'date-fns';
 import React, { type FC, Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
-import { Heading } from 'react-aria-components';
+import { Heading, Link } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
@@ -178,17 +178,21 @@ interface ImportModalProps extends ModalProps {
   from:
     | {
         type: 'file';
+        origin?: string;
       }
     | {
         type: 'uri';
         defaultValue?: string;
+        origin?: string;
       }
     | {
         type: 'curl';
         defaultValue?: string;
+        origin?: string;
       }
     | {
         type: 'clipboard';
+        origin?: string;
       };
 }
 
@@ -344,6 +348,9 @@ const ScanResourcesForm = ({
   return (
     <Fragment>
       <div className="flex flex-col">
+        <div className="mb-4 w-full items-center gap-4 rounded-lg border border-solid border-[rgba(var(--color-warning-rgb),1)] bg-(--color-bg) px-3 py-2 text-sm text-wrap text-[rgba(var(--color-warning-rgb),1)] shadow-lg outline-hidden">
+          ⚠️ Make sure that you trust the import source before continuing.
+        </div>
         <form
           aria-label="Import from"
           id={id}
@@ -407,6 +414,19 @@ const ScanResourcesForm = ({
         {scanResults && (
           <div className="margin-top-sm max-h-[20vh] overflow-y-auto">
             <ScanResultsTable scanResults={scanResults} />
+          </div>
+        )}
+      </div>
+      <div>
+        {from?.type === 'curl' && from.origin && (
+          <div className="notice my-1 flex w-full justify-start py-1">
+            <CurlIcon />
+            cURL from{' '}
+            <Link className="px-2 font-bold underline" href={from.origin}>
+              {' '}
+              {from.origin}{' '}
+            </Link>{' '}
+            ⚠️
           </div>
         )}
       </div>

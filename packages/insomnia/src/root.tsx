@@ -306,6 +306,7 @@ const Root = () => {
   const [importObject, setImportObject] = useState({ type: 'clipboard', defaultValue: '' } as {
     type: SourceType;
     defaultValue: string;
+    origin?: string;
   });
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
@@ -351,10 +352,10 @@ const Root = () => {
           },
         });
         if (params.uri) {
-          return setImportObject({ type: 'uri', defaultValue: params.uri });
+          return setImportObject({ type: 'uri', defaultValue: params.uri, origin: params.origin });
         }
         if (params.curl) {
-          return setImportObject({ type: 'curl', defaultValue: params.curl });
+          return setImportObject({ type: 'curl', defaultValue: params.curl, origin: params.origin });
         }
       }
       if (urlWithoutParams === 'insomnia://plugins/install') {
