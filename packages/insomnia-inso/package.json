@@ -51,8 +51,8 @@
     "shellwords": "^1.0.1"
   },
   "dependencies": {
-    "@segment/analytics-node": "^2.2.1",
     "@seald-io/nedb": "^4.1.1",
+    "@segment/analytics-node": "^2.2.1",
     "@stoplight/spectral-core": "^1.20.0",
     "@stoplight/spectral-formats": "^1.8.2",
     "@stoplight/spectral-ruleset-bundler": "1.6.3",
@@ -67,6 +67,6 @@
     "yaml": "^2.7.1"
   },
   "optionalDependencies": {
-    "@kong/insomnia-plugin-external-vault": "0.1.4-dev.20251224090833"
+    "@kong/insomnia-plugin-external-vault": "0.1.4"
   }
 }
