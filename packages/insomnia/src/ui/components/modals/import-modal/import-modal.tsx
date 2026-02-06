@@ -283,7 +283,7 @@ export const ImportModal: FC<ImportModalProps> = ({
 
   return (
     <OverlayContainer onClick={e => e.stopPropagation()}>
-      <Modal ref={modalRef} onHide={onHide}>
+      <Modal ref={modalRef} onHide={onHide} className="max-h-none">
         <ModalHeader>{header}</ModalHeader>
         {hasAnyDataToImport ? (
           <ImportResourcesForm
