@@ -19,7 +19,6 @@ import {
   Route as RouteComponent,
   Routes,
   useLoaderData,
-  useNavigate,
   useParams,
   useRouteLoaderData,
 } from 'react-router';
@@ -103,7 +102,6 @@ const Component = () => {
   const tabNavigate = useTabNavigate();
 
   const deleteMockRouteFetcher = useMockRouteDeleteActionFetcher();
-  const navigate = useNavigate();
 
   const mockRouteNavigateAction = (mockRouteId: string, withTab?: boolean) => {
     const currentRoute = mockRoutes.find(m => m._id === mockRouteId);

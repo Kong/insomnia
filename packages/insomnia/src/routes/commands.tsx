@@ -17,7 +17,7 @@ import { isRemoteProject, type Project } from '~/models/project';
 import type { Request } from '~/models/request';
 import type { RequestGroup } from '~/models/request-group';
 import type { WebSocketRequest } from '~/models/websocket-request';
-import { scopeToActivity, type Workspace } from '~/models/workspace';
+import { type Workspace } from '~/models/workspace';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 

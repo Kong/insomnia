@@ -22,7 +22,6 @@ import { useNavigate, useParams } from 'react-router';
 
 import { isMac } from '~/common/constants';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '~/common/hotkeys';
-import { fuzzyMatch } from '~/common/misc';
 import { isGrpcRequest } from '~/models/grpc-request';
 import { isRequest } from '~/models/request';
 import { isRequestGroup } from '~/models/request-group';
