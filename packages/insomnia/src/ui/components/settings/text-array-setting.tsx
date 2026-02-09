@@ -46,6 +46,10 @@ export const TextArraySetting: FC<{
     [currentValue, patchSettings, setting],
   );
 
+  const trimmedInput = folderToAdd.trim();
+  const isDuplicate = trimmedInput.length > 0 && currentValue.includes(trimmedInput);
+  const isAddDisabled = disabled || folderToAdd.trim().length === 0 || isDuplicate;
+
   return (
     <div className="form-control form-control--outlined">
       <label>
@@ -62,16 +66,23 @@ export const TextArraySetting: FC<{
             placeholder={placeholder}
             type={'text'}
             data-testid={setting}
+            style={isDuplicate ? { border: '1px solid var(--color-danger)' } : undefined}
           />
           <button
             className="btn btn--outlined btn--super-compact flex items-center gap-2"
             data-testid={`${setting}-btn`}
-            disabled={disabled}
+            disabled={isAddDisabled}
+            style={{ cursor: isAddDisabled ? 'not-allowed' : 'pointer' }}
             onClick={onAddDataFolder}
           >
             Add
           </button>
         </div>
+        {isDuplicate && (
+          <p className="margin-top-xs text-sm" style={{ color: 'var(--color-danger)' }}>
+            Duplicate folders are not allowed.
+          </p>
+        )}
       </label>
 
       <ListBox aria-label="data folders" className="margin-top-sm flex w-full flex-col overflow-y-auto">
