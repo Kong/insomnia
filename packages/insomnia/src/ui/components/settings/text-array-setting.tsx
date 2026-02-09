@@ -8,6 +8,7 @@ import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
+import { Tooltip } from '../tooltip';
 
 export const TextArraySetting: FC<{
   disabled?: InputHTMLAttributes<HTMLInputElement>['disabled'];
@@ -48,7 +49,12 @@ export const TextArraySetting: FC<{
 
   const trimmedInput = folderToAdd.trim();
   const isDuplicate = trimmedInput.length > 0 && currentValue.includes(trimmedInput);
-  const isAddDisabled = disabled || folderToAdd.trim().length === 0 || isDuplicate;
+  const isAddDisabled = disabled || trimmedInput.length === 0 || isDuplicate;
+  const addButtonTooltip = isDuplicate
+    ? 'Duplicate folders are not allowed.'
+    : trimmedInput.length === 0
+      ? 'Enter a folder path to add.'
+      : '';
 
   return (
     <div className="form-control form-control--outlined">
@@ -68,15 +74,17 @@ export const TextArraySetting: FC<{
             data-testid={setting}
             style={isDuplicate ? { border: '1px solid var(--color-danger)' } : undefined}
           />
-          <button
-            className="btn btn--outlined btn--super-compact flex items-center gap-2"
-            data-testid={`${setting}-btn`}
-            disabled={isAddDisabled}
-            style={{ cursor: isAddDisabled ? 'not-allowed' : 'pointer' }}
-            onClick={onAddDataFolder}
-          >
-            Add
-          </button>
+          <Tooltip message={addButtonTooltip} position="top">
+            <button
+              className="btn btn--outlined btn--super-compact flex items-center gap-2"
+              data-testid={`${setting}-btn`}
+              disabled={isAddDisabled}
+              style={{ cursor: isAddDisabled ? 'not-allowed' : 'pointer' }}
+              onClick={onAddDataFolder}
+            >
+              Add
+            </button>
+          </Tooltip>
         </div>
         {isDuplicate && (
           <p className="margin-top-xs text-sm" style={{ color: 'var(--color-danger)' }}>
