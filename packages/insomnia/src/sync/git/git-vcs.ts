@@ -1240,6 +1240,7 @@ export class GitVCS {
 
     // merge conflict from pull
     if (err instanceof git.Errors.MergeConflictError) {
+      console.log('[git] MergeConflictError detected during pull');
       return await this.collectMergeConflicts(err, oursBranch, theirsBranch, writeFileMap);
     }
 
@@ -1264,6 +1265,7 @@ export class GitVCS {
       } catch (mergeErr) {
         // If the merge operation reported conflicts, collect them
         if (mergeErr instanceof git.Errors.MergeConflictError) {
+          console.log('[git] MergeConflictError detected during manual merge after fetch');
           return await this.collectMergeConflicts(mergeErr, oursBranch, theirsBranch, writeFileMap);
         }
 
@@ -1479,7 +1481,7 @@ export class GitVCS {
 
     async function walkTree(entries: ArrayIterator<git.TreeEntry>, prefix = '') {
       for (const entry of entries) {
-        const filepath = path.join(prefix, entry.path);
+        const filepath = path.posix.join(prefix, entry.path);
         if (entry.type === 'tree') {
           const { tree: subtree } = await git.readTree({ ...baseOpts, oid: entry.oid });
           await walkTree(subtree.values(), filepath);
