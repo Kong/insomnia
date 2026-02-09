@@ -45,13 +45,14 @@ export type TabResource =
   | Workspace
   | UnitTestSuite;
 
-export interface AddTabParams {
+interface AddTabParams {
   resource: TabResource;
   organizationId: string;
   projectId: string;
   workspaceId?: string;
   projectName: string;
   workspaceName: string;
+  searchParams?: URLSearchParams;
 }
 
 // Utility function to infer tab type from resource
@@ -249,7 +250,7 @@ export const buildRunnerTab = (params: {
 };
 
 export const buildTabFromResource = async (params: AddTabParams): Promise<BaseTab | null> => {
-  const { resource, organizationId, projectId, workspaceId, projectName, workspaceName } = params;
+  const { resource, organizationId, projectId, workspaceId, projectName, workspaceName, searchParams } = params;
   const effectiveWorkspaceId = workspaceId ?? resource._id;
   const type = inferTabType(resource);
   const url = buildTabUrl(type, {
@@ -257,6 +258,7 @@ export const buildTabFromResource = async (params: AddTabParams): Promise<BaseTa
     projectId,
     workspaceId: effectiveWorkspaceId,
     resourceId: resource._id,
+    searchParams,
   });
 
   const baseTab: BaseTab = {
@@ -323,55 +325,44 @@ export const useTabNavigate = () => {
         isRunner?: boolean;
         navigateTo?: boolean;
         withTab?: boolean;
-        searchParams?: URLSearchParams | Record<string, string>;
+        searchParams?: URLSearchParams;
       },
     ) => {
       const { navigateTo = false, withTab = false, isRunner = false, searchParams } = options;
 
-      if (isRunner) {
-        const runnerTab = buildRunnerTab({
-          organizationId: typeof organization === 'string' ? organization : organization.id,
-          projectId: project._id,
-          workspaceId: workspace._id,
-          projectName: project.name,
-          workspaceName: workspace.name,
-          folderId: item.type === 'RequestGroup' ? item._id : undefined,
-          searchParams,
-        });
-
-        if (withTab) {
-          addTab(runnerTab);
-        }
-
-        if (navigateTo) {
-          navigate(runnerTab.url);
-        }
-
-        return runnerTab.url;
-      }
-
-      const tab = await buildTabFromResource({
-        resource: item,
-        organizationId: typeof organization === 'string' ? organization : organization.id,
-        projectId: project._id,
-        workspaceId: workspace._id,
-        projectName: project.name,
-        workspaceName: workspace.name,
-      });
+      const tab = isRunner
+        ? buildRunnerTab({
+            organizationId: typeof organization === 'string' ? organization : organization.id,
+            projectId: project._id,
+            workspaceId: workspace._id,
+            projectName: project.name,
+            workspaceName: workspace.name,
+            folderId: item.type === 'RequestGroup' ? item._id : undefined,
+            searchParams,
+          })
+        : await buildTabFromResource({
+            resource: item,
+            organizationId: typeof organization === 'string' ? organization : organization.id,
+            projectId: project._id,
+            workspaceId: workspace._id,
+            projectName: project.name,
+            workspaceName: workspace.name,
+            searchParams,
+          });
 
       if (!tab) {
         return;
       }
 
       if (withTab) {
-        addTab(tab);
+        addTab(tab, {
+          setActive: navigateTo,
+        });
       }
 
       if (navigateTo) {
         navigate(tab.url);
       }
-
-      return tab.url;
     },
     [addTab, navigate],
   );

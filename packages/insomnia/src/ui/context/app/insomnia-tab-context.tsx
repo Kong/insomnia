@@ -96,14 +96,16 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
       const existingTabIndex = currentTabs.tabList.findIndex(t => t.id === tab.id);
 
+      let newTabList = currentTabs.tabList;
+      let newActiveTabId = currentTabs.activeTabId;
+      const needsActivate = options.setActive && currentTabs.activeTabId !== tab.id;
+      if (needsActivate) {
+        newActiveTabId = tab.id;
+      }
       // If tab already exists, just activate it if needed (no duplicate tabs)
       if (existingTabIndex !== -1) {
         const existingTab = currentTabs.tabList[existingTabIndex];
         const shouldUpdateName = existingTab.name !== tab.name;
-        const needsActivate = options.setActive && currentTabs.activeTabId !== tab.id;
-
-        let newTabList = currentTabs.tabList;
-        let newActiveTabId = currentTabs.activeTabId;
 
         if (shouldUpdateName) {
           newTabList = currentTabs.tabList.map((t, i) =>
@@ -115,25 +117,15 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
               : t,
           );
         }
-
-        if (needsActivate) {
-          newActiveTabId = tab.id;
-        }
-
-        updateInsomniaTabs({
-          organizationId,
-          tabList: newTabList,
-          activeTabId: newActiveTabId,
-        });
-        return;
+      } else {
+        // Append new tab to the list
+        newTabList = [...currentTabs.tabList, tab];
       }
-
-      // Append new tab to the list
-      const newTabList = [...currentTabs.tabList, tab];
 
       updateInsomniaTabs({
         organizationId,
         tabList: newTabList,
+        activeTabId: newActiveTabId,
       });
     },
     [organizationId, updateInsomniaTabs],
@@ -337,6 +329,9 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     (id: string, options = { navigate: true }) => {
       const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
       const tab = currentTabs?.tabList.find(tab => tab.id === id);
+
+      console.log('[debug]', 'changeActiveTab:', id);
+
       if (options?.navigate && tab?.url) {
         navigate(tab.url);
       }
@@ -470,6 +465,8 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     },
     [organizationId, updateInsomniaTabs],
   );
+
+  console.log('[debug]', 'activeTabId:', appTabs?.[organizationId]?.activeTabId);
 
   return (
     <InsomniaTabContext.Provider

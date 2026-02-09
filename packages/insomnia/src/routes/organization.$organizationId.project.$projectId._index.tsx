@@ -1302,12 +1302,7 @@ const Component = () => {
                             )}
                           </div>
                           <TooltipTrigger>
-                            <Link
-                              onPress={() => item.action()}
-                              className="line-clamp-4 pt-4 text-base font-bold outline-hidden"
-                            >
-                              {item.name}
-                            </Link>
+                            <span className="line-clamp-4 pt-4 text-base font-bold outline-hidden">{item.name}</span>
                             <Tooltip
                               offset={8}
                               className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
