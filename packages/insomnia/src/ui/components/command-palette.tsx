@@ -551,6 +551,21 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           close();
         }
       }}
+      onSelectionChange={itemId => {
+        if (!itemId) {
+          return;
+        }
+
+        const item = [
+          ...currentRequests,
+          ...currentFiles,
+          ...currentEnvironments,
+          ...otherRequests,
+          ...otherFiles,
+        ].find(item => item.id === itemId);
+
+        item?.action();
+      }}
     >
       {({ isOpen }) => {
         return (
@@ -600,15 +615,19 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                     <Header className="p-2 text-xs text-(--hl) uppercase select-none">{section.name}</Header>
                     <Collection items={section.children}>
                       {item => (
-                        <ListBoxItem
-                          textValue={item.textValue}
-                          className="group outline-hidden select-none"
-                          onPress={e => {
-                            item.action(isMac() ? e.metaKey : e.ctrlKey);
-                          }}
-                        >
+                        <ListBoxItem textValue={item.textValue} className="group outline-hidden select-none">
                           <div
                             className={`flex outline-hidden select-none ${item.id === workspaceId || item.id === requestId ? 'font-bold text-(--color-font)' : 'text-(--hl)'} relative h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 transition-colors group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font) group-data-focused:bg-(--hl-sm)`}
+                            // Avoid ListBoxItem onSelect getting triggered and focus stealing by the button
+                            onMouseDownCapture={e => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                            }}
+                            onPointerDown={e => e.stopPropagation()}
+                            onPointerUp={e => e.stopPropagation()}
+                            onClick={e => {
+                              item.action(isMac() ? e.metaKey : e.ctrlKey);
+                            }}
                           >
                             {item.icon}
                             <Text className="shrink-0 truncate px-1" slot="label">
@@ -624,13 +643,6 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                             </Text>
                             {item.openInNewTab && (
                               <button
-                                // Avoid ListBoxItem onSelect getting triggered and focus stealing by the button
-                                onMouseDownCapture={e => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                }}
-                                onPointerDown={e => e.stopPropagation()}
-                                onPointerUp={e => e.stopPropagation()}
                                 aria-label="Open in New Tab"
                                 className="shrink-0 rounded-sm bg-(--hl-xs) px-2 py-1 text-xs opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-sm)"
                                 onClick={() => {

@@ -17,7 +17,7 @@ import { isRemoteProject, type Project } from '~/models/project';
 import type { Request } from '~/models/request';
 import type { RequestGroup } from '~/models/request-group';
 import type { WebSocketRequest } from '~/models/websocket-request';
-import { type Workspace } from '~/models/workspace';
+import { scopeToActivity, type Workspace } from '~/models/workspace';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 
@@ -215,6 +215,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
           const workspaceId = parentReferences.get(item.parentId)?.workspaceId || '';
           return {
             id: item._id,
+            url: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item._id}`,
             name: item.name,
             item,
             organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
@@ -231,6 +232,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
         const parentProject = allProjects.find(project => project._id === workspace.parentId);
         return {
           id: workspace._id,
+          url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
           name: workspace.name,
           item: {
             ...workspace,
@@ -254,6 +256,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
           const workspaceId = parentReferences.get(item.parentId)?.workspaceId || '';
           return {
             id: item._id,
+            url: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item._id}`,
             name: item.name,
             item,
             organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
@@ -270,6 +273,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
         const parentProject = allProjects.find(project => project._id === workspace.parentId);
         return {
           id: workspace._id,
+          url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
           name: workspace.name,
           item: {
             ...workspace,
