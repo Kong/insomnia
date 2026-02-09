@@ -30,7 +30,8 @@ export const TextArraySetting: FC<{
 
   const onAddDataFolder = useCallback(async () => {
     const validValue = folderToAdd ? folderToAdd.trim() : '';
-    const exists = currentValue.includes(validValue);
+    const normalizedValue = validValue.replace(/\/+$/, '') || validValue;
+    const exists = currentValue.some(v => (v.replace(/\/+$/, '') || v) === normalizedValue);
     if (folderToAdd !== '' && !exists) {
       const updatedValue = [...currentValue, validValue];
       patchSettings({ [setting]: updatedValue });
@@ -48,7 +49,9 @@ export const TextArraySetting: FC<{
   );
 
   const trimmedInput = folderToAdd.trim();
-  const isDuplicate = trimmedInput.length > 0 && currentValue.includes(trimmedInput);
+  const normalizedInput = trimmedInput.replace(/\/+$/, '') || trimmedInput;
+  const isDuplicate =
+    normalizedInput.length > 0 && currentValue.some(v => (v.replace(/\/+$/, '') || v) === normalizedInput);
   const isAddDisabled = disabled || trimmedInput.length === 0 || isDuplicate;
   const addButtonTooltip = isDuplicate
     ? 'Duplicate folders are not allowed.'
@@ -74,7 +77,7 @@ export const TextArraySetting: FC<{
             data-testid={setting}
             style={isDuplicate ? { border: '1px solid var(--color-danger)' } : undefined}
           />
-          <Tooltip message={addButtonTooltip} position="top">
+          <Tooltip message={addButtonTooltip} position="top" isDisabled={!addButtonTooltip}>
             <button
               className="btn btn--outlined btn--super-compact flex items-center gap-2"
               data-testid={`${setting}-btn`}
