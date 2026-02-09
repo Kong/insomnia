@@ -8,7 +8,6 @@ import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
-import { Tooltip } from '../tooltip';
 
 export const TextArraySetting: FC<{
   disabled?: InputHTMLAttributes<HTMLInputElement>['disabled'];
@@ -22,6 +21,7 @@ export const TextArraySetting: FC<{
 
   const patchSettings = useSettingsPatcher();
   const [folderToAdd, setFolderToAdd] = useState('');
+  const [validationError, setValidationError] = useState('');
 
   let currentValue = settings[setting];
   if (!Array.isArray(currentValue)) {
@@ -30,13 +30,20 @@ export const TextArraySetting: FC<{
 
   const onAddDataFolder = useCallback(async () => {
     const validValue = folderToAdd ? folderToAdd.trim() : '';
+    if (validValue === '') {
+      setValidationError('Enter a folder path to add.');
+      return;
+    }
     const normalizedValue = validValue.replace(/\/+$/, '') || validValue;
     const exists = currentValue.some(v => (v.replace(/\/+$/, '') || v) === normalizedValue);
-    if (folderToAdd !== '' && !exists) {
-      const updatedValue = [...currentValue, validValue];
-      patchSettings({ [setting]: updatedValue });
+    if (exists) {
+      setValidationError('Duplicate folders are not allowed.');
+      return;
     }
+    const updatedValue = [...currentValue, validValue];
+    patchSettings({ [setting]: updatedValue });
     setFolderToAdd('');
+    setValidationError('');
   }, [patchSettings, setting, currentValue, folderToAdd]);
 
   const onDeleteDataFolder = useCallback(
@@ -47,17 +54,6 @@ export const TextArraySetting: FC<{
     },
     [currentValue, patchSettings, setting],
   );
-
-  const trimmedInput = folderToAdd.trim();
-  const normalizedInput = trimmedInput.replace(/\/+$/, '') || trimmedInput;
-  const isDuplicate =
-    normalizedInput.length > 0 && currentValue.some(v => (v.replace(/\/+$/, '') || v) === normalizedInput);
-  const isAddDisabled = disabled || trimmedInput.length === 0 || isDuplicate;
-  const addButtonTooltip = isDuplicate
-    ? 'Duplicate folders are not allowed.'
-    : trimmedInput.length === 0
-      ? 'Enter a folder path to add.'
-      : '';
 
   return (
     <div className="form-control form-control--outlined">
@@ -71,27 +67,25 @@ export const TextArraySetting: FC<{
             name={setting}
             onChange={e => {
               setFolderToAdd(e.target.value);
+              setValidationError('');
             }}
             placeholder={placeholder}
             type={'text'}
             data-testid={setting}
-            style={isDuplicate ? { border: '1px solid var(--color-danger)' } : undefined}
+            style={validationError ? { border: '1px solid var(--color-danger)' } : undefined}
           />
-          <Tooltip message={addButtonTooltip} position="top" isDisabled={!addButtonTooltip}>
-            <button
-              className="btn btn--outlined btn--super-compact flex items-center gap-2"
-              data-testid={`${setting}-btn`}
-              disabled={isAddDisabled}
-              style={{ cursor: isAddDisabled ? 'not-allowed' : 'pointer' }}
-              onClick={onAddDataFolder}
-            >
-              Add
-            </button>
-          </Tooltip>
+          <button
+            className="btn btn--outlined btn--super-compact flex items-center gap-2"
+            data-testid={`${setting}-btn`}
+            disabled={disabled}
+            onClick={onAddDataFolder}
+          >
+            Add
+          </button>
         </div>
-        {isDuplicate && (
+        {validationError && (
           <p className="margin-top-xs text-sm" style={{ color: 'var(--color-danger)' }}>
-            Duplicate folders are not allowed.
+            {validationError}
           </p>
         )}
       </label>

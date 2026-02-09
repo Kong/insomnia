@@ -14,15 +14,14 @@ interface Props {
   wide?: boolean;
   style?: CSSProperties;
   onClick?: () => void;
-  isDisabled?: boolean;
 }
 
 export const Tooltip = (props: Props) => {
-  const { children, message, className, wide, selectable, delay = 400, position, style, isDisabled } = props;
+  const { children, message, className, wide, selectable, delay = 400, position, style } = props;
   const triggerRef = React.useRef<HTMLDivElement>(null);
   const overlayRef = React.useRef<HTMLDivElement>(null);
 
-  const state = useTooltipTriggerState({ delay, isDisabled });
+  const state = useTooltipTriggerState({ delay });
   const trigger = useTooltipTrigger(props, state, triggerRef);
   const tooltip = useTooltip(trigger.tooltipProps, state);
 
