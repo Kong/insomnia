@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import YAML from 'yaml';
 
-import { InsoError } from '../cli';
+import { InsoError } from '../errors';
 
 export async function writeFileWithCliOptions(outputPath: string, contents: string): Promise<string> {
   try {

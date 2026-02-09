@@ -1,12 +1,15 @@
 import classNames from 'classnames';
+import { formatDistanceToNowStrict } from 'date-fns';
 import React, { type FC, Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Heading } from 'react-aria-components';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
+import { isNotNullOrUndefined } from '~/common/misc';
 import { scopeToActivity } from '~/models/workspace';
 import { useImportResourcesFetcher } from '~/routes/import.resources';
 import { useScanResourcesFetcher } from '~/routes/import.scan';
+import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { Checkbox } from '~/ui/components/base/checkbox';
 
 import type { ScanResult } from '../../../../common/import';
@@ -217,12 +220,21 @@ export const ImportModal: FC<ImportModalProps> = ({
           requests: scanResourcesFetcherData.map(scanResult => scanResult.requests?.length || 0),
         },
       });
-      const workspace = importFetcher?.data?.workspace;
-      workspace
-        ? navigate(
-            `/organization/${organizationId}/project/${defaultProjectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
-          )
-        : navigate(`/organization/${organizationId}/project/${defaultProjectId}`);
+      const workspace = importFetcher?.data?.singleImportedWorkspace;
+      const request = importFetcher?.data?.singleImportedRequest;
+      if (workspace && request) {
+        navigate(
+          `/organization/${organizationId}/project/${defaultProjectId}/workspace/${workspace._id}/debug/request/${request._id}`,
+        );
+        return modalRef.current?.hide();
+      }
+      if (workspace) {
+        navigate(
+          `/organization/${organizationId}/project/${defaultProjectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+        );
+        return modalRef.current?.hide();
+      }
+      navigate(`/organization/${organizationId}/project/${defaultProjectId}`);
       modalRef.current?.hide();
     }
   }, [defaultProjectId, defaultWorkspaceId, importFetcher?.data, navigate, organizationId, scanResourcesFetcherData]);
@@ -276,13 +288,13 @@ export const ImportModal: FC<ImportModalProps> = ({
             loading={importFetcher.state !== 'idle'}
             disabled={importErrors.length > 0}
             isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
-            onImport={(overrideBaseEnvironmentData: boolean) => {
+            onImport={(overrideBaseEnvironmentData: boolean, selectedWorkspaceId?: string) => {
               invariant(Array.isArray(scanResourcesFetcherData));
 
               importFetcher.submit({
                 organizationId,
                 projectId: defaultProjectId || '',
-                workspaceId: shouldImportToWorkspace ? defaultWorkspaceId : undefined,
+                workspaceId: selectedWorkspaceId || (shouldImportToWorkspace ? defaultWorkspaceId : undefined),
                 options: {
                   overrideBaseEnvironmentData,
                 },
@@ -419,17 +431,65 @@ const ImportResourcesForm = ({
 }: {
   scanResults: ScanResult[];
   errors?: string[];
-  onImport: (overrideBaseEnvironmentData: boolean) => void;
+  onImport: (overrideBaseEnvironmentData: boolean, selectedWorkspaceId?: string) => void;
   disabled: boolean;
   loading: boolean;
   isImportingBaseEnvironmentToWorkspace: boolean;
 }) => {
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
   const [overrideBaseEnvironmentData, setOverrideBaseEnvironmentData] = useState(true);
+  const isSingleRequest = scanResults.length === 1 && (scanResults[0].requests?.length || 0) === 1;
+  const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(workspaceId || '');
+  useEffect(() => {
+    const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
+    if (isIdleAndUninitialized) {
+      workspacesFetcher.load({
+        organizationId,
+        projectId,
+      });
+    }
+  }, [organizationId, projectId, workspacesFetcher]);
+  // List collections for active project, sorted by last modified timestamp descending
+  // Should we list design or mcp?
+  const workspacesForActiveProject =
+    workspacesFetcher?.data?.files
+      .toSorted((a, b) => b.lastModifiedTimestamp - a.lastModifiedTimestamp)
+      .map(w => ({ ...w.workspace, lastModifiedTimestamp: w.lastModifiedTimestamp }))
+      .filter(isNotNullOrUndefined)
+      .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
+  const shouldShowWorkspaceSelect = !workspaceId && isSingleRequest && workspacesForActiveProject.length > 0;
   return (
     <Fragment>
       <div className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto">
         <div className="overflow-y-auto">
           <ScanResultsTable scanResults={scanResults} />
+          {shouldShowWorkspaceSelect && (
+            <div className="form-row mt-2">
+              <div className="form-control form-control--outlined">
+                <label>
+                  Select Workspace:
+                  <select
+                    aria-label="Select Workspace"
+                    name="workspaceId"
+                    value={selectedWorkspaceId}
+                    onChange={e => setSelectedWorkspaceId(e.target.value)}
+                  >
+                    <option value="">-- New Workspace --</option>
+                    {workspacesForActiveProject.map(w => (
+                      <option key={w._id} value={w._id}>
+                        {w.name} - {formatDistanceToNowStrict(w.lastModifiedTimestamp)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </div>
+          )}
           {isImportingBaseEnvironmentToWorkspace && (
             <Checkbox
               isSelected={overrideBaseEnvironmentData}
@@ -462,7 +522,7 @@ const ImportResourcesForm = ({
           variant="contained"
           bg="surprise"
           disabled={disabled}
-          onClick={() => onImport(overrideBaseEnvironmentData)}
+          onClick={() => onImport(overrideBaseEnvironmentData, selectedWorkspaceId)}
           className="btn h-10 gap-(--padding-sm)"
         >
           {loading ? (

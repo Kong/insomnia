@@ -2,7 +2,7 @@
 import { AutoComplete } from 'enquirer';
 
 import { logger } from '../../logger';
-import { type Database } from '../index';
+import type { Database } from '../types';
 import type { Environment } from './types';
 import { ensureSingle, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 

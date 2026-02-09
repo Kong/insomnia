@@ -2,7 +2,7 @@
 import { AutoComplete } from 'enquirer';
 
 import { logger } from '../../logger';
-import type { Database } from '../index';
+import type { Database } from '../types';
 import type { ApiSpec } from './types';
 import { ensureSingleOrNone, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 const entity = 'api specification';
