@@ -4,6 +4,7 @@ import { href, matchPath, useLocation, useNavigate, useSearchParams } from 'reac
 import { database } from '~/common/database';
 import { mcpRequest } from '~/models';
 import { type GrpcRequest, isGrpcRequest } from '~/models/grpc-request';
+import * as requestOperations from '~/models/helpers/request-operations';
 import { isMcpRequest, type McpRequest } from '~/models/mcp-request';
 import { isMockRoute, type MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
@@ -191,7 +192,7 @@ const buildTabUrl = (
   return `${url}${search}`;
 };
 
-const buildRunnerTabId = (workspaceId: string, folderId?: string | null) => {
+export const buildRunnerTabId = (workspaceId: string, folderId?: string | null) => {
   return folderId ? `runner_${folderId}` : `runner_${workspaceId}`;
 };
 
@@ -444,7 +445,7 @@ const buildTabFromUrl = async (pathname: string, searchParams: URLSearchParams):
   const resource = await (async () => {
     switch (tabType) {
       case 'request': {
-        return await database.findOne('Request', { _id: id });
+        return await requestOperations.getById(id);
       }
       case 'folder': {
         return await database.findOne('RequestGroup', { _id: id });
@@ -527,7 +528,7 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
         const newTemporaryTab = await buildTabFromUrl(location.pathname, searchParams);
 
         if (newTemporaryTab) {
-          addTemporaryTab({ ...newTemporaryTab, temporary: true }, { setActive: true });
+          addTemporaryTab(newTemporaryTab, { setActive: true });
 
           console.log('[debug]', '[useInsomniaTab] new temporary tab', {
             newTemporaryTab,

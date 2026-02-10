@@ -28,6 +28,7 @@ import { RenderError } from '../../../templating/render-error';
 import { getGrpcConnectionErrorDetails } from '../../../utils/grpc';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { setDefaultProtocol } from '../../../utils/url/protocol';
+import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
@@ -123,6 +124,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
   const patchRequest = useRequestPatcher();
 
+  const { updateTabById } = useInsomniaTabContext();
+
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
   const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
@@ -149,6 +152,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
         );
         const caCertificate = await models.caCertificate.findByParentId(workspaceId);
         const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
+
+        updateTabById?.(requestId, { temporary: false });
 
         window.main.grpc.start({
           request,

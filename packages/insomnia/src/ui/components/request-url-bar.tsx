@@ -29,6 +29,7 @@ import {
 } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
+import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/use-timeout-when';
@@ -142,6 +143,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const connectRequestFetcher = useRequestConnectActionFetcher();
     const sendRequestFetcher = useDebugRequestSendActionFetcher();
 
+    const { updateTabById } = useInsomniaTabContext();
+
     const { organizationId, projectId, workspaceId, requestId } = useParams() as {
       organizationId: string;
       projectId: string;
@@ -177,6 +180,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
 
     const sendOrConnect = useCallback(
       async (shouldPromptForPathAfterResponse?: boolean, ignoreUndefinedEnvVariable?: boolean) => {
+        updateTabById?.(requestId, { temporary: false });
         models.stats.incrementExecutedRequests();
         // reset timeout
         setCurrentTimeout(undefined);
@@ -234,7 +238,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           });
         }
       },
-      [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send],
+      [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, updateTabById],
     );
 
     useEffect(() => {

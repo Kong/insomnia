@@ -174,7 +174,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
         workspace: activeWorkspace,
         item: requestGroup,
       },
-      { withTab: true, navigateTo: true, isRunner: true },
+      { navigateTo: true, isRunner: true },
     );
   };
 
