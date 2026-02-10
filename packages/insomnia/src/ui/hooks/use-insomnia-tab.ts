@@ -532,6 +532,7 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
           console.log('[debug]', '[useInsomniaTab] new temporary tab', {
             newTemporaryTab,
           });
+          return;
         }
       }
 
