@@ -75,7 +75,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   const handleSelectionChange = (keys: Selection) => {
     if (keys !== 'all') {
       const key = [...keys.values()]?.[0] as string;
-      changeActiveTab(key);
+      changeActiveTab(key, { navigate: true });
     }
   };
 
@@ -345,7 +345,8 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     },
   });
 
-  if (!tabList.length) {
+  // Hide tab bar when there is only the temporary tab
+  if (!tabList.length || (tabList.length === 1 && tabList[0]?.temporary)) {
     return null;
   }
 

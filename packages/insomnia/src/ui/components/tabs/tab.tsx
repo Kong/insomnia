@@ -1,4 +1,5 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
+import classNames from 'classnames';
 import React, { useCallback } from 'react';
 import { Button, GridListItem } from 'react-aria-components';
 
@@ -35,6 +36,7 @@ export interface BaseTab {
   // method is used to display the tag color
   tag?: string;
   method?: string;
+  temporary?: boolean;
 }
 
 const REQUEST_METHOD_STYLE_MAP: Record<string, string> = {
@@ -120,14 +122,10 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
     return null;
   };
 
-  const handleClose = (id: string) => {
-    closeTabById(id);
-  };
-
   const handleAuxClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>, id: string) => {
     // If mouse middle button clicked, close tab
     if (e.button === 1) {
-      handleClose(id);
+      closeTabById(id);
     }
   };
 
@@ -158,6 +156,14 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
     [currentOrgTabs.activeTabId, tab.id],
   );
 
+  const { updateTabById } = useInsomniaTabContext();
+
+  const handleDoubleClick = () => {
+    if (tab.temporary) {
+      updateTabById?.(tab.id, { temporary: false });
+    }
+  };
+
   return (
     <GridListItem
       textValue={`tab-${tab.name}`}
@@ -168,19 +174,24 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
       {({ isSelected, isHovered }) => (
         <Tooltip delay={1000} message={`${tab.projectName} / ${tab.workspaceName}`} className="h-full">
           <div
+            onDoubleClick={handleDoubleClick}
             onAuxClick={e => handleAuxClick(e, tab.id)}
             onContextMenu={handleContextMenu}
             className={`relative flex h-full max-w-[200px] cursor-pointer flex-nowrap items-center border-r border-solid border-(--hl-sm) px-[10px] outline-hidden hover:text-(--color-font) ${!isSelected && !isHovered && 'opacity-[0.7]'}`}
           >
             {renderTabIcon(tab.type, tab.id)}
-            <span className="mx-2 overflow-hidden text-nowrap text-ellipsis">
+            <span
+              className={classNames('mx-[8px] overflow-hidden text-nowrap text-ellipsis', {
+                italic: tab.temporary,
+              })}
+            >
               {isMcpRequestId(tab.id) ? tab.workspaceName : tab.name}
             </span>
             <Button
               aria-label="Close Tab"
               data-testid="tab-close-button"
               className="flex h-[15px] w-[15px] items-center justify-center hover:bg-(--hl-md)"
-              onPress={() => handleClose(tab.id)}
+              onPress={() => closeTabById(tab.id)}
             >
               <Icon icon="close" />
             </Button>

@@ -18,6 +18,7 @@ interface ContextProps {
   appTabsRef?: React.MutableRefObject<InsomniaTabs | undefined>;
   closeTabById: (id: string) => void;
   addTab: (tab: BaseTab, options?: { setActive?: boolean }) => void;
+  addTemporaryTab: (tab: BaseTab, options?: { setActive?: boolean }) => void;
   changeActiveTab: (id: string, options?: { navigate: boolean }) => void;
   closeAllTabsUnderWorkspace?: (workspaceId: string) => void;
   closeAllTabsUnderProject?: (projectId: string) => void;
@@ -39,6 +40,7 @@ const InsomniaTabContext = createContext<ContextProps>({
   },
   closeTabById: () => {},
   addTab: () => {},
+  addTemporaryTab: () => {},
   changeActiveTab: () => {},
 });
 
@@ -103,23 +105,44 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
         newActiveTabId = tab.id;
       }
       // If tab already exists, just activate it if needed (no duplicate tabs)
+      // eslint-disable-next-line unicorn/prefer-ternary
       if (existingTabIndex !== -1) {
-        const existingTab = currentTabs.tabList[existingTabIndex];
-        const shouldUpdateName = existingTab.name !== tab.name;
-
-        if (shouldUpdateName) {
-          newTabList = currentTabs.tabList.map((t, i) =>
-            i === existingTabIndex
-              ? {
-                  ...t,
-                  name: tab.name,
-                }
-              : t,
-          );
-        }
+        newTabList = currentTabs.tabList.map((t, i) => (i === existingTabIndex ? tab : t));
       } else {
         // Append new tab to the list
         newTabList = [...currentTabs.tabList, tab];
+      }
+
+      updateInsomniaTabs({
+        organizationId,
+        tabList: newTabList,
+        activeTabId: newActiveTabId,
+      });
+    },
+    [organizationId, updateInsomniaTabs],
+  );
+
+  const addTemporaryTab = useCallback(
+    (tab: BaseTab, options?: { setActive?: boolean }) => {
+      const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
+      const existingTemporaryTabIndex = currentTabs.tabList.findIndex(t => t.temporary);
+
+      let newTabList = currentTabs.tabList;
+      const temporaryTab = {
+        ...tab,
+        temporary: true,
+      };
+
+      // If temporary tab already exists, just replace the tab and activate it if needed (no duplicate tabs)
+      newTabList =
+        existingTemporaryTabIndex !== -1
+          ? currentTabs.tabList.map((t, i) => (i === existingTemporaryTabIndex ? temporaryTab : t))
+          : [...currentTabs.tabList, temporaryTab];
+
+      let newActiveTabId = currentTabs.activeTabId;
+      const needsActivate = options?.setActive && currentTabs.activeTabId !== tab.id;
+      if (needsActivate) {
+        newActiveTabId = tab.id;
       }
 
       updateInsomniaTabs({
@@ -326,11 +349,9 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   );
 
   const changeActiveTab = useCallback(
-    (id: string, options = { navigate: true }) => {
+    (id: string, options?: { navigate?: boolean }) => {
       const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
       const tab = currentTabs?.tabList.find(tab => tab.id === id);
-
-      console.log('[debug]', 'changeActiveTab:', id);
 
       if (options?.navigate && tab?.url) {
         navigate(tab.url);
@@ -466,8 +487,6 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     [organizationId, updateInsomniaTabs],
   );
 
-  console.log('[debug]', 'activeTabId:', appTabs?.[organizationId]?.activeTabId);
-
   return (
     <InsomniaTabContext.Provider
       value={{
@@ -479,6 +498,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
         closeOtherTabs,
         batchCloseTabs,
         addTab,
+        addTemporaryTab,
         updateTabById,
         changeActiveTab,
         updateProjectName,
