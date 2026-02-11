@@ -1,4 +1,4 @@
-import { type CurrentPlan, type UserProfile } from 'insomnia-api';
+import { type Billing, type CurrentPlan, type FeatureList, type Organization, type UserProfile } from 'insomnia-api';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -16,7 +16,7 @@ import * as reactUse from 'react-use';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { userSession } from '~/models';
-import { isOwnerOfOrganization, isPersonalOrganization, type Organization } from '~/models/organization';
+import { isOwnerOfOrganization, isPersonalOrganization } from '~/models/organization';
 import type { Settings } from '~/models/settings';
 import { isScratchpad } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
@@ -71,28 +71,6 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     user: undefined,
     currentPlan: undefined,
   };
-}
-
-export interface FeatureStatus {
-  enabled: boolean;
-  reason?: string;
-}
-
-export interface FeatureList {
-  bulkImport: FeatureStatus;
-  gitSync: FeatureStatus;
-  orgBasicRbac: FeatureStatus;
-  aiMockServers: FeatureStatus;
-  aiCommitMessages: FeatureStatus;
-  aiMcpClient: FeatureStatus;
-}
-
-export interface Billing {
-  // If true, the user has paid for the current period
-  isActive: boolean;
-  expirationWarningMessage: string;
-  expirationErrorMessage: string;
-  accessDenied: boolean;
 }
 
 export interface OrganizationFeatureLoaderData {

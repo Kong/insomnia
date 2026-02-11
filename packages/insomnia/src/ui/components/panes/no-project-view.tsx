@@ -1,7 +1,7 @@
+import type { StorageRules } from 'insomnia-api';
 import React, { type FC } from 'react';
 import { Heading } from 'react-aria-components';
 
-import type { StorageRules } from '~/models/organization';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 
 import { ProjectCreateForm } from '../project/project-create-form';

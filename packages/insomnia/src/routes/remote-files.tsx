@@ -1,9 +1,8 @@
-import { getUserFiles, type RemoteFile } from 'insomnia-api';
+import { getUserFiles, type Organization, type RemoteFile } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { project, userSession } from '~/models';
-import { type Organization } from '~/models/organization';
 import { type Project } from '~/models/project';
 import { createFetcherLoadHook } from '~/utils/router';
 
