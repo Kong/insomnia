@@ -36,6 +36,9 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   beautifyRequestBody: 'Beautify Active Code Editors',
   graphql_explorer_focus_filter: 'Focus GraphQL Explorer Filter',
   close_tab: 'Close Tab',
+  tab_nextTab: 'Next Tab',
+  tab_previousTab: 'Previous Tab',
+  tab_reopenClosedTab: 'Reopen Closed Tab',
 };
 
 /**
@@ -167,6 +170,18 @@ const defaultRegistry: HotKeyRegistry = {
   close_tab: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.w.keyCode }],
     winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.w.keyCode }],
+  },
+  tab_nextTab: {
+    macKeys: [{ alt: true, meta: true, keyCode: keyboardKeys.rightarrow.keyCode }],
+    winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.tab.keyCode }],
+  },
+  tab_previousTab: {
+    macKeys: [{ alt: true, meta: true, keyCode: keyboardKeys.leftarrow.keyCode }],
+    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.tab.keyCode }],
+  },
+  tab_reopenClosedTab: {
+    macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.t.keyCode }],
+    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.t.keyCode }],
   },
 };
 
