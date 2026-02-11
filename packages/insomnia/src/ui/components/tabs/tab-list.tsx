@@ -27,6 +27,7 @@ import { INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';
 import { Icon } from '../icon';
+import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { AddRequestToCollectionModal } from '../modals/add-request-to-collection-modal';
 import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
 import { type BaseTab, InsomniaTab, type TabType } from './tab';
@@ -79,9 +80,28 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     moveBefore,
     batchUpdateTabs,
     currentOrgTabs,
+    goToNextTab,
+    goToPreviousTab,
+    reopenClosedTab,
   } = useInsomniaTabContext();
 
   const { tabList, activeTabId } = currentOrgTabs;
+
+  // Register keyboard shortcuts for tab navigation
+  useDocBodyKeyboardShortcuts({
+    tab_nextTab: event => {
+      event.preventDefault();
+      goToNextTab?.();
+    },
+    tab_previousTab: event => {
+      event.preventDefault();
+      goToPreviousTab?.();
+    },
+    tab_reopenClosedTab: event => {
+      event.preventDefault();
+      reopenClosedTab?.();
+    },
+  });
 
   const handleSelectionChange = (keys: Selection) => {
     if (keys !== 'all') {
@@ -115,17 +135,16 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     (docId: string, docType: string) => {
       if (docType === models.project.type) {
         // delete all tabs of this project
-        closeAllTabsUnderProject?.(docId);
-      }
-      if (docType === models.workspace.type) {
+        closeAllTabsUnderProject?.(docId, { removeFromClosedTabs: true });
+      } else if (docType === models.workspace.type) {
         // delete all tabs of this workspace
-        closeAllTabsUnderWorkspace?.(docId);
+        closeAllTabsUnderWorkspace?.(docId, { removeFromClosedTabs: true });
       } else if (docType === models.requestGroup.type) {
         // when delete a folder, we need also delete the corresponding folder runner tab(if exists)
-        batchCloseTabs?.([docId, `runner_${docId}`]);
+        batchCloseTabs?.([docId, `runner_${docId}`], { removeFromClosedTabs: true });
       } else {
         // delete tab by id
-        closeTabById(docId);
+        closeTabById(docId, { removeFromClosedTabs: true });
       }
     },
     [batchCloseTabs, closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById],
