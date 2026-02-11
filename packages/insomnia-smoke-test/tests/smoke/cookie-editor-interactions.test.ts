@@ -18,7 +18,7 @@ test.describe('Cookie editor', () => {
     await page.click('button:has-text("Cookies")');
 
     // Edit existing cookie
-    await page.getByRole('button', { name: 'Edit' }).first().click();
+    await page.getByTestId('cookie-test-iteration-0').getByRole('button', { name: 'Edit' }).click();
     await page.click('pre[role="presentation"]:has-text("bar")');
     await page.locator('[data-testid="CookieValue"] >> textarea').nth(1).fill('123');
     await page.locator('text=Done').nth(1).click();
@@ -27,7 +27,7 @@ test.describe('Cookie editor', () => {
     // Create a new cookie
     await page.getByRole('button', { name: 'Add Cookie' }).click();
 
-    await page.getByRole('button', { name: 'Edit' }).first().click();
+    await page.getByTestId('cookie-test-iteration-0').getByRole('button', { name: 'Edit' }).click();
 
     // Try to replace text in Raw view
     await page.getByRole('tab', { name: 'Raw' }).click();
@@ -66,7 +66,7 @@ test.describe('Cookie editor', () => {
     await page.getByRole('button', { name: 'Add Cookie' }).click();
 
     // Edit the new cookie
-    await page.getByRole('button', { name: 'Edit' }).first().click();
+    await page.getByTestId('cookie-test-iteration-0').getByRole('button', { name: 'Edit' }).click();
     await page.getByText('HostOnly').click();
     await expect.soft(page.locator('input[name="hostOnly"]')).toBeChecked();
     await page.getByRole('tab', { name: 'Raw' }).click();
@@ -90,7 +90,7 @@ test.describe('Cookie editor', () => {
     await page.click('button:has-text("Cookies")');
 
     // Set domain to empty
-    await page.getByRole('button', { name: 'Edit' }).first().click();
+    await page.getByTestId('cookie-test-iteration-0').getByRole('button', { name: 'Edit' }).click();
     await page.getByRole('tab', { name: 'Raw' }).click();
     await page
       .locator('text=Raw Cookie String >> input[type="text"]')
@@ -100,7 +100,7 @@ test.describe('Cookie editor', () => {
     await expect.soft(page.getByTestId('cookie-test-iteration-0').getByTestId('cookie-domain')).toBeEmpty();
 
     // Set domain to example.com
-    await page.getByRole('button', { name: 'Edit' }).first().click();
+    await page.getByTestId('cookie-test-iteration-0').getByRole('button', { name: 'Edit' }).click();
     await page.getByRole('tab', { name: 'Raw' }).click();
     await page
       .locator('text=Raw Cookie String >> input[type="text"]')

@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { app } from 'electron';
 
-import type { LLM_BACKENDS } from '~/common/constants';
+import { LLM_BACKENDS } from '~/common/constants';
 import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 import { ipcMainHandle } from '~/main/ipc/electron';
 
@@ -17,6 +17,8 @@ export interface LLMConfig {
   model: string;
   modelDir?: string;
   apiKey?: string;
+  url?: string;
+  baseURL?: string;
   temperature?: number;
   topP?: number;
   topK?: number;
@@ -51,7 +53,9 @@ export const getBackendConfig = async (backend: LLMBackend): Promise<Partial<LLM
 
     switch (field) {
       case 'model':
-      case 'apiKey': {
+      case 'apiKey':
+      case 'url':
+      case 'baseURL': {
         config[field] = value;
         break;
       }
@@ -91,9 +95,8 @@ export const updateBackendConfig = async (backend: LLMBackend, config: Partial<L
 };
 
 export const getAllConfigurations = async (): Promise<LLMConfig[]> => {
-  const backends: LLMBackend[] = ['gguf', 'claude', 'openai', 'gemini'];
   const configs = await Promise.all(
-    backends.map(
+    LLM_BACKENDS.map(
       async backend =>
         ({
           ...(await getBackendConfig(backend)),
@@ -102,7 +105,7 @@ export const getAllConfigurations = async (): Promise<LLMConfig[]> => {
     ),
   );
 
-  return configs.filter(config => config.model || config.apiKey);
+  return configs.filter(config => config.model || config.apiKey || config.url);
 };
 
 export const getCurrentConfig = async (): Promise<LLMConfig | null> => {
@@ -149,10 +152,8 @@ export const registerLLMConfigServiceAPI = () => {
   );
   ipcMainHandle('llm.getAllConfigurations', async () => getAllConfigurations());
   ipcMainHandle('llm.getCurrentConfig', async () => getCurrentConfig());
-  ipcMainHandle('llm.getAIFeatureEnabled', async (_, feature: 'aiMockServers' | 'aiCommitMessages') =>
-    getAIFeatureEnabled(feature),
-  );
-  ipcMainHandle('llm.setAIFeatureEnabled', async (_, feature: 'aiMockServers' | 'aiCommitMessages', enabled: boolean) =>
+  ipcMainHandle('llm.getAIFeatureEnabled', async (_, feature: AIFeatureNames) => getAIFeatureEnabled(feature));
+  ipcMainHandle('llm.setAIFeatureEnabled', async (_, feature: AIFeatureNames, enabled: boolean) =>
     setAIFeatureEnabled(feature, enabled),
   );
 };

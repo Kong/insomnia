@@ -291,7 +291,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 providerInfo={selectedProvider}
                 projectId={project!._id}
               />
-              {showEmailSelector && (
+              {showEmailSelector ? (
                 <div className="flex flex-col gap-2">
                   {isLoadingEmails ? (
                     <div className="flex items-center gap-2 text-sm">
@@ -369,7 +369,14 @@ export const ProjectSettingsForm: FC<Props> = ({
                     </div>
                   )}
                 </div>
-              )}
+              ) : selectedCredential?.author.email ? (
+                <div className="text-[12px]">
+                  <div className="flex">
+                    <div className="w-[110px] font-semibold">Author Email</div>
+                    <div>{selectedCredential?.author.email}</div>
+                  </div>
+                </div>
+              ) : null}
             </>
           )}
           {showGitRepoForm && (

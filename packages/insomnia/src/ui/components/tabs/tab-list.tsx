@@ -106,6 +106,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       models.environment.type,
       models.mockRoute.type,
       models.project.type,
+      models.socketIORequest.type,
     ];
     return list.includes(docType);
   };

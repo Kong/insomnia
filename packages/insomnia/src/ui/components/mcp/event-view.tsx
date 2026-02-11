@@ -92,8 +92,10 @@ export const MessageEventView = ({ event }: Props) => {
   const getElicitationFormSchema = () => {
     if (ElicitRequestSchema.safeParse(eventData).success) {
       const parsedElicitRequest = ElicitRequestSchema.parse(eventData);
-      const requestSchema = parsedElicitRequest.params.requestedSchema;
-      return requestSchema as RJSFSchema;
+      if ('requestedSchema' in parsedElicitRequest.params) {
+        const requestSchema = parsedElicitRequest.params.requestedSchema;
+        return requestSchema as RJSFSchema;
+      }
     }
     return {};
   };

@@ -49,6 +49,10 @@ export const GitRepositorySelect = ({
         isRequired
         isDisabled={loading}
         onSelectionChange={key => {
+          if (!key) {
+            onSelect('');
+            return;
+          }
           const selectedRepository = repositories.find(r => r.cloneUrl === key);
           if (selectedRepository) {
             setCannotFindRepository(false);
