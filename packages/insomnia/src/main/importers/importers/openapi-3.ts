@@ -592,7 +592,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
   }
 
   if (schema instanceof Object) {
-    const { type, format, example, readOnly, default: defaultValue } = schema;
+    const { type, format, example, readOnly, default: defaultValue, allOf, oneOf, anyOf } = schema as OpenAPIV3.SchemaObject & { allOf?: OpenAPIV3.SchemaObject[]; oneOf?: OpenAPIV3.SchemaObject[]; anyOf?: OpenAPIV3.SchemaObject[] };
 
     if (readOnly) {
       return;
@@ -604,6 +604,28 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
 
     if (defaultValue) {
       return defaultValue;
+    }
+
+    // Handle allOf by merging examples from all schemas
+    if (allOf && Array.isArray(allOf)) {
+      const mergedExample: Record<string, unknown> = {};
+      for (const subSchema of allOf) {
+        const subExample = generateParameterExample(subSchema as OpenAPIV3.SchemaObject);
+        if (subExample && typeof subExample === 'object' && !Array.isArray(subExample)) {
+          Object.assign(mergedExample, subExample);
+        }
+      }
+      return mergedExample;
+    }
+
+    // Handle oneOf by using the first schema (validates against exactly one)
+    if (oneOf && Array.isArray(oneOf) && oneOf.length > 0) {
+      return generateParameterExample(oneOf[0] as OpenAPIV3.SchemaObject);
+    }
+
+    // Handle anyOf by using the first schema (validates against any/one or more)
+    if (anyOf && Array.isArray(anyOf) && anyOf.length > 0) {
+      return generateParameterExample(anyOf[0] as OpenAPIV3.SchemaObject);
     }
 
     // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
