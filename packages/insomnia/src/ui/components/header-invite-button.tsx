@@ -31,6 +31,9 @@ export const HeaderInviteButton = ({
         setUserPermission(permissions);
       });
     })();
+    return () => {
+      setUserPermission(null);
+    };
   }, [organizationId]);
 
   // TODO: let backend handle the license check currently

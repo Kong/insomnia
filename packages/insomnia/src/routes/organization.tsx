@@ -1,5 +1,4 @@
-import { type Billing, type CurrentPlan, type FeatureList, type UserProfile } from 'insomnia-api';
-import { type Organization } from 'insomnia-api';
+import { type Billing, type CurrentPlan, type FeatureList, type Organization, type UserProfile } from 'insomnia-api';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
