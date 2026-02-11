@@ -1,5 +1,5 @@
 import { isAfter } from 'date-fns';
-import { revokeInvitation } from 'insomnia-api';
+import { type Collaborator, revokeInvitation, unlinkCollaborator } from 'insomnia-api';
 import React, { type FC, type MutableRefObject, useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -18,7 +18,7 @@ import { useParams, useSearchParams } from 'react-router';
 import { getAccountId, getCurrentSessionId } from '~/account/session';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { debounce } from '~/common/misc';
-import { type Collaborator, useCollaboratorsFetcher } from '~/routes/organization.$organizationId.collaborators';
+import { useCollaboratorsFetcher } from '~/routes/organization.$organizationId.collaborators';
 import { useInviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId';
 import { useReinviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId.reinvite';
 import { useCollaboratorsCheckSeatsLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-check-seats';
@@ -785,14 +785,15 @@ async function deleteMember(organizationId: string, userId: string) {
 }
 
 async function unlinkTeam(organizationId: string, collaboratorId: string) {
-  return insomniaFetch<void>({
-    method: 'DELETE',
-    path: `/v1/desktop/organizations/${organizationId}/collaborators/${collaboratorId}/unlink`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(error => {
+  try {
+    return await unlinkCollaborator({
+      organizationId,
+      collaboratorId,
+      sessionId: await getCurrentSessionId(),
+    });
+  } catch (error) {
     throw new Error(error ?? 'Failed to unlink team from organization');
-  });
+  }
 }
 
 async function revokeOrganizationInvite(organizationId: string, invitationId: string) {
