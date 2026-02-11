@@ -74,6 +74,8 @@ test.describe('multiple-tab feature test', () => {
       });
     await expect.soft(page.getByLabel('tab-New Request').getByLabel('Tab Tag')).toHaveText('GET');
     await page.getByTestId('tab-close-button').first().click();
+    // Move the mouse away to avoid accidentally show the tooltip of the tab which may cover the request method dropdown and cause the click fail
+    await page.mouse.move(0, 0);
     await page.getByLabel('Request Method').click();
     await page.getByRole('button', { name: 'POST' }).click();
     await expect.soft(page.getByLabel('tab-New Request').getByLabel('Tab Tag')).toHaveText('POST');

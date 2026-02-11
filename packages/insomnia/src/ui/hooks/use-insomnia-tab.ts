@@ -1,3 +1,4 @@
+import type { Organization } from 'insomnia-api';
 import { useCallback, useEffect, useMemo } from 'react';
 import { href, matchPath, useLocation, useNavigate, useSearchParams } from 'react-router';
 
@@ -8,7 +9,6 @@ import * as requestOperations from '~/models/helpers/request-operations';
 import { isMcpRequest, type McpRequest } from '~/models/mcp-request';
 import { isMockRoute, type MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
-import type { Organization } from '~/models/organization';
 import type { Project } from '~/models/project';
 import { isRequest, type Request } from '~/models/request';
 import { isRequestGroup, type RequestGroup } from '~/models/request-group';
