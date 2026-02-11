@@ -379,12 +379,6 @@ const Component = () => {
               disallowEmptySelection
               selectedKeys={[testSuiteId]}
               selectionMode="single"
-              onSelectionChange={keys => {
-                if (keys !== 'all') {
-                  const value = keys.values().next().value;
-                  value && navigateToTestSuite(value.toString(), true);
-                }
-              }}
             >
               {item => {
                 return (
