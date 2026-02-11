@@ -15,7 +15,7 @@ export const PasteCurlModal = ({
   defaultValue,
 }: ModalProps & { onImport: (req: Partial<Request>) => void; defaultValue?: string }) => {
   const modalRef = useRef<ModalHandle>(null);
-  const [isValid, setIsValid] = useState<boolean>(true);
+  const [errorMessage, setError] = useState<string>('');
   const [req, setReq] = useState<any>({});
 
   useEffect(() => {
@@ -31,11 +31,11 @@ export const PasteCurlModal = ({
         );
         const { resources } = data;
         const importedRequest = resources[0];
-        setIsValid(true);
+        setError('');
         setReq(importedRequest);
       } catch (error) {
         console.log('[importer] error', error);
-        setIsValid(false);
+        setError(error.message);
         setReq({});
       } finally {
         modalRef.current?.show();
@@ -58,7 +58,7 @@ export const PasteCurlModal = ({
             defaultValue={defaultValue}
             onChange={async value => {
               if (!value) {
-                setIsValid(false);
+                setError('Invalid input');
                 setReq({});
                 return;
               }
@@ -73,11 +73,12 @@ export const PasteCurlModal = ({
                 );
                 const { resources } = data;
                 const importedRequest = resources[0];
-                setIsValid(true);
+                setError('');
                 setReq(importedRequest);
               } catch (error) {
                 console.log('[importer] error', error);
-                setIsValid(false);
+                // Remove error prefix for brevity
+                setError(error.message.replace("Error invoking remote method 'parseImport': Error: ", ''));
                 setReq({});
               }
             }}
@@ -85,7 +86,7 @@ export const PasteCurlModal = ({
         </ModalBody>
         <ModalFooter>
           <div className="margin-left txt-sm truncate italic">
-            {isValid ? `Detected ${req.method} request to ${req.url}` : 'Invalid input'}
+            {errorMessage ? errorMessage : `Detected ${req.method} request to ${req.url}`}
           </div>
           <div>
             <button className="btn" onClick={() => modalRef.current?.hide()}>
@@ -97,7 +98,7 @@ export const PasteCurlModal = ({
                 onImport(req);
                 modalRef.current?.hide();
               }}
-              disabled={!isValid}
+              disabled={!errorMessage}
             >
               Import
             </button>
