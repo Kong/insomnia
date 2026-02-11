@@ -105,7 +105,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   );
 
   const addTab = useCallback(
-    (tab: BaseTab, options: { setActive?: boolean } = { setActive: true }) => {
+    (tab: Exclude<BaseTab, 'temporary'>, options: { setActive?: boolean } = { setActive: true }) => {
       const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
       const existingTabIndex = currentTabs.tabList.findIndex(t => t.id === tab.id);
 
@@ -114,41 +114,10 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       closedTabsRef.current[organizationId] = currentClosedTabs.filter(closedTab => closedTab.id !== tab.id);
 
       // If tab already exists, update its properties if needed
-      if (existingTabIndex !== -1) {
-        const existingTab = currentTabs.tabList[existingTabIndex];
-
-        // Only allow temporary to change from true -> false (make permanent), never false -> true
-        // This prevents a permanent tab from accidentally becoming temporary again
-        const shouldUpdateTemporary = existingTab.temporary === true && tab.temporary === false;
-        const shouldUpdateName = existingTab.name !== tab.name;
-        const needsUpdate = shouldUpdateTemporary || shouldUpdateName;
-        const needsActivate = options.setActive && currentTabs.activeTabId !== tab.id;
-
-        if (needsUpdate || needsActivate) {
-          const newTabList = needsUpdate
-            ? currentTabs.tabList.map((t, i) =>
-                i === existingTabIndex
-                  ? {
-                      ...t,
-                      name: tab.name,
-                      // Only update temporary if changing from true to false
-                      temporary: shouldUpdateTemporary ? false : t.temporary,
-                    }
-                  : t,
-              )
-            : currentTabs.tabList;
-
-          updateInsomniaTabs({
-            organizationId,
-            tabList: newTabList,
-            activeTabId: needsActivate ? tab.id : currentTabs.activeTabId,
-          });
-        }
-        return;
-      }
-
-      // New tab - append to the list
-      const newTabList = [...currentTabs.tabList, tab];
+      const newTabList =
+        existingTabIndex !== -1
+          ? currentTabs.tabList.map((t, i) => (i === existingTabIndex ? tab : t))
+          : [...currentTabs.tabList, tab];
       const newActiveTabId = options.setActive ? tab.id : currentTabs.activeTabId;
 
       updateInsomniaTabs({
@@ -161,7 +130,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   );
 
   const addTemporaryTab = useCallback(
-    (tab: BaseTab, options?: { setActive?: boolean }) => {
+    (tab: Exclude<BaseTab, 'temporary'>, options?: { setActive?: boolean }) => {
       const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
       const existingTemporaryTabIndex = currentTabs.tabList.findIndex(t => t.temporary);
 
