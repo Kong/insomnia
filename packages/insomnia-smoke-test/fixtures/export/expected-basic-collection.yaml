@@ -1,0 +1,50 @@
+# Expected export structure for basic collection
+# This fixture uses {{dynamic}} placeholders for fields that change between exports
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Test Collection
+meta:
+  id: "{{dynamic}}"
+  created: "{{dynamic}}"
+  modified: "{{dynamic}}"
+  isPrivate: false
+cookieJar:
+  name: Default Jar
+  meta:
+    id: "{{dynamic}}"
+    created: "{{dynamic}}"
+    modified: "{{dynamic}}"
+    isPrivate: false
+  cookies: []
+environments:
+  name: Base Environment
+  meta:
+    id: "{{dynamic}}"
+    created: "{{dynamic}}"
+    modified: "{{dynamic}}"
+    isPrivate: false
+  data: {}
+  color: ""
+  subEnvironments: []
+collection:
+  - url: https://httpbin.org/get
+    name: Test Request
+    method: GET
+    headers: []
+    body: {}
+    parameters: []
+    authentication: {}
+    metaSortKey: "{{dynamic}}"
+    isPrivate: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+    meta:
+      id: "{{dynamic}}"
+      created: "{{dynamic}}"
+      modified: "{{dynamic}}"
