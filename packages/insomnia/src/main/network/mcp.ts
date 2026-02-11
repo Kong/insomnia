@@ -373,13 +373,15 @@ const performConnection = async (context: ConnectionContext) => {
   mcpClient.setNotificationHandler(CancelledNotificationSchema, notification => {
     const serverRequestId = notification.params.requestId;
     // handle server request cancellation
-    if (mcpServerElicitationRequests.has(serverRequestId)) {
-      console.log('Received server request cancellation notification for elicitation request', serverRequestId);
-      mcpServerElicitationRequests.delete(serverRequestId);
-    }
-    if (mcpServerSamplingRequests.has(serverRequestId)) {
-      console.log('Received server request cancellation notification for sampling request', serverRequestId);
-      mcpServerSamplingRequests.delete(serverRequestId);
+    if (serverRequestId !== undefined) {
+      if (mcpServerElicitationRequests.has(serverRequestId)) {
+        console.log('Received server request cancellation notification for elicitation request', serverRequestId);
+        mcpServerElicitationRequests.delete(serverRequestId);
+      }
+      if (mcpServerSamplingRequests.has(serverRequestId)) {
+        console.log('Received server request cancellation notification for sampling request', serverRequestId);
+        mcpServerSamplingRequests.delete(serverRequestId);
+      }
     }
   });
   const originClientRequest = mcpClient.request.bind(mcpClient);

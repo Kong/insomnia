@@ -1,3 +1,4 @@
+import { getRealTimeCollaborators, type UserPresence } from 'insomnia-api';
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetchers, useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
@@ -14,7 +15,6 @@ import { useOrganizationSyncProjectsActionFetcher } from '~/routes/organization.
 import { useOrganizationSyncActionFetcher } from '~/routes/organization.sync';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { avatarImageCache } from '~/ui/hooks/image-cache';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];
@@ -66,17 +66,6 @@ interface VaultKeyChangeEvent {
   sessionId: string;
 }
 
-export interface UserPresence {
-  acct: string;
-  avatar: string;
-  branch: string;
-  file: string;
-  firstName: string;
-  lastName: string;
-  project: string;
-  team: string;
-}
-
 interface UserPresenceEvent extends UserPresence {
   type: 'PresentUserLeave' | 'PresentStateChanged' | 'OrganizationChanged' | 'StorageRuleChanged';
 }
@@ -126,16 +115,11 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       const sessionId = userSession.id;
       if (sessionId && remoteId) {
         try {
-          const response = await insomniaFetch<{
-            data?: UserPresence[];
-          }>({
-            path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
-            method: 'POST',
+          const response = await getRealTimeCollaborators({
             sessionId,
-            data: {
-              project: remoteId,
-              file: workspaceId,
-            },
+            organizationId: sanitizeTeamId(organizationId),
+            projectRemoteId: remoteId,
+            workspaceId,
           });
 
           const rows = response?.data || [];

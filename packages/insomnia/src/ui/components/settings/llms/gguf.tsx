@@ -102,10 +102,15 @@ export const GGUF = ({
   const topKId = useId();
   const repeatPenaltyId = useId();
   const seedId = useId();
+
+  // Extracted conditions for clearer rendering logic
+  const isCurrentBackend = currentLLM?.backend === 'gguf';
+  const showActionButtons = selectedModel || isCurrentBackend;
+
   return (
     <div className="flex w-full flex-col gap-2">
       <div className="form-control form-control--outlined">
-        <label htmlFor={modelId}>Model:</label>
+        <label htmlFor={modelId}>Model</label>
         <div className="flex flex-row gap-2">
           <select
             id={modelId}
@@ -124,7 +129,7 @@ export const GGUF = ({
           </select>
           <Button
             className="border-md rounded-md border border-solid border-(--hl-md) px-2 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)"
-            onClick={() => {
+            onPress={() => {
               refreshModelsDirectory();
               setSelectedModel('');
             }}
@@ -132,145 +137,151 @@ export const GGUF = ({
             <Icon icon="refresh" />
           </Button>
         </div>
-      </div>
-      <Text className="text-xs">
-        You can add more models by placing GGUF files in{' '}
-        <Button className="underline" onClick={() => window.shell.openPath(llmsFolder)}>
-          the LLMs folder
-        </Button>
-      </Text>
-      {selectedModel && (
-        <div className="mt-4">
-          <Button
-            className="flex w-full items-center justify-between rounded-md border border-(--hl-md) bg-(--color-bg) px-4 py-3 text-left text-(--color-font) transition-all hover:bg-(--hl-xs)"
-            onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-          >
-            <Text className="font-medium">Advanced Options</Text>
-            <Icon icon={showAdvancedOptions ? 'chevron-up' : 'chevron-down'} />
-          </Button>
+        <p className="mt-1 text-xs text-(--hl)">
+          You can add more models by placing GGUF files in{' '}
+          <span
+            className="cursor-pointer underline"
+            onClick={() => window.shell.openPath(llmsFolder)}
+          >the LLMs folder</span>.
+        </p>
+        {selectedModel && (
+          <div className="mt-4">
+            <Button
+              className="flex w-full items-center justify-between rounded-md border border-(--hl-md) bg-(--color-bg) px-4 py-3 text-left text-(--color-font) transition-all hover:bg-(--hl-xs)"
+              onPress={() => setShowAdvancedOptions(!showAdvancedOptions)}
+            >
+              <Text className="font-medium">Advanced Options</Text>
+              <Icon icon={showAdvancedOptions ? 'chevron-up' : 'chevron-down'} />
+            </Button>
 
-          {showAdvancedOptions && (
-            <div className="mt-3 rounded-md border border-(--hl-md) bg-(--hl-xs) p-4 text-sm">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="form-control form-control--outlined">
-                  <label htmlFor={temperatureId}>Temperature (0-2):</label>
-                  <Input
-                    id={temperatureId}
-                    type="number"
-                    value={modelParameters.temperature.toString()}
-                    onChange={e => {
-                      const value = Number.parseFloat(e.target.value);
-                      if (!Number.isNaN(value) && value >= 0 && value <= 2) {
-                        setModelParameters(prev => ({ ...prev, temperature: value }));
-                      }
-                    }}
-                    step="0.1"
-                    min={modelParametersSchema.shape.temperature.min.toString()}
-                    max={modelParametersSchema.shape.temperature.max.toString()}
-                  />
+            {showAdvancedOptions && (
+              <div className="mt-3 rounded-md border border-(--hl-md) bg-(--hl-xs) p-4 text-sm">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="form-control form-control--outlined">
+                    <label htmlFor={temperatureId}>Temperature (0-2):</label>
+                    <Input
+                      id={temperatureId}
+                      type="number"
+                      value={modelParameters.temperature.toString()}
+                      onChange={e => {
+                        const value = Number.parseFloat(e.target.value);
+                        if (!Number.isNaN(value) && value >= 0 && value <= 2) {
+                          setModelParameters(prev => ({ ...prev, temperature: value }));
+                        }
+                      }}
+                      step="0.1"
+                      min={modelParametersSchema.shape.temperature.min.toString()}
+                      max={modelParametersSchema.shape.temperature.max.toString()}
+                    />
+                  </div>
+
+                  <div className="form-control form-control--outlined">
+                    <label htmlFor={topPId}>Top P (0-1):</label>
+                    <Input
+                      id={topPId}
+                      type="number"
+                      value={modelParameters.topP.toString()}
+                      onChange={e => {
+                        const value = Number.parseFloat(e.target.value);
+                        if (!Number.isNaN(value) && value >= 0 && value <= 1) {
+                          setModelParameters(prev => ({ ...prev, topP: value }));
+                        }
+                      }}
+                      step="0.01"
+                      min={modelParametersSchema.shape.topP.min.toString()}
+                      max={modelParametersSchema.shape.topP.max.toString()}
+                    />
+                  </div>
+
+                  <div className="form-control form-control--outlined">
+                    <label htmlFor={topKId}>Top K (0-100):</label>
+                    <Input
+                      id={topKId}
+                      type="number"
+                      value={modelParameters.topK.toString()}
+                      onChange={e => {
+                        const value = Number.parseInt(e.target.value, 10);
+                        if (!Number.isNaN(value) && value >= 0 && value <= 100) {
+                          setModelParameters(prev => ({ ...prev, topK: value }));
+                        }
+                      }}
+                      step="1"
+                      min={modelParametersSchema.shape.topK.min.toString()}
+                      max={modelParametersSchema.shape.topK.max.toString()}
+                    />
+                  </div>
+
+                  <div className="form-control form-control--outlined">
+                    <label htmlFor={repeatPenaltyId}>Repeat Penalty (0-10):</label>
+                    <Input
+                      id={repeatPenaltyId}
+                      type="number"
+                      value={modelParameters.repeatPenalty.toString()}
+                      onChange={e => {
+                        const value = Number.parseFloat(e.target.value);
+                        if (!Number.isNaN(value) && value >= 0 && value <= 10) {
+                          setModelParameters(prev => ({ ...prev, repeatPenalty: value }));
+                        }
+                      }}
+                      step="0.1"
+                      min={modelParametersSchema.shape.repeatPenalty.min.toString()}
+                      max={modelParametersSchema.shape.repeatPenalty.max.toString()}
+                    />
+                  </div>
                 </div>
 
-                <div className="form-control form-control--outlined">
-                  <label htmlFor={topPId}>Top P (0-1):</label>
-                  <Input
-                    id={topPId}
-                    type="number"
-                    value={modelParameters.topP.toString()}
-                    onChange={e => {
-                      const value = Number.parseFloat(e.target.value);
-                      if (!Number.isNaN(value) && value >= 0 && value <= 1) {
-                        setModelParameters(prev => ({ ...prev, topP: value }));
-                      }
-                    }}
-                    step="0.01"
-                    min={modelParametersSchema.shape.topP.min.toString()}
-                    max={modelParametersSchema.shape.topP.max.toString()}
-                  />
-                </div>
-
-                <div className="form-control form-control--outlined">
-                  <label htmlFor={topKId}>Top K (0-100):</label>
-                  <Input
-                    id={topKId}
-                    type="number"
-                    value={modelParameters.topK.toString()}
-                    onChange={e => {
-                      const value = Number.parseInt(e.target.value, 10);
-                      if (!Number.isNaN(value) && value >= 0 && value <= 100) {
-                        setModelParameters(prev => ({ ...prev, topK: value }));
-                      }
-                    }}
-                    step="1"
-                    min={modelParametersSchema.shape.topK.min.toString()}
-                    max={modelParametersSchema.shape.topK.max.toString()}
-                  />
-                </div>
-
-                <div className="form-control form-control--outlined">
-                  <label htmlFor={repeatPenaltyId}>Repeat Penalty (0-10):</label>
-                  <Input
-                    id={repeatPenaltyId}
-                    type="number"
-                    value={modelParameters.repeatPenalty.toString()}
-                    onChange={e => {
-                      const value = Number.parseFloat(e.target.value);
-                      if (!Number.isNaN(value) && value >= 0 && value <= 10) {
-                        setModelParameters(prev => ({ ...prev, repeatPenalty: value }));
-                      }
-                    }}
-                    step="0.1"
-                    min={modelParametersSchema.shape.repeatPenalty.min.toString()}
-                    max={modelParametersSchema.shape.repeatPenalty.max.toString()}
-                  />
+                <div className="form-control form-control--outlined mt-4">
+                  <label htmlFor={seedId}>
+                    <input
+                      id={seedId}
+                      type="checkbox"
+                      checked={modelParameters.seed}
+                      onChange={e => setModelParameters(prev => ({ ...prev, seed: e.target.checked }))}
+                    />
+                    <Text className="text-md relative top-[8px]">Use Random Seed</Text>
+                  </label>
                 </div>
               </div>
+            )}
+          </div>
+        )}
+        <div className="mt-2 flex flex-row justify-between gap-2">
+          {showActionButtons && (
+            <>
+              <Button
+                isDisabled={!hasChanges || !selectedModel}
+                onPress={() => {
+                  const validationResult = modelParametersSchema.safeParse(modelParameters);
 
-              <div className="form-control form-control--outlined mt-4">
-                <label htmlFor={seedId}>
-                  <input
-                    id={seedId}
-                    type="checkbox"
-                    checked={modelParameters.seed}
-                    onChange={e => setModelParameters(prev => ({ ...prev, seed: e.target.checked }))}
-                  />
-                  <Text className="text-md relative top-[8px]">Use Random Seed</Text>
-                </label>
-              </div>
-            </div>
+                  if (validationResult.success) {
+                    const paramsToSave = {
+                      model: selectedModel,
+                      temperature: modelParameters.temperature,
+                      topP: modelParameters.topP,
+                      topK: modelParameters.topK,
+                      seed: modelParameters.seed,
+                      repeatPenalty: modelParameters.repeatPenalty,
+                    };
+                    saveLLMSettings(true, 'gguf', paramsToSave);
+                  } else {
+                    console.error('Validation failed:', validationResult.error);
+                  }
+                }}
+                className={`border-md rounded-md border border-solid border-(--hl-md) px-4 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset ${isCurrentBackend && !hasChanges ? 'opacity-50' : ''}`}
+              >
+                Activate
+              </Button>
+              {isCurrentBackend && (
+                <Button
+                  onPress={deactivateCurrentLLM}
+                  className="border-md rounded-md border border-solid border-(--hl-md) px-4 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+                >
+                  Deactivate
+                </Button>
+              )}
+            </>
           )}
         </div>
-      )}
-      <div className="mt-4 flex flex-row justify-between gap-2">
-        <Button
-          isDisabled={currentLLM?.backend !== 'gguf'}
-          onClick={deactivateCurrentLLM}
-          className="rounded-md border border-solid border-red-500 bg-(--color-bg) px-4 py-2 text-base text-red-500 ring-1 ring-transparent transition-all hover:border-red-600 hover:bg-(--hl-xs) focus:ring-red-300 focus:ring-inset"
-        >
-          Deactivate
-        </Button>
-        <Button
-          isDisabled={!hasChanges || !selectedModel}
-          onClick={() => {
-            const validationResult = modelParametersSchema.safeParse(modelParameters);
-
-            if (validationResult.success) {
-              const paramsToSave = {
-                model: selectedModel,
-                temperature: modelParameters.temperature,
-                topP: modelParameters.topP,
-                topK: modelParameters.topK,
-                seed: modelParameters.seed,
-                repeatPenalty: modelParameters.repeatPenalty,
-              };
-              saveLLMSettings(true, 'gguf', paramsToSave);
-            } else {
-              console.error('Validation failed:', validationResult.error);
-            }
-          }}
-          className="border-md rounded-md border border-solid border-(--hl-md) px-4 py-1 text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-selected:bg-(--hl-sm)"
-        >
-          Activate
-        </Button>
       </div>
     </div>
   );
