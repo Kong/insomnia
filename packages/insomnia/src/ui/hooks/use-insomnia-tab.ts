@@ -316,15 +316,15 @@ export const useTabNavigate = () => {
       },
       options: {
         withTab?: boolean;
-        navigateTo?: boolean;
-        isRunner?: boolean;
+        shouldNavigate?: boolean;
+        asRunner?: boolean;
         searchParams?: URLSearchParams;
       },
     ) => {
-      const { navigateTo = false, withTab = false, isRunner = false, searchParams } = options;
+      const { shouldNavigate = false, withTab = false, asRunner = false, searchParams } = options;
       const organizationId = typeof organization === 'string' ? organization : organization.id;
 
-      const tab = isRunner
+      const tab = asRunner
         ? buildRunnerTab({
             organizationId,
             projectId: project._id,
@@ -348,7 +348,7 @@ export const useTabNavigate = () => {
       if (withTab) {
         addTab(tab);
       }
-      if (navigateTo) {
+      if (shouldNavigate) {
         navigate(tab.url);
       }
     },

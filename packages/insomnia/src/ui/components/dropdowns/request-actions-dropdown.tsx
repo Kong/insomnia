@@ -82,7 +82,7 @@ export const RequestActionsDropdown = ({
       },
       {
         withTab: true,
-        navigateTo: true,
+        shouldNavigate: true,
       },
     );
   };

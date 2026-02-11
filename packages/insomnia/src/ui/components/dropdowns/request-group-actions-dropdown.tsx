@@ -162,7 +162,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
         workspace: activeWorkspace,
         item: requestGroup,
       },
-      { withTab: true, navigateTo: true },
+      { withTab: true, shouldNavigate: true },
     );
   };
 
@@ -174,7 +174,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
         workspace: activeWorkspace,
         item: requestGroup,
       },
-      { navigateTo: true, isRunner: true },
+      { shouldNavigate: true, asRunner: true },
     );
   };
 

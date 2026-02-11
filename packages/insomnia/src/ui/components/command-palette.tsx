@@ -157,7 +157,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       action: (withTab?: boolean) => {
         withTab = withTab && request.organizationId === organizationId;
         tabNavigate(navigateInfo, {
-          navigateTo: true,
+          shouldNavigate: true,
           withTab,
         });
         close();
@@ -193,7 +193,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       action: (withTab?: boolean) => {
         withTab = withTab && file.organizationId === organizationId;
         tabNavigate(navigationInfo, {
-          navigateTo: true,
+          shouldNavigate: true,
           withTab,
         });
         close();

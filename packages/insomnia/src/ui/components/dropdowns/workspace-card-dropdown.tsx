@@ -118,7 +118,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
       },
       {
         withTab: true,
-        navigateTo: true,
+        shouldNavigate: true,
       },
     );
   };

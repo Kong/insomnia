@@ -634,7 +634,7 @@ const Component = () => {
           },
           {
             withTab,
-            navigateTo: true,
+            shouldNavigate: true,
           },
         );
 

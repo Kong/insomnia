@@ -115,7 +115,7 @@ const Component = () => {
         workspace: activeWorkspace,
         item: suite,
       },
-      { withTab, navigateTo: true },
+      { withTab, shouldNavigate: true },
     );
   };
 

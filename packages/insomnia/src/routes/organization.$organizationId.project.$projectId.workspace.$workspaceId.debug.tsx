@@ -1042,7 +1042,7 @@ const Debug = () => {
                           workspace: activeWorkspace,
                           item: item.doc,
                         },
-                        { withTab: isMac() ? e.metaKey : e.ctrlKey, navigateTo: true, searchParams },
+                        { withTab: isMac() ? e.metaKey : e.ctrlKey, shouldNavigate: true, searchParams },
                       );
                     }}
                   >
@@ -1442,7 +1442,7 @@ const CollectionGridListItem = ({
           },
           {
             withTab,
-            navigateTo: true,
+            shouldNavigate: true,
             searchParams,
           },
         );
