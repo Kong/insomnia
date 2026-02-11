@@ -89,9 +89,18 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
   // Register keyboard shortcuts for tab navigation
   useDocBodyKeyboardShortcuts({
-    tab_nextTab: () => goToNextTab?.(),
-    tab_previousTab: () => goToPreviousTab?.(),
-    tab_reopenClosedTab: () => reopenClosedTab?.(),
+    tab_nextTab: event => {
+      event.preventDefault();
+      goToNextTab?.();
+    },
+    tab_previousTab: event => {
+      event.preventDefault();
+      goToPreviousTab?.();
+    },
+    tab_reopenClosedTab: event => {
+      event.preventDefault();
+      reopenClosedTab?.();
+    },
   });
 
   const handleSelectionChange = (keys: Selection) => {

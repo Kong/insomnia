@@ -46,7 +46,9 @@ export function useKeyboardShortcuts(
         .map(({ tinyKeyString, action }) => [tinyKeyString, action]),
     );
 
-    const unsubscribe = tinykeys(target, keyBindingMap);
+    const unsubscribe = tinykeys(target, keyBindingMap, {
+      capture: true,
+    });
     return unsubscribe;
   }, [hotKeyRegistry, listeners, getTarget]);
 }
