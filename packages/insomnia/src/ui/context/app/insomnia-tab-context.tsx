@@ -65,8 +65,8 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   // file: packages/insomnia/src/ui/hooks/tab.ts
   const appTabsRef = useRef(appTabs);
 
-  // Track recently closed tabs for reopen functionality
-  const closedTabsRef = useRef<BaseTab[]>([]);
+  // Track recently closed tabs for reopen functionality (per organization)
+  const closedTabsRef = useRef<Record<string, BaseTab[]>>({});
 
   const navigate = useNavigate();
 
@@ -108,7 +108,8 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       const existingTabIndex = currentTabs.tabList.findIndex(t => t.id === tab.id);
 
       // If the tab is reopened via other means, remove it from closed tabs memory
-      closedTabsRef.current = closedTabsRef.current.filter(closedTab => closedTab.id !== tab.id);
+      const currentClosedTabs = closedTabsRef.current[organizationId] || [];
+      closedTabsRef.current[organizationId] = currentClosedTabs.filter(closedTab => closedTab.id !== tab.id);
 
       // If tab already exists, update its properties if needed
       if (existingTabIndex !== -1) {
@@ -168,24 +169,28 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     [organizationId, updateInsomniaTabs],
   );
 
-  const addClosedTabs = useCallback((tabs: BaseTab[]) => {
-    if (!tabs.length) {
-      return;
-    }
+  const addClosedTabs = useCallback(
+    (tabs: BaseTab[]) => {
+      if (!tabs.length) return;
 
-    const closingIds = new Set(tabs.map(tab => tab.id));
-    closedTabsRef.current = closedTabsRef.current.filter(tab => !closingIds.has(tab.id));
-    closedTabsRef.current.push(...tabs);
-  }, []);
+      const currentClosedTabs = closedTabsRef.current[organizationId] || [];
+      const closingIds = new Set(tabs.map(tab => tab.id));
+      const filteredTabs = currentClosedTabs.filter(tab => !closingIds.has(tab.id));
+      closedTabsRef.current[organizationId] = [...filteredTabs, ...tabs];
+    },
+    [organizationId],
+  );
 
-  const removeClosedTabsByIds = useCallback((ids: string[]) => {
-    if (!ids.length) {
-      return;
-    }
+  const removeClosedTabsByIds = useCallback(
+    (ids: string[]) => {
+      if (!ids.length) return;
 
-    const idSet = new Set(ids);
-    closedTabsRef.current = closedTabsRef.current.filter(tab => !idSet.has(tab.id));
-  }, []);
+      const currentClosedTabs = closedTabsRef.current[organizationId] || [];
+      const idSet = new Set(ids);
+      closedTabsRef.current[organizationId] = currentClosedTabs.filter(tab => !idSet.has(tab.id));
+    },
+    [organizationId],
+  );
 
   const closeTabById = useCallback(
     (id: string, options: CloseTabOptions = {}) => {
@@ -567,16 +572,12 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   const reopenClosedTab = useCallback(() => {
     const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
     const existingIds = new Set(currentTabs.tabList.map(tab => tab.id));
+    const currentClosedTabs = closedTabsRef.current[organizationId] || [];
 
-    while (closedTabsRef.current.length) {
-      const closedTab = closedTabsRef.current.pop();
-      if (!closedTab) {
-        return;
-      }
-
-      if (existingIds.has(closedTab.id)) {
-        continue;
-      }
+    while (currentClosedTabs.length) {
+      const closedTab = currentClosedTabs.pop();
+      if (!closedTab) return;
+      if (existingIds.has(closedTab.id)) continue;
 
       updateInsomniaTabs({
         organizationId,
