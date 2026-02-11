@@ -12,7 +12,7 @@ export const canDuplicate = true;
 export const canSync = false;
 
 export interface BaseMcpPayload {
-  params?: Record<string, any>;
+  params?: string | Record<string, any>;
   url: string;
 }
 

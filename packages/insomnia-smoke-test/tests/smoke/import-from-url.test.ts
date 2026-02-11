@@ -16,7 +16,6 @@ test.describe('Import from URL', () => {
   test('Should work as expected in HTTP request', async ({ page }) => {
     const requestUrl = 'http://localhost:4010/echo?foo=bar&baz=qux';
     const codeMirror = page.getByTestId('OneLineEditor').first().locator('.CodeMirror');
-
     await page.getByText('example http').click();
 
     const importFromUrlButton = page.getByRole('button', { name: 'Import from URL' });

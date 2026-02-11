@@ -46,14 +46,6 @@ export const scanImportResources = async (data: {
     contentList.push({
       contentStr: curl,
     });
-    // const { data } = await window.main.parseImport(
-    //   {
-    //     contentStr: curl || '',
-    //   },
-    //   {
-    //     importerId: 'curl',
-    //   },
-    // );
   } else if (source === 'file') {
     let filePaths: string[];
     try {

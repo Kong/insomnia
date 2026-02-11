@@ -232,6 +232,8 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('writeFile', async (_, options: { path: string; content: string }) => {
     try {
+      const dir = path.dirname(options.path);
+      await fs.promises.mkdir(dir, { recursive: true });
       await fs.promises.writeFile(options.path, options.content);
       return options.path;
     } catch (err) {

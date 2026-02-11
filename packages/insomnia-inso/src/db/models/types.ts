@@ -1,5 +1,5 @@
 // Simplified and extracted from insomnia/src/models/*
-import type { Database } from '../index';
+import type { Database } from '../types';
 
 export interface BaseModel {
   _id: string;
