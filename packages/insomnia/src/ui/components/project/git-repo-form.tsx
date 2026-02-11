@@ -22,7 +22,7 @@ import { GitRemoteBranchSelect } from '~/ui/components/git-credentials/git-remot
 import { GitRepositorySelect } from '~/ui/components/git-credentials/git-repository-select';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
-import { type GitCredentials, isGitCredentialsV2, isOAuthCredential } from '../../../models/git-credentials';
+import { type GitCredentialsV2, isGitCredentialsV2, isOAuthCredential } from '../../../models/git-credentials';
 import { ErrorBoundary } from '../error-boundary';
 import type { ActiveView, ProjectData } from './utils';
 
@@ -34,7 +34,7 @@ const getDisplayValue = (fullUri: string | undefined, prefix: string | undefined
   return fullUri;
 };
 
-const getCredentialEmails = (credential: GitCredentials | undefined) => {
+const getCredentialEmails = (credential: GitCredentialsV2 | undefined) => {
   if (credential && isGitCredentialsV2(credential) && isOAuthCredential(credential)) {
     return credential.credentials?.emails || [];
   }
@@ -47,7 +47,7 @@ interface Props {
   initCloneGitRepositoryFetcher: ReturnType<typeof useGitProjectInitCloneActionFetcher>;
   organizationId: string;
   setActiveView: React.Dispatch<React.SetStateAction<ActiveView>>;
-  credentials: GitCredentials[];
+  credentials: GitCredentialsV2[];
   providers: GitProviderOption[];
   formId: string;
 }
@@ -144,7 +144,7 @@ export const GitRepoForm: FC<Props> = ({
           >
             <Label className="mb-2 px-0.5 pt-0 text-sm">Authorized as</Label>
             <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
-              <SelectValue<GitCredentials> className="flex items-center justify-center gap-2 truncate">
+              <SelectValue<GitCredentialsV2> className="flex items-center justify-center gap-2 truncate">
                 {({ selectedItem }) => {
                   if (selectedItem) {
                     const provider = providers.find(p => p.type === selectedItem.provider);

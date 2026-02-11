@@ -17,7 +17,7 @@ import { Banner } from '~/basic-components/banner';
 import { Divider } from '~/basic-components/divider';
 import { LearnMoreLink } from '~/basic-components/link';
 import {
-  type GitCredentials,
+  type GitCredentialsV2,
   isGitCredentialsV2,
   isOAuthCredential,
   type ProviderEmail,
@@ -71,7 +71,7 @@ interface Props {
   defaultProjectName?: string;
   onCancel?(): void;
   onSuccessUpdate?(): void;
-  credentials: GitCredentials[];
+  credentials: GitCredentialsV2[];
   providers: GitProviderOption[];
 }
 
