@@ -20,7 +20,6 @@ import {
 } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
-import { isMac } from '~/common/constants';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '~/common/hotkeys';
 import { isGrpcRequest } from '~/models/grpc-request';
 import { isRequest } from '~/models/request';
@@ -45,6 +44,7 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { isPrimaryClickModifier } from '~/ui/utils';
 
 export const CommandPalette = memo(function CommandPalette({ style = {} }: { style?: React.CSSProperties }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -626,7 +626,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                             onPointerDown={e => e.stopPropagation()}
                             onPointerUp={e => e.stopPropagation()}
                             onClick={e => {
-                              item.action(isMac() ? e.metaKey : e.ctrlKey);
+                              item.action(isPrimaryClickModifier(e));
                             }}
                           >
                             {item.icon}

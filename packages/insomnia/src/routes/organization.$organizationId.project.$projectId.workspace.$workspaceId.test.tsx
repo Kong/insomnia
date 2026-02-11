@@ -45,6 +45,7 @@ import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { isPrimaryClickModifier } from '~/ui/utils';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test';
@@ -102,11 +103,9 @@ const Component = () => {
 
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
 
-  const navigateToTestSuite = (suiteId: string, withTab?: boolean) => {
-    const suite = unitTestSuites.find(s => s._id === suiteId);
-    if (!suite) {
-      return;
-    }
+  const navigateToTestSuite = (suiteId: string | UnitTestSuite, withTab?: boolean) => {
+    const suite = typeof suiteId === 'string' ? unitTestSuites.find(s => s._id === suiteId) : suiteId;
+    if (!suite) return;
 
     tabNavigate(
       {
@@ -394,6 +393,9 @@ const Component = () => {
                     id={item._id}
                     textValue={item.name}
                     className="group w-full outline-hidden select-none"
+                    onPress={e => {
+                      navigateToTestSuite(item, isPrimaryClickModifier(e));
+                    }}
                   >
                     <div
                       className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)"

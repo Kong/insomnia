@@ -23,7 +23,7 @@ import {
   useRouteLoaderData,
 } from 'react-router';
 
-import { DEFAULT_SIDEBAR_SIZE, isMac } from '~/common/constants';
+import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import * as models from '~/models';
 import type { MockRoute } from '~/models/mock-route';
 import { useRootLoaderData } from '~/root';
@@ -43,6 +43,7 @@ import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { isPrimaryClickModifier } from '~/ui/utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server';
 import {
@@ -310,7 +311,7 @@ const Component = () => {
                   textValue={item.name}
                   className="group w-full outline-hidden select-none"
                   onPress={e => {
-                    mockRouteNavigateAction(item._id, isMac() ? e.metaKey : e.ctrlKey);
+                    mockRouteNavigateAction(item._id, isPrimaryClickModifier(e));
                   }}
                 >
                   <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
@@ -354,7 +355,7 @@ const Component = () => {
                               aria-label={item.name}
                               onAction={() => {}}
                               onPress={e => {
-                                mockRouteNavigateAction(item.id, isMac() ? e.metaKey : e.ctrlKey);
+                                mockRouteNavigateAction(item.id, isPrimaryClickModifier(e));
                               }}
                             >
                               <Icon icon={item.icon} />

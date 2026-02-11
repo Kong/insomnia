@@ -40,14 +40,7 @@ import {
 } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
-import {
-  DEFAULT_SIDEBAR_SIZE,
-  getProductName,
-  isMac,
-  SORT_ORDERS,
-  type SortOrder,
-  sortOrderName,
-} from '~/common/constants';
+import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
 import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
@@ -133,6 +126,7 @@ import {
   useRequestMetaPatcher,
   useRequestPatcher,
 } from '~/ui/hooks/use-request';
+import { isPrimaryClickModifier } from '~/ui/utils';
 import { scrollElementIntoView } from '~/utils';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/utils/grpc';
 
@@ -1042,7 +1036,7 @@ const Debug = () => {
                           workspace: activeWorkspace,
                           item: item.doc,
                         },
-                        { withTab: isMac() ? e.metaKey : e.ctrlKey, shouldNavigate: true, searchParams },
+                        { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
                       );
                     }}
                   >
@@ -1432,7 +1426,6 @@ const CollectionGridListItem = ({
       style={style}
       onAction={() => {}}
       onPress={e => {
-        const withTab = isMac() ? e.metaKey : e.ctrlKey;
         tabNavigate(
           {
             organization: organizationId,
@@ -1441,7 +1434,7 @@ const CollectionGridListItem = ({
             item: item.doc,
           },
           {
-            withTab,
+            withTab: isPrimaryClickModifier(e),
             shouldNavigate: true,
             searchParams,
           },

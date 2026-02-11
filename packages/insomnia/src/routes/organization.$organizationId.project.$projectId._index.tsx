@@ -31,7 +31,6 @@ import {
   dashboardSortOrderName,
   DEFAULT_SIDEBAR_SIZE,
   getAppWebsiteBaseURL,
-  isMac,
 } from '~/common/constants';
 import { database } from '~/common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
@@ -85,6 +84,7 @@ import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { trackTempProjectOpened } from '~/ui/temp-segment-tracking';
+import { isPrimaryClickModifier } from '~/ui/utils';
 import { invariant } from '~/utils/invariant';
 
 export type ProjectScopeKeys = WorkspaceScope | 'unsynced';
@@ -1269,7 +1269,7 @@ const Component = () => {
                           // onAction is required for onPress with selectionMode='none' but we handle clicks in onPress
                           onAction={() => {}}
                           onPress={e => {
-                            item.action(isMac() ? e.metaKey : e.ctrlKey);
+                            item.action(isPrimaryClickModifier(e));
                           }}
                           className={`flex aspect-square w-full flex-1 flex-col overflow-hidden rounded-md p-(--padding-md) ring-1 ring-(--hl-md) outline-hidden transition-all select-none hover:bg-(--hl-xs) hover:shadow-md hover:ring-(--hl-sm) focus:bg-(--hl-sm) focus:ring-(--hl-lg) ${item.loading ? 'animate-pulse' : ''}`}
                         >
