@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import { checkSeats, type CheckSeatsResponse, needsToIncreaseSeats, needsToUpgrade, type Role } from 'insomnia-api';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -19,19 +20,13 @@ import { debounce } from '~/common/misc';
 import { isOwnerOfOrganization } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
-import {
-  type CheckSeatsResponse,
-  needsToIncreaseSeats,
-  needsToUpgrade,
-} from '~/routes/organization.$organizationId.collaborators-check-seats';
 import { useCollaboratorsSearchLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-search';
 import { SegmentEvent } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 import { useIsLightTheme } from '~/ui/hooks/theme';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { startInvite } from './encryption';
-import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
+import { OrganizationMemberRolesSelector, SELECTOR_TYPE } from './organization-member-roles-selector';
 
 export function getSearchParamsString(
   searchParams: URLSearchParams,
@@ -162,21 +157,20 @@ export const InviteForm = ({
   }, [searchResult]);
 
   useEffect(() => {
-    const checkSeats = async () => {
+    const checkSeatsFn = async () => {
       const validEmails = emails.filter(e => e.isValid);
       if (validEmails.length === 0) {
         setError('');
       } else {
-        const data = await insomniaFetch<CheckSeatsResponse>({
-          method: 'POST',
-          path: `/v1/organizations/${organizationId}/check-seats`,
-          data: { emails: validEmails.map(e => e.email) },
+        const data = await checkSeats({
+          organizationId,
           sessionId,
+          emails: validEmails.map(e => e.email),
         });
         setError(data.isAllowed ? '' : 'You cannot invite more people than the seats you have remaining');
       }
     };
-    checkSeats();
+    checkSeatsFn();
   }, [emails, organizationId, sessionId]);
 
   const addEmail = ({
