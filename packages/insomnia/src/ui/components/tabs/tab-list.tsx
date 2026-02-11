@@ -136,8 +136,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       if (docType === models.project.type) {
         // delete all tabs of this project
         closeAllTabsUnderProject?.(docId, { removeFromClosedTabs: true });
-      }
-      if (docType === models.workspace.type) {
+      } else if (docType === models.workspace.type) {
         // delete all tabs of this workspace
         closeAllTabsUnderWorkspace?.(docId, { removeFromClosedTabs: true });
       } else if (docType === models.requestGroup.type) {
