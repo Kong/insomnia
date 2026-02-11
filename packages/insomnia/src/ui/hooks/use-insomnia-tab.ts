@@ -182,13 +182,13 @@ const buildTabUrl = (
     }
   })();
 
-  searchParams = searchParams || new URLSearchParams();
+  const newSearchParams = new URLSearchParams(searchParams);
   // Ensure we do not skip to active request when opening collection tab
   if (type === 'collection') {
-    searchParams.set('doNotSkipToActiveRequest', 'true');
+    newSearchParams.set('doNotSkipToActiveRequest', 'true');
   }
 
-  const search = buildSearchString(searchParams);
+  const search = buildSearchString(newSearchParams);
   return `${url}${search}`;
 };
 

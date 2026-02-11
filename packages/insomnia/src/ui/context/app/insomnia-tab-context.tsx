@@ -105,7 +105,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   );
 
   const addTab = useCallback(
-    (tab: Exclude<BaseTab, 'temporary'>, options: { setActive?: boolean } = { setActive: true }) => {
+    (tab: Omit<BaseTab, 'temporary'>, options: { setActive?: boolean } = { setActive: true }) => {
       const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
       const existingTabIndex = currentTabs.tabList.findIndex(t => t.id === tab.id);
 
@@ -130,18 +130,17 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   );
 
   const addTemporaryTab = useCallback(
-    (tab: Exclude<BaseTab, 'temporary'>, options?: { setActive?: boolean }) => {
+    (tab: Omit<BaseTab, 'temporary'>, options?: { setActive?: boolean }) => {
       const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
       const existingTemporaryTabIndex = currentTabs.tabList.findIndex(t => t.temporary);
 
-      let newTabList = currentTabs.tabList;
       const temporaryTab = {
         ...tab,
         temporary: true,
       };
 
       // If temporary tab already exists, just replace the tab and activate it if needed (no duplicate tabs)
-      newTabList =
+      const newTabList =
         existingTemporaryTabIndex !== -1
           ? currentTabs.tabList.map((t, i) => (i === existingTemporaryTabIndex ? temporaryTab : t))
           : [...currentTabs.tabList, temporaryTab];
@@ -300,7 +299,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   );
 
   const changeActiveTab = useCallback(
-    (id: string, options = { navigate: true }) => {
+    (id: string, options?: { navigate?: boolean }) => {
       const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
       if (!currentTabs) {
         return;
@@ -369,7 +368,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
 
       const closeIds = currentTabs.tabList.filter(tab => tab.id !== id).map(tab => tab.id);
       batchCloseTabs(closeIds, options);
-      changeActiveTab(id, { navigate: false });
+      changeActiveTab(id);
     },
     [batchCloseTabs, changeActiveTab, navigate, organizationId],
   );

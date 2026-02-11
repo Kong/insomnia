@@ -106,9 +106,8 @@ const Component = () => {
 
   const mockRouteNavigateAction = (mockRouteId: string, withTab?: boolean) => {
     const currentRoute = mockRoutes.find(m => m._id === mockRouteId);
-    if (!currentRoute) {
-      return;
-    }
+    if (!currentRoute) return;
+
     tabNavigate(
       {
         organization: organizationId,
@@ -344,6 +343,9 @@ const Component = () => {
                         <Menu
                           aria-label="Mock Route Action Menu"
                           selectionMode="single"
+                          onAction={key => {
+                            mockRouteActionList.find(({ id }) => key === id)?.action(item._id, item.name);
+                          }}
                           items={mockRouteActionList}
                           className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
                         >
@@ -353,10 +355,6 @@ const Component = () => {
                               id={item.id}
                               className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                               aria-label={item.name}
-                              onAction={() => {}}
-                              onPress={e => {
-                                mockRouteNavigateAction(item.id, isPrimaryClickModifier(e));
-                              }}
                             >
                               <Icon icon={item.icon} />
                               <span>{item.name}</span>
