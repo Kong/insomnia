@@ -57,6 +57,11 @@ describe('curl', () => {
     },
     // --data
     {
+      name: 'should handle --data with json string',
+      curl: `curl -X POST http://httpbin.org/post -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'X-Request-ID: abc123' -d '{"user":{"name":"John","email":"john@example.com"}}'`,
+      expected: { body: { text: '{"user":{"name":"John","email":"john@example.com"}}' } },
+    },
+    {
       name: 'should handle --data with key=value',
       curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data 'key=value'",
       expected: { body: { params: [{ name: 'key', value: 'value' }] } },
@@ -125,8 +130,8 @@ describe('curl', () => {
     },
     {
       name: 'should handle --data-binary with JSON string',
-      curl: 'curl -X POST https://example.com -H \'Content-Type: application/x-www-form-urlencoded\' --data-binary \'{"foo":"sGrG5sXDP5vX=p41h9tBcaQ==","bar":"123"}\'',
-      expected: { body: { params: [{ name: '{"foo":"sGrG5sXDP5vX', value: 'p41h9tBcaQ==","bar":"123"}' }] } },
+      curl: `curl -X POST https://example.com -H 'Content-Type: application/json' --data-binary '{"foo":"sGrG5sXDP5vX=p41h9tBcaQ==","bar":"123"}'`,
+      expected: { body: { text: '{"foo":"sGrG5sXDP5vX=p41h9tBcaQ==","bar":"123"}' } },
     },
     {
       name: 'should handle --data-binary with multiple equals signs',

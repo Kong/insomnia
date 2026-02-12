@@ -340,6 +340,10 @@ const pairToParameters = (pair: string | boolean, allowFiles = false): Parameter
   if (typeof pair === 'boolean') {
     return [{ name: '', value: pair.toString() }];
   }
+  try {
+    JSON.parse(pair);
+    return [{ name: '', value: pair }];
+  } catch {}
 
   return pair.split('&').map(pair => {
     if (pair.includes('@') && allowFiles) {
