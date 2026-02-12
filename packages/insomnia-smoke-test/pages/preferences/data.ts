@@ -115,6 +115,29 @@ export class DataPage {
   }
 
   /**
+   * Waits for export files to be created in the directory
+   * Used for project-level exports that don't show an alert
+   * @param dirPath - The directory to check for files
+   * @param expectedCount - The expected number of files
+   * @param timeout - Maximum time to wait in milliseconds (default: 10000)
+   */
+  async waitForExportFiles(dirPath: string, expectedCount: number, timeout = 10_000): Promise<void> {
+    const startTime = Date.now();
+    const pollInterval = 100;
+
+    while (Date.now() - startTime < timeout) {
+      const files = this.getExportedFiles(dirPath);
+      if (files.length >= expectedCount) {
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
+    }
+
+    const files = this.getExportedFiles(dirPath);
+    throw new Error(`Timeout waiting for ${expectedCount} export files. Found ${files.length} files in ${dirPath}`);
+  }
+
+  /**
    * Gets all exported files from a directory
    * @param dirPath - The directory path to search
    * @returns Array of file paths
@@ -220,8 +243,8 @@ export class DataPage {
     const path = require('node:path');
     const { parse, stringify } = require('yaml');
 
-    // Read expected fixture
-    const fixturePath = path.resolve(__dirname, '../../', expectedFixturePath);
+    // Read expected fixture (path is relative to fixtures directory)
+    const fixturePath = path.resolve(__dirname, '../../fixtures', expectedFixturePath);
     if (!fs.existsSync(fixturePath)) {
       return {
         matches: false,
@@ -259,7 +282,7 @@ export class DataPage {
       };
 
       const normalizedActual = normalizeForComparison(actualParsed);
-      const normalizedExpected = expectedParsed;
+      const normalizedExpected = normalizeForComparison(expectedParsed);
 
       // Convert back to YAML for string comparison
       const normalizedActualYaml = stringify(normalizedActual);
