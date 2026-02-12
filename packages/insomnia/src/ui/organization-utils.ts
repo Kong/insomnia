@@ -1,11 +1,19 @@
-import { type CurrentPlan, getCurrentPlan, getUserProfile } from 'insomnia-api';
+import {
+  type CurrentPlan,
+  getCurrentPlan,
+  getOrganizations,
+  getOrganizationStorageRule,
+  getUserProfile,
+  type Organization,
+  type StorageRules,
+} from 'insomnia-api';
+import { fetchTeamProjects } from 'insomnia-api';
 
 import { projectLock } from '~/common/project';
 
 import { database } from '../common/database';
 import { project, userSession } from '../models';
 import { updateLocalProjectToRemote } from '../models/helpers/project';
-import type { Organization, OrganizationsResponse, StorageRules } from '../models/organization';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../models/organization';
 import type { Project } from '../models/project';
 import { VCSInstance } from '../sync/vcs/insomnia-sync';
@@ -68,11 +76,7 @@ export async function syncCurrentPlan(sessionId: string, accountId: string) {
 export async function syncOrganizations(sessionId: string, accountId: string) {
   try {
     const [organizationsResult, user, currentPlan] = await Promise.all([
-      insomniaFetch<OrganizationsResponse | void>({
-        method: 'GET',
-        path: '/v1/organizations',
-        sessionId,
-      }),
+      getOrganizations({ sessionId }),
       getUserProfile({ sessionId }),
       getCurrentPlan({ sessionId }),
     ]);
@@ -149,11 +153,9 @@ export async function fetchAndCacheOrganizationStorageRule(
   const { id: sessionId } = await userSession.getOrCreate();
 
   // Otherwise fetch from the API
-  return await insomniaFetch<StorageRules>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}/storage-rule`,
+  return await getOrganizationStorageRule({
+    organizationId,
     sessionId,
-    onlyResolveOnSuccess: true,
   }).then(
     res => {
       if (res) {
@@ -180,18 +182,9 @@ async function getAllTeamProjects(organizationId: string) {
   }
 
   console.log('[project] Fetching', organizationId);
-  const response = await insomniaFetch<{
-    data: {
-      id: string;
-      name: string;
-    }[];
-  }>({
-    path: `/v1/organizations/${organizationId}/team-projects`,
-    method: 'GET',
-    sessionId,
-  });
+  const response = await fetchTeamProjects({ sessionId, organizationId });
 
-  return response.data as TeamProject[];
+  return response.data;
 }
 
 async function syncTeamProjects({

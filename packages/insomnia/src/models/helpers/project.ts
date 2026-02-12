@@ -1,10 +1,11 @@
+import { createTeamProject, isApiError } from 'insomnia-api';
+
 import { database } from '../../common/database';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
 } from '../../sync/vcs/initialize-backend-project';
 import type { VCS } from '../../sync/vcs/vcs';
-import { insomniaFetch } from '../../ui/insomnia-fetch';
 import { invariant } from '../../utils/invariant';
 import { isDefaultOrganizationProject, type Project, update as updateProject } from '../project';
 import { type Workspace } from '../workspace';
@@ -25,60 +26,51 @@ export async function updateLocalProjectToRemote({
   sessionId: string;
   organizationId: string;
 }) {
-  const newCloudProject = await insomniaFetch<
-    | {
-        id: string;
-        name: string;
-      }
-    | {
-        error: string;
-        message?: string;
-      }
-  >({
-    path: `/v1/organizations/${organizationId}/team-projects`,
-    method: 'POST',
-    data: {
+  try {
+    const newCloudProject = await createTeamProject({
+      sessionId,
+      organizationId,
       name: project.name,
-    },
-    sessionId,
-  });
+    });
+    const updatedProject = await updateProject(project, { name: newCloudProject.name, remoteId: newCloudProject.id });
 
-  if (!newCloudProject || 'error' in newCloudProject) {
-    let error = 'An unexpected error occurred while creating the project. Please try again.';
-    if (newCloudProject.error === 'FORBIDDEN' || newCloudProject.error === 'NEEDS_TO_UPGRADE') {
-      error = newCloudProject.error;
-    }
+    // For each workspace in the local project
+    const projectWorkspaces = await database.find<Workspace>('Workspace', {
+      parentId: updatedProject._id,
+    });
 
-    return {
-      error,
-    };
-  }
+    for (const workspace of projectWorkspaces) {
+      const workspaceMeta = await getOrCreateWorkspaceMeta(workspace._id);
 
-  const updatedProject = await updateProject(project, { name: newCloudProject.name, remoteId: newCloudProject.id });
+      // Initialize Sync on the workspace if it's not using Git sync
+      try {
+        if (!workspaceMeta.gitRepositoryId) {
+          invariant(vcs, 'VCS must be initialized');
 
-  // For each workspace in the local project
-  const projectWorkspaces = await database.find<Workspace>('Workspace', {
-    parentId: updatedProject._id,
-  });
-
-  for (const workspace of projectWorkspaces) {
-    const workspaceMeta = await getOrCreateWorkspaceMeta(workspace._id);
-
-    // Initialize Sync on the workspace if it's not using Git sync
-    try {
-      if (!workspaceMeta.gitRepositoryId) {
-        invariant(vcs, 'VCS must be initialized');
-
-        await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
-        await pushSnapshotOnInitialize({ vcs, workspace, project: updatedProject });
+          await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
+          await pushSnapshotOnInitialize({ vcs, workspace, project: updatedProject });
+        }
+      } catch (e) {
+        console.warn(
+          'Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.',
+          e,
+        );
+        // TODO: here we should show the try again dialog
       }
-    } catch (e) {
-      console.warn(
-        'Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.',
-        e,
-      );
-      // TODO: here we should show the try again dialog
     }
+  } catch (error: unknown) {
+    if (isApiError(error)) {
+      let errorMessage = 'An unexpected error occurred while connecting the project. Please try again.';
+      if (error.name === 'FORBIDDEN' || error.name === 'NEEDS_TO_UPGRADE') {
+        errorMessage = error.message;
+      }
+      return {
+        error: errorMessage,
+      };
+    }
+    return {
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 
   return {

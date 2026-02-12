@@ -1,4 +1,4 @@
-import { InsoError } from '../../cli';
+import { InsoError } from '../../errors';
 import type { BaseModel } from './types';
 
 export const matchIdIsh = ({ _id }: BaseModel, identifier: string) => _id.startsWith(identifier);

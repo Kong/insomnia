@@ -1,3 +1,5 @@
+import type { AllTypes, BaseModel } from '~/models/types';
+
 import { generateId } from '../common/misc';
 import { typedKeys } from '../utils';
 import * as _apiSpec from './api-spec';
@@ -42,19 +44,7 @@ import * as _webSocketResponse from './websocket-response';
 import * as _workspace from './workspace';
 import * as _workspaceMeta from './workspace-meta';
 
-export interface BaseModel {
-  _id: string;
-  type: AllTypes;
-  // TSCONVERSION -- parentId is always required for all models, except 4:
-  //   - Stats, Settings, and Project, which never have a parentId
-  //   - Workspace optionally has a parentId (which will be the id of a Project)
-  parentId: string; // or null
-  modified: number;
-  created: number;
-  isPrivate: boolean;
-  name: string;
-}
-
+export type { AllTypes, BaseModel };
 // Reference to each model
 export const apiSpec = _apiSpec;
 export const clientCertificate = _clientCertificate;
@@ -150,49 +140,6 @@ export function all() {
 export function types() {
   return all().map(model => model.type);
 }
-export type AllTypes =
-  | 'ApiSpec'
-  | 'CaCertificate'
-  | 'ClientCertificate'
-  | 'CloudCredential'
-  | 'CookieJar'
-  | 'Environment'
-  | 'GitCredentials'
-  | 'GitRepository'
-  | 'GrpcRequest'
-  | 'GrpcRequestMeta'
-  | 'MockRoute'
-  | 'MockServer'
-  | 'OAuth2Token'
-  | 'PluginData'
-  | 'Project'
-  | 'ProtoDirectory'
-  | 'ProtoFile'
-  | 'Request'
-  | 'RequestGroup'
-  | 'RequestGroupMeta'
-  | 'RequestMeta'
-  | 'RequestVersion'
-  | 'Response'
-  | 'RunnerTestResult'
-  | 'Settings'
-  | 'SocketIOPayload'
-  | 'SocketIORequest'
-  | 'SocketIOResponse'
-  | 'Stats'
-  | 'UnitTest'
-  | 'UnitTestResult'
-  | 'UnitTestSuite'
-  | 'UserSession'
-  | 'WebSocketPayload'
-  | 'WebSocketRequest'
-  | 'WebSocketResponse'
-  | 'McpRequest'
-  | 'McpResponse'
-  | 'McpPayload'
-  | 'Workspace'
-  | 'WorkspaceMeta';
-
 export const isValidType = (type: string): type is AllTypes => {
   return types().includes(type as AllTypes);
 };

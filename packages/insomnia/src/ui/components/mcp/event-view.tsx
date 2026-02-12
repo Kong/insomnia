@@ -92,8 +92,10 @@ export const MessageEventView = ({ event }: Props) => {
   const getElicitationFormSchema = () => {
     if (ElicitRequestSchema.safeParse(eventData).success) {
       const parsedElicitRequest = ElicitRequestSchema.parse(eventData);
-      const requestSchema = parsedElicitRequest.params.requestedSchema;
-      return requestSchema as RJSFSchema;
+      if ('requestedSchema' in parsedElicitRequest.params) {
+        const requestSchema = parsedElicitRequest.params.requestedSchema;
+        return requestSchema as RJSFSchema;
+      }
     }
     return {};
   };
@@ -122,10 +124,7 @@ export const MessageEventView = ({ event }: Props) => {
         }
       }
     }
-    // Escape tabs and new lines for CodeMirror display
-    pretty = JSON.stringify(parsed, null, '\t')
-      .replace(/\\n|\\r\\n|\\r/g, '\n')
-      .replace(/\\t/g, '\t');
+    pretty = JSON.stringify(parsed, null, '\t');
   } catch {
     // Can't parse as JSON.
   }
@@ -200,7 +199,7 @@ export const MessageEventView = ({ event }: Props) => {
         )}
       </div>
       {viewMode === 'raw' && (
-        <div className="h-full grow p-4">
+        <div className="h-full grow">
           <CodeEditor
             id="mcp-data-preview"
             hideLineNumbers

@@ -46,7 +46,9 @@ export function useKeyboardShortcuts(
         .map(({ tinyKeyString, action }) => [tinyKeyString, action]),
     );
 
-    const unsubscribe = tinykeys(target, keyBindingMap);
+    const unsubscribe = tinykeys(target, keyBindingMap, {
+      capture: true, // use capture phase to ensure hotkeys can be triggered to avoid being blocked by aria-components
+    });
     return unsubscribe;
   }, [hotKeyRegistry, listeners, getTarget]);
 }

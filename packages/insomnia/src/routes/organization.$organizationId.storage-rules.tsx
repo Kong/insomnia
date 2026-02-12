@@ -1,6 +1,6 @@
+import type { StorageRules } from 'insomnia-api';
 import { href } from 'react-router';
 
-import type { StorageRules } from '~/models/organization';
 import { fetchAndCacheOrganizationStorageRule } from '~/ui/organization-utils';
 import { createFetcherLoadHook, createFetcherSubmitHook } from '~/utils/router';
 

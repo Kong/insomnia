@@ -1,49 +1,39 @@
-// This file could be imported by both main and renderer processes, so it should be written in a way that works in both contexts.
+// NeDB Database implementation for main process and Node.js environments
+// This is the core database implementation using NeDB as the storage backend.
 
-/* eslint-disable prefer-rest-params -- don't want to change ...arguments usage for these sensitive functions without more testing */
+import os from 'node:os';
 import fsPath from 'node:path';
 
 import NeDB from '@seald-io/nedb';
-import electron from 'electron';
-import { v4 as uuidv4 } from 'uuid';
 
+import { database } from '~/common/database';
+import { generateId } from '~/common/misc';
+import { mustGetModel } from '~/models';
 import type { ApiSpec } from '~/models/api-spec';
 import type { CaCertificate } from '~/models/ca-certificate';
 import type { ClientCertificate } from '~/models/client-certificate';
 import type { CloudProviderCredential } from '~/models/cloud-credential';
+import type { CookieJar } from '~/models/cookie-jar';
+import { type Environment } from '~/models/environment';
+import type { GitRepository } from '~/models/git-repository';
+import type { AllTypes, BaseModel } from '~/models/index';
+import * as models from '~/models/index';
+import type { Workspace } from '~/models/workspace';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 
-import { mustGetModel } from '../models';
-import type { CookieJar } from '../models/cookie-jar';
-import { type Environment } from '../models/environment';
-import type { GitRepository } from '../models/git-repository';
-import type { AllTypes, BaseModel } from '../models/index';
-import * as models from '../models/index';
-import type { Workspace } from '../models/workspace';
-import { generateId } from './misc';
+import type { ChangeBufferEvent, ChangeListener, ChangeType, IDatabase, Operation, Query } from './types';
 
-export interface Operation {
-  upsert?: BaseModel[];
-  remove?: BaseModel[];
-}
-
-export interface SpecificQuery {
-  $gt?: number;
-  $in?: (string | null)[];
-  $nin?: string[];
-  $ne?: string | null;
-}
-
-export type Query<T extends BaseModel = BaseModel> = {
-  [key in keyof T]?: string | SpecificQuery | null | undefined;
+const getTempPath = (name: string) => {
+  return name === 'temp' ? os.tmpdir() : fsPath.join(os.tmpdir(), 'insomnia-send-request');
 };
 
-export type ChangeType = 'insert' | 'update' | 'remove';
-export const database = {
+/**
+ * Create the NeDB database implementation for main process and Node.js.
+ */
+export const nedbDatabase: Omit<IDatabase, 'init'> & {
+  init: (config?: NeDB.DataStoreOptions & { dbPath?: string }, forceReset?: boolean) => Promise<void>;
+} = {
   batchModifyDocs: async function ({ upsert = [], remove = [] }: Operation) {
-    if (process.type === 'renderer') {
-      return _send<void>('batchModifyDocs', ...arguments);
-    }
     const flushId = await database.bufferChanges();
 
     // Perform from least to most dangerous
@@ -56,9 +46,6 @@ export const database = {
   /** buffers database changes and returns a buffer id, automatically call flushChanges in millis,
    * bufferChanges and flushChanges should be called in pair every time documents changes are made to trigger change listeners */
   bufferChanges: async function (millis = 1000) {
-    if (process.type === 'renderer') {
-      return _send<number>('bufferChanges', ...arguments);
-    }
     bufferingChanges = true;
     setTimeout(database.flushChanges, millis);
     return ++bufferChangesId;
@@ -66,18 +53,12 @@ export const database = {
 
   /** buffers database changes and returns a buffer id */
   bufferChangesIndefinitely: async function () {
-    if (process.type === 'renderer') {
-      return _send<number>('bufferChangesIndefinitely', ...arguments);
-    }
     bufferingChanges = true;
     return ++bufferChangesId;
   },
 
   /** return count num of documents matching query */
   count: async function <T extends BaseModel>(type: AllTypes, query: Query<T> = {}) {
-    if (process.type === 'renderer') {
-      return _send<number>('count', ...arguments);
-    }
     return nedbBucket[type].countAsync(query);
   },
 
@@ -110,9 +91,6 @@ export const database = {
 
   /** duplicate doc and its descendents recursively */
   duplicate: async function <T extends BaseModel>(originalDoc: T, patch: Partial<T> = {}) {
-    if (process.type === 'renderer') {
-      return _send<T>('duplicate', ...arguments);
-    }
     const flushId = await database.bufferChanges();
 
     async function next<T extends BaseModel>(docToCopy: T, patch: Partial<T>) {
@@ -152,9 +130,6 @@ export const database = {
     query: Query<T> | string = {},
     sort: Record<string, any> = { created: 1 },
   ): Promise<T | undefined> {
-    if (process.type === 'renderer') {
-      return _send<T>('findOne', ...arguments);
-    }
     const doc = await nedbBucket[type].findOneAsync<T>(query).sort(sort);
     if (doc === null) {
       return undefined;
@@ -168,9 +143,6 @@ export const database = {
     sort: Record<string, any> = { created: 1 },
     limit = 0,
   ): Promise<T[]> {
-    if (process.type === 'renderer') {
-      return _send<T[]>('find', ...arguments);
-    }
     if (!nedbBucket[type]) {
       console.warn(`[db] No collection for type "${type}"`);
       return [];
@@ -186,45 +158,11 @@ export const database = {
 
   /** trigger all changeListeners */
   flushChanges: async function (id = 0, fake = false) {
-    if (process.type === 'renderer') {
-      return _send<void>('flushChanges', ...arguments);
-    }
-
-    // Only flush if ID is 0 or the current flush ID is the same as passed
-    if (id !== 0 && bufferChangesId !== id) {
-      return;
-    }
-
-    bufferingChanges = false;
-    const changes = [...changeBuffer];
-    changeBuffer = [];
-
-    if (changes.length === 0) {
-      // No work to do
-      return;
-    }
-
-    if (fake) {
-      console.log(`[db] Dropped ${changes.length} changes.`);
-      return;
-    }
-    // Notify local listeners too
-    for (const fn of changeListeners) {
-      await fn(changes);
-    }
-    // Notify remote listeners
-    const isMainContext = process.type === 'browser';
-    if (isMainContext) {
-      const windows = electron.BrowserWindow.getAllWindows();
-
-      for (const window of windows) {
-        window.webContents.send('db.changes', changes);
-      }
-    }
+    await flushChangesImpl(id, fake);
   },
 
   /** init in main process */
-  init: async (config: NeDB.DataStoreOptions = {}, forceReset = false) => {
+  init: async ({ dbPath, ...config }: NeDB.DataStoreOptions & { dbPath?: string } = {}, forceReset = false) => {
     if (forceReset) {
       changeListeners = [];
       nedbBucket = {} as Record<AllTypes, NeDB>;
@@ -234,7 +172,10 @@ export const database = {
       corruptAlertThreshold: 0.9,
       ...config,
     };
-    const dbPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
+
+    if (!dbPath) {
+      dbPath = process.env['INSOMNIA_DATA_PATH'] || getTempPath('userData');
+    }
 
     nedbBucket = {
       ApiSpec: new NeDB<ApiSpec>({
@@ -403,19 +344,6 @@ export const database = {
       }),
     };
 
-    electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
-      try {
-        // @ts-expect-error -- mapping unsoundness
-        const result = await database[fnName](...args);
-        e.sender.send(replyChannel, null, result);
-      } catch (err) {
-        e.sender.send(replyChannel, {
-          message: err.message,
-          stack: err.stack,
-        });
-      }
-    });
-
     // NOTE: Only repair the DB if we're not running in memory. Repairing here causes tests to hang indefinitely for some reason.
     // TODO: Figure out why this makes tests hang
     if (!config.inMemoryOnly) {
@@ -424,9 +352,6 @@ export const database = {
   },
 
   insert: async function <T extends BaseModel>(doc: T) {
-    if (process.type === 'renderer') {
-      return _send<T>('insert', ...arguments);
-    }
     const docWithDefaults = await models.initModel<T>(doc.type, doc);
     const newDoc = await nedbBucket[doc.type].insertAsync(docWithDefaults);
     notifyOfChange('insert', newDoc);
@@ -439,10 +364,6 @@ export const database = {
 
   /** remove doc and its descendants */
   remove: async function <T extends BaseModel>(doc: T) {
-    if (process.type === 'renderer') {
-      return _send<void>('remove', ...arguments);
-    }
-
     const flushId = await database.bufferChanges();
 
     const docs = await database.getWithDescendants(doc);
@@ -468,9 +389,6 @@ export const database = {
   },
 
   removeWhere: async function <T extends BaseModel>(type: AllTypes, query: Query<T>) {
-    if (process.type === 'renderer') {
-      return _send<void>('removeWhere', ...arguments);
-    }
     const flushId = await database.bufferChanges();
 
     for (const doc of await database.find<T>(type, query)) {
@@ -499,19 +417,11 @@ export const database = {
 
   /** Removes entries without removing their children */
   unsafeRemove: async function <T extends BaseModel>(doc: T) {
-    if (process.type === 'renderer') {
-      return _send<void>('unsafeRemove', ...arguments);
-    }
-
     nedbBucket[doc.type].remove({ _id: doc._id });
     notifyOfChange('remove', doc);
   },
 
   update: async function <T extends BaseModel>(doc: T, patches: Partial<T>[] = []) {
-    if (process.type === 'renderer') {
-      return _send<T>('update', ...arguments);
-    }
-
     const docWithDefaults = await models.initModel<T>(doc.type, doc);
     await nedbBucket[doc.type].updateAsync({ _id: docWithDefaults._id }, docWithDefaults, { upsert: true });
     notifyOfChange('update', docWithDefaults, patches);
@@ -520,10 +430,6 @@ export const database = {
 
   /** get all ancestors of specified types of a document including the original */
   withAncestors: async function <T extends BaseModel>(doc: T | undefined, types: AllTypes[] = []) {
-    if (process.type === 'renderer') {
-      return _send<T[]>('withAncestors', ...arguments);
-    }
-
     if (!doc) {
       return [];
     }
@@ -562,10 +468,6 @@ export const database = {
    * @returns A promise that resolves to an array of documents
    */
   getWithDescendants: async function <T extends BaseModel>(doc: T, types: AllTypes[] = []) {
-    if (process.type === 'renderer') {
-      return _send<T[]>('getWithDescendants', ...arguments);
-    }
-
     if (!doc) return [];
 
     let docsToReturn: BaseModel[] = [doc];
@@ -624,13 +526,37 @@ let nedbBucket: Record<AllTypes, NeDB> = {} as Record<AllTypes, NeDB>;
 let bufferingChanges = false;
 let bufferChangesId = 1;
 
-export type ChangeBufferEvent<T extends BaseModel = BaseModel> = [event: ChangeType, doc: T, patches: Partial<T>[]];
-
 let changeBuffer: ChangeBufferEvent[] = [];
 
-type ChangeListener = (changes: ChangeBufferEvent[]) => void;
-
 let changeListeners: ChangeListener[] = [];
+
+/** trigger all changeListeners */
+export const flushChangesImpl = async function (id = 0, fake = false): Promise<ChangeBufferEvent[] | void> {
+  // Only flush if ID is 0 or the current flush ID is the same as passed
+  if (id !== 0 && bufferChangesId !== id) {
+    return;
+  }
+
+  bufferingChanges = false;
+  const changes = [...changeBuffer];
+  changeBuffer = [];
+
+  if (changes.length === 0) {
+    // No work to do
+    return;
+  }
+
+  if (fake) {
+    console.log(`[db] Dropped ${changes.length} changes.`);
+    return;
+  }
+  // Notify local listeners too
+  for (const fn of changeListeners) {
+    await fn(changes);
+  }
+
+  return changes;
+};
 
 /** push changes into the buffer, so that changeListeners can get change contents when database.flushChanges is called,
  * this method should be called whenever a document change happens */
@@ -644,18 +570,6 @@ async function notifyOfChange<T extends BaseModel>(event: ChangeType, doc: T, pa
   if (!bufferingChanges) {
     await database.flushChanges();
   }
-}
-
-// ~~~~~~~ //
-// Helpers //
-// ~~~~~~~ //
-// If you call database.x methods within the render process, you can obtain results by this helper function
-async function _send<T>(fnName: string, ...args: any[]) {
-  return new Promise<T>((resolve, reject) => {
-    const replyChannel = `db.fn.reply:${uuidv4()}`;
-    electron.ipcRenderer.send('db.fn', fnName, replyChannel, ...args);
-    electron.ipcRenderer.once(replyChannel, (_e, err, result: T) => (err ? reject(err) : resolve(result)));
-  });
 }
 
 /**

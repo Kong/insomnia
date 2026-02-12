@@ -26,6 +26,7 @@ import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
 import type { UserUploadEnvironment } from '~/models/environment';
+import { getTimeline } from '~/models/helpers/response-operations';
 import type { RunnerResultPerRequest, RunnerTestResult } from '~/models/runner-test-result';
 import { cancelRequestById } from '~/network/cancellation';
 import { defaultSendActionRuntime } from '~/network/network';
@@ -49,7 +50,9 @@ import { ResponseTimer } from '~/ui/components/response-timer';
 import { getTimeAndUnit } from '~/ui/components/tags/time-tag';
 import { Tooltip } from '~/ui/components/tooltip';
 import { ResponseTimelineViewer } from '~/ui/components/viewers/response-timeline-viewer';
+import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
+import { buildRunnerTabId } from '~/ui/hooks/use-insomnia-tab';
 import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
 import { moveAfter, moveBefore } from '~/utils';
 import { invariant } from '~/utils/invariant';
@@ -70,7 +73,7 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
     const resp = await models.response.getById(respInfo.responseId);
 
     if (resp) {
-      const timeline = models.response.getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
+      const timeline = getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
       timelines = [
         ...timelines,
         {
@@ -159,6 +162,7 @@ export const Runner: FC = () => {
     settings.forceVerticalLayout ? 'vertical' : 'horizontal',
   );
 
+  const { updateTabById } = useInsomniaTabContext();
   const { runnerStateMap, updateRunnerState } = useRunnerContext();
   const {
     iterationCount = 1,
@@ -263,6 +267,7 @@ export const Runner: FC = () => {
       properties: { plan: organizationData?.currentPlan?.type || 'scratchpad', iterations: iterationCount },
     });
 
+    updateTabById?.(buildRunnerTabId(workspaceId, targetFolderId), { temporary: false });
     const requests = selectedKeys === 'all' ? reqList : reqList.filter(item => (selectedKeys as Set<Key>).has(item.id));
 
     // convert uploadData to environment data

@@ -19,7 +19,6 @@ test('can send gRPC requests using mTLS requests (with reflection)', async ({ ap
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('grpc').click();
 
   await page.getByLabel('Request Collection').getByTestId('grpcs').press('Enter');
   await expect.soft(page.getByRole('button', { name: 'Select Method' })).toBeDisabled();

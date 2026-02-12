@@ -16,13 +16,11 @@ test('can send requests', async ({ app, page }) => {
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-  await page.getByRole('button', { name: 'Workspace actions menu button' }).click();
-  await page.getByRole('menuitem', { name: 'Export' }).click();
+  await page.getByTestId('workspace-context-dropdown').click();
+  await page.getByRole('menuitemradio', { name: 'Export' }).click();
   await page.getByRole('button', { name: 'Export' }).click();
   await page.getByText('Which format would you like to export as?').click();
   await page.locator('.app').press('Escape');
-
-  await page.getByLabel('Smoke tests').click();
 
   await page.getByLabel('Create in collection').click();
   await page.getByRole('menuitemradio', { name: 'From Curl' }).click();

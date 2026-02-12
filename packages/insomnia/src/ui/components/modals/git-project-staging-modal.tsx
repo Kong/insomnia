@@ -1,4 +1,4 @@
-import React, { type FC, type ReactNode, useEffect, useState } from 'react';
+import React, { type FC, type ReactNode, useEffect, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -31,10 +31,12 @@ import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import { SegmentEvent } from '~/ui/analytics';
 import { Badge } from '~/ui/components/base/badge';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { SvgIcon } from '~/ui/components/svg-icon';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
+import { showToast } from '../toast-notification';
 import { GitPullRequiredModal } from './git-pull-required-modal';
 
 export type StagingModalMode = 'default' | 'commit-and-pull';
@@ -93,25 +95,37 @@ interface GeneratedCommitsFormProps {
   commits: { id: string; message: string; files: string[] }[];
   projectId: string;
   mode: StagingModalMode;
-  stagedCount: number;
-  unstagedCount: number;
+  changes: { staged: any[]; unstaged: any[] };
   setShowConfirmDiscardAndPullModal: (show: boolean) => void;
-  onCommitSuccess: () => void;
+  onCommitSuccess: (options: { push: boolean }) => void;
   diffChanges: (params: { path: string; staged: boolean }) => void;
+}
+
+interface FileItem {
+  id: string;
+  name: string;
+  type: string;
+  symbol: string;
 }
 
 interface CommitItem {
   id: string;
   name: string;
-  files?: { id: string; name: string }[];
+  files?: FileItem[];
 }
+
+type TreeItem = CommitItem | FileItem;
+
+const DO_NOT_COMMIT_ID = 'do-not-commit';
 
 const CommitSection = (props: {
   id: string;
   commitsSections: TreeData<CommitItem>;
-  files: TreeData<CommitItem>['items'];
+  files: TreeData<TreeItem>['items'];
   emptyState?: ReactNode;
+  isDoNotCommitSection?: boolean;
   diffChanges: (params: { path: string; staged: boolean }) => void;
+  onMoveToDoNotCommit?: (fileItem: FileItem) => void;
 }) => {
   const { dragAndDropHooks } = useDragAndDrop({
     // Provide drag data in a custom format as well as plain text.
@@ -172,7 +186,7 @@ const CommitSection = (props: {
           return props.emptyState;
         }
 
-        return <p className="p-2 text-sm text-(--hl)">No files to commit. This commit will be omitted.</p>;
+        return <p className="p-2 text-sm text-(--hl)">No files to commit. This commit will be ignored.</p>;
       }}
       className="w-full"
       aria-label="Files to commit"
@@ -186,12 +200,51 @@ const CommitSection = (props: {
       }}
     >
       {item => {
+        const fileItem = item.value as FileItem;
+
         return (
-          <GridListItem className="group flex w-full items-center gap-2 overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
+          <GridListItem className="group flex w-full items-center gap-2 overflow-hidden py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
             <Button slot="drag" className="cursor-move">
               <Icon icon="grip-vertical" className="size-4" />
             </Button>
-            <span className={`truncate`}>{item.value.name}</span>
+            <div className="flex w-full items-center justify-between overflow-hidden">
+              <span className={`truncate ${fileItem.type === 'deleted' ? 'line-through' : ''}`}>{fileItem.name}</span>
+              <div className="flex items-center gap-1">
+                {!props.isDoNotCommitSection && (
+                  <TooltipTrigger>
+                    <Button
+                      className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
+                      slot={null}
+                      name="Do not commit"
+                      onPress={() => {
+                        props.onMoveToDoNotCommit?.(fileItem);
+                      }}
+                    >
+                      <Icon icon="minus" aria-hidden pointerEvents="none" />
+                    </Button>
+                    <Tooltip
+                      offset={8}
+                      className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                    >
+                      Do not commit
+                    </Tooltip>
+                  </TooltipTrigger>
+                )}
+                <TooltipTrigger>
+                  <Button
+                    className={`cursor-default text-sm ${getModificationClassName(fileItem.type as GitFileType)}`}
+                  >
+                    {fileItem.symbol}
+                  </Button>
+                  <Tooltip
+                    offset={8}
+                    className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) capitalize shadow-lg select-none focus:outline-hidden"
+                  >
+                    {fileItem.type}
+                  </Tooltip>
+                </TooltipTrigger>
+              </div>
+            </div>
           </GridListItem>
         );
       }}
@@ -203,27 +256,44 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
   commits,
   projectId,
   mode,
-  stagedCount,
-  unstagedCount,
+  changes,
   setShowConfirmDiscardAndPullModal,
   onCommitSuccess,
   diffChanges,
 }) => {
   const commitsFetcher = useGitProjectCommitsActionFetcher();
-  const [committingAction, setCommittingAction] = useState<'commit' | 'commit-push' | null>(null);
+  const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const isCommitting = commitsFetcher.state !== 'idle';
-  const canCommitAndPull = stagedCount > 0 && unstagedCount === 0;
+  const canCommitAndPull = changes.staged.length > 0 && changes.unstaged.length === 0;
 
-  // Handle successful commits
   useEffect(() => {
-    const hasNoCommitErrors =
-      commitsFetcher.data && 'errors' in commitsFetcher.data && commitsFetcher.data.errors?.length === 0;
-    if (hasNoCommitErrors) {
-      onCommitSuccess();
+    if (!commitsFetcher.data || !committingActionRef.current || isCommitting) {
+      return;
     }
-  }, [commitsFetcher.data, onCommitSuccess]);
+    const action = committingActionRef.current;
+    committingActionRef.current = null;
+    const hasErrors =
+      'errors' in commitsFetcher.data && commitsFetcher.data.errors && commitsFetcher.data.errors.length > 0;
+    const isSuccess =
+      ('success' in commitsFetcher.data && commitsFetcher.data.success) ||
+      ('errors' in commitsFetcher.data && commitsFetcher.data.errors?.length === 0);
+    if (isSuccess && !hasErrors) {
+      onCommitSuccess({ push: action === 'commit-push' });
+    }
+  }, [commitsFetcher.data, onCommitSuccess, isCommitting]);
 
-  const DO_NOT_COMMIT_ID = 'do-not-commit';
+  const moveFileToDoNotCommit = (fileItem: FileItem) => {
+    try {
+      commitsSections.remove(fileItem.id);
+      commitsSections.append(DO_NOT_COMMIT_ID, fileItem);
+
+      // Force re-render by updating refresh key
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error('Error moving file:', error);
+    }
+  };
 
   const commitsSections = useTreeData<CommitItem>({
     initialItems: commits
@@ -233,6 +303,8 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
         files: commit.files.map(file => ({
           id: `${commit.id}:${file}`,
           name: file,
+          type: changes.staged.find(change => change.path === file)?.type || 'modified',
+          symbol: changes.staged.find(change => change.path === file)?.symbol || 'M',
         })),
       }))
       .concat({
@@ -253,7 +325,8 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
 
         const push = Boolean(formData.get('push') === 'true');
 
-        setCommittingAction(push ? 'commit-push' : 'commit');
+        const action = push ? 'commit-push' : 'commit';
+        committingActionRef.current = action;
 
         const commits = commitsSections.items
           .map(commit => ({
@@ -285,20 +358,22 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
         {commitsSections.items.map((commit, index) => (
           <div
             key={commit.key}
-            className="relative flex shrink-0 flex-col gap-2 rounded-md border border-solid border-(--hl-sm) p-2"
+            className={`relative flex shrink-0 flex-col gap-2 rounded-md border border-solid border-(--hl-sm) p-3 ${commit.children?.length === 0 ? 'opacity-50' : ''}`}
           >
-            <span className="absolute -top-3 left-2 w-fit bg-(--color-bg) px-2 text-(--hl)">
+            <span className="absolute -top-3 left-2 flex w-fit gap-1 bg-(--color-bg) px-2">
+              <SvgIcon icon="sparkles" style={{ color: `rgb(var(--color-surprise-rgb))` }} />
               {commit.value.id === DO_NOT_COMMIT_ID ? 'Do not commit' : `Commit ${index + 1}`}
             </span>
             {commit.value.id !== DO_NOT_COMMIT_ID && (
               <TextField
                 className="flex flex-col gap-2"
                 defaultValue={commit.value.name}
+                isDisabled={isCommitting || commit.children?.length === 0}
                 onChange={value => {
                   commitsSections.update(commit.key, { ...commit.value, name: value });
                 }}
               >
-                <Label className="font-bold text-(--hl)">Message:</Label>
+                <Label>Message</Label>
                 <TextArea
                   rows={2}
                   name="message"
@@ -307,17 +382,20 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
                 />
               </TextField>
             )}
-            <div className="">
-              <span className="font-bold text-(--hl)">Files:</span>
-              <div className="rounded-xs border border-solid border-(--hl-sm) p-2">
+            <div className="pt-2">
+              <span>Files ({commit.children?.length || 0})</span>
+              <div className="py-1">
                 <CommitSection
+                  key={`${commit.key}-${refreshKey}`}
                   id={commit.key.toString()}
-                  files={commit.children || []}
+                  files={commitsSections.getItem(commit.key)?.children || []}
+                  isDoNotCommitSection={commit.value.id === DO_NOT_COMMIT_ID}
                   commitsSections={commitsSections}
                   diffChanges={diffChanges}
+                  onMoveToDoNotCommit={moveFileToDoNotCommit}
                   emptyState={
                     commit.value.id !== DO_NOT_COMMIT_ID ? (
-                      <p className="p-2 text-sm text-(--hl)">No files to commit. This commit will be omitted.</p>
+                      <p className="p-2 text-sm text-(--hl)">No files to commit. This commit will be ignored.</p>
                     ) : (
                       <p className="p-2 text-sm text-(--hl)">These files will not be committed.</p>
                     )
@@ -333,7 +411,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
         <div className="flex items-center gap-2">
           <Button
             type="submit"
-            isDisabled={isCommitting || stagedCount === 0}
+            isDisabled={isCommitting || changes.staged.length === 0}
             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             {canCommitAndPull ? (
@@ -362,7 +440,14 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
               setShowConfirmDiscardAndPullModal(true);
             }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="size-4"
+              aria-label="Discard and pull"
+              aria-hidden="true"
+            >
               <path d="M5.828 7l2.536 2.535L6.95 10.95 2 6l4.95-4.95 1.414 1.415L5.828 5H13a8 8 0 110 16H4v-2h9a6 6 0 000-12H5.828z" />
             </svg>
             Discard and pull
@@ -372,26 +457,26 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
         <div className="flex shrink-0 items-center justify-stretch gap-2">
           <Button
             type="submit"
-            isDisabled={committingAction === 'commit' && isCommitting}
+            isDisabled={committingActionRef.current === 'commit' && isCommitting}
             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             <Icon
-              icon={committingAction === 'commit' && isCommitting ? 'spinner' : 'check'}
-              className={`w-5 ${committingAction === 'commit' && isCommitting ? 'animate-spin' : ''}`}
+              icon={committingActionRef.current === 'commit' && isCommitting ? 'spinner' : 'check'}
+              className={`w-5 ${committingActionRef.current === 'commit' && isCommitting ? 'animate-spin' : ''}`}
             />{' '}
             Commit
           </Button>
 
           <Button
             type="submit"
-            isDisabled={committingAction === 'commit-push' && isCommitting}
+            isDisabled={committingActionRef.current === 'commit-push' && isCommitting}
             name="push"
             value="true"
             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             <Icon
-              icon={committingAction === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
-              className={`w-5 ${committingAction === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
+              icon={committingActionRef.current === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
+              className={`w-5 ${committingActionRef.current === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
             />{' '}
             Commit and push
           </Button>
@@ -406,7 +491,7 @@ interface ManualCommitFormProps {
   mode: StagingModalMode;
   changes: { staged: any[]; unstaged: any[] };
   setShowConfirmDiscardAndPullModal: (show: boolean) => void;
-  onCommitSuccess: () => void;
+  onCommitSuccess: (options: { push: boolean }) => void;
   onPullRequired: () => void;
   diffChanges: (params: { path: string; staged: boolean }) => void;
   setDiscardData: (data: { paths: string[]; filesCount: number }) => void;
@@ -429,7 +514,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   const stagedCount = changes.staged.length;
   const unstagedCount = changes.unstaged.length;
   const [message, setMessage] = useState('');
-  const [committingAction, setCommittingAction] = useState<'commit' | 'commit-push' | null>(null);
+  const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
 
   const isCommitting = commitFetcher.state !== 'idle';
@@ -449,25 +534,25 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
     });
   }
 
-  const hasNoCommitErrors =
-    commitFetcher.data && 'errors' in commitFetcher.data && commitFetcher.data.errors?.length === 0;
-
-  // Handle commit results (errors and success)
   useEffect(() => {
-    if (commitFetcher.data) {
-      if (commitFetcher.data.errors && commitFetcher.data.errors.length > 0) {
-        if (commitFetcher.data.errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
-          onPullRequired();
-        } else {
-          setOperationError(commitFetcher.data.errors.join('\n'));
-        }
-      } else if (hasNoCommitErrors) {
-        setMessage('');
-        setOperationError(null);
-        onCommitSuccess();
-      }
+    if (!commitFetcher.data || !committingActionRef.current || isCommitting) {
+      return;
     }
-  }, [commitFetcher.data, hasNoCommitErrors, onCommitSuccess, onPullRequired]);
+    const action = committingActionRef.current;
+    committingActionRef.current = null;
+    const errors = commitFetcher.data.errors;
+    if (errors && errors.length > 0) {
+      if (errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
+        onPullRequired();
+      } else {
+        setOperationError(errors.join('\n'));
+      }
+      return;
+    }
+    setMessage('');
+    setOperationError(null);
+    onCommitSuccess({ push: action === 'commit-push' });
+  }, [commitFetcher.data, onCommitSuccess, onPullRequired, isCommitting]);
 
   return (
     <>
@@ -479,7 +564,8 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           const message = formData.get('message')?.toString() || '';
           const push = Boolean(formData.get('push') === 'true');
 
-          setCommittingAction(push ? 'commit-push' : 'commit');
+          const action = push ? 'commit-push' : 'commit';
+          committingActionRef.current = action;
 
           commitFetcher.submit({
             projectId,
@@ -494,7 +580,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           <TextArea
             rows={3}
             name="message"
-            className="resize-none rounded-xs border border-solid border-(--hl-sm) p-2 placeholder:text-(--hl-md)"
+            className="text-md resize-none rounded-xs border border-solid border-(--hl-sm) p-2 placeholder:text-(--hl-md)"
             placeholder="This is a helpful message that describes the changes made in this commit."
             required
             value={message}
@@ -534,7 +620,14 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                 setShowConfirmDiscardAndPullModal(true);
               }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="size-4"
+                aria-label="Discard and pull"
+                aria-hidden="true"
+              >
                 <path d="M5.828 7l2.536 2.535L6.95 10.95 2 6l4.95-4.95 1.414 1.415L5.828 5H13a8 8 0 110 16H4v-2h9a6 6 0 000-12H5.828z" />
               </svg>
               Discard and pull
@@ -544,26 +637,26 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           <div className="flex shrink-0 items-center justify-stretch gap-2">
             <Button
               type="submit"
-              isDisabled={(committingAction === 'commit' && isCommitting) || stagedCount === 0}
+              isDisabled={(committingActionRef.current === 'commit' && isCommitting) || stagedCount === 0}
               className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             >
               <Icon
-                icon={committingAction === 'commit' && isCommitting ? 'spinner' : 'check'}
-                className={`w-5 ${committingAction === 'commit' && isCommitting ? 'animate-spin' : ''}`}
+                icon={committingActionRef.current === 'commit' && isCommitting ? 'spinner' : 'check'}
+                className={`w-5 ${committingActionRef.current === 'commit' && isCommitting ? 'animate-spin' : ''}`}
               />{' '}
               Commit
             </Button>
 
             <Button
               type="submit"
-              isDisabled={(committingAction === 'commit-push' && isCommitting) || stagedCount === 0}
+              isDisabled={(committingActionRef.current === 'commit-push' && isCommitting) || stagedCount === 0}
               name="push"
               value="true"
               className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             >
               <Icon
-                icon={committingAction === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
-                className={`w-5 ${committingAction === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
+                icon={committingActionRef.current === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
+                className={`w-5 ${committingActionRef.current === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
               />{' '}
               Commit and push
             </Button>
@@ -680,7 +773,14 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                     });
                   }}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="size-4"
+                    aria-label="Discard all changes"
+                    aria-hidden="true"
+                  >
                     <path d="M5.828 7l2.536 2.535L6.95 10.95 2 6l4.95-4.95 1.414 1.415L5.828 5H13a8 8 0 110 16H4v-2h9a6 6 0 000-12H5.828z" />
                   </svg>
                 </Button>
@@ -756,6 +856,8 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                             viewBox="0 0 24 24"
                             fill="currentColor"
                             className="size-4"
+                            aria-label="Discard change"
+                            aria-hidden="true"
                           >
                             <path d="M5.828 7l2.536 2.535L6.95 10.95 2 6l4.95-4.95 1.414 1.415L5.828 5H13a8 8 0 110 16H4v-2h9a6 6 0 000-12H5.828z" />
                           </svg>
@@ -859,16 +961,24 @@ export const GitProjectStagingModal: FC<{
   const allChanges = [...changes.staged, ...changes.unstaged];
   const allChangesLength = allChanges.length;
 
-  // Callback when commit succeeds - check if we should close the modal
-  const handleCommitSuccess = React.useCallback(() => {
-    // Check if there are no more changes left after commit
-    if (allChangesLength === 0) {
-      if (mode === StagingModalModes.commitAndPull) {
-        onPullAfterCommit();
+  const handleCommitSuccess = React.useCallback(
+    ({ push }: { push: boolean }) => {
+      if (push) {
+        showToast({
+          icon: ['fab', 'git-alt'],
+          title: 'Changes committed and pushed',
+          status: 'success',
+        });
       }
-      onClose();
-    }
-  }, [allChangesLength, mode, onPullAfterCommit, onClose]);
+      if (allChangesLength === 0) {
+        if (mode === StagingModalModes.commitAndPull) {
+          onPullAfterCommit();
+        }
+        onClose();
+      }
+    },
+    [allChangesLength, mode, onPullAfterCommit, onClose],
+  );
 
   // Callback when pull is required
   const handlePullRequired = React.useCallback(() => {
@@ -955,7 +1065,9 @@ export const GitProjectStagingModal: FC<{
                           Smart commits
                         </h3>
                         <div className="text-sm text-gray-300">
-                          Let AI create commits and comments from your staged changes.
+                          {generateCommitsFetcher?.data?.commits
+                            ? `${generateCommitsFetcher?.data?.commits.length} commit${generateCommitsFetcher?.data?.commits.length !== 1 ? 's' : ''} generated`
+                            : 'Let AI create commits and comments from your staged changes.'}
                         </div>
                         <Button
                           isDisabled={isGeneratingCommits}
@@ -1010,8 +1122,7 @@ export const GitProjectStagingModal: FC<{
                         commits={generateCommitsFetcher.data.commits}
                         projectId={projectId}
                         mode={mode}
-                        stagedCount={changes.staged.length}
-                        unstagedCount={changes.unstaged.length}
+                        changes={changes}
                         setShowConfirmDiscardAndPullModal={setShowConfirmDiscardAndPullModal}
                         onCommitSuccess={handleCommitSuccess}
                         diffChanges={diffChanges}

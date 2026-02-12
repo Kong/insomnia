@@ -610,7 +610,10 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `R${MNEMONIC_SYM}estart`,
-        click: window?.main.restart,
+        click: () => {
+          app.relaunch();
+          app.exit();
+        },
       },
       {
         label: `Set window for ${MNEMONIC_SYM}FHD Screenshot`,

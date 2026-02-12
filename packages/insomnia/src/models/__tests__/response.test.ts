@@ -6,6 +6,7 @@ import zlib from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 
 import * as models from '../../models';
+import { getBodyBuffer } from '../helpers/response-operations';
 
 describe('migrate()', () => {
   it('does it', async () => {
@@ -14,7 +15,7 @@ describe('migrate()', () => {
     const response = await models.initModel(models.response.type, {
       bodyPath,
     });
-    const body = (await models.response.getBodyBuffer(response)).toString();
+    const body = (await getBodyBuffer(response)).toString();
     expect(response.bodyCompression).toBe('zip');
     expect(body).toBe('Hello World!');
   });

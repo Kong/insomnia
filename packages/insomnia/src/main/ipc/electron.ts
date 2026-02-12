@@ -72,6 +72,7 @@ export type HandleChannels =
   | 'git.initSignInToGitProvider'
   | 'git.completeSignInToGitProvider'
   | 'git.getGitProviderRepositories'
+  | 'git.getGitProviderEmails'
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'
   | 'insecureReadFile'

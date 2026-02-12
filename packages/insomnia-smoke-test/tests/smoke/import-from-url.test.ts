@@ -11,13 +11,11 @@ test.describe('Import from URL', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByLabel('simple').click();
   });
 
   test('Should work as expected in HTTP request', async ({ page }) => {
     const requestUrl = 'http://localhost:4010/echo?foo=bar&baz=qux';
     const codeMirror = page.getByTestId('OneLineEditor').first().locator('.CodeMirror');
-
     await page.getByText('example http').click();
 
     const importFromUrlButton = page.getByRole('button', { name: 'Import from URL' });

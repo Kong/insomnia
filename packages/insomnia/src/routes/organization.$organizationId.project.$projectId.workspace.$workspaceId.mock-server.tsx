@@ -13,11 +13,12 @@ import {
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
+  href,
   NavLink,
+  redirect,
   Route as RouteComponent,
   Routes,
   useLoaderData,
-  useNavigate,
   useParams,
   useRouteLoaderData,
 } from 'react-router';
@@ -39,9 +40,10 @@ import { EmptyStatePane } from '~/ui/components/panes/empty-state-pane';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
+import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
-import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
-import { invariant } from '~/utils/invariant';
+import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { isPrimaryClickModifier } from '~/ui/utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server';
 import {
@@ -55,12 +57,25 @@ export interface MockServerLoaderData {
 }
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  const { workspaceId } = params;
+  const { workspaceId, projectId, organizationId } = params;
+
+  const project = await models.project.getById(projectId);
+  if (!project) {
+    showResourceNotFoundToast(`Project not found: ${projectId}`);
+    throw redirect(href('/organization/:organizationId/project', { organizationId }));
+  }
 
   const activeWorkspace = await models.workspace.getById(workspaceId);
-  invariant(activeWorkspace, 'Workspace not found');
+  if (!activeWorkspace) {
+    showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+  }
+
   const activeMockServer = await models.mockServer.getByParentId(workspaceId);
-  invariant(activeMockServer, 'Mock Server not found');
+  if (!activeMockServer) {
+    showResourceNotFoundToast(`Mock Server not found: ${workspaceId}`);
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+  }
   const mockRoutes = await models.mockRoute.findByParentId(activeMockServer._id);
 
   return {
@@ -83,18 +98,42 @@ const Component = () => {
     mockRouteId: string;
   };
   const { settings } = useRootLoaderData()!;
-  const { mockServerId, mockRoutes } = useLoaderData() as MockServerLoaderData;
-
   const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
+  const { mockServerId, mockRoutes } = useLoaderData() as MockServerLoaderData;
+  const tabNavigate = useTabNavigate();
 
   const deleteMockRouteFetcher = useMockRouteDeleteActionFetcher();
-  const navigate = useNavigate();
+
+  const mockRouteNavigateAction = (mockRouteId: string, withTab?: boolean) => {
+    const currentRoute = mockRoutes.find(m => m._id === mockRouteId);
+    if (!currentRoute) return;
+
+    tabNavigate(
+      {
+        organization: organizationId,
+        project: activeProject,
+        workspace: activeWorkspace,
+        item: currentRoute,
+      },
+      {
+        withTab,
+        shouldNavigate: true,
+      },
+    );
+  };
+
   const mockRouteActionList: {
     id: string;
     name: string;
     icon: IconName;
     action: (id: string, name: string) => void;
   }[] = [
+    {
+      id: 'open-in-new-tab',
+      name: 'Open in New Tab',
+      icon: 'external-link-alt',
+      action: id => mockRouteNavigateAction(id, true),
+    },
     {
       id: 'edit-route',
       name: 'Edit',
@@ -195,15 +234,6 @@ const Component = () => {
     };
   }, [settings.forceVerticalLayout, direction]);
 
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
-    activeMockRoute: mockRoutes.find(s => s._id === mockRouteId),
-  });
-
   useEffect(() => {
     setMockRouteModalState(null);
   }, [mockRouteId]);
@@ -271,14 +301,6 @@ const Component = () => {
             disallowEmptySelection
             selectedKeys={[mockRouteId]}
             selectionMode="single"
-            onSelectionChange={keys => {
-              if (keys !== 'all') {
-                const value = keys.values().next().value;
-                navigate({
-                  pathname: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${value}`,
-                });
-              }
-            }}
           >
             {item => {
               return (
@@ -287,6 +309,9 @@ const Component = () => {
                   id={item._id}
                   textValue={item.name}
                   className="group w-full outline-hidden select-none"
+                  onPress={e => {
+                    mockRouteNavigateAction(item._id, isPrimaryClickModifier(e));
+                  }}
                 >
                   <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
                     <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />

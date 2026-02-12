@@ -17,7 +17,6 @@ test.describe('runner features tests', () => {
     await page.getByTestId('settings-button').click();
     await page.getByText('Use vertical layout').click();
     await page.locator('.app').press('Escape');
-    await page.getByLabel('Runner').click();
   });
 
   const verifyResultRows = async (

@@ -143,6 +143,7 @@ const git: GitServiceAPI = {
   initSignInToGitProvider: options => ipcRenderer.invoke('git.initSignInToGitProvider', options),
   completeSignInToGitProvider: options => ipcRenderer.invoke('git.completeSignInToGitProvider', options),
   getGitProviderRepositories: options => ipcRenderer.invoke('git.getGitProviderRepositories', options),
+  getGitProviderEmails: options => ipcRenderer.invoke('git.getGitProviderEmails', options),
   getCurrentBranchByRepositoryId: options => ipcRenderer.invoke('git.getCurrentBranchByRepositoryId', options),
 };
 
@@ -290,6 +291,9 @@ const clipboard: Window['clipboard'] = {
 const webUtils: Window['webUtils'] = {
   getPathForFile: (file: File) => webUtilities.getPathForFile(file),
 };
+const database: Window['database'] = {
+  invoke: (fnName, ...args) => ipcRenderer.invoke('database.invoke', fnName, ...args),
+};
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);
   contextBridge.exposeInMainWorld('dialog', dialog);
@@ -298,6 +302,7 @@ if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('clipboard', clipboard);
   contextBridge.exposeInMainWorld('webUtils', webUtils);
   contextBridge.exposeInMainWorld('path', path);
+  contextBridge.exposeInMainWorld('database', database);
 } else {
   window.main = main;
   window.dialog = dialog;
@@ -306,4 +311,5 @@ if (process.contextIsolated) {
   window.clipboard = clipboard;
   window.webUtils = webUtils;
   window.path = path;
+  window.database = database;
 }

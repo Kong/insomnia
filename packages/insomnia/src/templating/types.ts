@@ -2,6 +2,8 @@ import type { BinaryToTextEncoding } from 'node:crypto';
 
 import type { Cookie } from 'tough-cookie';
 
+import type { getBodyBuffer } from '~/models/helpers/response-operations';
+
 import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
@@ -11,7 +13,7 @@ import type { OAuth2Token } from '../models/o-auth-2-token';
 import type { Project } from '../models/project';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
-import type { getBodyBuffer, getLatestForRequestId, Response } from '../models/response';
+import type { getLatestForRequestId, Response } from '../models/response';
 import type { get as getSettings } from '../models/settings';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';

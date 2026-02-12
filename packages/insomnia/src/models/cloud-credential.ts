@@ -1,5 +1,5 @@
 import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import type { BaseModel } from './types';
 
 export type CloudProviderName = 'aws' | 'azure' | 'gcp' | 'hashicorp';
 

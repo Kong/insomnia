@@ -23,7 +23,6 @@ test('Can generate content-type header from imported postman file', async ({ app
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   // Have generated content-type of application/x-www-form-urlencoded for the request
-  await page.getByRole('link', { name: 'New Collection' }).click();
   await page.getByTestId('New Request').click();
   await page.locator('[data-key="headers"]').click();
   await expect.soft(page.getByText('application/x-www-form-urlencoded')).toBeAttached();

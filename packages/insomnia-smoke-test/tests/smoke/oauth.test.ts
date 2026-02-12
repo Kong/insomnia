@@ -17,7 +17,6 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('OAuth Testing').click();
 
   // Test Folder Level Auth propagates to heirs
 

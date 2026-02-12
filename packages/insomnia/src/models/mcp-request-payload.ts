@@ -1,5 +1,5 @@
 import { database } from '../common/database';
-import type { BaseModel } from '.';
+import type { BaseModel } from './types';
 
 export const name = 'MCP Payload';
 
@@ -12,7 +12,7 @@ export const canDuplicate = true;
 export const canSync = false;
 
 export interface BaseMcpPayload {
-  params?: Record<string, any>;
+  params?: string | Record<string, any>;
   url: string;
 }
 

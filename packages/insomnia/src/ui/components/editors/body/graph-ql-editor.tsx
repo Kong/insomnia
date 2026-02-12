@@ -22,6 +22,7 @@ import ReactDOM from 'react-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import * as reactUse from 'react-use';
 
+import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
@@ -184,7 +185,7 @@ const fetchGraphQLSchemaForRequest = async ({
         },
       };
     }
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await getBodyBuffer(response);
     if (bodyBuffer) {
       const { data, errors } = JSON.parse(bodyBuffer.toString());
       if (errors?.length) {

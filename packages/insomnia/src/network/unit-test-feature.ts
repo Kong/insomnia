@@ -1,5 +1,6 @@
+import { getBodyBuffer } from '~/models/helpers/response-operations';
+
 import { stats } from '../models';
-import { getBodyBuffer } from '../models/response';
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import {
   fetchRequestData,

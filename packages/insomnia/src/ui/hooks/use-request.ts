@@ -21,7 +21,6 @@ import type { SocketIOPayload } from '../../models/socket-io-payload';
 import type { SocketIORequest } from '../../models/socket-io-request';
 import type { WebSocketRequest } from '../../models/websocket-request';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
-import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 
 export const useRequestPatcher = () => {
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -29,7 +28,6 @@ export const useRequestPatcher = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestUpdateActionFetcher();
   return (
     requestId: string,
@@ -40,7 +38,6 @@ export const useRequestPatcher = () => {
       | Partial<SocketIORequest>
       | Partial<McpRequest>,
   ) => {
-    updateTabById?.(requestId, { temporary: false });
     fetcher.submit({
       organizationId,
       patch,
@@ -57,10 +54,8 @@ export const useRequestMetaPatcher = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestUpdateMetaActionFetcher();
   return (requestId: string, patch: Partial<GrpcRequestMeta> | Partial<RequestMeta>) => {
-    updateTabById?.(requestId, { temporary: false });
     fetcher.submit({
       organizationId,
       projectId,
@@ -77,10 +72,8 @@ export const useRequestGroupPatcher = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestGroupUpdateActionFetcher();
   return (requestGroupId: string, patch: Partial<RequestGroup>) => {
-    updateTabById?.(requestGroupId, { temporary: false });
     fetcher.submit({
       organizationId,
       projectId,
@@ -97,10 +90,8 @@ export const useRequestGroupMetaPatcher = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestGroupUpdateMetaActionFetcher();
   return (requestGroupId: string, patch: Partial<RequestGroupMeta>) => {
-    updateTabById?.(requestGroupId, { temporary: false });
     fetcher.submit({
       organizationId,
       projectId,

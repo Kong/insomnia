@@ -1,15 +1,10 @@
+import { type Role } from 'insomnia-api';
 import { useState } from 'react';
 import type { Key } from 'react-aria-components';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Text } from 'react-aria-components';
 
 import { showModal } from '..';
 import { AlertModal } from '../alert-modal';
-
-export interface Role {
-  id: string;
-  name: string;
-  description?: string;
-}
 
 interface AllowChangeRole {
   allow: boolean;

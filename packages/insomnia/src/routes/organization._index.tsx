@@ -1,8 +1,9 @@
+import type { Organization } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import * as session from '~/account/session';
 import { userSession } from '~/models';
-import { findPersonalOrganization, type Organization } from '~/models/organization';
+import { findPersonalOrganization } from '~/models/organization';
 import { migrateProjectsUnderOrganization, syncOrganizations } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 

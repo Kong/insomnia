@@ -3,8 +3,8 @@ import path from 'node:path';
 
 import YAML from 'yaml';
 
-import type { Database, DbAdapter } from '../index';
-import { emptyDb } from '../index';
+import type { Database, DbAdapter } from '../types';
+import { emptyDb } from '../types';
 
 const gitAdapter: DbAdapter = async (dir, filterTypes) => {
   // Confirm if model directories exist

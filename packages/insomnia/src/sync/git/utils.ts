@@ -98,7 +98,10 @@ export const getAuthorFromGitRepository = async (gitRepositoryId: string): Promi
     };
   }
 
-  return credentials.author;
+  return {
+    name: credentials.author.name,
+    email: gitRepo.selectedAuthorEmail || credentials.author.email,
+  };
 };
 
 export const gitCallbacks = (credentialsId?: string | null) => {

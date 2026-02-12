@@ -2,6 +2,7 @@ import { href } from 'react-router';
 
 import { importResourcesToProject, importResourcesToWorkspace } from '~/common/import';
 import * as models from '~/models';
+import * as requestOperations from '~/models/helpers/request-operations';
 import { isRemoteProject } from '~/models/project';
 import type { Workspace } from '~/models/workspace';
 import {
@@ -36,7 +37,7 @@ export const importScannedResources = async ({
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found.');
 
-  await (typeof workspaceId === 'string' && workspaceId
+  return await (typeof workspaceId === 'string' && workspaceId
     ? importResourcesToWorkspace({
         workspaceId: workspaceId,
         overrideBaseEnvironmentData: options?.overrideBaseEnvironmentData ?? true,
@@ -59,13 +60,17 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(typeof organizationId === 'string', 'OrganizationId is required.');
     invariant(typeof projectId === 'string', 'ProjectId is required.');
 
-    await importScannedResources({
+    const result = await importScannedResources({
       organizationId,
       projectId,
       workspaceId,
       options,
     });
-    return { done: true };
+    // When navigating, we are interested in knowing if there was only one workspace and only one request
+    const singleImportedWorkspace = Array.isArray(result) && result.length === 1 && result[0];
+    const requests = singleImportedWorkspace && (await requestOperations.findByParentId(singleImportedWorkspace._id));
+    const singleImportedRequest = Array.isArray(requests) && requests.length === 1 && requests.at(0);
+    return { done: true, singleImportedWorkspace, singleImportedRequest };
   } catch (error) {
     console.error('Failed to import resources:', error);
     return {

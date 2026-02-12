@@ -1,3 +1,4 @@
+import type { StorageRules } from 'insomnia-api';
 import { useParams } from 'react-router';
 
 import { Banner } from '~/basic-components/banner';
@@ -5,7 +6,7 @@ import { Button } from '~/basic-components/button';
 import { LearnMoreLink } from '~/basic-components/link';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { docsPricingLearnMoreLink } from '~/common/documentation';
-import { isOwnerOfOrganization, type StorageRules } from '~/models/organization';
+import { isOwnerOfOrganization } from '~/models/organization';
 import { getProjectStorageTypeLabel } from '~/models/project';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
@@ -36,6 +37,7 @@ export const ProjectTypeWarning = ({ isGitSyncEnabled, storageType, storageRules
           <Banner
             type="info"
             title="Git Sync limited to organizations of 3 or fewer users"
+            aria-label="Git Sync Feature Disabled Banner"
             className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
             message={
               <div>
@@ -56,6 +58,7 @@ export const ProjectTypeWarning = ({ isGitSyncEnabled, storageType, storageRules
         ) : (
           <Banner
             type="info"
+            aria-label="Git Sync Feature Disabled Banner"
             title="Git Sync limited to organizations of 3 or fewer users"
             className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
             message={
@@ -70,6 +73,7 @@ export const ProjectTypeWarning = ({ isGitSyncEnabled, storageType, storageRules
       {showStorageRestrictionMessage && (
         <Banner
           type="warning"
+          aria-label="Project Storage Restriction Banner"
           message={
             <span>
               The organization owner mandates that projects must be created and stored using{' '}

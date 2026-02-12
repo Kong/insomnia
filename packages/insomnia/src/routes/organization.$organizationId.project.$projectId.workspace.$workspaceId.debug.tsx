@@ -29,7 +29,6 @@ import {
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   href,
-  type NavigateFunction,
   NavLink,
   redirect,
   Route as RouteComponent,
@@ -60,11 +59,10 @@ import {
   type Request,
 } from '~/models/request';
 import { isRequestGroup, isRequestGroupId, type RequestGroup } from '~/models/request-group';
-import type { RequestGroupMeta } from '~/models/request-group-meta';
 import { getByParentId as getRequestMetaByParentId } from '~/models/request-meta';
 import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '~/models/socket-io-request';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '~/models/websocket-request';
-import { isDesign } from '~/models/workspace';
+import { isDesign, type Workspace } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
 import {
   type Child,
@@ -75,7 +73,6 @@ import { useRequestLoaderData } from '~/routes/organization.$organizationId.proj
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
-import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import Runner from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import Tutorial, {
@@ -115,23 +112,23 @@ import { ResponsePane } from '~/ui/components/panes/response-pane';
 import { SocketIORequestPane } from '~/ui/components/socket-io/request-pane';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { getMethodShortHand } from '~/ui/components/tags/method-tag';
+import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-request-pane';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useExecutionState } from '~/ui/hooks/use-execution-state';
 import { useFilteredRequests } from '~/ui/hooks/use-filtered-requests';
-import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
+import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 import {
   type CreateRequestType,
-  useRequestGroupMetaPatcher,
   useRequestGroupPatcher,
   useRequestMetaPatcher,
   useRequestPatcher,
 } from '~/ui/hooks/use-request';
+import { isPrimaryClickModifier } from '~/ui/utils';
 import { scrollElementIntoView } from '~/utils';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/utils/grpc';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
 
@@ -163,12 +160,20 @@ const INITIAL_GRPC_REQUEST_STATE = {
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
-    invariant(workspaceId, 'Workspace ID is required');
-    invariant(projectId, 'Project ID is required');
+
+    const activeProject = await models.project.getById(projectId);
+    if (!activeProject) {
+      showResourceNotFoundToast(`Project not found: ${projectId}`);
+      throw redirect(href('/organization/:organizationId/project', { organizationId }));
+    }
+
     const activeWorkspace = await models.workspace.getById(workspaceId);
-    invariant(activeWorkspace, 'Workspace not found');
+    if (!activeWorkspace) {
+      showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
+      throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+    }
+
     const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-    invariant(activeWorkspaceMeta, 'Workspace meta not found');
     const activeRequestId = activeWorkspaceMeta.activeRequestId;
     const activeRequest = activeRequestId ? await models.request.getById(activeRequestId) : null;
     // TODO(george): we should remove this after enabling the sidebar for the runner
@@ -232,27 +237,7 @@ const RequestTiming = ({ requestId }: { requestId: string }) => {
 };
 
 const DebugEntry = () => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    requestId?: string;
-    requestGroupId?: string;
-  };
-  const { activeRequestGroup } = useRequestGroupLoaderData() || {};
-  const { activeWorkspace, activeProject } = useWorkspaceLoaderData()!;
-  const requestData = useRequestLoaderData();
-  const { activeRequest } = requestData || {};
-
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
-    activeRequest,
-    activeRequestGroup,
-  });
+  const { activeWorkspace } = useWorkspaceLoaderData()!;
 
   if (activeWorkspace.scope === 'mcp') {
     // MCP request under mcp workspace has different layout so we need to render a different component
@@ -499,6 +484,22 @@ const Debug = () => {
         showModal(GenerateCodeModal, { request: activeRequest });
       }
     },
+    request_openInNewTab: () => {
+      if (activeRequest && requestId) {
+        tabNavigate(
+          {
+            organization: organizationId,
+            project: activeProject,
+            workspace: activeWorkspace,
+            item: activeRequest,
+          },
+          {
+            withTab: true,
+            shouldNavigate: true,
+          },
+        );
+      }
+    },
   });
 
   const isRealtimeRequest =
@@ -531,10 +532,7 @@ const Debug = () => {
       req,
     });
 
-  const groupMetaPatcher = useRequestGroupMetaPatcher();
   const reorderFetcher = useDebugReorderActionFetcher();
-
-  const navigate = useNavigate();
 
   const collectionDragAndDrop = useDragAndDrop({
     getItems: keys => [...keys].map(key => ({ 'text/plain': key.toString() })),
@@ -803,6 +801,8 @@ const Debug = () => {
     };
   }, [settings.forceVerticalLayout, direction]);
 
+  const tabNavigate = useTabNavigate();
+
   return (
     <PanelGroup
       ref={sidebarPanelRef}
@@ -1035,14 +1035,6 @@ const Debug = () => {
               disallowEmptySelection
               selectedKeys={requestId ? [requestId] : []}
               selectionMode="single"
-              onSelectionChange={keys => {
-                if (keys !== 'all') {
-                  const value = keys.values().next().value;
-                  navigate(
-                    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`,
-                  );
-                }
-              }}
             >
               {item => {
                 return (
@@ -1052,6 +1044,17 @@ const Debug = () => {
                     className="group outline-hidden select-none"
                     textValue={item.doc.name}
                     data-testid={item.doc.name}
+                    onPress={e => {
+                      tabNavigate(
+                        {
+                          organization: organizationId,
+                          project: activeProject,
+                          workspace: activeWorkspace,
+                          item: item.doc,
+                        },
+                        { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                      );
+                    }}
                   >
                     <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
                       <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
@@ -1122,22 +1125,6 @@ const Debug = () => {
                 aria-label="Request Collection"
                 key={sortOrder}
                 dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
-                onAction={key => {
-                  const id = key.toString();
-                  if (isRequestGroupId(id)) {
-                    const item = collection.find(i => i.doc._id === id);
-                    if (item) {
-                      groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
-                      navigate(
-                        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${id}?${searchParams.toString()}`,
-                      );
-                      return;
-                    }
-                  }
-                  navigate(
-                    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${id}?${searchParams.toString()}`,
-                  );
-                }}
               >
                 {virtualItem => {
                   const item = visibleCollection[virtualItem.index];
@@ -1154,21 +1141,20 @@ const Debug = () => {
                     <CollectionGridListItem
                       {...{
                         label,
+                        item,
                         style: {
                           height: `${virtualItem.size}`,
                           transform: `translateY(${virtualItem.start}px)`,
                         },
-                        item,
-                        navigate,
                         organizationId,
                         projectId,
                         workspaceId,
                         searchParams,
-                        groupMetaPatcher,
                         patchGroup,
                         patchRequest,
                         activeEnvironment,
                         activeProject,
+                        activeWorkspace,
                       }}
                     />
                   );
@@ -1388,34 +1374,37 @@ const ScratchPadTutorialPanel = () => {
 
 const CollectionGridListItem = ({
   label,
-  activeEnvironment,
-  activeProject,
   item,
+  style,
   organizationId,
-  patchGroup,
-  patchRequest,
   projectId,
   workspaceId,
-  style,
+  searchParams,
+  patchGroup,
+  patchRequest,
+  activeEnvironment,
+  activeProject,
+  activeWorkspace,
 }: {
   label: string;
   item: Child;
   style: React.CSSProperties;
-  navigate: NavigateFunction;
   organizationId: string;
   projectId: string;
   workspaceId: string;
   searchParams: URLSearchParams;
-  groupMetaPatcher: (requestGroupId: string, patch: Partial<RequestGroupMeta>) => void;
   patchGroup: (requestGroupId: string, patch: Partial<RequestGroup>) => void;
   patchRequest: (requestId: string, patch: Partial<GrpcRequest> | Partial<Request> | Partial<WebSocketRequest>) => void;
   activeEnvironment: Environment;
   activeProject: Project;
+  activeWorkspace: Workspace;
 }): React.ReactNode => {
   const [isEditable, setIsEditable] = useState(false);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const patchRequestMeta = useRequestMetaPatcher();
+
+  const tabNavigate = useTabNavigate();
 
   const action = isRequestGroup(item.doc)
     ? `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}/update`
@@ -1451,6 +1440,22 @@ const CollectionGridListItem = ({
       textValue={label}
       data-testid={item.doc.name}
       style={style}
+      onAction={() => {}}
+      onPress={e => {
+        tabNavigate(
+          {
+            organization: organizationId,
+            project: activeProject,
+            workspace: activeWorkspace,
+            item: item.doc,
+          },
+          {
+            withTab: isPrimaryClickModifier(e),
+            shouldNavigate: true,
+            searchParams,
+          },
+        );
+      }}
       ref={triggerRef}
     >
       <div
@@ -1560,7 +1565,6 @@ const CollectionGridListItem = ({
         ) : (
           <RequestActionsDropdown
             activeEnvironment={activeEnvironment}
-            activeProject={activeProject}
             request={item.doc}
             onRename={() => setIsEditable(true)}
             isPinned={item.pinned}

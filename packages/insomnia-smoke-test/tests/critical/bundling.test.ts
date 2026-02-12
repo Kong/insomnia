@@ -22,7 +22,6 @@ test('can use bundled plugins, node-libcurl, httpsnippet, hidden browser window'
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('Smoke tests').click();
 
   await page.getByLabel('Request Collection').getByTestId('send JSON request').press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -58,7 +57,6 @@ test('can use external modules in scripts', async ({ app, page }) => {
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
   // select request
-  await page.getByLabel('Pre-request Scripts').click();
   await page.getByLabel('Request Collection').getByTestId('use external modules').press('Enter');
 
   // send

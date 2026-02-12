@@ -2,13 +2,10 @@ import { href } from 'react-router';
 
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
+import { removeResponse } from '~/models/helpers/response-operations';
 import { isMcpRequestId } from '~/models/mcp-request';
-import type { McpResponse } from '~/models/mcp-response';
-import type { Response } from '~/models/response';
 import { isSocketIORequestId } from '~/models/socket-io-request';
-import type { SocketIOResponse } from '~/models/socket-io-response';
 import { isWebSocketRequestId } from '~/models/websocket-request';
-import type { WebSocketResponse } from '~/models/websocket-response';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -43,16 +40,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const res = await responseModel.getById(responseId);
   invariant(res, 'Response not found');
 
-  // Type-safe remove operation based on the request type
-  if (isWebSocketRequest) {
-    await models.webSocketResponse.remove(res as WebSocketResponse);
-  } else if (isSocketIORequest) {
-    await models.socketIOResponse.remove(res as SocketIOResponse);
-  } else if (isMcpRequest) {
-    await models.mcpResponse.remove(res as McpResponse);
-  } else {
-    await models.response.remove(res as Response);
-  }
+  await removeResponse(res);
   const response = await responseModel.getLatestForRequestId(requestId, workspaceMeta.activeEnvironmentId);
   if (response?.requestVersionId) {
     await models.requestVersion.restore(response.requestVersionId);

@@ -1,45 +1,10 @@
+import { getCollaborators } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { userSession } from '~/models';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.collaborators';
-
-interface PaginatedList {
-  start: number;
-  limit: number;
-  length: number;
-  total: number;
-  next: string;
-}
-
-export type CollaboratorType = 'invite' | 'member' | 'group';
-
-interface CollaboratorMetadata {
-  groupId?: string;
-  invitationId?: string;
-  roleId?: string;
-  email?: string;
-  userId?: string;
-  expiresAt?: string;
-  groupTotal?: number;
-}
-
-export interface Collaborator {
-  id: string;
-  picture: string;
-  type: CollaboratorType;
-  name: string;
-  createdAt?: string;
-  metadata: CollaboratorMetadata;
-}
-
-type CollaboratorsListResult =
-  | (PaginatedList & {
-      collaborators: Collaborator[];
-    })
-  | Error;
 
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   const { id: sessionId } = await userSession.get();
@@ -50,22 +15,12 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     const requestUrl = new URL(request.url);
     const searchParams = Object.fromEntries(requestUrl.searchParams.entries());
 
-    // Construct the base path
-    let path = `/v1/desktop/organizations/${organizationId}/collaborators?per_page=${searchParams.per_page || 25}`;
-
-    // Append query parameters conditionally
-    if (searchParams.page) {
-      path += `&page=${searchParams.page}`;
-    }
-
-    if (searchParams.filter) {
-      path += `&filter=${searchParams.filter}`;
-    }
-
-    const collaboratorsList = await insomniaFetch<CollaboratorsListResult>({
-      method: 'GET',
-      path,
+    const collaboratorsList = await getCollaborators({
       sessionId,
+      organizationId,
+      pageLimit: Number(searchParams.per_page) || 25,
+      page: Number(searchParams.page) || 0,
+      filter: searchParams.filter,
     });
 
     return collaboratorsList;
