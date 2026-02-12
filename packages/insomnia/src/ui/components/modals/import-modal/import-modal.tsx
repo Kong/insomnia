@@ -455,9 +455,9 @@ const ScanResourcesForm = ({
             <ScanResultsTable scanResults={scanResults} />
           </div>
         )}
-        {message && <div className="margin-left txt-sm truncate italic">{message}</div>}
+        {message && <div className="truncate">{message}</div>}
         {from?.type === 'curl' && from.origin && (
-          <div className="notice my-1 flex w-full justify-start py-1">
+          <div className="flex w-full justify-start py-1">
             <CurlIcon />
             cURL from{' '}
             <Link className="px-2 font-bold underline" href={from.origin}>
