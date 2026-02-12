@@ -423,14 +423,19 @@ const ScanResourcesForm = ({
                       );
                       const { resources } = data;
                       const importedRequest = resources[0];
-                      if (importedRequest) {
-                        setMessage(`Detected ${importedRequest.method} request to ${importedRequest.url}`);
-                      } else {
-                        setMessage('Invalid cURL request');
-                      }
+                      setMessage(
+                        importedRequest.url
+                          ? `Detected ${importedRequest.method} request to ${importedRequest.url}`
+                          : 'Invalid cURL request',
+                      );
                     } catch (error) {
                       console.log('[importer] error', error);
-                      setMessage(error.message.replace("Error invoking remote method 'parseImport': Error: ", ''));
+
+                      setMessage(
+                        error.message.includes('No importers found for file')
+                          ? 'Invalid cURL request'
+                          : error.message.replace("Error invoking remote method 'parseImport': Error: ", ''),
+                      );
                     }
                   }}
                 />
