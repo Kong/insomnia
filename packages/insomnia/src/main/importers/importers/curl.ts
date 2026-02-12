@@ -32,11 +32,9 @@ const SUPPORTED_ARGS = [
   'X',
 ];
 
-type Pair = string | boolean;
+type PairsByName = Record<string, (string | boolean)[]>;
 
-type PairsByName = Record<string, Pair[]>;
-
-const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
+const importCommand = (parseEntries: ParseEntry[]) => {
   // ~~~~~~~~~~~~~~~~~~~~~ //
   // Collect all the flags //
   // ~~~~~~~~~~~~~~~~~~~~~ //
@@ -83,39 +81,34 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
       singletons.push(parseEntry);
     }
   }
-
-  // ~~~~~~~~~~~~~~~~~ //
-  // Build the request //
-  // ~~~~~~~~~~~~~~~~~ //
-
-  /// /////// Url & parameters //////////
-  let parameters: Parameter[] = [];
-  let url = '';
-
+  return { pairsByName, singletons };
+};
+const extractUrlAndParameters = (urlValue: string): { url: string; parameters: Parameter[] } => {
   try {
-    const urlValue = getPairValue(pairsByName, (singletons[0] as string) || '', ['url']);
     const { searchParams, href, search } = new URL(urlValue);
-    parameters = Array.from(searchParams.entries()).map(([name, value]) => ({
+    const parameters = Array.from(searchParams.entries()).map(([name, value]) => ({
       name,
       value,
       disabled: false,
     }));
-
-    url = href.replace(search, '').replace(/\/$/, '');
-  } catch {}
-
-  /// /////// Authentication //////////
+    const url = href.replace(search, '').replace(/\/$/, '');
+    return { url, parameters };
+  } catch {
+    return { url: '', parameters: [] };
+  }
+};
+const extractAuth = (pairsByName: PairsByName) => {
   const [username, password] = getPairValue(pairsByName, '', ['u', 'user']).split(/:(.*)$/);
 
-  const authentication = username
+  return username
     ? {
         username: username.trim(),
         password: password.trim(),
       }
     : {};
-
-  /// /////// Headers //////////
-  const headers = [
+};
+const extractHeaders = (pairsByName: PairsByName) => {
+  return [
     ...((pairsByName.header as string[] | undefined) || []),
     ...((pairsByName.H as string[] | undefined) || []),
   ].map(header => {
@@ -132,35 +125,21 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
       value: value.trim(),
     };
   });
-
-  /// /////// Cookies //////////
-  const cookieHeaderValue = [
-    ...((pairsByName.cookie as string[] | undefined) || []),
-    ...((pairsByName.b as string[] | undefined) || []),
-  ]
+};
+const extractCookieHeaderValue = (pairsByName: PairsByName) => {
+  return [...((pairsByName.cookie as string[] | undefined) || []), ...((pairsByName.b as string[] | undefined) || [])]
     .map(str => {
       const name = str.split('=', 1)[0];
       const value = str.replace(`${name}=`, '');
       return `${name}=${value}`;
     })
     .join('; ');
-
-  // Convert cookie value to header
-  const existingCookieHeader = headers.find(header => header.name.toLowerCase() === 'cookie');
-
-  if (cookieHeaderValue && existingCookieHeader) {
-    // Has existing cookie header, so let's update it
-    existingCookieHeader.value += `; ${cookieHeaderValue}`;
-  } else if (cookieHeaderValue) {
-    // No existing cookie header, so let's make a new one
-    headers.push({
-      name: 'Cookie',
-      value: cookieHeaderValue,
-    });
-  }
-
-  /// /////// Body (Text or Blob) //////////
-  const dataParameters = pairsToDataParameters(pairsByName);
+};
+const extractBody = (
+  dataParameters: Parameter[],
+  pairsByName: PairsByName,
+  headers: { name: string; value: string }[],
+) => {
   const contentTypeHeader = headers.find(header => header.name.toLowerCase() === 'content-type');
   const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : null;
 
@@ -185,14 +164,8 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     return item;
   });
 
-  /// /////// Body //////////
-  let body = {};
-  const bodyAsGET = getPairValue(pairsByName, false, ['G', 'get']);
-
-  if (dataParameters.length !== 0 && bodyAsGET) {
-    parameters.push(...dataParameters);
-  } else if (dataParameters.length !== 0 && mimeType === 'application/x-www-form-urlencoded') {
-    body = {
+  if (dataParameters.length !== 0 && mimeType === 'application/x-www-form-urlencoded') {
+    return {
       mimeType,
       params: dataParameters.map(parameter => ({
         ...parameter,
@@ -201,26 +174,62 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
       })),
     };
   } else if (dataParameters.length !== 0) {
-    body = {
+    return {
       text: dataParameters
         .map(parameter => (parameter.name ? `${parameter.name}=${parameter.value}` : parameter.value))
         .join('&'),
       mimeType: mimeType || '',
     };
   } else if (formDataParams.length) {
-    body = {
+    return {
       params: formDataParams,
       mimeType: mimeType || 'multipart/form-data',
     };
   }
-
-  /// /////// Method //////////
+  return {};
+};
+const extractMethod = (pairsByName: PairsByName, body: any) => {
   let method = getPairValue(pairsByName, '__UNSET__', ['X', 'request']).toUpperCase();
 
   if (method === '__UNSET__' && body) {
     method = 'text' in body || 'params' in body ? 'POST' : 'GET';
   }
+  return method;
+};
 
+const buildRequestObject = ({
+  pairsByName,
+  singletons,
+}: {
+  pairsByName: PairsByName;
+  singletons: ParseEntry[];
+}): ImportRequest => {
+  const urlValue = getPairValue(pairsByName, (singletons[0] as string) || '', ['url']);
+  const { url, parameters } = extractUrlAndParameters(urlValue);
+
+  const authentication = extractAuth(pairsByName);
+  const headers = extractHeaders(pairsByName);
+  const cookieHeaderValue = extractCookieHeaderValue(pairsByName);
+  // Convert cookie value to header
+  const existingCookieHeader = headers.find(header => header.name.toLowerCase() === 'cookie');
+  if (cookieHeaderValue && existingCookieHeader) {
+    // Has existing cookie header, so let's update it
+    existingCookieHeader.value += `; ${cookieHeaderValue}`;
+  } else if (cookieHeaderValue) {
+    // No existing cookie header, so let's make a new one
+    headers.push({
+      name: 'Cookie',
+      value: cookieHeaderValue,
+    });
+  }
+  const dataParameters = pairsToDataParameters(pairsByName);
+  let body = {};
+  if (dataParameters.length !== 0 && getPairValue(pairsByName, false, ['G', 'get'])) {
+    parameters.push(...dataParameters);
+  } else {
+    body = extractBody(dataParameters, pairsByName, headers);
+  }
+  const method = extractMethod(pairsByName, body);
   const count = requestCount++;
   return {
     _id: `__REQ_${count}__`,
@@ -327,7 +336,7 @@ const pairsToDataParameters = (keyedPairs: PairsByName): Parameter[] => {
  * @param pair command line value
  * @param allowFiles whether to allow the `@` to support include files
  */
-const pairToParameters = (pair: Pair, allowFiles = false): Parameter[] => {
+const pairToParameters = (pair: string | boolean, allowFiles = false): Parameter[] => {
   if (typeof pair === 'boolean') {
     return [{ name: '', value: pair.toString() }];
   }
@@ -419,7 +428,10 @@ export const convert: Converter = rawData => {
   // Push the last unfinished command
   commands.push(currentCommand);
 
-  const requests: ImportRequest[] = commands.filter(command => command[0] === 'curl').map(importCommand);
+  const requests: ImportRequest[] = commands
+    .filter(command => command[0] === 'curl')
+    .map(importCommand)
+    .map(buildRequestObject);
 
   return requests;
 };
