@@ -185,8 +185,8 @@ const defaultRegistry: HotKeyRegistry = {
     winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.t.keyCode }],
   },
   request_openInNewTab: {
-    macKeys: [{ alt: true, meta: true, keyCode: keyboardKeys.o.keyCode }],
-    winLinuxKeys: [{ ctrl: true, alt: true, keyCode: keyboardKeys.o.keyCode }],
+    macKeys: [{ meta: true, shift: true, keyCode: keyboardKeys.o.keyCode }],
+    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.o.keyCode }],
   },
 };
 

@@ -362,13 +362,14 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
         return;
       }
 
-      if (currentTabs.activeTabId !== id) {
-        navigate(reservedTab.url);
-      }
-
       const closeIds = currentTabs.tabList.filter(tab => tab.id !== id).map(tab => tab.id);
       batchCloseTabs(closeIds, options);
-      changeActiveTab(id);
+
+      // If there is an active tab and the reserved tab is not active, navigate to it and set it as active
+      if (currentTabs.activeTabId && currentTabs.activeTabId !== id) {
+        navigate(reservedTab.url);
+        changeActiveTab(id);
+      }
     },
     [batchCloseTabs, changeActiveTab, navigate, organizationId],
   );

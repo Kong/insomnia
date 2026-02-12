@@ -645,7 +645,8 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                               <button
                                 aria-label="Open in New Tab"
                                 className="shrink-0 rounded-sm bg-(--hl-xs) px-2 py-1 text-xs opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-sm)"
-                                onClick={() => {
+                                onClick={e => {
+                                  e.stopPropagation();
                                   item.openInNewTab?.();
                                 }}
                               >
