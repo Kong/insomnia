@@ -496,7 +496,7 @@ const ImportResourcesForm = ({
 }: {
   scanResults: ScanResult[];
   errors?: string[];
-  onImport: (overrideBaseEnvironmentData: boolean, selectedWorkspaceId?: string) => void;
+  onImport: (overrideBaseEnvironmentData: boolean, selectedProjectId?: string, selectedWorkspaceId?: string) => void;
   disabled: boolean;
   loading: boolean;
   isImportingBaseEnvironmentToWorkspace: boolean;
@@ -510,15 +510,19 @@ const ImportResourcesForm = ({
   const isSingleRequest = scanResults.length === 1 && (scanResults[0].requests?.length || 0) === 1;
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(workspaceId || '');
+  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
   useEffect(() => {
-    const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized) {
+    const isIdle = workspacesFetcher.state === 'idle';
+    const hasFetchedSelectedProject = selectedProjectId === workspacesFetcher?.data?.activeProject._id;
+    const hasDataAndFetchedSelectedProject = workspacesFetcher?.data && hasFetchedSelectedProject;
+    const needsFetch = isIdle && !hasDataAndFetchedSelectedProject;
+    if (needsFetch) {
       workspacesFetcher.load({
         organizationId,
-        projectId,
+        projectId: selectedProjectId,
       });
     }
-  }, [organizationId, projectId, workspacesFetcher]);
+  }, [organizationId, projectId, selectedProjectId, workspacesFetcher]);
   // List collections for active project, sorted by last modified timestamp descending
   // Should we list design or mcp?
   const workspacesForActiveProject =
@@ -528,11 +532,34 @@ const ImportResourcesForm = ({
       .filter(isNotNullOrUndefined)
       .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
   const shouldShowWorkspaceSelect = !workspaceId && isSingleRequest && workspacesForActiveProject.length > 0;
+  const shouldShowProjectSelect = true;
   return (
     <Fragment>
       <div className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto">
         <div className="overflow-y-auto">
           <ScanResultsTable scanResults={scanResults} />
+          {shouldShowProjectSelect && (
+            <div className="form-row mt-2">
+              <div className="form-control form-control--outlined">
+                <label>
+                  Select Project:
+                  <select
+                    aria-label="Select Project"
+                    name="projectId"
+                    value={selectedProjectId}
+                    onChange={e => setSelectedProjectId(e.target.value)}
+                  >
+                    <option value="">-- New Project --</option>
+                    {workspacesFetcher?.data?.projects.map(w => (
+                      <option key={w._id} value={w._id}>
+                        {w.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </div>
+          )}
           {shouldShowWorkspaceSelect && (
             <div className="form-row mt-2">
               <div className="form-control form-control--outlined">
