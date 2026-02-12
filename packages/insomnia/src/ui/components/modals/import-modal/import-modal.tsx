@@ -4,7 +4,6 @@ import React, { type FC, Fragment, type ReactNode, useEffect, useId, useMemo, us
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Heading, Link } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
-import { useMount } from 'react-use';
 
 import { isNotNullOrUndefined } from '~/common/misc';
 import { scopeToActivity } from '~/models/workspace';
@@ -377,9 +376,10 @@ const ScanResourcesForm = ({
       );
     }
   };
-  useMount(() => {
+  useEffect(() => {
     validateCurl(from?.type === 'curl' && from.defaultValue ? from.defaultValue : '');
-  });
+    return () => {};
+  }, [from]);
   return (
     <Fragment>
       <div className="flex flex-col">
