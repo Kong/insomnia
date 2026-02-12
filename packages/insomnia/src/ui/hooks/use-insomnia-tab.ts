@@ -116,12 +116,14 @@ const buildTabUrl = (
     workspaceId,
     resourceId,
     searchParams,
+    withTab,
   }: {
     organizationId: string;
     projectId: string;
     workspaceId: string;
     resourceId: string;
     searchParams?: URLSearchParams;
+    withTab?: boolean;
   },
 ): string => {
   const url = (() => {
@@ -183,8 +185,8 @@ const buildTabUrl = (
   })();
 
   const newSearchParams = new URLSearchParams(searchParams);
-  // Ensure we do not skip to active request when opening collection tab
-  if (type === 'collection') {
+  // Ensure we do not skip to active request when opening a permanent collection tab
+  if (type === 'collection' && withTab) {
     newSearchParams.set('doNotSkipToActiveRequest', 'true');
   }
 
@@ -237,14 +239,12 @@ export const buildRunnerTab = ({
   };
 };
 
-export const buildTabFromResource = async (params: AddTabParams): Promise<BaseTab | null> => {
+export const buildTabFromResource = async (params: AddTabParams, withTab?: boolean): Promise<BaseTab | null> => {
   const { resource, organizationId, projectId, workspaceId, projectName, workspaceName, searchParams } = params;
   const effectiveWorkspaceId = workspaceId ?? resource._id;
   const type = inferTabType(resource);
 
-  if (!type) {
-    return null;
-  }
+  if (!type) return null;
 
   const url = buildTabUrl(type, {
     organizationId,
@@ -252,6 +252,7 @@ export const buildTabFromResource = async (params: AddTabParams): Promise<BaseTa
     workspaceId: effectiveWorkspaceId,
     resourceId: resource._id,
     searchParams,
+    withTab,
   });
 
   const baseTab: BaseTab = {
@@ -334,15 +335,18 @@ export const useTabNavigate = () => {
             folderId: item.type === 'RequestGroup' ? item._id : undefined,
             searchParams,
           })
-        : await buildTabFromResource({
-            resource: item,
-            organizationId,
-            projectId: project._id,
-            workspaceId: workspace._id,
-            projectName: project.name,
-            workspaceName: workspace.name,
-            searchParams,
-          });
+        : await buildTabFromResource(
+            {
+              resource: item,
+              organizationId,
+              projectId: project._id,
+              workspaceId: workspace._id,
+              projectName: project.name,
+              workspaceName: workspace.name,
+              searchParams,
+            },
+            withTab,
+          );
       if (!tab) return;
 
       if (withTab) {
