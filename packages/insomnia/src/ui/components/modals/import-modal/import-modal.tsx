@@ -344,7 +344,7 @@ const ScanResourcesForm = ({
 }) => {
   const id = useId();
   const [importFrom, setImportFrom] = useState(from?.type || 'uri');
-
+  const [message, setMessage] = useState('');
   return (
     <Fragment>
       <div className="flex flex-col">
@@ -406,6 +406,33 @@ const ScanResourcesForm = ({
                   name="curl"
                   defaultValue={from?.type === 'curl' ? from.defaultValue : undefined}
                   placeholder="curl --request GET --url http://insomnia.rest/"
+                  onChange={async event => {
+                    const { value } = event.target;
+                    if (!value) {
+                      setMessage('Invalid cURL request');
+                      return;
+                    }
+                    try {
+                      const { data } = await window.main.parseImport(
+                        {
+                          contentStr: value,
+                        },
+                        {
+                          importerId: 'curl',
+                        },
+                      );
+                      const { resources } = data;
+                      const importedRequest = resources[0];
+                      if (importedRequest) {
+                        setMessage(`Detected ${importedRequest.method} request to ${importedRequest.url}`);
+                      } else {
+                        setMessage('Invalid cURL request');
+                      }
+                    } catch (error) {
+                      console.log('[importer] error', error);
+                      setMessage(error.message.replace("Error invoking remote method 'parseImport': Error: ", ''));
+                    }
+                  }}
                 />
               </label>
             </div>
@@ -416,8 +443,7 @@ const ScanResourcesForm = ({
             <ScanResultsTable scanResults={scanResults} />
           </div>
         )}
-      </div>
-      <div>
+        {message && <div className="margin-left txt-sm truncate italic">{message}</div>}
         {from?.type === 'curl' && from.origin && (
           <div className="notice my-1 flex w-full justify-start py-1">
             <CurlIcon />
@@ -430,6 +456,7 @@ const ScanResourcesForm = ({
           </div>
         )}
       </div>
+
       <div className="flex items-end justify-between gap-(--padding-sm)">
         <SupportedFormats />
         <Button variant="contained" bg="surprise" type="submit" form={id} className="btn h-10 gap-(--padding-sm)">
