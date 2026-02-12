@@ -5,7 +5,7 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import type { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 import YAML from 'yaml';
 
-import type { Authentication, Converter, ImportRequest } from '../entities';
+import type { Converter, ImportRequest } from '../entities';
 import { unthrowableParseJson } from '../utils';
 
 export const id = 'openapi3';
@@ -283,7 +283,7 @@ const importRequest = (
     body: body,
     description: endpointSchema.description || '',
     headers: [...paramHeaders, ...securityHeaders],
-    authentication: authentication as Authentication,
+    authentication: authentication,
     parameters: [...prepareQueryParams(endpointSchema), ...securityParams],
   };
 };

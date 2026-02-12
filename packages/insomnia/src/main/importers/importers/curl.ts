@@ -2,6 +2,8 @@ import { URL } from 'node:url';
 
 import { type ControlOperator, parse, type ParseEntry } from 'shell-quote';
 
+import type { RequestAuthentication } from '~/models/request';
+
 import { type Converter, type ImportRequest, type Parameter } from '../entities';
 
 export const id = 'curl';
@@ -99,7 +101,7 @@ const extractUrlAndParameters = (urlValue: string): { url: string; parameters: P
 };
 const isBearerAuth = (header: string, value: string) =>
   header.toLowerCase() === 'authorization' && value.trim().toLowerCase().startsWith('bearer');
-const extractAuth = (pairsByName: PairsByName) => {
+const extractAuth = (pairsByName: PairsByName): RequestAuthentication | {} => {
   const [username, password] = getPairValue(pairsByName, '', ['u', 'user']).split(/:(.*)$/);
   const [header, value] = getPairValue(pairsByName, '', ['H', 'header']).split(/:(.*)$/);
   if (isBearerAuth(header, value)) {
@@ -107,6 +109,7 @@ const extractAuth = (pairsByName: PairsByName) => {
   }
   return username
     ? {
+        type: 'basic',
         username: username.trim(),
         password: password.trim(),
       }
