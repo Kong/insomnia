@@ -150,6 +150,13 @@ export const InviteForm = ({
     }
   }
 
+  /* Why is inviting others still allowed when there are no seats available?
+  This is because a specific scenario might occur: User A has purchased 3 seats and owns two organizations, X and Y.
+  User B has already been invited to Organization X, which now has 3 members (full).
+  At this point, even though User A has run out of seats, they can still invite User B to Organization Y. */
+  const isFormDisabled =
+    checkSeatsResponseData && !checkSeatsResponseData.isAllowed && checkSeatsResponseData.code !== needsToIncreaseSeats;
+
   const searchResult = useMemo(() => collaboratorSearchLoader.data || [], [collaboratorSearchLoader.data]);
 
   useEffect(() => {
@@ -332,7 +339,7 @@ export const InviteForm = ({
               onBlur={handleInputBlur}
               onPaste={handlePaste}
               onChange={e => handleSearch(e.currentTarget.value)}
-              disabled={checkSeatsResponseData && !checkSeatsResponseData.isAllowed}
+              disabled={isFormDisabled}
             />
           </div>
           <div className="flex w-[81px] items-center">
@@ -349,7 +356,7 @@ export const InviteForm = ({
         </div>
         <Button
           className="h-[40px] w-[67px] shrink-0 self-end rounded-sm bg-[#4000bf] text-center text-(--color-font-surprise) disabled:cursor-not-allowed disabled:opacity-70"
-          isDisabled={loading || (checkSeatsResponseData && !checkSeatsResponseData.isAllowed)}
+          isDisabled={loading || isFormDisabled}
           onPress={async () => {
             if (emails.some(({ isValid }) => !isValid)) {
               setError('Some emails are invalid, please correct them before inviting.');
