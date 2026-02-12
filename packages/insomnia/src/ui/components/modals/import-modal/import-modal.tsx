@@ -4,6 +4,7 @@ import React, { type FC, Fragment, type ReactNode, useEffect, useId, useMemo, us
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Heading, Link } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
+import { useMount } from 'react-use';
 
 import { isNotNullOrUndefined } from '~/common/misc';
 import { scopeToActivity } from '~/models/workspace';
@@ -345,6 +346,40 @@ const ScanResourcesForm = ({
   const id = useId();
   const [importFrom, setImportFrom] = useState(from?.type || 'uri');
   const [message, setMessage] = useState('');
+  const validateCurl = async (value: string) => {
+    if (!value) {
+      setMessage('Invalid cURL request');
+      return;
+    }
+    try {
+      const { data } = await window.main.parseImport(
+        {
+          contentStr: value,
+        },
+        {
+          importerId: 'curl',
+        },
+      );
+      const { resources } = data;
+      const importedRequest = resources[0];
+      setMessage(
+        importedRequest.url
+          ? `Detected ${importedRequest.method} request to ${importedRequest.url}`
+          : 'Invalid cURL request',
+      );
+    } catch (error) {
+      console.log('[importer] error', error);
+
+      setMessage(
+        error.message.includes('No importers found for file')
+          ? 'Invalid cURL request'
+          : error.message.replace("Error invoking remote method 'parseImport': Error: ", ''),
+      );
+    }
+  };
+  useMount(() => {
+    validateCurl(from?.type === 'curl' && from.defaultValue ? from.defaultValue : '');
+  });
   return (
     <Fragment>
       <div className="flex flex-col">
@@ -408,35 +443,7 @@ const ScanResourcesForm = ({
                   placeholder="curl --request GET --url http://insomnia.rest/"
                   onChange={async event => {
                     const { value } = event.target;
-                    if (!value) {
-                      setMessage('Invalid cURL request');
-                      return;
-                    }
-                    try {
-                      const { data } = await window.main.parseImport(
-                        {
-                          contentStr: value,
-                        },
-                        {
-                          importerId: 'curl',
-                        },
-                      );
-                      const { resources } = data;
-                      const importedRequest = resources[0];
-                      setMessage(
-                        importedRequest.url
-                          ? `Detected ${importedRequest.method} request to ${importedRequest.url}`
-                          : 'Invalid cURL request',
-                      );
-                    } catch (error) {
-                      console.log('[importer] error', error);
-
-                      setMessage(
-                        error.message.includes('No importers found for file')
-                          ? 'Invalid cURL request'
-                          : error.message.replace("Error invoking remote method 'parseImport': Error: ", ''),
-                      );
-                    }
+                    validateCurl(value);
                   }}
                 />
               </label>
