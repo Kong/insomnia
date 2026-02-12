@@ -97,9 +97,14 @@ const extractUrlAndParameters = (urlValue: string): { url: string; parameters: P
     return { url: '', parameters: [] };
   }
 };
+const isBearerAuth = (header: string, value: string) =>
+  header.toLowerCase() === 'authorization' && value.trim().toLowerCase().startsWith('bearer');
 const extractAuth = (pairsByName: PairsByName) => {
   const [username, password] = getPairValue(pairsByName, '', ['u', 'user']).split(/:(.*)$/);
-
+  const [header, value] = getPairValue(pairsByName, '', ['H', 'header']).split(/:(.*)$/);
+  if (isBearerAuth(header, value)) {
+    return { type: 'bearer', token: value.trim().slice(7) };
+  }
   return username
     ? {
         username: username.trim(),
@@ -108,23 +113,25 @@ const extractAuth = (pairsByName: PairsByName) => {
     : {};
 };
 const extractHeaders = (pairsByName: PairsByName) => {
-  return [
-    ...((pairsByName.header as string[] | undefined) || []),
-    ...((pairsByName.H as string[] | undefined) || []),
-  ].map(header => {
-    const [name, value] = header.split(/:(.*)$/);
-    // remove final colon from header name if present
-    if (!value) {
+  return [...((pairsByName.header as string[] | undefined) || []), ...((pairsByName.H as string[] | undefined) || [])]
+    .filter(header => {
+      const [name, value] = header.split(/:(.*)$/);
+      return isBearerAuth(name, value) === false;
+    })
+    .map(header => {
+      const [name, value] = header.split(/:(.*)$/);
+      // remove final colon from header name if present
+      if (!value) {
+        return {
+          name: name.trim().replace(/;$/, ''),
+          value: '',
+        };
+      }
       return {
-        name: name.trim().replace(/;$/, ''),
-        value: '',
+        name: name.trim(),
+        value: value.trim(),
       };
-    }
-    return {
-      name: name.trim(),
-      value: value.trim(),
-    };
-  });
+    });
 };
 const extractCookieHeaderValue = (pairsByName: PairsByName) => {
   return [...((pairsByName.cookie as string[] | undefined) || []), ...((pairsByName.b as string[] | undefined) || [])]

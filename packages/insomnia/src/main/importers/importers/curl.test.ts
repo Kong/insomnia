@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { convert } from './curl';
+import { convert, name } from './curl';
 
 describe('curl', () => {
   const testCases = [
@@ -209,6 +209,7 @@ describe('curl', () => {
       curl: "curl https://example.com    -H 'Content-Type:application/x-www-form-urlencoded'",
       expected: { headers: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }] },
     },
+    // auth
     {
       name: 'should handle -u for basic auth',
       curl: 'curl https://example.com -u username:password',
@@ -218,6 +219,14 @@ describe('curl', () => {
       name: 'should handle --user for basic auth',
       curl: 'curl https://example.com --user username:password',
       expected: { authentication: { username: 'username', password: 'password' } },
+    },
+    {
+      name: 'should handle bearer',
+      curl: `curl http://httpbin.org/get -H 'Authorization: Bearer mytoken123'`,
+      expected: {
+        authentication: { type: 'bearer', token: 'mytoken123' },
+        headers: [],
+      },
     },
   ];
 
