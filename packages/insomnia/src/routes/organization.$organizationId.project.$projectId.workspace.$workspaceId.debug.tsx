@@ -484,6 +484,22 @@ const Debug = () => {
         showModal(GenerateCodeModal, { request: activeRequest });
       }
     },
+    request_openInNewTab: () => {
+      if (activeRequest && requestId) {
+        tabNavigate(
+          {
+            organization: organizationId,
+            project: activeProject,
+            workspace: activeWorkspace,
+            item: activeRequest,
+          },
+          {
+            withTab: true,
+            shouldNavigate: true,
+          },
+        );
+      }
+    },
   });
 
   const isRealtimeRequest =

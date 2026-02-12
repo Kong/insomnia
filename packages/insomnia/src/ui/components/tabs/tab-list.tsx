@@ -364,10 +364,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     },
   });
 
-  // Hide tab bar when there is only the temporary tab
-  if (!tabList.length || (tabList.length === 1 && tabList[0]?.temporary)) {
-    return null;
-  }
+  if (!tabList.length) return null;
 
   return (
     <div className="box-content flex bg-(--color-bg)" style={{ height: `${INSOMNIA_TAB_HEIGHT + 1}px` }}>

@@ -252,6 +252,7 @@ export const RequestActionsDropdown = ({
           name: 'Open in New Tab',
           action: openInNewTab,
           icon: 'external-link-alt',
+          hint: hotKeyRegistry.request_openInNewTab,
         },
         {
           id: 'Pin',
