@@ -283,7 +283,7 @@ export const ImportModal: FC<ImportModalProps> = ({
 
   return (
     <OverlayContainer onClick={e => e.stopPropagation()}>
-      <Modal ref={modalRef} onHide={onHide} className="max-h-none">
+      <Modal ref={modalRef} onHide={onHide}>
         <ModalHeader>{header}</ModalHeader>
         {hasAnyDataToImport ? (
           <ImportResourcesForm
@@ -389,7 +389,7 @@ const ScanResourcesForm = ({
   const isValidCurl = (importFrom === 'curl' && message && message.startsWith('Detected')) || importFrom !== 'curl';
   return (
     <Fragment>
-      <div className="flex flex-col">
+      <div className="flex flex-col overflow-y-auto">
         <div className="mb-4 w-full items-center gap-4 rounded-lg border border-solid border-[rgba(var(--color-warning-rgb),1)] bg-(--color-bg) px-3 py-2 text-sm text-wrap text-[rgba(var(--color-warning-rgb),1)] shadow-lg outline-hidden">
           ⚠️ Make sure that you trust the import source before continuing.
         </div>
