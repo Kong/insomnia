@@ -99,8 +99,8 @@ const extractUrlAndParameters = (urlValue: string): { url: string; parameters: P
     return { url: '', parameters: [] };
   }
 };
-const isBearerAuth = (header: string, value: string) =>
-  header.toLowerCase() === 'authorization' && value.trim().toLowerCase().startsWith('bearer');
+const isBearerAuth = (header?: string, value?: string) =>
+  header?.toLowerCase() === 'authorization' && value?.trim().toLowerCase().startsWith('bearer');
 const extractAuth = (pairsByName: PairsByName): RequestAuthentication | {} => {
   const [username, password] = getPairValue(pairsByName, '', ['u', 'user']).split(/:(.*)$/);
   const [header, value] = getPairValue(pairsByName, '', ['H', 'header']).split(/:(.*)$/);
