@@ -4,6 +4,7 @@ import { expect } from '@playwright/test';
 
 import { DataPage } from '../../pages/preferences/data';
 import { ProjectPage } from '../../pages/project';
+import { WorkspacePage } from '../../pages/workspace';
 import { test } from '../../playwright/test';
 
 test.describe('Export', () => {
@@ -161,6 +162,100 @@ test.describe('Export', () => {
 
         expect.soft(comparison.matches, `Exported file ${fileName} should match fixture ${fixtureFile}`).toBe(true);
       }
+    } finally {
+      // Cleanup temp directory
+      dataPage.cleanupExportDir(tempDir);
+    }
+  });
+
+  test('Can export single workspace from workspace card dropdown', async ({ app, page }) => {
+    const projectPage = new ProjectPage(page, app);
+    const workspacePage = new WorkspacePage(page);
+    const dataPage = new DataPage(page, app);
+
+    const projectName = 'Export Single Workspace Test';
+    const fixtureFile = FIXTURE_FILES[0]; // Collection A
+
+    // Step 1: Create a new project
+    await projectPage.createProject(projectName, 'local');
+
+    // Wait for empty project view
+    await projectPage.waitForEmptyProjectView();
+
+    // Step 2: Import a single fixture file
+    await projectPage.importFixtureFromEmptyProject(fixtureFile);
+
+    // After import, app redirects to workspace page, navigate back to project
+    await workspacePage.waitForWorkspaceLoaded();
+    await workspacePage.goBackToProject();
+
+    // Verify collection was imported
+    const filesGrid = page.getByLabel('Files');
+    await expect.soft(filesGrid.getByLabel('Collection A')).toBeVisible();
+
+    // Step 3: Export workspace from workspace card dropdown
+    const tempDir = dataPage.createTempExportDir();
+    const exportFilePath = path.join(tempDir, 'Collection-A-export.yaml');
+
+    try {
+      // Export the workspace using the workspace card dropdown
+      await projectPage.exportWorkspaceFromCard('Collection A', exportFilePath, 'yaml');
+
+      // Wait for the export file to be created
+      await dataPage.waitForExportFiles(tempDir, 1);
+
+      // Step 4: Verify the exported file matches the fixture
+      const exportedContent = dataPage.readExportedFile(exportFilePath);
+
+      // Compare with fixture
+      const comparison = dataPage.compareWithFixture(exportedContent, fixtureFile);
+
+      expect.soft(comparison.matches, `Exported file should match fixture ${fixtureFile}`).toBe(true);
+    } finally {
+      // Cleanup temp directory
+      dataPage.cleanupExportDir(tempDir);
+    }
+  });
+
+  test('Can export single workspace from workspace dropdown', async ({ app, page }) => {
+    const projectPage = new ProjectPage(page, app);
+    const workspacePage = new WorkspacePage(page, app);
+    const dataPage = new DataPage(page, app);
+
+    const projectName = 'Export Workspace Dropdown Test';
+    const fixtureFile = FIXTURE_FILES[0]; // Collection A
+
+    // Step 1: Create a new project
+    await projectPage.createProject(projectName, 'local');
+
+    // Wait for empty project view
+    await projectPage.waitForEmptyProjectView();
+
+    // Step 2: Import a single fixture file
+    await projectPage.importFixtureFromEmptyProject(fixtureFile);
+
+    // After import, app redirects to workspace page
+    // This time we stay on the workspace page (don't navigate back to project)
+    await workspacePage.waitForWorkspaceLoaded();
+
+    // Step 3: Export workspace from workspace dropdown
+    const tempDir = dataPage.createTempExportDir();
+    const exportFilePath = path.join(tempDir, 'Collection-A-workspace-dropdown-export.yaml');
+
+    try {
+      // Export the workspace using the workspace dropdown
+      await workspacePage.exportWorkspaceFromDropdown(exportFilePath, 'yaml');
+
+      // Wait for the export file to be created
+      await dataPage.waitForExportFiles(tempDir, 1);
+
+      // Step 4: Verify the exported file matches the fixture
+      const exportedContent = dataPage.readExportedFile(exportFilePath);
+
+      // Compare with fixture
+      const comparison = dataPage.compareWithFixture(exportedContent, fixtureFile);
+
+      expect.soft(comparison.matches, `Exported file should match fixture ${fixtureFile}`).toBe(true);
     } finally {
       // Cleanup temp directory
       dataPage.cleanupExportDir(tempDir);
