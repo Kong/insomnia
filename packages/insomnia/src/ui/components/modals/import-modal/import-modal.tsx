@@ -345,9 +345,9 @@ const ScanResourcesForm = ({
   const id = useId();
   const [importFrom, setImportFrom] = useState(from?.type || 'uri');
   const [message, setMessage] = useState('');
-  const validateCurl = async (value: string) => {
+  const validateCurl = async (isMounted: boolean, value: string) => {
     if (!value) {
-      setMessage('Invalid cURL request');
+      isMounted && setMessage('Invalid cURL request');
       return;
     }
     try {
@@ -361,24 +361,30 @@ const ScanResourcesForm = ({
       );
       const { resources } = data;
       const importedRequest = resources[0];
-      setMessage(
-        importedRequest.url
-          ? `Detected ${importedRequest.method} request to ${importedRequest.url}`
-          : 'Invalid cURL request',
-      );
+      isMounted &&
+        setMessage(
+          importedRequest.url
+            ? `Detected ${importedRequest.method} request to ${importedRequest.url}`
+            : 'Invalid cURL request',
+        );
     } catch (error) {
       console.log('[importer] error', error);
 
-      setMessage(
-        error.message.includes('No importers found for file')
-          ? 'Invalid cURL request'
-          : error.message.replace("Error invoking remote method 'parseImport': Error: ", ''),
-      );
+      isMounted &&
+        setMessage(
+          error.message.includes('No importers found for file')
+            ? 'Invalid cURL request'
+            : error.message.replace("Error invoking remote method 'parseImport': Error: ", ''),
+        );
     }
   };
   useEffect(() => {
-    validateCurl(from?.type === 'curl' && from.defaultValue ? from.defaultValue : '');
-    return () => {};
+    let isMounted = true;
+
+    validateCurl(isMounted, from?.type === 'curl' && from.defaultValue ? from.defaultValue : '');
+    return () => {
+      isMounted = false;
+    };
   }, [from]);
   return (
     <Fragment>
@@ -443,7 +449,7 @@ const ScanResourcesForm = ({
                   placeholder="curl --request GET --url http://insomnia.rest/"
                   onChange={async event => {
                     const { value } = event.target;
-                    validateCurl(value);
+                    validateCurl(true, value);
                   }}
                 />
               </label>
@@ -455,7 +461,7 @@ const ScanResourcesForm = ({
             <ScanResultsTable scanResults={scanResults} />
           </div>
         )}
-        {message && <div className="truncate">{message}</div>}
+        {importFrom === 'curl' && message && <div className="truncate">{message}</div>}
         {from?.type === 'curl' && from.origin && (
           <div className="flex w-full justify-start py-1">
             <CurlIcon />
