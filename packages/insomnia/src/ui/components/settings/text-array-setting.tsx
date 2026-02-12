@@ -4,6 +4,7 @@ import { ListBox, ListBoxItem } from 'react-aria-components';
 import { useRootLoaderData } from '~/root';
 import { invariant } from '~/utils/invariant';
 
+import { normalizeFolderPath } from '../../../common/misc';
 import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { PromptButton } from '../base/prompt-button';
@@ -34,8 +35,12 @@ export const TextArraySetting: FC<{
       setValidationError('Enter a folder path to add.');
       return;
     }
-    const normalizedValue = validValue.replace(/\/+$/, '') || validValue;
-    const exists = currentValue.some(v => (v.replace(/\/+$/, '') || v) === normalizedValue);
+    const normalizedValue = normalizeFolderPath(validValue);
+    if (validValue !== normalizedValue) {
+      setValidationError(`Invalid path format. Did you mean "${normalizedValue}"?`);
+      return;
+    }
+    const exists = currentValue.some(v => normalizeFolderPath(v) === normalizedValue);
     if (exists) {
       setValidationError('Duplicate folders are not allowed.');
       return;
