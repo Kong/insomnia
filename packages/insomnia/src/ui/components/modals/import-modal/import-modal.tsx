@@ -386,6 +386,7 @@ const ScanResourcesForm = ({
       isMounted = false;
     };
   }, [from]);
+  const isValidCurl = (importFrom === 'curl' && message && message.startsWith('Detected')) || importFrom !== 'curl';
   return (
     <Fragment>
       <div className="flex flex-col">
@@ -477,7 +478,14 @@ const ScanResourcesForm = ({
 
       <div className="flex items-end justify-between gap-(--padding-sm)">
         <SupportedFormats />
-        <Button variant="contained" bg="surprise" type="submit" form={id} className="btn h-10 gap-(--padding-sm)">
+        <Button
+          isDisabled={!isValidCurl}
+          variant="contained"
+          bg="surprise"
+          type="submit"
+          form={id}
+          className="btn h-10 gap-(--padding-sm)"
+        >
           <i className="fa fa-file-import" /> Scan
           {loading && <Icon icon="spinner" className="ml-[4px] animate-spin" />}
         </Button>
