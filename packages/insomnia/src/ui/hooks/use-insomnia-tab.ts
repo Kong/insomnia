@@ -516,16 +516,6 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
     const currentActiveTabId = currentOrgTab?.activeTabId;
     const matchingTab = (tabInfoFromUrl && currentTabList?.find(tab => tab.id === tabInfoFromUrl.id)) || null;
 
-    console.log('[debug]', '[useInsomniaTab] Syncing tab with route', {
-      pathname: location.pathname,
-      searchParams: searchParams.toString(),
-      tabInfoFromUrl,
-      existingTabWithSameId: currentTabList?.find(tab => tab.id === tabInfoFromUrl?.id),
-      currentTabList,
-      matchingTab,
-      currentActiveTabId,
-    });
-
     (async () => {
       if (!matchingTab) {
         // If no existing tab for this route, create/update the temporary tab
@@ -533,10 +523,6 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
 
         if (newTemporaryTab) {
           addTemporaryTab(newTemporaryTab, { setActive: true });
-
-          console.log('[debug]', '[useInsomniaTab] new temporary tab', {
-            newTemporaryTab,
-          });
           return;
         }
       }
@@ -544,10 +530,6 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
       if (currentActiveTabId !== matchingTab?.id) {
         // If there's an existing tab for this route, make it active
         changeActiveTab(matchingTab?.id ?? '');
-
-        console.log('[debug]', '[useInsomniaTab] activating existing tab', {
-          matchingTab,
-        });
       }
     })();
   }, [addTemporaryTab, appTabsRef, changeActiveTab, location.pathname, tabInfoFromUrl, organizationId, searchParams]);
