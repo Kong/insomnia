@@ -1,7 +1,6 @@
+import type { Organization } from 'insomnia-api';
 import { Fragment } from 'react';
 import { Button, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
-
-import type { Organization } from '~/models/organization';
 
 import { Icon } from '../icon';
 
