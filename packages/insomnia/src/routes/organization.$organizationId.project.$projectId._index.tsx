@@ -6,7 +6,6 @@ import {
   GridListItem,
   Heading,
   Input,
-  Link,
   ListBox,
   ListBoxItem,
   Menu,
@@ -49,7 +48,7 @@ import {
   isRemoteProject,
   type Project,
 } from '~/models/project';
-import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '~/models/workspace';
+import { isDesign, type Workspace, type WorkspaceScope } from '~/models/workspace';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
@@ -75,12 +74,15 @@ import { ProjectEmptyView } from '~/ui/components/project/project-empty-view';
 import { ProjectListSidebar } from '~/ui/components/project/project-list-sidebar';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { TimeFromNow } from '~/ui/components/time-from-now';
+import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
+import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { trackTempProjectOpened } from '~/ui/temp-segment-tracking';
+import { isPrimaryClickModifier } from '~/ui/utils';
 import { invariant } from '~/utils/invariant';
 
 export type ProjectScopeKeys = WorkspaceScope | 'unsynced';
@@ -561,6 +563,8 @@ const Component = () => {
     organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && isPersonalOrganization(organization);
 
+  const tabNavigate = useTabNavigate();
+
   const filteredFiles = allFiles
     .filter(w => (workspaceListScope !== 'all' ? w.scope === workspaceListScope : true))
     .filter(workspace => {
@@ -599,7 +603,7 @@ const Component = () => {
     })
     .map(file => ({
       ...file,
-      action: () => {
+      action: (withTab?: boolean) => {
         // hack to workaround gridlist not have access to workspace scope
         if (file.scope === 'unsynced') {
           if (activeProject?.remoteId && file.remoteId) {
@@ -613,31 +617,48 @@ const Component = () => {
           return;
         }
 
-        const activity = scopeToActivity(file.scope);
-        return navigate(`/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${activity}`);
+        if (!activeProject || !file.workspace) {
+          showResourceNotFoundToast('Workspace not found');
+          return;
+        }
+
+        tabNavigate(
+          {
+            organization: organizationId,
+            project: activeProject,
+            workspace: file.workspace,
+            item: file.workspace,
+          },
+          {
+            withTab,
+            shouldNavigate: true,
+          },
+        );
+
+        return;
       },
     }));
 
   const projectsWithPresence = projects.map(project => {
-      const projectPresence = presence
-        .filter(p => p.project === project.remoteId)
-        .filter(p => p.acct !== userSession.accountId)
-        .map(user => {
-          return {
-            key: user.acct,
-            alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-            src: user.avatar,
-          };
-        });
-      return {
-        ...project,
-        presence: projectPresence,
-        hasUncommittedOrUnpushedChanges:
-          checkAllProjectSyncStatus?.[project._id] ||
-          project.gitRepository?.hasUncommittedChanges ||
-          project.gitRepository?.hasUnpushedChanges,
-      };
-    });
+    const projectPresence = presence
+      .filter(p => p.project === project.remoteId)
+      .filter(p => p.acct !== userSession.accountId)
+      .map(user => {
+        return {
+          key: user.acct,
+          alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+          src: user.avatar,
+        };
+      });
+    return {
+      ...project,
+      presence: projectPresence,
+      hasUncommittedOrUnpushedChanges:
+        checkAllProjectSyncStatus?.[project._id] ||
+        project.gitRepository?.hasUncommittedChanges ||
+        project.gitRepository?.hasUnpushedChanges,
+    };
+  });
 
   const navigate = useNavigate();
 
@@ -1119,7 +1140,11 @@ const Component = () => {
                           key={item.id}
                           id={item.id}
                           textValue={item.name}
-                          onAction={item.action}
+                          // onAction is required for onPress with selectionMode='none' but we handle clicks in onPress
+                          onAction={() => {}}
+                          onPress={e => {
+                            item.action(isPrimaryClickModifier(e));
+                          }}
                           className={`flex aspect-square w-full flex-1 flex-col overflow-hidden rounded-md p-(--padding-md) ring-1 ring-(--hl-md) outline-hidden transition-all select-none hover:bg-(--hl-xs) hover:shadow-md hover:ring-(--hl-sm) focus:bg-(--hl-sm) focus:ring-(--hl-lg) ${item.loading ? 'animate-pulse' : ''}`}
                         >
                           <div className="flex h-[20px] gap-2">
@@ -1150,12 +1175,7 @@ const Component = () => {
                             )}
                           </div>
                           <TooltipTrigger>
-                            <Link
-                              onPress={item.action}
-                              className="line-clamp-4 pt-4 text-base font-bold outline-hidden"
-                            >
-                              {item.name}
-                            </Link>
+                            <span className="line-clamp-4 pt-4 text-base font-bold outline-hidden">{item.name}</span>
                             <Tooltip
                               offset={8}
                               className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"

@@ -1,17 +1,15 @@
+import { getOrgUserPermissions, type Permission } from 'insomnia-api';
 import React, { useEffect, useState } from 'react';
 import { Button, Heading, Link, Radio, RadioGroup } from 'react-aria-components';
 
+import { getCurrentSessionId } from '~/account/session';
 import { Modal } from '~/basic-components/modal';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { SegmentEvent } from '~/ui/analytics';
 import { Tooltip } from '~/ui/components/tooltip';
 
 import { Icon } from './icon';
-import {
-  getCurrentUserPermissionsInOrg,
-  InviteModalContainer,
-  type Permission,
-} from './modals/invite-modal/invite-modal';
+import { InviteModalContainer } from './modals/invite-modal/invite-modal';
 
 export const HeaderInviteButton = ({
   className = '',
@@ -25,11 +23,17 @@ export const HeaderInviteButton = ({
 
   // TODO: should manage this in the scope of organization context
   useEffect(() => {
-    if (organizationId) {
-      getCurrentUserPermissionsInOrg(organizationId).then(permissions => {
+    (async () => {
+      getOrgUserPermissions({
+        organizationId,
+        sessionId: await getCurrentSessionId(),
+      }).then(permissions => {
         setUserPermission(permissions);
       });
-    }
+    })();
+    return () => {
+      setUserPermission(null);
+    };
   }, [organizationId]);
 
   // TODO: let backend handle the license check currently

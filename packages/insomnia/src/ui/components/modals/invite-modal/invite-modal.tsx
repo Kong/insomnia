@@ -1,5 +1,17 @@
 import { isAfter } from 'date-fns';
-import { type Collaborator, revokeInvitation, unlinkCollaborator } from 'insomnia-api';
+import {
+  type Collaborator,
+  deleteOrganizationMember,
+  type FeatureList,
+  getOrganizationFeatures,
+  getOrganizationMemberRoles,
+  getOrganizationRoles,
+  getOrgUserPermissions,
+  type Permission,
+  revokeInvitation,
+  type Role,
+  unlinkCollaborator,
+} from 'insomnia-api';
 import React, { type FC, type MutableRefObject, useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -32,7 +44,7 @@ import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 
 import { InviteForm } from './invite-form';
-import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
+import { OrganizationMemberRolesSelector, SELECTOR_TYPE } from './organization-member-roles-selector';
 
 export function getSearchParamsString(
   searchParams: URLSearchParams,
@@ -58,7 +70,7 @@ const InviteModal: FC<{
   organizationId: string;
   allRoles: Role[];
   currentUserRoleInOrg: Role;
-  orgFeatures: Features;
+  orgFeatures: FeatureList;
   permissionRef: MutableRefObject<Record<Permission, boolean>>;
   isCurrentUserOrganizationOwner: boolean;
   currentUserAccountId: string;
@@ -268,7 +280,7 @@ const MemberListItem: FC<{
   currentUserRoleInOrg: Role;
   allRoles: Role[];
   isCurrentUserOrganizationOwner: boolean;
-  orgFeatures: Features;
+  orgFeatures: FeatureList;
   permissionRef: MutableRefObject<Record<Permission, boolean>>;
   revalidateCurrentUserRoleAndPermissionsInOrg: (organizationId: string) => Promise<[void, void]>;
   onResetCurrentPage: () => void;
@@ -413,7 +425,7 @@ const MemberListItem: FC<{
             isDisabled={
               (isAcceptedMember && memberRoleName === 'owner') || invitationRoleUpdating || memberRoleUpdating
             }
-            isRBACEnabled={Boolean(orgFeatures?.features.orgBasicRbac?.enabled)}
+            isRBACEnabled={Boolean(orgFeatures?.orgBasicRbac?.enabled)}
             isUserOrganizationOwner={isCurrentUserOrganizationOwner}
             hasPermissionToChangeRoles={permissionRef.current['update:membership']}
             className="flex h-6 min-w-[88px] items-center gap-2"
@@ -463,7 +475,7 @@ const MemberListItem: FC<{
           className="flex min-w-[85px] items-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
           doneMessage={isFailed ? 'Failed' : isAcceptedMember || isGroup ? 'Removed' : 'Revoked'}
           disabled={memberRoleName === 'owner' || isCurrentUser}
-          onClick={() => {
+          onClick={async () => {
             if (isPendingMember && member.metadata.invitationId) {
               if (!permissionRef.current['delete:invitation']) {
                 showModal(AlertModal, {
@@ -484,7 +496,11 @@ const MemberListItem: FC<{
             setIsFailed(false);
 
             if (isAcceptedMember) {
-              deleteMember(organizationId, member.metadata.userId!)
+              deleteOrganizationMember({
+                organizationId,
+                userId: member.metadata.userId!,
+                sessionId: await getCurrentSessionId(),
+              })
                 .then(() => {
                   onResetCurrentPage();
                   onRemoveMember();
@@ -581,18 +597,24 @@ export const InviteModalContainer: FC<{
   const { organizationId } = useParams();
   const [allRoles, setAllRoles] = useState<Role[]>([]);
   const [currentUserRoleInOrg, setCurrentUserRoleInOrg] = useState<Role | null>(null);
-  const [orgFeatures, setOrgFeatures] = useState<Features | null>(null);
+  const [orgFeatures, setOrgFeatures] = useState<FeatureList | null>(null);
   const permissionRef = useRef<Record<Permission, boolean>>();
   const [currentUserAccountId, setCurrentUserAccountId] = useState('');
   const [currentOrgInfo, setCurrentOrgInfo] = useState<OrganizationAuth0 | null>(null);
 
   const isCurrentUserOrganizationOwner = currentUserAccountId === currentOrgInfo?.metadata?.ownerAccountId;
 
-  function getBaseInfo(organizationId: string) {
+  async function getBaseInfo(organizationId: string) {
     return Promise.all([
       getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
-      getOrganizationFeatures(organizationId).then(setOrgFeatures),
-      getCurrentUserPermissionsInOrg(organizationId).then(permissions => {
+      getOrganizationFeatures({
+        organizationId,
+        sessionId: await getCurrentSessionId(),
+      }).then(res => setOrgFeatures(res?.features)),
+      getOrgUserPermissions({
+        organizationId,
+        sessionId: await getCurrentSessionId(),
+      }).then(permissions => {
         permissionRef.current = permissions;
       }),
       getAccountId().then(setCurrentUserAccountId),
@@ -600,10 +622,13 @@ export const InviteModalContainer: FC<{
     ]);
   }
 
-  function revalidateCurrentUserRoleAndPermissionsInOrg(organizationId: string) {
+  async function revalidateCurrentUserRoleAndPermissionsInOrg(organizationId: string) {
     return Promise.all([
       getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
-      getCurrentUserPermissionsInOrg(organizationId).then(permissions => {
+      getOrgUserPermissions({
+        organizationId,
+        sessionId: await getCurrentSessionId(),
+      }).then(permissions => {
         permissionRef.current = permissions;
       }),
     ]);
@@ -614,7 +639,10 @@ export const InviteModalContainer: FC<{
     (async () => {
       if (organizationId) {
         setLoadingOrgInfo(true);
-        await Promise.all([getAllRoles().then(setAllRoles), getBaseInfo(organizationId)]);
+        await Promise.all([
+          getOrganizationRoles({ sessionId: await getCurrentSessionId() }).then(setAllRoles),
+          getBaseInfo(organizationId),
+        ]);
         setLoadingOrgInfo(false);
       }
     })();
@@ -664,78 +692,12 @@ function checkPermissionRefType(
   return Boolean(permissionRef.current);
 }
 
-export type Permission =
-  | 'own:organization'
-  | 'read:organization'
-  | 'delete:organization'
-  | 'update:organization'
-  | 'read:membership'
-  | 'delete:membership'
-  | 'update:membership'
-  | 'read:invitation'
-  | 'create:invitation'
-  | 'delete:invitation'
-  | 'create:enterprise_connection'
-  | 'read:enterprise_connection'
-  | 'delete:enterprise_connection'
-  | 'update:enterprise_connection'
-  | 'leave:organization';
-
-export async function getCurrentUserPermissionsInOrg(organizationId: string): Promise<Record<Permission, boolean>> {
-  return insomniaFetch({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}/user-permissions`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  });
-}
-
-export interface FeatureStatus {
-  enabled: boolean;
-  reason?: string;
-}
-
-export interface OrgFeatures {
-  gitSync: FeatureStatus;
-  orgBasicRbac: FeatureStatus;
-  cloudSync: FeatureStatus;
-  localVault: FeatureStatus;
-}
-
-export interface Features {
-  features: OrgFeatures;
-}
-
-async function getOrganizationFeatures(organizationId: string): Promise<Features> {
-  return insomniaFetch<Features>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}/features`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(() => {
-    throw new Error('Failed to fetch org features');
-  });
-}
-
-/** Get all roles */
-export async function getAllRoles(): Promise<Role[]> {
-  return insomniaFetch<Role[]>({
-    method: 'GET',
-    path: '/v1/organizations/roles',
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(() => {
-    throw new Error('Failed to fetch roles');
-  });
-}
-
 /** Get current user's role in an organization */
 export async function getCurrentUserRoleInOrg(organizationId: string): Promise<Role> {
-  return insomniaFetch<Role>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}/members/${await getAccountId()}/roles`,
+  return getOrganizationMemberRoles({
+    organizationId,
     sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
+    userId: await getAccountId(),
   }).catch(() => {
     throw new Error('Failed to fetch member roles');
   });
@@ -770,17 +732,6 @@ async function getOrganization(organizationId: string): Promise<OrganizationAuth
     onlyResolveOnSuccess: true,
   }).catch(() => {
     throw new Error('Failed to fetch organization');
-  });
-}
-
-async function deleteMember(organizationId: string, userId: string) {
-  return insomniaFetch<void>({
-    method: 'DELETE',
-    path: `/v1/organizations/${organizationId}/members/${userId}`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(error => {
-    throw new Error(error ?? 'Failed to remove member from organization');
   });
 }
 

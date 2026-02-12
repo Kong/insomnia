@@ -18,13 +18,11 @@ import {
   Popover,
   Text,
 } from 'react-aria-components';
-import { href, useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '~/common/hotkeys';
-import { fuzzyMatch } from '~/common/misc';
-import { mcpRequest } from '~/models';
 import { isGrpcRequest } from '~/models/grpc-request';
-import { isRequest, type Request } from '~/models/request';
+import { isRequest } from '~/models/request';
 import { isRequestGroup } from '~/models/request-group';
 import { isWebSocketRequest } from '~/models/websocket-request';
 import { useRootLoaderData } from '~/root';
@@ -43,11 +41,10 @@ import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
-import { type TabType } from '~/ui/components/tabs/tab';
-import { getMethodShortHand, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
-import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
+import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
-import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
+import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { isPrimaryClickModifier } from '~/ui/utils';
 
 export const CommandPalette = memo(function CommandPalette({ style = {} }: { style?: React.CSSProperties }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -104,8 +101,9 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const { presence } = useInsomniaEventStreamContext();
   const pullFileFetcher = useInsomniaSyncPullRemoteFileActionFetcher();
   const setActiveEnvironmentFetcher = useSetActiveEnvironmentFetcher();
+
   const navigate = useNavigate();
-  const { addTab } = useInsomniaTabContext();
+  const tabNavigate = useTabNavigate();
 
   const accountId = userSession.accountId;
 
@@ -133,108 +131,74 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
 
   type CommandRequest = NonNullable<typeof commandsLoader.data>['current']['requests'][number];
 
-  const getRequestOpenInNewTabHandler = (request: CommandRequest) => {
-    if (request.organizationId === organizationId) {
-      return () => {
-        const tabType: TabType = isRequestGroup(request.item) ? 'folder' : 'request';
+  const getRequestHandlers = (request: CommandRequest) => {
+    const navigateInfo = {
+      organization: request.organizationId,
+      project: {
+        _id: request.projectId,
+        name: request.projectName,
+      },
+      workspace: {
+        _id: request.workspaceId,
+        name: request.workspaceName,
+      },
+      item: request.item,
+    };
 
-        addTab(
-          {
-            type: tabType,
-            id: request.item._id,
-            name: request.name,
-            url: request.url,
-            organizationId: request.organizationId,
-            projectId: request.projectId,
-            workspaceId: request.workspaceId,
-            projectName: request.projectName,
-            workspaceName: request.workspaceName,
-            temporary: false,
-            ...(tabType === 'request'
-              ? {
-                  tag: getRequestMethodShortHand(request.item),
-                  method: (request.item as Request)?.method || '',
-                }
-              : {}),
-          },
-          { setActive: false },
-        );
-      };
-    }
-    return;
+    return {
+      openInNewTab:
+        request.organizationId === organizationId
+          ? () => {
+              tabNavigate(navigateInfo, {
+                withTab: true,
+              });
+            }
+          : undefined,
+      action: (withTab?: boolean) => {
+        withTab = withTab && request.organizationId === organizationId;
+        tabNavigate(navigateInfo, {
+          shouldNavigate: true,
+          withTab,
+        });
+        close();
+      },
+    };
   };
 
-  type CommandFile = NonNullable<typeof commandsLoader.data>['current']['files'][number];
+  type CommandFile =
+    | NonNullable<typeof commandsLoader.data>['current']['files'][number]
+    | NonNullable<typeof commandsLoader.data>['other']['files'][number];
 
-  const getFileOpenInNewTabHandler = (file: CommandFile) => {
-    if (file.organizationId === organizationId) {
-      return async () => {
-        const { scope } = file.item;
-        if (scope === 'mcp') {
-          const mcpRequestData = await mcpRequest.getByParentId(file.id);
+  const getFileHandlers = (file: CommandFile) => {
+    const navigationInfo = {
+      organization: file.organizationId,
+      project: {
+        _id: file.projectId,
+        name: file.projectName,
+      },
+      workspace: {
+        _id: file.id,
+        name: file.name,
+      },
+      item: file.item,
+    };
 
-          if (!mcpRequestData) {
-            showResourceNotFoundToast(`MCP Request not found for workspace: ${file.id}`);
-            return;
-          }
-
-          addTab(
-            {
-              type: 'request',
-              id: mcpRequestData._id,
-              name: file.name,
-              url: href(
-                '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId',
-                {
-                  organizationId,
-                  projectId: file.projectId,
-                  workspaceId: file.id,
-                  requestId: mcpRequestData._id,
-                },
-              ),
-              organizationId: file.organizationId,
-              projectId: file.projectId,
-              workspaceId: file.id,
-              projectName: file.projectName,
-              workspaceName: file.name,
-              temporary: false,
-              tag: 'MCP',
-              method: '',
-            },
-            { setActive: false },
-          );
-        } else {
-          const type = (
-            {
-              'environment': 'environment',
-              'design': 'document',
-              'mock-server': 'mockServer',
-              'collection': 'collection',
-            } as const
-          )[scope];
-          const url =
-            file.item.scope === 'collection'
-              ? `${file.url}${file.url.includes('?') ? '&' : '?'}doNotSkipToActiveRequest=true`
-              : file.url;
-          addTab(
-            {
-              type: type,
-              id: file.id,
-              name: file.name,
-              url: url,
-              organizationId: file.organizationId,
-              projectId: file.projectId,
-              workspaceId: file.id,
-              projectName: file.projectName,
-              workspaceName: file.name,
-              temporary: false,
-            },
-            { setActive: false },
-          );
-        }
-      };
-    }
-    return;
+    return {
+      openInNewTab:
+        file.organizationId === organizationId
+          ? () => {
+              tabNavigate(navigationInfo, { withTab: true });
+            }
+          : undefined,
+      action: (withTab?: boolean) => {
+        withTab = withTab && file.organizationId === organizationId;
+        tabNavigate(navigationInfo, {
+          shouldNavigate: true,
+          withTab,
+        });
+        close();
+      },
+    };
   };
 
   const comboboxSections: {
@@ -252,16 +216,14 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       description: React.ReactNode;
       textValue: string;
       openInNewTab?: () => void;
+      action: (withTab?: boolean) => void;
     }[];
   }[] = [];
 
   const currentRequests =
     commandsLoader.data?.current.requests.map(request => ({
       ...request,
-      action: () => {
-        navigate(request.url);
-      },
-      openInNewTab: getRequestOpenInNewTabHandler(request),
+      ...getRequestHandlers(request),
     })) || [];
 
   const remoteFiles = remoteFilesLoader.data?.files || [];
@@ -274,29 +236,21 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const currentLocalFiles =
     currentFilesData?.map(file => ({
       ...file,
-      action: () => {
-        navigate(file.url);
-        return null;
-      },
-      openInNewTab: getFileOpenInNewTabHandler(file),
+      ...getFileHandlers(file),
     })) || [];
 
   const currentRemoteFiles =
     currentRemoteFilesData?.map(file => ({
       ...file,
-      action: () => {
-        if (file.pullUrl) {
-          pullFileFetcher.submit({
-            backendProjectId: file.item.projectId,
-            remoteId: file.item.teamProjectId,
-            organizationId: file.item.organizationId,
-          });
-
-          return true;
-        }
+      action: async () => {
+        await pullFileFetcher.submit({
+          backendProjectId: file.item.projectId,
+          remoteId: file.item.teamProjectId,
+          organizationId: file.item.organizationId,
+        });
 
         navigate(file.url);
-        return null;
+        close();
       },
     })) || [];
 
@@ -306,25 +260,20 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     commandsLoader.data?.current.environments.map(environment => ({
       ...environment,
       id: environment._id,
-      action: () => {
-        setActiveEnvironmentFetcher.submit({
+      action: async () => {
+        await setActiveEnvironmentFetcher.submit({
           organizationId,
           projectId,
           workspaceId,
           environmentId: environment._id,
         });
-
-        return true;
       },
     })) || [];
 
   const otherRequests =
     commandsLoader.data?.other.requests.map(request => ({
       ...request,
-      action: () => {
-        navigate(request.url);
-      },
-      openInNewTab: getRequestOpenInNewTabHandler(request),
+      ...getRequestHandlers(request),
     })) || [];
 
   const otherFilesData = commandsLoader.data?.other.files || [];
@@ -335,28 +284,21 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const otherLocalFiles =
     otherFilesData.map(file => ({
       ...file,
-      action: () => {
-        navigate(file.url);
-        return null;
-      },
-      openInNewTab: getFileOpenInNewTabHandler(file),
+      ...getFileHandlers(file),
     })) || [];
 
   const otherRemoteFiles =
     otherRemoteFilesData.map(file => ({
       ...file,
-      action: () => {
-        if (file.pullUrl) {
-          pullFileFetcher.submit({
-            backendProjectId: file.item.projectId,
-            remoteId: file.item.teamProjectId,
-            organizationId: file.item.organizationId,
-          });
+      action: async () => {
+        await pullFileFetcher.submit({
+          backendProjectId: file.item.projectId,
+          remoteId: file.item.teamProjectId,
+          organizationId: file.item.organizationId,
+        });
 
-          return true;
-        }
         navigate(file.url);
-        return null;
+        close();
       },
     })) || [];
 
@@ -398,8 +340,9 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         name: request.name,
         presence: [],
         description: request.item.url,
-        textValue: `${isRequest(request.item) ? request.item.method : isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name} ${request.url}`,
+        textValue: `${isRequest(request.item) ? request.item.method : isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name}`,
         openInNewTab: request.openInNewTab,
+        action: request.action,
       })),
     });
 
@@ -434,6 +377,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
             };
           }),
         openInNewTab: 'openInNewTab' in file ? file.openInNewTab : undefined,
+        action: file.action,
       })),
     });
 
@@ -458,6 +402,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         presence: [],
         description: `${environment.isPrivate ? 'Private' : 'Shared'} environment`,
         textValue: environment.name,
+        action: environment.action,
       })),
     });
 
@@ -506,9 +451,10 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           </span>
         ),
         textValue: !isRequestGroup(request.item)
-          ? `${isRequest(request.item) ? request.item.method : isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name} ${request.url}`
+          ? `${isRequest(request.item) ? request.item.method : isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name}`
           : '',
         openInNewTab: 'openInNewTab' in request ? request.openInNewTab : undefined,
+        action: request.action,
       })),
     });
 
@@ -546,6 +492,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
             };
           }),
         openInNewTab: 'openInNewTab' in file ? file.openInNewTab : undefined,
+        action: file.action,
       })),
     });
 
@@ -604,9 +551,6 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           close();
         }
       }}
-      defaultFilter={(textValue, filter) => {
-        return Boolean(fuzzyMatch(filter, textValue, { splitSpace: false, loose: true })?.indexes);
-      }}
       onSelectionChange={itemId => {
         if (!itemId) {
           return;
@@ -620,11 +564,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           ...otherFiles,
         ].find(item => item.id === itemId);
 
-        const result = item?.action();
-
-        if (!result) {
-          close();
-        }
+        item?.action();
       }}
     >
       {({ isOpen }) => {
@@ -678,6 +618,16 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                         <ListBoxItem textValue={item.textValue} className="group outline-hidden select-none">
                           <div
                             className={`flex outline-hidden select-none ${item.id === workspaceId || item.id === requestId ? 'font-bold text-(--color-font)' : 'text-(--hl)'} relative h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 transition-colors group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font) group-data-focused:bg-(--hl-sm)`}
+                            // Avoid ListBoxItem onSelect getting triggered and focus stealing by the button
+                            onMouseDownCapture={e => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                            }}
+                            onPointerDown={e => e.stopPropagation()}
+                            onPointerUp={e => e.stopPropagation()}
+                            onClick={e => {
+                              item.action(isPrimaryClickModifier(e));
+                            }}
                           >
                             {item.icon}
                             <Text className="shrink-0 truncate px-1" slot="label">
@@ -693,16 +643,10 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                             </Text>
                             {item.openInNewTab && (
                               <button
-                                // Avoid ListBoxItem onSelect getting triggered and focus stealing by the button
-                                onMouseDownCapture={e => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                }}
-                                onPointerDown={e => e.stopPropagation()}
-                                onPointerUp={e => e.stopPropagation()}
                                 aria-label="Open in New Tab"
                                 className="shrink-0 rounded-sm bg-(--hl-xs) px-2 py-1 text-xs opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-sm)"
-                                onClick={() => {
+                                onClick={e => {
+                                  e.stopPropagation();
                                   item.openInNewTab?.();
                                 }}
                               >

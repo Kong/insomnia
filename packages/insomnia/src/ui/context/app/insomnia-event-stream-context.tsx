@@ -1,10 +1,9 @@
-import { getRealTimeCollaborators, type UserPresence } from 'insomnia-api';
+import { getRealTimeCollaborators, type Organization, type UserPresence } from 'insomnia-api';
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetchers, useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { CDN_INVALIDATION_TTL } from '~/common/constants';
-import type { Organization } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
 import { useClearVaultKeyFetcher } from '~/routes/auth.clear-vault-key';
 import { useProjectIndexLoaderData } from '~/routes/organization.$organizationId.project.$projectId._index';
