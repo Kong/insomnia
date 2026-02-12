@@ -55,20 +55,24 @@ export async function getSendRequestCallbackMemDb(
     },
     true,
   );
+
+  // First, upsert all docs from memDB (which may include Settings from fixtures)
   const docs: BaseModel[] = [];
-
-  const settings = await models.settings.getOrCreate();
-  docs.push({ ...settings, ...settingsOverrides });
-
   for (const type of Object.keys(memDB)) {
     for (const doc of memDB[type]) {
       docs.push(doc);
     }
   }
-  // init database with the provided documents
-  // TODO: this could be done with database.init instead
   await database.batchModifyDocs({
     upsert: docs,
+    remove: [],
+  });
+
+  // Now get settings (may come from fixtures) and merge with overrides
+  const settings = await models.settings.getOrCreate();
+  const mergedSettings = { ...settings, ...settingsOverrides };
+  await database.batchModifyDocs({
+    upsert: [mergedSettings],
     remove: [],
   });
 

@@ -122,14 +122,10 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
     return null;
   };
 
-  const handleClose = (id: string) => {
-    closeTabById(id);
-  };
-
   const handleAuxClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>, id: string) => {
     // If mouse middle button clicked, close tab
     if (e.button === 1) {
-      handleClose(id);
+      closeTabById(id);
     }
   };
 
@@ -195,7 +191,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
               aria-label="Close Tab"
               data-testid="tab-close-button"
               className="flex h-[15px] w-[15px] items-center justify-center hover:bg-(--hl-md)"
-              onPress={() => handleClose(tab.id)}
+              onPress={() => closeTabById(tab.id)}
             >
               <Icon icon="close" />
             </Button>

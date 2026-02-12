@@ -12,6 +12,7 @@ import {
   getClientString,
   getProductName,
   getSegmentWriteKey,
+  PLAYWRIGHT,
 } from '../common/constants';
 import * as models from '../models/index';
 
@@ -67,10 +68,11 @@ export enum SegmentEvent {
   mcpToolCalled = 'MCP Tool Called',
   mcpResourceRead = 'MCP Resource Read',
   mcpPromptCalled = 'MCP Prompt Called',
+  installPlugin = 'Plugin Installed',
+
   // TODO(INS-1912): Remove in 12.5
   tempOrganizationOpened = 'temp_organization_opened',
   tempProjectOpened = 'temp_project_opened',
-  installPlugin = 'Plugin Installed',
 }
 
 function hashString(input: string) {
@@ -78,6 +80,9 @@ function hashString(input: string) {
 }
 
 export async function trackSegmentEvent(event: SegmentEvent, properties?: Record<string, any>) {
+  if (PLAYWRIGHT) {
+    return;
+  }
   const settings = await models.settings.getOrCreate();
   const userSession = await models.userSession.getOrCreate();
   if (!userSession?.hashedAccountId) {
@@ -128,6 +133,9 @@ export async function trackSegmentEvent(event: SegmentEvent, properties?: Record
 }
 
 export async function trackPageView(name: string) {
+  if (PLAYWRIGHT) {
+    return;
+  }
   const settings = await models.settings.getOrCreate();
   const userSession = await models.userSession.getOrCreate();
   if (!userSession?.hashedAccountId) {

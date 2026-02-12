@@ -8,7 +8,7 @@ import path from 'node:path';
 import { oas } from '@stoplight/spectral-rulesets';
 import { DiagnosticSeverity } from '@stoplight/types';
 
-import { InsoError } from '../cli';
+import { InsoError } from '../errors';
 import { logger } from '../logger';
 export const getRuleSetFileFromFolderByFilename = async (filePath: string) => {
   try {

@@ -1,7 +1,7 @@
+import { updateUserRoles } from 'insomnia-api';
 import { href } from 'react-router';
 
 import * as models from '~/models';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -18,11 +18,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   try {
     const user = await models.userSession.getOrCreate();
     const sessionId = user.id;
-
-    const response = await insomniaFetch<{ enabled: boolean }>({
-      method: 'PATCH',
-      path: `/v1/organizations/${organizationId}/members/${userId}/roles`,
-      data: { roles: [roleId] },
+    const response = await updateUserRoles({
+      organizationId,
+      userId,
+      roleId,
       sessionId,
     });
 

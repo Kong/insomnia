@@ -1,3 +1,4 @@
+import type { StorageRules } from 'insomnia-api';
 import { useEffect, useState } from 'react';
 import {
   Button,
@@ -16,7 +17,6 @@ import {
 import { useParams } from 'react-router';
 
 import { removeResponsesForRequest } from '~/models/helpers/response-operations';
-import type { StorageRules } from '~/models/organization';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
