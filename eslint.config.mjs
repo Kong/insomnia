@@ -220,6 +220,7 @@ export default defineConfig([
       '**/verify-pkg.js',
       '**/__mocks__/*',
       '**/.react-router/*',
+      'packages/insomnia/src/*.js',
     ],
   },
   // Main process ESLint rules
