@@ -4,16 +4,17 @@ import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, P
 import { useParams } from 'react-router';
 
 import { useRootLoaderData } from '~/root';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 import { SegmentEvent } from '~/ui/analytics';
+import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
 import type { Environment } from '../../../models/environment';
 import type { GrpcRequest } from '../../../models/grpc-request';
-import type { Project } from '../../../models/project';
 import { isRequest, type Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import type { SocketIORequest } from '../../../models/socket-io-request';
@@ -37,7 +38,6 @@ import { RequestSettingsModal } from '../modals/request-settings-modal';
 
 interface Props {
   activeEnvironment: Environment;
-  activeProject: Project;
   isPinned: boolean;
   request: Request | GrpcRequest | WebSocketRequest | SocketIORequest;
   requestGroup?: RequestGroup;
@@ -49,7 +49,6 @@ interface Props {
 
 export const RequestActionsDropdown = ({
   activeEnvironment,
-  activeProject,
   isPinned,
   request,
   isOpen,
@@ -58,6 +57,7 @@ export const RequestActionsDropdown = ({
   onRename,
 }: Props) => {
   const { settings } = useRootLoaderData()!;
+  const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
   const patchRequestMeta = useRequestMetaPatcher();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
@@ -70,6 +70,22 @@ export const RequestActionsDropdown = ({
   };
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const tabNavigate = useTabNavigate();
+
+  const openInNewTab = async () => {
+    tabNavigate(
+      {
+        organization: organizationId,
+        project: activeProject,
+        workspace: activeWorkspace,
+        item: request,
+      },
+      {
+        withTab: true,
+        shouldNavigate: true,
+      },
+    );
+  };
 
   const onOpen = useCallback(async () => {
     const actionPlugins = await getRequestActions();
@@ -231,6 +247,13 @@ export const RequestActionsDropdown = ({
       id: 'actions',
       icon: 'cog',
       items: [
+        {
+          id: 'OpenInNewTab',
+          name: 'Open in New Tab',
+          action: openInNewTab,
+          icon: 'external-link-alt',
+          hint: hotKeyRegistry.request_openInNewTab,
+        },
         {
           id: 'Pin',
           name: isPinned ? 'Unpin' : 'Pin',

@@ -8,6 +8,7 @@ import NeDB from '@seald-io/nedb';
 
 import { database } from '~/common/database';
 import { generateId } from '~/common/misc';
+import type { ChangeBufferEvent, ChangeListener, ChangeType, IDatabase, Operation, Query } from '~/insomnia-data';
 import { mustGetModel } from '~/models';
 import type { ApiSpec } from '~/models/api-spec';
 import type { CaCertificate } from '~/models/ca-certificate';
@@ -20,8 +21,6 @@ import type { AllTypes, BaseModel } from '~/models/index';
 import * as models from '~/models/index';
 import type { Workspace } from '~/models/workspace';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
-
-import type { ChangeBufferEvent, ChangeListener, ChangeType, IDatabase, Operation, Query } from './types';
 
 const getTempPath = (name: string) => {
   return name === 'temp' ? os.tmpdir() : fsPath.join(os.tmpdir(), 'insomnia-send-request');

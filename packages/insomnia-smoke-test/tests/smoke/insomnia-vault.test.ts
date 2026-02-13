@@ -173,7 +173,12 @@ test.describe('Check vault used in environment', () => {
     await page.getByText('legacy vault value array').click();
     await page.locator('body').click();
     // activate request
-    await page.getByTestId('legacy-array-vault').getByLabel('GET legacy-array-vault', { exact: true }).click();
+    await page
+      .getByTestId('legacy-array-vault')
+      .getByLabel('GET legacy-array-vault', { exact: true })
+      .click({
+        modifiers: ['ControlOrMeta'],
+      });
     // Wait for tab appear
     await expect.soft(page.getByLabel('Insomnia Tabs').getByText('legacy-array-vault', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Send' }).click();
@@ -189,7 +194,12 @@ test.describe('Check vault used in environment', () => {
     await page.getByText('legacy vault value object').click();
     await page.locator('body').click();
     // activate request
-    await page.getByTestId('legacy-object-vault').getByLabel('GET legacy-object-vault', { exact: true }).click();
+    await page
+      .getByTestId('legacy-object-vault')
+      .getByLabel('GET legacy-object-vault', { exact: true })
+      .click({
+        modifiers: ['ControlOrMeta'],
+      });
     await expect.soft(page.getByLabel('Insomnia Tabs').getByText('legacy-object-vault', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Send' }).click();
 
@@ -204,7 +214,12 @@ test.describe('Check vault used in environment', () => {
     await page.getByText('base with vault').click();
     await page.locator('body').click();
     // activate request
-    await page.getByTestId('legacy-invalid-vault').getByLabel('GET legacy-invalid-vault', { exact: true }).click();
+    await page
+      .getByTestId('legacy-invalid-vault')
+      .getByLabel('GET legacy-invalid-vault', { exact: true })
+      .click({
+        modifiers: ['ControlOrMeta'],
+      });
     await expect
       .soft(page.getByLabel('Insomnia Tabs').getByText('legacy-invalid-vault', { exact: true }))
       .toBeVisible();

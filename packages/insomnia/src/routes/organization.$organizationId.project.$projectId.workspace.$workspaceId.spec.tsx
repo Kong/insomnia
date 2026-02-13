@@ -56,7 +56,6 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
-import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
@@ -158,8 +157,7 @@ const lintOptions = {
 
 const Component = ({ params }: Route.ComponentProps) => {
   const { organizationId, projectId, workspaceId } = params;
-  const { activeProject, activeCookieJar, caCertificate, clientCertificates, activeWorkspace, vcsVersion } =
-    useWorkspaceLoaderData()!;
+  const { activeProject, activeCookieJar, caCertificate, clientCertificates, vcsVersion } = useWorkspaceLoaderData()!;
   const { settings } = useRootLoaderData()!;
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
@@ -403,14 +401,6 @@ const Component = ({ params }: Route.ComponentProps) => {
       mediaQuery.removeEventListener('change', handleChange);
     };
   }, [settings.forceVerticalLayout, direction]);
-
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
-  });
 
   return (
     <PanelGroup

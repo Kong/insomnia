@@ -3,6 +3,7 @@ import { Button, ComboBox, FieldError, Input, Label, ListBox, ListBoxItem, Popov
 
 import { fuzzyMatch } from '~/common/misc';
 import { useGitProviderRepositoriesLoaderFetcher } from '~/routes/git-provider.repositories';
+import type { GitRemoteProviderType } from '~/sync/git/providers/types';
 
 import { Icon } from '../icon';
 
@@ -11,11 +12,13 @@ export const GitRepositorySelect = ({
   onSelect,
   credentialsId,
   allConnectedRepoURIProjectNameMap,
+  providerType,
 }: {
   onSelect: (repoUri: string) => void;
   uri?: string;
   credentialsId?: string;
   allConnectedRepoURIProjectNameMap?: Record<string, string> | undefined;
+  providerType?: GitRemoteProviderType;
 }) => {
   const getGitProviderRepositoriesFetcher = useGitProviderRepositoriesLoaderFetcher();
   const lastLoadedCredentialsIdRef = useRef<string | undefined>();
@@ -86,6 +89,7 @@ export const GitRepositorySelect = ({
               <Icon icon="caret-down" className="w-5 shrink-0" />
             </Button>
           </div>
+
           {/* There ought to be only on react-aria Button under ComboBox, so we use the original button here */}
           <button
             type="button"
@@ -101,6 +105,18 @@ export const GitRepositorySelect = ({
             <Icon icon="refresh" className={loading ? 'animate-spin' : ''} />
           </button>
         </div>
+        {providerType === 'github' && (
+          <span className={`flex gap-1 p-2 text-xs ${loading ? 'opacity-40' : ''}`}>
+            <Icon icon="info-circle" className="text-(--hl)" />
+            <span>Can't find a repository?</span>
+            <a
+              className="flex items-center gap-1 text-(--color-surprise)"
+              href="https://github.com/apps/insomnia-desktop/installations/select_target"
+            >
+              Configure on GitHub <i className="fa-solid fa-up-right-from-square" />
+            </a>
+          </span>
+        )}
         <Popover
           className="grid w-(--trigger-width) min-w-max grid-flow-col divide-x divide-solid divide-(--hl-md) overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none focus:outline-hidden"
           placement="bottom start"

@@ -6,8 +6,8 @@ import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
-import { initDatabase } from '~/common/database';
-import { database as clientDatabase } from '~/common/database/database.client';
+import { initDatabase } from '~/insomnia-data';
+import { database as clientDatabase } from '~/ui/database.client';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
