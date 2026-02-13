@@ -4,6 +4,7 @@ import { ListBox, ListBoxItem } from 'react-aria-components';
 import { useRootLoaderData } from '~/root';
 import { invariant } from '~/utils/invariant';
 
+import { normalizeFolderPath } from '../../../common/misc';
 import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { PromptButton } from '../base/prompt-button';
@@ -21,6 +22,7 @@ export const TextArraySetting: FC<{
 
   const patchSettings = useSettingsPatcher();
   const [folderToAdd, setFolderToAdd] = useState('');
+  const [validationError, setValidationError] = useState('');
 
   let currentValue = settings[setting];
   if (!Array.isArray(currentValue)) {
@@ -29,12 +31,24 @@ export const TextArraySetting: FC<{
 
   const onAddDataFolder = useCallback(async () => {
     const validValue = folderToAdd ? folderToAdd.trim() : '';
-    const exists = currentValue.includes(validValue);
-    if (folderToAdd !== '' && !exists) {
-      const updatedValue = [...currentValue, validValue];
-      patchSettings({ [setting]: updatedValue });
+    if (validValue === '') {
+      setValidationError('Enter a folder path to add.');
+      return;
     }
+    const normalizedValue = normalizeFolderPath(validValue);
+    if (validValue !== normalizedValue) {
+      setValidationError(`Invalid path format. Did you mean "${normalizedValue}"?`);
+      return;
+    }
+    const exists = currentValue.some(v => normalizeFolderPath(v) === normalizedValue);
+    if (exists) {
+      setValidationError('Duplicate folders are not allowed.');
+      return;
+    }
+    const updatedValue = [...currentValue, validValue];
+    patchSettings({ [setting]: updatedValue });
     setFolderToAdd('');
+    setValidationError('');
   }, [patchSettings, setting, currentValue, folderToAdd]);
 
   const onDeleteDataFolder = useCallback(
@@ -58,10 +72,12 @@ export const TextArraySetting: FC<{
             name={setting}
             onChange={e => {
               setFolderToAdd(e.target.value);
+              setValidationError('');
             }}
             placeholder={placeholder}
             type={'text'}
             data-testid={setting}
+            style={validationError ? { border: '1px solid var(--color-danger)' } : undefined}
           />
           <button
             className="btn btn--outlined btn--super-compact flex items-center gap-2"
@@ -72,6 +88,11 @@ export const TextArraySetting: FC<{
             Add
           </button>
         </div>
+        {validationError && (
+          <p className="margin-top-xs text-sm" style={{ color: 'var(--color-danger)' }}>
+            {validationError}
+          </p>
+        )}
       </label>
 
       <ListBox aria-label="data folders" className="margin-top-sm flex w-full flex-col overflow-y-auto">

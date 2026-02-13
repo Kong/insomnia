@@ -525,7 +525,12 @@ test.describe('pre-request features tests', () => {
 
     await page.getByLabel('Pre-request Scripts', { exact: true }).click();
     // go to request collection
-    await page.getByLabel('Request Collection').getByTestId('persist global environment').press('Enter');
+    await page
+      .getByLabel('Request Collection')
+      .getByTestId('persist global environment')
+      .click({
+        modifiers: ['ControlOrMeta'],
+      });
     // activate global environment
     await page.getByLabel('Manage Environments').click();
     await page.getByPlaceholder('Choose a global environment').click();

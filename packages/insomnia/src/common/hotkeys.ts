@@ -39,6 +39,7 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   tab_nextTab: 'Next Tab',
   tab_previousTab: 'Previous Tab',
   tab_reopenClosedTab: 'Reopen Closed Tab',
+  request_openInNewTab: 'Open Request in New Tab',
 };
 
 /**
@@ -182,6 +183,10 @@ const defaultRegistry: HotKeyRegistry = {
   tab_reopenClosedTab: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.t.keyCode }],
     winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.t.keyCode }],
+  },
+  request_openInNewTab: {
+    macKeys: [{ meta: true, shift: true, keyCode: keyboardKeys.o.keyCode }],
+    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.o.keyCode }],
   },
 };
 

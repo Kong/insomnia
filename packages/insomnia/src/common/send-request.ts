@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { database, initDatabase } from '~/common/database';
-import { nedbDatabase } from '~/common/database/database-nedb';
+import { database, initDatabase } from '~/insomnia-data';
+import { nedbDatabase } from '~/insomnia-data/node';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { BaseModel } from '../models';

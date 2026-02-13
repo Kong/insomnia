@@ -151,14 +151,13 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     },
   });
 
-  // add a created query param to the URL to indicate that the request was just created, this is for distinguishing if we will create a temporary or permanent tab
   return redirect(
-    `${href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
+    href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
       organizationId,
       projectId,
       workspaceId,
       requestId: activeRequestId,
-    })}?created=true`,
+    }),
   );
 }
 

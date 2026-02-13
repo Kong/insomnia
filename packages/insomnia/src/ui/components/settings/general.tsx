@@ -245,7 +245,7 @@ export const General: FC = () => {
           label="What folders can Insomnia access?"
           setting="dataFolders"
           help="This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to."
-          placeholder=""
+          placeholder="e.g., /Users/folder1"
         />
       </div>
 

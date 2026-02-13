@@ -59,7 +59,8 @@ export type KeyboardShortcut =
   | 'close_tab'
   | 'tab_nextTab'
   | 'tab_previousTab'
-  | 'tab_reopenClosedTab';
+  | 'tab_reopenClosedTab'
+  | 'request_openInNewTab';
 
 /**
  * The collection of defined hotkeys.
