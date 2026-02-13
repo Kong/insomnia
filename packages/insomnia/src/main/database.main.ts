@@ -1,8 +1,8 @@
 import type NeDB from '@seald-io/nedb';
 import electron from 'electron';
 
-import { flushChangesImpl, nedbDatabase } from '~/common/database/database-nedb';
-import type { IDatabase } from '~/common/database/types';
+import type { IDatabase } from '~/insomnia-data';
+import { flushChangesImpl, nedbDatabase } from '~/insomnia-data/node';
 
 export const mainDatabase: IDatabase = {
   ...nedbDatabase,

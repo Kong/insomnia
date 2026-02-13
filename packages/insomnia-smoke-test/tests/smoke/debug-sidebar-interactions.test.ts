@@ -66,7 +66,12 @@ test.describe('Debug-Sidebar', () => {
     await page.getByLabel('Request filter').click();
     await page.getByLabel('Request filter').fill('test folder');
     await page.getByLabel('Request filter').press('Enter');
-    await page.getByLabel('Request Collection').getByRole('row', { name: 'test folder' }).click();
+    await page
+      .getByLabel('Request Collection')
+      .getByRole('row', { name: 'test folder' })
+      .click({
+        modifiers: ['ControlOrMeta'],
+      });
     // Wait for tab appear
     await page.getByLabel('Insomnia Tabs').getByLabel('tab-test folder', { exact: true }).click();
     await page.getByLabel('Clear search').click();
@@ -121,9 +126,15 @@ test.describe('Debug-Sidebar', () => {
       .soft(page.getByTestId('new name').getByLabel('GET new name', { exact: true }))
       .toContainText('new name');
 
-    // Create a new HTTP request
+    // Create a new HTTP request to have two "New Request"
     await page.getByLabel('Create in collection').click();
     await page.getByRole('menuitemradio', { name: 'Http Request' }).click();
-    await page.getByLabel('Request Collection').getByRole('row', { name: 'New Request' }).click();
+
+    // Verify there are two "New Request" rows
+    const newRequests = page.getByLabel('Request Collection').getByRole('row', { name: 'New Request' });
+    await expect.soft(newRequests).toHaveCount(2);
+
+    // Verify the first "New Request" is selected (data-selected is on child element)
+    await expect.soft(newRequests.first().locator('[data-selected="true"]').first()).toBeVisible();
   });
 });

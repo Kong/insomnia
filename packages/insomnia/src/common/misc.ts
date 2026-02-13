@@ -1,3 +1,4 @@
+import path from 'node:path';
 import zlib from 'node:zlib';
 
 import fuzzysort from 'fuzzysort';
@@ -264,6 +265,8 @@ export function unescapeForwardSlash(str: string): string {
     return match;
   });
 }
+
+export const normalizeFolderPath = (p: string) => path.normalize(p).replace(/[/\\]+$/, '');
 
 export function cannotAccessPathError(accessingPath: string): string {
   return process.type === 'renderer' || process.type === 'browser'

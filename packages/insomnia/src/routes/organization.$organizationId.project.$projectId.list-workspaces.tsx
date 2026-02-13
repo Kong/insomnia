@@ -2,6 +2,7 @@ import { href } from 'react-router';
 
 import { parseApiSpec, type ParsedApiSpec } from '~/common/api-specs';
 import { database } from '~/common/database';
+import { scopeToLabelMap } from '~/common/get-workspace-label';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort } from '~/common/sorting';
 import * as models from '~/models';
@@ -16,7 +17,7 @@ import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.list-workspaces';
-import { type InsomniaFile, scopeToLabelMap } from './organization.$organizationId.project.$projectId._index';
+import { type InsomniaFile } from './organization.$organizationId.project.$projectId._index';
 
 async function getAllLocalFiles({ projectId }: { projectId: string }) {
   const projectWorkspaces = await models.workspace.findByParentId(projectId);

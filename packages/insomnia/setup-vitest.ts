@@ -1,9 +1,10 @@
 import { vi } from 'vitest';
 
+import { initDatabase } from '~/insomnia-data';
+
 import { nodeLibcurlMock } from './src/__mocks__/@getinsomnia/node-libcurl';
 import { electronMock } from './src/__mocks__/electron';
-import { initDatabase } from './src/common/database';
-import { mainDatabase } from './src/common/database/database.main';
+import { mainDatabase } from './src/main/database.main';
 import { v4Mock } from './src/models/__mocks__/uuid';
 
 await initDatabase(mainDatabase, { inMemoryOnly: true }, true);

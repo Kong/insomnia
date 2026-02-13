@@ -1,11 +1,17 @@
 import { useEffect, useRef } from 'react';
-import { parseColor } from 'react-aria-components';
 
-import { useRootLoaderData } from '~/root';
+import { findSystemChangeLines } from '~/common/significant-diff-detection';
+import { useIsLightTheme } from '~/ui/hooks/theme';
 
 import { monaco } from './monaco.client';
 
-export const DiffEditor = ({ original, modified }: { original: string; modified: string }) => {
+interface DiffEditorProps {
+  original: string;
+  modified: string;
+  highlightSystemChange?: boolean;
+}
+
+export const DiffEditor = ({ original, modified, highlightSystemChange = false }: DiffEditorProps) => {
   const monacoEl = useRef<HTMLDivElement | null>(null);
 
   const editorRef = useRef<monaco.editor.IStandaloneDiffEditor | null>(null);
@@ -14,60 +20,8 @@ export const DiffEditor = ({ original, modified }: { original: string; modified:
     modified?: monaco.editor.ITextModel;
   }>({});
 
-  const { settings } = useRootLoaderData()!;
-
-  // 1) Define theme when settings change
-  useEffect(() => {
-    const computedStyles = window.getComputedStyle(document.body);
-
-    function getColorVariableAsHex(colorVariable: string, lightnessLimit = 100) {
-      try {
-        const color = parseColor(computedStyles.getPropertyValue(colorVariable));
-        if (color.toFormat('hsl').getChannelValue('lightness') > lightnessLimit) {
-          return color.toFormat('hsl').withChannelValue('lightness', lightnessLimit).toString('hex');
-        }
-        return color.toString('hex');
-      } catch (e) {
-        console.error('Failed to parse color', e);
-        return '#ffffff00';
-      }
-    }
-
-    monaco.editor.defineTheme('insomnia', {
-      base: 'vs',
-      inherit: true,
-      rules: [],
-      colors: {
-        'focusBorder': '#ffffff00',
-        'editor.background': '#ffffff00',
-        'editorCursor.foreground': getColorVariableAsHex('--color-font'),
-        'scrollbar.shadow-sm': getColorVariableAsHex('--color-bg'),
-        'editor.lineHighlightBorder': getColorVariableAsHex('--hl', 30),
-        'editor.foreground': getColorVariableAsHex('--color-font'),
-        'editor.selectionBackground': getColorVariableAsHex('--hl'),
-        'editor.inactiveSelectionBackground': getColorVariableAsHex('--hl'),
-        'editor.selectionForeground': getColorVariableAsHex('--color-font'),
-        'diffEditor.insertedTextBackground': getColorVariableAsHex('--color-success', 20),
-        'diffEditor.removedTextBackground': getColorVariableAsHex('--color-danger', 20),
-        'diffEditor.insertedLineBackground': getColorVariableAsHex('--color-success', 40),
-        'diffEditor.removedLineBackground': getColorVariableAsHex('--color-danger', 40),
-        'diffEditorGutter.insertedLineBackground': getColorVariableAsHex('--color-success', 40),
-        'diffEditorGutter.removedLineBackground': getColorVariableAsHex('--color-danger', 40),
-        'diffEditorOverview.insertedForeground': getColorVariableAsHex('--color-success', 20),
-        'diffEditorOverview.removedForeground': getColorVariableAsHex('--color-danger', 20),
-        'diffEditor.unchangedRegionBackground': getColorVariableAsHex('--color-bg'),
-        'diffEditor.unchangedRegionForeground': getColorVariableAsHex('--color-font'),
-        'diffEditor.unchangedCodeBackground': getColorVariableAsHex('--color-bg'),
-        'diffEditor.diagonalFill': getColorVariableAsHex('--color-notice', 20),
-      },
-    });
-
-    // Apply theme (global)
-    monaco.editor.setTheme('insomnia');
-
-    // Re-layout if editor exists
-    editorRef.current?.layout(undefined, true);
-  }, [settings]);
+  const isLightTheme = useIsLightTheme();
+  const isLightThemeRef = useRef(isLightTheme);
 
   // 2) Create the diff editor ONCE (mount)
   useEffect(() => {
@@ -78,17 +32,22 @@ export const DiffEditor = ({ original, modified }: { original: string; modified:
       renderSideBySide: true,
       useInlineViewWhenSpaceIsLimited: true,
       readOnly: true,
-      lineNumbers: 'off',
       scrollBeyondLastLine: false,
       automaticLayout: true,
       contextmenu: false,
       minimap: { enabled: false },
+      hideUnchangedRegions: {
+        enabled: true,
+        contextLineCount: 3,
+        minimumLineCount: 3,
+        revealLineCount: 20,
+      },
+      enableSplitViewResizing: false,
+      theme: isLightThemeRef.current ? 'vs' : 'vs-dark',
+      glyphMargin: highlightSystemChange,
     });
 
     editorRef.current = diffEditor;
-
-    // Make sure theme vars are applied
-    monaco.editor.setTheme('insomnia');
 
     // Layout next frame (helps in Electron)
     requestAnimationFrame(() => diffEditor.layout(undefined, true));
@@ -111,7 +70,7 @@ export const DiffEditor = ({ original, modified }: { original: string; modified:
 
       editorRef.current = null;
     };
-  }, []);
+  }, [highlightSystemChange]);
 
   // 3) Update models ONLY when original/modified change
   useEffect(() => {
@@ -142,10 +101,44 @@ export const DiffEditor = ({ original, modified }: { original: string; modified:
       modified: modifiedModel,
     });
 
-    // Re-apply theme vars + layout (cheap)
-    monaco.editor.setTheme('insomnia');
+    const originalEditor = diffEditor.getOriginalEditor();
+    const modifiedEditor = diffEditor.getModifiedEditor();
+
+    // Add system change decorations if enabled
+    if (highlightSystemChange) {
+      const systemChangeLines = findSystemChangeLines(original, modified);
+      systemChangeLines.originalLines.forEach(lineNumber => {
+        addLineDecoration(originalEditor, lineNumber);
+      });
+      systemChangeLines.modifiedLines.forEach(lineNumber => {
+        addLineDecoration(modifiedEditor, lineNumber);
+      });
+    }
+
     diffEditor.layout(undefined, true);
-  }, [original, modified]);
+  }, [original, modified, highlightSystemChange]);
 
   return <div className="h-full w-full" ref={monacoEl} />;
 };
+
+const hoverMessage = [
+  {
+    value: 'This is a required change to Insomnia metadata\n\nand can not be manually edited or discarded.',
+  },
+];
+
+function addLineDecoration(editor: monaco.editor.IStandaloneCodeEditor, lineNumber: number) {
+  editor.createDecorationsCollection([
+    {
+      range: new monaco.Range(lineNumber, 1, lineNumber, 1),
+      options: {
+        className: 'system-change-line-bg',
+        glyphMarginClassName: 'info-decoration',
+        hoverMessage: hoverMessage,
+        glyphMarginHoverMessage: hoverMessage,
+        isWholeLine: true,
+        showIfCollapsed: false,
+      },
+    },
+  ]);
+}

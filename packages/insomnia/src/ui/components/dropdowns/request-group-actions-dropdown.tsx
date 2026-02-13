@@ -1,13 +1,14 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useRef, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
-import { useNavigate, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
 import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
+import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
@@ -39,18 +40,19 @@ interface Props extends Partial<DropdownProps> {
 }
 
 export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, onOpenChange, onRename }: Props) => {
-  const { activeProject } = useWorkspaceLoaderData()!;
+  const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
   const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<DropdownHandle>(null);
-  const navigate = useNavigate();
 
   const newRequestFetcher = useRequestNewActionFetcher();
   const newRequestGroupFetcher = useRequestGroupNewActionFetcher();
   const duplicateRequestGroupFetcher = useRequestGroupDuplicateActionFetcher();
   const deleteRequestGroupFetcher = useRequestGroupDeleteActionFetcher();
+
+  const tabNavigate = useTabNavigate();
 
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
@@ -151,6 +153,30 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
+
+  const openInNewTab = () => {
+    tabNavigate(
+      {
+        organization: organizationId,
+        project: activeProject,
+        workspace: activeWorkspace,
+        item: requestGroup,
+      },
+      { withTab: true, shouldNavigate: true },
+    );
+  };
+
+  const openRunner = () => {
+    tabNavigate(
+      {
+        organization: organizationId,
+        project: activeProject,
+        workspace: activeWorkspace,
+        item: requestGroup,
+      },
+      { shouldNavigate: true, asRunner: true },
+    );
+  };
 
   const requestGroupActionItems: {
     name: string;
@@ -272,6 +298,12 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
       icon: 'cog',
       items: [
         {
+          id: 'OpenInNewTab',
+          name: 'Open in New Tab',
+          icon: 'external-link-alt',
+          action: openInNewTab,
+        },
+        {
           id: 'Duplicate',
           name: 'Duplicate',
           icon: 'copy',
@@ -299,11 +331,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
           id: 'RunFolder',
           name: 'Run Folder',
           icon: 'circle-play',
-          action: () => {
-            navigate(
-              `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner?folder=${requestGroup._id}`,
-            );
-          },
+          action: () => openRunner(),
         },
       ],
     },
