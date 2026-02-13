@@ -117,6 +117,7 @@ const extractAuth = (pairsByName: PairsByName): RequestAuthentication | {} => {
 };
 const extractHeaders = (pairsByName: PairsByName) => {
   return [...((pairsByName.header as string[] | undefined) || []), ...((pairsByName.H as string[] | undefined) || [])]
+    .filter(header => header.includes(':'))
     .filter(header => {
       const [name, value] = header.split(/:(.*)$/);
       return isBearerAuth(name, value) === false;

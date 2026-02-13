@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { convert, name } from './curl';
+import { convert } from './curl';
 
 describe('curl', () => {
   const testCases = [

@@ -345,10 +345,13 @@ const validateCurl = async (value: string) => {
       ? `Detected ${importedRequest.method} request to ${importedRequest.url}`
       : 'Invalid cURL request';
   } catch (error) {
-    console.log('[importer] error', error);
-    return error.message.includes('No importers found for file')
+    const rawMessage = error instanceof Error ? error.message : String(error);
+    const cleanedMessage = rawMessage.replace("Error invoking remote method 'parseImport': Error: ", '');
+    const finalMessage = rawMessage.includes('No importers found for file') ? 'Invalid cURL request' : cleanedMessage;
+    console.log('[importer] error', finalMessage);
+    return finalMessage.includes('No importers found for file')
       ? 'Invalid cURL request'
-      : error.message.replace("Error invoking remote method 'parseImport': Error: ", '');
+      : finalMessage.replace("Error invoking remote method 'parseImport': Error: ", '');
   }
 };
 const ScanResourcesForm = ({
@@ -459,7 +462,12 @@ const ScanResourcesForm = ({
           <div className="flex w-full justify-start py-1">
             <CurlIcon />
             cURL from{' '}
-            <Link className="px-2 font-bold underline" href={from.origin}>
+            <Link
+              className="px-2 font-bold underline"
+              onClick={() => {
+                window.main.openInBrowser(from.origin || '');
+              }}
+            >
               {' '}
               {from.origin}{' '}
             </Link>{' '}
