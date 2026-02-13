@@ -515,7 +515,7 @@ const ImportResourcesForm = ({
     const isIdle = workspacesFetcher.state === 'idle';
     const hasFetchedSelectedProject = selectedProjectId === workspacesFetcher?.data?.activeProject._id;
     const hasDataAndFetchedSelectedProject = workspacesFetcher?.data && hasFetchedSelectedProject;
-    const needsFetch = isIdle && !hasDataAndFetchedSelectedProject;
+    const needsFetch = isIdle && !hasDataAndFetchedSelectedProject && selectedProjectId;
     if (needsFetch) {
       workspacesFetcher.load({
         organizationId,
@@ -525,41 +525,40 @@ const ImportResourcesForm = ({
   }, [organizationId, projectId, selectedProjectId, workspacesFetcher]);
   // List collections for active project, sorted by last modified timestamp descending
   // Should we list design or mcp?
-  const workspacesForActiveProject =
-    workspacesFetcher?.data?.files
-      .toSorted((a, b) => b.lastModifiedTimestamp - a.lastModifiedTimestamp)
-      .map(w => ({ ...w.workspace, lastModifiedTimestamp: w.lastModifiedTimestamp }))
-      .filter(isNotNullOrUndefined)
-      .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
-  const shouldShowWorkspaceSelect = !workspaceId && isSingleRequest && workspacesForActiveProject.length > 0;
-  const shouldShowProjectSelect = true;
+  const selectedNewProject = !selectedProjectId;
+  const workspacesForActiveProject = selectedNewProject
+    ? []
+    : workspacesFetcher?.data?.files
+        .toSorted((a, b) => b.lastModifiedTimestamp - a.lastModifiedTimestamp)
+        .map(w => ({ ...w.workspace, lastModifiedTimestamp: w.lastModifiedTimestamp }))
+        .filter(isNotNullOrUndefined)
+        .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
+  const shouldShowWorkspaceSelect = isSingleRequest && workspacesForActiveProject.length > 0;
   return (
     <Fragment>
       <div className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto">
         <div className="overflow-y-auto">
           <ScanResultsTable scanResults={scanResults} />
-          {shouldShowProjectSelect && (
-            <div className="form-row mt-2">
-              <div className="form-control form-control--outlined">
-                <label>
-                  Select Project:
-                  <select
-                    aria-label="Select Project"
-                    name="projectId"
-                    value={selectedProjectId}
-                    onChange={e => setSelectedProjectId(e.target.value)}
-                  >
-                    <option value="">-- New Project --</option>
-                    {workspacesFetcher?.data?.projects.map(w => (
-                      <option key={w._id} value={w._id}>
-                        {w.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+          <div className="form-row mt-2">
+            <div className="form-control form-control--outlined">
+              <label>
+                Select Project:
+                <select
+                  aria-label="Select Project"
+                  name="projectId"
+                  value={selectedProjectId}
+                  onChange={e => setSelectedProjectId(e.target.value)}
+                >
+                  <option value="">-- New Project --</option>
+                  {workspacesFetcher?.data?.projects.map(w => (
+                    <option key={w._id} value={w._id}>
+                      {w.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
-          )}
+          </div>
           {shouldShowWorkspaceSelect && (
             <div className="form-row mt-2">
               <div className="form-control form-control--outlined">
@@ -614,7 +613,7 @@ const ImportResourcesForm = ({
           variant="contained"
           bg="surprise"
           disabled={disabled}
-          onClick={() => onImport(overrideBaseEnvironmentData, selectedWorkspaceId)}
+          onClick={() => onImport(overrideBaseEnvironmentData, selectedProjectId, selectedWorkspaceId)}
           className="btn h-10 gap-(--padding-sm)"
         >
           {loading ? (
