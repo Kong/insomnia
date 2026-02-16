@@ -1,5 +1,6 @@
 import { URL } from 'node:url';
 
+import { toJsonObject } from 'curlconverter';
 import { type ControlOperator, parse, type ParseEntry } from 'shell-quote';
 
 import type { RequestAuthentication } from '~/models/request';
@@ -384,7 +385,7 @@ const getPairValue = <T extends string | boolean>(parisByName: PairsByName, defa
   return defaultValue;
 };
 
-export const convert: Converter = rawData => {
+export const convertWithShellQuote: Converter = rawData => {
   requestCount = 1;
 
   if (!rawData.match(/^\s*curl /)) {
@@ -450,3 +451,107 @@ export const convert: Converter = rawData => {
 
   return requests;
 };
+
+/**
+ * Alternative convert function built on curlconverter.
+ * Maps curlconverter's JSON output to the ImportRequest[] format used by Insomnia.
+ */
+export const convertWithCurlConverter: Converter = (rawData: string) => {
+  if (!rawData.match(/^\s*curl /)) {
+    return null;
+  }
+
+  let parsed: ReturnType<typeof toJsonObject>;
+  try {
+    parsed = toJsonObject(rawData);
+  } catch {
+    return null;
+  }
+
+  // toJsonObject returns a single object (or array for multiple commands)
+  const commands = Array.isArray(parsed) ? parsed : [parsed];
+
+  return commands.map((cmd: any, index: number) => {
+    const url = (cmd.url || '').replace(/\/$/, '');
+
+    // Headers: convert from {name: value} object to [{name, value}] array
+    const rawHeaders = Object.entries(cmd.headers || {}).map(([name, value]) => ({
+      name,
+      value: value as string,
+    }));
+
+    // Extract bearer auth from headers
+    const bearerHeader = rawHeaders.find(
+      h => h.name.toLowerCase() === 'authorization' && h.value.trim().toLowerCase().startsWith('bearer'),
+    );
+
+    // Filter out bearer auth from headers list
+    const headers = bearerHeader ? rawHeaders.filter(h => h !== bearerHeader) : rawHeaders;
+
+    // Authentication
+    let authentication: Record<string, string> = {};
+    if (cmd.auth && cmd.auth_type === 'basic') {
+      authentication = {
+        type: 'basic',
+        username: cmd.auth.user || '',
+        password: cmd.auth.password || '',
+      };
+    } else if (bearerHeader) {
+      authentication = {
+        type: 'bearer',
+        token: bearerHeader.value.trim().slice(7), // Remove "Bearer "
+      };
+    }
+
+    // Body
+    const contentTypeHeader = rawHeaders.find(h => h.name.toLowerCase() === 'content-type');
+    const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : null;
+    const isUrlEncoded = mimeType === 'application/x-www-form-urlencoded';
+
+    let body: Record<string, any> = {};
+    if (cmd.data !== undefined) {
+      if (isUrlEncoded) {
+        const dataStr =
+          typeof cmd.data === 'object'
+            ? Object.entries(cmd.data)
+                .map(([k, v]) => `${k}=${v}`)
+                .join('&')
+            : String(cmd.data);
+
+        const params = dataStr.split('&').map((pair: string) => {
+          // Handle @filename patterns (file references from -d '@file')
+          if (pair.startsWith('@')) {
+            return { name: '', fileName: pair.slice(1), type: 'file' };
+          }
+
+          const eqIndex = pair.indexOf('=');
+          if (eqIndex === -1) {
+            return { name: '', value: decodeURIComponent(pair) };
+          }
+          const name = decodeURIComponent(pair.slice(0, eqIndex));
+          const value = decodeURIComponent(pair.slice(eqIndex + 1));
+          return { name, value };
+        });
+        body = { params };
+      } else {
+        // Non-urlencoded: treat as raw text body
+        const text = typeof cmd.data === 'object' ? JSON.stringify(cmd.data) : String(cmd.data);
+        body = { text };
+      }
+    }
+
+    return {
+      _id: `__REQ_${index + 1}__`,
+      _type: 'request',
+      parentId: '__WORKSPACE_ID__',
+      name: url || `cURL Import ${index + 1}`,
+      parameters: [],
+      url,
+      method: (cmd.method || 'GET').toUpperCase(),
+      headers,
+      authentication,
+      body,
+    };
+  });
+};
+export const convert = convertWithCurlConverter;

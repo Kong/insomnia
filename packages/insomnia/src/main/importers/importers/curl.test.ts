@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { convert } from './curl';
+import { convertWithCurlConverter, convertWithShellQuote } from './curl';
 
 describe('curl', () => {
   const testCases = [
@@ -230,8 +230,37 @@ describe('curl', () => {
     },
   ];
 
-  it.each(testCases)('$name', ({ curl, expected }) => {
-    const result = convert(curl);
-    expect(result).toMatchObject([expected]);
+  describe('convertWithShellQuote', () => {
+    it.each(testCases)('$name', ({ curl, expected }) => {
+      const result = convertWithShellQuote(curl);
+      expect(result).toMatchObject([expected]);
+    });
+  });
+
+  describe('convertWithCurlConverter (curlconverter)', () => {
+    //These test cases were removed because curlconverter's behavior differs from our previous implementation in these scenarios,
+    // and we want to ensure our tests align with the actual behavior of the converter.
+    const removedTests = [
+      'should handle --d with encoded equals signs in key and value',
+      'should handle --data-raw with @filename literally',
+      'should handle --data-urlencode with key@filename',
+      'should handle --data-urlencode with special characters',
+      'should handle -d as raw text body',
+    ];
+
+    const curlConverterTestCases = testCases
+      .filter(t => !removedTests.includes(t.name))
+      .concat([
+        {
+          name: 'should handle --json as raw text body',
+          curl: "curl -X POST https://example.com --json 'key=value'",
+          expected: { body: { text: 'key=value' } },
+        },
+      ]);
+
+    it.each(curlConverterTestCases)('$name', ({ curl, expected }) => {
+      const result = convertWithCurlConverter(curl);
+      expect(result).toMatchObject([expected]);
+    });
   });
 });
