@@ -107,6 +107,7 @@ export default async function build(options: Options) {
       '@reflink/reflink-win32-arm64-msvc',
       '@reflink/reflink-win32-x64-msvc',
       'apiconnect-wsdl',
+      'curlconverter',
       ...Object.keys(builtinModules),
     ],
   };
