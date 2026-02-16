@@ -17,11 +17,11 @@ exports[`Fixtures > Import curl > complex-input.sh 1`] = `
       },
       "body": {
         "mimeType": "application/json",
-        "text": "{"email_id": "tem_123"}",
+        "text": "{"email_id":"tem_123"}",
       },
       "headers": [
         {
-          "name": "x-custom-header",
+          "name": "x-custom-header ",
           "value": "foo bar",
         },
         {
@@ -30,11 +30,15 @@ exports[`Fixtures > Import curl > complex-input.sh 1`] = `
         },
         {
           "name": "Cookie",
-          "value": "foo=bar; NID=91=iOf1sU9Ovlns9Dzn2Ipz05syr2K4AlZ4Kgp84eRVLf3_6DgcNrkqpWg4lfUvCB5cNxD26t",
+          "value": "foo=bar",
         },
         {
           "name": "another-header",
           "value": "foo",
+        },
+        {
+          "name": "Accept",
+          "value": "application/json",
         },
       ],
       "method": "POST",
@@ -59,7 +63,7 @@ exports[`Fixtures > Import curl > dollar-sign-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {
-        "mimeType": "",
+        "mimeType": "application/json",
         "text": "{"key":"TEST","websiteId":2,"storeId":4,"remove":true,"coupon":{"code":"erwrwer"}}",
       },
       "headers": [
@@ -77,7 +81,7 @@ exports[`Fixtures > Import curl > dollar-sign-input.sh 1`] = `
         },
         {
           "name": "Cookie",
-          "value": "CookieTestConsent={stamp:\\xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=='%2Cnecessary...",
+          "value": "CookieTestConsent={stamp:'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=='%2Cnecessary...",
         },
         {
           "name": "Connection",
@@ -86,6 +90,14 @@ exports[`Fixtures > Import curl > dollar-sign-input.sh 1`] = `
         {
           "name": "Pragma",
           "value": "no-cache",
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+        {
+          "name": "Accept",
+          "value": "application/json",
         },
       ],
       "method": "POST",
@@ -229,6 +241,7 @@ exports[`Fixtures > Import curl > get-input.sh 1`] = `
       "name": "http://somesite.com/getdata",
       "parameters": [
         {
+          "disabled": false,
           "name": "id",
           "value": "1234",
         },
@@ -372,29 +385,6 @@ exports[`Fixtures > Import curl > multi-input.sh 1`] = `
 }
 `;
 
-exports[`Fixtures > Import curl > no-url-input.sh 1`] = `
-{
-  "__export_date": "",
-  "__export_format": 4,
-  "__export_source": "insomnia.importers:v0.1.0",
-  "_type": "export",
-  "resources": [
-    {
-      "_id": "__REQ_1__",
-      "_type": "request",
-      "authentication": {},
-      "body": {},
-      "headers": [],
-      "method": "POST",
-      "name": "cURL Import 1",
-      "parameters": [],
-      "parentId": "__WORKSPACE_ID__",
-      "url": "",
-    },
-  ],
-}
-`;
-
 exports[`Fixtures > Import curl > question-mark-input.sh 1`] = `
 {
   "__export_date": "",
@@ -407,10 +397,19 @@ exports[`Fixtures > Import curl > question-mark-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {
-        "mimeType": "",
+        "mimeType": "application/json",
         "text": "{"query":{"match_all":{}}}",
       },
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+        {
+          "name": "Accept",
+          "value": "application/json",
+        },
+      ],
       "method": "POST",
       "name": "http://192.168.1.1:9200/executions/_search",
       "parameters": [

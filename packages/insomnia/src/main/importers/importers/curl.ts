@@ -529,7 +529,25 @@ export const convertWithCurlConverter: Converter = (rawData: string) => {
     }
   }
   return parsed.map((cmd: any, index: number) => {
-    const url = (cmd.url || '').replace(/\/$/, '');
+    const rawUrl = (cmd.url || '').replace(/\/$/, '');
+
+    // Extract query parameters from URL and queries field
+    let url = rawUrl;
+    const parameters: Parameter[] = [];
+    try {
+      const parsed = new URL(rawUrl);
+      if (parsed.search) {
+        for (const [name, value] of parsed.searchParams.entries()) {
+          parameters.push({ name, value, disabled: false });
+        }
+        url = rawUrl.replace(parsed.search, '');
+      }
+    } catch {}
+    if (cmd.queries) {
+      for (const [name, value] of Object.entries(cmd.queries)) {
+        parameters.push({ name, value: String(value), disabled: false });
+      }
+    }
 
     // Headers: convert from {name: value} object to [{name, value}] array
     const rawHeaders = Object.entries(cmd.headers || {}).map(([name, value]) => ({
@@ -566,7 +584,19 @@ export const convertWithCurlConverter: Converter = (rawData: string) => {
     const isUrlEncoded = mimeType === 'application/x-www-form-urlencoded';
 
     let body: Record<string, any> = {};
-    if (cmd.data !== undefined) {
+    if (cmd.files) {
+      // Multipart form data (from -F/--form flags)
+      const params: any[] = [];
+      for (const [name, fileName] of Object.entries(cmd.files)) {
+        params.push({ name, fileName, type: 'file' });
+      }
+      if (cmd.data && typeof cmd.data === 'object') {
+        for (const [name, value] of Object.entries(cmd.data)) {
+          params.push({ name, value: String(value), type: 'text' });
+        }
+      }
+      body = { mimeType: mimeType || 'multipart/form-data', params };
+    } else if (cmd.data !== undefined) {
       if (isUrlEncoded) {
         const dataStr =
           typeof cmd.data === 'object'
@@ -602,7 +632,7 @@ export const convertWithCurlConverter: Converter = (rawData: string) => {
       _type: 'request',
       parentId: '__WORKSPACE_ID__',
       name: url || `cURL Import ${index + 1}`,
-      parameters: [],
+      parameters,
       url,
       method: (cmd.method || 'GET').toUpperCase(),
       headers,
