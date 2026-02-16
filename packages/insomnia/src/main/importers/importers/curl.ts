@@ -453,6 +453,62 @@ export const convertWithShellQuote: Converter = rawData => {
 };
 
 /**
+ * Splits a shell string into separate commands by unquoted ; or newlines,
+ * respecting single quotes, double quotes, and backslash escapes.
+ */
+const splitCommands = (input: string): string[] => {
+  const commands: string[] = [];
+  let current = '';
+  let inSingle = false;
+  let inDouble = false;
+  let escaped = false;
+
+  for (const ch of input) {
+    if (escaped) {
+      current += ch;
+      escaped = false;
+      continue;
+    }
+
+    if (ch === '\\' && !inSingle) {
+      escaped = true;
+      current += ch;
+      continue;
+    }
+
+    if (ch === "'" && !inDouble) {
+      inSingle = !inSingle;
+      current += ch;
+      continue;
+    }
+
+    if (ch === '"' && !inSingle) {
+      inDouble = !inDouble;
+      current += ch;
+      continue;
+    }
+
+    if (!inSingle && !inDouble && (ch === ';' || ch === '\n')) {
+      const trimmed = current.trim();
+      if (trimmed) {
+        commands.push(trimmed);
+      }
+      current = '';
+      continue;
+    }
+
+    current += ch;
+  }
+
+  const trimmed = current.trim();
+  if (trimmed) {
+    commands.push(trimmed);
+  }
+
+  return commands;
+};
+
+/**
  * Alternative convert function built on curlconverter.
  * Maps curlconverter's JSON output to the ImportRequest[] format used by Insomnia.
  */
@@ -460,10 +516,7 @@ export const convertWithCurlConverter: Converter = (rawData: string) => {
   if (!rawData.match(/^\s*curl /)) {
     return null;
   }
-  const asArray = rawData
-    .split(';')
-    .map(cmd => cmd.trim())
-    .filter(cmd => cmd.startsWith('curl '));
+  const asArray = splitCommands(rawData).filter(cmd => cmd.match(/^\s*curl /));
   const parsed: ReturnType<typeof toJsonObject>[] = [];
   for (const cmd of asArray) {
     try {
