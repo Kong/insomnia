@@ -536,11 +536,11 @@ export const convertWithCurlConverter: Converter = (rawData: string) => {
           const value = decodeURIComponent(pair.slice(eqIndex + 1));
           return { name, value };
         });
-        body = { params };
+        body = { params, mimeType };
       } else {
         // Non-urlencoded: treat as raw text body
         const text = typeof cmd.data === 'object' ? JSON.stringify(cmd.data) : String(cmd.data);
-        body = { text };
+        body = { text, mimeType };
       }
     }
 
