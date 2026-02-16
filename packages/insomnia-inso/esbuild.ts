@@ -41,7 +41,7 @@ const config: BuildOptions = {
     '__DEV__': JSON.stringify(!isProd),
   },
   // node-llama-cpp is not included here because inso does not need it
-  external: ['@getinsomnia/node-libcurl', 'fsevents', 'mocha'],
+  external: ['@getinsomnia/node-libcurl', 'fsevents', 'mocha', 'curlconverter'],
   entryPoints: ['./src/index.ts'],
 };
 
