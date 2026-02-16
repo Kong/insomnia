@@ -351,11 +351,27 @@ const Root = () => {
             source: 'import-url',
           },
         });
+        const sanitizeUrlAndExtractOrigin = (url: string) => {
+          try {
+            const parsed = new URL(url);
+            return parsed.origin;
+          } catch {
+            return '';
+          }
+        };
         if (params.uri) {
-          return setImportObject({ type: 'uri', defaultValue: params.uri, origin: params.origin });
+          return setImportObject({
+            type: 'uri',
+            defaultValue: params.uri,
+            origin: sanitizeUrlAndExtractOrigin(params.uri),
+          });
         }
         if (params.curl) {
-          return setImportObject({ type: 'curl', defaultValue: params.curl, origin: params.origin });
+          return setImportObject({
+            type: 'curl',
+            defaultValue: params.curl,
+            origin: sanitizeUrlAndExtractOrigin(params.curl),
+          });
         }
       }
       if (urlWithoutParams === 'insomnia://plugins/install') {
