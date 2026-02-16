@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
 import { convertWithCurlConverter, convertWithShellQuote } from './curl';
-
+const baseRequest = {
+  _id: '__REQ_1__',
+  _type: 'request',
+  parentId: '__WORKSPACE_ID__',
+  method: 'POST',
+  url: 'https://example1.com',
+  name: 'https://example1.com',
+  headers: [],
+  authentication: {},
+  body: {},
+  parameters: [],
+};
 describe('curl', () => {
   const testCases = [
     // --data flags with urlencoded content type
@@ -9,6 +20,14 @@ describe('curl', () => {
       name: 'should handle -d with key=value',
       curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' -d 'key=value'",
       expected: { body: { params: [{ name: 'key', value: 'value' }] } },
+    },
+    {
+      name: 'should handle mutliple curls seperated by semi-colon',
+      curl: 'curl -X POST https://example1.com; curl -X POST https://example2.com ',
+      expected: [
+        baseRequest,
+        { ...baseRequest, _id: '__REQ_2__', url: 'https://example2.com', name: 'https://example2.com' },
+      ],
     },
     {
       name: 'should handle -d with only a value',
@@ -233,7 +252,7 @@ describe('curl', () => {
   describe('convertWithShellQuote', () => {
     it.each(testCases)('$name', ({ curl, expected }) => {
       const result = convertWithShellQuote(curl);
-      expect(result).toMatchObject([expected]);
+      expect(result).toMatchObject(Array.isArray(expected) ? expected : [expected]);
     });
   });
 
@@ -260,7 +279,7 @@ describe('curl', () => {
 
     it.each(curlConverterTestCases)('$name', ({ curl, expected }) => {
       const result = convertWithCurlConverter(curl);
-      expect(result).toMatchObject([expected]);
+      expect(result).toMatchObject(Array.isArray(expected) ? expected : [expected]);
     });
   });
 });

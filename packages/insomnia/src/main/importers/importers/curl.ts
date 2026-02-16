@@ -460,18 +460,22 @@ export const convertWithCurlConverter: Converter = (rawData: string) => {
   if (!rawData.match(/^\s*curl /)) {
     return null;
   }
-
-  let parsed: ReturnType<typeof toJsonObject>;
-  try {
-    parsed = toJsonObject(rawData);
-  } catch {
-    return null;
+  const asArray = rawData
+    .split(';')
+    .map(cmd => cmd.trim())
+    .filter(cmd => cmd.startsWith('curl '));
+  const parsed: ReturnType<typeof toJsonObject>[] = [];
+  for (const cmd of asArray) {
+    try {
+      parsed.push(toJsonObject(cmd));
+    } catch (error) {
+      console.log(error);
+      return {
+        convertErrorMessage: `Failed to parse cURL command: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
   }
-
-  // toJsonObject returns a single object (or array for multiple commands)
-  const commands = Array.isArray(parsed) ? parsed : [parsed];
-
-  return commands.map((cmd: any, index: number) => {
+  return parsed.map((cmd: any, index: number) => {
     const url = (cmd.url || '').replace(/\/$/, '');
 
     // Headers: convert from {name: value} object to [{name, value}] array
