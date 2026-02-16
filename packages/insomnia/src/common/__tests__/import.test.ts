@@ -62,7 +62,7 @@ describe('importRaw()', () => {
 
     expect(curlRequests[0]).toMatchObject({
       body: {
-        text: '{\"email_id\": \"tem_123\"}',
+        text: '{\"email_id\":\"tem_123\"}',
       },
     });
   });
@@ -90,7 +90,7 @@ describe('importRaw()', () => {
 
     expect(curlRequests[0]).toMatchObject({
       body: {
-        text: '{\"email_id\": \"tem_123\"}',
+        text: '{\"email_id\":\"tem_123\"}',
       },
     });
   });
