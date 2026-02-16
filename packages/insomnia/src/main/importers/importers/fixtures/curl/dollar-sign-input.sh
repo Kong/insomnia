@@ -5,5 +5,5 @@ curl 'https://test.dk' \
     -H $'Cookie: CookieTestConsent={stamp:\'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx==\'%2Cnecessary...' \
     -H 'Connection: keep-alive' \
     -H 'Pragma: no-cache' \
-    --data-binary '{"key":"TEST","websiteId":2,"storeId":4,"remove":true,"coupon":{"code":"erwrwer"}}' \
+    --json '{"key":"TEST","websiteId":2,"storeId":4,"remove":true,"coupon":{"code":"erwrwer"}}' \
     --compressed

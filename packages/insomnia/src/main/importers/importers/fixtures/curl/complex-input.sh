@@ -8,5 +8,5 @@ curl \
   --user 'My User:My:Secret:Password' \
   --cookie NID=91=iOf1sU9Ovlns9Dzn2Ipz05syr2K4AlZ4Kgp84eRVLf3_6DgcNrkqpWg4lfUvCB5cNxD26t \
   -H 'another-header: foo' \
-  --data '{"email_id": "tem_123"}';
+  --json '{"email_id": "tem_123"}';
 
