@@ -351,6 +351,28 @@ const Root = () => {
             source: 'import-url',
           },
         });
+        if (params.scope === 'mcp') {
+          const workspace = await models.workspace.create({
+            name: 'MCP Workspace',
+            parentId: projectId,
+            scope: 'mcp',
+          });
+
+          await models.environment.create({
+            name: 'Base Env',
+            parentId: workspace._id,
+            data: {},
+          });
+          const mcpRequest = await models.mcpRequest.create({
+            name: 'Imported MCP client',
+            parentId: workspace._id,
+            url: params.uri || 'https://example.com',
+            transportType: 'streamable-http',
+          });
+          return navigate(
+            `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${mcpRequest._id}`,
+          );
+        }
         if (params.uri) {
           return setImportObject({ type: 'uri', defaultValue: params.uri, origin: params.origin });
         }
