@@ -371,8 +371,7 @@ const Root = () => {
               const importedRequest = parseResult.data?.resources?.[0];
               invariant(parseResult.data?.resources?.length === 1, 'Cannnot auto import multiple requests');
               if (importedRequest?.url) {
-                // use label to set mcp workspace name or search for existing workspace
-                let newWorkspaceId = null;
+                // use label to create mcp client, search for existing collection with matching name, or make new collection
                 let importedWorkspace = null;
                 if (params.scope === 'mcp') {
                   importedWorkspace = await models.workspace.create({
@@ -380,39 +379,32 @@ const Root = () => {
                     name: params.label || 'Imported MCP Client',
                     scope: 'mcp',
                   });
-                  newWorkspaceId = importedWorkspace._id;
                 } else {
                   const workspaces = await models.workspace.findByParentId(projectId);
-                  importedWorkspace = workspaces.find(workspace => workspace.name === params.label);
-                  if (importedWorkspace?._id) {
-                    newWorkspaceId = importedWorkspace._id;
-                  } else {
+                  importedWorkspace = workspaces.find(
+                    workspace => workspace.name === params.label && workspace.scope === 'collection',
+                  );
+                  if (!importedWorkspace) {
                     importedWorkspace = await models.workspace.create({
                       parentId: projectId,
                       name: params.label || 'Imported Collection',
                     });
-                    newWorkspaceId = importedWorkspace._id;
                   }
                 }
-                invariant(newWorkspaceId, 'Failed to create workspace for imported request');
-                let newRequestId = null;
-                if (params.scope === 'mcp') {
-                  const mcpRequest = await models.mcpRequest.create({
-                    parentId: newWorkspaceId,
-                    name: params.label || 'Imported MCP Request',
-                    url: importedRequest.url,
-                    headers: importedRequest.headers,
-                    authentication: importedRequest.authentication,
-                  });
-                  newRequestId = mcpRequest._id;
-                } else {
-                  const request = await models.request.create({
-                    parentId: newWorkspaceId,
-                    name: importedRequest.name || 'Imported Request',
-                    ...importedRequest,
-                  });
-                  newRequestId = request._id;
-                }
+                invariant(importedWorkspace, 'Failed to create workspace for imported request');
+                const newRequest = await (params.scope === 'mcp'
+                  ? models.mcpRequest.create({
+                      parentId: importedWorkspace._id,
+                      name: params.label || 'Imported MCP Request',
+                      url: importedRequest.url,
+                      headers: importedRequest.headers,
+                      authentication: importedRequest.authentication,
+                    })
+                  : models.request.create({
+                      parentId: importedWorkspace._id,
+                      name: importedRequest.name || 'Imported Request',
+                      ...importedRequest,
+                    }));
 
                 window.main.trackSegmentEvent({
                   event: SegmentEvent.importCompleted,
@@ -423,7 +415,7 @@ const Root = () => {
                 const workspace = importedWorkspace;
                 if (workspace) {
                   navigate(
-                    `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${newRequestId}`,
+                    `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${newRequest._id}`,
                   );
                   return;
                 }
