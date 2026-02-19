@@ -374,7 +374,7 @@ const Root = () => {
         }
         if (params.curl) {
           // Validate and auto-import if curl is valid, skipping the import UI
-          if (organizationId && projectId && params.skipImport) {
+          if (organizationId && projectId) {
             try {
               const parseResult = await window.main.parseImport({ contentStr: params.curl }, { importerId: 'curl' });
               const importedRequest = parseResult.data?.resources?.[0];
