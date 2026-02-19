@@ -22,8 +22,6 @@ import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import type { Settings, UserSession } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import * as requestOperations from '~/models/helpers/request-operations';
-import { scopeToActivity } from '~/models/workspace';
 import { executePluginMainAction, reloadPlugins } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
@@ -32,8 +30,6 @@ import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-br
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
-import { importScannedResources } from '~/routes/import.resources';
-import { scanImportResources } from '~/routes/import.scan';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -48,6 +44,7 @@ import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
+import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/root';
 
@@ -372,42 +369,65 @@ const Root = () => {
             try {
               const parseResult = await window.main.parseImport({ contentStr: params.curl }, { importerId: 'curl' });
               const importedRequest = parseResult.data?.resources?.[0];
+              invariant(parseResult.data?.resources?.length === 1, 'Cannnot auto import multiple requests');
               if (importedRequest?.url) {
-                const scanResults = await scanImportResources({ source: 'curl', curl: params.curl });
-                const hasErrors = scanResults.some(r => r.errors?.length);
-                if (!hasErrors && scanResults.length > 0) {
-                  const importedWorkspaces = await importScannedResources({
-                    organizationId,
-                    projectId,
-                    options: { label: params.label, scope: params.scope },
+                // use label to set mcp workspace name or search for existing workspace
+                let newWorkspaceId = null;
+                let importedWorkspace = null;
+                if (params.scope === 'mcp') {
+                  importedWorkspace = await models.workspace.create({
+                    parentId: projectId,
+                    name: params.label || 'Imported MCP Client',
+                    scope: 'mcp',
                   });
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.importCompleted,
-                    properties: {
-                      workspaces: scanResults.map(r => r.workspaces?.length || 0),
-                      requests: scanResults.map(r => r.requests?.length || 0),
-                    },
-                  });
-                  const workspace =
-                    Array.isArray(importedWorkspaces) && importedWorkspaces.length === 1
-                      ? importedWorkspaces[0]
-                      : undefined;
-                  if (workspace) {
-                    const requests = await requestOperations.findByParentId(workspace._id);
-                    if (Array.isArray(requests) && requests.length === 1) {
-                      navigate(
-                        `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${requests[0]._id}`,
-                      );
-                      return;
-                    }
-                    navigate(
-                      `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
-                    );
-                    return;
+                  newWorkspaceId = importedWorkspace._id;
+                } else {
+                  const workspaces = await models.workspace.findByParentId(projectId);
+                  importedWorkspace = workspaces.find(workspace => workspace.name === params.label);
+                  if (importedWorkspace?._id) {
+                    newWorkspaceId = importedWorkspace._id;
+                  } else {
+                    importedWorkspace = await models.workspace.create({
+                      parentId: projectId,
+                      name: params.label || 'Imported Collection',
+                    });
+                    newWorkspaceId = importedWorkspace._id;
                   }
-                  navigate(`/organization/${organizationId}/project/${projectId}`);
+                }
+                invariant(newWorkspaceId, 'Failed to create workspace for imported request');
+                let newRequestId = null;
+                if (params.scope === 'mcp') {
+                  const mcpRequest = await models.mcpRequest.create({
+                    parentId: newWorkspaceId,
+                    name: params.label || 'Imported MCP Request',
+                    url: importedRequest.url,
+                    headers: importedRequest.headers,
+                    authentication: importedRequest.authentication,
+                  });
+                  newRequestId = mcpRequest._id;
+                } else {
+                  const request = await models.request.create({
+                    parentId: newWorkspaceId,
+                    name: importedRequest.name || 'Imported Request',
+                    ...importedRequest,
+                  });
+                  newRequestId = request._id;
+                }
+
+                window.main.trackSegmentEvent({
+                  event: SegmentEvent.importCompleted,
+                  properties: {
+                    requests: 1,
+                  },
+                });
+                const workspace = importedWorkspace;
+                if (workspace) {
+                  navigate(
+                    `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${newRequestId}`,
+                  );
                   return;
                 }
+                throw new Error('Failed to find or create workspace for imported request');
               }
             } catch (err) {
               console.error('[deep-link] Failed to auto-import curl:', err);
@@ -421,40 +441,6 @@ const Root = () => {
             scope: params.scope,
           });
         }
-      }
-      if (urlWithoutParams === 'insomnia://plugins/install') {
-        if (!params.name || params.name.trim() === '') {
-          return showError({
-            title: 'Plugin Install',
-            message: 'Plugin name is required',
-          });
-        }
-
-        return showModal(AskModal, {
-          title: 'Plugin Install',
-          message: (
-            <p className="text-(--hl)">
-              Do you want to install <i className="font-bold text-(--hl)">{params.name}</i>?
-            </p>
-          ),
-          yesText: 'Install',
-          noText: 'Cancel',
-          onDone: async (isYes: boolean) => {
-            if (isYes) {
-              try {
-                // TODO (pavkout): Remove second parameter when we will decide about the @scoped packages name validation
-                await window.main.installPlugin(params.name.trim(), true);
-                showModal(SettingsModal, { tab: 'plugins' });
-              } catch (err) {
-                showError({
-                  title: 'Plugin Install',
-                  message: 'Failed to install plugin',
-                  error: err.message,
-                });
-              }
-            }
-          },
-        });
       }
       if (urlWithoutParams === 'insomnia://plugins/theme') {
         const parsedTheme = JSON.parse(decodeURIComponent(params.theme));

@@ -309,8 +309,6 @@ export const ImportModal: FC<ImportModalProps> = ({
                 workspaceId: selectedWorkspaceId || (shouldImportToWorkspace ? defaultWorkspaceId : undefined),
                 options: {
                   overrideBaseEnvironmentData,
-                  label: from.type === 'curl' ? from.label : undefined,
-                  scope: from.type === 'curl' ? from.scope : undefined,
                 },
               });
               scanResourcesFetcherData
