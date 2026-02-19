@@ -53,6 +53,12 @@ export const importScannedResources = async ({
       const matchedWorkspace = workspaces.find(workspace => workspace.name === options.label);
       if (matchedWorkspace) {
         workspaceId = matchedWorkspace._id;
+      } else {
+        const newWorkspace = await models.workspace.create({
+          parentId: projectId,
+          name: options.label || 'Imported Collection',
+        });
+        workspaceId = newWorkspace._id;
       }
     }
   }
