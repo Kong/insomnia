@@ -317,6 +317,8 @@ const Root = () => {
     type: SourceType;
     defaultValue: string;
     origin?: string;
+    label?: string;
+    scope?: string;
   });
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
@@ -421,6 +423,8 @@ const Root = () => {
             type: 'curl',
             defaultValue: params.curl,
             origin: sanitizeUrlAndExtractOrigin(params.origin),
+            label: params.label,
+            scope: params.scope,
           });
         }
       }

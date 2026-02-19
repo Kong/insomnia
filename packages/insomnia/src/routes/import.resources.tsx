@@ -43,7 +43,7 @@ export const importScannedResources = async ({
     if (options.scope === 'mcp') {
       const newWorkspace = await models.workspace.create({
         parentId: projectId,
-        name: options.label,
+        name: options.label || 'Imported MCP Client',
         scope: 'mcp',
       });
       workspaceId = newWorkspace._id;
