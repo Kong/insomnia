@@ -23,6 +23,8 @@ interface ImportScannedResourcesParams {
   workspaceId?: string;
   options?: {
     overrideBaseEnvironmentData?: boolean;
+    label?: string;
+    scope?: string;
   };
 }
 
@@ -37,6 +39,23 @@ export const importScannedResources = async ({
 
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found.');
+  // use label to set mcp workspace name or search for existing workspace
+  if (!workspaceId && options?.label) {
+    if (options.scope === 'mcp') {
+      const newWorkspace = await models.workspace.create({
+        parentId: projectId,
+        name: options.label,
+        scope: 'mcp',
+      });
+      workspaceId = newWorkspace._id;
+    } else {
+      const workspaces = await models.workspace.findByParentId(projectId);
+      const matchedWorkspace = workspaces.find(workspace => workspace.name === options.label);
+      if (matchedWorkspace) {
+        workspaceId = matchedWorkspace._id;
+      }
+    }
+  }
 
   return await (typeof workspaceId === 'string' && workspaceId
     ? importResourcesToWorkspace({

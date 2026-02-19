@@ -372,7 +372,7 @@ const Root = () => {
         }
         if (params.curl) {
           // Validate and auto-import if curl is valid, skipping the import UI
-          if (organizationId && projectId) {
+          if (organizationId && projectId && params.skipImport) {
             try {
               const parseResult = await window.main.parseImport({ contentStr: params.curl }, { importerId: 'curl' });
               const importedRequest = parseResult.data?.resources?.[0];
@@ -380,7 +380,11 @@ const Root = () => {
                 const scanResults = await scanImportResources({ source: 'curl', curl: params.curl });
                 const hasErrors = scanResults.some(r => r.errors?.length);
                 if (!hasErrors && scanResults.length > 0) {
-                  const importedWorkspaces = await importScannedResources({ organizationId, projectId });
+                  const importedWorkspaces = await importScannedResources({
+                    organizationId,
+                    projectId,
+                    options: { label: params.label, scope: params.scope },
+                  });
                   window.main.trackSegmentEvent({
                     event: SegmentEvent.importCompleted,
                     properties: {
