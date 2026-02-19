@@ -22,6 +22,7 @@ import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import type { Settings, UserSession } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
+import type { RequestBody, RequestParameter } from '~/models/request';
 import { executePluginMainAction, reloadPlugins } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
@@ -402,8 +403,13 @@ const Root = () => {
                     })
                   : models.request.create({
                       parentId: importedWorkspace._id,
-                      name: importedRequest.name || 'Imported Request',
-                      ...importedRequest,
+                      name: params.label || 'Imported Request',
+                      url: importedRequest.url,
+                      method: importedRequest.method,
+                      headers: importedRequest.headers,
+                      authentication: importedRequest.authentication,
+                      parameters: importedRequest.parameters as RequestParameter[],
+                      body: importedRequest.body as RequestBody,
                     }));
 
                 window.main.trackSegmentEvent({
