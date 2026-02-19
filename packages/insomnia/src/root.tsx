@@ -20,6 +20,7 @@ import {
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import * as models from '~/models';
+import type { RequestBody, RequestParameter } from '~/models/request';
 import type { Settings } from '~/models/settings';
 import type { UserSession } from '~/models/user-session';
 import { executePluginMainAction, reloadPlugins } from '~/plugins';
@@ -402,8 +403,13 @@ const Root = () => {
                     })
                   : models.request.create({
                       parentId: importedWorkspace._id,
-                      name: importedRequest.name || 'Imported Request',
-                      ...importedRequest,
+                      name: params.label || 'Imported Request',
+                      url: importedRequest.url,
+                      method: importedRequest.method,
+                      headers: importedRequest.headers,
+                      authentication: importedRequest.authentication,
+                      parameters: importedRequest.parameters as RequestParameter[],
+                      body: importedRequest.body as RequestBody,
                     }));
 
                 window.main.trackSegmentEvent({
