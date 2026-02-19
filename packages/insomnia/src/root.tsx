@@ -22,6 +22,8 @@ import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import type { Settings, UserSession } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
+import * as requestOperations from '~/models/helpers/request-operations';
+import { scopeToActivity } from '~/models/workspace';
 import { executePluginMainAction, reloadPlugins } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
@@ -30,7 +32,8 @@ import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-br
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
-import type { SourceType } from '~/routes/import.scan';
+import { importScannedResources } from '~/routes/import.resources';
+import { scanImportResources, type SourceType } from '~/routes/import.scan';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -368,6 +371,48 @@ const Root = () => {
           });
         }
         if (params.curl) {
+          // Validate and auto-import if curl is valid, skipping the import UI
+          if (organizationId && projectId) {
+            try {
+              const parseResult = await window.main.parseImport({ contentStr: params.curl }, { importerId: 'curl' });
+              const importedRequest = parseResult.data?.resources?.[0];
+              if (importedRequest?.url) {
+                const scanResults = await scanImportResources({ source: 'curl', curl: params.curl });
+                const hasErrors = scanResults.some(r => r.errors?.length);
+                if (!hasErrors && scanResults.length > 0) {
+                  const importedWorkspaces = await importScannedResources({ organizationId, projectId });
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.importCompleted,
+                    properties: {
+                      workspaces: scanResults.map(r => r.workspaces?.length || 0),
+                      requests: scanResults.map(r => r.requests?.length || 0),
+                    },
+                  });
+                  const workspace =
+                    Array.isArray(importedWorkspaces) && importedWorkspaces.length === 1
+                      ? importedWorkspaces[0]
+                      : undefined;
+                  if (workspace) {
+                    const requests = await requestOperations.findByParentId(workspace._id);
+                    if (Array.isArray(requests) && requests.length === 1) {
+                      navigate(
+                        `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${requests[0]._id}`,
+                      );
+                      return;
+                    }
+                    navigate(
+                      `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+                    );
+                    return;
+                  }
+                  navigate(`/organization/${organizationId}/project/${projectId}`);
+                  return;
+                }
+              }
+            } catch (err) {
+              console.error('[deep-link] Failed to auto-import curl:', err);
+            }
+          }
           return setImportObject({
             type: 'curl',
             defaultValue: params.curl,
@@ -571,6 +616,8 @@ const Root = () => {
     gitProviderCompleteSignInSubmit,
     logoutSubmit,
     navigate,
+    organizationId,
+    projectId,
     redirectToDefaultBrowserSubmit,
   ]);
 
