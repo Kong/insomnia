@@ -33,7 +33,7 @@ import { useLogoutFetcher } from '~/routes/auth.logout';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
 import { importScannedResources } from '~/routes/import.resources';
-import { scanImportResources, type SourceType } from '~/routes/import.scan';
+import { scanImportResources } from '~/routes/import.scan';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -42,7 +42,7 @@ import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
-import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
+import { ImportModal, type ImportSourceType } from '~/ui/components/modals/import-modal/import-modal';
 import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
@@ -313,13 +313,7 @@ const Root = () => {
     projectId: string;
   };
 
-  const [importObject, setImportObject] = useState({ type: 'clipboard', defaultValue: '' } as {
-    type: SourceType;
-    defaultValue: string;
-    origin?: string;
-    label?: string;
-    scope?: string;
-  });
+  const [importObject, setImportObject] = useState({ type: 'clipboard', defaultValue: '' } as ImportSourceType);
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: logoutSubmit } = useLogoutFetcher();
