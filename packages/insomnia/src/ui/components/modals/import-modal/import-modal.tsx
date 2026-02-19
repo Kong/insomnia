@@ -366,7 +366,7 @@ const ScanResourcesForm = ({
   loading: boolean;
 }) => {
   const id = useId();
-  const [importFrom, setImportFrom] = useState(from?.type || 'uri');
+  const [selectedTab, setSelectedTab] = useState(from?.type || 'uri');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -380,7 +380,7 @@ const ScanResourcesForm = ({
       isMounted = false;
     };
   }, [from]);
-  const isValidCurl = (importFrom === 'curl' && message && message.startsWith('Detected')) || importFrom !== 'curl';
+  const isValidCurl = (selectedTab === 'curl' && message && message.startsWith('Detected')) || selectedTab !== 'curl';
   return (
     <Fragment>
       <div className="flex flex-col overflow-y-auto">
@@ -396,31 +396,41 @@ const ScanResourcesForm = ({
         >
           <fieldset className="flex flex-col gap-(--padding-md)">
             <div className="flex rounded-md border border-solid border-(--hl-md) bg-(--hl-xs) p-(--padding-xs)">
-              <Radio onChange={() => setImportFrom('file')} name="source" value="file" checked={importFrom === 'file'}>
+              <Radio
+                onChange={() => setSelectedTab('file')}
+                name="source"
+                value="file"
+                checked={selectedTab === 'file'}
+              >
                 <i className="fa fa-plus" />
                 File
               </Radio>
-              <Radio onChange={() => setImportFrom('uri')} name="source" value="uri" checked={importFrom === 'uri'}>
+              <Radio onChange={() => setSelectedTab('uri')} name="source" value="uri" checked={selectedTab === 'uri'}>
                 <i className="fa fa-link" />
                 Url
               </Radio>
-              <Radio onChange={() => setImportFrom('curl')} name="source" value="curl" checked={importFrom === 'curl'}>
+              <Radio
+                onChange={() => setSelectedTab('curl')}
+                name="source"
+                value="curl"
+                checked={selectedTab === 'curl'}
+              >
                 <CurlIcon />
                 cURL
               </Radio>
               <Radio
-                onChange={() => setImportFrom('clipboard')}
+                onChange={() => setSelectedTab('clipboard')}
                 name="source"
                 value="clipboard"
-                checked={importFrom === 'clipboard'}
+                checked={selectedTab === 'clipboard'}
               >
                 <i className="fa fa-clipboard" />
                 Clipboard
               </Radio>
             </div>
           </fieldset>
-          {importFrom === 'file' && <FileField />}
-          {importFrom === 'uri' && (
+          {selectedTab === 'file' && <FileField />}
+          {selectedTab === 'uri' && (
             <div className="form-control form-control--outlined">
               <label>
                 Url:
@@ -433,7 +443,7 @@ const ScanResourcesForm = ({
               </label>
             </div>
           )}
-          {importFrom === 'curl' && (
+          {selectedTab === 'curl' && (
             <div className="form-control form-control--outlined">
               <label>
                 cURL:
@@ -457,7 +467,7 @@ const ScanResourcesForm = ({
             <ScanResultsTable scanResults={scanResults} />
           </div>
         )}
-        {importFrom === 'curl' && message && <div className="truncate">{message}</div>}
+        {selectedTab === 'curl' && message && <div className="truncate">{message}</div>}
         {from?.type === 'curl' && from.origin && (
           <div className="flex w-full justify-start py-1">
             <CurlIcon />
