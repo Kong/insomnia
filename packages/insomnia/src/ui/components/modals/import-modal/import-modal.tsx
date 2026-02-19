@@ -165,7 +165,29 @@ const FileField: FC = () => {
     </div>
   );
 };
-
+export type ImportSourceType =
+  | {
+      type: 'file';
+      origin?: string;
+      defaultValue?: string;
+    }
+  | {
+      type: 'uri';
+      defaultValue?: string;
+      origin?: string;
+    }
+  | {
+      type: 'curl';
+      defaultValue?: string;
+      origin?: string;
+      label?: string;
+      scope?: string;
+    }
+  | {
+      type: 'clipboard';
+      origin?: string;
+      defaultValue?: string;
+    };
 interface ImportModalProps extends ModalProps {
   organizationId: string;
   projectName: string;
@@ -175,25 +197,7 @@ interface ImportModalProps extends ModalProps {
   defaultProjectId: string;
   // undefined when in workspace selection page
   defaultWorkspaceId?: string;
-  from:
-    | {
-        type: 'file';
-        origin?: string;
-      }
-    | {
-        type: 'uri';
-        defaultValue?: string;
-        origin?: string;
-      }
-    | {
-        type: 'curl';
-        defaultValue?: string;
-        origin?: string;
-      }
-    | {
-        type: 'clipboard';
-        origin?: string;
-      };
+  from: ImportSourceType;
 }
 
 export const ImportModal: FC<ImportModalProps> = ({
@@ -305,6 +309,8 @@ export const ImportModal: FC<ImportModalProps> = ({
                 workspaceId: selectedWorkspaceId || (shouldImportToWorkspace ? defaultWorkspaceId : undefined),
                 options: {
                   overrideBaseEnvironmentData,
+                  label: from.type === 'curl' ? from.label : undefined,
+                  scope: from.type === 'curl' ? from.scope : undefined,
                 },
               });
               scanResourcesFetcherData
@@ -497,7 +503,7 @@ const ScanResourcesForm = ({
           className="btn h-10 gap-(--padding-sm)"
         >
           <i className="fa fa-file-import" /> Scan
-          {loading && <Icon icon="spinner" className="ml-[4px] animate-spin" />}
+          {loading && <Icon icon="spinner" className="ml-1 animate-spin" />}
         </Button>
       </div>
     </Fragment>
