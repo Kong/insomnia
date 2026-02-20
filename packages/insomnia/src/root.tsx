@@ -19,6 +19,7 @@ import {
 } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
+import { setDefaults } from '~/main/importers/utils';
 import * as models from '~/models';
 import type { RequestBody, RequestParameter } from '~/models/request';
 import type { Settings } from '~/models/settings';
@@ -369,9 +370,19 @@ const Root = () => {
           if (organizationId && projectId) {
             try {
               const parseResult = await window.main.parseImport({ contentStr: params.curl }, { importerId: 'curl' });
-              const importedRequest = parseResult.data?.resources?.[0];
+              let importedRequest = parseResult.data?.resources?.[0];
               invariant(parseResult.data?.resources?.length === 1, 'Cannot auto import multiple requests');
               if (importedRequest?.url) {
+                // set defaults
+                importedRequest = {
+                  url: '',
+                  body: '',
+                  parameters: [],
+                  headers: [],
+                  authentication: {},
+                  ...importedRequest,
+                  method: (importedRequest.method || 'GET').toUpperCase(),
+                };
                 // use label to create mcp client, search for existing collection with matching name, or make new collection
                 let importedWorkspace = null;
                 if (params.scope === 'mcp') {
@@ -393,6 +404,9 @@ const Root = () => {
                   }
                 }
                 invariant(importedWorkspace, 'Failed to create workspace for imported request');
+                await models.environment.getOrCreateForParentId(importedWorkspace._id);
+                await models.cookieJar.getOrCreateForParentId(importedWorkspace._id);
+
                 const newRequest = await (params.scope === 'mcp'
                   ? models.mcpRequest.create({
                       parentId: importedWorkspace._id,
@@ -418,14 +432,10 @@ const Root = () => {
                     requests: 1,
                   },
                 });
-                const workspace = importedWorkspace;
-                if (workspace) {
-                  navigate(
-                    `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${newRequest._id}`,
-                  );
-                  return;
-                }
-                throw new Error('Failed to find or create workspace for imported request');
+
+                return navigate(
+                  `/organization/${organizationId}/project/${projectId}/workspace/${importedWorkspace._id}/debug/request/${newRequest._id}`,
+                );
               }
             } catch (err) {
               console.error('[deep-link] Failed to auto-import curl:', err);
@@ -439,40 +449,6 @@ const Root = () => {
             scope: params.scope,
           });
         }
-      }
-      if (urlWithoutParams === 'insomnia://plugins/install') {
-        if (!params.name || params.name.trim() === '') {
-          return showError({
-            title: 'Plugin Install',
-            message: 'Plugin name is required',
-          });
-        }
-
-        return showModal(AskModal, {
-          title: 'Plugin Install',
-          message: (
-            <p className="text-(--hl)">
-              Do you want to install <i className="font-bold text-(--hl)">{params.name}</i>?
-            </p>
-          ),
-          yesText: 'Install',
-          noText: 'Cancel',
-          onDone: async (isYes: boolean) => {
-            if (isYes) {
-              try {
-                // TODO (pavkout): Remove second parameter when we will decide about the @scoped packages name validation
-                await window.main.installPlugin(params.name.trim(), true);
-                showModal(SettingsModal, { tab: 'plugins' });
-              } catch (err) {
-                showError({
-                  title: 'Plugin Install',
-                  message: 'Failed to install plugin',
-                  error: err.message,
-                });
-              }
-            }
-          },
-        });
       }
       if (urlWithoutParams === 'insomnia://plugins/theme') {
         const parsedTheme = JSON.parse(decodeURIComponent(params.theme));
