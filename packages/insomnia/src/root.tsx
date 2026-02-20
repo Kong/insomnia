@@ -370,7 +370,7 @@ const Root = () => {
             try {
               const parseResult = await window.main.parseImport({ contentStr: params.curl }, { importerId: 'curl' });
               const importedRequest = parseResult.data?.resources?.[0];
-              invariant(parseResult.data?.resources?.length === 1, 'Cannnot auto import multiple requests');
+              invariant(parseResult.data?.resources?.length === 1, 'Cannot auto import multiple requests');
               if (importedRequest?.url) {
                 // use label to create mcp client, search for existing collection with matching name, or make new collection
                 let importedWorkspace = null;
