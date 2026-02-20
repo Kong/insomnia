@@ -340,7 +340,7 @@ export const ImportModal: FC<ImportModalProps> = ({
 };
 const validateCurl = async (value: string) => {
   if (!value) {
-    return 'Invalid cURL request';
+    return '';
   }
   try {
     const { data } = await window.main.parseImport({ contentStr: value }, { importerId: 'curl' });
@@ -437,7 +437,7 @@ const ScanResourcesForm = ({
           {selectedTab === 'uri' && (
             <div className="form-control form-control--outlined">
               <label>
-                Url:
+                Url
                 <input
                   type="text"
                   name="uri"
@@ -450,7 +450,7 @@ const ScanResourcesForm = ({
           {selectedTab === 'curl' && (
             <div className="form-control form-control--outlined">
               <label>
-                cURL:
+                cURL
                 <textarea
                   className="h-[200px] resize-none font-mono"
                   name="curl"
