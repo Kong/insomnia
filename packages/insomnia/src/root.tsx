@@ -440,6 +440,40 @@ const Root = () => {
           });
         }
       }
+      if (urlWithoutParams === 'insomnia://plugins/install') {
+        if (!params.name || params.name.trim() === '') {
+          return showError({
+            title: 'Plugin Install',
+            message: 'Plugin name is required',
+          });
+        }
+
+        return showModal(AskModal, {
+          title: 'Plugin Install',
+          message: (
+            <p className="text-(--hl)">
+              Do you want to install <i className="font-bold text-(--hl)">{params.name}</i>?
+            </p>
+          ),
+          yesText: 'Install',
+          noText: 'Cancel',
+          onDone: async (isYes: boolean) => {
+            if (isYes) {
+              try {
+                // TODO (pavkout): Remove second parameter when we will decide about the @scoped packages name validation
+                await window.main.installPlugin(params.name.trim(), true);
+                showModal(SettingsModal, { tab: 'plugins' });
+              } catch (err) {
+                showError({
+                  title: 'Plugin Install',
+                  message: 'Failed to install plugin',
+                  error: err.message,
+                });
+              }
+            }
+          },
+        });
+      }
       if (urlWithoutParams === 'insomnia://plugins/theme') {
         const parsedTheme = JSON.parse(decodeURIComponent(params.theme));
         showModal(AskModal, {
