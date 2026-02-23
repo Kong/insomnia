@@ -511,6 +511,9 @@ const Component = ({ params }: Route.ComponentProps) => {
                 setIsSpecPaneOpen(value);
                 window.main.trackSegmentEvent({
                   event: SegmentEvent.designerPreviewToggled,
+                  properties: {
+                    status: !value ? 'open' : 'collapsed',
+                  },
                 });
               }}
             >

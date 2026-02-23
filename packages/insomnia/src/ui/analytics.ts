@@ -79,7 +79,6 @@ export enum SegmentEvent {
 
   // INS-2120: Segment events to track common actions
   homepageFiltered = 'homepage-filtered',
-  homepageImportClicked = 'homepage-import-clicked',
   quickSearchOpenedByKeyboard = 'quick-search-opened-by-keyboard',
   quickSearchOpenedByMouse = 'quick-search-opened-by-mouse',
   statusbarLeftbarToggled = 'statusbar-leftbar-toggled',
