@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import { formatDistanceToNowStrict } from 'date-fns';
 import React, { type FC, Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
-import { Heading } from 'react-aria-components';
+import { Heading, Link } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
@@ -178,17 +178,21 @@ interface ImportModalProps extends ModalProps {
   from:
     | {
         type: 'file';
+        origin?: string;
       }
     | {
         type: 'uri';
         defaultValue?: string;
+        origin?: string;
       }
     | {
         type: 'curl';
         defaultValue?: string;
+        origin?: string;
       }
     | {
         type: 'clipboard';
+        origin?: string;
       };
 }
 
@@ -288,12 +292,16 @@ export const ImportModal: FC<ImportModalProps> = ({
             loading={importFetcher.state !== 'idle'}
             disabled={importErrors.length > 0}
             isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
-            onImport={(overrideBaseEnvironmentData: boolean, selectedWorkspaceId?: string) => {
+            onImport={(
+              overrideBaseEnvironmentData: boolean,
+              selectedProjectId?: string,
+              selectedWorkspaceId?: string,
+            ) => {
               invariant(Array.isArray(scanResourcesFetcherData));
 
               importFetcher.submit({
                 organizationId,
-                projectId: defaultProjectId || '',
+                projectId: selectedProjectId || defaultProjectId || '',
                 workspaceId: selectedWorkspaceId || (shouldImportToWorkspace ? defaultWorkspaceId : undefined),
                 options: {
                   overrideBaseEnvironmentData,
@@ -326,7 +334,26 @@ export const ImportModal: FC<ImportModalProps> = ({
     </OverlayContainer>
   );
 };
-
+const validateCurl = async (value: string) => {
+  if (!value) {
+    return 'Invalid cURL request';
+  }
+  try {
+    const { data } = await window.main.parseImport({ contentStr: value }, { importerId: 'curl' });
+    const importedRequest = data?.resources?.[0];
+    return importedRequest.url
+      ? `Detected ${importedRequest.method} request to ${importedRequest.url}`
+      : 'Invalid cURL request';
+  } catch (error) {
+    const rawMessage = error instanceof Error ? error.message : String(error);
+    const cleanedMessage = rawMessage.replace("Error invoking remote method 'parseImport': Error: ", '');
+    const finalMessage = rawMessage.includes('No importers found for file') ? 'Invalid cURL request' : cleanedMessage;
+    console.log('[importer] error', finalMessage);
+    return finalMessage.includes('No importers found for file')
+      ? 'Invalid cURL request'
+      : finalMessage.replace("Error invoking remote method 'parseImport': Error: ", '');
+  }
+};
 const ScanResourcesForm = ({
   onSubmit,
   from,
@@ -340,10 +367,26 @@ const ScanResourcesForm = ({
 }) => {
   const id = useId();
   const [importFrom, setImportFrom] = useState(from?.type || 'uri');
+  const [message, setMessage] = useState('');
 
+  useEffect(() => {
+    let isMounted = true;
+    const fn = async () => {
+      const msg = await validateCurl(from?.type === 'curl' && from.defaultValue ? from.defaultValue : '');
+      isMounted && setMessage(msg);
+    };
+    fn();
+    return () => {
+      isMounted = false;
+    };
+  }, [from]);
+  const isValidCurl = (importFrom === 'curl' && message && message.startsWith('Detected')) || importFrom !== 'curl';
   return (
     <Fragment>
-      <div className="flex flex-col">
+      <div className="flex flex-col overflow-y-auto">
+        <div className="mb-4 w-full items-center gap-4 rounded-lg border border-solid border-[rgba(var(--color-warning-rgb),1)] bg-(--color-bg) px-3 py-2 text-sm text-wrap text-[rgba(var(--color-warning-rgb),1)] shadow-lg outline-hidden">
+          ⚠️ Make sure that you trust the import source before continuing.
+        </div>
         <form
           aria-label="Import from"
           id={id}
@@ -394,11 +437,16 @@ const ScanResourcesForm = ({
             <div className="form-control form-control--outlined">
               <label>
                 cURL:
-                <input
-                  type="text"
+                <textarea
+                  className="h-[200px] resize-none font-mono"
                   name="curl"
                   defaultValue={from?.type === 'curl' ? from.defaultValue : undefined}
                   placeholder="curl --request GET --url http://insomnia.rest/"
+                  onChange={async event => {
+                    const { value } = event.target;
+                    const msg = await validateCurl(value);
+                    setMessage(msg);
+                  }}
                 />
               </label>
             </div>
@@ -409,10 +457,35 @@ const ScanResourcesForm = ({
             <ScanResultsTable scanResults={scanResults} />
           </div>
         )}
+        {importFrom === 'curl' && message && <div className="truncate">{message}</div>}
+        {from?.type === 'curl' && from.origin && (
+          <div className="flex w-full justify-start py-1">
+            <CurlIcon />
+            cURL from{' '}
+            <Link
+              className="px-2 font-bold underline"
+              onClick={() => {
+                window.main.openInBrowser(from.origin || '');
+              }}
+            >
+              {' '}
+              {from.origin}{' '}
+            </Link>{' '}
+            ⚠️
+          </div>
+        )}
       </div>
+
       <div className="flex items-end justify-between gap-(--padding-sm)">
         <SupportedFormats />
-        <Button variant="contained" bg="surprise" type="submit" form={id} className="btn h-10 gap-(--padding-sm)">
+        <Button
+          isDisabled={!isValidCurl}
+          variant="contained"
+          bg="surprise"
+          type="submit"
+          form={id}
+          className="btn h-10 gap-(--padding-sm)"
+        >
           <i className="fa fa-file-import" /> Scan
           {loading && <Icon icon="spinner" className="ml-[4px] animate-spin" />}
         </Button>
@@ -431,7 +504,7 @@ const ImportResourcesForm = ({
 }: {
   scanResults: ScanResult[];
   errors?: string[];
-  onImport: (overrideBaseEnvironmentData: boolean, selectedWorkspaceId?: string) => void;
+  onImport: (overrideBaseEnvironmentData: boolean, selectedProjectId?: string, selectedWorkspaceId?: string) => void;
   disabled: boolean;
   loading: boolean;
   isImportingBaseEnvironmentToWorkspace: boolean;
@@ -445,41 +518,67 @@ const ImportResourcesForm = ({
   const isSingleRequest = scanResults.length === 1 && (scanResults[0].requests?.length || 0) === 1;
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(workspaceId || '');
+  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
   useEffect(() => {
-    const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized) {
+    const isIdle = workspacesFetcher.state === 'idle';
+    const hasFetchedSelectedProject = selectedProjectId === workspacesFetcher?.data?.activeProject._id;
+    const hasDataAndFetchedSelectedProject = workspacesFetcher?.data && hasFetchedSelectedProject;
+    const needsFetch = isIdle && !hasDataAndFetchedSelectedProject && selectedProjectId;
+    if (needsFetch) {
       workspacesFetcher.load({
         organizationId,
-        projectId,
+        projectId: selectedProjectId,
       });
     }
-  }, [organizationId, projectId, workspacesFetcher]);
+  }, [organizationId, projectId, selectedProjectId, workspacesFetcher]);
   // List collections for active project, sorted by last modified timestamp descending
   // Should we list design or mcp?
-  const workspacesForActiveProject =
-    workspacesFetcher?.data?.files
-      .toSorted((a, b) => b.lastModifiedTimestamp - a.lastModifiedTimestamp)
-      .map(w => ({ ...w.workspace, lastModifiedTimestamp: w.lastModifiedTimestamp }))
-      .filter(isNotNullOrUndefined)
-      .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
-  const shouldShowWorkspaceSelect = !workspaceId && isSingleRequest && workspacesForActiveProject.length > 0;
+  const selectedNewProject = !selectedProjectId;
+  const workspacesForActiveProject = selectedNewProject
+    ? []
+    : workspacesFetcher?.data?.files
+        .toSorted((a, b) => b.lastModifiedTimestamp - a.lastModifiedTimestamp)
+        .map(w => ({ ...w.workspace, lastModifiedTimestamp: w.lastModifiedTimestamp }))
+        .filter(isNotNullOrUndefined)
+        .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
+  const shouldShowWorkspaceSelect = isSingleRequest && workspacesForActiveProject.length > 0;
   return (
     <Fragment>
       <div className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto">
         <div className="overflow-y-auto">
           <ScanResultsTable scanResults={scanResults} />
+          <div className="form-row mt-2">
+            <div className="form-control form-control--outlined">
+              <label>
+                Select Project:
+                <select
+                  aria-label="Select Project"
+                  name="projectId"
+                  value={selectedProjectId}
+                  onChange={e => setSelectedProjectId(e.target.value)}
+                >
+                  <option value="">-- New Project --</option>
+                  {workspacesFetcher?.data?.projects.map(w => (
+                    <option key={w._id} value={w._id}>
+                      {w.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </div>
           {shouldShowWorkspaceSelect && (
             <div className="form-row mt-2">
               <div className="form-control form-control--outlined">
                 <label>
-                  Select Workspace:
+                  Select Collection:
                   <select
-                    aria-label="Select Workspace"
+                    aria-label="Select Collection"
                     name="workspaceId"
                     value={selectedWorkspaceId}
                     onChange={e => setSelectedWorkspaceId(e.target.value)}
                   >
-                    <option value="">-- New Workspace --</option>
+                    <option value="">-- New Collection --</option>
                     {workspacesForActiveProject.map(w => (
                       <option key={w._id} value={w._id}>
                         {w.name} - {formatDistanceToNowStrict(w.lastModifiedTimestamp)}
@@ -522,7 +621,7 @@ const ImportResourcesForm = ({
           variant="contained"
           bg="surprise"
           disabled={disabled}
-          onClick={() => onImport(overrideBaseEnvironmentData, selectedWorkspaceId)}
+          onClick={() => onImport(overrideBaseEnvironmentData, selectedProjectId, selectedWorkspaceId)}
           className="btn h-10 gap-(--padding-sm)"
         >
           {loading ? (

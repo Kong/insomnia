@@ -1,23 +1,12 @@
 import type * as Har from 'har-format';
 
+import type { RequestAuthentication } from '~/models/request';
+
 export interface Comment {
   comment?: string;
 }
 
 export type Variable = `{{ ${string} }}`;
-
-export interface Authentication extends Comment {
-  authorizationUrl?: string;
-  accessTokenUrl?: string;
-  clientId?: string;
-  clientSecret?: Variable;
-  scope?: string;
-  type?: 'basic' | 'oauth2';
-  grantType?: 'authorization_code' | 'password' | 'client_credentials';
-  disabled?: boolean;
-  username?: string;
-  password?: string;
-}
 
 export interface Parameter extends Comment {
   name: string;
@@ -62,7 +51,7 @@ export interface ImportRequest extends Comment {
   _id?: string;
   // @TODO Fix me
   _type?: string;
-  authentication?: Authentication;
+  authentication?: RequestAuthentication | {};
   body?: Body;
   cookies?: Cookie[];
   environment?: {};

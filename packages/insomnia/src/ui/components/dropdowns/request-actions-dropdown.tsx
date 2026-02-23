@@ -73,6 +73,7 @@ export const RequestActionsDropdown = ({
   const tabNavigate = useTabNavigate();
 
   const openInNewTab = async () => {
+    window.main.trackSegmentEvent({ event: SegmentEvent.requestOpenInNewTabClicked });
     tabNavigate(
       {
         organization: organizationId,
@@ -96,6 +97,7 @@ export const RequestActionsDropdown = ({
     if (!request) {
       return;
     }
+    window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuDuplicateClicked });
 
     showModal(PromptModal, {
       title: 'Duplicate Request',
@@ -166,6 +168,7 @@ export const RequestActionsDropdown = ({
   };
 
   const togglePin = () => {
+    window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuPinClicked });
     patchRequestMeta(request._id, { pinned: !isPinned });
   };
 
@@ -271,7 +274,10 @@ export const RequestActionsDropdown = ({
         {
           id: 'Rename',
           name: 'Rename',
-          action: onRename,
+          action: () => {
+            window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuRenameClicked });
+            onRename();
+          },
           icon: 'edit',
         },
         {
@@ -287,6 +293,7 @@ export const RequestActionsDropdown = ({
           icon: 'gear',
           hint: hotKeyRegistry.request_showSettings,
           action: () => {
+            window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuSettingsClicked });
             setIsSettingsModalOpen(true);
           },
         },

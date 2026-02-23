@@ -21,6 +21,7 @@ import {
   type McpRequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { SegmentEvent } from '../../../ui/analytics';
 import { useRequestPatcher, useRequestPayloadPatcher } from '../../hooks/use-request';
 import { CodeEditor, type CodeEditorHandle } from '../.client/codemirror/code-editor';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
@@ -372,6 +373,9 @@ export const McpRequestPane: FC<Props> = ({
                         onChange={handleEditorChange}
                         mode="json"
                         placeholder=""
+                        onPrettify={() => {
+                          window.main.trackSegmentEvent({ event: SegmentEvent.mcpRequestParamsBeautifyClicked });
+                        }}
                       />
                     </div>
                   </div>
@@ -400,6 +404,9 @@ export const McpRequestPane: FC<Props> = ({
             bulk={false}
             isDisabled={!isDisconnected}
             requestType="McpRequest"
+            onDescriptionToggle={() => {
+              window.main.trackSegmentEvent({ event: SegmentEvent.mcpRequestHeadersDescriptionToggled });
+            }}
           />
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="env">

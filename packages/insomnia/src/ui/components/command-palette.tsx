@@ -31,6 +31,7 @@ import { useCommandsLoaderFetcher } from '~/routes/commands';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
 import { useRemoteFilesLoaderFetcher } from '~/routes/remote-files';
+import { SegmentEvent } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
@@ -48,13 +49,26 @@ export const CommandPalette = memo(function CommandPalette({ style = {} }: { sty
   useDocBodyKeyboardShortcuts({
     request_quickSwitch: () => {
       setIsOpen(true);
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.quickSearchOpenedByKeyboard,
+      });
     },
   });
 
   const requestSwitchKeyCombination = getPlatformKeyCombinations(settings.hotKeyRegistry.request_quickSwitch)[0];
 
   return (
-    <DialogTrigger onOpenChange={setIsOpen} isOpen={isOpen}>
+    <DialogTrigger
+      onOpenChange={isOpen => {
+        setIsOpen(isOpen);
+        if (isOpen) {
+          window.main.trackSegmentEvent({
+            event: SegmentEvent.quickSearchOpenedByMouse,
+          });
+        }
+      }}
+      isOpen={isOpen}
+    >
       <Button
         style={{ ...style }}
         data-testid="quick-search"

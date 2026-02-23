@@ -15,6 +15,7 @@ interface Props {
   bulk: boolean;
   isDisabled?: boolean;
   requestType: 'Request' | 'RequestGroup' | 'WebSocketRequest' | 'McpRequest';
+  onDescriptionToggle?: () => void;
 }
 export const readOnlyWebsocketPairs = [
   { name: 'Connection', value: 'Upgrade' },
@@ -28,7 +29,7 @@ export const readOnlyHttpPairs = [
   { name: 'Host', value: '<calculated at runtime>' },
 ].map(pair => ({ ...pair, id: generateId('pair') }));
 
-export const RequestHeadersEditor: FC<Props> = ({ headers, bulk, isDisabled, requestType }) => {
+export const RequestHeadersEditor: FC<Props> = ({ headers, bulk, isDisabled, requestType, onDescriptionToggle }) => {
   const patchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
   const patcher = requestType === 'RequestGroup' ? patchRequestGroup : patchRequest;
@@ -101,6 +102,7 @@ export const RequestHeadersEditor: FC<Props> = ({ headers, bulk, isDisabled, req
       onChange={headers => patcher(id, { headers })}
       isDisabled={isDisabled}
       readOnlyPairs={isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs}
+      onDescriptionToggle={onDescriptionToggle}
     />
   );
 };

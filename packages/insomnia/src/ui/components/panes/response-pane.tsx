@@ -251,7 +251,12 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">
           <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
-            <ResponseHeadersViewer headers={activeResponse.headers} />
+            <ResponseHeadersViewer
+              headers={activeResponse.headers}
+              onCopyAll={() => {
+                window.main.trackSegmentEvent({ event: SegmentEvent.responseHeadersCopyAllClicked });
+              }}
+            />
           </ErrorBoundary>
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="cookies">
