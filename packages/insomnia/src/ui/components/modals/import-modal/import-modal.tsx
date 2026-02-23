@@ -388,9 +388,6 @@ const ScanResourcesForm = ({
   return (
     <Fragment>
       <div className="flex flex-col overflow-y-auto">
-        <div className="mb-4 w-full items-center gap-4 rounded-lg border border-solid border-[rgba(var(--color-warning-rgb),1)] bg-(--color-bg) px-3 py-2 text-sm text-wrap text-[rgba(var(--color-warning-rgb),1)] shadow-lg outline-hidden">
-          ⚠️ Make sure that you trust the import source before continuing.
-        </div>
         <form
           aria-label="Import from"
           id={id}
@@ -471,11 +468,12 @@ const ScanResourcesForm = ({
             <ScanResultsTable scanResults={scanResults} />
           </div>
         )}
-        {selectedTab === 'curl' && message && <div className="truncate">{message}</div>}
-        {from?.type === 'curl' && from.origin && (
-          <div className="flex w-full justify-start py-1">
-            <CurlIcon />
-            cURL from{' '}
+        {selectedTab === 'curl' && message && (
+          <div className={`truncate ${isValidCurl ? '' : 'text-(--color-danger)'}`}>{message}</div>
+        )}
+        {from?.origin && (
+          <div className="flex w-full justify-start py-2">
+            from{' '}
             <Link
               className="px-2 font-bold underline"
               onClick={() => {
@@ -488,6 +486,9 @@ const ScanResourcesForm = ({
             ⚠️
           </div>
         )}
+        <div className="mt-4 w-full items-center gap-4 text-wrap outline-hidden">
+          ⚠️ Make sure that you trust the import source before continuing.
+        </div>
       </div>
 
       <div className="flex items-end justify-between gap-(--padding-sm)">
@@ -627,10 +628,7 @@ const ImportResourcesForm = ({
         </div>
       </div>
 
-      <div className="flex w-full items-end justify-between gap-(--padding-sm)">
-        <div>
-          <div className="pb-(--padding-sm)">{disclaimer}</div>
-        </div>
+      <div className="flex w-full items-end justify-end gap-(--padding-sm)">
         <Button
           variant="contained"
           bg="surprise"
