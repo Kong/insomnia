@@ -19,7 +19,6 @@ import {
 } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
-import { setDefaults } from '~/main/importers/utils';
 import * as models from '~/models';
 import type { RequestBody, RequestParameter } from '~/models/request';
 import type { Settings } from '~/models/settings';
