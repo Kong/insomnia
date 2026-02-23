@@ -57,7 +57,7 @@ import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organizatio
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
-import { SegmentEvent } from '~/ui/analytics';
+import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
 import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
@@ -950,7 +950,12 @@ const Component = () => {
                       aria-label="Files filter"
                       className="group relative flex-1"
                       value={workspaceListFilter}
-                      onChange={filter => setWorkspaceListFilter(filter)}
+                      onChange={filter => {
+                        setWorkspaceListFilter(filter);
+                        if (filter.trim() !== '') {
+                          trackOnceDaily(SegmentEvent.homepageFiltered);
+                        }
+                      }}
                     >
                       <Input
                         placeholder="Filter"

@@ -848,12 +848,24 @@ const Debug = () => {
               <div className="flex w-full items-center justify-between gap-2">
                 <EnvironmentPicker
                   isOpen={isEnvironmentPickerOpen}
-                  onOpenChange={setIsEnvironmentPickerOpen}
+                  onOpenChange={isOpen => {
+                    setIsEnvironmentPickerOpen(isOpen);
+                    if (isOpen) {
+                      window.main.trackSegmentEvent({
+                        event: SegmentEvent.requestEnvironmentClicked,
+                      });
+                    }
+                  }}
                   onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
                 />
               </div>
               <Button
-                onPress={() => setIsCookieModalOpen(true)}
+                onPress={() => {
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.requestAddCookiesClicked,
+                  });
+                  setIsCookieModalOpen(true);
+                }}
                 className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               >
                 <Icon icon="cookie-bite" className="w-5 shrink-0" />
@@ -863,7 +875,12 @@ const Debug = () => {
                 </span>
               </Button>
               <Button
-                onPress={() => setCertificatesModalOpen(true)}
+                onPress={() => {
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.requestAddCertificatesClicked,
+                  });
+                  setCertificatesModalOpen(true);
+                }}
                 className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               >
                 <Icon icon="file-contract" className="w-5 shrink-0" />
@@ -907,13 +924,17 @@ const Debug = () => {
                 aria-label="Sort order"
                 className="aspect-square h-full"
                 selectedKey={sortOrder}
-                onSelectionChange={order =>
-                  order &&
-                  setSearchParams({
-                    ...Object.fromEntries(searchParams.entries()),
-                    sortOrder: order.toString(),
-                  })
-                }
+                onSelectionChange={order => {
+                  if (order) {
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.requestListSortClicked,
+                    });
+                    setSearchParams({
+                      ...Object.fromEntries(searchParams.entries()),
+                      sortOrder: order.toString(),
+                    });
+                  }
+                }}
               >
                 <Button
                   aria-label="Select sort order"
@@ -958,6 +979,9 @@ const Debug = () => {
                   defaultSelected={allExpanded}
                   onChange={() => {
                     setAllExpanded(!allExpanded);
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.requestListExpandCollapseClicked,
+                    });
                     toggleExpandAllFetcher.submit({
                       organizationId,
                       projectId,
