@@ -57,3 +57,10 @@ export function getByParentId(parentId: string) {
 export function all() {
   return db.find<UnitTest>(type);
 }
+
+export function rewriteReferences(doc: UnitTest, idMapping: Map<string, string>): UnitTest {
+  return {
+    ...doc,
+    requestId: doc.requestId ? (idMapping.get(doc.requestId) ?? doc.requestId) : null,
+  };
+}
