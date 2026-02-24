@@ -55,10 +55,18 @@ export const OpenAI = ({
           const gptModels = (data.data as OpenAIModelData[])
             .filter(model => model.id.includes('gpt') && model.object === 'model')
             .sort((a, b) => b.id.localeCompare(a.id));
-          setAvailableModels(gptModels);
-          if (configuredLLMs.length === 1 && configuredLLMs[0].apiKey !== realApiKey) {
-            saveLLMSettings(false, 'openai', { apiKey: realApiKey });
+          if (gptModels.length === 0) {
+            console.error('No compatible GPT models found in OpenAI response:', data.data);
+            setError('No compatible models found for this API key.');
+          } else {
+            setAvailableModels(gptModels);
+            if (configuredLLMs.length === 1 && configuredLLMs[0].apiKey !== realApiKey) {
+              saveLLMSettings(false, 'openai', { apiKey: realApiKey });
+            }
           }
+        } else {
+          console.error('OpenAI models response contained no data:', data);
+          setError('No models returned by the API.');
         }
       } catch (error) {
         console.error('Error fetching OpenAI models:', error);
