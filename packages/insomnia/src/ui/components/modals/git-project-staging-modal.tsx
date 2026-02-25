@@ -1180,7 +1180,7 @@ export const GitProjectStagingModal: FC<{
                       <p>
                         <Icon icon="info-circle" className="mr-2" />
                         This file includes changes to{' '}
-                        <LearnMoreLink href="https://insomnia.rest/">Insomnia metadata</LearnMoreLink>, which is
+                        <LearnMoreLink href="https://developer.konghq.com/insomnia/git-sync/#metadata-changes">Insomnia metadata</LearnMoreLink>, which is
                         determined by the system and cannot be discarded.
                       </p>
                       {previewDiffItem && (
