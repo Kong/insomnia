@@ -44,6 +44,16 @@ function useTimeNowLabel(timestamp: number | Date | string, titleCase?: boolean,
   return text;
 }
 
+/**
+  Finds epoch's digit count and converts it to make it exactly 13 digits.
+  Which is the epoch millisecond representation. (trims last 2 digits)
+*/
+export function convertEpochToMilliseconds(epoch: number) {
+  epoch = Math.floor(epoch);
+  const expDigitCount = epoch.toString().length;
+  return Number.parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
+}
+
 export const TimeFromNow: FC<Props> = ({ className, timestamp, titleCase, title, intervalSeconds }) => {
   const text = useTimeNowLabel(timestamp, titleCase, intervalSeconds);
   return (

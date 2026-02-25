@@ -134,8 +134,8 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       has_prescript: !!req?.preRequestScript,
       has_postscript: !!req?.afterResponseScript,
       request_header_names: req?.headers?.map(h => h.name) || [],
-      count_cookies: req?.headers.find(h => h.name.toLowerCase() === 'cookie')
-        ? req.headers.find(h => h.name.toLowerCase() === 'cookie')?.value.split(';').length
+      count_cookies: req?.headers?.find(h => h.name.toLowerCase() === 'cookie')
+        ? req.headers?.find(h => h.name.toLowerCase() === 'cookie')?.value.split(';').length
         : 0,
       count_certificates: certificates.length,
       count_headers: req?.headers?.length || 0,

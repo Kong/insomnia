@@ -18,6 +18,9 @@ import {
 import { useParams } from 'react-router';
 import { type TreeData, useTreeData } from 'react-stately';
 
+import { Button as BasicButton } from '~/basic-components/button';
+import { LearnMoreLink } from '~/basic-components/link';
+import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { useAIGenerateActionFetcher } from '~/routes/ai.generate-commit-messages';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
 import { useGitProjectCommitActionFetcher } from '~/routes/git.commit';
@@ -495,6 +498,8 @@ interface ManualCommitFormProps {
   onPullRequired: () => void;
   diffChanges: (params: { path: string; staged: boolean }) => void;
   setDiscardData: (data: { paths: string[]; filesCount: number }) => void;
+  stageChanges: (paths: string[]) => void;
+  unstageChanges: (paths: string[]) => void;
 }
 
 const ManualCommitForm: FC<ManualCommitFormProps> = ({
@@ -506,10 +511,10 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   onPullRequired,
   diffChanges,
   setDiscardData,
+  stageChanges,
+  unstageChanges,
 }) => {
   const commitFetcher = useGitProjectCommitActionFetcher();
-  const stageChangesFetcher = useGitProjectStageActionFetcher();
-  const unstageChangesFetcher = useGitProjectUnstageActionFetcher();
 
   const stagedCount = changes.staged.length;
   const unstagedCount = changes.unstaged.length;
@@ -519,20 +524,6 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
 
   const isCommitting = commitFetcher.state !== 'idle';
   const canCommitAndPull = stagedCount > 0 && unstagedCount === 0;
-
-  function stageChanges(paths: string[]) {
-    stageChangesFetcher.submit({
-      projectId,
-      paths,
-    });
-  }
-
-  function unstageChanges(paths: string[]) {
-    unstageChangesFetcher.submit({
-      projectId,
-      paths,
-    });
-  }
 
   useEffect(() => {
     if (!commitFetcher.data || !committingActionRef.current || isCommitting) {
@@ -932,7 +923,7 @@ export const GitProjectStagingModal: FC<{
   const { isGenerateCommitMessagesWithAIEnabled } = useAIFeatureStatus();
 
   function diffChanges({ path, staged }: { path: string; staged: boolean }) {
-    diffChangesFetcher.load({
+    return diffChangesFetcher.load({
       projectId,
       filePath: path,
       staged,
@@ -1013,6 +1004,25 @@ export const GitProjectStagingModal: FC<{
     });
   }, [commitGenerationKey, generateCommitsFetcher, projectId, commitGenerationCompleted]);
 
+  const stageChangesFetcher = useGitProjectStageActionFetcher();
+  const unstageChangesFetcher = useGitProjectUnstageActionFetcher();
+  function stageChanges(paths: string[]) {
+    return stageChangesFetcher.submit({
+      projectId,
+      paths,
+    });
+  }
+
+  function unstageChanges(paths: string[]) {
+    return unstageChangesFetcher.submit({
+      projectId,
+      paths,
+    });
+  }
+
+  const showManualCommitForm =
+    !generateCommitsFetcher.data || (generateCommitsFetcher.data && 'error' in generateCommitsFetcher.data);
+
   return (
     <>
       <ModalOverlay
@@ -1023,12 +1033,7 @@ export const GitProjectStagingModal: FC<{
         isDismissable
         className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
       >
-        <Modal
-          onOpenChange={isOpen => {
-            !isOpen && onClose();
-          }}
-          className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
-        >
+        <Modal className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
           <Dialog
             data-loading={gitChangesFetcher.state === 'loading' ? 'true' : undefined}
             className="flex h-full flex-1 flex-col overflow-hidden outline-hidden data-loading:animate-pulse"
@@ -1129,8 +1134,7 @@ export const GitProjectStagingModal: FC<{
                       />
                     )}
 
-                    {(!generateCommitsFetcher.data ||
-                      (generateCommitsFetcher.data && 'error' in generateCommitsFetcher.data)) && (
+                    {showManualCommitForm && (
                       <ManualCommitForm
                         projectId={projectId}
                         mode={mode}
@@ -1140,18 +1144,52 @@ export const GitProjectStagingModal: FC<{
                         onPullRequired={handlePullRequired}
                         diffChanges={diffChanges}
                         setDiscardData={setDiscardData}
+                        stageChanges={stageChanges}
+                        unstageChanges={unstageChanges}
                       />
                     )}
                   </div>
                   {previewDiffItem?.diff ? (
                     <div className="flex h-full flex-col gap-2 overflow-y-auto pb-0">
                       <Heading className="flex items-center gap-2 font-bold">
-                        <Icon icon="code-compare" />
-                        {previewDiffItem.name}
+                        <div className="flex h-full shrink-0 items-center gap-2 rounded-xs bg-(--hl-xs) pr-2 text-sm text-(--color-font)">
+                          <div
+                            className={`${scopeToBgColorMap[previewDiffItem.scope]} ${scopeToTextColorMap[previewDiffItem.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
+                          >
+                            <Icon icon={scopeToIconMap[previewDiffItem.scope]} />
+                          </div>
+                          <span>{previewDiffItem.name}</span>
+                        </div>
+                        <span className="font-light">{previewDiffItem.filepath}</span>
+                        {showManualCommitForm && (
+                          <BasicButton
+                            onPress={async () => {
+                              await (previewDiffItem.staged
+                                ? unstageChanges([previewDiffItem.filepath])
+                                : stageChanges([previewDiffItem.filepath]));
+                              await diffChanges({
+                                path: previewDiffItem.filepath,
+                                staged: !previewDiffItem.staged,
+                              });
+                            }}
+                          >
+                            {!previewDiffItem.staged ? 'Stage this file' : 'Unstage this file'}
+                          </BasicButton>
+                        )}
                       </Heading>
+                      <p>
+                        <Icon icon="info-circle" className="mr-2" />
+                        This file includes changes to{' '}
+                        <LearnMoreLink href="https://insomnia.rest/">Insomnia metadata</LearnMoreLink>, which is
+                        determined by the system and cannot be discarded.
+                      </p>
                       {previewDiffItem && (
                         <div className="flex-1 overflow-hidden rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
-                          <DiffEditor original={previewDiffItem.diff.before} modified={previewDiffItem.diff.after} />
+                          <DiffEditor
+                            original={previewDiffItem.diff.before}
+                            modified={previewDiffItem.diff.after}
+                            highlightSystemChange
+                          />
                         </div>
                       )}
                     </div>

@@ -23,6 +23,7 @@ import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
+import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CommandPalette } from '~/ui/components/command-palette';
 import { GitHubStarsButton } from '~/ui/components/github-stars-button';
@@ -418,7 +419,15 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                 <TooltipTrigger>
                   <ToggleButton
                     className="h-[10px] w-[10px] grow-0 gap-2 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
-                    onChange={setIsOrganizationSidebarOpen}
+                    onChange={value => {
+                      setIsOrganizationSidebarOpen(value);
+                      window.main.trackSegmentEvent({
+                        event: SegmentEvent.statusbarLeftbarToggled,
+                        properties: {
+                          status: value ? 'open' : 'collapsed',
+                        },
+                      });
+                    }}
                     isSelected={isOrganizationSidebarOpen}
                   >
                     {({ isSelected }) => {
@@ -456,6 +465,12 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     className="h-[10px] w-[10px] grow-0 rotate-90 gap-2 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                     onChange={flag => {
                       setIsMinimal(!flag);
+                      window.main.trackSegmentEvent({
+                        event: SegmentEvent.statusbarTopbarToggled,
+                        properties: {
+                          status: !flag ? 'minimal' : 'expanded',
+                        },
+                      });
                     }}
                     isSelected={!isMinimal}
                   >
@@ -513,7 +528,12 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     <div>
                       <Button
                         className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                        onPress={() => showModal(SettingsModal, { tab: 'data' })}
+                        onPress={() => {
+                          window.main.trackSegmentEvent({
+                            event: SegmentEvent.statusbarOrphanedProjectsClicked,
+                          });
+                          showModal(SettingsModal, { tab: 'data' });
+                        }}
                       >
                         <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click
                         here to view them.
@@ -524,7 +544,12 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     <TooltipTrigger delay={500}>
                       <Button
                         className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                        onPress={() => showModal(SettingsModal, { tab: 'data' })}
+                        onPress={() => {
+                          window.main.trackSegmentEvent({
+                            event: SegmentEvent.statusbarOrphanedProjectsClicked,
+                          });
+                          showModal(SettingsModal, { tab: 'data' });
+                        }}
                       >
                         <Icon icon="exclamation-circle" />
                       </Button>

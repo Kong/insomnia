@@ -12,6 +12,7 @@ exports[`Fixtures > Import curl > complex-input.sh 1`] = `
       "_type": "request",
       "authentication": {
         "password": "My:Secret:Password",
+        "type": "basic",
         "username": "My User",
       },
       "body": {

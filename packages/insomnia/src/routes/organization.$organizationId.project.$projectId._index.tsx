@@ -32,6 +32,7 @@ import {
   getAppWebsiteBaseURL,
 } from '~/common/constants';
 import { database } from '~/common/database';
+import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort, sortMethodMap } from '~/common/sorting';
 import * as models from '~/models';
@@ -56,7 +57,7 @@ import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organizatio
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
-import { SegmentEvent } from '~/ui/analytics';
+import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
 import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
@@ -84,46 +85,6 @@ import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { trackTempProjectOpened } from '~/ui/temp-segment-tracking';
 import { isPrimaryClickModifier } from '~/ui/utils';
 import { invariant } from '~/utils/invariant';
-
-export type ProjectScopeKeys = WorkspaceScope | 'unsynced';
-export const scopeToLabelMap: Record<
-  ProjectScopeKeys,
-  'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client'
-> = {
-  'design': 'Document',
-  'collection': 'Collection',
-  'mock-server': 'Mock Server',
-  'unsynced': 'Unsynced',
-  'environment': 'Environment',
-  'mcp': 'MCP Client',
-};
-
-export const scopeToIconMap: Record<ProjectScopeKeys, IconProp> = {
-  'design': 'file',
-  'collection': 'bars',
-  'mock-server': 'server',
-  'unsynced': 'cloud-download',
-  'environment': 'code',
-  'mcp': ['fac', 'mcp'] as unknown as IconProp,
-};
-
-export const scopeToBgColorMap: Record<ProjectScopeKeys, string> = {
-  'design': 'bg-(--color-info)',
-  'collection': 'bg-(--color-surprise)',
-  'mock-server': 'bg-(--color-warning)',
-  'unsynced': 'bg-(--hl-md)',
-  'environment': 'bg-(--color-font)',
-  'mcp': 'bg-(--color-danger)',
-};
-
-export const scopeToTextColorMap: Record<ProjectScopeKeys, string> = {
-  'design': 'text-(--color-font-info)',
-  'collection': 'text-(--color-font-surprise)',
-  'mock-server': 'text-(--color-font-warning)',
-  'unsynced': 'text-(--color-font)',
-  'environment': 'text-(--color-bg)',
-  'mcp': 'text-(--color-font-danger)',
-};
 
 export interface InsomniaFile {
   id: string;
@@ -989,7 +950,12 @@ const Component = () => {
                       aria-label="Files filter"
                       className="group relative flex-1"
                       value={workspaceListFilter}
-                      onChange={filter => setWorkspaceListFilter(filter)}
+                      onChange={filter => {
+                        setWorkspaceListFilter(filter);
+                        if (filter.trim() !== '') {
+                          trackOnceDaily(SegmentEvent.homepageFiltered);
+                        }
+                      }}
                     >
                       <Input
                         placeholder="Filter"

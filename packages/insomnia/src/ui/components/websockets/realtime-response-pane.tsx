@@ -20,6 +20,7 @@ import type { Response } from '../../../models/response';
 import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socket-io-response';
 import { type WebSocketResponse } from '../../../models/websocket-response';
 import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { SegmentEvent } from '../../../ui/analytics';
 import { deserializeNDJSON } from '../../../utils/ndjson';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
@@ -408,7 +409,12 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
           <>
             <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">
               <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
-                <ResponseHeadersViewer headers={response.headers} />
+                <ResponseHeadersViewer
+                  headers={response.headers}
+                  onCopyAll={() => {
+                    window.main.trackSegmentEvent({ event: SegmentEvent.mcpResponseHeadersCopyAllClicked });
+                  }}
+                />
               </ErrorBoundary>
             </TabPanel>
             <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="cookies">

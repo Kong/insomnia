@@ -25,6 +25,7 @@ import { useRootLoaderData } from '~/root';
 import { getTagDefinitions } from '~/templating/index';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/templating/types';
 import { extractNunjucksTagFromCoords } from '~/templating/utils';
+import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { FilterHelpModal } from '~/ui/components/modals/filter-help-modal';
@@ -109,6 +110,7 @@ export interface CodeEditorProps {
   onChange?: (value: string, changeObj: EditorChange[]) => void;
   onCursorActivity?: (doc: CodeMirror.Editor) => void;
   onPaste?: (value: string) => string;
+  onPrettify?: () => void;
   onClickLink?: CodeMirrorLinkClickCallback;
   pinToBottom?: boolean;
   placeholder?: string;
@@ -185,6 +187,7 @@ export const CodeEditor = memo(
         onChange,
         onCursorActivity,
         onPaste,
+        onPrettify,
         onClickLink,
         pinToBottom,
         placeholder,
@@ -788,6 +791,9 @@ export const CodeEditor = memo(
                   title="Filter response body"
                   defaultValue={filter || ''}
                   placeholder={mode?.includes('json') ? '$.store.books[*].author' : '/store/books/author'}
+                  onFocus={() => {
+                    trackOnceDaily(SegmentEvent.responsePreviewJSONPathEntered);
+                  }}
                   onKeyDown={createKeybindingsHandler({
                     Enter: () => {
                       const filter = inputRef.current?.value;
@@ -861,6 +867,7 @@ export const CodeEditor = memo(
                       if (mode?.includes('json') || mode?.includes('xml')) {
                         maybePrettifyAndSetValue(codeMirror.current?.getValue(), true);
                       }
+                      onPrettify?.();
                     }}
                   >
                     Beautify {mode?.includes('json') ? 'JSON' : mode?.includes('xml') ? 'XML' : ''}

@@ -31,7 +31,7 @@ import { Link } from '../../base/link';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
 import { Button } from '../../themed-button';
-import { TimeFromNow } from '../../time-from-now';
+import { convertEpochToMilliseconds, TimeFromNow } from '../../time-from-now';
 import { AuthAccordion } from './components/auth-accordion';
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthSelectRow } from './components/auth-select-row';
@@ -367,15 +367,7 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
     </>
   );
 };
-/**
-  Finds epoch's digit count and converts it to make it exactly 13 digits.
-  Which is the epoch millisecond representation. (trims last 2 digits)
-*/
-export function convertEpochToMilliseconds(epoch: number) {
-  epoch = Math.floor(epoch);
-  const expDigitCount = epoch.toString().length;
-  return Number.parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
-}
+
 const renderIdentityTokenExpiry = (token?: Pick<OAuth2Token, 'identityToken'>) => {
   if (!token || !token.identityToken) {
     return;
