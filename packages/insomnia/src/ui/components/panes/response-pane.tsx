@@ -91,7 +91,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
         });
         return;
       }
-      await window.main.writeFile({ path: outputPath, content: activeResponse.bodyBuffer?.toString('utf8') || '' });
+      await window.main.writeFile({ path: outputPath, content: activeResponse.bodyBuffer ?? Buffer.alloc(0) });
     },
     [activeRequest, activeResponse],
   );
