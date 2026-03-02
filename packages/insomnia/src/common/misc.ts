@@ -266,7 +266,33 @@ export function unescapeForwardSlash(str: string): string {
   });
 }
 
-export const normalizeFolderPath = (p: string) => path.normalize(p).replace(/[/\\]+$/, '');
+export const normalizeFolderPath = (p: string) => {
+  const normalized = path.normalize(p);
+  // Preserve filesystem roots as-is (e.g. "/" on POSIX, "C:\" on Windows)
+  if (normalized === path.parse(normalized).root) {
+    return normalized;
+  }
+  return normalized.replace(/[/\\]+$/, '');
+};
+
+export type FolderValidationResult =
+  | { ok: true; normalizedValue: string }
+  | { ok: false; error: string };
+
+export function validateFolderInput(input: string, existing: string[]): FolderValidationResult {
+  const trimmed = input.trim();
+  if (trimmed === '') {
+    return { ok: false, error: 'Enter a folder path to add.' };
+  }
+  const normalized = normalizeFolderPath(trimmed);
+  if (trimmed !== normalized) {
+    return { ok: false, error: `Invalid folder path format. Did you mean "${normalized}"?` };
+  }
+  if (existing.some(v => normalizeFolderPath(v) === normalized)) {
+    return { ok: false, error: 'Duplicate folders are not allowed.' };
+  }
+  return { ok: true, normalizedValue: normalized };
+}
 
 export function cannotAccessPathError(accessingPath: string): string {
   return process.type === 'renderer' || process.type === 'browser'

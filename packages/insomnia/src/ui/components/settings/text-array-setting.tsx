@@ -4,7 +4,7 @@ import { ListBox, ListBoxItem } from 'react-aria-components';
 import { useRootLoaderData } from '~/root';
 import { invariant } from '~/utils/invariant';
 
-import { normalizeFolderPath } from '../../../common/misc';
+import { validateFolderInput } from '../../../common/misc';
 import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { PromptButton } from '../base/prompt-button';
@@ -30,22 +30,12 @@ export const TextArraySetting: FC<{
   }
 
   const onAddDataFolder = useCallback(async () => {
-    const validValue = folderToAdd ? folderToAdd.trim() : '';
-    if (validValue === '') {
-      setValidationError('Enter a folder path to add.');
+    const result = validateFolderInput(folderToAdd, currentValue);
+    if (!result.ok) {
+      setValidationError(result.error);
       return;
     }
-    const normalizedValue = normalizeFolderPath(validValue);
-    if (validValue !== normalizedValue) {
-      setValidationError(`Invalid path format. Did you mean "${normalizedValue}"?`);
-      return;
-    }
-    const exists = currentValue.some(v => normalizeFolderPath(v) === normalizedValue);
-    if (exists) {
-      setValidationError('Duplicate folders are not allowed.');
-      return;
-    }
-    const updatedValue = [...currentValue, validValue];
+    const updatedValue = [...currentValue, result.normalizedValue];
     patchSettings({ [setting]: updatedValue });
     setFolderToAdd('');
     setValidationError('');
@@ -115,7 +105,7 @@ export const TextArraySetting: FC<{
                   confirmMessage=""
                   doneMessage=""
                   onClick={() => onDeleteDataFolder(dataFolderPath)}
-                  title="Delete cookie"
+                  title="Delete folder"
                 >
                   <i className="fa fa-trash-o" />
                 </PromptButton>
