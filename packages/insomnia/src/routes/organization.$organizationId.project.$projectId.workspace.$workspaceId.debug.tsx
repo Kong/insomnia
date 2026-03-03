@@ -122,6 +122,7 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 import {
   type CreateRequestType,
+  useRequestGroupMetaPatcher,
   useRequestGroupPatcher,
   useRequestMetaPatcher,
   useRequestPatcher,
@@ -1429,6 +1430,7 @@ const CollectionGridListItem = ({
   const patchRequestMeta = useRequestMetaPatcher();
 
   const tabNavigate = useTabNavigate();
+  const groupMetaPatcher = useRequestGroupMetaPatcher();
 
   const action = isRequestGroup(item.doc)
     ? `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}/update`
@@ -1466,6 +1468,12 @@ const CollectionGridListItem = ({
       style={style}
       onAction={() => {}}
       onPress={e => {
+        const id = item.doc._id;
+        // Toggle collapse if it's a request group
+        if (isRequestGroupId(id)) {
+          groupMetaPatcher(id, { collapsed: !item.collapsed });
+        }
+
         tabNavigate(
           {
             organization: organizationId,
