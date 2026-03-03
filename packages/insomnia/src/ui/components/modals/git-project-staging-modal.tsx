@@ -1052,6 +1052,14 @@ export const GitProjectStagingModal: FC<{
   const showManualCommitForm =
     !generateCommitsFetcher.data || (generateCommitsFetcher.data && 'error' in generateCommitsFetcher.data);
 
+  const isPreviewDiffItemInChangesList = (() => {
+    if (previewDiffItem?.diff) {
+      const list = previewDiffItem.staged ? changes.staged : changes.unstaged;
+      return list.find(entry => entry.path === previewDiffItem.filepath);
+    }
+    return false;
+  })();
+
   return (
     <>
       <ModalOverlay
@@ -1179,11 +1187,7 @@ export const GitProjectStagingModal: FC<{
                     )}
                   </div>
                   {/* Show the diff view only if the file is in the changes list */}
-                  {previewDiffItem?.diff &&
-                  (() => {
-                    const list = previewDiffItem.staged ? changes.staged : changes.unstaged;
-                    return list.find(entry => entry.path === previewDiffItem.filepath);
-                  })() ? (
+                  {previewDiffItem?.diff && isPreviewDiffItemInChangesList ? (
                     <div className="flex h-full flex-col gap-2 overflow-y-auto pb-0">
                       <Heading className="flex items-center gap-2 font-bold">
                         <div className="flex h-full shrink-0 items-center gap-2 rounded-xs bg-(--hl-xs) pr-2 text-sm text-(--color-font)">
