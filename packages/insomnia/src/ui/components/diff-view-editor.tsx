@@ -40,7 +40,7 @@ export const DiffEditor = ({ original, modified, highlightSystemChange = false }
         enabled: true,
         contextLineCount: 3,
         minimumLineCount: 3,
-        revealLineCount: 20,
+        revealLineCount: 200,
       },
       enableSplitViewResizing: false,
       theme: isLightThemeRef.current ? 'vs' : 'vs-dark',
