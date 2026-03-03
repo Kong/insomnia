@@ -1069,6 +1069,20 @@ const Debug = () => {
                     className="group outline-hidden select-none"
                     textValue={item.doc.name}
                     data-testid={item.doc.name}
+                    onAuxClick={e => {
+                      if (e.button === 1) {
+                        e.preventDefault();
+                        tabNavigate(
+                          {
+                            organization: organizationId,
+                            project: activeProject,
+                            workspace: activeWorkspace,
+                            item: item.doc,
+                          },
+                          { withTab: true, shouldNavigate: true, searchParams },
+                        );
+                      }
+                    }}
                     onPress={e => {
                       tabNavigate(
                         {
@@ -1467,6 +1481,20 @@ const CollectionGridListItem = ({
       data-testid={item.doc.name}
       style={style}
       onAction={() => {}}
+      onAuxClick={e => {
+        if (e.button === 1) {
+          e.preventDefault();
+          tabNavigate(
+            {
+              organization: organizationId,
+              project: activeProject,
+              workspace: activeWorkspace,
+              item: item.doc,
+            },
+            { withTab: true, shouldNavigate: true, searchParams },
+          );
+        }
+      }}
       onPress={e => {
         const id = item.doc._id;
         // Toggle collapse if it's a request group
