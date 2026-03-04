@@ -77,18 +77,18 @@ const upgradeBannerWording = {
     submitLink: getAppWebsiteBaseURL() + '/app/pricing?source=app_invite_modal',
   },
   [needsToIncreaseSeats]: {
-    ownerTitle: 'Increase plan seats to invite more people',
-    memberTitle: 'Your team is full',
+    ownerTitle: 'You have consumed all of your seats',
+    memberTitle: 'Your team has consumed all of its seats',
     ownerDescription: (
       <>
-        Your team has reached your plan's total purchased seats. Increase your plan's number of seats to continue
-        inviting new people.
+        Your team has reached your plan’s total purchased seats. To invite any new people, purchase more seats by
+        clicking Increase Seats below. You can still invite existing users to different organizations.
       </>
     ),
     memberDescription: (
       <>
-        Your team has reached your plan's total purchased seats. Tell your plan's owner to increase the number of seats
-        to continue inviting new people.
+        Your team has reached your plan’s total purchased seats. Tell your plan's owner to increase the number of seats
+        to continue inviting new people. You can still invite existing users to different organizations.
       </>
     ),
     submitText: 'Increase seats',

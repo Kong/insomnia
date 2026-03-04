@@ -318,7 +318,7 @@ jobs:
       - name: Scan inso docker artifacts
         id: sbom_action
         if: runner.os == 'Linux' && runner.arch == 'X64'
-        uses: Kong/public-shared-actions/security-actions/scan-docker-image@a18abf762d6e2444bcbfd20de70451ea1e3bc1b1 # v4.1.1
+        uses: Kong/public-shared-actions/security-actions/scan-docker-image@29dd57c7c19389e07390c1c9fe83aef6ff0c424a # v6.1.0
         with:
           asset_prefix: image-inso-${{ runner.os }}-${{ runner.arch }}
           image: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/${{ env.INSO_DOCKER_TAR }}

@@ -122,6 +122,7 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 import {
   type CreateRequestType,
+  useRequestGroupMetaPatcher,
   useRequestGroupPatcher,
   useRequestMetaPatcher,
   useRequestPatcher,
@@ -1068,6 +1069,20 @@ const Debug = () => {
                     className="group outline-hidden select-none"
                     textValue={item.doc.name}
                     data-testid={item.doc.name}
+                    onAuxClick={e => {
+                      if (e.button === 1) {
+                        e.preventDefault();
+                        tabNavigate(
+                          {
+                            organization: organizationId,
+                            project: activeProject,
+                            workspace: activeWorkspace,
+                            item: item.doc,
+                          },
+                          { withTab: true, shouldNavigate: true, searchParams },
+                        );
+                      }
+                    }}
                     onPress={e => {
                       tabNavigate(
                         {
@@ -1429,6 +1444,7 @@ const CollectionGridListItem = ({
   const patchRequestMeta = useRequestMetaPatcher();
 
   const tabNavigate = useTabNavigate();
+  const groupMetaPatcher = useRequestGroupMetaPatcher();
 
   const action = isRequestGroup(item.doc)
     ? `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}/update`
@@ -1465,7 +1481,27 @@ const CollectionGridListItem = ({
       data-testid={item.doc.name}
       style={style}
       onAction={() => {}}
+      onAuxClick={e => {
+        if (e.button === 1) {
+          e.preventDefault();
+          tabNavigate(
+            {
+              organization: organizationId,
+              project: activeProject,
+              workspace: activeWorkspace,
+              item: item.doc,
+            },
+            { withTab: true, shouldNavigate: true, searchParams },
+          );
+        }
+      }}
       onPress={e => {
+        const id = item.doc._id;
+        // Toggle collapse if it's a request group
+        if (isRequestGroupId(id)) {
+          groupMetaPatcher(id, { collapsed: !item.collapsed });
+        }
+
         tabNavigate(
           {
             organization: organizationId,

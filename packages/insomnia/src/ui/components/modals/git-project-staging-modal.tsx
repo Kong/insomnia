@@ -1,4 +1,4 @@
-import React, { type FC, type ReactNode, useEffect, useRef, useState } from 'react';
+import React, { type FC, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -749,7 +749,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
         </div>
         <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
           <Heading className="group flex w-full shrink-0 items-center justify-between py-1 font-semibold">
-            <span>Changes</span>
+            <span>Unstaged changes</span>
             <div className="flex items-center gap-2">
               <TooltipTrigger>
                 <Button
@@ -919,16 +919,25 @@ export const GitProjectStagingModal: FC<{
 
   const undoUnstagedChangesFetcher = useGitProjectDiscardActionFetcher();
   const diffChangesFetcher = useGitProjectDiffLoaderFetcher();
+  const diffChangesFetcherLoad = diffChangesFetcher.load;
 
   const { isGenerateCommitMessagesWithAIEnabled } = useAIFeatureStatus();
 
-  function diffChanges({ path, staged }: { path: string; staged: boolean }) {
-    return diffChangesFetcher.load({
-      projectId,
-      filePath: path,
-      staged,
-    });
-  }
+  const [fileToDiff, setFileToDiff] = useState<{ path: string; staged: boolean } | null>(null);
+
+  useEffect(() => {
+    if (fileToDiff?.path) {
+      diffChangesFetcherLoad({
+        projectId,
+        filePath: fileToDiff.path,
+        staged: fileToDiff.staged,
+      });
+    }
+  }, [fileToDiff?.path, fileToDiff?.staged, projectId, diffChangesFetcherLoad]);
+
+  const diffChanges = useCallback(({ path, staged }: { path: string; staged: boolean }) => {
+    setFileToDiff({ path, staged });
+  }, []);
 
   useEffect(() => {
     if (gitChangesFetcher.state === 'idle' && !gitChangesFetcher.data) {
@@ -1006,22 +1015,50 @@ export const GitProjectStagingModal: FC<{
 
   const stageChangesFetcher = useGitProjectStageActionFetcher();
   const unstageChangesFetcher = useGitProjectUnstageActionFetcher();
-  function stageChanges(paths: string[]) {
-    return stageChangesFetcher.submit({
-      projectId,
-      paths,
-    });
+
+  /* If only one file is staged or unstaged, show its diff
+    If multiple files are staged or unstaged, update the diff view of the file that is currently being diffed.
+  */
+  function afterStageOrUnstage(paths: string[], staged: boolean) {
+    if (paths.length === 1) {
+      diffChanges({
+        path: paths[0],
+        staged,
+      });
+    } else if (paths.length > 1 && fileToDiff?.path) {
+      diffChanges({
+        path: fileToDiff.path,
+        staged,
+      });
+    }
   }
 
-  function unstageChanges(paths: string[]) {
-    return unstageChangesFetcher.submit({
+  async function stageChanges(paths: string[]) {
+    await stageChangesFetcher.submit({
       projectId,
       paths,
     });
+    afterStageOrUnstage(paths, true);
+  }
+
+  async function unstageChanges(paths: string[]) {
+    await unstageChangesFetcher.submit({
+      projectId,
+      paths,
+    });
+    afterStageOrUnstage(paths, false);
   }
 
   const showManualCommitForm =
     !generateCommitsFetcher.data || (generateCommitsFetcher.data && 'error' in generateCommitsFetcher.data);
+
+  const isPreviewDiffItemInChangesList = (() => {
+    if (previewDiffItem?.diff) {
+      const list = previewDiffItem.staged ? changes.staged : changes.unstaged;
+      return list.find(entry => entry.path === previewDiffItem.filepath);
+    }
+    return false;
+  })();
 
   return (
     <>
@@ -1149,7 +1186,8 @@ export const GitProjectStagingModal: FC<{
                       />
                     )}
                   </div>
-                  {previewDiffItem?.diff ? (
+                  {/* Show the diff view only if the file is in the changes list */}
+                  {previewDiffItem?.diff && isPreviewDiffItemInChangesList ? (
                     <div className="flex h-full flex-col gap-2 overflow-y-auto pb-0">
                       <Heading className="flex items-center gap-2 font-bold">
                         <div className="flex h-full shrink-0 items-center gap-2 rounded-xs bg-(--hl-xs) pr-2 text-sm text-(--color-font)">
@@ -1163,14 +1201,10 @@ export const GitProjectStagingModal: FC<{
                         <span className="font-light">{previewDiffItem.filepath}</span>
                         {showManualCommitForm && (
                           <BasicButton
-                            onPress={async () => {
-                              await (previewDiffItem.staged
+                            onPress={() => {
+                              previewDiffItem.staged
                                 ? unstageChanges([previewDiffItem.filepath])
-                                : stageChanges([previewDiffItem.filepath]));
-                              await diffChanges({
-                                path: previewDiffItem.filepath,
-                                staged: !previewDiffItem.staged,
-                              });
+                                : stageChanges([previewDiffItem.filepath]);
                             }}
                           >
                             {!previewDiffItem.staged ? 'Stage this file' : 'Unstage this file'}
@@ -1180,8 +1214,10 @@ export const GitProjectStagingModal: FC<{
                       <p>
                         <Icon icon="info-circle" className="mr-2" />
                         This file includes changes to{' '}
-                        <LearnMoreLink href="https://developer.konghq.com/insomnia/git-sync/#metadata-changes">Insomnia metadata</LearnMoreLink>, which is
-                        determined by the system and cannot be discarded.
+                        <LearnMoreLink href="https://developer.konghq.com/insomnia/git-sync/#metadata-changes">
+                          Insomnia metadata
+                        </LearnMoreLink>
+                        , which is determined by the system and cannot be discarded.
                       </p>
                       {previewDiffItem && (
                         <div className="flex-1 overflow-hidden rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
