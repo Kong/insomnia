@@ -198,26 +198,28 @@ export class ProjectPage {
   }
 
   /**
+   * Set the import file paths on the hidden input and dispatch an input event.
+   * This consolidates value assignment and event dispatch into a single DOM operation.
+   */
+  private async setImportFilePathsAndDispatch(filePaths: string[]) {
+    await this.page.evaluate((paths: string[]) => {
+      const hiddenInput = document.querySelector('input[name="filePaths"]') as HTMLInputElement | null;
+      if (hiddenInput) {
+        hiddenInput.value = JSON.stringify(paths);
+        hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }, filePaths);
+  }
+
+  /**
    * Common import file logic shared between empty and non-empty project states
    * @param filePath - The absolute path to the file to import
    */
   private async importFileCommon(filePath: string) {
     await this.selectImportSource('file');
 
-    // Set file path using the hidden input mechanism
-    await this.setImportFilePaths([filePath]);
-
-    // Trigger the file input change event to update the UI
-    await this.page.evaluate(async absolutePath => {
-      // Find the hidden input and update its value
-      const hiddenInput = document.querySelector('input[name="filePaths"]') as HTMLInputElement;
-      if (hiddenInput) {
-        hiddenInput.value = JSON.stringify([absolutePath]);
-        // Dispatch input event to trigger React state update
-        hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-    }, filePath);
-
+    // Set file path and trigger the input event in a single DOM operation
+    await this.setImportFilePathsAndDispatch([filePath]);
     await this.clickScanButton();
     await this.clickImportButton();
     await this.waitForImportComplete();
