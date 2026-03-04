@@ -267,7 +267,7 @@ export class DataPage {
           const result: any = {};
           for (const [key, value] of Object.entries(obj)) {
             // Replace dynamic fields with placeholder
-            if (['id', '_id', 'created', 'modified', 'metaSortKey'].includes(key)) {
+            if (['id', '_id', 'created', 'modified', 'metaSortKey', 'sortKey'].includes(key)) {
               result[key] = '{{dynamic}}';
             } else if (key === 'meta' && value && typeof value === 'object') {
               // Handle meta object specially
