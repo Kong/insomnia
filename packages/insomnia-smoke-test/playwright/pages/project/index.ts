@@ -2,8 +2,8 @@ import type { ElectronApplication, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { loadFixture } from '../../paths';
-import { ProjectSidebarComponent } from './sidebar.component';
-import { WorkspaceListComponent } from './workspace-list.component';
+import { ProjectSidebarComponent } from './sidebar';
+import { WorkspaceListComponent } from './workspace-list';
 
 /**
  * Page Object for the **project dashboard** (file list view).

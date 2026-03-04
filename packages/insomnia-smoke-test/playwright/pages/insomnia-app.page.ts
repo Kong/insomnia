@@ -1,7 +1,7 @@
 import type { ElectronApplication, Page } from '@playwright/test';
 
 import { StatusbarComponent } from './components/statusbar';
-import { ProjectPage } from './dashboard/dashboard.page';
+import { ProjectPage } from './project';
 
 /**
  * Root facade for the Insomnia E2E Page Object Model.
@@ -16,10 +16,9 @@ import { ProjectPage } from './dashboard/dashboard.page';
  *
  * // Project operations
  * await insomnia.projectPage.importFixture('simple.yaml');
- * await insomnia.projectPage.createProject();
  *
  * // Shared components (statusbar is always present)
- * await insomnia.statusbar.openSettings();
+ * await insomnia.statusbar.openPreferences();
  * ```
  *
  * ## Architecture
@@ -27,16 +26,8 @@ import { ProjectPage } from './dashboard/dashboard.page';
  * ```
  * InsomniaApp (root)
  * ├── .statusbar     -> StatusbarComponent (convenience shortcut)
- * ├── .loginPage     -> LoginPage
- * │   ├── .statusbar    -> StatusbarComponent
- * │   └── .loginForm    -> LoginFormComponent
  * └── .projectPage     -> ProjectPage
- *     ├── .topNavbar    -> TopNavBarComponent
- *     ├── .statusbar    -> StatusbarComponent
- *     ├── .navbar       -> NavBarComponent
- *     ├── .tabbar       -> TabBarComponent
- *     ├── .sidebar      -> DashboardSidebarComponent
- *     ├── .toolbar      -> DashboardToolbarComponent
+ *     ├── .sidebar      -> ProjectSidebarComponent
  *     └── .workspaceList -> WorkspaceListComponent
  * ```
  */

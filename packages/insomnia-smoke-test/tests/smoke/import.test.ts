@@ -10,6 +10,9 @@ test('Can import multiple workspaces from single file', async ({ app, page }) =>
   // Have two collections in current project
   await expect.soft(insomnia.projectPage.workspaceList.workspaceLocator('Collection 1')).toBeVisible();
   await expect.soft(insomnia.projectPage.workspaceList.workspaceLocator('Collection 2')).toBeVisible();
+
+  await insomnia.projectPage.workspaceList.workspaceLocator('Collection 2').click();
+  await expect.soft(page.getByTestId('workspace-context-dropdown').getByText(`Collection 2`)).toBeVisible();
 });
 
 test('Can generate content-type header from imported postman file', async ({ app, page }) => {
