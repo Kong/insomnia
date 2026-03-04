@@ -9,12 +9,11 @@ import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { BrowserWindow } from 'electron';
 import type { Dispatcher } from 'undici';
 
+import { type McpResponse, services } from '~/insomnia-data';
 import { type ConnectionContext, getFetchDispatcher, writeEventLogAndNotify, writeTimeline } from '~/main/mcp/common';
 import { MCPAuthError, type McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
 import type { McpAuthEventWithoutBase, OpenMcpHTTPClientConnectionOptions } from '~/main/mcp/types';
 import * as models from '~/models';
-import { TRANSPORT_TYPES } from '~/models/mcp-request';
-import type { McpResponse } from '~/models/mcp-response';
 import type { RequestHeader } from '~/models/request';
 
 // Extend undici RequestInit to include dispatcher, it's in node.js fetch but not in dom fetch.
@@ -134,10 +133,10 @@ const wrappedFetch = async (
       elapsedTime: performance.now() - start,
       timelinePath,
       eventLogPath,
-      transportType: TRANSPORT_TYPES.HTTP,
+      transportType: models.mcpRequest.TRANSPORT_TYPES.HTTP,
     };
     const settings = await models.settings.get();
-    const res = await models.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
+    const res = await services.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
     models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
   }
 

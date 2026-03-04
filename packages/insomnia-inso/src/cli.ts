@@ -21,6 +21,8 @@ import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';
 
+import { initServices } from '~/insomnia-data';
+import { servicesNodeImpl } from '~/insomnia-data/node';
 import type { Workspace } from '~/models/workspace';
 
 import type { RequestTestResult } from '../../insomnia-scripting-environment/src/objects';
@@ -39,10 +41,12 @@ import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
 import type { Database } from './db/types';
 import { InsoError } from './errors';
-import { BasicReporter, logger,LogLevel } from './logger';
+import { BasicReporter, logger, LogLevel } from './logger';
 import { logTestResult, logTestResultSummary, reporterTypes, type TestReporter } from './reporter';
 import { generateDocumentation } from './scripts/docs';
 import { getAppDataDir, getDefaultProductName } from './util';
+
+initServices(servicesNodeImpl);
 
 export interface GlobalOptions {
   ci: boolean;

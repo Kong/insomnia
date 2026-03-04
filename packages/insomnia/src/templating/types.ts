@@ -2,13 +2,13 @@ import type { BinaryToTextEncoding } from 'node:crypto';
 
 import type { Cookie } from 'tough-cookie';
 
+import type { McpRequest } from '~/insomnia-data';
 import type { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
 import type { GrpcRequest } from '../models/grpc-request';
-import type { McpRequest } from '../models/mcp-request';
 import type { OAuth2Token } from '../models/o-auth-2-token';
 import type { Project } from '../models/project';
 import type { Request } from '../models/request';

@@ -8,6 +8,7 @@ import {
 import { BrowserWindow, ipcMain } from 'electron';
 
 import { getOauthRedirectUrl } from '~/common/constants';
+import { services } from '~/insomnia-data';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import type { ConnectionContext } from '~/main/mcp/common';
 import * as models from '~/models';
@@ -64,9 +65,9 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     );
   }
   private async updateAuthentication(auth: Partial<RequestAuthentication>) {
-    const mcpRequest = await models.mcpRequest.getById(this.context.requestId);
+    const mcpRequest = await services.mcpRequest.getById(this.context.requestId);
     invariant(mcpRequest, 'MCP Request not found');
-    await models.mcpRequest.update(mcpRequest, {
+    await services.mcpRequest.update(mcpRequest, {
       authentication: {
         ...mcpRequest.authentication,
         ...auth,

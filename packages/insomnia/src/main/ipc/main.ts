@@ -17,6 +17,7 @@ import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
+import { services } from '~/insomnia-data';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
@@ -29,7 +30,6 @@ import type {
 } from '~/plugins/types';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
-import * as models from '../../models';
 import type { PluginTemplateTag } from '../../templating/types';
 import type { SegmentEvent } from '../analytics';
 import { trackPageView, trackSegmentEvent } from '../analytics';
@@ -194,7 +194,7 @@ export function registerMainHandlers() {
     return getExecution(options.requestId);
   });
   ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
-    return models.caCertificate.create(options);
+    return services.caCertificate.create(options);
   });
   ipcMainHandle('multipartBufferToArray', async (_, options) => {
     return multipartBufferToArray(options);

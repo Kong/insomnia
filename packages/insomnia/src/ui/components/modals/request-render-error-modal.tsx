@@ -1,7 +1,8 @@
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
-import type { McpRequest } from '../../..//models/mcp-request';
+import type { McpRequest } from '~/insomnia-data';
+
 import { docsTemplateTags } from '../../../common/documentation';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import type { Request } from '../../../models/request';

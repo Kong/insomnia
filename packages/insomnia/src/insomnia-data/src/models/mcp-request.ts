@@ -1,11 +1,8 @@
 import type { Root } from '@modelcontextprotocol/sdk/types.js';
 
-import { invariant } from '~/utils/invariant';
-
-import { database as db } from '../common/database';
-import { type EnvironmentKvPairData } from './environment';
-import type { RequestAuthentication, RequestHeader } from './request';
-import type { BaseModel } from './types';
+import type { BaseModel } from '~/models';
+import { type EnvironmentKvPairData } from '~/models/environment';
+import type { RequestAuthentication, RequestHeader } from '~/models/request';
 
 export const name = 'MCP Request';
 export const type = 'McpRequest';
@@ -17,11 +14,11 @@ export const TRANSPORT_TYPES = {
   STDIO: 'stdio',
   HTTP: 'streamable-http',
 } as const;
-export type TransportType = (typeof TRANSPORT_TYPES)[keyof typeof TRANSPORT_TYPES];
+export type McpTransportType = (typeof TRANSPORT_TYPES)[keyof typeof TRANSPORT_TYPES];
 
 export interface BaseMcpRequest {
   url: string;
-  transportType: TransportType;
+  transportType: McpTransportType;
   description: string;
   headers: RequestHeader[];
   authentication: RequestAuthentication | {};
@@ -35,7 +32,7 @@ export interface BaseMcpRequest {
 }
 export type McpServerPrimitiveTypes = 'tools' | 'resources' | 'prompts' | 'resourceTemplates';
 
-export const MCP_TRANSPORT_TYPES: TransportType[] = [TRANSPORT_TYPES.HTTP, TRANSPORT_TYPES.STDIO];
+export const MCP_TRANSPORT_TYPES: McpTransportType[] = [TRANSPORT_TYPES.HTTP, TRANSPORT_TYPES.STDIO];
 
 export type McpRequest = BaseModel & BaseMcpRequest & { type: typeof type };
 
@@ -61,38 +58,4 @@ export function init(): BaseMcpRequest {
 
 export function migrate(doc: McpRequest) {
   return doc;
-}
-
-export function create(patch: Partial<McpRequest> = {}) {
-  if (!patch.parentId) {
-    throw new Error('New GrpcRequest missing `parentId`');
-  }
-
-  return db.docCreate<McpRequest>(type, patch);
-}
-
-export function remove(obj: McpRequest) {
-  return db.remove(obj);
-}
-
-export function all() {
-  return db.find<McpRequest>(type);
-}
-
-export function getByParentId(parentId: string) {
-  return db.findOne<McpRequest>(type, { parentId });
-}
-
-export function getById(id: string) {
-  return db.findOne<McpRequest>(type, { _id: id });
-}
-
-export function update(request: McpRequest, patch: Partial<McpRequest> = {}) {
-  return db.docUpdate<McpRequest>(request, patch);
-}
-
-export async function clearResourceSubscriptions(requestId: string) {
-  const request = await getById(requestId);
-  invariant(request, 'McpRequest not found');
-  return update(request, { subscribeResources: [] });
 }

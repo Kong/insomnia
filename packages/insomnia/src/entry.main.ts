@@ -9,7 +9,8 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import { configureFetch } from 'insomnia-api';
 
 import { getCurrentSessionId } from '~/account/session';
-import { database, initDatabase } from '~/insomnia-data';
+import { database, initDatabase, initServices } from '~/insomnia-data';
+import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
@@ -50,6 +51,9 @@ app.setPath('userData', dataPath);
 initializeLogging();
 
 initializeSentry();
+
+// Initialize services for main process
+initServices(servicesNodeImpl);
 
 registerInsomniaProtocols();
 

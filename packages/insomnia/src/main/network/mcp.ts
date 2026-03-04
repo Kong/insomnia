@@ -20,6 +20,7 @@ import electron from 'electron';
 
 import { getAppVersion, getProductName, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { getMcpMethodFromMessage, METHOD_NOTIFICATION_CANCELLED } from '~/common/mcp-utils';
+import { services } from '~/insomnia-data';
 import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 import {
   callTool,
@@ -69,7 +70,6 @@ import type {
   OpenMcpHTTPClientConnectionOptions,
 } from '~/main/mcp/types';
 import * as models from '~/models';
-import { TRANSPORT_TYPES } from '~/models/mcp-request';
 import { invariant } from '~/utils/invariant';
 
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
@@ -203,14 +203,14 @@ const createErrorResponse = async (
     transportType: options.transportType,
   };
 
-  const res = await models.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
+  const res = await services.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
   models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 export const isOpenMcpHTTPClientConnectionOptions = (
   options: OpenMcpClientConnectionOptions,
 ): options is OpenMcpHTTPClientConnectionOptions => {
-  return options.transportType === TRANSPORT_TYPES.HTTP;
+  return options.transportType === models.mcpRequest.TRANSPORT_TYPES.HTTP;
 };
 
 const createTransportAndConnect = async (context: ConnectionContext, mcpClient: Client) => {
@@ -246,7 +246,7 @@ const createTransportAndConnect = async (context: ConnectionContext, mcpClient: 
     await mcpClient.connect(transport, { timeout: 3 * 60 * 1000 });
   }
 
-  const mcpRequest = await models.mcpRequest.getById(connectionOptions.requestId);
+  const mcpRequest = await services.mcpRequest.getById(connectionOptions.requestId);
   invariant(mcpRequest, 'MCP Request not found');
 
   let authType = 'none';
@@ -261,7 +261,7 @@ const createTransportAndConnect = async (context: ConnectionContext, mcpClient: 
   trackSegmentEvent(SegmentEvent.mcpClientConnected, {
     transportType: connectionOptions.transportType,
     firstTime: isFirstConnection,
-    ...(connectionOptions.transportType === TRANSPORT_TYPES.HTTP
+    ...(connectionOptions.transportType === models.mcpRequest.TRANSPORT_TYPES.HTTP
       ? {
           authType,
           authDisabled,
@@ -270,7 +270,7 @@ const createTransportAndConnect = async (context: ConnectionContext, mcpClient: 
   });
   if (isFirstConnection) {
     // Mark as connected for the first time
-    await models.mcpRequest.update(mcpRequest, { connected: true });
+    await services.mcpRequest.update(mcpRequest, { connected: true });
   }
 };
 
@@ -349,7 +349,7 @@ const performConnection = async (context: ConnectionContext) => {
 
   // Add roots request handler to indicate the client supports it
   mcpClient.setRequestHandler(ListRootsRequestSchema, async () => {
-    const mcpRequest = await models.mcpRequest.getById(requestId);
+    const mcpRequest = await services.mcpRequest.getById(requestId);
     invariant(mcpRequest, 'MCP request not found');
     return { roots: mcpRequest.roots };
   });
@@ -454,7 +454,7 @@ const closeMcpConnection = async (options: CommonMcpOptions) => {
     // This occurs when the server is not reachable, terminateSession failure will cause the connection to never close
     await client.close();
     // Execute clear resource subscription in main process rather than UI to make sure closeAllMcpConnections method will clear subscriptions
-    await models.mcpRequest.clearResourceSubscriptions(requestId);
+    await services.mcpRequest.clearResourceSubscriptions(requestId);
   }
   trackSegmentEvent(SegmentEvent.mcpClientDisconnected);
 };

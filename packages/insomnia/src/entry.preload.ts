@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
+import { initServices, services } from '~/insomnia-data';
+import { servicesNodeImpl } from '~/insomnia-data/node';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
 
@@ -12,7 +14,7 @@ import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 import { invariant } from './utils/invariant';
-
+initServices(servicesNodeImpl);
 const ports = new Map<'hiddenWindowPort', MessagePort>();
 
 const webSocket: WebSocketBridgeAPI = {
@@ -294,6 +296,7 @@ const webUtils: Window['webUtils'] = {
 const database: Window['database'] = {
   invoke: (fnName, ...args) => ipcRenderer.invoke('database.invoke', fnName, ...args),
 };
+
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);
   contextBridge.exposeInMainWorld('dialog', dialog);
@@ -303,6 +306,7 @@ if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('webUtils', webUtils);
   contextBridge.exposeInMainWorld('path', path);
   contextBridge.exposeInMainWorld('database', database);
+  contextBridge.exposeInMainWorld('_dataServices', services);
 } else {
   window.main = main;
   window.dialog = dialog;
@@ -312,4 +316,5 @@ if (process.contextIsolated) {
   window.webUtils = webUtils;
   window.path = path;
   window.database = database;
+  window._dataServices = services;
 }
