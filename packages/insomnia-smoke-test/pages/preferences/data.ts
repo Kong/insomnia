@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import type { ElectronApplication, Page } from '@playwright/test';
+import { parse, stringify } from 'yaml';
 
 /**
  * Page Object for the Data tab in Preferences (Import/Export functionality)
@@ -38,8 +39,8 @@ export class DataPage {
    * @returns The path to the temporary directory
    */
   createTempExportDir(): string {
-    const tempDir = path.join(os.tmpdir(), `insomnia-export-test-${Date.now()}`);
-    fs.mkdirSync(tempDir, { recursive: true });
+    const prefix = path.join(os.tmpdir(), 'insomnia-export-test-');
+    const tempDir = fs.mkdtempSync(prefix);
     return tempDir;
   }
 
@@ -184,46 +185,6 @@ export class DataPage {
   }
 
   /**
-   * Parses YAML export content and returns normalized object for comparison
-   * Removes dynamic fields like timestamps, ids that change each export
-   * @param content - The YAML content string
-   * @returns Normalized object for comparison
-   */
-  normalizeExportContent(content: string): Record<string, unknown> {
-    const { parse } = require('yaml');
-    const parsed = parse(content);
-
-    // Helper to recursively remove dynamic fields
-    const removeDynamicFields = (obj: unknown): unknown => {
-      if (Array.isArray(obj)) {
-        return obj.map(removeDynamicFields);
-      }
-      if (obj && typeof obj === 'object') {
-        const result: Record<string, unknown> = {};
-        for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
-          // Skip dynamic fields that change between exports
-          if (['created', 'modified', 'id', '_id', 'parentId'].includes(key)) {
-            continue;
-          }
-          // Recursively process nested objects/arrays
-          if (key === 'meta') {
-            const meta = value as Record<string, unknown>;
-            result[key] = {
-              ...(removeDynamicFields(meta) as object),
-            };
-          } else {
-            result[key] = removeDynamicFields(value);
-          }
-        }
-        return result;
-      }
-      return obj;
-    };
-
-    return removeDynamicFields(parsed) as Record<string, unknown>;
-  }
-
-  /**
    * Compares exported YAML content with expected fixture
    * Handles dynamic fields by replacing them with placeholders
    * @param actualContent - The actual exported content
@@ -239,10 +200,6 @@ export class DataPage {
     normalizedActual?: string;
     normalizedExpected?: string;
   } {
-    const fs = require('node:fs');
-    const path = require('node:path');
-    const { parse, stringify } = require('yaml');
-
     // Read expected fixture (path is relative to fixtures directory)
     const fixturePath = path.resolve(__dirname, '../../fixtures', expectedFixturePath);
     if (!fs.existsSync(fixturePath)) {
@@ -267,7 +224,7 @@ export class DataPage {
           const result: any = {};
           for (const [key, value] of Object.entries(obj)) {
             // Replace dynamic fields with placeholder
-            if (['id', '_id', 'created', 'modified', 'metaSortKey'].includes(key)) {
+            if (['id', '_id', 'created', 'modified', 'metaSortKey', 'sortKey'].includes(key)) {
               result[key] = '{{dynamic}}';
             } else if (key === 'meta' && value && typeof value === 'object') {
               // Handle meta object specially
