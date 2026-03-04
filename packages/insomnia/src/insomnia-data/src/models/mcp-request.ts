@@ -55,7 +55,3 @@ export function init(): BaseMcpRequest {
     sslValidation: true,
   };
 }
-
-export function migrate(doc: McpRequest) {
-  return doc;
-}

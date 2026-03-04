@@ -50,7 +50,3 @@ export function init(): BaseMcpResponse {
     transportType: TRANSPORT_TYPES.HTTP,
   };
 }
-
-export function migrate(doc: McpResponse) {
-  return doc;
-}

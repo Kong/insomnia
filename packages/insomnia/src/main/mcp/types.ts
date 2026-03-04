@@ -4,7 +4,7 @@ import type { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/cl
 import type { ClientRequest, JSONRPCResponse, Notification } from '@modelcontextprotocol/sdk/types.js';
 import type z from 'zod';
 
-import type { models } from '~/insomnia-data';
+import type * as models from '~/models';
 import type { RequestAuthentication, RequestHeader } from '~/models/request';
 
 // Refer the SDK: https://github.com/modelcontextprotocol/typescript-sdk/blob/main/src/shared/protocol.ts#L504

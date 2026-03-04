@@ -30,7 +30,3 @@ export function init(): BaseCaCertificate {
 }
 
 export const isCaCertificate = (model: Pick<BaseModel, 'type'>): model is CaCertificate => model.type === type;
-
-export function migrate(doc: CaCertificate) {
-  return doc;
-}

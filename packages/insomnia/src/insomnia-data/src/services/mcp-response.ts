@@ -7,6 +7,6 @@ export type McpResponseService = Override<
   {
     create(patch?: Partial<McpResponse>, maxResponses?: number): Promise<McpResponse>;
     updateOrCreate(patch: Partial<McpResponse>, maxResponses?: number): Promise<McpResponse>;
-    getLatestForRequestId(requestId: string, environmentId: string | null): Promise<McpResponse | void>;
+    getLatestForRequestId(requestId: string, environmentId: string | null): Promise<McpResponse | undefined>;
   }
 >;

@@ -17,7 +17,7 @@ export interface BaseMcpPayload {
 
 export type McpPayload = BaseModel & BaseMcpPayload & { type: typeof type };
 
-export const isSocketIOPayload = (model: Pick<BaseModel, 'type'>): model is McpPayload => model.type === type;
+export const isMcpPayload = (model: Pick<BaseModel, 'type'>): model is McpPayload => model.type === type;
 
 export const isMcpPayloadId = (id: string | null) => id?.startsWith(`${prefix}_`);
 
@@ -27,5 +27,3 @@ export const init = (): BaseMcpPayload => {
     url: '',
   };
 };
-
-export const migrate = (doc: McpPayload) => doc;
