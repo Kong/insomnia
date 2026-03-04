@@ -1,11 +1,17 @@
 import { href } from 'react-router';
 
+import { database } from '~/insomnia-data';
 import * as models from '~/models';
-import { isEmptyGitProject } from '~/models/project';
+import { isEmptyGitProject, type Project } from '~/models/project';
 import { createFetcherLoadHook } from '~/utils/router';
 
-export async function clientLoader() {
-  const allProjects = await models.project.all();
+import type { Route } from './+types/organization.$organizationId.git.all-connected-repos';
+
+export async function clientLoader({ params }: Route.ClientActionArgs) {
+  const { organizationId } = params;
+  const allProjects = await database.find<Project>('Project', {
+    parentId: organizationId,
+  });
   const allConnectedGitProjects = allProjects.filter(
     project => models.project.isGitProject(project) && !isEmptyGitProject(project),
   );
@@ -24,8 +30,8 @@ export async function clientLoader() {
 }
 
 export const useAllConnectedReposLoaderFetcher = createFetcherLoadHook(
-  load => () => {
-    return load(`${href('/git/all-connected-repos')}`);
+  load => (organizationId: string) => {
+    return load(`${href('/organization/:organizationId/git/all-connected-repos', { organizationId })}`);
   },
   clientLoader,
 );

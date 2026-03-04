@@ -12,8 +12,8 @@ import {
 } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
-import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
+import { useAllConnectedReposLoaderFetcher } from '~/routes/organization.$organizationId.git.all-connected-repos';
 import type { GitProviderOption, ProviderEmail } from '~/sync/git/providers/types';
 import { Checkbox } from '~/ui/components/base/checkbox';
 import { Input } from '~/ui/components/base/input';
@@ -66,8 +66,8 @@ export const GitRepoForm: FC<Props> = ({
   const allConnectedReposLoaderFetcherLoad = allConnectedReposLoaderFetcher.load;
 
   useEffect(() => {
-    allConnectedReposLoaderFetcherLoad();
-  }, [allConnectedReposLoaderFetcherLoad]);
+    allConnectedReposLoaderFetcherLoad(organizationId);
+  }, [allConnectedReposLoaderFetcherLoad, organizationId]);
 
   const allConnectedRepoURIProjectNameMap = allConnectedReposLoaderFetcher.data;
 
