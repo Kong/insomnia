@@ -1,5 +1,4 @@
 import type { Locator, Page } from '@playwright/test';
-import { expect } from '@playwright/test';
 
 /**
  * Component for the **workspace list** on the dashboard.
@@ -14,7 +13,7 @@ export class WorkspaceListComponent {
     return this.page.getByTestId('workspace-grid');
   }
 
-  locatorForWorkspace(name: string): Locator {
+  workspaceLocator(name: string): Locator {
     return this.root.getByLabel(name);
   }
 
@@ -24,6 +23,6 @@ export class WorkspaceListComponent {
 
   /** Open a workspace by clicking its name. */
   async openWorkspace(name: string): Promise<void> {
-    await this.locatorForWorkspace(name).click();
+    await this.workspaceLocator(name).click();
   }
 }

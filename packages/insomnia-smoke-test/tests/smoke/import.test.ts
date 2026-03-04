@@ -8,8 +8,8 @@ test('Can import multiple workspaces from single file', async ({ app, page }) =>
   await insomnia.projectPage.importFixture('import/multiple-workspaces.yaml');
 
   // Have two collections in current project
-  await expect.soft(insomnia.projectPage.workspaceList.locatorForWorkspace('Collection 1')).toBeVisible();
-  await expect.soft(insomnia.projectPage.workspaceList.locatorForWorkspace('Collection 2')).toBeVisible();
+  await expect.soft(insomnia.projectPage.workspaceList.workspaceLocator('Collection 1')).toBeVisible();
+  await expect.soft(insomnia.projectPage.workspaceList.workspaceLocator('Collection 2')).toBeVisible();
 });
 
 test('Can generate content-type header from imported postman file', async ({ app, page }) => {
@@ -17,6 +17,7 @@ test('Can generate content-type header from imported postman file', async ({ app
   await insomnia.projectPage.importFixture('import/import-content-type-from-postman.json');
 
   // Navigate into the imported request and check content-type header
-  await insomnia.projectPage.workspaceList.openWorkspace('New Request');
+  await page.getByTestId('New Request').click();
+  await page.locator('[data-key="headers"]').click();
   await expect.soft(page.getByText('application/x-www-form-urlencoded')).toBeAttached();
 });
