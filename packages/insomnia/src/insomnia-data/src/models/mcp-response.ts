@@ -1,5 +1,5 @@
-import type { BaseModel } from '~/models';
 import type { ResponseHeader } from '~/models/response';
+import type { BaseModel } from '~/models/types';
 
 import { type McpTransportType, TRANSPORT_TYPES } from './mcp-request';
 
