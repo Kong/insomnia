@@ -8,7 +8,7 @@ import {
   getOrganizationMemberRoles,
   getOrganizationRoles,
   getOrgUserPermissions,
-  type OrganizationDetail,
+  type Organization,
   type Permission,
   revokeInvitation,
   type Role,
@@ -601,7 +601,7 @@ export const InviteModalContainer: FC<{
   const [orgFeatures, setOrgFeatures] = useState<FeatureList | null>(null);
   const permissionRef = useRef<Record<Permission, boolean>>();
   const [currentUserAccountId, setCurrentUserAccountId] = useState('');
-  const [currentOrgInfo, setCurrentOrgInfo] = useState<OrganizationDetail | null>(null);
+  const [currentOrgInfo, setCurrentOrgInfo] = useState<Organization | null>(null);
 
   const isCurrentUserOrganizationOwner = currentUserAccountId === currentOrgInfo?.metadata?.ownerAccountId;
 
