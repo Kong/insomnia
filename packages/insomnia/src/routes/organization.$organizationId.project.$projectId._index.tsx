@@ -1,4 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import { getLearningFeature } from 'insomnia-api';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -80,7 +81,6 @@ import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-s
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { trackTempProjectOpened } from '~/ui/temp-segment-tracking';
 import { isPrimaryClickModifier } from '~/ui/utils';
@@ -317,7 +317,7 @@ interface LearningFeature {
   url: string;
 }
 
-const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
+const getInsomniaLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   let learningFeature = fallbackLearningFeature;
   const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
   const lastFetched = lastFetchedString ? Number.parseInt(lastFetchedString, 10) : 0;
@@ -327,12 +327,7 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   const wasNotDismissedAndOneDayHasPassed = !wasDismissed && hasOneDayPassedSinceLastFetch;
   if (wasNotDismissedAndOneDayHasPassed) {
     try {
-      learningFeature = await insomniaFetch<LearningFeature>({
-        method: 'GET',
-        path: '/insomnia-production-public-assets/inapp-learning.json',
-        origin: 'https://storage.googleapis.com',
-        sessionId: '',
-      });
+      learningFeature = await getLearningFeature();
       window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
     } catch {
       console.log('[project] Could not fetch learning feature data.');
@@ -402,7 +397,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   ]);
 
   const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
-  const learningFeaturePromise = getLearningFeature(fallbackLearningFeature);
+  const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
 
   const projects = sortProjects(organizationProjects);
 

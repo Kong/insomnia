@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 
 import clone from 'clone';
+import { runVcsGraphQL } from 'insomnia-api';
 
 import { PLAYWRIGHT } from '~/common/constants';
 
@@ -13,7 +14,6 @@ import * as session from '../../account/session';
 import type { Operation } from '../../common/database';
 import { generateId } from '../../common/misc';
 import type { BaseModel } from '../../models';
-import { insomniaFetch } from '../../ui/insomnia-fetch';
 import Store from '../store';
 import type { BaseDriver } from '../store/drivers/base';
 import compress from '../store/hooks/compress';
@@ -888,12 +888,11 @@ export class VCS {
 
   async _runGraphQL<T>(query: string, variables: Record<string, any>, name: string): Promise<T> {
     const { sessionId } = await this._assertSession();
-
-    const { data, errors } = await insomniaFetch<{ data: T; errors: [{ message: string }] }>({
-      method: 'POST',
-      path: '/graphql?' + name,
-      data: { query, variables },
+    const { data, errors } = await runVcsGraphQL<T>({
+      query,
+      variables,
       sessionId,
+      name,
     });
 
     if (errors && errors.length) {
