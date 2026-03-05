@@ -23,7 +23,6 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   request_toggleHistory: 'Show Request History',
   request_focusUrl: 'Focus URL',
   request_showGenerateCodeEditor: 'Generate Code',
-  sidebar_focusFilter: 'Filter Sidebar',
   sidebar_toggle: 'Toggle Sidebar',
   response_focus: 'Focus Response',
   showCookiesEditor: 'Edit Cookies',
@@ -113,10 +112,6 @@ const defaultRegistry: HotKeyRegistry = {
   request_showGenerateCodeEditor: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.g.keyCode }],
     winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.g.keyCode }],
-  },
-  sidebar_focusFilter: {
-    macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.f.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.f.keyCode }],
   },
   sidebar_toggle: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.backslash.keyCode }],

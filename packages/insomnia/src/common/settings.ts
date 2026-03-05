@@ -44,7 +44,6 @@ export type KeyboardShortcut =
   | 'request_toggleHistory'
   | 'request_focusUrl'
   | 'request_showGenerateCodeEditor'
-  | 'sidebar_focusFilter'
   | 'sidebar_toggle'
   | 'response_focus'
   | 'showCookiesEditor'
