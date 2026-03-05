@@ -23,12 +23,15 @@ export const fetchMockbinLogs = ({
   compoundId,
   method,
   sessionId,
+  mockbinUrl,
 }: {
   compoundId: string;
   method: string;
   sessionId: string;
+  mockbinUrl: string;
 }) => {
   return fetch<MockbinLogOutput>({
+    origin: mockbinUrl,
     method: 'GET',
     path: `/bin/log/${compoundId}`,
     headers: {

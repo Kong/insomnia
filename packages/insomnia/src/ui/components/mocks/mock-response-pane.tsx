@@ -171,6 +171,7 @@ const HistoryViewWrapperComponentFactory = ({
     const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
     try {
       const res = await fetchMockbinLogs({
+        mockbinUrl,
         compoundId,
         method: mockRoute.method,
         sessionId: userSession.id,
