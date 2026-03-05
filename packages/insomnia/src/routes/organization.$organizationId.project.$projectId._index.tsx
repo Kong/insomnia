@@ -1108,6 +1108,12 @@ const Component = () => {
                           textValue={item.name}
                           // onAction is required for onPress with selectionMode='none' but we handle clicks in onPress
                           onAction={() => {}}
+                          onAuxClick={e => {
+                            if (e.button === 1) {
+                              e.preventDefault();
+                              item.action(true);
+                            }
+                          }}
                           onPress={e => {
                             item.action(isPrimaryClickModifier(e));
                           }}

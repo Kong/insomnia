@@ -51,10 +51,18 @@ export const Gemini = ({
           const geminiModels = (data.models as GeminiModelData[])
             .filter(model => model.supportedGenerationMethods.includes('generateContent'))
             .sort((a, b) => b.name.localeCompare(a.name));
-          setAvailableModels(geminiModels);
-          if (configuredLLMs.length === 1 && configuredLLMs[0].apiKey !== realApiKey) {
-            saveLLMSettings(false, 'gemini', { apiKey: realApiKey });
+          if (geminiModels.length === 0) {
+            console.error('No compatible Gemini models found in response:', data.models);
+            setError('No compatible models found for this API key.');
+          } else {
+            setAvailableModels(geminiModels);
+            if (configuredLLMs.length === 1 && configuredLLMs[0].apiKey !== realApiKey) {
+              saveLLMSettings(false, 'gemini', { apiKey: realApiKey });
+            }
           }
+        } else {
+          console.error('Gemini models response contained no data:', data);
+          setError('No models returned by the API.');
         }
       } catch (error) {
         console.error('Error fetching Gemini models:', error);
