@@ -366,6 +366,7 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
                       id={item.id}
                       key={item.key}
                       textValue={item.name}
+                      aria-label={item.name}
                       className="w-full p-2 transition-colors focus:bg-(--hl-sm) focus:outline-hidden"
                     >
                       <LocalBranchItem
@@ -399,6 +400,7 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
                         id={item.id}
                         key={item.key}
                         textValue={item.name}
+                        aria-label={item.name}
                         className="w-full p-2 transition-colors focus:bg-(--hl-sm) focus:outline-hidden"
                       >
                         <RemoteBranchItem
