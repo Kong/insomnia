@@ -1,3 +1,5 @@
+import { finishAddingCollaborators, startAddingCollaborators } from 'insomnia-api';
+
 import { decryptRSAWithJWK, encryptRSAWithJWK } from '../../../../account/crypt';
 import { getCurrentSessionId, getPrivateKey } from '../../../../account/session';
 import { invariant } from '../../../../utils/invariant';
@@ -124,26 +126,17 @@ interface MemberProjectKey {
   encSymmetricKey: string;
 }
 
-interface CollaboratorInstructionItem {
-  accountId: string;
-  publicKey: string; // stringified JSON WEB KEY
-  autoLinked: boolean;
-}
-
-type CollaboratorInstruction = Record<string, CollaboratorInstructionItem>;
-
 export async function startInvite({ emails, teamIds, organizationId, roleId }: StartInviteParams) {
   const sessionId = await getCurrentSessionId();
   invariant(sessionId, 'Session ID is required');
 
   // we are merging these endpoints into one as it has grown onto several types over time.
   // this way, we can also offload the complex logic to the API
-  const instruction = await insomniaFetch<CollaboratorInstruction>({
-    method: 'POST',
-    path: `/v1/desktop/organizations/${organizationId}/collaborators/start-adding`,
-    data: { teamIds, emails },
+  const instruction = await startAddingCollaborators({
     sessionId,
-    onlyResolveOnSuccess: true,
+    organizationId,
+    emails,
+    teamIds,
   });
 
   const myKeysInfo = await insomniaFetch<ResponseGetMyProjectKeys>({
@@ -206,12 +199,12 @@ export async function startInvite({ emails, teamIds, organizationId, roleId }: S
       });
     }
   }
-
-  await insomniaFetch({
-    method: 'POST',
-    path: `/v1/desktop/organizations/${organizationId}/collaborators/finish-adding`,
-    data: { teamIds, keys, accountIds, roleId },
+  await finishAddingCollaborators({
     sessionId,
-    onlyResolveOnSuccess: true,
+    organizationId,
+    teamIds,
+    keys,
+    accountIds,
+    roleId,
   });
 }

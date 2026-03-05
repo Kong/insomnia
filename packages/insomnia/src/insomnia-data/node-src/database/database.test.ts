@@ -1,10 +1,10 @@
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { BaseModel } from '../../models';
-import * as models from '../../models';
-import type { ChangeBufferEvent } from '../database';
-import { database as db } from '../database';
-import { _repairDatabase } from '../database/database-nedb';
+import type { BaseModel } from '../../../models';
+import * as models from '../../../models';
+import type { ChangeBufferEvent } from '../..';
+import { database as db } from '../..';
+import { _repairDatabase } from './database-nedb';
 
 describe('init()', () => {
   it('handles being initialized twice', async () => {
@@ -265,7 +265,6 @@ describe('_repairDatabase()', async () => {
     const descendants = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
       parentId: d.parentId,
-      // @ts-expect-error -- TSCONVERSION appears to be genuine
       data: d.data || null,
     }));
     expect(descendants).toEqual([
@@ -327,7 +326,6 @@ describe('_repairDatabase()', async () => {
     const descendants2 = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
       parentId: d.parentId,
-      // @ts-expect-error -- TSCONVERSION appears to be genuine
       data: d.data || null,
     }));
     expect(descendants2).toEqual([
@@ -428,7 +426,6 @@ describe('_repairDatabase()', async () => {
     expect((await db.getWithDescendants(workspace)).length).toBe(3);
     const descendants = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
-      // @ts-expect-error -- TSCONVERSION
       cookies: d.cookies || null,
       parentId: d.parentId,
     }));
@@ -476,7 +473,6 @@ describe('_repairDatabase()', async () => {
     // Make sure things get adjusted
     const descendants2 = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
-      // @ts-expect-error -- TSCONVERSION
       cookies: d.cookies || null,
       parentId: d.parentId,
     }));
@@ -603,9 +599,7 @@ describe('duplicate()', () => {
     });
     expect(duplicated._id).not.toEqual(workspace._id);
     expect(duplicated._id).toMatch(/^wrk_[a-z0-9]{32}$/);
-    // @ts-expect-error -- TSCONVERSION
     delete workspace._id;
-    // @ts-expect-error -- TSCONVERSION
     delete duplicated._id;
     expect(duplicated).toEqual({
       ...workspace,

@@ -3,9 +3,9 @@ import path from 'node:path';
 
 import NeDB from '@seald-io/nedb';
 
-import type { Database, DbAdapter } from '../index';
-import { emptyDb } from '../index';
 import type { BaseModel } from '../models/types';
+import type { Database, DbAdapter } from '../types';
+import { emptyDb } from '../types';
 
 const neDbAdapter: DbAdapter = async (dir, filterTypes) => {
   // Confirm if db files exist

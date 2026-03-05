@@ -1,28 +1,4 @@
-import { type PersonalPlanType } from 'insomnia-api';
-
-interface Branding {
-  logo_url: string;
-}
-
-export interface Metadata {
-  organizationType: string;
-  ownerAccountId: string;
-}
-
-export interface Organization {
-  id: string;
-  name: string;
-  display_name: string;
-  branding?: Branding;
-  metadata: Metadata;
-}
-
-export interface StorageRules {
-  enableCloudSync: boolean;
-  enableLocalVault: boolean;
-  enableGitSync: boolean;
-  isOverridden: boolean;
-}
+import { type Organization, type PersonalPlanType } from 'insomnia-api';
 
 export const SCRATCHPAD_ORGANIZATION_ID = 'org_scratchpad';
 export const isScratchpadOrganizationId = (organizationId: string) => organizationId === SCRATCHPAD_ORGANIZATION_ID;
@@ -40,14 +16,6 @@ export const findPersonalOrganization = (organizations: Organization[], accountI
     }),
   );
 };
-export interface OrganizationsResponse {
-  start: number;
-  limit: number;
-  length: number;
-  total: number;
-  next: string;
-  organizations: Organization[];
-}
 
 export const formatCurrentPlanType = (type: PersonalPlanType) => {
   switch (type) {

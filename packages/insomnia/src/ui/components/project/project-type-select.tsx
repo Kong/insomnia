@@ -1,9 +1,9 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { StorageRules } from 'insomnia-api';
 import { useState } from 'react';
 import { Label, Radio, RadioGroup } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
-import type { StorageRules } from '~/models/organization';
 import type { ProjectType } from '~/ui/components/project/utils';
 
 interface ProjectTypeItem {

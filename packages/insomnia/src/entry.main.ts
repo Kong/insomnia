@@ -9,7 +9,8 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import { configureFetch } from 'insomnia-api';
 
 import { getCurrentSessionId } from '~/account/session';
-import { mainDatabase } from '~/common/database/database.main';
+import { database, initDatabase } from '~/insomnia-data';
+import { mainDatabase } from '~/main/database.main';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
 import { runGitCredentialsMigration } from '~/sync/git/migrations';
@@ -17,7 +18,6 @@ import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
-import { database, initDatabase } from './common/database';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';

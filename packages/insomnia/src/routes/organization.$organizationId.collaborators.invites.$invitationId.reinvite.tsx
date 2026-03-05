@@ -1,7 +1,7 @@
+import { reinvite } from 'insomnia-api';
 import { href } from 'react-router';
 
 import * as models from '~/models';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.collaborators.invites.$invitationId.reinvite';
@@ -13,9 +13,9 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     const user = await models.userSession.getOrCreate();
     const sessionId = user.id;
 
-    const response = await insomniaFetch<{ enabled: boolean }>({
-      method: 'POST',
-      path: `/v1/organizations/${organizationId}/invites/${invitationId}/reinvite`,
+    const response = await reinvite({
+      organizationId,
+      invitationId,
       sessionId,
     });
 

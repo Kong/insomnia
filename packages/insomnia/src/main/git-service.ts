@@ -2144,15 +2144,21 @@ export const unstageChangesAction = async ({
   }
 };
 
-function getPreviewItemName(previewDiffItem: { before: string; after: string }) {
+function getPreviewItemNameAndScope(previewDiffItem: { before: string; after: string }) {
   let prevName = '';
   let nextName = '';
+
+  let prevScope: WorkspaceScope = 'collection';
+  let nextScope: WorkspaceScope = 'collection';
 
   try {
     const prev = parse(previewDiffItem.before);
 
     if ((prev && 'fileName' in prev) || 'name' in prev) {
       prevName = prev.fileName || prev.name;
+    }
+    if ('type' in prev) {
+      prevScope = insomniaSchemaTypeToScope(prev.type);
     }
   } catch {
     // Nothing to do
@@ -2163,11 +2169,17 @@ function getPreviewItemName(previewDiffItem: { before: string; after: string }) 
     if ((next && 'fileName' in next) || 'name' in next) {
       nextName = next.fileName || next.name;
     }
+    if ('type' in next) {
+      nextScope = insomniaSchemaTypeToScope(next.type);
+    }
   } catch {
     // Nothing to do
   }
 
-  return nextName || prevName;
+  return {
+    name: nextName || prevName,
+    scope: nextScope || prevScope,
+  };
 }
 
 export type GitDiffResult =
@@ -2177,6 +2189,9 @@ export type GitDiffResult =
         before: string;
         after: string;
       };
+      filepath: string;
+      scope: WorkspaceScope;
+      staged: boolean;
     }
   | {
       errors: string[];
@@ -2207,9 +2222,14 @@ export const diffFileLoader = async ({
           after: fileStatus.workdir,
         };
 
+    const { name, scope } = getPreviewItemNameAndScope(diff);
+
     return {
-      name: getPreviewItemName(diff) || filepath,
+      name: name || filepath,
       diff,
+      filepath,
+      scope,
+      staged,
     };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while unstaging changes';

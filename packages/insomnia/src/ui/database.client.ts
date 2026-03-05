@@ -1,7 +1,7 @@
 // Bridge Database implementation for renderer process
 // Uses window.database.invoke API exposed by contextBridge from preload
 
-import type { IDatabase, Operation, Query } from '~/common/database/types';
+import type { IDatabase, Operation, Query } from '~/insomnia-data';
 import type { AllTypes, BaseModel } from '~/models/index';
 
 /**

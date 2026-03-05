@@ -262,3 +262,47 @@ table.json-diff-viewer {
 .CodeMirror-merge .CodeMirror {
   height: 100%;
 }
+
+/* Info decoration styles for glyph margin */
+.monaco-editor .info-decoration {
+}
+
+/* System change line background */
+.monaco-editor.vs-dark .system-change-line-bg {
+  background-color: #383838 !important;
+}
+
+.monaco-editor.vs .system-change-line-bg {
+  background-color: #e5e5e5 !important;
+}
+
+.monaco-editor .info-decoration::after {
+  content: '\f05a'; /* FontAwesome info-circle icon */
+  color: var(--color-font);
+  font-size: 12px;
+  font-family: 'Font Awesome 6 Free' !important; /* FontAwesome font family */
+}
+
+.monaco-editor .codicon-unfold::before,
+.monaco-editor .codicon-fold:before {
+  content: '' !important;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  background-color: var(--color-font);
+}
+
+.monaco-editor .codicon-unfold::before {
+  mask-image: url('../images/icn-expand.svg');
+}
+
+.monaco-editor .codicon-fold::before {
+  mask-image: url('../images/icn-collapse.svg');
+}
+
+.monaco-editor .diff-hidden-lines-widget a[title='Show Unchanged Region'] {
+  margin-right: auto;
+}

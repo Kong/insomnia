@@ -1,9 +1,9 @@
+import type { Organization } from 'insomnia-api';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
 import { database } from '../common/database';
 import * as models from '../models';
-import type { Organization } from '../models/organization';
 import { findPersonalOrganization, SCRATCHPAD_ORGANIZATION_ID } from '../models/organization';
 import { type Project, SCRATCHPAD_PROJECT_ID } from '../models/project';
 import { scopeToActivity, SCRATCHPAD_WORKSPACE_ID } from '../models/workspace';
