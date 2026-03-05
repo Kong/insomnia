@@ -56,7 +56,7 @@ export const upsertMockbin = ({
   method: string;
   data: Har.Response;
 }) => {
-  return fetch({
+  return fetch<string>({
     origin: mockbinUrl,
     path: `/bin/upsert/${compoundId}`,
     method: 'PUT',
