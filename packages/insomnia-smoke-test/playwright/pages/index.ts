@@ -1,1 +1,1 @@
-export { InsomniaApp } from './insomnia-app.page';
+export { InsomniaApp } from './insomnia-app';

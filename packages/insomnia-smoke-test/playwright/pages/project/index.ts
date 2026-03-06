@@ -1,23 +1,18 @@
 import type { ElectronApplication, Page } from '@playwright/test';
-import { expect } from '@playwright/test';
 
 import { loadFixture } from '../../paths';
-import { ProjectSidebarComponent } from './sidebar';
 import { WorkspaceListComponent } from './workspace-list';
 
 /**
- * Page Object for the **project dashboard** (file list view).
+ * Page Object for the **project page** (file list view).
  *
  * Visible at route: `/organization/:orgId/project/:projectId`
  *
- * Composes shared layout components and dashboard-specific components:
+ * Composes shared layout components and project-specific components:
  * - TopNavBar, Statusbar, NavBar, TabBar (layout)
- * - Sidebar, Toolbar, WorkspaceList (dashboard-specific)
+ * - Sidebar, Toolbar, WorkspaceList (project-specific)
  */
 export class ProjectPage {
-  /** The sidebar (projects, workspace filter). */
-  readonly sidebar: ProjectSidebarComponent;
-
   /** The workspace list (files). */
   readonly workspaceList: WorkspaceListComponent;
 
@@ -46,53 +41,9 @@ export class ProjectPage {
     const text = await loadFixture(fixturePath);
     await this.app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-    await this.page.getByLabel('Import').click();
-    await this.page.locator('[data-test-id="import-from-clipboard"]').click();
-    await this.page.getByRole('button', { name: 'Scan' }).click();
-    await this.page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  }
-
-  // ===========================================================================
-  // Documents
-  // ===========================================================================
-
-  /** Create a new design document. */
-  async createDocument(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Create document', exact: true }).click();
-    await this.page.getByRole('button', { name: 'Create', exact: true }).click();
-  }
-
-  // ===========================================================================
-  // Collections
-  // ===========================================================================
-
-  /** Create a new request collection. */
-  async createCollection(): Promise<void> {
-    await this.page.getByLabel('Create in project').click();
-    await this.page.getByText('Request collection').click();
-    await this.page.getByRole('button', { name: 'Create', exact: true }).click();
-  }
-
-  // ===========================================================================
-  // Scope filter
-  // ===========================================================================
-
-  /** Click a scope filter (e.g. "All Files (0)"). */
-  async selectScope(label: string): Promise<void> {
-    await this.page.getByLabel(label).click();
-  }
-
-  // ===========================================================================
-  // Assertions
-  // ===========================================================================
-
-  /** Assert the dashboard contains text. */
-  async expectContains(text: string): Promise<void> {
-    await expect.soft(this.root).toContainText(text);
-  }
-
-  /** Assert the dashboard does NOT contain text. */
-  async expectNotContains(text: string): Promise<void> {
-    await expect.soft(this.root).not.toContainText(text);
+    await this.root.getByLabel('Import').click();
+    await this.root.locator('[data-test-id="import-from-clipboard"]').click();
+    await this.root.getByRole('button', { name: 'Scan' }).click();
+    await this.root.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   }
 }
