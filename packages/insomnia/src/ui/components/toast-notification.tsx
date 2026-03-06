@@ -114,7 +114,7 @@ export const Toaster = () => (
                 {toast.content.time && <span className="text-xs text-(--hl)">{toast.content.time}</span>}
               </Text>
               {toast.content.description && (
-                <Text slot="description" className="max-w-md text-xs">
+                <Text slot="description" className="max-w-md text-xs whitespace-pre-line">
                   {toast.content.description}
                 </Text>
               )}

@@ -193,6 +193,21 @@ export function newDefaultRegistry(): HotKeyRegistry {
 }
 
 /**
+ * Serialize a key combination into a comparable string key.
+ */
+function serializeKeyCombination(keyComb: KeyCombination): string {
+  const modifiers = [
+    keyComb.ctrl ? 'ctrl' : '',
+    keyComb.alt ? 'alt' : '',
+    keyComb.shift ? 'shift' : '',
+    keyComb.meta ? 'meta' : '',
+  ]
+    .filter(Boolean)
+    .join('+');
+  return `${modifiers}+${keyComb.keyCode}`;
+}
+
+/**
  * Get the key combinations based on the current platform.
  */
 export function getPlatformKeyCombinations(bindings: PlatformKeyCombinations): KeyCombination[] {
@@ -206,14 +221,8 @@ export function getPlatformKeyCombinations(bindings: PlatformKeyCombinations): K
 /**
  * Determine whether two key combinations are the same by comparing each of their keys.
  */
-export function areSameKeyCombinations(keyComb1: KeyCombination, keyComb2: KeyCombination) {
-  return (
-    keyComb1.keyCode === keyComb2.keyCode &&
-    Boolean(keyComb1.alt) === Boolean(keyComb2.alt) &&
-    Boolean(keyComb1.shift) === Boolean(keyComb2.shift) &&
-    Boolean(keyComb1.ctrl) === Boolean(keyComb2.ctrl) &&
-    Boolean(keyComb1.meta) === Boolean(keyComb2.meta)
-  );
+export function areSameKeyCombinations(keyComb1: KeyCombination, keyComb2: KeyCombination): boolean {
+  return serializeKeyCombination(keyComb1) === serializeKeyCombination(keyComb2);
 }
 
 /**
@@ -230,6 +239,58 @@ export function getChar(keyCode: number) {
   }
 
   return char || 'unknown';
+}
+export interface HotKeyConflict {
+  keyCombinationDisplay: string;
+  shortcuts: { id: KeyboardShortcut; description: string }[];
+}
+
+/**
+ * Flatten all platform-specific key combinations in the registry into a single list.
+ */
+function flattenPlatformKeyCombinations(
+  registry: Partial<HotKeyRegistry>,
+): { id: KeyboardShortcut; keyComb: KeyCombination }[] {
+  const result: { id: KeyboardShortcut; keyComb: KeyCombination }[] = [];
+  for (const [shortcutId, platformCombinations] of Object.entries(registry)) {
+    for (const keyComb of getPlatformKeyCombinations(platformCombinations)) {
+      result.push({ id: shortcutId as KeyboardShortcut, keyComb });
+    }
+  }
+  return result;
+}
+
+/**
+ * Detect conflicting hotkey bindings in the registry.
+ * A conflict is when 2+ shortcuts share the same key combination on the current platform.
+ * This typically happens when a user customized a shortcut in an older version,
+ * and a newer version assigns that same key combination as the default for a new shortcut.
+ */
+export function detectHotKeyConflicts(registry: HotKeyRegistry): HotKeyConflict[] {
+  const keyCombMap = new Map<string, { id: KeyboardShortcut; keyComb: KeyCombination }[]>();
+
+  for (const { id, keyComb } of flattenPlatformKeyCombinations(registry)) {
+    const serialized = serializeKeyCombination(keyComb);
+    if (!keyCombMap.has(serialized)) {
+      keyCombMap.set(serialized, []);
+    }
+    keyCombMap.get(serialized)!.push({ id, keyComb });
+  }
+
+  const conflicts: HotKeyConflict[] = [];
+  keyCombMap.forEach(entries => {
+    if (entries.length > 1) {
+      conflicts.push({
+        keyCombinationDisplay: constructKeyCombinationDisplay(entries[0].keyComb, true),
+        shortcuts: entries.map(e => ({
+          id: e.id,
+          description: keyboardShortcutDescriptions[e.id],
+        })),
+      });
+    }
+  });
+
+  return conflicts;
 }
 
 function joinHotKeys(mustUsePlus: boolean, keys: string[]) {

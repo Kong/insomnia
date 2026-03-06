@@ -1,5 +1,6 @@
 import { config } from '@fortawesome/fontawesome-svg-core';
 import type { IpcRendererEvent } from 'electron';
+import { once } from 'es-toolkit/function';
 import type { FC } from 'react';
 import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
@@ -19,6 +20,8 @@ import {
 } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
+import { detectHotKeyConflicts } from '~/common/hotkeys';
+import type { HotKeyRegistry } from '~/common/settings';
 import * as models from '~/models';
 import type { Settings } from '~/models/settings';
 import type { UserSession } from '~/models/user-session';
@@ -41,7 +44,7 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { SettingsModal } from '~/ui/components/modals/settings-modal';
-import { Toaster } from '~/ui/components/toast-notification';
+import { showToast, Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
@@ -303,6 +306,25 @@ export const HydrateFallback = () => {
     </div>
   );
 };
+
+// Only detect hotkey conflicts once per app launch, since the detection can be expensive and hotkey registry is unlikely to change frequently during a session. If we want to detect more frequently in the future, we can consider adding a manual "Detect Conflicts" button in the Keyboard Shortcuts settings page that calls the detectHotKeyConflicts function directly.
+const detectHotKeyConflictsOnce = once((hotKeyRegistry: HotKeyRegistry) => {
+  const conflicts = detectHotKeyConflicts(hotKeyRegistry);
+  if (conflicts.length > 0) {
+    const details = conflicts
+      .map(c => `[${c.keyCombinationDisplay}]: ${c.shortcuts.map(s => s.description).join(', ')}`)
+      .join('\n');
+    showToast(
+      {
+        title: 'Keyboard shortcut conflicts detected',
+        description: `${conflicts.length} shortcut conflict(s) found. Please check Preferences > Keyboard to resolve them.\n${details}`,
+        status: 'warning',
+      },
+      // Give users enough time to read through the conflicts and take action, since this toast contains important information about how to resolve the conflicts
+      { timeout: 10_000 },
+    );
+  }
+});
 
 const Root = () => {
   const { organizationId, projectId } = useParams() as {
@@ -573,6 +595,12 @@ const Root = () => {
     navigate,
     redirectToDefaultBrowserSubmit,
   ]);
+
+  const rootData = useRootLoaderData();
+  useEffect(() => {
+    if (!rootData?.settings?.hotKeyRegistry) return;
+    detectHotKeyConflictsOnce(rootData.settings.hotKeyRegistry);
+  }, [rootData?.settings?.hotKeyRegistry]);
 
   return (
     <>
