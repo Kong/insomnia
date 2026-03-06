@@ -16,6 +16,7 @@ import { isGrpcRequest } from '~/models/grpc-request';
 import { isSocketIORequest } from '~/models/socket-io-request';
 import { isWebSocketRequest } from '~/models/websocket-request';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
+import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
@@ -27,9 +28,10 @@ import { INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';
 import { Icon } from '../icon';
+import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { AddRequestToCollectionModal } from '../modals/add-request-to-collection-modal';
 import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
-import { type BaseTab, InsomniaTab, type TabType } from './tab';
+import { type BaseTab, InsomniaTab } from './tab';
 
 export interface OrganizationTabs {
   tabList: BaseTab[];
@@ -41,20 +43,6 @@ export const enum TAB_CONTEXT_MENU_COMMAND {
   CLOSE_OTHERS = 'Close Other Tabs',
 }
 
-export const TAB_ROUTER_PATH: Record<TabType, string> = {
-  collection: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug',
-  folder: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request-group/:requestGroupId',
-  request: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId',
-  environment: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment',
-  mockServer: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server',
-  runner: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/runner',
-  document: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/spec',
-  mockRoute:
-    '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId',
-  test: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test',
-  testSuite: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/*',
-};
-
 export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' }) => {
   const [showAddRequestModal, setShowAddRequestModal] = useState(false);
   const [isOverFlow, setIsOverFlow] = useState(false);
@@ -63,6 +51,8 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
   const newRequestFetcher = useRequestNewActionFetcher();
   const { organizationId, projectId } = useParams();
+
+  useInsomniaTab({ organizationId: organizationId || '' });
 
   const {
     changeActiveTab,
@@ -79,14 +69,33 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     moveBefore,
     batchUpdateTabs,
     currentOrgTabs,
+    goToNextTab,
+    goToPreviousTab,
+    reopenClosedTab,
   } = useInsomniaTabContext();
 
   const { tabList, activeTabId } = currentOrgTabs;
 
+  // Register keyboard shortcuts for tab navigation
+  useDocBodyKeyboardShortcuts({
+    tab_nextTab: event => {
+      event.preventDefault();
+      goToNextTab?.();
+    },
+    tab_previousTab: event => {
+      event.preventDefault();
+      goToPreviousTab?.();
+    },
+    tab_reopenClosedTab: event => {
+      event.preventDefault();
+      reopenClosedTab?.();
+    },
+  });
+
   const handleSelectionChange = (keys: Selection) => {
     if (keys !== 'all') {
       const key = [...keys.values()]?.[0] as string;
-      changeActiveTab(key);
+      changeActiveTab(key, { navigate: true });
     }
   };
 
@@ -106,6 +115,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       models.environment.type,
       models.mockRoute.type,
       models.project.type,
+      models.socketIORequest.type,
     ];
     return list.includes(docType);
   };
@@ -114,17 +124,16 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     (docId: string, docType: string) => {
       if (docType === models.project.type) {
         // delete all tabs of this project
-        closeAllTabsUnderProject?.(docId);
-      }
-      if (docType === models.workspace.type) {
+        closeAllTabsUnderProject?.(docId, { removeFromClosedTabs: true });
+      } else if (docType === models.workspace.type) {
         // delete all tabs of this workspace
-        closeAllTabsUnderWorkspace?.(docId);
+        closeAllTabsUnderWorkspace?.(docId, { removeFromClosedTabs: true });
       } else if (docType === models.requestGroup.type) {
         // when delete a folder, we need also delete the corresponding folder runner tab(if exists)
-        batchCloseTabs?.([docId, `runner_${docId}`]);
+        batchCloseTabs?.([docId, `runner_${docId}`], { removeFromClosedTabs: true });
       } else {
         // delete tab by id
-        closeTabById(docId);
+        closeTabById(docId, { removeFromClosedTabs: true });
       }
     },
     [batchCloseTabs, closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById],
@@ -355,9 +364,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     },
   });
 
-  if (!tabList.length) {
-    return null;
-  }
+  if (!tabList.length) return null;
 
   return (
     <div className="box-content flex bg-(--color-bg)" style={{ height: `${INSOMNIA_TAB_HEIGHT + 1}px` }}>

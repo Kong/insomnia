@@ -5,6 +5,22 @@ import type { Request } from '../request';
 import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '../socket-io-request';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../websocket-request';
 
+export function findByParentId(
+  parentId: string,
+): Promise<(Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest)[]> {
+  return Promise.all([
+    models.request.findByParentId(parentId),
+    models.grpcRequest.findByParentId(parentId),
+    models.webSocketRequest.findByParentId(parentId),
+    models.socketIORequest.findByParentId(parentId),
+  ]).then(([requests, grpcRequests, webSocketRequests, socketIORequests]) => [
+    ...requests,
+    ...grpcRequests,
+    ...webSocketRequests,
+    ...socketIORequests,
+  ]);
+}
+
 export function getById(
   requestId: string,
 ): Promise<Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest | undefined> {

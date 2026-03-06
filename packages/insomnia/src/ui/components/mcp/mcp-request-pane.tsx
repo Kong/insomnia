@@ -8,6 +8,7 @@ import { useLatest } from 'react-use';
 import { docsMcpClient } from '~/common/documentation';
 import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
 import type { McpReadyState } from '~/main/mcp/types';
+import type { BaseMcpPayload } from '~/models/mcp-request-payload';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Link } from '~/ui/components/base/link';
 import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
@@ -20,6 +21,7 @@ import {
   type McpRequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { SegmentEvent } from '../../../ui/analytics';
 import { useRequestPatcher, useRequestPayloadPatcher } from '../../hooks/use-request';
 import { CodeEditor, type CodeEditorHandle } from '../.client/codemirror/code-editor';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
@@ -57,6 +59,22 @@ interface Props {
   onTabChange: (newTab: RequestPaneTabs) => void;
 }
 
+const getParamsFromPayload = (payloadParams: BaseMcpPayload['params']) => {
+  // INS-2041 params has been changed from object to json string to avoid param name with dot issue
+  // For existing payload, we need to handle both string and object type
+  if (typeof payloadParams === 'string') {
+    try {
+      return JSON.parse(payloadParams);
+    } catch (error) {
+      console.warn('Failed to parse MCP params string:', error);
+      return {};
+    }
+  } else if (typeof payloadParams === 'object') {
+    return payloadParams;
+  }
+  return {};
+};
+
 export const McpRequestPane: FC<Props> = ({
   environment,
   readyState,
@@ -70,7 +88,7 @@ export const McpRequestPane: FC<Props> = ({
 
   const { activeProject } = useWorkspaceLoaderData()!;
 
-  const [mcpParams, setMcpParams] = useState<Record<string, any>>(requestPayload?.params || {});
+  const [mcpParams, setMcpParams] = useState<Record<string, any>>(getParamsFromPayload(requestPayload?.params));
 
   const paramEditorRef = useRef<CodeEditorHandle>(null);
   const rjsfFormRef = useRef<InsomniaRjsfFormHandle>(null);
@@ -196,13 +214,13 @@ export const McpRequestPane: FC<Props> = ({
 
   useEffect(() => {
     if (isConnected) {
-      latestPayloadPatcherRef.current(requestId, { params: mcpParams, url: activeRequest.url });
+      latestPayloadPatcherRef.current(requestId, { params: JSON.stringify(mcpParams), url: activeRequest.url });
     }
   }, [activeRequest.url, mcpParams, latestPayloadPatcherRef, requestId, isConnected]);
 
   useEffect(() => {
     if (isConnected) {
-      setMcpParams(latestRequestPayloadRef.current?.params || {});
+      setMcpParams(getParamsFromPayload(latestRequestPayloadRef.current?.params));
     }
   }, [activeRequest.url, latestRequestPayloadRef, isConnected]);
 
@@ -355,6 +373,9 @@ export const McpRequestPane: FC<Props> = ({
                         onChange={handleEditorChange}
                         mode="json"
                         placeholder=""
+                        onPrettify={() => {
+                          window.main.trackSegmentEvent({ event: SegmentEvent.mcpRequestParamsBeautifyClicked });
+                        }}
                       />
                     </div>
                   </div>
@@ -383,6 +404,9 @@ export const McpRequestPane: FC<Props> = ({
             bulk={false}
             isDisabled={!isDisconnected}
             requestType="McpRequest"
+            onDescriptionToggle={() => {
+              window.main.trackSegmentEvent({ event: SegmentEvent.mcpRequestHeadersDescriptionToggled });
+            }}
           />
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="env">

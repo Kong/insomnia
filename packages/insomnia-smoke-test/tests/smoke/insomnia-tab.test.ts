@@ -10,6 +10,18 @@ test.describe('multiple-tab feature test', () => {
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
+    await page
+      .getByLabel('Request Collection')
+      .getByRole('row', { name: 'My first request' })
+      .click({
+        modifiers: ['ControlOrMeta'],
+      });
+    await page
+      .getByLabel('Request Collection')
+      .getByRole('row', { name: 'New Request' })
+      .click({
+        modifiers: ['ControlOrMeta'],
+      });
     const tab = page.getByLabel('Insomnia Tabs').getByLabel(`tab-New Request`, { exact: true });
     await expect.soft(tab).toBeVisible();
     await expect.soft(tab).toHaveAttribute('data-selected', 'true');
@@ -54,8 +66,16 @@ test.describe('multiple-tab feature test', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
+    await page
+      .getByLabel('Request Collection')
+      .getByRole('row', { name: 'New Request' })
+      .click({
+        modifiers: ['ControlOrMeta'],
+      });
     await expect.soft(page.getByLabel('tab-New Request').getByLabel('Tab Tag')).toHaveText('GET');
     await page.getByTestId('tab-close-button').first().click();
+    // Move the mouse away to avoid accidentally show the tooltip of the tab which may cover the request method dropdown and cause the click fail
+    await page.mouse.move(0, 0);
     await page.getByLabel('Request Method').click();
     await page.getByRole('button', { name: 'POST' }).click();
     await expect.soft(page.getByLabel('tab-New Request').getByLabel('Tab Tag')).toHaveText('POST');

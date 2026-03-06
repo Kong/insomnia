@@ -29,7 +29,6 @@ import {
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   href,
-  type NavigateFunction,
   NavLink,
   redirect,
   Route as RouteComponent,
@@ -60,11 +59,10 @@ import {
   type Request,
 } from '~/models/request';
 import { isRequestGroup, isRequestGroupId, type RequestGroup } from '~/models/request-group';
-import type { RequestGroupMeta } from '~/models/request-group-meta';
 import { getByParentId as getRequestMetaByParentId } from '~/models/request-meta';
 import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '~/models/socket-io-request';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '~/models/websocket-request';
-import { isDesign } from '~/models/workspace';
+import { isDesign, type Workspace } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
 import {
   type Child,
@@ -75,7 +73,6 @@ import { useRequestLoaderData } from '~/routes/organization.$organizationId.proj
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
-import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import Runner from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import Tutorial, {
@@ -121,7 +118,7 @@ import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-reque
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useExecutionState } from '~/ui/hooks/use-execution-state';
 import { useFilteredRequests } from '~/ui/hooks/use-filtered-requests';
-import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
+import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 import {
   type CreateRequestType,
@@ -130,6 +127,7 @@ import {
   useRequestMetaPatcher,
   useRequestPatcher,
 } from '~/ui/hooks/use-request';
+import { isPrimaryClickModifier } from '~/ui/utils';
 import { scrollElementIntoView } from '~/utils';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/utils/grpc';
 
@@ -240,27 +238,7 @@ const RequestTiming = ({ requestId }: { requestId: string }) => {
 };
 
 const DebugEntry = () => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    requestId?: string;
-    requestGroupId?: string;
-  };
-  const { activeRequestGroup } = useRequestGroupLoaderData() || {};
-  const { activeWorkspace, activeProject } = useWorkspaceLoaderData()!;
-  const requestData = useRequestLoaderData();
-  const { activeRequest } = requestData || {};
-
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
-    activeRequest,
-    activeRequestGroup,
-  });
+  const { activeWorkspace } = useWorkspaceLoaderData()!;
 
   if (activeWorkspace.scope === 'mcp') {
     // MCP request under mcp workspace has different layout so we need to render a different component
@@ -507,6 +485,22 @@ const Debug = () => {
         showModal(GenerateCodeModal, { request: activeRequest });
       }
     },
+    request_openInNewTab: () => {
+      if (activeRequest && requestId) {
+        tabNavigate(
+          {
+            organization: organizationId,
+            project: activeProject,
+            workspace: activeWorkspace,
+            item: activeRequest,
+          },
+          {
+            withTab: true,
+            shouldNavigate: true,
+          },
+        );
+      }
+    },
   });
 
   const isRealtimeRequest =
@@ -539,10 +533,7 @@ const Debug = () => {
       req,
     });
 
-  const groupMetaPatcher = useRequestGroupMetaPatcher();
   const reorderFetcher = useDebugReorderActionFetcher();
-
-  const navigate = useNavigate();
 
   const collectionDragAndDrop = useDragAndDrop({
     getItems: keys => [...keys].map(key => ({ 'text/plain': key.toString() })),
@@ -811,6 +802,8 @@ const Debug = () => {
     };
   }, [settings.forceVerticalLayout, direction]);
 
+  const tabNavigate = useTabNavigate();
+
   return (
     <PanelGroup
       ref={sidebarPanelRef}
@@ -856,12 +849,24 @@ const Debug = () => {
               <div className="flex w-full items-center justify-between gap-2">
                 <EnvironmentPicker
                   isOpen={isEnvironmentPickerOpen}
-                  onOpenChange={setIsEnvironmentPickerOpen}
+                  onOpenChange={isOpen => {
+                    setIsEnvironmentPickerOpen(isOpen);
+                    if (isOpen) {
+                      window.main.trackSegmentEvent({
+                        event: SegmentEvent.requestEnvironmentClicked,
+                      });
+                    }
+                  }}
                   onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
                 />
               </div>
               <Button
-                onPress={() => setIsCookieModalOpen(true)}
+                onPress={() => {
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.requestAddCookiesClicked,
+                  });
+                  setIsCookieModalOpen(true);
+                }}
                 className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               >
                 <Icon icon="cookie-bite" className="w-5 shrink-0" />
@@ -871,7 +876,12 @@ const Debug = () => {
                 </span>
               </Button>
               <Button
-                onPress={() => setCertificatesModalOpen(true)}
+                onPress={() => {
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.requestAddCertificatesClicked,
+                  });
+                  setCertificatesModalOpen(true);
+                }}
                 className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               >
                 <Icon icon="file-contract" className="w-5 shrink-0" />
@@ -915,13 +925,17 @@ const Debug = () => {
                 aria-label="Sort order"
                 className="aspect-square h-full"
                 selectedKey={sortOrder}
-                onSelectionChange={order =>
-                  order &&
-                  setSearchParams({
-                    ...Object.fromEntries(searchParams.entries()),
-                    sortOrder: order.toString(),
-                  })
-                }
+                onSelectionChange={order => {
+                  if (order) {
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.requestListSortClicked,
+                    });
+                    setSearchParams({
+                      ...Object.fromEntries(searchParams.entries()),
+                      sortOrder: order.toString(),
+                    });
+                  }
+                }}
               >
                 <Button
                   aria-label="Select sort order"
@@ -966,6 +980,9 @@ const Debug = () => {
                   defaultSelected={allExpanded}
                   onChange={() => {
                     setAllExpanded(!allExpanded);
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.requestListExpandCollapseClicked,
+                    });
                     toggleExpandAllFetcher.submit({
                       organizationId,
                       projectId,
@@ -1043,14 +1060,6 @@ const Debug = () => {
               disallowEmptySelection
               selectedKeys={requestId ? [requestId] : []}
               selectionMode="single"
-              onSelectionChange={keys => {
-                if (keys !== 'all') {
-                  const value = keys.values().next().value;
-                  navigate(
-                    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`,
-                  );
-                }
-              }}
             >
               {item => {
                 return (
@@ -1060,6 +1069,31 @@ const Debug = () => {
                     className="group outline-hidden select-none"
                     textValue={item.doc.name}
                     data-testid={item.doc.name}
+                    onAuxClick={e => {
+                      if (e.button === 1) {
+                        e.preventDefault();
+                        tabNavigate(
+                          {
+                            organization: organizationId,
+                            project: activeProject,
+                            workspace: activeWorkspace,
+                            item: item.doc,
+                          },
+                          { withTab: true, shouldNavigate: true, searchParams },
+                        );
+                      }
+                    }}
+                    onPress={e => {
+                      tabNavigate(
+                        {
+                          organization: organizationId,
+                          project: activeProject,
+                          workspace: activeWorkspace,
+                          item: item.doc,
+                        },
+                        { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                      );
+                    }}
                   >
                     <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
                       <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
@@ -1130,22 +1164,6 @@ const Debug = () => {
                 aria-label="Request Collection"
                 key={sortOrder}
                 dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
-                onAction={key => {
-                  const id = key.toString();
-                  if (isRequestGroupId(id)) {
-                    const item = collection.find(i => i.doc._id === id);
-                    if (item) {
-                      groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
-                      navigate(
-                        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${id}?${searchParams.toString()}`,
-                      );
-                      return;
-                    }
-                  }
-                  navigate(
-                    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${id}?${searchParams.toString()}`,
-                  );
-                }}
               >
                 {virtualItem => {
                   const item = visibleCollection[virtualItem.index];
@@ -1162,21 +1180,20 @@ const Debug = () => {
                     <CollectionGridListItem
                       {...{
                         label,
+                        item,
                         style: {
                           height: `${virtualItem.size}`,
                           transform: `translateY(${virtualItem.start}px)`,
                         },
-                        item,
-                        navigate,
                         organizationId,
                         projectId,
                         workspaceId,
                         searchParams,
-                        groupMetaPatcher,
                         patchGroup,
                         patchRequest,
                         activeEnvironment,
                         activeProject,
+                        activeWorkspace,
                       }}
                     />
                   );
@@ -1396,34 +1413,38 @@ const ScratchPadTutorialPanel = () => {
 
 const CollectionGridListItem = ({
   label,
-  activeEnvironment,
-  activeProject,
   item,
+  style,
   organizationId,
-  patchGroup,
-  patchRequest,
   projectId,
   workspaceId,
-  style,
+  searchParams,
+  patchGroup,
+  patchRequest,
+  activeEnvironment,
+  activeProject,
+  activeWorkspace,
 }: {
   label: string;
   item: Child;
   style: React.CSSProperties;
-  navigate: NavigateFunction;
   organizationId: string;
   projectId: string;
   workspaceId: string;
   searchParams: URLSearchParams;
-  groupMetaPatcher: (requestGroupId: string, patch: Partial<RequestGroupMeta>) => void;
   patchGroup: (requestGroupId: string, patch: Partial<RequestGroup>) => void;
   patchRequest: (requestId: string, patch: Partial<GrpcRequest> | Partial<Request> | Partial<WebSocketRequest>) => void;
   activeEnvironment: Environment;
   activeProject: Project;
+  activeWorkspace: Workspace;
 }): React.ReactNode => {
   const [isEditable, setIsEditable] = useState(false);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const patchRequestMeta = useRequestMetaPatcher();
+
+  const tabNavigate = useTabNavigate();
+  const groupMetaPatcher = useRequestGroupMetaPatcher();
 
   const action = isRequestGroup(item.doc)
     ? `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}/update`
@@ -1459,6 +1480,42 @@ const CollectionGridListItem = ({
       textValue={label}
       data-testid={item.doc.name}
       style={style}
+      onAction={() => {}}
+      onAuxClick={e => {
+        if (e.button === 1) {
+          e.preventDefault();
+          tabNavigate(
+            {
+              organization: organizationId,
+              project: activeProject,
+              workspace: activeWorkspace,
+              item: item.doc,
+            },
+            { withTab: true, shouldNavigate: true, searchParams },
+          );
+        }
+      }}
+      onPress={e => {
+        const id = item.doc._id;
+        // Toggle collapse if it's a request group
+        if (isRequestGroupId(id)) {
+          groupMetaPatcher(id, { collapsed: !item.collapsed });
+        }
+
+        tabNavigate(
+          {
+            organization: organizationId,
+            project: activeProject,
+            workspace: activeWorkspace,
+            item: item.doc,
+          },
+          {
+            withTab: isPrimaryClickModifier(e),
+            shouldNavigate: true,
+            searchParams,
+          },
+        );
+      }}
       ref={triggerRef}
     >
       <div
@@ -1568,7 +1625,6 @@ const CollectionGridListItem = ({
         ) : (
           <RequestActionsDropdown
             activeEnvironment={activeEnvironment}
-            activeProject={activeProject}
             request={item.doc}
             onRename={() => setIsEditable(true)}
             isPinned={item.pinned}

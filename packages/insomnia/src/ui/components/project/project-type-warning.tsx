@@ -1,3 +1,4 @@
+import type { StorageRules } from 'insomnia-api';
 import { useParams } from 'react-router';
 
 import { Banner } from '~/basic-components/banner';
@@ -5,7 +6,7 @@ import { Button } from '~/basic-components/button';
 import { LearnMoreLink } from '~/basic-components/link';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { docsPricingLearnMoreLink } from '~/common/documentation';
-import { isOwnerOfOrganization, type StorageRules } from '~/models/organization';
+import { isOwnerOfOrganization } from '~/models/organization';
 import { getProjectStorageTypeLabel } from '~/models/project';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';

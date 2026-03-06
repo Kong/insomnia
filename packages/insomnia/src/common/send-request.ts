@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { database, initDatabase } from '~/common/database';
-import { nedbDatabase } from '~/common/database/database-nedb';
+import { database, initDatabase } from '~/insomnia-data';
+import { createNedbDatabase } from '~/insomnia-data/node';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { BaseModel } from '../models';
@@ -49,26 +49,30 @@ export async function getSendRequestCallbackMemDb(
 ) {
   // Initialize the DB in-memory and fill it with data if we're given one
   await initDatabase(
-    nedbDatabase,
+    createNedbDatabase(),
     {
       inMemoryOnly: true,
     },
     true,
   );
+
+  // First, upsert all docs from memDB (which may include Settings from fixtures)
   const docs: BaseModel[] = [];
-
-  const settings = await models.settings.getOrCreate();
-  docs.push({ ...settings, ...settingsOverrides });
-
   for (const type of Object.keys(memDB)) {
     for (const doc of memDB[type]) {
       docs.push(doc);
     }
   }
-  // init database with the provided documents
-  // TODO: this could be done with database.init instead
   await database.batchModifyDocs({
     upsert: docs,
+    remove: [],
+  });
+
+  // Now get settings (may come from fixtures) and merge with overrides
+  const settings = await models.settings.getOrCreate();
+  const mergedSettings = { ...settings, ...settingsOverrides };
+  await database.batchModifyDocs({
+    upsert: [mergedSettings],
     remove: [],
   });
 

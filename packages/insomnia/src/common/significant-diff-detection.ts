@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { diffLines } from 'diff';
 import { parse } from 'yaml';
 
 import { normalizeScripts } from '~/common/insomnia-schema-migrations/v5.1';
@@ -180,4 +181,86 @@ export function hasSignificantChanges(
     console.warn('Parse error:', err);
     return originalContent !== modifiedContent;
   }
+}
+
+/**
+ * Find lines that represent "system changes" - lines that were modified (not added/deleted)
+ * and contain the "modified" property.
+ *
+ * A "modification" is detected by finding adjacent removed and added chunks in the diff.
+ * For each such pair, we check if any line contains "modified" and mark those lines.
+ */
+export function findSystemChangeLines(
+  original: string,
+  modified: string,
+): {
+  originalLines: number[];
+  modifiedLines: number[];
+} {
+  const originalLines: number[] = [];
+  const modifiedLines: number[] = [];
+
+  try {
+    const changes = diffLines(original, modified);
+
+    let originalLineNumber = 1;
+    let modifiedLineNumber = 1;
+
+    for (let i = 0; i < changes.length; i++) {
+      const change = changes[i];
+      const lines = change.value.split('\n');
+      // diffLines includes trailing newline, so remove empty last element
+      if (lines[lines.length - 1] === '') {
+        lines.pop();
+      }
+      const lineCount = lines.length;
+
+      if (!change.added && !change.removed) {
+        // Unchanged lines - advance both line counters
+        originalLineNumber += lineCount;
+        modifiedLineNumber += lineCount;
+      } else if (change.removed && !change.added) {
+        // Check if next change is an addition (which would make this a modification)
+        const nextChange = changes[i + 1];
+        if (nextChange && nextChange.added && !nextChange.removed) {
+          // This is a modification: removed lines followed by added lines
+          const addedLines = nextChange.value.split('\n');
+          if (addedLines[addedLines.length - 1] === '') {
+            addedLines.pop();
+          }
+
+          // Check each line pair for "modified" property
+          // For modifications, we consider lines that contain "modified:" in either version
+          lines.forEach((originalLine, j) => {
+            if (originalLine && /\bmodified\b/.test(originalLine)) {
+              originalLines.push(originalLineNumber + j);
+            }
+          });
+
+          addedLines.forEach((modifiedLine, j) => {
+            if (modifiedLine && /\bmodified\b/.test(modifiedLine)) {
+              modifiedLines.push(modifiedLineNumber + j);
+            }
+          });
+
+          // Advance original line counter for removed lines
+          originalLineNumber += lineCount;
+          // Advance modified line counter for added lines
+          modifiedLineNumber += addedLines.length;
+          // Skip the next change since we've processed it
+          i++;
+        } else {
+          // Pure deletion - just advance original line counter
+          originalLineNumber += lineCount;
+        }
+      } else if (change.added && !change.removed) {
+        // Pure addition - just advance modified line counter
+        modifiedLineNumber += lineCount;
+      }
+    }
+  } catch (error) {
+    console.error('Error finding system change lines:', error);
+  }
+
+  return { originalLines, modifiedLines };
 }

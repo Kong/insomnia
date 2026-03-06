@@ -134,8 +134,8 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       has_prescript: !!req?.preRequestScript,
       has_postscript: !!req?.afterResponseScript,
       request_header_names: req?.headers?.map(h => h.name) || [],
-      count_cookies: req?.headers.find(h => h.name.toLowerCase() === 'cookie')
-        ? req.headers.find(h => h.name.toLowerCase() === 'cookie')?.value.split(';').length
+      count_cookies: req?.headers?.find(h => h.name.toLowerCase() === 'cookie')
+        ? req.headers?.find(h => h.name.toLowerCase() === 'cookie')?.value.split(';').length
         : 0,
       count_certificates: certificates.length,
       count_headers: req?.headers?.length || 0,
@@ -151,14 +151,13 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     },
   });
 
-  // add a created query param to the URL to indicate that the request was just created, this is for distinguishing if we will create a temporary or permanent tab
   return redirect(
-    `${href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
+    href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
       organizationId,
       projectId,
       workspaceId,
       requestId: activeRequestId,
-    })}?created=true`,
+    }),
   );
 }
 

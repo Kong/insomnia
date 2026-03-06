@@ -9,6 +9,7 @@ import { href, useParams } from 'react-router';
 
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
+import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
@@ -105,6 +106,22 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isDeleteRemoteWorkspaceModalOpen, setIsDeleteRemoteWorkspaceModalOpen] = useState(false);
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
+  const tabNavigate = useTabNavigate();
+
+  const openInNewTab = async () => {
+    tabNavigate(
+      {
+        organization: organizationId,
+        project: project,
+        workspace: workspace,
+        item: workspace,
+      },
+      {
+        withTab: true,
+        shouldNavigate: true,
+      },
+    );
+  };
 
   const deleteWorkspaceFetcher = useWorkspaceDeleteActionFetcher();
 
@@ -125,6 +142,9 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           </Button>
         }
       >
+        <DropdownItem aria-label="Open in New Tab">
+          <ItemContent label="Open in New Tab" icon="external-link-alt" onClick={openInNewTab} />
+        </DropdownItem>
         {!isMcp(workspace) && (
           <DropdownItem aria-label="Duplicate / Move">
             <ItemContent label="Duplicate / Move" icon="copy" onClick={() => setIsDuplicateModalOpen(true)} />

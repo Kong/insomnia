@@ -273,6 +273,7 @@ export const GitRepoForm: FC<Props> = ({
                     }))
                   }
                   credentialsId={selectedCredentialsId}
+                  providerType={selectedProvider.type}
                 />
               ) : (
                 <Input

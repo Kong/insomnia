@@ -53,7 +53,6 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { InputVaultKeyModal } from '~/ui/components/modals/input-vault-key-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
-import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { decryptVaultKeyFromSession } from '~/utils/vault';
 
@@ -82,8 +81,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   const updateEnvironmentFetcher = useEnvironmentUpdateActionFetcher();
   const duplicateEnvironmentFetcher = useEnvironmentDuplicateActionFetcher();
 
-  const { activeProject, baseEnvironment, activeEnvironment, subEnvironments, activeWorkspaceMeta, activeWorkspace } =
-    routeData;
+  const { activeProject, baseEnvironment, activeEnvironment, subEnvironments, activeWorkspaceMeta } = routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
   const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
@@ -300,14 +298,6 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
 
   useDocBodyKeyboardShortcuts({
     sidebar_toggle: toggleSidebar,
-  });
-
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
   });
 
   return (

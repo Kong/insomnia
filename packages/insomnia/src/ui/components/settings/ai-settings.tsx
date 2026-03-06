@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button, Switch } from 'react-aria-components';
 
-import type { LLMBackend, LLMConfig } from '~/main/llm-config-service';
+import type { AIFeatureNames, LLMBackend, LLMConfig } from '~/main/llm-config-service';
 import { Badge } from '~/ui/components/base/badge';
 import { Claude } from '~/ui/components/settings/llms/claude';
 import { Gemini } from '~/ui/components/settings/llms/gemini';
 import { GGUF } from '~/ui/components/settings/llms/gguf';
 import { OpenAI } from '~/ui/components/settings/llms/openai';
+import { Url } from '~/ui/components/settings/llms/url';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 
 export const AISettings = () => {
@@ -14,9 +15,11 @@ export const AISettings = () => {
   const [currentLLM, setCurrentLLM] = useState<LLMConfig | null>(null);
   const [selectedBackend, setSelectedBackend] = useState<LLMBackend>('gguf');
   const [configuredLLMs, setConfiguredLLMs] = useState<LLMConfig[]>([]);
-  const [mockServerEnabled, setMockServerEnabled] = useState(false);
-  const [commitMessagesEnabled, setCommitMessagesEnabled] = useState(false);
-  const [mcpClientEnabled, setMcpClientEnabled] = useState(false);
+  const [aiFeatures, setAIFeatures] = useState<Record<AIFeatureNames, boolean>>({
+    aiMockServers: false,
+    aiCommitMessages: false,
+    aiMcpClient: false,
+  });
 
   const hasActiveLLM = currentLLM !== null;
   // If the feature is undefined, default to disabled (org hasn't enabled it)
@@ -35,9 +38,11 @@ export const AISettings = () => {
       const commitMessagesFeature = await window.main.llm.getAIFeatureEnabled('aiCommitMessages');
       const mcpClientFeature = await window.main.llm.getAIFeatureEnabled('aiMcpClient');
 
-      setMockServerEnabled(isMockServerEnabledByOrg && mockServerFeature);
-      setCommitMessagesEnabled(isCommitMessagesEnabledByOrg && commitMessagesFeature);
-      setMcpClientEnabled(isMcpClientEnabledByOrg && mcpClientFeature);
+      setAIFeatures({
+        aiMockServers: isMockServerEnabledByOrg && mockServerFeature,
+        aiCommitMessages: isCommitMessagesEnabledByOrg && commitMessagesFeature,
+        aiMcpClient: isMcpClientEnabledByOrg && mcpClientFeature,
+      });
 
       setConfiguredLLMs(configs);
       if (current) {
@@ -48,6 +53,11 @@ export const AISettings = () => {
 
     loadConfigurations();
   }, [isMockServerEnabledByOrg, isCommitMessagesEnabledByOrg, isMcpClientEnabledByOrg]);
+
+  const toggleAIFeature = useCallback(async (feature: AIFeatureNames, enabled: boolean) => {
+    setAIFeatures(prev => ({ ...prev, [feature]: enabled }));
+    await window.main.llm.setAIFeatureEnabled(feature, enabled);
+  }, []);
 
   const saveLLMSettings = useCallback(
     async (setCurrent: boolean, backend: LLMBackend, extras: Partial<LLMConfig> = {}) => {
@@ -68,26 +78,10 @@ export const AISettings = () => {
   const deactivateCurrentLLM = useCallback(async () => {
     await window.main.llm.clearActiveBackend();
     setCurrentLLM(null);
-    setMockServerEnabled(false);
-    setCommitMessagesEnabled(false);
-    await window.main.llm.setAIFeatureEnabled('aiMockServers', false);
-    await window.main.llm.setAIFeatureEnabled('aiCommitMessages', false);
-  }, []);
-
-  const handleMockServerToggle = useCallback(async (enabled: boolean) => {
-    setMockServerEnabled(enabled);
-    await window.main.llm.setAIFeatureEnabled('aiMockServers', enabled);
-  }, []);
-
-  const handleCommitMessagesToggle = useCallback(async (enabled: boolean) => {
-    setCommitMessagesEnabled(enabled);
-    await window.main.llm.setAIFeatureEnabled('aiCommitMessages', enabled);
-  }, []);
-
-  const handleMcpClientToggle = useCallback(async (enabled: boolean) => {
-    setMcpClientEnabled(enabled);
-    await window.main.llm.setAIFeatureEnabled('aiMcpClient', enabled);
-  }, []);
+    await toggleAIFeature('aiMockServers', false);
+    await toggleAIFeature('aiCommitMessages', false);
+    await toggleAIFeature('aiMcpClient', false);
+  }, [toggleAIFeature]);
 
   const activeBadge = (
     <span className="bg-surprise flex h-5 min-w-5 items-center justify-center rounded-full px-2 py-1 text-xs text-white">
@@ -123,8 +117,8 @@ export const AISettings = () => {
             </div>
             <span className="group relative inline-flex h-6 w-11">
               <Switch
-                isSelected={mockServerEnabled && isMockServerEnabledByOrg}
-                onChange={handleMockServerToggle}
+                isSelected={aiFeatures.aiMockServers && isMockServerEnabledByOrg}
+                onChange={(enabled) => toggleAIFeature('aiMockServers', enabled)}
                 isDisabled={isMockServerFeatureDisabled}
                 className="group flex items-center gap-2"
               >
@@ -149,8 +143,8 @@ export const AISettings = () => {
             </div>
             <span className="group relative inline-flex h-6 w-11">
               <Switch
-                isSelected={commitMessagesEnabled && isCommitMessagesEnabledByOrg}
-                onChange={handleCommitMessagesToggle}
+                isSelected={aiFeatures.aiCommitMessages && isCommitMessagesEnabledByOrg}
+                onChange={(enabled) => toggleAIFeature('aiCommitMessages', enabled)}
                 isDisabled={isCommitMessagesFeatureDisabled}
                 className="group flex items-center gap-2"
               >
@@ -175,8 +169,8 @@ export const AISettings = () => {
             </div>
             <span className="group relative inline-flex h-6 w-11">
               <Switch
-                isSelected={mcpClientEnabled && isMcpClientEnabledByOrg}
-                onChange={handleMcpClientToggle}
+                isSelected={aiFeatures.aiMcpClient && isMcpClientEnabledByOrg}
+                onChange={(enabled) => toggleAIFeature('aiMcpClient', enabled)}
                 isDisabled={isMcpClientFeatureDisabled}
                 className="group flex items-center gap-2"
               >
@@ -221,6 +215,12 @@ export const AISettings = () => {
                 {currentLLM?.backend === 'gemini' && activeBadge}
               </span>
             </Button>
+            <Button className={getNavStyle('url')} onClick={() => setSelectedBackend('url')}>
+              <span className="flex items-center gap-2">
+                LLM URL
+                {currentLLM?.backend === 'url' && activeBadge}
+              </span>
+            </Button>
             <Button className={getNavStyle('gguf')} onClick={() => setSelectedBackend('gguf')}>
               <span className="flex items-center gap-2">
                 Local LLM
@@ -250,6 +250,14 @@ export const AISettings = () => {
               saveLLMSettings={saveLLMSettings}
               deactivateCurrentLLM={deactivateCurrentLLM}
               configuredLLMs={configuredLLMs.filter(llm => llm.backend === 'gemini')}
+            />
+          )}
+          {selectedBackend === 'url' && (
+            <Url
+              currentLLM={currentLLM}
+              saveLLMSettings={saveLLMSettings}
+              deactivateCurrentLLM={deactivateCurrentLLM}
+              configuredLLMs={configuredLLMs.filter(llm => llm.backend === 'url')}
             />
           )}
           {selectedBackend === 'gguf' && (

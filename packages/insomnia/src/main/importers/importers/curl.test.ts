@@ -1,263 +1,237 @@
-import { quote } from 'shell-quote';
 import { describe, expect, it } from 'vitest';
 
-import type { Parameter } from '../entities';
 import { convert } from './curl';
 
 describe('curl', () => {
-  describe("cURL --data flags -H 'Content-Type: application/x-www-form-urlencoded'", () => {
-    it.each([
-      // -d
-      { flag: '-d', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
-      { flag: '-d', inputs: ['value'], expected: [{ name: '', value: 'value' }] },
-      { flag: '-d', inputs: ['@filename'], expected: [{ name: '', fileName: 'filename', type: 'file' }] },
-      {
-        flag: '-d',
-        inputs: ['first=1', 'second=2', 'third'],
-        expected: [
-          { name: 'first', value: '1' },
-          {
-            name: 'second',
-            value: '2',
-          },
-          { name: '', value: 'third' },
-        ],
+  const testCases = [
+    // --data flags with urlencoded content type
+    {
+      name: 'should handle -d with key=value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' -d 'key=value'",
+      expected: { body: { params: [{ name: 'key', value: 'value' }] } },
+    },
+    {
+      name: 'should handle -d with only a value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' -d 'value'",
+      expected: { body: { params: [{ name: '', value: 'value' }] } },
+    },
+    {
+      name: 'should handle -d with @filename',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' -d '@filename'",
+      expected: { body: { params: [{ name: '', fileName: 'filename', type: 'file' }] } },
+    },
+    {
+      name: 'should handle multiple -d flags',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' -d 'first=1' -d 'second=2' -d 'third'",
+      expected: {
+        body: {
+          params: [
+            { name: 'first', value: '1' },
+            { name: 'second', value: '2' },
+            { name: '', value: 'third' },
+          ],
+        },
       },
-      {
-        flag: '-d',
-        inputs: ['first=1&second=2'],
-        expected: [
-          { name: 'first', value: '1' },
-          { name: 'second', value: '2' },
-        ],
+    },
+    {
+      name: 'should handle -d with url-encoded ampersand',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' -d 'first=1&second=2'",
+      expected: {
+        body: {
+          params: [
+            { name: 'first', value: '1' },
+            { name: 'second', value: '2' },
+          ],
+        },
       },
-      { flag: '-d', inputs: ['%3D'], expected: [{ name: '', value: '=' }] },
-      { flag: '--d', inputs: ['%3D=%3D'], expected: [{ name: '=', value: '=' }] },
+    },
+    {
+      name: 'should handle -d with encoded equals sign',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' -d '%3D'",
+      expected: { body: { params: [{ name: '', value: '=' }] } },
+    },
+    {
+      name: 'should handle --d with encoded equals signs in key and value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --d '%3D=%3D'",
+      expected: { body: { params: [{ name: '=', value: '=' }] } },
+    },
+    // --data
+    {
+      name: 'should handle --data with json string',
+      curl: `curl -X POST http://httpbin.org/post -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'X-Request-ID: abc123' -d '{"user":{"name":"John","email":"john@example.com"}}'`,
+      expected: { body: { text: '{"user":{"name":"John","email":"john@example.com"}}' } },
+    },
+    {
+      name: 'should handle --data with key=value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data 'key=value'",
+      expected: { body: { params: [{ name: 'key', value: 'value' }] } },
+    },
+    {
+      name: 'should handle --data with only a value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data 'value'",
+      expected: { body: { params: [{ name: '', value: 'value' }] } },
+    },
+    {
+      name: 'should handle --data with @filename',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data '@filename'",
+      expected: { body: { params: [{ name: '', fileName: 'filename' }] } },
+    },
+    {
+      name: 'should handle multiple --data flags',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data 'first=1' --data 'second=2' --data 'third'",
+      expected: {
+        body: {
+          params: [
+            { name: 'first', value: '1' },
+            { name: 'second', value: '2' },
+            { name: '', value: 'third' },
+          ],
+        },
+      },
+    },
+    {
+      name: 'should handle --data with url-encoded ampersand',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data 'first=1&second=2'",
+      expected: {
+        body: {
+          params: [
+            { name: 'first', value: '1' },
+            { name: 'second', value: '2' },
+          ],
+        },
+      },
+    },
+    {
+      name: 'should handle --data with base64 value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data 'base64=SGVsbG8='",
+      expected: { body: { params: [{ name: 'base64', value: 'SGVsbG8=' }] } },
+    },
+    // --data-ascii
+    {
+      name: 'should handle --data-ascii with key=value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-ascii 'key=value'",
+      expected: { body: { params: [{ name: 'key', value: 'value' }] } },
+    },
+    {
+      name: 'should handle --data-ascii with @filename',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-ascii '@filename'",
+      expected: { body: { params: [{ name: '', fileName: 'filename', type: 'file' }] } },
+    },
+    // --data-binary
+    {
+      name: 'should handle --data-binary with key=value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-binary 'key=value'",
+      expected: { body: { params: [{ name: 'key', value: 'value' }] } },
+    },
+    {
+      name: 'should handle --data-binary with @filename',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-binary '@filename'",
+      expected: { body: { params: [{ name: '', fileName: 'filename', type: 'file' }] } },
+    },
+    {
+      name: 'should handle --data-binary with JSON string',
+      curl: `curl -X POST https://example.com -H 'Content-Type: application/json' --data-binary '{"foo":"sGrG5sXDP5vX=p41h9tBcaQ==","bar":"123"}'`,
+      expected: { body: { text: '{"foo":"sGrG5sXDP5vX=p41h9tBcaQ==","bar":"123"}' } },
+    },
+    {
+      name: 'should handle --data-binary with multiple equals signs',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-binary 'key=value=with=equals'",
+      expected: { body: { params: [{ name: 'key', value: 'value=with=equals' }] } },
+    },
+    // --data-raw
+    {
+      name: 'should handle --data-raw with @filename literally',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-raw '@filename'",
+      expected: { body: { params: [{ name: '', value: '@filename' }] } },
+    },
+    {
+      name: 'should handle --data-raw with key=value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-raw 'key=value'",
+      expected: { body: { params: [{ name: 'key', value: 'value' }] } },
+    },
+    // --data-urlencode
+    {
+      name: 'should handle --data-urlencode with key=value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode 'key=value'",
+      expected: { body: { params: [{ name: 'key', value: 'value' }] } },
+    },
+    {
+      name: 'should handle --data-urlencode with key@filename',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode 'key@filename'",
+      expected: { body: { params: [{ name: 'key', fileName: 'filename', type: 'file' }] } },
+    },
+    {
+      name: 'should handle --data-urlencode with =value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode '=value'",
+      expected: { body: { params: [{ name: '', value: 'value' }] } },
+    },
+    {
+      name: 'should handle --data-urlencode with special characters',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode ' '",
+      expected: { body: { params: [{ name: '', value: ' ' }] } },
+    },
+    {
+      name: 'should handle --data-urlencode with only equals',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode '='",
+      expected: { body: { params: [{ name: '', value: '' }] } },
+    },
+    {
+      name: 'should handle --data-urlencode with encoded equals',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode '%3D'",
+      expected: { body: { params: [{ name: '', value: '%3D' }] } },
+    },
 
-      // --data
-      { flag: '--data', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
-      { flag: '--data', inputs: ['value'], expected: [{ name: '', value: 'value' }] },
-      { flag: '--data', inputs: ['@filename'], expected: [{ name: '', fileName: 'filename' }] },
-      {
-        flag: '--data',
-        inputs: ['first=1', 'second=2', 'third'],
-        expected: [
-          { name: 'first', value: '1' },
-          {
-            name: 'second',
-            value: '2',
-          },
-          { name: '', value: 'third' },
-        ],
-      },
-      {
-        flag: '--data',
-        inputs: ['first=1&second=2'],
-        expected: [
-          { name: 'first', value: '1' },
-          { name: 'second', value: '2' },
-        ],
-      },
-      { flag: '--data', inputs: ['%3D'], expected: [{ name: '', value: '=' }] },
-      { flag: '--data', inputs: ['%3D=%3D'], expected: [{ name: '=', value: '=' }] },
-      { flag: '--data', inputs: ['base64=SGVsbG8='], expected: [{ name: 'base64', value: 'SGVsbG8=' }] },
+    // --data flags without urlencoded content type
+    {
+      name: 'should handle -d as raw text body',
+      curl: "curl -X POST https://example.com -d 'key=value'",
+      expected: { body: { text: 'key=value' } },
+    },
 
-      // --data-ascii
-      { flag: '--data-ascii', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
-      { flag: '--data-ascii', inputs: ['value'], expected: [{ name: '', value: 'value' }] },
-      { flag: '--data-ascii', inputs: ['@filename'], expected: [{ name: '', fileName: 'filename', type: 'file' }] },
-      {
-        flag: '--data-ascii',
-        inputs: ['first=1', 'second=2', 'third'],
-        expected: [
-          { name: 'first', value: '1' },
-          {
-            name: 'second',
-            value: '2',
-          },
-          { name: '', value: 'third' },
-        ],
+    // -H flags
+    {
+      name: 'should handle -H with space after colon',
+      curl: "curl https://example.com -H 'X-Host: example.com'",
+      expected: { headers: [{ name: 'X-Host', value: 'example.com' }] },
+    },
+    {
+      name: 'should handle -H with no space after colon',
+      curl: "curl https://example.com -H 'X-Host:example.com'",
+      expected: { headers: [{ name: 'X-Host', value: 'example.com' }] },
+    },
+    {
+      name: 'should handle -H for Content-Type',
+      curl: "curl https://example.com -H 'Content-Type:application/x-www-form-urlencoded'",
+      expected: { headers: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }] },
+    },
+    {
+      name: 'should handle -H with leading spaces before flag',
+      curl: "curl https://example.com    -H 'Content-Type:application/x-www-form-urlencoded'",
+      expected: { headers: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }] },
+    },
+    // auth
+    {
+      name: 'should handle -u for basic auth',
+      curl: 'curl https://example.com -u username:password',
+      expected: { authentication: { username: 'username', password: 'password' } },
+    },
+    {
+      name: 'should handle --user for basic auth',
+      curl: 'curl https://example.com --user username:password',
+      expected: { authentication: { username: 'username', password: 'password' } },
+    },
+    {
+      name: 'should handle bearer',
+      curl: `curl http://httpbin.org/get -H 'Authorization: Bearer mytoken123'`,
+      expected: {
+        authentication: { type: 'bearer', token: 'mytoken123' },
+        headers: [],
       },
-      {
-        flag: '--data-ascii',
-        inputs: ['first=1&second=2'],
-        expected: [
-          { name: 'first', value: '1' },
-          { name: 'second', value: '2' },
-        ],
-      },
+    },
+  ];
 
-      // --data-binary
-      { flag: '--data-binary', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
-      { flag: '--data-binary', inputs: ['value'], expected: [{ name: '', value: 'value' }] },
-      { flag: '--data-binary', inputs: ['@filename'], expected: [{ name: '', fileName: 'filename', type: 'file' }] },
-      {
-        flag: '--data-binary',
-        inputs: ['first=1', 'second=2', 'third'],
-        expected: [
-          { name: 'first', value: '1' },
-          {
-            name: 'second',
-            value: '2',
-          },
-          { name: '', value: 'third' },
-        ],
-      },
-      {
-        flag: '--data-binary',
-        inputs: ['first=1&second=2'],
-        expected: [
-          { name: 'first', value: '1' },
-          { name: 'second', value: '2' },
-        ],
-      },
-      {
-        flag: '--data-binary',
-        inputs: ['{"foo":"sGrG5sXDP5vX=p41h9tBcaQ==","bar":"123"}'],
-        expected: [{ name: '{"foo":"sGrG5sXDP5vX', value: 'p41h9tBcaQ==","bar":"123"}' }],
-      },
-      {
-        flag: '--data-binary',
-        inputs: ['key=value=with=equals'],
-        expected: [{ name: 'key', value: 'value=with=equals' }],
-      },
-
-      // --data-raw
-      { flag: '--data-raw', inputs: ['@filename'], expected: [{ name: '', value: '@filename' }] },
-      { flag: '--data-raw', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
-      {
-        flag: '--data-raw',
-        inputs: ['first=1', 'second=2', 'third'],
-        expected: [
-          { name: 'first', value: '1' },
-          {
-            name: 'second',
-            value: '2',
-          },
-          { name: '', value: 'third' },
-        ],
-      },
-      {
-        flag: '--data-raw',
-        inputs: ['first=1&second=2'],
-        expected: [
-          { name: 'first', value: '1' },
-          { name: 'second', value: '2' },
-        ],
-      },
-
-      // --data-urlencode
-      { flag: '--data-urlencode', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
-      {
-        flag: '--data-urlencode',
-        inputs: ['key@filename'],
-        expected: [{ name: 'key', fileName: 'filename', type: 'file' }],
-      },
-      {
-        flag: '--data-urlencode',
-        inputs: ['first=1', 'second=2', 'third'],
-        expected: [
-          { name: 'first', value: '1' },
-          {
-            name: 'second',
-            value: '2',
-          },
-          { name: '', value: 'third' },
-        ],
-      },
-      {
-        flag: '--data-urlencode',
-        inputs: ['first=1&second=2'],
-        expected: [
-          { name: 'first', value: '1' },
-          { name: 'second', value: '2' },
-        ],
-      },
-      { flag: '--data-urlencode', inputs: ['=value'], expected: [{ name: '', value: 'value' }] },
-
-      // --data-urlencode URI encoding
-      { flag: '--data-urlencode', inputs: ['a='], expected: [{ name: 'a', value: '' }] },
-      { flag: '--data-urlencode', inputs: [' '], expected: [{ name: '', value: ' ' }] },
-      { flag: '--data-urlencode', inputs: ['<'], expected: [{ name: '', value: '<' }] },
-      { flag: '--data-urlencode', inputs: ['>'], expected: [{ name: '', value: '>' }] },
-      { flag: '--data-urlencode', inputs: ['?'], expected: [{ name: '', value: '?' }] },
-      { flag: '--data-urlencode', inputs: ['['], expected: [{ name: '', value: '[' }] },
-      { flag: '--data-urlencode', inputs: [']'], expected: [{ name: '', value: ']' }] },
-      { flag: '--data-urlencode', inputs: ['|'], expected: [{ name: '', value: '|' }] },
-      { flag: '--data-urlencode', inputs: ['^'], expected: [{ name: '', value: '^' }] },
-      { flag: '--data-urlencode', inputs: ['"'], expected: [{ name: '', value: '"' }] },
-      { flag: '--data-urlencode', inputs: ['='], expected: [{ name: '', value: '' }] },
-      { flag: '--data-urlencode', inputs: ['%3D'], expected: [{ name: '', value: '%3D' }] },
-    ])(
-      'handles %p correctly',
-      async ({ flag, inputs, expected }: { flag: string; inputs: string[]; expected: Parameter[] }) => {
-        const flaggedInputs = inputs.map(input => `${flag} ${quote([input])}`).join(' ');
-        const rawData = `curl -X POST https://example.com 
-      -H 'Content-Type: application/x-www-form-urlencoded'
-      ${flaggedInputs}
-      `;
-
-        expect(convert(rawData)).toMatchObject([
-          {
-            body: {
-              params: expected,
-            },
-          },
-        ]);
-      },
-    );
-  });
-
-  describe('cURL --data flags', () => {
-    it.each([{ flag: '-d', inputs: ['key=value'], expected: 'key=value' }])(
-      'handles %p correctly',
-      async ({ flag, inputs, expected }: { flag: string; inputs: string[]; expected: string }) => {
-        const flaggedInputs = inputs.map(input => `${flag} ${quote([input])}`).join(' ');
-        const rawData = `curl -X POST https://example.com 
-      ${flaggedInputs}
-      `;
-
-        expect(convert(rawData)).toMatchObject([
-          {
-            body: {
-              text: expected,
-            },
-          },
-        ]);
-      },
-    );
-  });
-
-  describe('cURL -H flags', () => {
-    it.each([
-      { flag: '-H', inputs: ['X-Host: example.com'], expected: [{ name: 'X-Host', value: 'example.com' }] },
-      { flag: '-H', inputs: ['X-Host:example.com'], expected: [{ name: 'X-Host', value: 'example.com' }] },
-      {
-        flag: '-H',
-        inputs: ['Content-Type:application/x-www-form-urlencoded'],
-        expected: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }],
-      },
-      {
-        flag: '   -H',
-        inputs: ['Content-Type:application/x-www-form-urlencoded'],
-        expected: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }],
-      },
-      {
-        flag: ' -H',
-        inputs: ['Content-Type:application/x-www-form-urlencoded'],
-        expected: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }],
-      },
-    ])(
-      'handles %p correctly',
-      async ({ flag, inputs, expected }: { flag: string; inputs: string[]; expected: Parameter[] }) => {
-        const flaggedInputs = inputs.map(input => `${flag} ${quote([input])}`).join(' ');
-        const rawData = `curl https://example.com ${flaggedInputs}`;
-        expect(convert(rawData)).toMatchObject([
-          {
-            headers: expected,
-          },
-        ]);
-      },
-    );
+  it.each(testCases)('$name', ({ curl, expected }) => {
+    const result = convert(curl);
+    expect(result).toMatchObject([expected]);
   });
 });
