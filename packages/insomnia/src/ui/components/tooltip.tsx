@@ -40,7 +40,7 @@ export const Tooltip = (props: Props) => {
     selectable,
   });
 
-  const overlayContent = (
+  const overlayContent = message ? (
     <div
       ref={overlayRef}
       onClick={e => e.stopPropagation()}
@@ -49,7 +49,7 @@ export const Tooltip = (props: Props) => {
     >
       {message}
     </div>
-  );
+  ) : null;
 
   const modalContainer = triggerRef.current?.closest('[aria-label="Modal"]');
 
@@ -65,6 +65,7 @@ export const Tooltip = (props: Props) => {
         {children}
       </div>
       {state.isOpen &&
+        overlayContent &&
         (modalContainer ? (
           // Render tooltip inside modal if exists.
           // Otherwise OverlayContainer becomes inert and breaks hover event listener: INS-1930
