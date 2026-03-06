@@ -1,12 +1,11 @@
-import type NeDB from '@seald-io/nedb';
 import electron from 'electron';
 
-import type { IDatabase } from '~/insomnia-data';
-import { flushChangesImpl, nedbDatabase } from '~/insomnia-data/node';
+import type { DataStoreOptions, IDatabase } from '~/insomnia-data';
+import { createNedbDatabase, flushChangesImpl } from '~/insomnia-data/node';
 
-export const mainDatabase: IDatabase = {
+export const mainDatabase: IDatabase = createNedbDatabase(nedbDatabase => ({
   ...nedbDatabase,
-  init: async (config: NeDB.DataStoreOptions = {}, forceReset = false) => {
+  init: async (config: DataStoreOptions = {}, forceReset = false) => {
     const dbPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
     await nedbDatabase.init(
       {
@@ -36,4 +35,4 @@ export const mainDatabase: IDatabase = {
       }
     }
   },
-};
+}));

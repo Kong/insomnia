@@ -3,10 +3,12 @@ import {
   type Collaborator,
   deleteOrganizationMember,
   type FeatureList,
+  getOrganizationDetail,
   getOrganizationFeatures,
   getOrganizationMemberRoles,
   getOrganizationRoles,
   getOrgUserPermissions,
+  type Organization,
   type Permission,
   revokeInvitation,
   type Role,
@@ -40,7 +42,6 @@ import { PromptButton } from '~/ui/components/base/prompt-button';
 import { Icon } from '~/ui/components/icon';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { showModal } from '~/ui/components/modals/index';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 
 import { InviteForm } from './invite-form';
@@ -600,25 +601,29 @@ export const InviteModalContainer: FC<{
   const [orgFeatures, setOrgFeatures] = useState<FeatureList | null>(null);
   const permissionRef = useRef<Record<Permission, boolean>>();
   const [currentUserAccountId, setCurrentUserAccountId] = useState('');
-  const [currentOrgInfo, setCurrentOrgInfo] = useState<OrganizationAuth0 | null>(null);
+  const [currentOrgInfo, setCurrentOrgInfo] = useState<Organization | null>(null);
 
   const isCurrentUserOrganizationOwner = currentUserAccountId === currentOrgInfo?.metadata?.ownerAccountId;
 
   async function getBaseInfo(organizationId: string) {
+    const sessionId = await getCurrentSessionId();
     return Promise.all([
       getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
       getOrganizationFeatures({
         organizationId,
-        sessionId: await getCurrentSessionId(),
+        sessionId,
       }).then(res => setOrgFeatures(res?.features)),
       getOrgUserPermissions({
         organizationId,
-        sessionId: await getCurrentSessionId(),
+        sessionId,
       }).then(permissions => {
         permissionRef.current = permissions;
       }),
       getAccountId().then(setCurrentUserAccountId),
-      getOrganization(organizationId).then(setCurrentOrgInfo),
+      getOrganizationDetail({
+        organizationId,
+        sessionId,
+      }).then(setCurrentOrgInfo),
     ]);
   }
 
@@ -706,33 +711,6 @@ export async function getCurrentUserRoleInOrg(organizationId: string): Promise<R
 export interface OrganizationBranding {
   logo_url: string;
   colors: string[];
-}
-
-export type OrganizationType = 'personal' | 'team' | 'enterprise';
-
-export interface Metadata {
-  organizationType: OrganizationType;
-  ownerAccountId?: string;
-  description?: string;
-}
-
-export interface OrganizationAuth0 {
-  id: string;
-  name: string;
-  display_name: string;
-  branding: OrganizationBranding;
-  metadata: Metadata;
-}
-
-async function getOrganization(organizationId: string): Promise<OrganizationAuth0> {
-  return insomniaFetch<OrganizationAuth0>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(() => {
-    throw new Error('Failed to fetch organization');
-  });
 }
 
 async function unlinkTeam(organizationId: string, collaboratorId: string) {
