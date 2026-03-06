@@ -9,6 +9,7 @@ import express from 'express';
 import { createHandler } from 'graphql-http/lib/use/http';
 
 import { basicAuthRouter } from './basic-auth';
+import cloudSyncApi from './cloud-sync-api';
 import githubApi from './github-api';
 import gitlabApi from './gitlab-api';
 import { schema } from './graphql';
@@ -77,6 +78,7 @@ githubApi(app);
 gitlabApi(app);
 insomniaApi(app);
 simpleCrud(app);
+cloudSyncApi(app);
 
 app.get('/delay/seconds/:duration', (req, res) => {
   const delaySec = Number.parseInt(req.params.duration || '2');
@@ -91,7 +93,7 @@ app.get('/', (_req, res) => {
   res.status(200).send();
 });
 
-app.all('/graphql', createHandler({ schema }));
+app.all('/graphqlTest', createHandler({ schema }));
 
 app.use(express.json()); // Used to parse JSON bodies
 
