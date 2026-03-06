@@ -20,7 +20,6 @@ export class ProjectPage {
     readonly page: Page,
     readonly app: ElectronApplication,
   ) {
-    this.sidebar = new ProjectSidebarComponent(page);
     this.workspaceList = new WorkspaceListComponent(page);
   }
 
