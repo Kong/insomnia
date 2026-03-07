@@ -48,6 +48,14 @@ export function getOAuthSession(): string {
   return token || initNewOAuthSession();
 }
 
+function closeOAuthModalForDefaultBrowser(authentication: AuthTypeOAuth2) {
+  if (authentication.useDefaultBrowser) {
+    uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
+      status: 'none',
+    });
+  }
+}
+
 // NOTE
 // 1. return valid access token from insomnia db
 // 2. send refresh token in order to save and return valid access token
@@ -78,11 +86,12 @@ export const getOAuth2Token = async (
       invariant(authentication.authorizationUrl, 'Missing authorization URL');
       const responseTypeOrFallback = authentication.responseType || 'token';
       const hasNonce = responseTypeOrFallback === 'id_token token' || responseTypeOrFallback === 'id_token';
+      const redirectUrl = authentication.useDefaultBrowser ? getOauthRedirectUrl() : authentication.redirectUrl;
       const implicitUrl = new URL(authentication.authorizationUrl);
       [
         { name: 'response_type', value: responseTypeOrFallback },
         { name: 'client_id', value: authentication.clientId },
-        ...insertAuthKeyIf('redirect_uri', authentication.redirectUrl),
+        ...insertAuthKeyIf('redirect_uri', redirectUrl),
         ...insertAuthKeyIf('scope', authentication.scope),
         ...insertAuthKeyIf('state', authentication.state),
         ...insertAuthKeyIf('audience', authentication.audience),
@@ -95,24 +104,46 @@ export const getOAuth2Token = async (
             ]
           : []),
       ].forEach(p => p.value && implicitUrl.searchParams.append(p.name, p.value));
-      const redirectedTo = await window.main.authorizeUserInWindow({
-        url: implicitUrl.toString(),
-        urlSuccessRegex: /(access_token=|id_token=)/,
-        urlFailureRegex: /(error=)/,
-        sessionId: getOAuthSession(),
-      });
-      console.log('[oauth2] Detected redirect ' + redirectedTo);
+      let redirectedTo: string | null = null;
+      if (authentication.useDefaultBrowser) {
+        const implicitUrlStr = implicitUrl.toString();
+        const { relayUrl, decryptOAuthResult } = encryptOAuthUrl(implicitUrlStr);
 
+        uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
+          status: 'getting_code',
+          authCodeUrlStr: relayUrl,
+        });
+
+        const result = await window.main.authorizeUserInDefaultBrowser({
+          url: relayUrl,
+        });
+
+        redirectedTo = decryptOAuthResult(result);
+      } else {
+        redirectedTo = await window.main.authorizeUserInWindow({
+          url: implicitUrl.toString(),
+          urlSuccessRegex: /(access_token=|id_token=)/,
+          urlFailureRegex: /(error=)/,
+          sessionId: getOAuthSession(),
+        });
+        console.log('[oauth2] Detected redirect ' + redirectedTo);
+      }
       const responseUrl = new URL(redirectedTo);
       if (responseUrl.searchParams.has('error')) {
         const params = Object.fromEntries(responseUrl.searchParams);
         const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
+
+        closeOAuthModalForDefaultBrowser(authentication);
+
         return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(params));
       }
       const hash = responseUrl.hash.slice(1);
       invariant(hash, 'No hash found in response URL from OAuth2 provider');
       const data = Object.fromEntries(new URLSearchParams(hash));
       const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
+
+      closeOAuthModalForDefaultBrowser(authentication);
+
       return models.oAuth2Token.update(
         old,
         transformNewAccessTokenToOauthModel({
@@ -236,22 +267,14 @@ export const getOAuth2Token = async (
     const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
     const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
 
-    if (authentication.useDefaultBrowser) {
-      uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
-        status: 'none',
-      });
-    }
+    closeOAuthModalForDefaultBrowser(authentication);
 
     return models.oAuth2Token.update(
       old,
       transformNewAccessTokenToOauthModel(await oauthResponseToAccessToken(authentication.accessTokenUrl, response)),
     );
   } catch (err) {
-    if (authentication.useDefaultBrowser) {
-      uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
-        status: 'none',
-      });
-    }
+    closeOAuthModalForDefaultBrowser(authentication);
     throw err;
   }
 };
