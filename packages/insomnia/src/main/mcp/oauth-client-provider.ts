@@ -179,8 +179,10 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     });
     const redirectedTo = decryptOAuthResult(redirectedResult);
     const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
-    const authorizationCode = redirectParams.code;
-    if (!authorizationCode) {
+    const { code: authorizationCode, error, error_description, error_uri } = redirectParams;
+    if (error) {
+      throw new Error(JSON.stringify({ error, error_description, error_uri }));
+    } else if (!authorizationCode) {
       throw new Error('Authorization code not found');
     }
     await this._redirectEndListener?.(authorizationCode);
