@@ -299,7 +299,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                     className="flex flex-col gap-4"
                   >
                     <input type="hidden" name="workspaceId" value={workspace._id} />
-                    <p>
+                    <div>
                       This will permanently delete the{' '}
                       {<strong style={{ whiteSpace: 'pre-wrap' }}>{workspace?.name}</strong>}{' '}
                       {getWorkspaceLabel(workspace).singular}
@@ -332,7 +332,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                           </div>
                         </RadioGroup>
                       )}
-                    </p>
+                    </div>
                     {deleteWorkspaceFetcher.data && deleteWorkspaceFetcher.data.error && (
                       <p className="notice error margin-bottom-sm no-margin-top">{deleteWorkspaceFetcher.data.error}</p>
                     )}
