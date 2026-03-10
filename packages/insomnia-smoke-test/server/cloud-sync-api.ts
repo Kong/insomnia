@@ -287,6 +287,7 @@ const rawBlobs: Record<string, string> = {
     '{"_id":"mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0","authentication":{},"connected":false,"created":1769408435331,"description":"","env":[],"headers":[{"name":"User-Agent","value":"insomnia/12.3.0"}],"mcpStdioAccess":false,"parentId":"wrk_efab8e758b97459bab2659d8fdcf8627","roots":[],"sslValidation":true,"subscribeResources":[],"transportType":"streamable-http","type":"McpRequest","url":"http://localhost:4010/mcp"}',
 };
 const defaultBranches = [{ name: 'master' }, { name: 'develop' }];
+const deletedProjectIds: string[] = [];
 let cloudSyncApiEnabled = false;
 let remoteHasNewCommit = false;
 
@@ -469,7 +470,7 @@ export default function setup(app: Application) {
           case 'projects': {
             return res.status(200).json({
               data: {
-                projects: cloudSyncProject,
+                projects: cloudSyncProject.filter(p => !deletedProjectIds.includes(p.id)),
               },
             });
           }
@@ -512,6 +513,10 @@ export default function setup(app: Application) {
         switch (operationName) {
           // delete project
           case 'projectArchive': {
+            const projectId = variables.id;
+            if (!deletedProjectIds.includes(projectId)) {
+              deletedProjectIds.push(projectId);
+            }
             return res.status(200).json({
               data: {
                 projectArchive: true,

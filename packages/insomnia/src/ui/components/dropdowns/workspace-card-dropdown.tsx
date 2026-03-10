@@ -309,6 +309,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                           <div className="flex gap-2">
                             <Radio
                               value="true"
+                              aria-label="Remove Local Copy"
                               className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                             >
                               <div className="flex items-center gap-2">
@@ -318,6 +319,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                             </Radio>
                             <Radio
                               value="false"
+                              aria-label="Delete Permanently"
                               className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                             >
                               <div className="flex items-center gap-2">
@@ -339,6 +341,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                     <div className="flex justify-end">
                       <Button
                         type="submit"
+                        aria-label="Delete Workspace"
                         className="rounded-xs border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90 hover:no-underline"
                       >
                         Delete
