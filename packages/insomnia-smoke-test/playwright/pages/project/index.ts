@@ -41,8 +41,8 @@ export class ProjectPage {
     await this.app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
     await this.root.getByLabel('Import').click();
-    await this.root.locator('[data-test-id="import-from-clipboard"]').click();
-    await this.root.getByRole('button', { name: 'Scan' }).click();
-    await this.root.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    await this.page.locator('[data-test-id="import-from-clipboard"]').click();
+    await this.page.getByRole('button', { name: 'Scan' }).click();
+    await this.page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   }
 }
