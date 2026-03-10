@@ -287,7 +287,7 @@ const rawBlobs: Record<string, string> = {
     '{"_id":"mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0","authentication":{},"connected":false,"created":1769408435331,"description":"","env":[],"headers":[{"name":"User-Agent","value":"insomnia/12.3.0"}],"mcpStdioAccess":false,"parentId":"wrk_efab8e758b97459bab2659d8fdcf8627","roots":[],"sslValidation":true,"subscribeResources":[],"transportType":"streamable-http","type":"McpRequest","url":"http://localhost:4010/mcp"}',
 };
 const defaultBranches = [{ name: 'master' }, { name: 'develop' }];
-const deletedProjectIds: string[] = [];
+let deletedProjectIds: string[] = [];
 let cloudSyncApiEnabled = false;
 let remoteHasNewCommit = false;
 
@@ -307,6 +307,11 @@ export default function setup(app: Application) {
       return res.status(400).json({ error: 'enabled must be boolean value' });
     }
     cloudSyncApiEnabled = enabled;
+    if (!enabled) {
+      // clear the test data when cloud sync is disabled to avoid affecting other tests
+      deletedProjectIds = [];
+      remoteHasNewCommit = false;
+    }
     return res.status(200).send();
   });
 

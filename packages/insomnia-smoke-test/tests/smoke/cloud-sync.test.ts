@@ -147,7 +147,7 @@ test.describe('Cloud Sync', () => {
     // delete workspace locally
     await page.getByLabel('My Collection R1').getByTestId('DropdownButton').click();
     await page.getByRole('button', { name: 'Delete' }).click();
-    await page.getByText('Remove Local CopyThe project').click();
+    await page.getByText('Remove Local Copy').click();
     await page.getByRole('button', { name: 'Delete Workspace' }).click();
     // check workspace is deleted locally
     await expect.soft(page.getByLabel('Collection Project')).toBeVisible();

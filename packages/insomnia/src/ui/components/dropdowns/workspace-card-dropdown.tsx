@@ -312,24 +312,22 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                               aria-label="Remove Local Copy"
                               className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                             >
-                              <div className="flex items-center gap-2">
+                              <div>
                                 <Heading className="text-lg font-bold">Remove Local Copy</Heading>
+                                <p className="pt-2">The project will still exist on the Cloud.</p>
                               </div>
-                              <p className="pt-2">The project will still exist on the Cloud.</p>
                             </Radio>
                             <Radio
                               value="false"
                               aria-label="Delete Permanently"
                               className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                             >
-                              <div className="flex items-center gap-2">
-                                <Heading className="text-lg font-bold">
-                                  <span>Delete Permanently</span>
-                                </Heading>
+                              <div>
+                                <Heading className="text-lg font-bold">Delete Permanently</Heading>
+                                <p className="pt-2">
+                                  The project will be deleted everywhere. You cannot undo this action.
+                                </p>
                               </div>
-                              <p className="pt-2">
-                                The project will be deleted everywhere. You cannot undo this action.
-                              </p>
                             </Radio>
                           </div>
                         </RadioGroup>
