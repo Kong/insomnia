@@ -22,7 +22,7 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { NavLink, useLoaderData } from 'react-router';
+import { href, NavLink, redirect, useLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
@@ -39,6 +39,7 @@ import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.pr
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 import { useSpecUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.update';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
+import { SegmentEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { DesignEmptyState } from '~/ui/components/design-empty-state';
 import { DocumentTab } from '~/ui/components/document-tab';
@@ -54,27 +55,35 @@ import { CertificatesModal } from '~/ui/components/modals/workspace-certificates
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
+import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
-import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  const { projectId, workspaceId } = params;
+  const { organizationId, projectId, workspaceId } = params;
 
   const project = await models.project.getById(projectId);
-  invariant(project, 'Project not found');
-
-  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
-  invariant(apiSpec, 'API spec not found');
+  if (!project) {
+    showResourceNotFoundToast(`Project not found: ${projectId}`);
+    throw redirect(href('/organization/:organizationId/project', { organizationId }));
+  }
 
   const workspace = await models.workspace.getById(workspaceId);
-  invariant(workspace, 'Workspace not found');
+  if (!workspace) {
+    showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+  }
+
+  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  if (!apiSpec) {
+    showResourceNotFoundToast(`API Specification not found for workspace: ${workspaceId}`);
+    throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+  }
 
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
 
@@ -149,8 +158,7 @@ const lintOptions = {
 
 const Component = ({ params }: Route.ComponentProps) => {
   const { organizationId, projectId, workspaceId } = params;
-  const { activeProject, activeCookieJar, caCertificate, clientCertificates, activeWorkspace, vcsVersion } =
-    useWorkspaceLoaderData()!;
+  const { activeProject, activeCookieJar, caCertificate, clientCertificates, vcsVersion } = useWorkspaceLoaderData()!;
   const { settings } = useRootLoaderData()!;
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
@@ -363,7 +371,15 @@ const Component = ({ params }: Route.ComponentProps) => {
       id: 'toggle-preview',
       name: 'Toggle preview',
       icon: <Icon className="w-3" icon={isSpecPaneOpen ? 'eye' : 'eye-slash'} />,
-      action: () => setIsSpecPaneOpen(!isSpecPaneOpen),
+      action: () => {
+        window.main.trackSegmentEvent({
+          event: SegmentEvent.designerPreviewToggled,
+          properties: {
+            status: !isSpecPaneOpen ? 'open' : 'collapsed',
+          },
+        });
+        setIsSpecPaneOpen(!isSpecPaneOpen);
+      },
     },
   ];
 
@@ -394,14 +410,6 @@ const Component = ({ params }: Route.ComponentProps) => {
       mediaQuery.removeEventListener('change', handleChange);
     };
   }, [settings.forceVerticalLayout, direction]);
-
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
-  });
 
   return (
     <PanelGroup
@@ -482,7 +490,12 @@ const Component = ({ params }: Route.ComponentProps) => {
             <span className="flex-1" />
             {isGenerateMockServersWithAIEnabled && (
               <Button
-                onPress={() => setNewMockServerModalOpen(true)}
+                onPress={() => {
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.designerGenerateMockClicked,
+                  });
+                  setNewMockServerModalOpen(true);
+                }}
                 isDisabled={!apiSpec.contents}
                 className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
               >
@@ -494,7 +507,15 @@ const Component = ({ params }: Route.ComponentProps) => {
               aria-label="Toggle preview"
               isSelected={isSpecPaneOpen}
               className="flex h-full items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-              onChange={setIsSpecPaneOpen}
+              onChange={value => {
+                setIsSpecPaneOpen(value);
+                window.main.trackSegmentEvent({
+                  event: SegmentEvent.designerPreviewToggled,
+                  properties: {
+                    status: !value ? 'open' : 'collapsed',
+                  },
+                });
+              }}
             >
               {({ isSelected }) => (
                 <>

@@ -1,10 +1,14 @@
 import { vi } from 'vitest';
 
+import { initDatabase } from '~/insomnia-data';
+
 import { nodeLibcurlMock } from './src/__mocks__/@getinsomnia/node-libcurl';
 import { electronMock } from './src/__mocks__/electron';
-import { database as db } from './src/common/database';
+import { mainDatabase } from './src/main/database.main';
 import { v4Mock } from './src/models/__mocks__/uuid';
-await db.init({ inMemoryOnly: true }, true);
+
+await initDatabase(mainDatabase, { inMemoryOnly: true }, true);
+
 vi.mock('electron', () => ({ default: electronMock }));
 
 vi.mock('uuid', () => ({

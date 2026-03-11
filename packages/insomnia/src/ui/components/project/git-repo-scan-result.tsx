@@ -4,12 +4,8 @@ import type { FC } from 'react';
 import { Banner } from '~/basic-components/banner';
 import { Icon } from '~/basic-components/icon';
 import { LearnMoreLink } from '~/basic-components/link';
+import { type ProjectScopeKeys, scopeToIconMap, scopeToLabelMap } from '~/common/get-workspace-label';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import {
-  type ProjectScopeKeys,
-  scopeToIconMap,
-  scopeToLabelMap,
-} from '~/routes/organization.$organizationId.project.$projectId._index';
 
 interface Props {
   initCloneGitRepositoryFetcher: ReturnType<typeof useGitProjectInitCloneActionFetcher>;

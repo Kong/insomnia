@@ -17,8 +17,6 @@ test.describe('pre-request features tests', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-
-    await page.getByLabel('Pre-request Scripts').click();
   });
 
   const testCases = [
@@ -237,7 +235,7 @@ test.describe('pre-request features tests', () => {
     await page.getByTestId('dataFolders').click();
     await page.getByTestId('dataFolders').fill(process.cwd());
     await page.getByTestId('dataFolders-btn').click();
-    await page.getByRole('button', { name: '' }).click();
+    await page.getByRole('button', { name: 'Modal Close Button' }).click();
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     const responseBody = page.getByTestId('response-pane').getByTestId('CodeEditor').locator('.CodeMirror-line');
 
@@ -461,7 +459,7 @@ test.describe('pre-request features tests', () => {
     await expect.soft(responsePane).toContainText('Adding SSL KEY certificate');
   });
 
-  test('pre: insomnia.test and insomnia.expect can work together', async ({ page }) => {
+  test('insomnia.test and insomnia.expect can work together', async ({ page }) => {
     await page.getByLabel('Request Collection').getByTestId('insomnia.test').press('Enter');
 
     // send
@@ -523,9 +521,16 @@ test.describe('pre-request features tests', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    // go to request collection
+    await page.getByTestId('project').click();
+
     await page.getByLabel('Pre-request Scripts', { exact: true }).click();
-    await page.getByLabel('Request Collection').getByTestId('persist global environment').press('Enter');
+    // go to request collection
+    await page
+      .getByLabel('Request Collection')
+      .getByTestId('persist global environment')
+      .click({
+        modifiers: ['ControlOrMeta'],
+      });
     // activate global environment
     await page.getByLabel('Manage Environments').click();
     await page.getByPlaceholder('Choose a global environment').click();
@@ -633,8 +638,6 @@ test.describe('unhappy paths', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-
-    await page.getByLabel('Pre-request Scripts').click();
   });
 
   test('custom errors are returned', async ({ page }) => {

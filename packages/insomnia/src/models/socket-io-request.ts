@@ -1,6 +1,6 @@
 import { database } from '../common/database';
-import type { BaseModel } from '.';
 import type { RequestAuthentication, RequestHeader, RequestParameter, RequestPathParameter } from './request';
+import type { BaseModel } from './types';
 
 export const name = 'Socket.IO Request';
 
@@ -64,6 +64,8 @@ export const create = (patch: Partial<SocketIORequest> = {}) => {
 };
 
 export const getById = (_id: string) => database.findOne<SocketIORequest>(type, { _id });
+
+export const findByParentId = (parentId: string) => database.find<SocketIORequest>(type, { parentId });
 
 export const migrate = (doc: SocketIORequest) => doc;
 

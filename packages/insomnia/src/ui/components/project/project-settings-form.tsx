@@ -1,17 +1,31 @@
+import type { StorageRules } from 'insomnia-api';
 import type { FC } from 'react';
-import { useEffect, useMemo, useState } from 'react';
-import { Button, Input, Label, TextField } from 'react-aria-components';
+import { Fragment, useEffect, useMemo, useState } from 'react';
+import {
+  Button,
+  Input,
+  Label,
+  ListBox,
+  ListBoxItem,
+  Popover,
+  Select,
+  SelectValue,
+  TextField,
+} from 'react-aria-components';
 import { useParams } from 'react-router';
 
 import { Banner } from '~/basic-components/banner';
 import { Divider } from '~/basic-components/divider';
 import { LearnMoreLink } from '~/basic-components/link';
-import type { StorageRules } from '~/models/organization';
-import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import {
-  fallbackFeatures,
-  useOrganizationPermissionsLoaderFetcher,
-} from '~/routes/organization.$organizationId.permissions';
+  type GitCredentials,
+  isGitCredentialsV2,
+  isOAuthCredential,
+  type ProviderEmail,
+} from '~/models/git-credentials';
+import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
+import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
+import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
@@ -19,9 +33,8 @@ import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
-import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 
-import type { OauthProviderName } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
 import {
   EMPTY_GIT_PROJECT_ID,
@@ -32,6 +45,8 @@ import {
 } from '../../../models/project';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
+
+const FORMID = 'git-repo-form';
 
 function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
   if (storageType === 'git' && !isGitProject(project)) {
@@ -51,35 +66,28 @@ function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote
 
 interface Props {
   storageRules: StorageRules;
-  isGitSyncEnabled: boolean;
   project?: Project;
   gitRepository?: GitRepository;
   defaultProjectName?: string;
   onCancel?(): void;
   onSuccessUpdate?(): void;
+  credentials: GitCredentials[];
+  providers: GitProviderOption[];
 }
 
 export const ProjectSettingsForm: FC<Props> = ({
   storageRules,
-  isGitSyncEnabled,
   project,
   gitRepository,
   defaultProjectName = 'My Project',
   onCancel,
   onSuccessUpdate,
+  credentials,
+  providers,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
-  const permissionsFetcher = useOrganizationPermissionsLoaderFetcher({ key: `permissions:${organizationId}` });
-  const permissionsFetcherLoad = permissionsFetcher.load;
-  useEffect(() => {
-    permissionsFetcherLoad({
-      organizationId,
-    });
-  }, [organizationId, permissionsFetcherLoad]);
-  const { featuresPromise } = permissionsFetcher.data || {};
-  const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise, organizationId);
-  isGitSyncEnabled = features.gitSync.enabled;
+  const isGitSyncEnabled = useIsGitSyncEnabled(organizationId);
 
   const isLightTheme = useIsLightTheme();
 
@@ -93,35 +101,21 @@ export const ProjectSettingsForm: FC<Props> = ({
     return isSwitchingStorageType(project!, storageType);
   }, [project, storageType]);
 
-  const [selectedTab, setTab] = useState<OauthProviderName>('github');
-
   const [error, setError] = useState<string | null>(null);
 
   const [projectData, setProjectData] = useState<{
     name: string;
-    authorName?: string;
-    authorEmail?: string;
     uri?: string;
     ref?: string;
-    username?: string;
-    password?: string;
-    token?: string;
-    oauth2format?: OauthProviderName;
+    credentialsId?: string;
     connectRepositoryLater?: boolean;
+    selectedAuthorEmail?: string | null;
   }>({
     name: project?.name || defaultProjectName,
-    authorName: gitRepository?.author?.name || '',
-    authorEmail: gitRepository?.author?.email || '',
     uri: gitRepository?.uri || '',
-    username: gitRepository?.credentials?.username || '',
-    password:
-      gitRepository?.credentials && 'password' in gitRepository.credentials ? gitRepository?.credentials?.password : '',
-    token: gitRepository?.credentials && 'token' in gitRepository.credentials ? gitRepository?.credentials?.token : '',
-    oauth2format:
-      gitRepository?.credentials && 'oauth2format' in gitRepository.credentials
-        ? (gitRepository?.credentials?.oauth2format ?? 'github')
-        : undefined,
+    credentialsId: gitRepository?.credentialsId ?? undefined,
     connectRepositoryLater: false,
+    selectedAuthorEmail: gitRepository?.selectedAuthorEmail ?? null,
   });
 
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
@@ -133,7 +127,7 @@ export const ProjectSettingsForm: FC<Props> = ({
       : [];
 
   useEffect(() => {
-    if (updateProjectFetcher.data && updateProjectFetcher.data.success && onSuccessUpdate) {
+    if (updateProjectFetcher?.data && updateProjectFetcher?.data?.success && onSuccessUpdate) {
       onSuccessUpdate();
     }
   }, [onSuccessUpdate, updateProjectFetcher.data]);
@@ -156,6 +150,52 @@ export const ProjectSettingsForm: FC<Props> = ({
       });
     }
   };
+
+  const selectedCredential = credentials.find(c => c._id === projectData.credentialsId);
+  const selectedProvider = providers.find(p => p.type === selectedCredential?.provider);
+
+  const hideActionButtons = storageType === 'git' && !projectData.connectRepositoryLater && credentials.length === 0;
+
+  const showGitConnectionInfo =
+    storageType === 'git' &&
+    !isSwitchingStorageType(project!, storageType) &&
+    project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID &&
+    gitRepository?.credentialsId &&
+    selectedProvider;
+
+  const showGitRepoForm =
+    storageType === 'git' &&
+    ((isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) ||
+      (!isSwitchingStorageType(project!, storageType) && project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID));
+
+  const emailsFetcher = useGitProviderEmailsLoaderFetcher();
+  const isLoadingEmails = emailsFetcher.state !== 'idle';
+
+  const availableEmails = useMemo(() => {
+    const fetchedEmails = emailsFetcher.data?.emails || [];
+    if (fetchedEmails.length > 0) {
+      return fetchedEmails;
+    }
+    if (selectedCredential && isGitCredentialsV2(selectedCredential) && isOAuthCredential(selectedCredential)) {
+      return selectedCredential.credentials?.emails || [];
+    }
+    return [];
+  }, [selectedCredential, emailsFetcher.data?.emails]);
+
+  const canFetchEmails =
+    selectedCredential &&
+    isGitCredentialsV2(selectedCredential) &&
+    isOAuthCredential(selectedCredential) &&
+    selectedProvider?.supportsFetchEmails;
+
+  const showEmailSelector = showGitConnectionInfo && canFetchEmails;
+  const [isEmailSelectOpen, setIsEmailSelectOpen] = useState(false);
+
+  useEffect(() => {
+    if (canFetchEmails && selectedCredential && emailsFetcher.state === 'idle' && !emailsFetcher.data) {
+      emailsFetcher.load({ credentialsId: selectedCredential._id });
+    }
+  }, [canFetchEmails, selectedCredential, emailsFetcher]);
 
   return (
     <>
@@ -242,23 +282,115 @@ export const ProjectSettingsForm: FC<Props> = ({
               }
             />
           )}
-          {storageType === 'git' &&
-            (!isSwitchingStorageType(project!, storageType) && project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID ? (
-              <>
-                <Divider />
-                <GitConnectionInfo gitRepository={gitRepository} projectId={project!._id} />
-              </>
-            ) : (
-              <GitRepoForm
-                projectData={projectData}
-                setProjectData={setProjectData}
-                initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
-                organizationId={organizationId}
-                setActiveView={setActiveView}
-                selectedTab={selectedTab}
-                setTab={setTab}
+
+          {showGitConnectionInfo && (
+            <>
+              <Divider />
+              <GitConnectionInfo
+                gitRepository={gitRepository}
+                providerInfo={selectedProvider}
+                projectId={project!._id}
               />
-            ))}
+              {showEmailSelector ? (
+                <div className="flex flex-col gap-2">
+                  {isLoadingEmails ? (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Icon icon="spinner" className="animate-spin" />
+                      <span>Loading emails...</span>
+                    </div>
+                  ) : availableEmails.length > 1 ? (
+                    <Select
+                      onOpenChange={setIsEmailSelectOpen}
+                      isOpen={isEmailSelectOpen}
+                      aria-label="Author Email"
+                      selectedKey={projectData.selectedAuthorEmail || selectedCredential?.author.email}
+                      onSelectionChange={email => {
+                        setProjectData(prev => ({
+                          ...prev,
+                          selectedAuthorEmail: email,
+                        }));
+                      }}
+                    >
+                      <Label className="mb-2 px-0.5 pt-0 text-sm">Author Email</Label>
+                      <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
+                        <SelectValue<ProviderEmail> className="flex items-center justify-center gap-2 truncate">
+                          {({ selectedItem }) => {
+                            if (selectedItem) {
+                              return (
+                                <Fragment>
+                                  <span>{selectedItem.email}</span>
+                                  {selectedItem.primary && <span className="text-xs text-(--hl-lg)">(primary)</span>}
+                                </Fragment>
+                              );
+                            }
+                            return (
+                              projectData.selectedAuthorEmail || selectedCredential?.author.email || 'Select an email'
+                            );
+                          }}
+                        </SelectValue>
+                        <Icon icon="caret-down" />
+                      </Button>
+                      <Popover className="isolate flex w-(--trigger-width) min-w-max flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none">
+                        <ListBox
+                          items={availableEmails}
+                          className="min-w-max overflow-y-auto py-2 focus:outline-hidden"
+                        >
+                          {item => (
+                            <ListBoxItem
+                              id={item.email}
+                              key={item.email}
+                              className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                              aria-label={item.email}
+                              textValue={item.email}
+                              value={item}
+                            >
+                              {({ isSelected }) => (
+                                <Fragment>
+                                  <span>{item.email}</span>
+                                  {item.primary && <span className="text-xs text-(--hl-lg)">(primary)</span>}
+                                  {isSelected && (
+                                    <Icon icon="check" className="justify-self-end text-(--color-success)" />
+                                  )}
+                                </Fragment>
+                              )}
+                            </ListBoxItem>
+                          )}
+                        </ListBox>
+                      </Popover>
+                    </Select>
+                  ) : (
+                    <div className="text-[12px]">
+                      <div className="flex">
+                        <div className="w-[110px] font-semibold">Author Email</div>
+                        <div>
+                          {projectData.selectedAuthorEmail || selectedCredential?.author.email || 'No email available'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : selectedCredential?.author.email ? (
+                <div className="text-[12px]">
+                  <div className="flex">
+                    <div className="w-[110px] font-semibold">Author Email</div>
+                    <div>{selectedCredential?.author.email}</div>
+                  </div>
+                </div>
+              ) : null}
+            </>
+          )}
+          {showGitRepoForm && (
+            <GitRepoForm
+              projectData={projectData}
+              setProjectData={setProjectData}
+              initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
+              organizationId={organizationId}
+              setActiveView={setActiveView}
+              credentials={credentials}
+              providers={providers}
+              formId={FORMID}
+            />
+          )}
         </div>
 
         <div className={activeView === 'git-results' ? '' : 'hidden'}>
@@ -272,7 +404,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 
       {/* Actions */}
 
-      {activeView === 'project' && (
+      {activeView === 'project' && !hideActionButtons && (
         <div className="flex w-full items-center justify-end gap-2 px-0.5">
           <div className="flex items-center gap-2">
             {onCancel && (
@@ -285,10 +417,12 @@ export const ProjectSettingsForm: FC<Props> = ({
             )}
             {storageType === 'git' &&
             !projectData.connectRepositoryLater &&
-            (isSwitchingStorageType(project!, storageType) || project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID) ? (
+            (isSwitchingStorageType(project!, storageType) ||
+              project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID ||
+              !gitRepository?.credentialsId) ? (
               <Button
-                isDisabled={!isGitSyncEnabled}
-                form={selectedTab}
+                isDisabled={!isGitSyncEnabled && isSwitchingStorageType(project!, storageType)}
+                form={FORMID}
                 type="submit"
                 className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
@@ -297,12 +431,15 @@ export const ProjectSettingsForm: FC<Props> = ({
             ) : (
               <Button
                 onPress={onUpsertProject}
-                isDisabled={updateProjectFetcher.state !== 'idle' || updateProjectFetcher.state !== 'idle'}
+                isDisabled={
+                  updateProjectFetcher.state !== 'idle' ||
+                  (!isSwitchingStorageType(project!, storageType) &&
+                    project?.name.trim() === projectData.name.trim() &&
+                    (gitRepository?.selectedAuthorEmail ?? null) === (projectData.selectedAuthorEmail ?? null))
+                }
                 className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
-                {(updateProjectFetcher.state !== 'idle' || updateProjectFetcher.state !== 'idle') && (
-                  <Icon icon="spinner" className="animate-spin" />
-                )}
+                {updateProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
                 <span>Update</span>
               </Button>
             )}

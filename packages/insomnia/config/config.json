@@ -14,6 +14,16 @@
     "development": "rTOCSvGV23cHGJyb3HI9EUQDNA6ar7ay",
     "production": "4l7QUfACrIcqvC913hiIwAA2BDYP2OJ1"
   },
+  "cio": {
+    "development": {
+      "writeKey": "d819a0f74f1ba47aac56",
+      "siteId": "6a3e5585a91dc95f33d5"
+    },
+    "production": {
+      "writeKey": "70d3f482cef87818efce",
+      "siteId": "4d5c703f3edbc5155bac"
+    }
+  },
   "bundlePlugins": [
     {
       "name": "@kong/insomnia-plugin-external-vault"

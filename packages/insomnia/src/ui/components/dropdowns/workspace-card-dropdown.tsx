@@ -1,5 +1,6 @@
 import {
   exportGlobalEnvironmentToFile,
+  exportMcpClientToFile,
   exportMockServerToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
 import React, { type FC, Fragment, useCallback, useState } from 'react';
@@ -8,6 +9,7 @@ import { href, useParams } from 'react-router';
 
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
+import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
@@ -104,6 +106,22 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isDeleteRemoteWorkspaceModalOpen, setIsDeleteRemoteWorkspaceModalOpen] = useState(false);
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
+  const tabNavigate = useTabNavigate();
+
+  const openInNewTab = async () => {
+    tabNavigate(
+      {
+        organization: organizationId,
+        project: project,
+        workspace: workspace,
+        item: workspace,
+      },
+      {
+        withTab: true,
+        shouldNavigate: true,
+      },
+    );
+  };
 
   const deleteWorkspaceFetcher = useWorkspaceDeleteActionFetcher();
 
@@ -124,6 +142,9 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           </Button>
         }
       >
+        <DropdownItem aria-label="Open in New Tab">
+          <ItemContent label="Open in New Tab" icon="external-link-alt" onClick={openInNewTab} />
+        </DropdownItem>
         {!isMcp(workspace) && (
           <DropdownItem aria-label="Duplicate / Move">
             <ItemContent label="Duplicate / Move" icon="copy" onClick={() => setIsDuplicateModalOpen(true)} />
@@ -154,48 +175,49 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           />
         </DropdownItem>
         <DropdownSection aria-label="Meta section">
-          {isMcp(workspace) ? null : (
-            <>
-              <DropdownItem aria-label="Import">
-                <ItemContent
-                  label="Import"
-                  icon="file-import"
-                  onClick={() => {
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.importStarted,
-                      properties: {
-                        source: `${workspace.scope}-list`,
-                      },
-                    });
+          {!isMcp(workspace) ? (
+            <DropdownItem aria-label="Import">
+              <ItemContent
+                label="Import"
+                icon="file-import"
+                onClick={() => {
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.importStarted,
+                    properties: {
+                      source: `${workspace.scope}-list`,
+                    },
+                  });
 
-                    setIsImportModalOpen(true);
-                  }}
-                />
-              </DropdownItem>
-              <DropdownItem aria-label="Export">
-                <ItemContent
-                  label="Export"
-                  icon="file-export"
-                  onClick={() => {
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.exportStarted,
-                      properties: {
-                        source: `${workspace.scope}-list`,
-                      },
-                    });
+                  setIsImportModalOpen(true);
+                }}
+              />
+            </DropdownItem>
+          ) : null}
+          <DropdownItem aria-label="Export">
+            <ItemContent
+              label="Export"
+              icon="file-export"
+              onClick={() => {
+                window.main.trackSegmentEvent({
+                  event: SegmentEvent.exportStarted,
+                  properties: {
+                    source: `${workspace.scope}-list`,
+                  },
+                });
 
-                    if (workspace.scope === 'mock-server') {
-                      return exportMockServerToFile(workspace);
-                    }
-                    if (workspace.scope === 'environment') {
-                      return exportGlobalEnvironmentToFile(workspace);
-                    }
-                    return setIsExportModalOpen(true);
-                  }}
-                />
-              </DropdownItem>
-            </>
-          )}
+                if (workspace.scope === 'mock-server') {
+                  return exportMockServerToFile(workspace);
+                }
+                if (workspace.scope === 'environment') {
+                  return exportGlobalEnvironmentToFile(workspace);
+                }
+                if (workspace.scope === 'mcp') {
+                  return exportMcpClientToFile(workspace);
+                }
+                return setIsExportModalOpen(true);
+              }}
+            />
+          </DropdownItem>
           <DropdownItem aria-label="Settings">
             <ItemContent label="Settings" icon="gear" onClick={() => setIsSettingsModalOpen(true)} />
           </DropdownItem>

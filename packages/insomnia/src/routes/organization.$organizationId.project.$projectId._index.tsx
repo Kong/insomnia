@@ -1,4 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import { getLearningFeature } from 'insomnia-api';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -6,7 +7,6 @@ import {
   GridListItem,
   Heading,
   Input,
-  Link,
   ListBox,
   ListBoxItem,
   Menu,
@@ -15,7 +15,6 @@ import {
   Popover,
   SearchField,
   Select,
-  SelectValue,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -34,15 +33,15 @@ import {
   getAppWebsiteBaseURL,
 } from '~/common/constants';
 import { database } from '~/common/database';
+import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort, sortMethodMap } from '~/common/sorting';
 import * as models from '~/models';
 import { userSession } from '~/models';
-import { type ApiSpec } from '~/models/api-spec';
+import type { ApiSpec } from '~/models/api-spec';
 import type { GitRepository } from '~/models/git-repository';
 import { sortProjects } from '~/models/helpers/project';
 import type { MockServer } from '~/models/mock-server';
-import type { Organization } from '~/models/organization';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '~/models/organization';
 import {
   getProjectStorageTypeLabel,
@@ -50,9 +49,8 @@ import {
   isLocalProject,
   isRemoteProject,
   type Project,
-  SCRATCHPAD_PROJECT_ID,
 } from '~/models/project';
-import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '~/models/workspace';
+import { isDesign, type Workspace, type WorkspaceScope } from '~/models/workspace';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
@@ -60,12 +58,11 @@ import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organizatio
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
-import { SegmentEvent } from '~/ui/analytics';
+import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
 import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
 import { LocalProjectBar } from '~/ui/components/dropdowns/local-project-bar';
-import { ProjectDropdown } from '~/ui/components/dropdowns/project-dropdown';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
@@ -74,55 +71,20 @@ import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
 import { NoSelectedProjectView } from '~/ui/components/panes/no-selected-project-view';
+import { OrganizationSelect } from '~/ui/components/project/organization-select';
 import { ProjectEmptyView } from '~/ui/components/project/project-empty-view';
+import { ProjectListSidebar } from '~/ui/components/project/project-list-sidebar';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { TimeFromNow } from '~/ui/components/time-from-now';
+import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
+import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
+import { trackTempProjectOpened } from '~/ui/temp-segment-tracking';
+import { isPrimaryClickModifier } from '~/ui/utils';
 import { invariant } from '~/utils/invariant';
-
-export type ProjectScopeKeys = WorkspaceScope | 'unsynced';
-export const scopeToLabelMap: Record<
-  ProjectScopeKeys,
-  'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client'
-> = {
-  'design': 'Document',
-  'collection': 'Collection',
-  'mock-server': 'Mock Server',
-  'unsynced': 'Unsynced',
-  'environment': 'Environment',
-  'mcp': 'MCP Client',
-};
-
-export const scopeToIconMap: Record<ProjectScopeKeys, IconProp> = {
-  'design': 'file',
-  'collection': 'bars',
-  'mock-server': 'server',
-  'unsynced': 'cloud-download',
-  'environment': 'code',
-  'mcp': ['fac', 'mcp'] as unknown as IconProp,
-};
-
-export const scopeToBgColorMap: Record<ProjectScopeKeys, string> = {
-  'design': 'bg-(--color-info)',
-  'collection': 'bg-(--color-surprise)',
-  'mock-server': 'bg-(--color-warning)',
-  'unsynced': 'bg-(--hl-md)',
-  'environment': 'bg-(--color-font)',
-  'mcp': 'bg-(--color-danger)',
-};
-
-export const scopeToTextColorMap: Record<ProjectScopeKeys, string> = {
-  'design': 'text-(--color-font-info)',
-  'collection': 'text-(--color-font-surprise)',
-  'mock-server': 'text-(--color-font-warning)',
-  'unsynced': 'text-(--color-font)',
-  'environment': 'text-(--color-bg)',
-  'mcp': 'text-(--color-font-danger)',
-};
 
 export interface InsomniaFile {
   id: string;
@@ -159,6 +121,35 @@ export interface ProjectLoaderData {
   learningFeaturePromise?: Promise<LearningFeature>;
   remoteFilesPromise?: Promise<InsomniaFile[]>;
   projectsSyncStatusPromise?: Promise<Record<string, boolean>>;
+}
+
+/**
+ * Get all projects for an organization with their associated git repositories
+ */
+export async function getProjectsWithGitRepositories({
+  organizationId,
+}: {
+  organizationId: string;
+}): Promise<(Project & { gitRepository?: GitRepository })[]> {
+  const projects = await database.find<Project>('Project', {
+    parentId: organizationId,
+  });
+
+  const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
+
+  const gitRepositories = await database.find<GitRepository>('GitRepository', {
+    _id: {
+      $in: gitRepositoryIds,
+    },
+  });
+
+  return projects.map(project => {
+    const gitRepository = gitRepositories.find(gr => gr._id === project.gitRepositoryId);
+    return {
+      ...project,
+      gitRepository,
+    };
+  });
 }
 
 async function getAllLocalFiles({ projectId }: { projectId: string }) {
@@ -326,7 +317,7 @@ interface LearningFeature {
   url: string;
 }
 
-const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
+const getInsomniaLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   let learningFeature = fallbackLearningFeature;
   const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
   const lastFetched = lastFetchedString ? Number.parseInt(lastFetchedString, 10) : 0;
@@ -336,12 +327,7 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   const wasNotDismissedAndOneDayHasPassed = !wasDismissed && hasOneDayPassedSinceLastFetch;
   if (wasNotDismissedAndOneDayHasPassed) {
     try {
-      learningFeature = await insomniaFetch<LearningFeature>({
-        method: 'GET',
-        path: '/insomnia-production-public-assets/inapp-learning.json',
-        origin: 'https://storage.googleapis.com',
-        sessionId: '',
-      });
+      learningFeature = await getLearningFeature();
       window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
     } catch {
       console.log('[project] Could not fetch learning feature data.');
@@ -369,32 +355,6 @@ const CheckAllProjectSyncStatus = async (projects: Project[]) => {
   });
   return obj;
 };
-
-async function getProjectsWithGitRepositories({
-  organizationId,
-}: {
-  organizationId: string;
-}): Promise<(Project & { gitRepository?: GitRepository })[]> {
-  const projects = await database.find<Project>(models.project.type, {
-    parentId: organizationId,
-  });
-
-  const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
-
-  const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
-    _id: {
-      $in: gitRepositoryIds,
-    },
-  });
-
-  return projects.map(project => {
-    const gitRepository = gitRepositories.find(gr => gr._id === project.gitRepositoryId);
-    return {
-      ...project,
-      gitRepository,
-    };
-  });
-}
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId, projectId } = params;
@@ -437,7 +397,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   ]);
 
   const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
-  const learningFeaturePromise = getLearningFeature(fallbackLearningFeature);
+  const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
 
   const projects = sortProjects(organizationProjects);
 
@@ -519,7 +479,7 @@ const Component = () => {
   const { presence } = useInsomniaEventStreamContext();
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
-  const { billing, features } = useOrganizationPermissions();
+  const { billing } = useOrganizationPermissions();
 
   useEffect(() => {
     if (!isScratchpadOrganizationId(organizationId)) {
@@ -528,14 +488,17 @@ const Component = () => {
     }
   }, [organizationId, storageRuleFetcher.load]);
 
+  // TODO(INS-1912): Remove in 12.5
+  useEffect(() => {
+    if (projectId) {
+      trackTempProjectOpened(projectId);
+    }
+  }, [projectId]);
+
   const { storagePromise } = storageRuleFetcher.data || {};
 
   const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
 
-  const [projectListFilter, setProjectListFilter] = reactUse.useLocalStorage(
-    `${organizationId}:project-list-filter`,
-    '',
-  );
   const [workspaceListFilter, setWorkspaceListFilter] = reactUse.useLocalStorage(
     `${projectId}:workspace-list-filter`,
     '',
@@ -555,6 +518,8 @@ const Component = () => {
   const isUserOwner =
     organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && isPersonalOrganization(organization);
+
+  const tabNavigate = useTabNavigate();
 
   const filteredFiles = allFiles
     .filter(w => (workspaceListScope !== 'all' ? w.scope === workspaceListScope : true))
@@ -594,7 +559,7 @@ const Component = () => {
     })
     .map(file => ({
       ...file,
-      action: () => {
+      action: (withTab?: boolean) => {
         // hack to workaround gridlist not have access to workspace scope
         if (file.scope === 'unsynced') {
           if (activeProject?.remoteId && file.remoteId) {
@@ -608,33 +573,48 @@ const Component = () => {
           return;
         }
 
-        const activity = scopeToActivity(file.scope);
-        return navigate(`/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${activity}`);
+        if (!activeProject || !file.workspace) {
+          showResourceNotFoundToast('Workspace not found');
+          return;
+        }
+
+        tabNavigate(
+          {
+            organization: organizationId,
+            project: activeProject,
+            workspace: file.workspace,
+            item: file.workspace,
+          },
+          {
+            withTab,
+            shouldNavigate: true,
+          },
+        );
+
+        return;
       },
     }));
 
-  const projectsWithPresence = projects
-    .filter(p => (projectListFilter ? p.name?.toLowerCase().includes(projectListFilter.toLowerCase()) : true))
-    .map(project => {
-      const projectPresence = presence
-        .filter(p => p.project === project.remoteId)
-        .filter(p => p.acct !== userSession.accountId)
-        .map(user => {
-          return {
-            key: user.acct,
-            alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-            src: user.avatar,
-          };
-        });
-      return {
-        ...project,
-        presence: projectPresence,
-        hasUncommittedOrUnpushedChanges:
-          checkAllProjectSyncStatus?.[project._id] ||
-          project.gitRepository?.hasUncommittedChanges ||
-          project.gitRepository?.hasUnpushedChanges,
-      };
-    });
+  const projectsWithPresence = projects.map(project => {
+    const projectPresence = presence
+      .filter(p => p.project === project.remoteId)
+      .filter(p => p.acct !== userSession.accountId)
+      .map(user => {
+        return {
+          key: user.acct,
+          alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+          src: user.avatar,
+        };
+      });
+    return {
+      ...project,
+      presence: projectPresence,
+      hasUncommittedOrUnpushedChanges:
+        checkAllProjectSyncStatus?.[project._id] ||
+        project.gitRepository?.hasUncommittedChanges ||
+        project.gitRepository?.hasUnpushedChanges,
+    };
+  });
 
   const navigate = useNavigate();
 
@@ -668,7 +648,6 @@ const Component = () => {
   };
 
   const canCreateMockServer = activeProject?._id;
-  const isGitSyncEnabled = features.gitSync.enabled;
 
   const createInProjectActionList: {
     id: string;
@@ -808,141 +787,19 @@ const Component = () => {
             collapsible
           >
             <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-              <div className="flex h-[40px] flex-col items-start justify-center p-(--padding-sm)">
-                <Select
-                  aria-label="Organizations"
-                  onSelectionChange={id => {
-                    navigate(`/organization/${id}`);
-                  }}
-                  selectedKey={organizationId}
-                >
-                  <Button className="flex flex-1 items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm font-bold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
-                    <SelectValue<Organization> className="flex items-center justify-center gap-2 truncate">
-                      {({ selectedItem }) => {
-                        return selectedItem?.display_name || 'Select an organization';
-                      }}
-                    </SelectValue>
-                    <Icon icon="caret-down" />
-                  </Button>
-                  <Popover className="flex min-w-max flex-col overflow-y-hidden">
-                    <ListBox
-                      items={organizationData?.organizations}
-                      className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
-                    >
-                      {item => (
-                        <ListBoxItem
-                          id={item.id}
-                          key={item.id}
-                          className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
-                          aria-label={item.display_name}
-                          textValue={item.display_name}
-                          value={item}
-                        >
-                          {({ isSelected }) => (
-                            <Fragment>
-                              <span>{item.display_name}</span>
-                              {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
-                            </Fragment>
-                          )}
-                        </ListBoxItem>
-                      )}
-                    </ListBox>
-                  </Popover>
-                </Select>
-              </div>
-              <div className="flex flex-1 flex-col overflow-hidden">
-                <Heading className="p-(--padding-sm) text-xs uppercase">Projects ({projectsCount})</Heading>
-                <div className="flex justify-between gap-1 p-(--padding-sm)">
-                  <SearchField
-                    aria-label="Projects filter"
-                    className="group relative flex-1"
-                    isDisabled={activeProject === undefined}
-                    value={projectListFilter}
-                    onChange={value => {
-                      setProjectListFilter(value);
-
-                      if (value.trim() !== '') {
-                        window.main.trackSegmentEvent({
-                          event: SegmentEvent.filterCreatedProjects,
-                        });
-                      }
-                    }}
-                  >
-                    <Input
-                      placeholder="Filter"
-                      className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-                    />
-                    <div className="absolute top-0 right-0 flex h-full items-center px-2">
-                      <Button className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
-                        <Icon icon="close" />
-                      </Button>
-                    </div>
-                  </SearchField>
-                  <Button
-                    aria-label="Create new Project"
-                    onPress={() => setIsNewProjectModalOpen(true)}
-                    isDisabled={activeProject === undefined}
-                    className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                  >
-                    <Icon icon="plus-circle" />
-                  </Button>
-                </div>
-
-                <GridList
-                  aria-label="Projects"
-                  items={projectsWithPresence}
-                  className="flex-1 overflow-y-auto py-(--padding-sm) data-empty:py-0"
-                  disallowEmptySelection
-                  selectedKeys={[activeProject?._id || '']}
-                  selectionMode="single"
-                  onSelectionChange={keys => {
-                    if (keys !== 'all') {
-                      const [value] = keys.values();
-
-                      navigate({
-                        pathname: `/organization/${organizationId}/project/${value}`,
-                      });
-                    }
-                  }}
-                >
-                  {item => {
-                    return (
-                      <GridListItem
-                        key={item._id}
-                        id={item._id}
-                        textValue={item.name}
-                        className="group outline-hidden select-none"
-                      >
-                        <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
-                          <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
-                          <Icon
-                            icon={
-                              isRemoteProject(item)
-                                ? 'globe-americas'
-                                : isGitProject(item)
-                                  ? ['fab', 'git-alt']
-                                  : 'laptop'
-                            }
-                          />
-                          <span className={'truncate'}>{item.name}</span>
-                          <span className="flex-1" />
-                          {item.presence.length > 0 && (
-                            <AvatarGroup size="small" maxAvatars={3} items={item.presence} />
-                          )}
-                          {item._id !== SCRATCHPAD_PROJECT_ID && (
-                            <ProjectDropdown
-                              organizationId={organizationId}
-                              project={item}
-                              storageRules={storageRules}
-                              isGitSyncEnabled={isGitSyncEnabled}
-                            />
-                          )}
-                        </div>
-                      </GridListItem>
-                    );
-                  }}
-                </GridList>
-              </div>
+              <OrganizationSelect
+                organizationId={organizationId}
+                organizations={organizationData?.organizations || []}
+                onSelect={id => navigate(`/organization/${id}`)}
+              />
+              <ProjectListSidebar
+                organizationId={organizationId}
+                activeProjectId={activeProject?._id}
+                projects={projectsWithPresence}
+                projectsCount={projectsCount}
+                storageRules={storageRules}
+                onCreateProject={() => setIsNewProjectModalOpen(true)}
+              />
               {activeProject && (
                 <>
                   <GridList
@@ -1088,7 +945,12 @@ const Component = () => {
                       aria-label="Files filter"
                       className="group relative flex-1"
                       value={workspaceListFilter}
-                      onChange={filter => setWorkspaceListFilter(filter)}
+                      onChange={filter => {
+                        setWorkspaceListFilter(filter);
+                        if (filter.trim() !== '') {
+                          trackOnceDaily(SegmentEvent.homepageFiltered);
+                        }
+                      }}
                     >
                       <Input
                         placeholder="Filter"
@@ -1201,6 +1063,7 @@ const Component = () => {
                 <div className="flex-1 overflow-y-auto">
                   <GridList
                     aria-label="Files"
+                    data-testid="workspace-grid"
                     className="grid grid-cols-[repeat(auto-fit,200px)] grid-rows-[repeat(auto-fit,200px)] gap-4 p-(--padding-md) data-empty:flex data-empty:justify-center"
                     items={filesWithPresence}
                     renderEmptyState={() => {
@@ -1239,7 +1102,17 @@ const Component = () => {
                           key={item.id}
                           id={item.id}
                           textValue={item.name}
-                          onAction={item.action}
+                          // onAction is required for onPress with selectionMode='none' but we handle clicks in onPress
+                          onAction={() => {}}
+                          onAuxClick={e => {
+                            if (e.button === 1) {
+                              e.preventDefault();
+                              item.action(true);
+                            }
+                          }}
+                          onPress={e => {
+                            item.action(isPrimaryClickModifier(e));
+                          }}
                           className={`flex aspect-square w-full flex-1 flex-col overflow-hidden rounded-md p-(--padding-md) ring-1 ring-(--hl-md) outline-hidden transition-all select-none hover:bg-(--hl-xs) hover:shadow-md hover:ring-(--hl-sm) focus:bg-(--hl-sm) focus:ring-(--hl-lg) ${item.loading ? 'animate-pulse' : ''}`}
                         >
                           <div className="flex h-[20px] gap-2">
@@ -1270,12 +1143,7 @@ const Component = () => {
                             )}
                           </div>
                           <TooltipTrigger>
-                            <Link
-                              onPress={item.action}
-                              className="line-clamp-4 pt-4 text-base font-bold outline-hidden"
-                            >
-                              {item.name}
-                            </Link>
+                            <span className="line-clamp-4 pt-4 text-base font-bold outline-hidden">{item.name}</span>
                             <Tooltip
                               offset={8}
                               className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
@@ -1332,7 +1200,7 @@ const Component = () => {
             ) : projects.length ? (
               <NoSelectedProjectView />
             ) : (
-              <NoProjectView isGitSyncEnabled={isGitSyncEnabled} storageRules={storageRules} />
+              <NoProjectView storageRules={storageRules} />
             )}
           </Panel>
         </PanelGroup>
@@ -1341,7 +1209,6 @@ const Component = () => {
             isOpen={isNewProjectModalOpen}
             onOpenChange={setIsNewProjectModalOpen}
             storageRules={storageRules}
-            isGitSyncEnabled={isGitSyncEnabled}
           />
         )}
         {isUpdateProjectModalOpen && (
@@ -1351,7 +1218,6 @@ const Component = () => {
             project={activeProject}
             gitRepository={activeProjectGitRepository || undefined}
             storageRules={storageRules}
-            isGitSyncEnabled={isGitSyncEnabled}
           />
         )}
         {activeProject && newWorkspaceModalState?.isOpen && (

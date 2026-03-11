@@ -11,6 +11,7 @@ import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
 import type { Environment, UserUploadEnvironment } from '~/models/environment';
+import { getBodyStream } from '~/models/helpers/response-operations';
 import type { RequestMeta } from '~/models/request-meta';
 import type { ResponseInfo, RunnerResultPerRequestPerIteration } from '~/models/runner-test-result';
 import {
@@ -72,7 +73,7 @@ const writeToDownloadPath = (
   invariant(downloadPathAndName, 'filename should be set by now');
 
   const to = createWriteStream(downloadPathAndName);
-  const readStream = models.response.getBodyStream(responsePatch);
+  const readStream = getBodyStream(responsePatch);
   if (!readStream || typeof readStream === 'string') {
     return null;
   }

@@ -1,8 +1,8 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { StorageRules } from 'insomnia-api';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Tooltip, TooltipTrigger } from 'react-aria-components';
 
-import type { StorageRules } from '~/models/organization';
 import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
 
 import type { GitRepository } from '../../../models/git-repository';
@@ -17,7 +17,6 @@ interface Props {
   project: Project & { hasUncommittedOrUnpushedChanges?: boolean; gitRepository?: GitRepository };
   organizationId: string;
   storageRules: StorageRules;
-  isGitSyncEnabled: boolean;
 }
 
 interface ProjectActionItem {
@@ -27,7 +26,7 @@ interface ProjectActionItem {
   action: (projectId: string, projectName: string) => void;
 }
 
-export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRules, isGitSyncEnabled }) => {
+export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRules }) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] = useState(false);
   const deleteProjectFetcher = useProjectDeleteActionFetcher();
 
@@ -141,7 +140,6 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
       {isProjectSettingsModalOpen && (
         <ProjectModal
           project={project}
-          isGitSyncEnabled={isGitSyncEnabled}
           storageRules={storageRules}
           gitRepository={project.gitRepository}
           isOpen={isProjectSettingsModalOpen}

@@ -92,15 +92,27 @@ export const MessageEventView = ({ event }: Props) => {
   const getElicitationFormSchema = () => {
     if (ElicitRequestSchema.safeParse(eventData).success) {
       const parsedElicitRequest = ElicitRequestSchema.parse(eventData);
-      const requestSchema = parsedElicitRequest.params.requestedSchema;
-      return requestSchema as RJSFSchema;
+      if ('requestedSchema' in parsedElicitRequest.params) {
+        const requestSchema = parsedElicitRequest.params.requestedSchema;
+        return requestSchema as RJSFSchema;
+      }
     }
     return {};
   };
 
   let pretty = raw;
   try {
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(raw, (_key, value) => {
+      // Try to parse any nested JSON strings
+      if (typeof value === 'string' && (value.startsWith('{') || value.startsWith('['))) {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      }
+      return value;
+    });
     // If call tool response, try to parse the `result.content` field if it's JSON string
     if (isCallToolEvent && 'result' in parsed) {
       const callToolResult = parsed.result;
@@ -122,10 +134,7 @@ export const MessageEventView = ({ event }: Props) => {
         }
       }
     }
-    // Escape tabs and new lines for CodeMirror display
-    pretty = JSON.stringify(parsed, null, '\t')
-      .replace(/\\n|\\r\\n|\\r/g, '\n')
-      .replace(/\\t/g, '\t');
+    pretty = JSON.stringify(parsed, null, '\t');
   } catch {
     // Can't parse as JSON.
   }
@@ -200,7 +209,7 @@ export const MessageEventView = ({ event }: Props) => {
         )}
       </div>
       {viewMode === 'raw' && (
-        <div className="h-full grow p-4">
+        <div className="h-full grow">
           <CodeEditor
             id="mcp-data-preview"
             hideLineNumbers

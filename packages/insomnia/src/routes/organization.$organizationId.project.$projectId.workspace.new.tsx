@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { upsertMockbin } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import { getAppVersion, getMockServiceURL, METHOD_GET } from '~/common/constants';
@@ -17,7 +18,6 @@ import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initiali
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -138,6 +138,26 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       await models.apiSpec.getOrCreateForParentId(workspace._id);
     }
 
+    if (workspaceData.scope === 'mcp') {
+      const settings = await models.settings.getOrCreate();
+      const defaultHeaders = settings.disableAppVersionUserAgent
+        ? []
+        : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
+      // Create mcp request when MCP workspace is created
+      await models.mcpRequest.create({
+        parentId: workspace._id,
+        transportType: 'streamable-http',
+        url: '',
+        name: 'MCP Client',
+        headers: defaultHeaders,
+        description: '',
+      });
+
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.mcpClientAdded,
+      });
+    }
+
     // Create default env, cookie jar, and meta
     await models.environment.getOrCreateForParentId(workspace._id);
     await models.cookieJar.getOrCreateForParentId(workspace._id);
@@ -146,7 +166,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     await database.flushChanges(flushId);
 
     const { id } = await models.userSession.getOrCreate();
-    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project) && scope !== 'mcp') {
+    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project)) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs,
@@ -206,36 +226,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           projectId,
           workspaceId: workspace._id,
           requestId: activeRequestId,
-        }),
-      );
-    }
-
-    if (workspaceData.scope === 'mcp') {
-      const settings = await models.settings.getOrCreate();
-      const defaultHeaders = settings.disableAppVersionUserAgent
-        ? []
-        : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
-      // Create mcp request when MCP workspace is created
-      const newMcpRequest = await models.mcpRequest.create({
-        parentId: workspace._id,
-        transportType: 'streamable-http',
-        url: '',
-        name: 'My first MCP Client',
-        headers: defaultHeaders,
-        description: '',
-      });
-      const requestId = newMcpRequest._id;
-
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.mcpClientAdded,
-      });
-
-      return redirect(
-        href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId', {
-          organizationId,
-          projectId,
-          workspaceId: workspace._id,
-          requestId,
         }),
       );
     }
@@ -454,15 +444,12 @@ async function createMockRoutes(
       const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
 
       if (mockbinUrl && sessionId) {
-        await insomniaFetch({
-          origin: mockbinUrl,
-          path: `/bin/upsert/${compoundId}`,
-          method: 'PUT',
+        await upsertMockbin({
+          mockbinUrl,
+          compoundId,
           organizationId,
           sessionId,
-          headers: {
-            'insomnia-mock-method': route.method,
-          },
+          method: route.method,
           data: mockRouteToHar({
             statusCode: mockRoute.statusCode,
             statusText: mockRoute.statusText || '',

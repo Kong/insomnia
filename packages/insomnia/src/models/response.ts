@@ -1,14 +1,8 @@
-import fs from 'node:fs';
-import type { Readable } from 'node:stream';
-import zlib from 'node:zlib';
-
 import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import { database as db } from '../common/database';
-import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as requestOperations from '../models/helpers/request-operations';
-import { deserializeNDJSON } from '../utils/ndjson';
-import type { BaseModel } from './index';
 import * as models from './index';
+import type { BaseModel } from './types';
 
 export const name = 'Response';
 
@@ -109,34 +103,6 @@ export async function all() {
   return db.find<Response>(type);
 }
 
-export async function removeForRequest(parentId: string, environmentId?: string | null) {
-  const settings = await models.settings.get();
-  const query: Record<string, any> = {
-    parentId,
-  };
-
-  // Only add if not undefined. null is not the same as undefined
-  //  null: find responses sent from base environment
-  //  undefined: find all responses
-  if (environmentId !== undefined && settings.filterResponsesByEnv) {
-    query.environmentId = environmentId;
-  }
-  const toDelete = await db.find<Response>(type, query);
-  for (const doc of toDelete) {
-    fs.promises.unlink(doc.bodyPath);
-    fs.promises.unlink(doc.timelinePath);
-  }
-  // Also delete legacy responses here or else the user will be confused as to
-  // why some responses are still showing in the UI.
-  await db.removeWhere(type, query);
-}
-
-export function remove(response: Response) {
-  fs.promises.unlink(response.bodyPath);
-  fs.promises.unlink(response.timelinePath);
-  return db.remove(response);
-}
-
 export async function getLatestForRequestId(
   requestId: string,
   environmentId: string | null,
@@ -189,93 +155,6 @@ export async function create(patch: Partial<Response> = {}, maxResponses = 20): 
   });
   // Actually create the new response
   return db.docCreate(type, patch);
-}
-
-export const getBodyStream = (
-  response?: { bodyPath?: string; bodyCompression?: Compression },
-  readFailureValue?: string,
-): Readable | string | null => {
-  if (!response?.bodyPath) {
-    return null;
-  }
-  try {
-    fs.statSync(response?.bodyPath);
-  } catch (err) {
-    console.warn('Failed to read response body', err.message);
-    return readFailureValue === undefined ? null : readFailureValue;
-  }
-  if (response?.bodyCompression === 'zip') {
-    return fs.createReadStream(response?.bodyPath).pipe(zlib.createGunzip());
-  }
-  return fs.createReadStream(response?.bodyPath);
-};
-export const readCurlResponse = async (options: { bodyPath?: string; bodyCompression?: Compression }) => {
-  const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
-  const bodyBufferOrErrMsg = await getBodyBuffer(options, readFailureMsg);
-  // TODO(jackkav): simplify the fail msg and reuse in other getBodyBuffer renderer calls
-
-  if (!bodyBufferOrErrMsg) {
-    return { body: '', error: readFailureMsg };
-  } else if (typeof bodyBufferOrErrMsg === 'string') {
-    if (bodyBufferOrErrMsg === readFailureMsg) {
-      return { body: '', error: readFailureMsg };
-    }
-    return { body: '', error: `unknown error in loading response body: ${bodyBufferOrErrMsg}` };
-  }
-
-  return { body: bodyBufferOrErrMsg.toString('utf8'), error: '' };
-};
-export const getBodyBuffer = async (
-  response?: { bodyPath?: string; bodyCompression?: Compression },
-  readFailureValue?: string,
-): Promise<Buffer | string> => {
-  if (!response?.bodyPath) {
-    // No body, so return empty Buffer
-    return Buffer.alloc(0);
-  }
-  try {
-    // TODO: unpick theis read buffer so it can be used as a simple string reader
-    const rawBuffer = await fs.promises.readFile(response?.bodyPath);
-    if (response?.bodyCompression === 'zip') {
-      return new Promise((resolve, reject) =>
-        zlib.gunzip(rawBuffer, (err, buffer) => (err ? reject(err) : resolve(buffer))),
-      );
-    }
-
-    return rawBuffer;
-  } catch (err) {
-    console.warn('Failed to read response body', err.message);
-    return readFailureValue === undefined ? Buffer.alloc(0) : readFailureValue;
-  }
-};
-
-export function getTimeline(response: Response, showBody?: boolean) {
-  const { timelinePath, bodyPath } = response;
-
-  if (!timelinePath) {
-    return [];
-  }
-
-  try {
-    const rawBuffer = fs.readFileSync(timelinePath);
-    const timelineString = rawBuffer.toString();
-    const timeline = deserializeNDJSON(timelineString);
-
-    const body: ResponseTimelineEntry[] = showBody
-      ? [
-          {
-            name: 'DataOut',
-            timestamp: Date.now(),
-            value: fs.readFileSync(bodyPath).toString(),
-          },
-        ]
-      : [];
-    const output = [...timeline, ...body];
-    return output;
-  } catch (err) {
-    console.warn('Failed to read response body', err.message);
-    return [];
-  }
 }
 
 function migrateBodyCompression(doc: Response) {

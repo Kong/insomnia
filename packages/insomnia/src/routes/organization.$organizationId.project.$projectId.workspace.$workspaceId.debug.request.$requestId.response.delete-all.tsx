@@ -2,9 +2,7 @@ import { href } from 'react-router';
 
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { isMcpRequestId } from '~/models/mcp-request';
-import { isSocketIORequestId } from '~/models/socket-io-request';
-import { isWebSocketRequestId } from '~/models/websocket-request';
+import { removeResponsesForRequest } from '~/models/helpers/response-operations';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -19,15 +17,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
   invariant(workspaceMeta, 'Active workspace meta not found');
 
-  if (isWebSocketRequestId(requestId)) {
-    await models.webSocketResponse.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
-  } else if (isSocketIORequestId(requestId)) {
-    await models.socketIOResponse.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
-  } else if (isMcpRequestId(requestId)) {
-    await models.mcpResponse.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
-  } else {
-    await models.response.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
-  }
+  await removeResponsesForRequest(requestId, workspaceMeta.activeEnvironmentId);
 
   return null;
 }

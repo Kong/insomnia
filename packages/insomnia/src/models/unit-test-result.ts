@@ -1,7 +1,7 @@
 import type { TestResults } from 'insomnia-testing';
 
 import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import type { BaseModel } from './types';
 
 export const name = 'Unit Test Result';
 

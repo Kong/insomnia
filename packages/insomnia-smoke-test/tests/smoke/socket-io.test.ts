@@ -17,7 +17,6 @@ test('can make socket.io connection', async ({ app, page }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('Socket.io Collection').click();
 
   await page.getByLabel('Request Collection').getByTestId('Socket.IO Request').press('Enter');
   await expect.soft(page.locator('.app')).toContainText('http://localhost:4020');

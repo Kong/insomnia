@@ -58,6 +58,7 @@ interface Props {
   valuePlaceholder?: string;
   onBlur?: (e: FocusEvent) => void;
   readOnlyPairs?: Pair[];
+  onDescriptionToggle?: () => void;
 }
 
 export const KeyValueEditor: FC<Props> = ({
@@ -72,6 +73,7 @@ export const KeyValueEditor: FC<Props> = ({
   pairs,
   valuePlaceholder,
   readOnlyPairs,
+  onDescriptionToggle,
 }) => {
   const [showDescription, setShowDescription] = useState(
     pairs.some(p => p.description && p.description.trim() !== '') || false,
@@ -256,7 +258,10 @@ export const KeyValueEditor: FC<Props> = ({
         </PromptButton>
         <ToggleButton
           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
-          onChange={setShowDescription}
+          onChange={value => {
+            setShowDescription(value);
+            onDescriptionToggle?.();
+          }}
           isSelected={showDescription}
         >
           {({ isSelected }) => (

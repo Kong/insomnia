@@ -27,6 +27,7 @@ import {
   type RequestLoaderData,
   useRequestLoaderData,
 } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { SegmentEvent } from '../../ui/analytics';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
@@ -372,7 +373,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                         <ItemContent
                           icon="code"
                           label="Generate Client Code"
-                          onClick={() => showModal(GenerateCodeModal, { request: activeRequest })}
+                          onClick={() => {
+                            window.main.trackSegmentEvent({ event: SegmentEvent.requestSendMenuGenerateCodeClicked });
+                            showModal(GenerateCodeModal, { request: activeRequest });
+                          }}
                         />
                       </DropdownItem>
                     </DropdownSection>
@@ -381,7 +385,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                         <ItemContent
                           icon="clock-o"
                           label="Send After Delay"
-                          onClick={() =>
+                          onClick={() => {
+                            window.main.trackSegmentEvent({ event: SegmentEvent.requestSendMenuSendAfterDelayClicked });
                             showModal(PromptModal, {
                               inputType: 'decimal',
                               title: 'Send After Delay',
@@ -390,15 +395,18 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                               onComplete: seconds => {
                                 setCurrentTimeout(+seconds * 1000);
                               },
-                            })
-                          }
+                            });
+                          }}
                         />
                       </DropdownItem>
                       <DropdownItem aria-label="Repeat on Interval">
                         <ItemContent
                           icon="repeat"
                           label="Repeat on Interval"
-                          onClick={() =>
+                          onClick={() => {
+                            window.main.trackSegmentEvent({
+                              event: SegmentEvent.requestSendMenuRepeatAfterIntervalClicked,
+                            });
                             showModal(PromptModal, {
                               inputType: 'decimal',
                               title: 'Send on Interval',
@@ -409,8 +417,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                                 sendOrConnect();
                                 setCurrentInterval(+seconds * 1000);
                               },
-                            })
-                          }
+                            });
+                          }}
                         />
                       </DropdownItem>
                       {downloadPath ? (
@@ -428,6 +436,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                             icon="download"
                             label="Download After Send"
                             onClick={async () => {
+                              window.main.trackSegmentEvent({
+                                event: SegmentEvent.requestSendMenuDownloadAfterSendClicked,
+                              });
                               const { canceled, filePaths } = await window.dialog.showOpenDialog({
                                 title: 'Select Download Location',
                                 buttonLabel: 'Select',
@@ -442,7 +453,16 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                         </DropdownItem>
                       )}
                       <DropdownItem aria-label="Send And Download">
-                        <ItemContent icon="download" label="Send And Download" onClick={() => sendOrConnect(true)} />
+                        <ItemContent
+                          icon="download"
+                          label="Send And Download"
+                          onClick={() => {
+                            window.main.trackSegmentEvent({
+                              event: SegmentEvent.requestSendMenuSendAndDownloadClicked,
+                            });
+                            sendOrConnect(true);
+                          }}
+                        />
                       </DropdownItem>
                     </DropdownSection>
                   </Dropdown>

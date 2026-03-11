@@ -36,8 +36,10 @@ import {
   type McpRequestLoaderData,
   useRequestLoaderData,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
 import { McpActionsDropdown } from '~/ui/components/dropdowns/mcp-actions-dropdown';
 import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
+import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
@@ -441,7 +443,12 @@ export const McpPane = () => {
                 aria-label="Server Capability filter"
                 className="group relative flex-1"
                 value={filter ?? ''}
-                onChange={setFilter}
+                onChange={value => {
+                  setFilter(value);
+                  if (value) {
+                    trackOnceDaily(SegmentEvent.mcpListFiltered);
+                  }
+                }}
               >
                 <Input
                   placeholder="Filter"
@@ -465,6 +472,7 @@ export const McpPane = () => {
                       setCollapsedPrimitives(['tools', 'resources', 'prompts']);
                     }
                     setAllExpanded(newState);
+                    window.main.trackSegmentEvent({ event: SegmentEvent.mcpListExpandCollapseClicked });
                   }}
                   className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                 >
@@ -537,6 +545,8 @@ export const McpPane = () => {
               </GridList>
             </div>
           </div>
+          <WorkspaceSyncDropdown />
+
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
           {isCertificatesModalOpen && <MCPCertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
         </div>
@@ -678,5 +688,3 @@ const CollectionGridListItem = (props: {
     </GridListItem>
   );
 };
-
-export default McpPane;

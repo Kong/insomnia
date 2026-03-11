@@ -1,9 +1,10 @@
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
 
+import { getTimeline } from '~/models/helpers/response-operations';
+
 import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
-import * as models from '../../../models';
 import { isRequest } from '../../../models/request';
 import { isResponse } from '../../../models/response';
 import {
@@ -57,7 +58,7 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       return;
     }
 
-    const timeline = models.response.getTimeline(activeResponse);
+    const timeline = getTimeline(activeResponse);
     const headers = timeline
       .filter(v => v.name === 'HeaderIn')
       .map(v => v.value)

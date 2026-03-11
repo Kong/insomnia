@@ -38,6 +38,10 @@ export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () =>
   appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT ? 'development' : 'production'];
 export const getSentryDsn = () => appConfig.sentryDsn;
+export const getCioWriteKey = () =>
+  appConfig.cio[isDevelopment() || env.PLAYWRIGHT ? 'development' : 'production'].writeKey;
+export const getCioSiteId = () =>
+  appConfig.cio[isDevelopment() || env.PLAYWRIGHT ? 'development' : 'production'].siteId;
 export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
 
 export const getBrowserUserAgent = () =>
@@ -77,7 +81,7 @@ export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 24;
 
 export const ACCEPTED_NODE_CA_FILE_EXTS = ['.pem', '.crt', '.cer', '.p12'];
 
-export const LLM_BACKENDS = ['gguf', 'claude', 'openai', 'gemini'] as const;
+export const LLM_BACKENDS = ['gguf', 'claude', 'openai', 'gemini', 'url'] as const;
 
 // Available editor key map
 export enum EditorKeyMap {

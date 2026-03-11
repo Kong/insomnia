@@ -1,4 +1,4 @@
-import { type CurrentPlan, type UserProfile } from 'insomnia-api';
+import { type Billing, type CurrentPlan, type FeatureList, type Organization, type UserProfile } from 'insomnia-api';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -16,13 +16,14 @@ import * as reactUse from 'react-use';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { userSession } from '~/models';
-import { isOwnerOfOrganization, isPersonalOrganization, type Organization } from '~/models/organization';
+import { isOwnerOfOrganization, isPersonalOrganization } from '~/models/organization';
 import type { Settings } from '~/models/settings';
 import { isScratchpad } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
+import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CommandPalette } from '~/ui/components/command-palette';
 import { GitHubStarsButton } from '~/ui/components/github-stars-button';
@@ -43,6 +44,7 @@ import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { sortOrganizations } from '~/ui/organization-utils';
+import { trackTempOrganizationOpened } from '~/ui/temp-segment-tracking';
 import { AsyncTask, getInitialRouteForOrganization } from '~/utils/router';
 
 import type { Route } from './+types/organization';
@@ -70,28 +72,6 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     user: undefined,
     currentPlan: undefined,
   };
-}
-
-export interface FeatureStatus {
-  enabled: boolean;
-  reason?: string;
-}
-
-export interface FeatureList {
-  bulkImport: FeatureStatus;
-  gitSync: FeatureStatus;
-  orgBasicRbac: FeatureStatus;
-  aiMockServers: FeatureStatus;
-  aiCommitMessages: FeatureStatus;
-  aiMcpClient: FeatureStatus;
-}
-
-export interface Billing {
-  // If true, the user has paid for the current period
-  isActive: boolean;
-  expirationWarningMessage: string;
-  expirationErrorMessage: string;
-  accessDenied: boolean;
 }
 
 export interface OrganizationFeatureLoaderData {
@@ -232,6 +212,13 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
       untrackedProjectsFetcher.load();
     }
   }, [organizationId, untrackedProjectsFetcher]);
+
+  // TODO(INS-1912): Remove in 12.5
+  useEffect(() => {
+    if (organizationId) {
+      trackTempOrganizationOpened(organizationId);
+    }
+  }, [organizationId]);
 
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
   const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
@@ -427,12 +414,20 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                 <Outlet />
               </RunnerProvider>
             </div>
-            <div className="relative flex items-center overflow-hidden [grid-area:Statusbar]">
+            <div className="relative flex items-center overflow-hidden [grid-area:Statusbar]" data-testid="statusbar">
               <div className="flex h-full w-[50px] shrink-0 items-center justify-center gap-2 border-r border-solid border-r-(--hl-md)">
                 <TooltipTrigger>
                   <ToggleButton
                     className="h-[10px] w-[10px] grow-0 gap-2 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
-                    onChange={setIsOrganizationSidebarOpen}
+                    onChange={value => {
+                      setIsOrganizationSidebarOpen(value);
+                      window.main.trackSegmentEvent({
+                        event: SegmentEvent.statusbarLeftbarToggled,
+                        properties: {
+                          status: value ? 'open' : 'collapsed',
+                        },
+                      });
+                    }}
                     isSelected={isOrganizationSidebarOpen}
                   >
                     {({ isSelected }) => {
@@ -470,6 +465,12 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     className="h-[10px] w-[10px] grow-0 rotate-90 gap-2 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                     onChange={flag => {
                       setIsMinimal(!flag);
+                      window.main.trackSegmentEvent({
+                        event: SegmentEvent.statusbarTopbarToggled,
+                        properties: {
+                          status: !flag ? 'minimal' : 'expanded',
+                        },
+                      });
                     }}
                     isSelected={!isMinimal}
                   >
@@ -527,7 +528,12 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     <div>
                       <Button
                         className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                        onPress={() => showModal(SettingsModal, { tab: 'data' })}
+                        onPress={() => {
+                          window.main.trackSegmentEvent({
+                            event: SegmentEvent.statusbarOrphanedProjectsClicked,
+                          });
+                          showModal(SettingsModal, { tab: 'data' });
+                        }}
                       >
                         <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click
                         here to view them.
@@ -538,7 +544,12 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     <TooltipTrigger delay={500}>
                       <Button
                         className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                        onPress={() => showModal(SettingsModal, { tab: 'data' })}
+                        onPress={() => {
+                          window.main.trackSegmentEvent({
+                            event: SegmentEvent.statusbarOrphanedProjectsClicked,
+                          });
+                          showModal(SettingsModal, { tab: 'data' });
+                        }}
                       >
                         <Icon icon="exclamation-circle" />
                       </Button>

@@ -5,10 +5,10 @@ import YAML from 'yaml';
 
 import { database, database as db } from '../../common/database';
 import { extractErrorMessages } from '../../common/import';
-import type { InsomniaFile } from '../../common/import-v5-parser';
+import { type InsomniaFile, InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import * as models from '../../models';
-import { isMcp, isWorkspace, type Workspace } from '../../models/workspace';
+import { isWorkspace, type Workspace } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import Stat from './stat';
 import { SystemError } from './system-error';
@@ -73,7 +73,10 @@ export class GitProjectNeDBClient {
 
     const dataStr = data.toString();
 
-    const doesFileContainInsomniaV5FormatTypeString = dataStr.split('\n')[0].trim().includes('insomnia.rest');
+    const fileTypeStr = dataStr.split('\n')[0].trim();
+    const doesFileContainInsomniaV5FormatTypeString = InsomniaFileTypeValues.some(fileType =>
+      fileTypeStr.includes(fileType),
+    );
 
     if (!doesFileContainInsomniaV5FormatTypeString) {
       throw this._errMissing(filePath);
@@ -146,10 +149,8 @@ export class GitProjectNeDBClient {
 
   async readdir(filePath: string) {
     filePath = path.normalize(filePath);
-    // Exclude the mcp workspace since it's not supported in git sync
-    const workspaces = (await db.find<Workspace>(models.workspace.type, { parentId: this._projectId })).filter(
-      w => !isMcp(w),
-    );
+    const workspaces = await db.find<Workspace>(models.workspace.type, { parentId: this._projectId });
+
     const workspaceMetas = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
       parentId: {
         $in: workspaces.map(w => w._id),

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
-import * as models from '../../models/index';
+import { getBodyBuffer, getBodyStream } from '~/models/helpers/response-operations';
+
 import type { ResponseHeader } from '../../models/response';
 
 interface MaybeResponse {
@@ -48,11 +49,11 @@ export function init(response?: MaybeResponse) {
       },
 
       getBody() {
-        return models.response.getBodyBuffer(response);
+        return getBodyBuffer(response);
       },
 
       getBodyStream() {
-        return models.response.getBodyStream(response);
+        return getBodyStream(response);
       },
 
       setBody(body: Buffer) {

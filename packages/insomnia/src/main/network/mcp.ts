@@ -239,10 +239,7 @@ const createTransportAndConnect = async (context: ConnectionContext, mcpClient: 
     wrapTransport();
     await mcpClient.connect(transport);
   } else {
-    const mcpRequest = await models.mcpRequest.getById(connectionOptions.requestId);
-    invariant(mcpRequest, 'MCP Request not found');
-
-    const authProvider = new McpOAuthClientProvider(mcpRequest, context);
+    const authProvider = new McpOAuthClientProvider(context);
     transport = await createStreamableHTTPTransport(context, connectionOptions, authProvider);
     wrapTransport();
     // Use a longer timeout for initial connection to allow for auth flow to complete
@@ -376,13 +373,15 @@ const performConnection = async (context: ConnectionContext) => {
   mcpClient.setNotificationHandler(CancelledNotificationSchema, notification => {
     const serverRequestId = notification.params.requestId;
     // handle server request cancellation
-    if (mcpServerElicitationRequests.has(serverRequestId)) {
-      console.log('Received server request cancellation notification for elicitation request', serverRequestId);
-      mcpServerElicitationRequests.delete(serverRequestId);
-    }
-    if (mcpServerSamplingRequests.has(serverRequestId)) {
-      console.log('Received server request cancellation notification for sampling request', serverRequestId);
-      mcpServerSamplingRequests.delete(serverRequestId);
+    if (serverRequestId !== undefined) {
+      if (mcpServerElicitationRequests.has(serverRequestId)) {
+        console.log('Received server request cancellation notification for elicitation request', serverRequestId);
+        mcpServerElicitationRequests.delete(serverRequestId);
+      }
+      if (mcpServerSamplingRequests.has(serverRequestId)) {
+        console.log('Received server request cancellation notification for sampling request', serverRequestId);
+        mcpServerSamplingRequests.delete(serverRequestId);
+      }
     }
   });
   const originClientRequest = mcpClient.request.bind(mcpClient);

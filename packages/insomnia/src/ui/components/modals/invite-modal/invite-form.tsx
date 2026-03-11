@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import { checkSeats, type CheckSeatsResponse, needsToIncreaseSeats, needsToUpgrade, type Role } from 'insomnia-api';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -19,19 +20,13 @@ import { debounce } from '~/common/misc';
 import { isOwnerOfOrganization } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
-import {
-  type CheckSeatsResponse,
-  needsToIncreaseSeats,
-  needsToUpgrade,
-} from '~/routes/organization.$organizationId.collaborators-check-seats';
 import { useCollaboratorsSearchLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-search';
 import { SegmentEvent } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 import { useIsLightTheme } from '~/ui/hooks/theme';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { startInvite } from './encryption';
-import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
+import { OrganizationMemberRolesSelector, SELECTOR_TYPE } from './organization-member-roles-selector';
 
 export function getSearchParamsString(
   searchParams: URLSearchParams,
@@ -82,18 +77,18 @@ const upgradeBannerWording = {
     submitLink: getAppWebsiteBaseURL() + '/app/pricing?source=app_invite_modal',
   },
   [needsToIncreaseSeats]: {
-    ownerTitle: 'Increase plan seats to invite more people',
-    memberTitle: 'Your team is full',
+    ownerTitle: 'You have consumed all of your seats',
+    memberTitle: 'Your team has consumed all of its seats',
     ownerDescription: (
       <>
-        Your team has reached your plan's total purchased seats. Increase your plan's number of seats to continue
-        inviting new people.
+        Your team has reached your plan’s total purchased seats. To invite any new people, purchase more seats by
+        clicking Increase Seats below. You can still invite existing users to different organizations.
       </>
     ),
     memberDescription: (
       <>
-        Your team has reached your plan's total purchased seats. Tell your plan's owner to increase the number of seats
-        to continue inviting new people.
+        Your team has reached your plan’s total purchased seats. Tell your plan's owner to increase the number of seats
+        to continue inviting new people. You can still invite existing users to different organizations.
       </>
     ),
     submitText: 'Increase seats',
@@ -155,6 +150,13 @@ export const InviteForm = ({
     }
   }
 
+  /* Why is inviting others still allowed when there are no seats available?
+  This is because a specific scenario might occur: User A has purchased 3 seats and owns two organizations, X and Y.
+  User B has already been invited to Organization X, which now has 3 members (full).
+  At this point, even though User A has run out of seats, they can still invite User B to Organization Y. */
+  const isFormDisabled =
+    checkSeatsResponseData && !checkSeatsResponseData.isAllowed && checkSeatsResponseData.code !== needsToIncreaseSeats;
+
   const searchResult = useMemo(() => collaboratorSearchLoader.data || [], [collaboratorSearchLoader.data]);
 
   useEffect(() => {
@@ -162,21 +164,20 @@ export const InviteForm = ({
   }, [searchResult]);
 
   useEffect(() => {
-    const checkSeats = async () => {
+    const checkSeatsFn = async () => {
       const validEmails = emails.filter(e => e.isValid);
       if (validEmails.length === 0) {
         setError('');
       } else {
-        const data = await insomniaFetch<CheckSeatsResponse>({
-          method: 'POST',
-          path: `/v1/organizations/${organizationId}/check-seats`,
-          data: { emails: validEmails.map(e => e.email) },
+        const data = await checkSeats({
+          organizationId,
           sessionId,
+          emails: validEmails.map(e => e.email),
         });
         setError(data.isAllowed ? '' : 'You cannot invite more people than the seats you have remaining');
       }
     };
-    checkSeats();
+    checkSeatsFn();
   }, [emails, organizationId, sessionId]);
 
   const addEmail = ({
@@ -338,7 +339,7 @@ export const InviteForm = ({
               onBlur={handleInputBlur}
               onPaste={handlePaste}
               onChange={e => handleSearch(e.currentTarget.value)}
-              disabled={checkSeatsResponseData && !checkSeatsResponseData.isAllowed}
+              disabled={isFormDisabled}
             />
           </div>
           <div className="flex w-[81px] items-center">
@@ -355,7 +356,7 @@ export const InviteForm = ({
         </div>
         <Button
           className="h-[40px] w-[67px] shrink-0 self-end rounded-sm bg-[#4000bf] text-center text-(--color-font-surprise) disabled:cursor-not-allowed disabled:opacity-70"
-          isDisabled={loading || (checkSeatsResponseData && !checkSeatsResponseData.isAllowed)}
+          isDisabled={loading || isFormDisabled}
           onPress={async () => {
             if (emails.some(({ isValid }) => !isValid)) {
               setError('Some emails are invalid, please correct them before inviting.');

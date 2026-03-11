@@ -25,6 +25,7 @@ import { useCACertUpdateActionFetcher } from '~/routes/organization.$organizatio
 import { useClientCertDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.clientcert.delete';
 import { useClientCertNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.clientcert.new';
 import { useClientCertUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.clientcert.update';
+import { Tooltip } from '~/ui/components/tooltip';
 
 import type { ClientCertificate } from '../../../models/client-certificate';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -254,9 +255,15 @@ const ClientCertificateGridListItem = ({ certificate }: { certificate: ClientCer
     <GridListItem className="flex flex-col items-center justify-between gap-2 p-4 outline-hidden ring-inset focus:ring-1 focus:ring-(--hl-md)">
       <div className="flex w-full items-center gap-2">
         {Boolean(certificate.pfx || certificate.cert) && (
-          <Icon icon="file-contract" className="w-4" title={certificate.pfx || certificate.cert || ''} />
+          <Tooltip message={certificate.pfx || certificate.cert || ''} position="top">
+            <Icon icon="file-contract" className="w-4" />
+          </Tooltip>
         )}
-        {certificate.key && <Icon icon="key" title={certificate.key} />}
+        {certificate.key && (
+          <Tooltip message={certificate.key} position="top">
+            <Icon icon="key" />
+          </Tooltip>
+        )}
         <div className="flex-1 truncate text-sm text-(--color-font)">{certificate.host}</div>
         {certificate.passphrase && (
           <div className="flex items-center gap-2 truncate">
@@ -334,7 +341,9 @@ export const CACertificate = ({ caCertificate, tip }: { caCertificate?: CaCertif
       <div className="flex flex-col gap-2">
         {caCertificate ? (
           <div className="flex items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-sm) p-4">
-            <Icon icon="file-contract" className="w-4" />
+            <Tooltip message={caCertificate.path || ''} position="top">
+              <Icon icon="file-contract" className="w-4" />
+            </Tooltip>
             <div className="flex-1 truncate text-sm text-(--color-font)" title={caCertificate.path || ''}>
               {caCertificate?.path?.split('\\')?.pop()?.split('/')?.pop()}
             </div>

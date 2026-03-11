@@ -1,17 +1,7 @@
-import type { FetchConfig } from 'insomnia-api';
+import { type FetchConfig, ResponseFailError } from 'insomnia-api';
 
 import { getApiBaseURL, getClientString, INSOMNIA_FETCH_TIME_OUT, PLAYWRIGHT } from '../common/constants';
 import { generateId } from '../common/misc';
-
-export class ResponseFailError extends Error {
-  constructor(name: string, msg: string, response: Response) {
-    super(msg);
-    this.name = 'ResponseFailError';
-    if (name) this.name += `: ${name}`;
-    this.response = response;
-  }
-  response;
-}
 
 // Adds headers, retries and opens deep links returned from the api
 export async function insomniaFetch<T = void>({
@@ -56,8 +46,8 @@ export async function insomniaFetch<T = void>({
     }
     const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
     if (onlyResolveOnSuccess && !response.ok) {
-      let errName = `CODE-${response.status}`,
-        errMsg = response.statusText;
+      let errName = `CODE-${response.status}`;
+      let errMsg = response.statusText;
       if (isJson) {
         try {
           const json = await response.json();

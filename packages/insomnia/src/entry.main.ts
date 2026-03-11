@@ -8,13 +8,16 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
 
+import { getCurrentSessionId } from '~/account/session';
+import { database, initDatabase } from '~/insomnia-data';
+import { mainDatabase } from '~/main/database.main';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
+import { runGitCredentialsMigration } from '~/sync/git/migrations';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
-import { database } from './common/database';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
@@ -110,13 +113,16 @@ app.on('ready', async () => {
   }
 
   // Init some important things first
-  await database.init();
+  await initDatabase(mainDatabase);
   await _createModelInstances();
   // backup needs the channel from settings which needs the database
   await backupIfNewerVersionAvailable();
   sentryWatchAnalyticsEnabled();
   watchProxySettings();
   windowUtils.init();
+
+  await runGitCredentialsMigration();
+
   await _launchApp();
 
   // Init the rest
@@ -231,7 +237,8 @@ const _launchApp = async () => {
         window.webContents.send('shell:open', lastArg);
       });
       window = windowUtils.createWindowsAndReturnMain();
-      const openDeepLinkUrl = (url: string) => {
+
+      const openDeepLinkUrl = async (url: string) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {
@@ -242,8 +249,18 @@ const _launchApp = async () => {
         } else {
           window = windowUtils.createWindowsAndReturnMain();
         }
-        window.webContents.send('shell:open', url);
+        // Block imports when not logged in
+        const isImportDeeplink = url.includes('://app/import');
+        const isLoggedIn = (await getCurrentSessionId()) ? true : false;
+        const shouldShowLoginPrompt = isImportDeeplink && !isLoggedIn;
+        if (shouldShowLoginPrompt) {
+          const title = encodeURIComponent('You must be logged in to open this link');
+          const message = encodeURIComponent('Please log in and try again.');
+          return window.webContents.send('shell:open', `insomnia://app/alert?title=${title}&message=${message}`);
+        }
+        return window.webContents.send('shell:open', url);
       };
+
       app.on('open-url', (_event, url) => {
         openDeepLinkUrl(url);
       });

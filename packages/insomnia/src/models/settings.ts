@@ -2,7 +2,7 @@ import { getAppDefaultDarkTheme, getAppDefaultLightTheme, getAppDefaultTheme } f
 import { database as db } from '../common/database';
 import * as hotkeys from '../common/hotkeys';
 import { HttpVersions, type KeyboardShortcut, type Settings as BaseSettings, UpdateChannel } from '../common/settings';
-import type { BaseModel } from './index';
+import type { BaseModel } from './types';
 
 export type Settings = BaseModel & BaseSettings;
 export const name = 'Settings';

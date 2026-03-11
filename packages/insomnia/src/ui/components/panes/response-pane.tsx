@@ -2,6 +2,7 @@ import { extension as mimeExtension } from 'mime-types';
 import { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
+import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
 import { useRootLoaderData } from '~/root';
 import { SegmentEvent } from '~/ui/analytics';
 import { jsonPrettify } from '~/utils/prettify/json';
@@ -128,7 +129,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
     );
   }
 
-  const timeline = models.response.getTimeline(activeResponse);
+  const timeline = getTimeline(activeResponse);
   const cookieHeaders = getSetCookieHeaders(activeResponse.headers);
 
   return (
@@ -222,7 +223,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
               copyToClipboard={async () => {
-                const bodyBuffer = activeResponse ? await models.response.getBodyBuffer(activeResponse) : null;
+                const bodyBuffer = activeResponse ? await getBodyBuffer(activeResponse) : null;
                 if (bodyBuffer) {
                   window.clipboard.writeText(bodyBuffer.toString('utf8'));
                 }
@@ -241,7 +242,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             filter={filter}
             filterHistory={filterHistory}
             bodyBuffer={activeResponse.bodyBuffer}
-            getBody={() => models.response.getBodyBuffer(activeResponse)}
+            getBody={() => getBodyBuffer(activeResponse)}
             previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
             responseId={activeResponse._id}
             updateFilter={activeResponse.error ? undefined : handleSetFilter}
@@ -250,7 +251,12 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">
           <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
-            <ResponseHeadersViewer headers={activeResponse.headers} />
+            <ResponseHeadersViewer
+              headers={activeResponse.headers}
+              onCopyAll={() => {
+                window.main.trackSegmentEvent({ event: SegmentEvent.responseHeadersCopyAllClicked });
+              }}
+            />
           </ErrorBoundary>
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="cookies">

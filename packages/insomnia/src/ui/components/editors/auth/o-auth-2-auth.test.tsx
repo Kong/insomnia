@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { convertEpochToMilliseconds } from './o-auth-2-auth';
+import { convertEpochToMilliseconds } from '../../time-from-now';
 
 describe('convertEpochToMilliseconds()', () => {
   it('should convert microseconds to milliseconds', () => {

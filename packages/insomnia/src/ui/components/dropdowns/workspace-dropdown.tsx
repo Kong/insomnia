@@ -1,6 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import {
   exportGlobalEnvironmentToFile,
+  exportMcpClientToFile,
   exportMockServerToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
 import { type FC, type ReactNode, useCallback, useEffect, useState } from 'react';
@@ -53,11 +54,11 @@ import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 
 export const WorkspaceDropdown: FC<{}> = () => {
-  const { organizationId, projectId, workspaceId } = useParams<{
+  const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
-  }>();
+  };
   invariant(organizationId, 'Expected organizationId');
   const { activeWorkspace, activeWorkspaceMeta, activeProject, activeMockServer } = useWorkspaceLoaderData()!;
 
@@ -265,49 +266,49 @@ export const WorkspaceDropdown: FC<{}> = () => {
                 }),
             }),
         },
-        ...(isMcp(activeWorkspace)
-          ? []
-          : [
+        {
+          id: 'export',
+          name: 'Export',
+          icon: <Icon icon="file-export" />,
+          action: () => {
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.exportStarted,
+              properties: {
+                source: `${activeWorkspace.scope}-menu`,
+              },
+            });
+
+            if (activeWorkspace.scope === 'mock-server') {
+              return exportMockServerToFile(activeWorkspace);
+            }
+
+            if (activeWorkspace.scope === 'environment') {
+              return exportGlobalEnvironmentToFile(activeWorkspace);
+            }
+
+            if (activeWorkspace.scope === 'mcp') {
+              return exportMcpClientToFile(activeWorkspace);
+            }
+
+            return setIsExportModalOpen(true);
+          },
+        },
+        ...(activeWorkspace.scope === 'mock-server'
+          ? [
               {
-                id: 'export',
-                name: 'Export',
-                icon: <Icon icon="file-export" />,
+                id: 'generate-collection',
+                name: 'Generate Collection',
+                icon: <Icon icon="code" />,
                 action: () => {
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.exportStarted,
-                    properties: {
-                      source: `${activeWorkspace.scope}-menu`,
-                    },
+                  generateCollectionFetcher.submit({
+                    organizationId,
+                    projectId: activeWorkspace.parentId,
+                    workspaceId: activeWorkspace._id,
                   });
-
-                  if (activeWorkspace.scope === 'mock-server') {
-                    return exportMockServerToFile(activeWorkspace);
-                  }
-
-                  if (activeWorkspace.scope === 'environment') {
-                    return exportGlobalEnvironmentToFile(activeWorkspace);
-                  }
-
-                  return setIsExportModalOpen(true);
                 },
               },
-              ...(activeWorkspace.scope === 'mock-server'
-                ? [
-                    {
-                      id: 'generate-collection',
-                      name: 'Generate Collection',
-                      icon: <Icon icon="code" />,
-                      action: () => {
-                        generateCollectionFetcher.submit({
-                          organizationId,
-                          projectId: activeWorkspace.parentId,
-                          workspaceId: activeWorkspace._id,
-                        });
-                      },
-                    },
-                  ]
-                : []),
-            ]),
+            ]
+          : []),
         {
           id: 'settings',
           name: 'Settings',
