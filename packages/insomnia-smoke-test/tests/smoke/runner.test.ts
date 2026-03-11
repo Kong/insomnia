@@ -1,20 +1,14 @@
 import { expect, type Page } from '@playwright/test';
 
-import { getFixturePath, loadFixture } from '../../playwright/paths';
+import { getFixturePath } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test.describe('runner features tests', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  test.beforeEach(async ({ app, page }) => {
-    const text = await loadFixture('runner-collection.yaml');
-    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-
-    await page.getByLabel('Import').click();
-    await page.locator('[data-test-id="import-from-clipboard"]').click();
-    await page.getByRole('button', { name: 'Scan' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByTestId('settings-button').click();
+  test.beforeEach(async ({ page, insomnia }) => {
+    await insomnia.projectPage.importFixture('runner-collection.yaml');
+    await insomnia.statusbar.openPreferences();
     await page.getByText('Use vertical layout').click();
     await page.locator('.app').press('Escape');
   });

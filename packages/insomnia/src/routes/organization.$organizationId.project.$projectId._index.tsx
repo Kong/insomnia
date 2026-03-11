@@ -1063,6 +1063,7 @@ const Component = () => {
                 <div className="flex-1 overflow-y-auto">
                   <GridList
                     aria-label="Files"
+                    data-testid="workspace-grid"
                     className="grid grid-cols-[repeat(auto-fit,200px)] grid-rows-[repeat(auto-fit,200px)] gap-4 p-(--padding-md) data-empty:flex data-empty:justify-center"
                     items={filesWithPresence}
                     renderEmptyState={() => {

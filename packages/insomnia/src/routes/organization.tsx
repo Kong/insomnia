@@ -414,7 +414,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                 <Outlet />
               </RunnerProvider>
             </div>
-            <div className="relative flex items-center overflow-hidden [grid-area:Statusbar]">
+            <div className="relative flex items-center overflow-hidden [grid-area:Statusbar]" data-testid="statusbar">
               <div className="flex h-full w-[50px] shrink-0 items-center justify-center gap-2 border-r border-solid border-r-(--hl-md)">
                 <TooltipTrigger>
                   <ToggleButton

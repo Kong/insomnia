@@ -102,7 +102,17 @@ export const MessageEventView = ({ event }: Props) => {
 
   let pretty = raw;
   try {
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(raw, (_key, value) => {
+      // Try to parse any nested JSON strings
+      if (typeof value === 'string' && (value.startsWith('{') || value.startsWith('['))) {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      }
+      return value;
+    });
     // If call tool response, try to parse the `result.content` field if it's JSON string
     if (isCallToolEvent && 'result' in parsed) {
       const callToolResult = parsed.result;
