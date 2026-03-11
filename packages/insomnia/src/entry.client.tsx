@@ -30,7 +30,12 @@ initializeSentry();
 // Initialize database for renderer process
 await initDatabase(clientDatabase);
 // Initialize services for renderer process
-initServices(window._dataServices as Services);
+if (!window._dataServices) {
+  throw new Error(
+    'window._dataServices is not available. This entrypoint must run in an environment with the preload bridge.',
+  );
+}
+initServices(window._dataServices);
 // Remove the global services reference after initialization to improve security by preventing unintended access from the global scope.
 delete window._dataServices;
 
