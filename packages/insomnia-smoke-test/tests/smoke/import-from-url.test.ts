@@ -4,8 +4,7 @@ import { InsomniaApp } from '../../playwright/pages';
 import { test } from '../../playwright/test';
 
 test.describe('Import from URL', () => {
-  test.beforeEach(async ({ app, page }) => {
-    const insomnia = new InsomniaApp(page, app);
+  test.beforeEach(async ({ insomnia }) => {
     await insomnia.projectPage.importFixture('import-from-url.yaml');
   });
 

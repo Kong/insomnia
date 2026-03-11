@@ -1,15 +1,12 @@
 import { expect, type Page } from '@playwright/test';
 
-import { InsomniaApp } from '../../playwright/pages';
 import { getFixturePath } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test.describe('runner features tests', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  test.beforeEach(async ({ app, page }) => {
-    const insomnia = new InsomniaApp(page, app);
-
+  test.beforeEach(async ({ page, insomnia }) => {
     await insomnia.projectPage.importFixture('runner-collection.yaml');
     await insomnia.statusbar.openPreferences();
     await page.getByText('Use vertical layout').click();

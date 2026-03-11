@@ -6,19 +6,14 @@ import { ProjectPage } from './project';
 /**
  * Root facade for the Insomnia E2E Page Object Model.
  *
- * Instantiate **once** per test:
- *
  * ```ts
- * const insomnia = new InsomniaApp(page, app);
+ * test('example test', async ({ insomnia }) => {
+ *  // Project operations
+ *  await insomnia.projectPage.importFixture('simple.yaml');
  *
- * // Login page
- * await insomnia.loginPage.loginForm.goToScratchPad();
- *
- * // Project operations
- * await insomnia.projectPage.importFixture('simple.yaml');
- *
- * // Shared components (statusbar is always present)
- * await insomnia.statusbar.openPreferences();
+ *  // Shared components (statusbar is always present)
+ *  await insomnia.statusbar.openPreferences();
+ * });
  * ```
  *
  * ## Architecture

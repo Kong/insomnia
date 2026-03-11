@@ -1,11 +1,9 @@
 import { expect } from '@playwright/test';
 
-import { InsomniaApp } from '../../playwright/pages';
 import { test } from '../../playwright/test';
 
-test('can send requests', async ({ app, page }) => {
+test('can send requests', async ({ page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
-  const insomnia = new InsomniaApp(page, app);
 
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.getByTestId('response-pane');

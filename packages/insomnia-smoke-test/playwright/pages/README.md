@@ -37,9 +37,9 @@ The goal is to keep tests stable, readable, and selector-safe.
 Instantiate once per test and use composed objects:
 
 ```ts
-const insomnia = new InsomniaApp(page, app);
-
-await insomnia.projectPage.createCollection();
-await insomnia.tabbar.closeTab('New Request');
-await expect.soft(insomnia.tabbar.tabLocator('foo')).toHaveAttribute('data-selected', 'true');
+test('example test', async ({ insomnia }) => {
+  await insomnia.projectPage.createCollection();
+  await insomnia.tabbar.closeTab('New Request');
+  await expect.soft(insomnia.tabbar.tabLocator('foo')).toHaveAttribute('data-selected', 'true');
+});
 ```
