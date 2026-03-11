@@ -2,10 +2,15 @@ import path from 'node:path';
 
 import { expect } from '@playwright/test';
 
-import { DataPage } from '../../pages/preferences/data';
-import { ProjectPage } from '../../pages/project';
-import { WorkspacePage } from '../../pages/workspace';
 import { test } from '../../playwright/test';
+import {
+  cleanupExportDir,
+  compareWithFixture,
+  createTempExportDir,
+  getExportedFiles,
+  readExportedFile,
+  waitForExportFiles,
+} from '../../playwright/utils';
 
 test.describe('Export', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
@@ -15,27 +20,24 @@ test.describe('Export', () => {
     'export/Collection-B-wrk_64f68b9501cf48c5b4281e28718b7d41.yaml',
   ];
 
-  test('Can export project files from Preferences Data tab in YAML format', async ({ app, page }) => {
-    const projectPage = new ProjectPage(page, app);
-    const dataPage = new DataPage(page, app);
-
+  test('Can export project files from Preferences Data tab in YAML format', async ({ insomnia, page }) => {
     const projectName = 'Export Test Project';
-    await projectPage.createProject(projectName, 'local');
-    await projectPage.waitForEmptyProjectView();
-    await projectPage.importMultipleFixtures(FIXTURE_FILES);
+    await insomnia.projectPage.createProject(projectName, 'local');
+    await insomnia.projectPage.waitForEmptyProjectView();
+    await insomnia.projectPage.importMultipleFixtures(FIXTURE_FILES);
     const filesGrid = page.getByLabel('Files');
     await expect.soft(filesGrid.getByLabel('Collection A')).toBeVisible();
     await expect.soft(filesGrid.getByLabel('Collection B')).toBeVisible();
-    const tempDir = dataPage.createTempExportDir();
+    const tempDir = createTempExportDir();
 
     try {
-      await dataPage.mockOpenDialogForDirectory(tempDir);
-      await dataPage.openDataTab();
-      await dataPage.clickExportProjectButton(projectName);
-      await dataPage.selectExportFormat('yaml');
-      await dataPage.waitForExportFiles(tempDir, 2);
-      await dataPage.closeSettingsModal();
-      const exportedFiles = dataPage.getExportedFiles(tempDir);
+      await insomnia.preferencesPage.dataTab.mockOpenDialogForDirectory(tempDir);
+      await insomnia.preferencesPage.dataTab.openDataTab();
+      await insomnia.preferencesPage.dataTab.clickExportProjectButton(projectName);
+      await insomnia.preferencesPage.dataTab.selectExportFormat('yaml');
+      await waitForExportFiles(tempDir, 2);
+      await insomnia.preferencesPage.closePreferences();
+      const exportedFiles = getExportedFiles(tempDir);
       expect.soft(exportedFiles.length).toBe(2);
       const fixtureMap: Record<string, string> = {
         'Collection-A': FIXTURE_FILES[0],
@@ -43,7 +45,7 @@ test.describe('Export', () => {
       };
 
       for (const exportedFile of exportedFiles) {
-        const exportedContent = dataPage.readExportedFile(exportedFile);
+        const exportedContent = readExportedFile(exportedFile);
         const fileName = path.basename(exportedFile);
 
         // Find the matching fixture file by collection name
@@ -55,42 +57,39 @@ test.describe('Export', () => {
         expect.soft(fixtureFile, `Should find fixture for ${collectionName}`).toBeTruthy();
 
         // Compare with fixture
-        const comparison = dataPage.compareWithFixture(exportedContent, fixtureFile);
+        const comparison = compareWithFixture(exportedContent, fixtureFile);
 
         expect.soft(comparison.matches, `Exported file ${fileName} should match fixture ${fixtureFile}`).toBe(true);
       }
     } finally {
-      dataPage.cleanupExportDir(tempDir);
+      cleanupExportDir(tempDir);
     }
   });
 
-  test('Can export all data from Preferences Data tab', async ({ app, page }) => {
-    const projectPage = new ProjectPage(page, app);
-    const dataPage = new DataPage(page, app);
-
+  test('Can export all data from Preferences Data tab', async ({ insomnia, page }) => {
     const projectName = 'Export All Data Test';
-    await projectPage.createProject(projectName, 'local');
-    await projectPage.waitForEmptyProjectView();
-    await projectPage.importMultipleFixtures(FIXTURE_FILES);
+    await insomnia.projectPage.createProject(projectName, 'local');
+    await insomnia.projectPage.waitForEmptyProjectView();
+    await insomnia.projectPage.importMultipleFixtures(FIXTURE_FILES);
     const filesGrid = page.getByLabel('Files');
     await expect.soft(filesGrid.getByLabel('Collection A')).toBeVisible();
     await expect.soft(filesGrid.getByLabel('Collection B')).toBeVisible();
-    const tempDir = dataPage.createTempExportDir();
+    const tempDir = createTempExportDir();
 
     try {
-      await dataPage.mockOpenDialogForDirectory(tempDir);
-      await dataPage.openDataTab();
-      await dataPage.clickExportAllDataButton();
-      await dataPage.waitForExportCompleteAlert();
-      await dataPage.closeSettingsModal();
-      const exportedFiles = dataPage.getExportedFiles(tempDir).filter(file => !file.includes('scratchpad'));
+      await insomnia.preferencesPage.dataTab.mockOpenDialogForDirectory(tempDir);
+      await insomnia.preferencesPage.dataTab.openDataTab();
+      await insomnia.preferencesPage.dataTab.clickExportAllDataButton();
+      await insomnia.preferencesPage.dataTab.waitForExportCompleteAlert();
+      await insomnia.preferencesPage.closePreferences();
+      const exportedFiles = getExportedFiles(tempDir).filter((file: string) => !file.includes('scratchpad'));
       expect.soft(exportedFiles.length).toBe(2);
       const fixtureMap: Record<string, string> = {
         'Collection-A': FIXTURE_FILES[0],
         'Collection-B': FIXTURE_FILES[1],
       };
       for (const exportedFile of exportedFiles) {
-        const exportedContent = dataPage.readExportedFile(exportedFile);
+        const exportedContent = readExportedFile(exportedFile);
         const fileName = path.basename(exportedFile);
 
         const collectionNameMatch = fileName.match(/^(Collection-[AB])/);
@@ -99,47 +98,44 @@ test.describe('Export', () => {
         const collectionName = String(collectionNameMatch?.[1]);
         const fixtureFile = String(fixtureMap[collectionName]);
         expect.soft(fixtureFile, `Should find fixture for ${collectionName}`).toBeTruthy();
-        const comparison = dataPage.compareWithFixture(exportedContent, fixtureFile);
+        const comparison = compareWithFixture(exportedContent, fixtureFile);
 
         expect.soft(comparison.matches, `Exported file ${fileName} should match fixture ${fixtureFile}`).toBe(true);
       }
     } finally {
-      dataPage.cleanupExportDir(tempDir);
+      cleanupExportDir(tempDir);
     }
   });
 
-  test('Can export project files from Preferences Data tab in HAR format', async ({ app, page }) => {
-    const projectPage = new ProjectPage(page, app);
-    const dataPage = new DataPage(page, app);
-
+  test('Can export project files from Preferences Data tab in HAR format', async ({ insomnia, page }) => {
     const projectName = 'Export Project HAR Test';
 
-    await projectPage.createProject(projectName, 'local');
+    await insomnia.projectPage.createProject(projectName, 'local');
 
-    await projectPage.waitForEmptyProjectView();
+    await insomnia.projectPage.waitForEmptyProjectView();
 
-    await projectPage.importMultipleFixtures(FIXTURE_FILES);
+    await insomnia.projectPage.importMultipleFixtures(FIXTURE_FILES);
 
     const filesGrid = page.getByLabel('Files');
     await expect.soft(filesGrid.getByLabel('Collection A')).toBeVisible();
     await expect.soft(filesGrid.getByLabel('Collection B')).toBeVisible();
 
-    const tempDir = dataPage.createTempExportDir();
+    const tempDir = createTempExportDir();
     const exportFilePath = path.join(tempDir, `${projectName}.har`);
 
     try {
-      await dataPage.mockSaveDialogForFile(exportFilePath);
+      await insomnia.preferencesPage.dataTab.mockSaveDialogForFile(exportFilePath);
 
-      await dataPage.openDataTab();
+      await insomnia.preferencesPage.dataTab.openDataTab();
 
-      await dataPage.clickExportProjectButton(projectName);
+      await insomnia.preferencesPage.dataTab.clickExportProjectButton(projectName);
 
-      await dataPage.selectExportFormat('har');
-      await dataPage.waitForExportFiles(tempDir, 1);
+      await insomnia.preferencesPage.dataTab.selectExportFormat('har');
+      await waitForExportFiles(tempDir, 1);
 
-      await dataPage.closeSettingsModal();
+      await insomnia.preferencesPage.closePreferences();
 
-      const exportedContent = dataPage.readExportedFile(exportFilePath);
+      const exportedContent = readExportedFile(exportFilePath);
 
       const har = JSON.parse(exportedContent);
 
@@ -156,86 +152,74 @@ test.describe('Export', () => {
       expect.soft(firstEntry.request.method, 'HAR entry request should have method').toBeDefined();
       expect.soft(firstEntry.request.url, 'HAR entry request should have url').toBeDefined();
     } finally {
-      dataPage.cleanupExportDir(tempDir);
+      cleanupExportDir(tempDir);
     }
   });
 
-  test('Can export single workspace from workspace card dropdown', async ({ app, page }) => {
-    const projectPage = new ProjectPage(page, app);
-    const workspacePage = new WorkspacePage(page);
-    const dataPage = new DataPage(page, app);
-
+  test('Can export single workspace from workspace card dropdown', async ({ insomnia, page }) => {
     const projectName = 'Export Single Workspace Test';
     const fixtureFile = FIXTURE_FILES[0];
-    await projectPage.createProject(projectName, 'local');
-    await projectPage.waitForEmptyProjectView();
-    await projectPage.importFixtureFromEmptyProject(fixtureFile);
-    await workspacePage.waitForWorkspaceLoaded();
-    await workspacePage.goBackToProject();
+    await insomnia.projectPage.createProject(projectName, 'local');
+    await insomnia.projectPage.waitForEmptyProjectView();
+    await insomnia.projectPage.importFixture(fixtureFile);
+    await insomnia.workspacePage.waitForWorkspaceLoaded();
+    await insomnia.workspacePage.goBackToProject();
     const filesGrid = page.getByLabel('Files');
     await expect.soft(filesGrid.getByLabel('Collection A')).toBeVisible();
-    const tempDir = dataPage.createTempExportDir();
+    const tempDir = createTempExportDir();
     const exportFilePath = path.join(tempDir, 'Collection-A-export.yaml');
 
     try {
-      await projectPage.exportWorkspaceFromCard('Collection A', exportFilePath, 'yaml');
-      await dataPage.waitForExportFiles(tempDir, 1);
-      const exportedContent = dataPage.readExportedFile(exportFilePath);
-      const comparison = dataPage.compareWithFixture(exportedContent, fixtureFile);
+      await insomnia.projectPage.exportWorkspaceFromCard('Collection A', exportFilePath, 'yaml');
+      await waitForExportFiles(tempDir, 1);
+      const exportedContent = readExportedFile(exportFilePath);
+      const comparison = compareWithFixture(exportedContent, fixtureFile);
 
       expect.soft(comparison.matches, `Exported file should match fixture ${fixtureFile}`).toBe(true);
     } finally {
-      dataPage.cleanupExportDir(tempDir);
+      cleanupExportDir(tempDir);
     }
   });
 
-  test('Can export single workspace from workspace page dropdown', async ({ app, page }) => {
-    const projectPage = new ProjectPage(page, app);
-    const workspacePage = new WorkspacePage(page, app);
-    const dataPage = new DataPage(page, app);
-
+  test('Can export single workspace from workspace page dropdown', async ({ insomnia, page }) => {
     const projectName = 'Export Workspace Page Dropdown Test';
     const fixtureFile = FIXTURE_FILES[0];
-    await projectPage.createProject(projectName, 'local');
-    await projectPage.waitForEmptyProjectView();
-    await projectPage.importFixtureFromEmptyProject(fixtureFile);
-    await workspacePage.waitForWorkspaceLoaded();
-    const tempDir = dataPage.createTempExportDir();
+    await insomnia.projectPage.createProject(projectName, 'local');
+    await insomnia.projectPage.waitForEmptyProjectView();
+    await insomnia.projectPage.importFixture(fixtureFile);
+    await insomnia.workspacePage.waitForWorkspaceLoaded();
+    const tempDir = createTempExportDir();
     const exportFilePath = path.join(tempDir, 'Collection-A-workspace-page-dropdown-export.yaml');
 
     try {
-      await workspacePage.exportWorkspaceFromDropdown(exportFilePath, 'yaml');
-      await dataPage.waitForExportFiles(tempDir, 1);
-      const exportedContent = dataPage.readExportedFile(exportFilePath);
-      const comparison = dataPage.compareWithFixture(exportedContent, fixtureFile);
+      await insomnia.workspacePage.exportWorkspaceFromDropdown(exportFilePath, 'yaml');
+      await waitForExportFiles(tempDir, 1);
+      const exportedContent = readExportedFile(exportFilePath);
+      const comparison = compareWithFixture(exportedContent, fixtureFile);
 
       expect.soft(comparison.matches, `Exported file should match fixture ${fixtureFile}`).toBe(true);
     } finally {
-      dataPage.cleanupExportDir(tempDir);
+      cleanupExportDir(tempDir);
     }
   });
 
-  test('Can export single workspace from workspace card dropdown in HAR format', async ({ app, page }) => {
-    const projectPage = new ProjectPage(page, app);
-    const workspacePage = new WorkspacePage(page);
-    const dataPage = new DataPage(page, app);
-
+  test('Can export single workspace from workspace card dropdown in HAR format', async ({ insomnia, page }) => {
     const projectName = 'Export Single Workspace HAR Test';
     const fixtureFile = FIXTURE_FILES[0];
-    await projectPage.createProject(projectName, 'local');
-    await projectPage.waitForEmptyProjectView();
-    await projectPage.importFixtureFromEmptyProject(fixtureFile);
-    await workspacePage.waitForWorkspaceLoaded();
-    await workspacePage.goBackToProject();
+    await insomnia.projectPage.createProject(projectName, 'local');
+    await insomnia.projectPage.waitForEmptyProjectView();
+    await insomnia.projectPage.importFixture(fixtureFile);
+    await insomnia.workspacePage.waitForWorkspaceLoaded();
+    await insomnia.workspacePage.goBackToProject();
     const filesGrid = page.getByLabel('Files');
     await expect.soft(filesGrid.getByLabel('Collection A')).toBeVisible();
-    const tempDir = dataPage.createTempExportDir();
+    const tempDir = createTempExportDir();
     const exportFilePath = path.join(tempDir, 'Collection-A-export.har');
 
     try {
-      await projectPage.exportWorkspaceFromCard('Collection A', exportFilePath, 'har');
-      await dataPage.waitForExportFiles(tempDir, 1);
-      const exportedContent = dataPage.readExportedFile(exportFilePath);
+      await insomnia.projectPage.exportWorkspaceFromCard('Collection A', exportFilePath, 'har');
+      await waitForExportFiles(tempDir, 1);
+      const exportedContent = readExportedFile(exportFilePath);
       const har = JSON.parse(exportedContent);
       expect.soft(har.log, 'HAR should have log property').toBeDefined();
       expect.soft(har.log.version, 'HAR log should have version').toBeDefined();
@@ -247,28 +231,24 @@ test.describe('Export', () => {
       expect.soft(firstEntry.request.method, 'HAR entry request should have method').toBeDefined();
       expect.soft(firstEntry.request.url, 'HAR entry request should have url').toBeDefined();
     } finally {
-      dataPage.cleanupExportDir(tempDir);
+      cleanupExportDir(tempDir);
     }
   });
 
-  test('Can export single workspace from workspace page dropdown in HAR format', async ({ app, page }) => {
-    const projectPage = new ProjectPage(page, app);
-    const workspacePage = new WorkspacePage(page, app);
-    const dataPage = new DataPage(page, app);
-
+  test('Can export single workspace from workspace page dropdown in HAR format', async ({ insomnia, page }) => {
     const projectName = 'Export Workspace Page Dropdown HAR Test';
     const fixtureFile = FIXTURE_FILES[0];
-    await projectPage.createProject(projectName, 'local');
-    await projectPage.waitForEmptyProjectView();
-    await projectPage.importFixtureFromEmptyProject(fixtureFile);
-    await workspacePage.waitForWorkspaceLoaded();
-    const tempDir = dataPage.createTempExportDir();
+    await insomnia.projectPage.createProject(projectName, 'local');
+    await insomnia.projectPage.waitForEmptyProjectView();
+    await insomnia.projectPage.importFixture(fixtureFile);
+    await insomnia.workspacePage.waitForWorkspaceLoaded();
+    const tempDir = createTempExportDir();
     const exportFilePath = path.join(tempDir, 'Collection-A-workspace-page-dropdown-export.har');
 
     try {
-      await workspacePage.exportWorkspaceFromDropdown(exportFilePath, 'har');
-      await dataPage.waitForExportFiles(tempDir, 1);
-      const exportedContent = dataPage.readExportedFile(exportFilePath);
+      await insomnia.workspacePage.exportWorkspaceFromDropdown(exportFilePath, 'har');
+      await waitForExportFiles(tempDir, 1);
+      const exportedContent = readExportedFile(exportFilePath);
       const har = JSON.parse(exportedContent);
       expect.soft(har.log, 'HAR should have log property').toBeDefined();
       expect.soft(har.log.version, 'HAR log should have version').toBeDefined();
@@ -280,7 +260,7 @@ test.describe('Export', () => {
       expect.soft(firstEntry.request.method, 'HAR entry request should have method').toBeDefined();
       expect.soft(firstEntry.request.url, 'HAR entry request should have url').toBeDefined();
     } finally {
-      dataPage.cleanupExportDir(tempDir);
+      cleanupExportDir(tempDir);
     }
   });
 });
