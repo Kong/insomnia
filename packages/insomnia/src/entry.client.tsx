@@ -6,8 +6,7 @@ import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
-import { initServices, type Services } from '~/insomnia-data';
-import { initDatabase } from '~/insomnia-data';
+import { initDatabase, initServices } from '~/insomnia-data';
 import { database as clientDatabase } from '~/ui/database.client';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 

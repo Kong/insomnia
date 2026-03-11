@@ -1,7 +1,6 @@
 import { useParams } from 'react-router';
 
-import type { McpPayload } from '~/insomnia-data';
-import type { McpRequest } from '~/insomnia-data';
+import type { McpPayload, McpRequest } from '~/insomnia-data';
 import { useRequestUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';
 import { useRequestUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-meta';
 import { useRequestUpdatePayloadActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-payload';
