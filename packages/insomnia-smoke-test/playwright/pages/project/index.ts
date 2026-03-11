@@ -191,9 +191,7 @@ export class ProjectPage {
       if (isFirstImport) {
         // First import - check if project is empty
         const isEmpty = await this.isProjectEmpty();
-        isEmpty
-          ? await this.importFromClipboardEmptyProject(content)
-          : await this.importFromClipboardToolbar(content);
+        isEmpty ? await this.importFromClipboardEmptyProject(content) : await this.importFromClipboardToolbar(content);
         isFirstImport = false;
       } else {
         // Subsequent imports - project will have workspaces
@@ -311,7 +309,7 @@ export class ProjectPage {
    */
   async selectExportFormat(format: 'yaml' | 'har'): Promise<void> {
     await this.page.getByText('Which format would you like to export as?').waitFor({ state: 'visible' });
-    await this.page.getByLabel('Select Modal').locator('select').selectOption(format);
+    await this.page.getByTestId('Select Modal').locator('select').selectOption(format);
     await this.page.getByRole('button', { name: 'Done' }).click();
   }
 
@@ -339,7 +337,7 @@ export class ProjectPage {
   async exportWorkspaceFromCard(
     workspaceName: string,
     exportPath: string,
-    format: 'yaml' | 'har' = 'yaml'
+    format: 'yaml' | 'har' = 'yaml',
   ): Promise<void> {
     // Mock the save dialog first
     await this.mockSaveDialogForFile(exportPath);

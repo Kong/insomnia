@@ -12,7 +12,7 @@ import type { ElectronApplication, Locator, Page } from '@playwright/test';
 export class WorkspacePage {
   constructor(
     readonly page: Page,
-    readonly app: ElectronApplication
+    readonly app: ElectronApplication,
   ) {}
 
   /** The root workspace container. */
@@ -73,7 +73,7 @@ export class WorkspacePage {
    */
   async selectExportFormat(format: 'yaml' | 'har'): Promise<void> {
     await this.page.getByText('Which format would you like to export as?').waitFor({ state: 'visible' });
-    await this.page.getByLabel('Select Modal').locator('select').selectOption(format);
+    await this.page.getByTestId('Select Modal').locator('select').selectOption(format);
     await this.page.getByRole('button', { name: 'Done' }).click();
   }
 

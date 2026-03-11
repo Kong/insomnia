@@ -11,7 +11,7 @@ import type { ElectronApplication, Locator, Page } from '@playwright/test';
 export class PreferencesDataTab {
   constructor(
     readonly page: Page,
-    readonly app: ElectronApplication
+    readonly app: ElectronApplication,
   ) {}
 
   get root(): Locator {
@@ -64,7 +64,7 @@ export class PreferencesDataTab {
     await this.page.getByText('Which format would you like to export as?').waitFor({ state: 'visible' });
 
     // The modal uses a <select> element, so we need to use selectOption
-    await this.page.getByLabel('Select Modal').locator('select').selectOption(format);
+    await this.page.getByTestId('Select Modal').locator('select').selectOption(format);
 
     await this.page.getByRole('button', { name: 'Done' }).click();
   }

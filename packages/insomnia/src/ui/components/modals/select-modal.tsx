@@ -48,7 +48,7 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
   return (
     <Modal ref={modalRef}>
       <ModalHeader>{title || 'Confirm?'}</ModalHeader>
-      <ModalBody className="wide pad" aria-label="Select Modal">
+      <ModalBody className="wide pad" data-testid="Select Modal">
         <p>{message}</p>
         <div className="form-control form-control--outlined">
           <select
