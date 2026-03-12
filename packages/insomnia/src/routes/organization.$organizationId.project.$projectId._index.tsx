@@ -61,7 +61,17 @@ import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
+import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
+import { useRequestUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';
+import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
+import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
+import { useRequestGroupUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId.update';
+import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
+import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
+import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
+import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
+import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
@@ -72,14 +82,19 @@ import { LocalProjectBar } from '~/ui/components/dropdowns/local-project-bar';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
+import { showModal } from '~/ui/components/modals';
+import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
+import { PasteCurlModal } from '~/ui/components/modals/paste-curl-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
+import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
 import { NoSelectedProjectView } from '~/ui/components/panes/no-selected-project-view';
 import { OrganizationSelect } from '~/ui/components/project/organization-select';
 import { ProjectEmptyView } from '~/ui/components/project/project-empty-view';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
+import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { TimeFromNow } from '~/ui/components/time-from-now';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
@@ -606,6 +621,16 @@ const Component = () => {
   const { presence } = useInsomniaEventStreamContext();
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
+  const createRequestFetcher = useRequestNewActionFetcher();
+  const createRequestGroupFetcher = useRequestGroupNewActionFetcher();
+  const updateRequestFetcher = useRequestUpdateActionFetcher();
+  const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
+  const deleteRequestFetcher = useRequestDeleteActionFetcher();
+  const updateRequestGroupFetcher = useRequestGroupUpdateActionFetcher();
+  const duplicateRequestGroupFetcher = useRequestGroupDuplicateActionFetcher();
+  const deleteRequestGroupFetcher = useRequestGroupDeleteActionFetcher();
+  const updateWorkspaceFetcher = useWorkspaceUpdateActionFetcher();
+  const deleteWorkspaceFetcher = useWorkspaceDeleteActionFetcher();
   const { billing } = useOrganizationPermissions();
 
   useEffect(() => {
@@ -650,6 +675,18 @@ const Component = () => {
   const expandedCollectionKeyList = Array.isArray(expandedCollectionKeys) ? expandedCollectionKeys : [];
   const expandedRequestGroupKeyList = Array.isArray(expandedRequestGroupKeys) ? expandedRequestGroupKeys : [];
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
+  const [collectionActionTarget, setCollectionActionTarget] = useState<{
+    project: Project & { gitRepository?: GitRepository };
+    workspace: Workspace;
+  } | null>(null);
+  const [isCollectionImportModalOpen, setIsCollectionImportModalOpen] = useState(false);
+  const [isCollectionPasteCurlModalOpen, setIsCollectionPasteCurlModalOpen] = useState(false);
+  const [folderPasteCurlTarget, setFolderPasteCurlTarget] = useState<{
+    project: Project & { gitRepository?: GitRepository };
+    workspace: Workspace;
+    parentId: string;
+  } | null>(null);
+  const [isFolderPasteCurlModalOpen, setIsFolderPasteCurlModalOpen] = useState(false);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
   const organization = organizationData?.organizations.find(o => o.id === organizationId);
@@ -941,6 +978,42 @@ const Component = () => {
     );
   };
 
+  const createCollectionRequest = ({
+    project,
+    workspace,
+    requestType,
+    parentId,
+    req,
+  }: {
+    project: Project & { gitRepository?: GitRepository };
+    workspace: Workspace;
+    requestType: 'HTTP' | 'Event Stream' | 'GraphQL' | 'gRPC' | 'WebSocket' | 'SocketIO' | 'From Curl';
+    parentId?: string;
+    req?: Partial<Request>;
+  }) => {
+    createRequestFetcher.submit({
+      organizationId,
+      projectId: project._id,
+      workspaceId: workspace._id,
+      requestType,
+      parentId: parentId || workspace._id,
+      req,
+    });
+  };
+
+  const getRequestMethodBadgeClass = (method: string) =>
+    (
+      {
+        GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
+        POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
+        HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+        OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+        DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
+        PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
+        PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
+      } as Record<string, string>
+    )[method] || 'bg-(--hl-md) text-(--color-font)';
+
   const isRemoteProjectInconsistent = activeProject && isRemoteProject(activeProject) && !storageRules.enableCloudSync;
   const isLocalProjectInconsistent =
     activeProject && !isRemoteProject(activeProject) && !isGitProject(activeProject) && !storageRules.enableLocalVault;
@@ -982,7 +1055,7 @@ const Component = () => {
                     <Icon icon="plus-circle" />
                   </Button>
                 </div>
-                <div className="flex-1 overflow-y-auto py-1">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden py-1">
                   {projectsWithPresence.map(project => {
                     const isProjectExpanded = expandedProjectIdList.includes(project._id);
                     const isActiveProject = project._id === activeProject?._id;
@@ -990,7 +1063,11 @@ const Component = () => {
 
                     return (
                       <div key={project._id} className="flex flex-col">
-                        <div className="group flex items-center gap-1 px-2 py-1">
+                        <div
+                          className={`group flex w-full min-w-0 items-center gap-1 rounded-xs px-2 py-1 ${
+                            isActiveProject ? 'bg-(--hl-sm)' : 'hover:bg-(--hl-xs)'
+                          }`}
+                        >
                           <Button
                             aria-label={`${isProjectExpanded ? 'Collapse' : 'Expand'} ${project.name}`}
                             onPress={() => toggleProjectExpanded(project._id)}
@@ -1003,8 +1080,7 @@ const Component = () => {
                             onPress={() => navigate(`/organization/${organizationId}/project/${project._id}`)}
                             className={`flex min-w-0 flex-1 items-center gap-2 rounded-xs px-2 py-1 text-left text-sm transition-colors ${
                               isActiveProject
-                                ? 'bg-(--hl-sm) text-(--color-font)'
-                                : 'text-(--hl) hover:bg-(--hl-xs) hover:text-(--color-font)'
+                                ? 'text-(--color-font)' : 'text-(--hl) hover:text-(--color-font)'
                             }`}
                           >
                             <Icon
@@ -1016,14 +1092,71 @@ const Component = () => {
                                     : 'laptop'
                               }
                             />
-                            <span className="truncate">{project.name}</span>
+                            <span className="min-w-0 flex-1 truncate">{project.name}</span>
                             {project.presence.length > 0 && (
                               <AvatarGroup size="small" maxAvatars={3} items={project.presence} />
                             )}
                           </Button>
+                          <MenuTrigger>
+                            <Button
+                              aria-label={`Actions for project ${project.name}`}
+                              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-xs text-(--hl) opacity-0 pointer-events-none transition-all hover:bg-(--hl-xs) group-hover:opacity-100 group-hover:pointer-events-auto group-focus:opacity-100 group-focus:pointer-events-auto focus:opacity-100 focus:pointer-events-auto data-pressed:opacity-100 data-pressed:pointer-events-auto"
+                            >
+                              <Icon icon="ellipsis-h" />
+                            </Button>
+                            <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                              <Menu
+                                aria-label="Project actions"
+                                onAction={key => {
+                                  if (key === 'new-collection') {
+                                    createNewWorkspaceFetcher.submit({
+                                      organizationId,
+                                      projectId: project._id,
+                                      scope: 'collection',
+                                      name: 'My Collection',
+                                    });
+                                  }
+                                  if (key === 'new-environment') {
+                                    createNewWorkspaceFetcher.submit({
+                                      organizationId,
+                                      projectId: project._id,
+                                      scope: 'environment',
+                                      name: 'New Environment',
+                                    });
+                                  }
+                                  if (key === 'new-mcp') {
+                                    createNewWorkspaceFetcher.submit({
+                                      organizationId,
+                                      projectId: project._id,
+                                      scope: 'mcp',
+                                      name: 'MCP Client',
+                                    });
+                                  }
+                                  if (key === 'new-document') {
+                                    createNewWorkspaceFetcher.submit({
+                                      organizationId,
+                                      projectId: project._id,
+                                      scope: 'design',
+                                      name: 'my-spec.yaml',
+                                    });
+                                  }
+                                }}
+                                className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+                              >
+                                <MenuItem id="new-collection" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">New Collection</MenuItem>
+                                <MenuItem id="new-environment" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">New Environment</MenuItem>
+                                <MenuItem id="new-mcp" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">New MCP Client</MenuItem>
+                                <MenuItem id="new-document" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">New Document</MenuItem>
+                              </Menu>
+                            </Popover>
+                          </MenuTrigger>
                         </div>
                         {isProjectExpanded && (
-                          <div className="mb-1 flex flex-col">
+                          <div className="relative mb-1 flex flex-col">
+                            <div
+                              className="pointer-events-none absolute top-0 bottom-0 w-px -translate-x-1/2 bg-(--hl-sm)"
+                              style={{ left: '17px' }}
+                            />
                             {files
                               .slice()
                               .sort((a, b) => {
@@ -1033,19 +1166,83 @@ const Component = () => {
                               .map(file => {
                                 if (file.scope !== 'collection') {
                                   return (
-                                    <Button
+                                    <div
                                       key={`${project._id}:${file.id}`}
+                                      className="group flex w-full min-w-0 items-center gap-1 py-1 pl-6 pr-2"
+                                    >
+                                    <span className="h-5 w-5 shrink-0" />
+                                    <Button
                                       aria-label={`Open ${file.name}`}
                                       onPress={e => {
-                                        openFileFromTree(project, file, isPrimaryClickModifier(e));
-                                      }}
-                                      className="ml-10 mr-2 flex items-center gap-2 rounded-xs px-2 py-1 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
-                                    >
+                                          openFileFromTree(project, file, isPrimaryClickModifier(e));
+                                        }}
+                                        className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs py-1 pr-2 pl-2 text-left text-sm text-(--hl) transition-colors hover:text-(--color-font)"
+                                      >
                                       <Icon icon={workspaceScopeIcon[file.scope]} className="w-3.5" />
-                                      <span className="truncate">{file.name}</span>
+                                      <span className="min-w-0 flex-1 truncate">{file.name}</span>
                                     </Button>
-                                  );
-                                }
+                                    <MenuTrigger>
+                                      <Button
+                                        aria-label={`Actions for ${file.name}`}
+                                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-xs text-(--hl) opacity-0 pointer-events-none transition-all hover:bg-(--hl-xs) group-hover:opacity-100 group-hover:pointer-events-auto group-focus:opacity-100 group-focus:pointer-events-auto focus:opacity-100 focus:pointer-events-auto data-pressed:opacity-100 data-pressed:pointer-events-auto"
+                                      >
+                                        <Icon icon="ellipsis-h" />
+                                      </Button>
+                                      <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                                        <Menu
+                                          aria-label="Workspace actions"
+                                          onAction={key => {
+                                            if (key === 'open-new-tab') {
+                                              openFileFromTree(project, file, true);
+                                            }
+                                            if (key === 'rename') {
+                                              showModal(PromptModal, {
+                                                title: `Rename ${scopeToLabelMap[file.scope]}`,
+                                                defaultValue: file.name,
+                                                submitName: 'Rename',
+                                                label: 'Name',
+                                                selectText: true,
+                                                onComplete: name =>
+                                                  updateWorkspaceFetcher.submit({
+                                                    organizationId,
+                                                    projectId: project._id,
+                                                    patch: {
+                                                      workspaceId: file.workspace._id,
+                                                      name,
+                                                    },
+                                                  }),
+                                              });
+                                            }
+                                            if (key === 'delete') {
+                                              showModal(AskModal, {
+                                                title: `Delete ${scopeToLabelMap[file.scope]}`,
+                                                message: `Do you really want to delete "${file.name}"?`,
+                                                yesText: 'Delete',
+                                                noText: 'Cancel',
+                                                color: 'danger',
+                                                onDone: (isYes: boolean) => {
+                                                  if (isYes) {
+                                                    deleteWorkspaceFetcher.submit({
+                                                      organizationId,
+                                                      projectId: project._id,
+                                                      workspaceId: file.workspace._id,
+                                                    });
+                                                  }
+                                                },
+                                              });
+                                            }
+                                          }}
+                                          className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+                                        >
+                                          <MenuItem id="open-new-tab" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Open in New Tab</MenuItem>
+                                          <MenuItem id="rename" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Rename</MenuItem>
+                                          <MenuItem id="delete" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-danger) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Delete</MenuItem>
+                                        </Menu>
+                                      </Popover>
+                                    </MenuTrigger>
+                                  </div>
+                                );
+                              }
 
                                 const collectionKey = `${project._id}:${file.id}`;
                                 const isCollectionExpanded = expandedCollectionKeyList.includes(collectionKey);
@@ -1070,19 +1267,22 @@ const Component = () => {
                                       if (node.nodeType === 'request-group') {
                                         return (
                                           <div key={requestGroupKey} className="flex flex-col">
-                                            <div className="group flex items-center gap-1 py-0.5 pr-2" style={{ paddingLeft: `${depth}px` }}>
+                                            <div
+                                              className="group flex w-full min-w-0 items-center gap-1 rounded-xs py-1 pr-2 hover:bg-(--hl-xs)"
+                                              style={{ paddingLeft: `${depth}px` }}
+                                            >
                                               <Button
                                                 aria-label={`${isRequestGroupExpanded ? 'Collapse' : 'Expand'} ${node.name}`}
                                                 onPress={() => toggleRequestGroupExpanded(requestGroupKey)}
-                                                className="flex h-4 w-4 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)"
+                                                className="flex h-5 w-5 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)"
                                               >
                                                 <Icon
                                                   icon={isRequestGroupExpanded ? 'chevron-down' : 'chevron-right'}
                                                   className="h-3 w-3"
                                                 />
                                               </Button>
-                                              <Button
-                                                aria-label={`Open folder ${node.name}`}
+                                                      <Button
+                                                        aria-label={`Open folder ${node.name}`}
                                                 onPress={e => {
                                                   if (!file.workspace) {
                                                     return;
@@ -1094,72 +1294,471 @@ const Component = () => {
                                                     withTab: isPrimaryClickModifier(e),
                                                   });
                                                 }}
-                                                className="flex min-w-0 flex-1 items-center gap-2 rounded-xs px-2 py-0.5 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
-                                              >
-                                                <Icon icon="folder" className="w-3" />
-                                                <span className="truncate">{node.name}</span>
-                                              </Button>
-                                            </div>
-                                            {isRequestGroupExpanded && hasChildren && (
-                                              <div className="flex flex-col">{renderTreeNodes(node._id, depth + 16)}</div>
-                                            )}
+                                                        className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-left text-sm text-(--hl) transition-colors hover:text-(--color-font)"
+                                                      >
+                                                        <Icon icon="folder" className="w-3" />
+                                                        <span className="min-w-0 flex-1 truncate">{node.name}</span>
+                                                      </Button>
+                                                      <MenuTrigger>
+                                                        <Button
+                                                          aria-label={`Actions for folder ${node.name}`}
+                                                          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-xs text-(--hl) opacity-0 pointer-events-none transition-all hover:bg-(--hl-xs) group-hover:opacity-100 group-hover:pointer-events-auto group-focus:opacity-100 group-focus:pointer-events-auto focus:opacity-100 focus:pointer-events-auto data-pressed:opacity-100 data-pressed:pointer-events-auto"
+                                                        >
+                                                          <Icon icon="ellipsis-h" />
+                                                        </Button>
+                                                        <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                                                          <Menu
+                                                            aria-label="Folder actions"
+                                                            onAction={key => {
+                                                              if (!file.workspace) {
+                                                                return;
+                                                              }
+                                                              const requestGroup = node.doc as RequestGroup;
+                                                              if (key === 'open-new-tab') {
+                                                                openCollectionTreeNode({
+                                                                  project,
+                                                                  workspace: file.workspace,
+                                                                  node,
+                                                                  withTab: true,
+                                                                });
+                                                              }
+                                                              if (key === 'new-folder') {
+                                                                showModal(PromptModal, {
+                                                                  title: 'New Folder',
+                                                                  defaultValue: 'My Folder',
+                                                                  submitName: 'Create',
+                                                                  label: 'Name',
+                                                                  selectText: true,
+                                                                  onComplete: name =>
+                                                                    createRequestGroupFetcher.submit({
+                                                                      organizationId,
+                                                                      projectId: project._id,
+                                                                      workspaceId: file.workspace._id,
+                                                                      parentId: requestGroup._id,
+                                                                      name,
+                                                                    }),
+                                                                });
+                                                              }
+                                                              if (key === 'new-http') {
+                                                                createCollectionRequest({
+                                                                  project,
+                                                                  workspace: file.workspace,
+                                                                  parentId: requestGroup._id,
+                                                                  requestType: 'HTTP',
+                                                                });
+                                                              }
+                                                              if (key === 'new-event-stream') {
+                                                                createCollectionRequest({
+                                                                  project,
+                                                                  workspace: file.workspace,
+                                                                  parentId: requestGroup._id,
+                                                                  requestType: 'Event Stream',
+                                                                });
+                                                              }
+                                                              if (key === 'new-graphql') {
+                                                                createCollectionRequest({
+                                                                  project,
+                                                                  workspace: file.workspace,
+                                                                  parentId: requestGroup._id,
+                                                                  requestType: 'GraphQL',
+                                                                });
+                                                              }
+                                                              if (key === 'new-grpc') {
+                                                                createCollectionRequest({
+                                                                  project,
+                                                                  workspace: file.workspace,
+                                                                  parentId: requestGroup._id,
+                                                                  requestType: 'gRPC',
+                                                                });
+                                                              }
+                                                              if (key === 'new-websocket') {
+                                                                createCollectionRequest({
+                                                                  project,
+                                                                  workspace: file.workspace,
+                                                                  parentId: requestGroup._id,
+                                                                  requestType: 'WebSocket',
+                                                                });
+                                                              }
+                                                              if (key === 'new-socketio') {
+                                                                createCollectionRequest({
+                                                                  project,
+                                                                  workspace: file.workspace,
+                                                                  parentId: requestGroup._id,
+                                                                  requestType: 'SocketIO',
+                                                                });
+                                                              }
+                                                              if (key === 'import-curl') {
+                                                                setFolderPasteCurlTarget({
+                                                                  project,
+                                                                  workspace: file.workspace,
+                                                                  parentId: requestGroup._id,
+                                                                });
+                                                                setIsFolderPasteCurlModalOpen(true);
+                                                              }
+                                                              if (key === 'duplicate') {
+                                                                showModal(PromptModal, {
+                                                                  title: 'Duplicate Folder',
+                                                                  defaultValue: requestGroup.name,
+                                                                  submitName: 'Create',
+                                                                  label: 'New Name',
+                                                                  selectText: true,
+                                                                  onComplete: name =>
+                                                                    duplicateRequestGroupFetcher.submit({
+                                                                      organizationId,
+                                                                      projectId: project._id,
+                                                                      workspaceId: file.workspace._id,
+                                                                      requestGroupData: {
+                                                                        _id: requestGroup._id,
+                                                                        name,
+                                                                      },
+                                                                    }),
+                                                                });
+                                                              }
+                                                              if (key === 'rename') {
+                                                                showModal(PromptModal, {
+                                                                  title: 'Rename Folder',
+                                                                  defaultValue: requestGroup.name,
+                                                                  submitName: 'Save',
+                                                                  label: 'Name',
+                                                                  selectText: true,
+                                                                  onComplete: name =>
+                                                                    updateRequestGroupFetcher.submit({
+                                                                      organizationId,
+                                                                      projectId: project._id,
+                                                                      workspaceId: file.workspace._id,
+                                                                      requestGroupId: requestGroup._id,
+                                                                      patch: {
+                                                                        name,
+                                                                      },
+                                                                    }),
+                                                                });
+                                                              }
+                                                              if (key === 'delete') {
+                                                                showModal(AskModal, {
+                                                                  title: 'Delete Folder',
+                                                                  message: `Do you really want to delete "${requestGroup.name}"?`,
+                                                                  yesText: 'Delete',
+                                                                  noText: 'Cancel',
+                                                                  color: 'danger',
+                                                                  onDone: (isYes: boolean) => {
+                                                                    if (isYes) {
+                                                                      deleteRequestGroupFetcher.submit({
+                                                                        organizationId,
+                                                                        projectId: project._id,
+                                                                        workspaceId: file.workspace._id,
+                                                                        id: requestGroup._id,
+                                                                      });
+                                                                    }
+                                                                  },
+                                                                });
+                                                              }
+                                                              if (key === 'run-folder') {
+                                                                tabNavigate(
+                                                                  {
+                                                                    organization: organizationId,
+                                                                    project,
+                                                                    workspace: file.workspace,
+                                                                    item: requestGroup,
+                                                                  },
+                                                                  {
+                                                                    shouldNavigate: true,
+                                                                    asRunner: true,
+                                                                  },
+                                                                );
+                                                              }
+                                                            }}
+                                                            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+                                                          >
+                                                            <MenuItem id="open-new-tab" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Open in New Tab</MenuItem>
+                                                            <MenuItem id="new-folder" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">New Folder</MenuItem>
+                                                            <MenuItem id="new-http" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">HTTP Request</MenuItem>
+                                                            <MenuItem id="new-event-stream" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Event Stream Request (SSE)</MenuItem>
+                                                            <MenuItem id="new-graphql" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">GraphQL Request</MenuItem>
+                                                            <MenuItem id="new-grpc" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">gRPC Request</MenuItem>
+                                                            <MenuItem id="new-websocket" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">WebSocket Request</MenuItem>
+                                                            <MenuItem id="new-socketio" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Socket.IO Request</MenuItem>
+                                                            <MenuItem id="import-curl" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Import From Curl</MenuItem>
+                                                            <MenuItem id="duplicate" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Duplicate</MenuItem>
+                                                            <MenuItem id="rename" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Rename</MenuItem>
+                                                            <MenuItem id="run-folder" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Run Folder</MenuItem>
+                                                            <MenuItem id="delete" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-danger) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Delete</MenuItem>
+                                                          </Menu>
+                                                        </Popover>
+                                                      </MenuTrigger>
+                                                    </div>
+                                            {isRequestGroupExpanded &&
+                                              (hasChildren ? (
+                                                <div className="relative flex flex-col">
+                                                  <div
+                                                    className="pointer-events-none absolute top-0 bottom-0 w-px -translate-x-1/2 bg-(--hl-sm)"
+                                                    style={{ left: `${depth + 9}px` }}
+                                                  />
+                                                  {renderTreeNodes(node._id, depth + 16)}
+                                                </div>
+                                              ) : (
+                                                <div
+                                                  className="py-1 pr-2 text-xs text-(--hl)"
+                                                  style={{ paddingLeft: `${depth + 22}px` }}
+                                                >
+                                                  Empty folder
+                                                </div>
+                                              ))}
                                           </div>
                                         );
                                       }
 
-                                      return (
-                                        <Button
-                                          key={requestGroupKey}
-                                          aria-label={`Open request ${node.name}`}
-                                          onPress={e => {
-                                            if (!file.workspace) {
-                                              return;
-                                            }
-                                            openCollectionTreeNode({
-                                              project,
-                                              workspace: file.workspace,
-                                              node,
-                                              withTab: isPrimaryClickModifier(e),
-                                            });
-                                          }}
-                                          className="mr-2 rounded-xs px-2 py-0.5 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
-                                          style={{ marginLeft: `${depth + 18}px` }}
-                                        >
-                                          <span className="truncate">
-                                            {node.requestMethod ? `${node.requestMethod} ` : ''}
-                                            {node.name}
-                                          </span>
-                                        </Button>
-                                      );
+                                              return (
+                                                <div
+                                                  key={requestGroupKey}
+                                                  className="group flex w-full min-w-0 items-center gap-1 py-1 pr-2"
+                                                >
+                                                  <Button
+                                                    aria-label={`Open request ${node.name}`}
+                                                    onPress={e => {
+                                                      if (!file.workspace) {
+                                                        return;
+                                                      }
+                                                      openCollectionTreeNode({
+                                                        project,
+                                                        workspace: file.workspace,
+                                                        node,
+                                                        withTab: isPrimaryClickModifier(e),
+                                                      });
+                                                    }}
+                                                    className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs py-1 pr-2 pl-2 text-left text-sm text-(--hl) transition-colors hover:text-(--color-font)"
+                                                    style={{ paddingLeft: `${depth + 18}px` }}
+                                                  >
+                                                    {node.requestMethod && (
+                                                      <span
+                                                        className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${getRequestMethodBadgeClass(node.requestMethod)}`}
+                                                      >
+                                                        {getMethodShortHand({ method: node.requestMethod } as Request)}
+                                                      </span>
+                                                    )}
+                                                    <span className="min-w-0 flex-1 truncate">{node.name}</span>
+                                                  </Button>
+                                                  <MenuTrigger>
+                                                    <Button
+                                                      aria-label={`Actions for request ${node.name}`}
+                                                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-xs text-(--hl) opacity-0 pointer-events-none transition-all hover:bg-(--hl-xs) group-hover:opacity-100 group-hover:pointer-events-auto group-focus:opacity-100 group-focus:pointer-events-auto focus:opacity-100 focus:pointer-events-auto data-pressed:opacity-100 data-pressed:pointer-events-auto"
+                                                    >
+                                                      <Icon icon="ellipsis-h" />
+                                                    </Button>
+                                                    <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                                                      <Menu
+                                                        aria-label="Request actions"
+                                                        onAction={key => {
+                                                          if (!file.workspace) {
+                                                            return;
+                                                          }
+                                                          const request = node.doc as RequestLike;
+                                                          if (key === 'open-new-tab') {
+                                                            openCollectionTreeNode({
+                                                              project,
+                                                              workspace: file.workspace,
+                                                              node,
+                                                              withTab: true,
+                                                            });
+                                                          }
+                                                          if (key === 'duplicate') {
+                                                            showModal(PromptModal, {
+                                                              title: 'Duplicate Request',
+                                                              defaultValue: request.name,
+                                                              submitName: 'Create',
+                                                              label: 'New Name',
+                                                              selectText: true,
+                                                              onComplete: name =>
+                                                                duplicateRequestFetcher.submit({
+                                                                  organizationId,
+                                                                  projectId: project._id,
+                                                                  workspaceId: file.workspace._id,
+                                                                  requestId: request._id,
+                                                                  name,
+                                                                }),
+                                                            });
+                                                          }
+                                                          if (key === 'rename') {
+                                                            showModal(PromptModal, {
+                                                              title: 'Rename Request',
+                                                              defaultValue: request.name,
+                                                              submitName: 'Save',
+                                                              label: 'Name',
+                                                              selectText: true,
+                                                              onComplete: name =>
+                                                                updateRequestFetcher.submit({
+                                                                  organizationId,
+                                                                  projectId: project._id,
+                                                                  workspaceId: file.workspace._id,
+                                                                  requestId: request._id,
+                                                                  patch: {
+                                                                    name,
+                                                                  },
+                                                                }),
+                                                            });
+                                                          }
+                                                          if (key === 'delete') {
+                                                            showModal(AskModal, {
+                                                              title: 'Delete Request',
+                                                              message: `Do you really want to delete "${request.name}"?`,
+                                                              yesText: 'Delete',
+                                                              noText: 'Cancel',
+                                                              color: 'danger',
+                                                              onDone: (isYes: boolean) => {
+                                                                if (isYes) {
+                                                                  deleteRequestFetcher.submit({
+                                                                    organizationId,
+                                                                    projectId: project._id,
+                                                                    workspaceId: file.workspace._id,
+                                                                    id: request._id,
+                                                                  });
+                                                                }
+                                                              },
+                                                            });
+                                                          }
+                                                        }}
+                                                        className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+                                                      >
+                                                        <MenuItem id="open-new-tab" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Open in New Tab</MenuItem>
+                                                        <MenuItem id="duplicate" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Duplicate</MenuItem>
+                                                        <MenuItem id="rename" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Rename</MenuItem>
+                                                        <MenuItem id="delete" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-danger) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Delete</MenuItem>
+                                                      </Menu>
+                                                    </Popover>
+                                                  </MenuTrigger>
+                                                </div>
+                                              );
                                     });
                                 };
 
                                 return (
                                   <div key={collectionKey} className="flex flex-col">
-                                    <div className="group flex items-center gap-1 py-0.5 pl-6 pr-2">
+                                    <div className="group flex w-full min-w-0 items-center gap-1 rounded-xs py-1 pl-6 pr-2 hover:bg-(--hl-xs)">
                                       <Button
                                         aria-label={`${isCollectionExpanded ? 'Collapse' : 'Expand'} ${file.name}`}
                                         onPress={() => toggleCollectionExpanded(collectionKey)}
-                                        className="flex h-4 w-4 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)"
+                                        className="flex h-5 w-5 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)"
                                       >
                                         <Icon
                                           icon={isCollectionExpanded ? 'chevron-down' : 'chevron-right'}
                                           className="h-3 w-3"
                                         />
                                       </Button>
-                                      <Button
-                                        aria-label={`Open ${file.name}`}
-                                        onPress={e => {
-                                          openFileFromTree(project, file, isPrimaryClickModifier(e));
-                                        }}
-                                        className="flex min-w-0 flex-1 items-center gap-2 rounded-xs px-2 py-0.5 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
-                                      >
-                                        <Icon icon={workspaceScopeIcon[file.scope]} className="w-3.5" />
-                                        <span className="truncate">{file.name}</span>
-                                        <span className="ml-auto text-[10px] text-(--hl-md)">{rootNodes.length}</span>
-                                      </Button>
-                                    </div>
-                                    {isCollectionExpanded && <div className="flex flex-col">{renderTreeNodes(file.id, 50)}</div>}
+                                              <Button
+                                                aria-label={`Open ${file.name}`}
+                                                onPress={e => {
+                                                  openFileFromTree(project, file, isPrimaryClickModifier(e));
+                                                }}
+                                                className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-left text-sm text-(--hl) transition-colors hover:text-(--color-font)"
+                                              >
+                                                <Icon icon={workspaceScopeIcon[file.scope]} className="w-3.5" />
+                                                <span className="min-w-0 flex-1 truncate">{file.name}</span>
+                                              </Button>
+                                              <MenuTrigger>
+                                                <Button
+                                                  aria-label={`Actions for ${file.name}`}
+                                                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-xs text-(--hl) opacity-0 pointer-events-none transition-all hover:bg-(--hl-xs) group-hover:opacity-100 group-hover:pointer-events-auto group-focus:opacity-100 group-focus:pointer-events-auto focus:opacity-100 focus:pointer-events-auto data-pressed:opacity-100 data-pressed:pointer-events-auto"
+                                                >
+                                                  <Icon icon="ellipsis-h" />
+                                                </Button>
+                                                <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                                                  <Menu
+                                                    aria-label="Collection actions"
+                                                    onAction={key => {
+                                                      if (key === 'new-folder') {
+                                                        showModal(PromptModal, {
+                                                          title: 'New Folder',
+                                                          defaultValue: 'My Folder',
+                                                          submitName: 'Create',
+                                                          label: 'Name',
+                                                          selectText: true,
+                                                          onComplete: name =>
+                                                            createRequestGroupFetcher.submit({
+                                                              organizationId,
+                                                              projectId: project._id,
+                                                              workspaceId: file.workspace._id,
+                                                              parentId: file.workspace._id,
+                                                              name,
+                                                            }),
+                                                        });
+                                                      }
+                                                      if (key === 'new-http') {
+                                                        createCollectionRequest({
+                                                          project,
+                                                          workspace: file.workspace,
+                                                          requestType: 'HTTP',
+                                                        });
+                                                      }
+                                                      if (key === 'new-event-stream') {
+                                                        createCollectionRequest({
+                                                          project,
+                                                          workspace: file.workspace,
+                                                          requestType: 'Event Stream',
+                                                        });
+                                                      }
+                                                      if (key === 'new-graphql') {
+                                                        createCollectionRequest({
+                                                          project,
+                                                          workspace: file.workspace,
+                                                          requestType: 'GraphQL',
+                                                        });
+                                                      }
+                                                      if (key === 'new-grpc') {
+                                                        createCollectionRequest({
+                                                          project,
+                                                          workspace: file.workspace,
+                                                          requestType: 'gRPC',
+                                                        });
+                                                      }
+                                                      if (key === 'new-websocket') {
+                                                        createCollectionRequest({
+                                                          project,
+                                                          workspace: file.workspace,
+                                                          requestType: 'WebSocket',
+                                                        });
+                                                      }
+                                                      if (key === 'new-socketio') {
+                                                        createCollectionRequest({
+                                                          project,
+                                                          workspace: file.workspace,
+                                                          requestType: 'SocketIO',
+                                                        });
+                                                      }
+                                                      if (key === 'import-file') {
+                                                        setCollectionActionTarget({ project, workspace: file.workspace });
+                                                        setIsCollectionImportModalOpen(true);
+                                                      }
+                                                      if (key === 'import-curl') {
+                                                        setCollectionActionTarget({ project, workspace: file.workspace });
+                                                        setIsCollectionPasteCurlModalOpen(true);
+                                                      }
+                                                    }}
+                                                    className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+                                                  >
+                                                    <MenuItem id="new-folder" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">New Folder</MenuItem>
+                                                    <MenuItem id="new-http" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">HTTP Request</MenuItem>
+                                                    <MenuItem id="new-event-stream" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Event Stream Request (SSE)</MenuItem>
+                                                    <MenuItem id="new-graphql" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">GraphQL Request</MenuItem>
+                                                    <MenuItem id="new-grpc" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">gRPC Request</MenuItem>
+                                                    <MenuItem id="new-websocket" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">WebSocket Request</MenuItem>
+                                                    <MenuItem id="new-socketio" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Socket.IO Request</MenuItem>
+                                                    <MenuItem id="import-curl" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Import From Curl</MenuItem>
+                                                    <MenuItem id="import-file" className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden">Import From File</MenuItem>
+                                                  </Menu>
+                                                </Popover>
+                                              </MenuTrigger>
+                                            </div>
+                                    {isCollectionExpanded &&
+                                      (rootNodes.length ? (
+                                        <div className="relative flex flex-col">
+                                          <div
+                                            className="pointer-events-none absolute top-0 bottom-0 w-px -translate-x-1/2 bg-(--hl-sm)"
+                                            style={{ left: '33px' }}
+                                          />
+                                          {renderTreeNodes(file.id, 34)}
+                                        </div>
+                                      ) : (
+                                        <div className="py-1 pl-12 pr-2 text-xs text-(--hl)">Empty collection</div>
+                                      ))}
                                   </div>
                                 );
                               })}
@@ -1573,6 +2172,46 @@ const Component = () => {
             from={{ type: importModalType }}
             organizationId={organizationId}
             defaultProjectId={activeProject._id}
+          />
+        )}
+        {collectionActionTarget && isCollectionImportModalOpen && (
+          <ImportModal
+            onHide={() => setIsCollectionImportModalOpen(false)}
+            from={{ type: 'file' }}
+            projectName={collectionActionTarget.project.name}
+            workspaceName={collectionActionTarget.workspace.name}
+            organizationId={organizationId}
+            defaultProjectId={collectionActionTarget.project._id}
+            defaultWorkspaceId={collectionActionTarget.workspace._id}
+          />
+        )}
+        {collectionActionTarget && isCollectionPasteCurlModalOpen && (
+          <PasteCurlModal
+            onImport={req => {
+              createCollectionRequest({
+                project: collectionActionTarget.project,
+                workspace: collectionActionTarget.workspace,
+                requestType: 'From Curl',
+                req,
+              });
+            }}
+            defaultValue=""
+            onHide={() => setIsCollectionPasteCurlModalOpen(false)}
+          />
+        )}
+        {folderPasteCurlTarget && isFolderPasteCurlModalOpen && (
+          <PasteCurlModal
+            onImport={req => {
+              createCollectionRequest({
+                project: folderPasteCurlTarget.project,
+                workspace: folderPasteCurlTarget.workspace,
+                requestType: 'From Curl',
+                parentId: folderPasteCurlTarget.parentId,
+                req,
+              });
+            }}
+            defaultValue=""
+            onHide={() => setIsFolderPasteCurlModalOpen(false)}
           />
         )}
       </Fragment>
