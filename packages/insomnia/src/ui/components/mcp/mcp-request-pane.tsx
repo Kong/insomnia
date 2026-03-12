@@ -1,3 +1,4 @@
+import { getToolUiResourceUri, McpUiToolMetaSchema } from '@modelcontextprotocol/ext-apps/app-bridge';
 import { type RJSFSchema } from '@rjsf/utils';
 import type { EditorChange } from 'codemirror';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -7,10 +8,11 @@ import { useLatest } from 'react-use';
 
 import { docsMcpClient } from '~/common/documentation';
 import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
-import type { McpReadyState } from '~/main/mcp/types';
+import type { McpAppResourceData, McpReadyState } from '~/main/mcp/types';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Link } from '~/ui/components/base/link';
 import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
+import { McpAppEmbeddedView } from '~/ui/components/mcp/mcp-app-embedded-view';
 import { InsomniaRjsfForm, type InsomniaRjsfFormHandle } from '~/ui/components/rjsf';
 
 import { type AuthTypes } from '../../../common/constants';
@@ -67,6 +69,7 @@ export const McpRequestPane: FC<Props> = ({
   const primitiveId = `${selectedPrimitiveItem?.type}_${selectedPrimitiveItem?.name}`;
   const { activeRequest, activeRequestMeta, requestPayload } = useRequestLoaderData()! as McpRequestLoaderData;
   const latestRequestPayloadRef = useLatest(requestPayload);
+  const [appResourceData, setAppResourceData] = useState<McpAppResourceData | null>(null);
 
   const { activeProject } = useWorkspaceLoaderData()!;
 
@@ -136,28 +139,31 @@ export const McpRequestPane: FC<Props> = ({
     // validate the form before sending, but don't block sending on validation errors for debug purpose
     rjsfFormRef.current?.validate();
     try {
-      if (selectedPrimitiveItem?.type === 'tools') {
-        await window.main.mcp.primitive.callTool({
-          name: selectedPrimitiveItem?.name || '',
-          arguments: mcpParams[primitiveId],
-          requestId: requestId,
-        });
-      } else if (selectedPrimitiveItem?.type === 'resources') {
-        await window.main.mcp.primitive.readResource({
-          requestId,
-          uri: selectedPrimitiveItem?.uri || '',
-        });
-      } else if (selectedPrimitiveItem?.type === 'resourceTemplates') {
-        await window.main.mcp.primitive.readResource({
-          requestId,
-          uri: fillUriTemplate(selectedPrimitiveItem.uriTemplate, mcpParams[primitiveId] || {}),
-        });
-      } else if (selectedPrimitiveItem?.type === 'prompts') {
-        await window.main.mcp.primitive.getPrompt({
-          requestId,
-          name: selectedPrimitiveItem?.name || '',
-          arguments: mcpParams[primitiveId],
-        });
+      if (selectedPrimitiveItem) {
+        const { type: primitiveType } = selectedPrimitiveItem;
+        if (primitiveType === 'tools') {
+          await window.main.mcp.primitive.callTool({
+            name: selectedPrimitiveItem.name || '',
+            arguments: mcpParams[primitiveId],
+            requestId: requestId,
+          });
+        } else if (primitiveType === 'resources') {
+          await window.main.mcp.primitive.readResource({
+            requestId,
+            uri: selectedPrimitiveItem.uri || '',
+          });
+        } else if (primitiveType === 'resourceTemplates') {
+          await window.main.mcp.primitive.readResource({
+            requestId,
+            uri: fillUriTemplate(selectedPrimitiveItem.uriTemplate, mcpParams[primitiveId] || {}),
+          });
+        } else if (primitiveType === 'prompts') {
+          await window.main.mcp.primitive.getPrompt({
+            requestId,
+            name: selectedPrimitiveItem?.name || '',
+            arguments: mcpParams[primitiveId],
+          });
+        }
       }
     } catch (err) {
       console.warn('MCP primitive call error', err);
@@ -196,7 +202,7 @@ export const McpRequestPane: FC<Props> = ({
 
   useEffect(() => {
     if (isConnected) {
-      latestPayloadPatcherRef.current(requestId, { params: mcpParams, url: activeRequest.url });
+      // latestPayloadPatcherRef.current(requestId, { params: mcpParams, url: activeRequest.url });
     }
   }, [activeRequest.url, mcpParams, latestPayloadPatcherRef, requestId, isConnected]);
 
@@ -205,6 +211,36 @@ export const McpRequestPane: FC<Props> = ({
       setMcpParams(latestRequestPayloadRef.current?.params || {});
     }
   }, [activeRequest.url, latestRequestPayloadRef, isConnected]);
+
+  useEffect(() => {
+    const getMcpAppResource = async (toolName: string) => {
+      const resourceData = await window.main.mcp.ext.app.getResourceData({
+        requestId,
+        toolName,
+      });
+      if (resourceData) {
+        setAppResourceData(resourceData);
+      }
+    };
+    if (selectedPrimitiveItem?.type === 'tools') {
+      const toolMeta = selectedPrimitiveItem._meta;
+      if (toolMeta && 'ui' in toolMeta) {
+        // Check if the tool has a UI component and visible to the client
+        const result = McpUiToolMetaSchema.safeParse(toolMeta.ui);
+        if (result.success) {
+          const visibility = result.data.visibility;
+          const resourceUri = result.data.resourceUri;
+          // visibility values: "model": Tool visible to and callable by the agent, "app": Tool callable by the app from this server only
+          const shouldRenderMcpApp = !visibility || visibility.includes('model');
+          if (shouldRenderMcpApp && resourceUri) {
+            getMcpAppResource(selectedPrimitiveItem.name);
+          }
+        }
+      }
+    }
+    // clear app resource data when primitive item changes
+    setAppResourceData(null);
+  }, [selectedPrimitiveItem, requestId]);
 
   return (
     <Pane type="request">
@@ -237,6 +273,12 @@ export const McpRequestPane: FC<Props> = ({
             id="params"
           >
             <span>Params</span>
+          </Tab>
+          <Tab
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            id="mcp-app"
+          >
+            <span>MCP App</span>
           </Tab>
           {!isStdio && (
             <Tab
@@ -397,6 +439,26 @@ export const McpRequestPane: FC<Props> = ({
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="roots">
           <McpRootsPanel request={activeRequest} readyState={readyState} />
+        </TabPanel>
+        <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="mcp-app">
+          {appResourceData ? (
+            <McpAppEmbeddedView
+              appResourceData={appResourceData}
+              requestId={requestId}
+              onInteraction={data => {
+                console.log('🎯 App interaction:', data);
+                // TODO: Re-execute tool with interaction data
+              }}
+            />
+          ) : (
+            <div className="flex h-full w-full flex-col items-center p-5 text-center">
+              <p className="notice info text-md no-margin-top w-full">
+                {selectedPrimitiveItem?.type === 'tools'
+                  ? 'This tool does not have an associated MCP App UI component.'
+                  : 'Select a tool primitive with an MCP App UI component from the list to start.'}
+              </p>
+            </div>
+          )}
         </TabPanel>
       </Tabs>
     </Pane>
