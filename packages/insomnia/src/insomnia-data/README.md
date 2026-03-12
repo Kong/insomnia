@@ -1,30 +1,119 @@
 # insomnia-data
 
-A runtime-agnostic data layer for Insomnia, following an **IoC (Inversion of Control)** pattern to decouple interface definitions from their concrete implementations.
+A runtime-agnostic data layer for Insomnia, based on interface + IoC.
 
-## Architecture
+## Core idea
 
-```txt
-insomnia-data/
-├── src/              # Runtime-agnostic (renderer, main and inso)
-│   ├── database/     # Database interface and query types
-│   ├── models/       # Model types, static configurations, type guards, and init functions
-│   └── services/     # Service interfaces and IoC container
-└── node-src/         # Node.js / main-process only
-    ├── database/     # NeDB-backed Database implementation
-    └── services/     # Concrete service implementations
+- `src/`: runtime-agnostic contracts (`IDatabase`, `Services`, model metadata/types)
+- `node-src/`: Node/main concrete implementations (`createNedbDatabase`, `servicesNodeImpl`)
+- entry points wire once:
+  - `initDatabase(impl)`
+  - `initServices(impl)`
+
+After wiring, business code always uses the same APIs: `database`, `services`, `models`.
+
+## Process flows
+
+### Database (main / renderer / inso)
+
+```mermaid
+flowchart LR
+    subgraph Renderer
+        R0[initDatabase] --> R1[clientDatabase implementation]
+        R2[feature code] --> R3[database from insomnia-data]
+        R3 --> R1
+        R1 --> R4[window.database.invoke]
+        R4 --> R5[ipcRenderer.invoke database.invoke]
+    end
+
+    subgraph Main
+        M0[initDatabase] --> M1[mainDatabase implementation]
+        M1 --> M2[createNedbDatabase impl]
+        M2 --> M3[(NeDB)]
+        M4[main feature code] --> M5[database from insomnia-data]
+        M5 --> M1
+        M6[ipcMain.handle database.invoke] --> M1
+        M1 --> M7[webContents.send db.changes]
+    end
+
+    subgraph Inso
+        I0[initDatabase] --> I1[inso database implementation]
+        I1 --> I2[createNedbDatabase impl]
+        I2 --> I3[(NeDB)]
+        I4[inso feature code] --> I5[database from insomnia-data]
+        I5 --> I1
+    end
+
+    R5 --> M6
+    M7 -.notify.-> R2
 ```
 
-### Entry points
+### Services (main / renderer / inso)
 
-| Import path            | Contents                                                    |
-| ---------------------- | ----------------------------------------------------------- |
-| `~/insomnia-data`      | Runtime-agnostic interfaces, model types, IoC containers    |
-| `~/insomnia-data/node` | Node.js implementations (NeDB database + concrete services) |
+```mermaid
+flowchart LR
+    subgraph Renderer
+        R0[initServices] --> R1[preload servicesProxy implementation]
+        R2[feature code] --> R3[services from insomnia-data]
+        R3 --> R1
+        R1 --> R4[ipcRenderer.invoke services.invoke]
+    end
 
-## Usage
+    subgraph Main
+        M0[initServices] --> M1[servicesNodeImpl]
+        M2[feature code] --> M3[services from insomnia-data]
+        M3 --> M1
+        M1 --> M4[service logic]
+        M4 --> M5[database]
+        M5 --> M6[(NeDB)]
+        M7[ipcMain.handle services.invoke] --> M1
+    end
 
-### Initialization (process entry points)
+    subgraph Inso
+        I0[initServices] --> I1[servicesNodeImpl]
+        I2[feature code] --> I3[services from insomnia-data]
+        I3 --> I1
+        I1 --> I6[(NeDB)]
+    end
+
+    R4 --> M7
+```
+
+Renderer services path:
+
+`services.xxx` -> preload proxy -> IPC -> main handler -> `servicesNodeImpl` -> database.
+
+## Why this design
+
+- Same API across runtimes: main, renderer, inso.
+- Feature code is decoupled from Electron/IPC/NeDB details.
+- Renderer has a safer boundary (bridge + IPC, no direct DB internals and node API access).
+- Easy to test or swap implementations by injecting at startup.
+
+## Minimal usage
+
+### Main
+
+```ts
+import { initDatabase, initServices } from '~/insomnia-data';
+import { mainDatabase } from '~/main/database.main';
+import { servicesNodeImpl } from '~/insomnia-data/node';
+
+await initDatabase(mainDatabase);
+initServices(servicesNodeImpl);
+```
+
+### Renderer
+
+```ts
+import { initDatabase, initServices } from '~/insomnia-data';
+import { clientDatabase } from '~/ui/database.client';
+
+await initDatabase(clientDatabase);
+initServices(window._dataServices);
+```
+
+### Inso / Node
 
 ```ts
 import { initDatabase, initServices } from '~/insomnia-data';
