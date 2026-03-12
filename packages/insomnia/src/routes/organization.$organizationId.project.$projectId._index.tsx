@@ -638,10 +638,6 @@ const Component = () => {
     `${organizationId}:project-tree-expanded-projects`,
     activeProject?._id ? [activeProject._id] : [],
   );
-  const [expandedCategoryKeys, setExpandedCategoryKeys] = reactUse.useLocalStorage<string[]>(
-    `${organizationId}:project-tree-expanded-categories`,
-    [],
-  );
   const [expandedCollectionKeys, setExpandedCollectionKeys] = reactUse.useLocalStorage<string[]>(
     `${organizationId}:project-tree-expanded-collections`,
     [],
@@ -650,6 +646,9 @@ const Component = () => {
     `${organizationId}:project-tree-expanded-request-groups`,
     [],
   );
+  const expandedProjectIdList = Array.isArray(expandedProjectIds) ? expandedProjectIds : [];
+  const expandedCollectionKeyList = Array.isArray(expandedCollectionKeys) ? expandedCollectionKeys : [];
+  const expandedRequestGroupKeyList = Array.isArray(expandedRequestGroupKeys) ? expandedRequestGroupKeys : [];
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
@@ -659,17 +658,6 @@ const Component = () => {
   const isPersonalOrg = organization && isPersonalOrganization(organization);
 
   const tabNavigate = useTabNavigate();
-
-  useEffect(() => {
-    if (!activeProject?._id) {
-      return;
-    }
-
-    setExpandedProjectIds(prev => {
-      const previous = prev || [];
-      return previous.includes(activeProject._id) ? previous : [activeProject._id, ...previous];
-    });
-  }, [activeProject?._id, setExpandedProjectIds]);
 
   const projectFilesWithRemoteByProjectId = useMemo(() => {
     const filesByProjectId = { ...projectFilesByProjectId };
@@ -853,40 +841,43 @@ const Component = () => {
     },
   ];
 
-  const projectTreeScopes: { scope: InsomniaFile['scope']; label: string; icon: IconProp }[] = [
-    { scope: 'collection', label: 'Collections', icon: 'bars' },
-    { scope: 'environment', label: 'Environments', icon: 'code' },
-    { scope: 'mcp', label: 'MCP Clients', icon: ['fac', 'mcp'] as unknown as IconProp },
-    { scope: 'design', label: 'Documents', icon: 'file' },
-    { scope: 'mock-server', label: 'Mock Servers', icon: 'server' },
-  ];
-
-  const toggleProjectExpanded = (id: string) => {
-    setExpandedProjectIds(prev => {
-      const previous = prev || [];
-      return previous.includes(id) ? previous.filter(value => value !== id) : [...previous, id];
-    });
+  const workspaceScopeOrder: Record<InsomniaFile['scope'], number> = {
+    collection: 0,
+    environment: 1,
+    mcp: 2,
+    design: 3,
+    'mock-server': 4,
+    unsynced: 5,
   };
 
-  const toggleCategoryExpanded = (key: string) => {
-    setExpandedCategoryKeys(prev => {
-      const previous = prev || [];
-      return previous.includes(key) ? previous.filter(value => value !== key) : [...previous, key];
-    });
+  const workspaceScopeIcon: Record<InsomniaFile['scope'], IconProp> = {
+    collection: 'bars',
+    environment: 'code',
+    mcp: ['fac', 'mcp'] as unknown as IconProp,
+    design: 'file',
+    'mock-server': 'server',
+    unsynced: 'cloud-download',
+  };
+
+  const toggleProjectExpanded = (id: string) => {
+    const next = expandedProjectIdList.includes(id)
+      ? expandedProjectIdList.filter(value => value !== id)
+      : [...expandedProjectIdList, id];
+    setExpandedProjectIds(next);
   };
 
   const toggleCollectionExpanded = (key: string) => {
-    setExpandedCollectionKeys(prev => {
-      const previous = prev || [];
-      return previous.includes(key) ? previous.filter(value => value !== key) : [...previous, key];
-    });
+    const next = expandedCollectionKeyList.includes(key)
+      ? expandedCollectionKeyList.filter(value => value !== key)
+      : [...expandedCollectionKeyList, key];
+    setExpandedCollectionKeys(next);
   };
 
   const toggleRequestGroupExpanded = (key: string) => {
-    setExpandedRequestGroupKeys(prev => {
-      const previous = prev || [];
-      return previous.includes(key) ? previous.filter(value => value !== key) : [...previous, key];
-    });
+    const next = expandedRequestGroupKeyList.includes(key)
+      ? expandedRequestGroupKeyList.filter(value => value !== key)
+      : [...expandedRequestGroupKeyList, key];
+    setExpandedRequestGroupKeys(next);
   };
 
   const openFileFromTree = (project: (Project & { gitRepository?: GitRepository }), file: InsomniaFile, withTab?: boolean) => {
@@ -905,6 +896,11 @@ const Component = () => {
       return;
     }
 
+    const searchParams = new URLSearchParams();
+    if (file.scope === 'collection') {
+      searchParams.set('doNotSkipToActiveRequest', 'true');
+    }
+
     tabNavigate(
       {
         organization: organizationId,
@@ -915,6 +911,7 @@ const Component = () => {
       {
         withTab,
         shouldNavigate: true,
+        searchParams,
       },
     );
   };
@@ -976,7 +973,7 @@ const Component = () => {
               />
               <div className="flex flex-1 flex-col overflow-hidden">
                 <div className="flex items-center justify-between p-(--padding-sm)">
-                  <Heading className="text-xs uppercase">Projects ({projectsCount})</Heading>
+                  <Heading className="text-xs uppercase">Projects</Heading>
                   <Button
                     aria-label="Create new Project"
                     onPress={() => setIsNewProjectModalOpen(true)}
@@ -987,7 +984,7 @@ const Component = () => {
                 </div>
                 <div className="flex-1 overflow-y-auto py-1">
                   {projectsWithPresence.map(project => {
-                    const isProjectExpanded = Boolean(expandedProjectIds?.includes(project._id));
+                    const isProjectExpanded = expandedProjectIdList.includes(project._id);
                     const isActiveProject = project._id === activeProject?._id;
                     const files = projectFilesWithRemoteByProjectId[project._id] || [];
 
@@ -999,7 +996,7 @@ const Component = () => {
                             onPress={() => toggleProjectExpanded(project._id)}
                             className="flex h-5 w-5 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)"
                           >
-                            <Icon icon={isProjectExpanded ? 'chevron-down' : 'chevron-right'} className="w-3" />
+                            <Icon icon={isProjectExpanded ? 'chevron-down' : 'chevron-right'} className="h-3 w-3" />
                           </Button>
                           <Button
                             aria-label={`Open project ${project.name}`}
@@ -1027,171 +1024,145 @@ const Component = () => {
                         </div>
                         {isProjectExpanded && (
                           <div className="mb-1 flex flex-col">
-                            {projectTreeScopes.map(scopeGroup => {
-                              const categoryKey = `${project._id}:${scopeGroup.scope}`;
-                              const isCategoryExpanded = Boolean(expandedCategoryKeys?.includes(categoryKey));
-                              const scopedFiles = files
-                                .filter(file => file.scope === scopeGroup.scope)
-                                .sort((a, b) => a.name.localeCompare(b.name));
-
-                              return (
-                                <div key={categoryKey} className="flex flex-col">
-                                  <div className="group flex items-center gap-1 pl-6 pr-2 py-0.5">
+                            {files
+                              .slice()
+                              .sort((a, b) => {
+                                const scopeDiff = workspaceScopeOrder[a.scope] - workspaceScopeOrder[b.scope];
+                                return scopeDiff !== 0 ? scopeDiff : a.name.localeCompare(b.name);
+                              })
+                              .map(file => {
+                                if (file.scope !== 'collection') {
+                                  return (
                                     <Button
-                                      aria-label={`${isCategoryExpanded ? 'Collapse' : 'Expand'} ${scopeGroup.label}`}
-                                      onPress={() => toggleCategoryExpanded(categoryKey)}
-                                      className="flex h-4 w-4 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)"
+                                      key={`${project._id}:${file.id}`}
+                                      aria-label={`Open ${file.name}`}
+                                      onPress={e => {
+                                        openFileFromTree(project, file, isPrimaryClickModifier(e));
+                                      }}
+                                      className="ml-10 mr-2 flex items-center gap-2 rounded-xs px-2 py-1 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
                                     >
-                                      <Icon
-                                        icon={isCategoryExpanded ? 'chevron-down' : 'chevron-right'}
-                                        className="w-2.5"
-                                      />
+                                      <Icon icon={workspaceScopeIcon[file.scope]} className="w-3.5" />
+                                      <span className="truncate">{file.name}</span>
                                     </Button>
-                                    <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xs px-2 py-0.5 text-(--hl)">
-                                      <Icon icon={scopeGroup.icon} className="w-3.5" />
-                                      <span className="truncate text-xs">{scopeGroup.label}</span>
-                                      <span className="ml-auto text-xs text-(--hl-md)">{scopedFiles.length}</span>
-                                    </div>
-                                  </div>
-                                  {isCategoryExpanded && (
-                                    <div className="flex flex-col">
-                                      {scopedFiles.map(file => {
-                                        if (scopeGroup.scope !== 'collection') {
-                                          return (
-                                            <Button
-                                              key={`${project._id}:${file.id}`}
-                                              aria-label={`Open ${file.name}`}
-                                              onPress={e => {
-                                                openFileFromTree(project, file, isPrimaryClickModifier(e));
-                                              }}
-                                              className="ml-12 mr-2 rounded-xs px-2 py-1 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
-                                            >
-                                              <span className="truncate">{file.name}</span>
-                                            </Button>
-                                          );
-                                        }
+                                  );
+                                }
 
-                                        const collectionKey = `${project._id}:${file.id}`;
-                                        const isCollectionExpanded = Boolean(expandedCollectionKeys?.includes(collectionKey));
-                                        const collectionTreeNodes = collectionTreeByWorkspaceId[file.id] || [];
-                                        const rootNodes = collectionTreeNodes
-                                          .filter(node => node.parentId === file.id)
-                                          .sort((a, b) => a.name.localeCompare(b.name));
+                                const collectionKey = `${project._id}:${file.id}`;
+                                const isCollectionExpanded = expandedCollectionKeyList.includes(collectionKey);
+                                const collectionTreeNodes = collectionTreeByWorkspaceId[file.id] || [];
+                                const rootNodes = collectionTreeNodes
+                                  .filter(node => node.parentId === file.id)
+                                  .sort((a, b) => a.name.localeCompare(b.name));
 
-                                        const renderTreeNodes = (parentId: string, depth: number) => {
-                                          return collectionTreeNodes
-                                            .filter(node => node.parentId === parentId)
-                                            .sort((a, b) => a.name.localeCompare(b.name))
-                                            .map(node => {
-                                              const requestGroupKey = `${project._id}:${file.id}:${node._id}`;
-                                              const isRequestGroupExpanded = Boolean(
-                                                expandedRequestGroupKeys?.includes(requestGroupKey),
-                                              );
-                                              const hasChildren = collectionTreeNodes.some(
-                                                childNode => childNode.parentId === node._id,
-                                              );
+                                const renderTreeNodes = (parentId: string, depth: number) => {
+                                  return collectionTreeNodes
+                                    .filter(node => node.parentId === parentId)
+                                    .sort((a, b) => a.name.localeCompare(b.name))
+                                    .map(node => {
+                                      const requestGroupKey = `${project._id}:${file.id}:${node._id}`;
+                                      const isRequestGroupExpanded = expandedRequestGroupKeyList.includes(
+                                        requestGroupKey,
+                                      );
+                                      const hasChildren = collectionTreeNodes.some(
+                                        childNode => childNode.parentId === node._id,
+                                      );
 
-                                              if (node.nodeType === 'request-group') {
-                                                return (
-                                                  <div key={requestGroupKey} className="flex flex-col">
-                                                    <div className="group flex items-center gap-1 py-0.5 pr-2" style={{ paddingLeft: `${depth}px` }}>
-                                                      <Button
-                                                        aria-label={`${isRequestGroupExpanded ? 'Collapse' : 'Expand'} ${node.name}`}
-                                                        onPress={() => toggleRequestGroupExpanded(requestGroupKey)}
-                                                        className="flex h-4 w-4 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)"
-                                                      >
-                                                        <Icon
-                                                          icon={isRequestGroupExpanded ? 'chevron-down' : 'chevron-right'}
-                                                          className="w-2.5"
-                                                        />
-                                                      </Button>
-                                                      <Button
-                                                        aria-label={`Open folder ${node.name}`}
-                                                        onPress={e => {
-                                                          if (!file.workspace) {
-                                                            return;
-                                                          }
-                                                          openCollectionTreeNode({
-                                                            project,
-                                                            workspace: file.workspace,
-                                                            node,
-                                                            withTab: isPrimaryClickModifier(e),
-                                                          });
-                                                        }}
-                                                        className="flex min-w-0 flex-1 items-center gap-2 rounded-xs px-2 py-0.5 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
-                                                      >
-                                                        <Icon icon="folder" className="w-3" />
-                                                        <span className="truncate">{node.name}</span>
-                                                      </Button>
-                                                    </div>
-                                                    {isRequestGroupExpanded && hasChildren && (
-                                                      <div className="flex flex-col">{renderTreeNodes(node._id, depth + 16)}</div>
-                                                    )}
-                                                  </div>
-                                                );
-                                              }
-
-                                              return (
-                                                <Button
-                                                  key={requestGroupKey}
-                                                  aria-label={`Open request ${node.name}`}
-                                                  onPress={e => {
-                                                    if (!file.workspace) {
-                                                      return;
-                                                    }
-                                                    openCollectionTreeNode({
-                                                      project,
-                                                      workspace: file.workspace,
-                                                      node,
-                                                      withTab: isPrimaryClickModifier(e),
-                                                    });
-                                                  }}
-                                                  className="mr-2 rounded-xs px-2 py-0.5 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
-                                                  style={{ marginLeft: `${depth + 18}px` }}
-                                                >
-                                                  <span className="truncate">
-                                                    {node.requestMethod ? `${node.requestMethod} ` : ''}
-                                                    {node.name}
-                                                  </span>
-                                                </Button>
-                                              );
-                                            });
-                                        };
-
+                                      if (node.nodeType === 'request-group') {
                                         return (
-                                          <div key={collectionKey} className="flex flex-col">
-                                            <div className="group flex items-center gap-1 py-0.5 pr-2 pl-12">
+                                          <div key={requestGroupKey} className="flex flex-col">
+                                            <div className="group flex items-center gap-1 py-0.5 pr-2" style={{ paddingLeft: `${depth}px` }}>
                                               <Button
-                                                aria-label={`${isCollectionExpanded ? 'Collapse' : 'Expand'} ${file.name}`}
-                                                onPress={() => toggleCollectionExpanded(collectionKey)}
+                                                aria-label={`${isRequestGroupExpanded ? 'Collapse' : 'Expand'} ${node.name}`}
+                                                onPress={() => toggleRequestGroupExpanded(requestGroupKey)}
                                                 className="flex h-4 w-4 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)"
                                               >
                                                 <Icon
-                                                  icon={isCollectionExpanded ? 'chevron-down' : 'chevron-right'}
-                                                  className="w-2.5"
+                                                  icon={isRequestGroupExpanded ? 'chevron-down' : 'chevron-right'}
+                                                  className="h-3 w-3"
                                                 />
                                               </Button>
                                               <Button
-                                                aria-label={`Open ${file.name}`}
+                                                aria-label={`Open folder ${node.name}`}
                                                 onPress={e => {
-                                                  openFileFromTree(project, file, isPrimaryClickModifier(e));
+                                                  if (!file.workspace) {
+                                                    return;
+                                                  }
+                                                  openCollectionTreeNode({
+                                                    project,
+                                                    workspace: file.workspace,
+                                                    node,
+                                                    withTab: isPrimaryClickModifier(e),
+                                                  });
                                                 }}
                                                 className="flex min-w-0 flex-1 items-center gap-2 rounded-xs px-2 py-0.5 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
                                               >
-                                                <Icon icon="bars" className="w-3.5" />
-                                                <span className="truncate">{file.name}</span>
-                                                <span className="ml-auto text-[10px] text-(--hl-md)">{rootNodes.length}</span>
+                                                <Icon icon="folder" className="w-3" />
+                                                <span className="truncate">{node.name}</span>
                                               </Button>
                                             </div>
-                                            {isCollectionExpanded && <div className="flex flex-col">{renderTreeNodes(file.id, 66)}</div>}
+                                            {isRequestGroupExpanded && hasChildren && (
+                                              <div className="flex flex-col">{renderTreeNodes(node._id, depth + 16)}</div>
+                                            )}
                                           </div>
                                         );
-                                      })}
+                                      }
+
+                                      return (
+                                        <Button
+                                          key={requestGroupKey}
+                                          aria-label={`Open request ${node.name}`}
+                                          onPress={e => {
+                                            if (!file.workspace) {
+                                              return;
+                                            }
+                                            openCollectionTreeNode({
+                                              project,
+                                              workspace: file.workspace,
+                                              node,
+                                              withTab: isPrimaryClickModifier(e),
+                                            });
+                                          }}
+                                          className="mr-2 rounded-xs px-2 py-0.5 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
+                                          style={{ marginLeft: `${depth + 18}px` }}
+                                        >
+                                          <span className="truncate">
+                                            {node.requestMethod ? `${node.requestMethod} ` : ''}
+                                            {node.name}
+                                          </span>
+                                        </Button>
+                                      );
+                                    });
+                                };
+
+                                return (
+                                  <div key={collectionKey} className="flex flex-col">
+                                    <div className="group flex items-center gap-1 py-0.5 pl-6 pr-2">
+                                      <Button
+                                        aria-label={`${isCollectionExpanded ? 'Collapse' : 'Expand'} ${file.name}`}
+                                        onPress={() => toggleCollectionExpanded(collectionKey)}
+                                        className="flex h-4 w-4 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)"
+                                      >
+                                        <Icon
+                                          icon={isCollectionExpanded ? 'chevron-down' : 'chevron-right'}
+                                          className="h-3 w-3"
+                                        />
+                                      </Button>
+                                      <Button
+                                        aria-label={`Open ${file.name}`}
+                                        onPress={e => {
+                                          openFileFromTree(project, file, isPrimaryClickModifier(e));
+                                        }}
+                                        className="flex min-w-0 flex-1 items-center gap-2 rounded-xs px-2 py-0.5 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
+                                      >
+                                        <Icon icon={workspaceScopeIcon[file.scope]} className="w-3.5" />
+                                        <span className="truncate">{file.name}</span>
+                                        <span className="ml-auto text-[10px] text-(--hl-md)">{rootNodes.length}</span>
+                                      </Button>
                                     </div>
-                                  )}
-                                </div>
-                              );
-                            })}
+                                    {isCollectionExpanded && <div className="flex flex-col">{renderTreeNodes(file.id, 50)}</div>}
+                                  </div>
+                                );
+                              })}
                           </div>
                         )}
                       </div>
