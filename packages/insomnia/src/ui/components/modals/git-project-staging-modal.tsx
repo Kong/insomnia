@@ -1,4 +1,13 @@
-import React, { type FC, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  type FC,
+  forwardRef,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import {
   Button,
   Dialog,
@@ -901,12 +910,75 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   );
 };
 
-export const GitProjectStagingModal: FC<{
-  mode?: StagingModalMode;
+export interface GitProjectStagingModalCallbackProps {
   onClose: () => void;
   onPullAfterCommit: () => void;
   onPushAfterPull: () => void;
-}> = ({ mode = StagingModalModes.default, onClose, onPullAfterCommit, onPushAfterPull }) => {
+}
+
+export interface GitProjectStagingModalOptions {
+  mode?: StagingModalMode;
+  callbackRef: React.MutableRefObject<GitProjectStagingModalCallbackProps>;
+}
+
+export interface GitProjectStagingModalHandle {
+  show: (options: GitProjectStagingModalOptions) => void;
+  hide: () => void;
+}
+
+export const GitProjectStagingModal = forwardRef<GitProjectStagingModalHandle>((_, ref) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [mode, setMode] = useState<StagingModalMode>(StagingModalModes.default);
+
+  const refOfCallbackRef = useRef<React.MutableRefObject<GitProjectStagingModalCallbackProps> | null>(null);
+
+  const hide = useCallback(() => {
+    setIsOpen(false);
+    setMode(StagingModalModes.default);
+    refOfCallbackRef.current = null;
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    show: ({ mode: newMode = StagingModalModes.default, callbackRef }) => {
+      setMode(newMode);
+      refOfCallbackRef.current = callbackRef;
+      setIsOpen(true);
+    },
+    hide,
+  }));
+
+  const onClose = useCallback(() => {
+    refOfCallbackRef.current?.current.onClose();
+    hide();
+  }, [hide]);
+
+  const onPullAfterCommit = useCallback(() => {
+    refOfCallbackRef.current?.current.onPullAfterCommit();
+    hide();
+  }, [hide]);
+
+  const onPushAfterPull = useCallback(() => {
+    refOfCallbackRef.current?.current.onPushAfterPull();
+  }, []);
+
+  return (
+    isOpen && (
+      <OriginalGitProjectStagingModal
+        mode={mode}
+        onClose={onClose}
+        onPullAfterCommit={onPullAfterCommit}
+        onPushAfterPull={onPushAfterPull}
+      />
+    )
+  );
+});
+GitProjectStagingModal.displayName = 'GitProjectStagingModal';
+
+const OriginalGitProjectStagingModal: FC<
+  {
+    mode?: StagingModalMode;
+  } & GitProjectStagingModalCallbackProps
+> = ({ mode = StagingModalModes.default, onClose, onPullAfterCommit, onPushAfterPull }) => {
   const { projectId } = useParams() as { projectId: string };
 
   const [commitGenerationKey, setCommitGenerationKey] = useState(0);

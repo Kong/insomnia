@@ -37,7 +37,11 @@ import { showModal } from '../modals';
 import { GitProjectBranchesModal } from '../modals/git-project-branches-modal';
 import { GitProjectLogModal } from '../modals/git-project-log-modal';
 import { GitProjectMigrationModal } from '../modals/git-project-migration-modal';
-import { GitProjectStagingModal, type StagingModalMode, StagingModalModes } from '../modals/git-project-staging-modal';
+import {
+  GitProjectStagingModal,
+  type GitProjectStagingModalCallbackProps,
+  StagingModalModes,
+} from '../modals/git-project-staging-modal';
 import { GitPullRequiredModal } from '../modals/git-pull-required-modal';
 import { SyncMergeModal } from '../modals/sync-merge-modal';
 import { showToast } from '../toast-notification';
@@ -54,9 +58,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
 
   const [isGitBranchesModalOpen, setIsGitBranchesModalOpen] = useState(false);
   const [isGitLogModalOpen, setIsGitLogModalOpen] = useState(false);
-  const [isGitStagingModalOpen, setIsGitStagingModalOpen] = useState(false);
   const [isGitPullRequiredModalOpen, setIsGitPullRequiredModalOpen] = useState(false);
-  const [stagingMode, setStagingMode] = useState<StagingModalMode>(StagingModalModes.default);
   const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
   const prevHadPullError = useRef(false);
 
@@ -257,6 +259,29 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
       ? gitRepoDataFetcher.data
       : { branches: [], branch: '' };
 
+  const closeGitProjectStagingModalRef = useRef<(() => void) | null>(null);
+
+  const gitProjectStagingModalCallbackPropsRef = useRef<GitProjectStagingModalCallbackProps>(null!);
+  gitProjectStagingModalCallbackPropsRef.current = {
+    onPullAfterCommit: async () => {
+      await handlePull();
+      fetchStatus();
+    },
+    onPushAfterPull: async () => {
+      setIsGitPullRequiredModalOpen(false);
+      const pullResult = await handlePull();
+      if (pullResult && pullResult.success) {
+        handlePush({ force: false });
+      }
+      prevHadPullError.current = true;
+      fetchStatus();
+    },
+    onClose: () => {
+      prevHadPullError.current = false;
+      fetchStatus();
+    },
+  };
+
   const handlePull = async () => {
     try {
       setIsPulling(true);
@@ -274,8 +299,10 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
         pullResult.errors.includes(GitVCSOperationErrors.UncommittedChangesError)
       ) {
         setIsPulling(false);
-        setStagingMode(StagingModalModes.commitAndPull);
-        setIsGitStagingModalOpen(true);
+        closeGitProjectStagingModalRef.current = showModal(GitProjectStagingModal, {
+          mode: StagingModalModes.commitAndPull,
+          callbackRef: gitProjectStagingModalCallbackPropsRef,
+        });
       } else if ('errors' in pullResult && pullResult.errors) {
         showToast({
           icon,
@@ -333,7 +360,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
               });
           },
           onCancelUnresolved: () => {
-            setIsGitStagingModalOpen(false);
+            closeGitProjectStagingModalRef.current?.();
             setIsPulling(false);
             showToast({
               icon,
@@ -394,7 +421,12 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
           icon: 'check',
           isDisabled: status?.localChanges === 0,
           label: 'Commit',
-          action: () => setIsGitStagingModalOpen(true),
+          action: () => {
+            closeGitProjectStagingModalRef.current = showModal(GitProjectStagingModal, {
+              mode: StagingModalModes.default,
+              callbackRef: gitProjectStagingModalCallbackPropsRef,
+            });
+          },
         },
         {
           id: 'pull',
@@ -658,36 +690,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
         />
       )}
       {isGitLogModalOpen && gitRepository && <GitProjectLogModal onClose={() => setIsGitLogModalOpen(false)} />}
-      {isGitStagingModalOpen && gitRepository && (
-        <GitProjectStagingModal
-          mode={stagingMode}
-          onPullAfterCommit={async () => {
-            setIsGitStagingModalOpen(false);
-            setStagingMode(StagingModalModes.default);
-            await handlePull();
-            fetchStatus();
-          }}
-          onPushAfterPull={async () => {
-            setIsGitPullRequiredModalOpen(false);
 
-            const pullResult = await handlePull();
-
-            if (pullResult && pullResult.success) {
-              handlePush({ force: false });
-            }
-
-            prevHadPullError.current = true;
-            fetchStatus();
-          }}
-          onClose={() => {
-            prevHadPullError.current = false;
-
-            setIsGitStagingModalOpen(false);
-            setStagingMode(StagingModalModes.default);
-            fetchStatus();
-          }}
-        />
-      )}
       {isMigrationModalOpen && gitRepository && legacyInsomniaWorkspace && (
         <GitProjectMigrationModal
           legacyFile={legacyInsomniaWorkspace}
