@@ -85,7 +85,6 @@ import { DocumentTab } from '~/ui/components/document-tab';
 import { RequestActionsDropdown } from '~/ui/components/dropdowns/request-actions-dropdown';
 import { RequestGroupActionsDropdown } from '~/ui/components/dropdowns/request-group-actions-dropdown';
 import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
-import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';
 import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
@@ -1211,7 +1210,6 @@ const Debug = () => {
 
           {isScratchpadOrganizationId(organizationId) && <ScratchPadTutorialPanel />}
 
-          <WorkspaceSyncDropdown />
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
           {isImportModalOpen && (
             <ImportModal

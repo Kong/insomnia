@@ -4,7 +4,6 @@ import { href, NavLink, redirect, useParams } from 'react-router';
 
 import { Icon } from '~/basic-components/icon';
 import * as models from '~/models';
-import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
@@ -96,7 +95,6 @@ const McpWorkspace = () => {
           <div className="flex flex-1 flex-col overflow-hidden">
             <div className="flex justify-between gap-1 p-(--padding-sm)" />
           </div>
-          <WorkspaceSyncDropdown />
         </div>
       </Panel>
       <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />

@@ -30,7 +30,6 @@ import { useTestSuiteUpdateActionFetcher } from '~/routes/organization.$organiza
 import { useTestSuiteNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.new';
 import { DocumentTab } from '~/ui/components/document-tab';
 import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
-import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';
 import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
@@ -458,7 +457,6 @@ const Component = () => {
               }}
             </GridList>
           </div>
-          <WorkspaceSyncDropdown />
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
           {isCookieModalOpen && <CookiesModal setIsOpen={setIsCookieModalOpen} />}
           {isCertificatesModalOpen && <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
