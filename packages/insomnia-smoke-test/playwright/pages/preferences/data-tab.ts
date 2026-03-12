@@ -38,15 +38,9 @@ export class PreferencesDataTab {
 
   /**
    * Clicks the "Export project" button.
-   * Note: The button text varies based on whether there's an active workspace:
-   * - With workspace: 'Export the "{projectName}" $Project' (note the $ is a bug in source)
-   * - Without workspace: 'Export files from the "{projectName}" Project'
-   * @param projectName - The name of the project
    */
-  async clickExportProjectButton(projectName: string): Promise<void> {
-    // Use regex to match either button text pattern (handles the $ bug in source)
-    const buttonPattern = new RegExp(`Export.*"${projectName}".*\\$?[Pp]roject`);
-    await this.page.getByRole('button', { name: buttonPattern }).click();
+  async clickExportProjectButton(): Promise<void> {
+    await this.page.getByTestId('export-project-button').click();
   }
 
   /**

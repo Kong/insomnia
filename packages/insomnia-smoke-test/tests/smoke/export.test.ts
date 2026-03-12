@@ -33,7 +33,7 @@ test.describe('Export', () => {
     try {
       await insomnia.preferencesPage.dataTab.mockOpenDialogForDirectory(tempDir);
       await insomnia.preferencesPage.dataTab.openDataTab();
-      await insomnia.preferencesPage.dataTab.clickExportProjectButton(projectName);
+      await insomnia.preferencesPage.dataTab.clickExportProjectButton();
       await insomnia.preferencesPage.dataTab.selectExportFormat('yaml');
       await waitForExportFiles(tempDir, 2);
       await insomnia.preferencesPage.closePreferences();
@@ -128,7 +128,7 @@ test.describe('Export', () => {
 
       await insomnia.preferencesPage.dataTab.openDataTab();
 
-      await insomnia.preferencesPage.dataTab.clickExportProjectButton(projectName);
+      await insomnia.preferencesPage.dataTab.clickExportProjectButton();
 
       await insomnia.preferencesPage.dataTab.selectExportFormat('har');
       await waitForExportFiles(tempDir, 1);
