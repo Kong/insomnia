@@ -229,7 +229,7 @@ describe('curl', () => {
       },
     },
     {
-      name: 'should handle bearer auth and nomral header auth together',
+      name: 'should handle bearer auth and normal header auth together',
       curl: `curl http://httpbin.org/get -H 'x-foo: x-bar' -H 'Authorization: Bearer mytoken123' `,
       expected: {
         authentication: { type: 'bearer', token: 'mytoken123' },
