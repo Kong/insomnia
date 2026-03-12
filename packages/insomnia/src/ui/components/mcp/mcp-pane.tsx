@@ -378,7 +378,9 @@ export const McpPane = () => {
         : 'default';
 
   return (
-    <PanelGroup
+    <div className="flex h-full w-full flex-col">
+      <OrganizationTabList currentPage="mcp" />
+      <PanelGroup
       ref={sidebarPanelRef}
       autoSaveId="insomnia-sidebar"
       id="wrapper"
@@ -553,7 +555,6 @@ export const McpPane = () => {
       </Panel>
       <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
       <Panel className="flex flex-col">
-        <OrganizationTabList currentPage="mcp" />
         <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
           <Panel id="mcp-request-pane" order={1} minSize={10} className="pane-one theme--pane">
             <McpRequestPane
@@ -577,6 +578,7 @@ export const McpPane = () => {
         </PanelGroup>
       </Panel>
     </PanelGroup>
+    </div>
   );
 };
 

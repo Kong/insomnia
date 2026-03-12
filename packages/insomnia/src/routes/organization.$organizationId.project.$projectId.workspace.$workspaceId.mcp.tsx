@@ -6,6 +6,7 @@ import { Icon } from '~/basic-components/icon';
 import * as models from '~/models';
 import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
+import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mcp';
@@ -54,12 +55,14 @@ const McpWorkspace = () => {
   };
 
   return (
-    <PanelGroup
-      autoSaveId="insomnia-sidebar"
-      id="wrapper"
-      className="new-sidebar h-full w-full text-(--color-font)"
-      direction="horizontal"
-    >
+    <div className="flex h-full w-full flex-col">
+      <OrganizationTabList />
+      <PanelGroup
+        autoSaveId="insomnia-sidebar"
+        id="wrapper"
+        className="new-sidebar h-full w-full text-(--color-font)"
+        direction="horizontal"
+      >
       <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
         <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
           <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
@@ -109,7 +112,8 @@ const McpWorkspace = () => {
           </PaneBody>
         </Pane>
       </Panel>
-    </PanelGroup>
+      </PanelGroup>
+    </div>
   );
 };
 

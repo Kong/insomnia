@@ -301,13 +301,15 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   });
 
   return (
-    <PanelGroup
-      ref={sidebarPanelRef}
-      autoSaveId="insomnia-sidebar"
-      id="wrapper"
-      className="new-sidebar h-full w-full text-(--color-font)"
-      direction="horizontal"
-    >
+    <div className="flex h-full w-full flex-col">
+      <OrganizationTabList />
+      <PanelGroup
+        ref={sidebarPanelRef}
+        autoSaveId="insomnia-sidebar"
+        id="wrapper"
+        className="new-sidebar h-full w-full text-(--color-font)"
+        direction="horizontal"
+      >
       <Panel
         id="sidebar"
         className="sidebar theme--sidebar flex flex-col justify-between divide-y divide-solid divide-(--hl-md) overflow-hidden"
@@ -476,7 +478,6 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
       </Panel>
       <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
       <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
-        <OrganizationTabList />
         <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
           <div className="flex w-full shrink-0 basis-(--line-height-sm) items-center justify-between gap-2 overflow-hidden p-(--padding-sm)">
             <Heading className="flex grow items-center gap-2 overflow-hidden px-4 py-2 text-lg">
@@ -600,6 +601,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
         </div>
       </Panel>
     </PanelGroup>
+    </div>
   );
 };
 
