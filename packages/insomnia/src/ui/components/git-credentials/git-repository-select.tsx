@@ -128,8 +128,8 @@ export const GitRepositorySelect = ({
             name: string;
           }> className="flex min-w-max flex-col p-2 text-sm select-none focus:outline-hidden">
             {item => {
-              const isDisabled =
-                allConnectedRepoURIInfoMap && Object.prototype.hasOwnProperty.call(allConnectedRepoURIInfoMap, item.id);
+              const connectedInfo = allConnectedRepoURIInfoMap?.[item.id];
+              const isDisabled = Boolean(connectedInfo);
               return (
                 <ListBoxItem
                   isDisabled={isDisabled}
@@ -138,11 +138,10 @@ export const GitRepositorySelect = ({
                 >
                   {isDisabled && <Icon icon="lock" className="group-aria-disabled:opacity-30" />}
                   <span className="truncate group-aria-disabled:opacity-30">{item.name}</span>
-                  {isDisabled && (
+                  {connectedInfo && (
                     /* If you use hidden here, if the drop down is a long list and you scroll to the disabled item and hover on it, the scroll bar will scroll to the top. So we use invisible instead */
                     <span className="invisible rounded border border-solid border-(--hl-xl) px-2 py-1 text-(--color-font) group-hover:visible">
-                      Already connected to: {allConnectedRepoURIInfoMap[item.id].organizationName} /{' '}
-                      {allConnectedRepoURIInfoMap[item.id].projectName}
+                      Already connected to: {connectedInfo.organizationName} / {connectedInfo.projectName}
                     </span>
                   )}
                 </ListBoxItem>

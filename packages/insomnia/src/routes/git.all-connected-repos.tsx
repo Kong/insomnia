@@ -21,6 +21,8 @@ export async function clientLoader() {
     )
   ).flat();
 
+  const organizationMap = Object.fromEntries(organizations.map(o => [o.id, o]));
+
   const allConnectedGitProjects = allProjects.filter(
     project => models.project.isGitProject(project) && !isEmptyGitProject(project),
   );
@@ -30,9 +32,8 @@ export async function clientLoader() {
       if (gitRepositoryId) {
         const gitRepository = await models.gitRepository.getById(gitRepositoryId);
         if (gitRepository) {
-          const organization = organizations.find(o => o.id === parentId);
           gitRepoURIInfoMap[gitRepository.uri] = {
-            organizationName: organization?.name || '',
+            organizationName: organizationMap[parentId]?.name || '',
             projectName: name,
           };
         }
