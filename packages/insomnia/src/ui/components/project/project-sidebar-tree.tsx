@@ -213,8 +213,7 @@ export function ProjectSidebarTree<
                     })
                     .map(file => {
                       if (file.scope !== 'collection') {
-                        const isWorkspaceActive =
-                          activeWorkspaceId === file.workspace?._id && !activeRequestId && !activeRequestGroupId;
+                        const isWorkspaceActive = activeWorkspaceId === file.workspace?._id;
 
                         return (
                           <div key={`${project._id}:${file.id}`} className="min-w-0">
