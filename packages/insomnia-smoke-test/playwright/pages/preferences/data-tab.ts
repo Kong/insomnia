@@ -1,6 +1,7 @@
 import type { ElectronApplication, Locator, Page } from '@playwright/test';
 
 import { mockOpenDialogForDirectory, mockSaveDialogForFile } from '../../utils';
+import { BasePage } from '../base-page';
 
 /**
  * Component for the **Data tab** within Insomnia Preferences.
@@ -10,11 +11,13 @@ import { mockOpenDialogForDirectory, mockSaveDialogForFile } from '../../utils';
  * - Export all data
  * - Format selection
  */
-export class PreferencesDataTab {
+export class PreferencesDataTab extends BasePage {
   constructor(
     readonly page: Page,
     readonly app: ElectronApplication,
-  ) {}
+  ) {
+    super(page);
+  }
 
   get root(): Locator {
     return this.page.getByTestId('import-export-tab');
@@ -34,7 +37,7 @@ export class PreferencesDataTab {
     } else if (format === 'har') {
       await mockSaveDialogForFile(this.app, dirPath);
     }
-    await this.selectExportFormat(format);
+    await this.exportModal.selectExportFormat(format);
   }
 
   /**
@@ -45,19 +48,6 @@ export class PreferencesDataTab {
     await this.page.getByRole('button', { name: /Export all data/ }).click();
 
     await this.waitForExportCompleteAlert();
-  }
-
-  /**
-   * Handles the export type selection modal (Insomnia v5 or HAR).
-   * @param format - The format to select ('yaml' for Insomnia v5, 'har' for HAR)
-   */
-  async selectExportFormat(format: 'yaml' | 'har'): Promise<void> {
-    await this.page.getByText('Which format would you like to export as?').waitFor({ state: 'visible' });
-
-    // The modal uses a <select> element, so we need to use selectOption
-    await this.page.getByTestId('global-select-modal').locator('select').selectOption(format);
-
-    await this.page.getByRole('button', { name: 'Done' }).click();
   }
 
   /**

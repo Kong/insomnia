@@ -1,6 +1,7 @@
-import type { ElectronApplication, Locator, Page } from '@playwright/test';
+import type { ElectronApplication, Page } from '@playwright/test';
 
 import { mockSaveDialogForFile } from '../../utils';
+import { BasePage } from '../base-page';
 
 /**
  * Page Object for the **workspace page** (debug view).
@@ -11,16 +12,18 @@ import { mockSaveDialogForFile } from '../../utils';
  * - Navigation (breadcrumb navigation)
  * - Export operations (from workspace dropdown)
  */
-export class WorkspacePage {
+export class WorkspacePage extends BasePage {
   constructor(
     readonly page: Page,
     readonly app: ElectronApplication,
-  ) {}
+  ) {
+    super(page);
+  }
 
   /** The root workspace container. */
-  get root(): Locator {
+  get root() {
     // Use the breadcrumb as a reliable indicator that workspace is loaded
-    return this.page.getByTestId('project');
+    return this.page.getByTestId('workspace-page');
   }
 
   // ===========================================================================
@@ -34,14 +37,6 @@ export class WorkspacePage {
     await this.page.getByTestId('project').click();
   }
 
-  /**
-   * Waits for the workspace page to be loaded.
-   */
-  async waitForWorkspaceLoaded(): Promise<void> {
-    // Wait for the breadcrumb to be visible, indicating workspace is loaded
-    await this.page.getByTestId('project').waitFor({ state: 'visible' });
-  }
-
   // ===========================================================================
   // Export Operations
   // ===========================================================================
@@ -51,32 +46,6 @@ export class WorkspacePage {
    */
   async openWorkspaceDropdown(): Promise<void> {
     await this.page.getByTestId('workspace-context-dropdown').click();
-  }
-
-  /**
-   * Clicks the Export option in the workspace dropdown.
-   */
-  async clickExportInWorkspaceDropdown(): Promise<void> {
-    // Wait for the Export menu item to be visible, then click it
-    const exportMenuItem = this.page.getByRole('menuitemradio', { name: 'Export' });
-    await exportMenuItem.click();
-  }
-
-  /**
-   * Clicks the Export button in the Export Requests modal.
-   */
-  async clickExportButtonInExportRequestsModal(): Promise<void> {
-    await this.page.getByRole('dialog').getByRole('button', { name: 'Export' }).click();
-  }
-
-  /**
-   * Selects the export format in the format selection modal.
-   * @param format - The format to select ('yaml' for Insomnia v5, 'har' for HAR)
-   */
-  async selectExportFormat(format: 'yaml' | 'har'): Promise<void> {
-    await this.page.getByText('Which format would you like to export as?').waitFor({ state: 'visible' });
-    await this.page.getByTestId('global-select-modal').locator('select').selectOption(format);
-    await this.page.getByRole('button', { name: 'Done' }).click();
   }
 
   /**
@@ -93,12 +62,13 @@ export class WorkspacePage {
     await this.openWorkspaceDropdown();
 
     // Click Export option
-    await this.clickExportInWorkspaceDropdown();
+    const exportMenuItem = this.page.getByRole('menuitemradio', { name: 'Export' });
+    await exportMenuItem.click();
 
     // Click Export button in the export requests modal (all requests selected by default)
-    await this.clickExportButtonInExportRequestsModal();
+    await this.page.getByRole('dialog').getByRole('button', { name: 'Export' }).click();
 
     // Select export format
-    await this.selectExportFormat(format);
+    await this.exportModal.selectExportFormat(format);
   }
 }

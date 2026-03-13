@@ -1,5 +1,6 @@
 import type { ElectronApplication, Page } from '@playwright/test';
 
+import { ExportModal } from './components/export-modal';
 import { StatusbarComponent } from './components/statusbar';
 import { PreferencesPage } from './preferences';
 import { ProjectPage } from './project';
@@ -42,6 +43,9 @@ export class InsomniaApp {
   /** Statusbar (footer) — always visible. */
   readonly statusbar: StatusbarComponent;
 
+  // global export modal
+  readonly exportModal: ExportModal;
+
   // ===========================================================================
   // Page objects
   // ===========================================================================
@@ -61,6 +65,7 @@ export class InsomniaApp {
   ) {
     // Shared components
     this.statusbar = new StatusbarComponent(page);
+    this.exportModal = new ExportModal(page);
 
     // Pages
     this.projectPage = new ProjectPage(page, app);
