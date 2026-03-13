@@ -69,6 +69,7 @@ import { AvatarGroup } from '~/ui/components/avatar';
 import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
 import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
 import { LocalProjectBar } from '~/ui/components/dropdowns/local-project-bar';
+import { SyncDropdown } from '~/ui/components/dropdowns/sync-dropdown';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
@@ -567,7 +568,6 @@ const Component = () => {
     activeProject,
     activeProjectGitRepository,
     projects,
-    projectsCount,
     learningFeaturePromise,
     remoteFilesPromise,
     projectsSyncStatusPromise,
@@ -576,9 +576,10 @@ const Component = () => {
     'learning-feature-dismissed',
     '',
   );
-  const { organizationId, projectId } = useParams() as {
+  const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
+    workspaceId?: string;
   };
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
   const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
@@ -625,6 +626,12 @@ const Component = () => {
   const { storagePromise } = storageRuleFetcher.data || {};
 
   const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
+  const projectWorkspaces = projectFilesByProjectId[activeProject?._id || ''] ?? [];
+  const activeWorkspace =
+    (workspaceId ? projectWorkspaces.find(file => file.id === workspaceId)?.workspace : null) ||
+    projectWorkspaces.find(file => file.scope === 'collection')?.workspace ||
+    projectWorkspaces.find(file => file.workspace)?.workspace ||
+    null;
 
   const [workspaceListFilter, setWorkspaceListFilter] = reactUse.useLocalStorage(
     `${projectId}:workspace-list-filter`,
@@ -1180,7 +1187,12 @@ const Component = () => {
                     />
                   )}
                   {isLocalProject(activeProject) && !isGitProject(activeProject) && <LocalProjectBar />}
-                  {isRemoteProject(activeProject) && <CloudSyncProjectBar />}
+                  {isRemoteProject(activeProject) &&
+                    (activeWorkspace ? (
+                      <SyncDropdown key={activeWorkspace._id} workspace={activeWorkspace} project={activeProject} />
+                    ) : (
+                      <CloudSyncProjectBar />
+                    ))}
                 </>
               )}
               {!isLearningFeatureDismissed && learningFeature?.active && (
