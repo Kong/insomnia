@@ -17,7 +17,7 @@ import { WorkspacePage } from './workspace';
  *  await insomnia.statusbar.openPreferences();
  *
  *  // Preferences and export
- *  await insomnia.preferencesPage.dataTab.clickExportProjectButton('My Project');
+ *  await insomnia.preferencesPage.dataTab.exportProjectData('My Project');
  * });
  * ```
  *

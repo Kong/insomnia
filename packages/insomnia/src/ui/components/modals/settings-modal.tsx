@@ -61,7 +61,14 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   );
 
   return (
-    <Modal className="z-10!" ref={modalRef} tall keyboardClosable={keyboardClosable} {...props}>
+    <Modal
+      dataTestId="preference-modal"
+      className="z-10!"
+      ref={modalRef}
+      tall
+      keyboardClosable={keyboardClosable}
+      {...props}
+    >
       <ModalHeader>
         {getProductName()} Preferences
         <span className="faint txt-sm">

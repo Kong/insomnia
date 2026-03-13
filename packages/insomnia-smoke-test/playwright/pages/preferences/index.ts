@@ -2,6 +2,8 @@ import type { ElectronApplication, Locator, Page } from '@playwright/test';
 
 import { PreferencesDataTab } from './data-tab';
 
+type PreferencesTab = 'Data' | 'General' | 'Themes' | 'Plugins' | 'Other';
+
 /**
  * Page Object for **Insomnia Preferences** modal.
  *
@@ -15,14 +17,14 @@ export class PreferencesPage {
 
   constructor(
     readonly page: Page,
-    readonly app: ElectronApplication
+    readonly app: ElectronApplication,
   ) {
     this.dataTab = new PreferencesDataTab(page, app);
   }
 
   /** The root preferences dialog. */
   get root(): Locator {
-    return this.page.locator('text=Insomnia Preferences').first();
+    return this.page.getByTestId('preference-modal');
   }
 
   // ===========================================================================
@@ -32,8 +34,19 @@ export class PreferencesPage {
   /**
    * Opens Insomnia Preferences via the statusbar preferences button.
    */
-  async openPreferences(): Promise<void> {
+  async openPreferences(tab?: PreferencesTab): Promise<void> {
     await this.page.getByTestId('settings-button').click();
+    if (tab) {
+      await this.openTab(tab);
+    }
+  }
+
+  /**
+   * Opens a specific tab in the preferences modal.
+   * @param tabName - The name of the tab to open (e.g., 'Data', 'General', 'Themes')
+   */
+  async openTab(tabName: PreferencesTab): Promise<void> {
+    await this.page.getByRole('tab', { name: tabName }).click();
   }
 
   /**

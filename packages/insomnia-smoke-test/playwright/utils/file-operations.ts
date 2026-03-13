@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import type { ElectronApplication } from '@playwright/test';
+
 /**
  * Creates a temporary directory for export operations.
  * @returns The path to the temporary directory
@@ -19,11 +21,7 @@ export function createTempExportDir(): string {
  * @param expectedCount - The expected number of files
  * @param timeout - Maximum time to wait in milliseconds (default: 10000)
  */
-export async function waitForExportFiles(
-  dirPath: string,
-  expectedCount: number,
-  timeout = 10_000
-): Promise<void> {
+export async function waitForExportFiles(dirPath: string, expectedCount: number, timeout = 10_000): Promise<void> {
   const startTime = Date.now();
   const pollInterval = 100;
 
@@ -36,9 +34,7 @@ export async function waitForExportFiles(
   }
 
   const files = getExportedFiles(dirPath);
-  throw new Error(
-    `Timeout waiting for ${expectedCount} export files. Found ${files.length} files in ${dirPath}`
-  );
+  throw new Error(`Timeout waiting for ${expectedCount} export files. Found ${files.length} files in ${dirPath}`);
 }
 
 /**
@@ -85,4 +81,34 @@ export function cleanupExportDir(dirPath: string): void {
   if (fs.existsSync(dirPath)) {
     fs.rmSync(dirPath, { recursive: true, force: true });
   }
+}
+
+/**
+ * Mocks the showSaveDialog to return a specific file path.
+ * Used for single file exports.
+ * @param filePath - The file path to return
+ */
+export async function mockSaveDialogForFile(app: ElectronApplication, filePath: string): Promise<void> {
+  await app.evaluate(async ({ ipcMain }, filePath) => {
+    // Override the showSaveDialog handler to return our temp file path
+    ipcMain.removeHandler('showSaveDialog');
+    ipcMain.handle('showSaveDialog', async () => {
+      return { filePath, canceled: false };
+    });
+  }, filePath);
+}
+
+/**
+ * Mocks the showOpenDialog to return a specific directory path.
+ * Used for "Export all data" which uses folder selection.
+ * @param dirPath - The directory path to return
+ */
+export async function mockOpenDialogForDirectory(app: ElectronApplication, dirPath: string): Promise<void> {
+  await app.evaluate(async ({ ipcMain }, dirPath) => {
+    // Override the showOpenDialog handler to return our temp directory
+    ipcMain.removeHandler('showOpenDialog');
+    ipcMain.handle('showOpenDialog', async () => {
+      return { filePaths: [dirPath], canceled: false };
+    });
+  }, dirPath);
 }

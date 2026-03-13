@@ -1,5 +1,7 @@
 import type { ElectronApplication, Locator, Page } from '@playwright/test';
 
+import { mockSaveDialogForFile } from '../../utils';
+
 /**
  * Page Object for the **workspace page** (debug view).
  *
@@ -73,22 +75,8 @@ export class WorkspacePage {
    */
   async selectExportFormat(format: 'yaml' | 'har'): Promise<void> {
     await this.page.getByText('Which format would you like to export as?').waitFor({ state: 'visible' });
-    await this.page.getByTestId('Select Modal').locator('select').selectOption(format);
+    await this.page.getByTestId('global-select-modal').locator('select').selectOption(format);
     await this.page.getByRole('button', { name: 'Done' }).click();
-  }
-
-  /**
-   * Mocks the save dialog to return a specific file path.
-   * Used for single file exports from workspace dropdown.
-   * @param filePath - The file path to return
-   */
-  async mockSaveDialogForFile(filePath: string): Promise<void> {
-    await this.app.evaluate(async ({ ipcMain }, filePath) => {
-      ipcMain.removeHandler('showSaveDialog');
-      ipcMain.handle('showSaveDialog', async () => {
-        return { filePath, canceled: false };
-      });
-    }, filePath);
   }
 
   /**
@@ -99,7 +87,7 @@ export class WorkspacePage {
    */
   async exportWorkspaceFromDropdown(exportPath: string, format: 'yaml' | 'har' = 'yaml'): Promise<void> {
     // Mock the save dialog first
-    await this.mockSaveDialogForFile(exportPath);
+    await mockSaveDialogForFile(this.app, exportPath);
 
     // Open workspace dropdown
     await this.openWorkspaceDropdown();

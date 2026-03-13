@@ -31,10 +31,8 @@ test.describe('Export', () => {
     const tempDir = createTempExportDir();
 
     try {
-      await insomnia.preferencesPage.dataTab.mockOpenDialogForDirectory(tempDir);
-      await insomnia.preferencesPage.dataTab.openDataTab();
-      await insomnia.preferencesPage.dataTab.clickExportProjectButton();
-      await insomnia.preferencesPage.dataTab.selectExportFormat('yaml');
+      await insomnia.preferencesPage.openPreferences('Data');
+      await insomnia.preferencesPage.dataTab.exportProjectData(tempDir, 'yaml');
       await waitForExportFiles(tempDir, 2);
       await insomnia.preferencesPage.closePreferences();
       const exportedFiles = getExportedFiles(tempDir);
@@ -77,10 +75,8 @@ test.describe('Export', () => {
     const tempDir = createTempExportDir();
 
     try {
-      await insomnia.preferencesPage.dataTab.mockOpenDialogForDirectory(tempDir);
-      await insomnia.preferencesPage.dataTab.openDataTab();
-      await insomnia.preferencesPage.dataTab.clickExportAllDataButton();
-      await insomnia.preferencesPage.dataTab.waitForExportCompleteAlert();
+      await insomnia.preferencesPage.openPreferences('Data');
+      await insomnia.preferencesPage.dataTab.exportAllData(tempDir);
       await insomnia.preferencesPage.closePreferences();
       const exportedFiles = getExportedFiles(tempDir).filter((file: string) => !file.includes('scratchpad'));
       expect.soft(exportedFiles.length).toBe(2);
@@ -124,13 +120,9 @@ test.describe('Export', () => {
     const exportFilePath = path.join(tempDir, `${projectName}.har`);
 
     try {
-      await insomnia.preferencesPage.dataTab.mockSaveDialogForFile(exportFilePath);
+      await insomnia.preferencesPage.openPreferences('Data');
 
-      await insomnia.preferencesPage.dataTab.openDataTab();
-
-      await insomnia.preferencesPage.dataTab.clickExportProjectButton();
-
-      await insomnia.preferencesPage.dataTab.selectExportFormat('har');
+      await insomnia.preferencesPage.dataTab.exportProjectData(exportFilePath, 'har');
       await waitForExportFiles(tempDir, 1);
 
       await insomnia.preferencesPage.closePreferences();
