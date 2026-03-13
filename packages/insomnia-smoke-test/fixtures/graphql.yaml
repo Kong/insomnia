@@ -6,7 +6,7 @@ meta:
   created: 1736278544391
   modified: 1736278544391
 collection:
-  - url: localhost:4010/graphql
+  - url: localhost:4010/graphqlTest
     name: GraphQL request with variables
     meta:
       id: req_5c2ed92546484588a32c4651a9ea000f
@@ -28,7 +28,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: localhost:4010/graphql
+  - url: localhost:4010/graphqlTest
     name: GraphQL request
     meta:
       id: req_d7540e876f894c07969fa8b8616d7923
@@ -50,7 +50,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: localhost:4010/graphql
+  - url: localhost:4010/graphqlTest
     name: GraphQL request with number
     meta:
       id: req_e2ebd88b1daa42bab6f6b3f18243d5ab

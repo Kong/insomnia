@@ -1,10 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { upsertMockbin } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import { getAppVersion, getMockServiceURL, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { userSession } from '~/models';
 import type { MockRoute } from '~/models/mock-route';
@@ -17,7 +19,6 @@ import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initiali
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -144,7 +145,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         ? []
         : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
       // Create mcp request when MCP workspace is created
-      await models.mcpRequest.create({
+      await services.mcpRequest.create({
         parentId: workspace._id,
         transportType: 'streamable-http',
         url: '',
@@ -444,15 +445,12 @@ async function createMockRoutes(
       const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
 
       if (mockbinUrl && sessionId) {
-        await insomniaFetch({
-          origin: mockbinUrl,
-          path: `/bin/upsert/${compoundId}`,
-          method: 'PUT',
+        await upsertMockbin({
+          mockbinUrl,
+          compoundId,
           organizationId,
           sessionId,
-          headers: {
-            'insomnia-mock-method': route.method,
-          },
+          method: route.method,
           data: mockRouteToHar({
             statusCode: mockRoute.statusCode,
             statusText: mockRoute.statusText || '',

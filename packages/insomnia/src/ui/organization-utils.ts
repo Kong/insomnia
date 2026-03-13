@@ -1,5 +1,4 @@
 import {
-  type CurrentPlan,
   getCurrentPlan,
   getOrganizations,
   getOrganizationStorageRule,
@@ -22,7 +21,6 @@ import {
   shouldMigrateProjectUnderOrganization,
 } from '../sync/vcs/migrate-projects-into-organization';
 import { invariant } from '../utils/invariant';
-import { insomniaFetch } from './insomnia-fetch';
 
 // Create an in-memory storage to store the storage rules
 const inMemoryStorageRuleCache: Map<string, StorageRules> = new Map<string, StorageRules>();
@@ -59,13 +57,7 @@ export function sortOrganizations(accountId: string, organizations: Organization
 }
 
 export async function syncCurrentPlan(sessionId: string, accountId: string) {
-  const [currentPlanResult] = await Promise.allSettled([
-    insomniaFetch<CurrentPlan | void>({
-      method: 'GET',
-      path: '/v1/billing/current-plan',
-      sessionId,
-    }),
-  ]);
+  const [currentPlanResult] = await Promise.allSettled([getCurrentPlan({ sessionId })]);
   if (currentPlanResult.status === 'fulfilled' && currentPlanResult.value) {
     localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlanResult.value));
   } else {

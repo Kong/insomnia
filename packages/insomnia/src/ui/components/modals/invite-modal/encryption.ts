@@ -1,9 +1,15 @@
-import { finishAddingCollaborators, startAddingCollaborators } from 'insomnia-api';
+import {
+  finishAddingCollaborators,
+  getMyProjectKeys,
+  type MemberProjectKey,
+  type ProjectMember,
+  reconcileFileKeys,
+  startAddingCollaborators,
+} from 'insomnia-api';
 
 import { decryptRSAWithJWK, encryptRSAWithJWK } from '../../../../account/crypt';
 import { getCurrentSessionId, getPrivateKey } from '../../../../account/session';
 import { invariant } from '../../../../utils/invariant';
-import { insomniaFetch } from '../../../insomnia-fetch';
 
 interface InviteInstruction {
   inviteKeys: InviteKey[];
@@ -99,31 +105,9 @@ interface StartInviteParams {
   roleId: string;
 }
 
-interface ProjectKey {
-  projectId: string;
-  encKey: string;
-}
-
-interface ProjectMember {
-  accountId: string;
-  projectId: string;
-  publicKey: string;
-}
-
-interface ResponseGetMyProjectKeys {
-  projectKeys: ProjectKey[];
-  members: ProjectMember[];
-}
-
 interface DecryptedProjectKey {
   projectId: string;
   symmetricKey: string;
-}
-
-interface MemberProjectKey {
-  accountId: string;
-  projectId: string;
-  encSymmetricKey: string;
 }
 
 export async function startInvite({ emails, teamIds, organizationId, roleId }: StartInviteParams) {
@@ -139,11 +123,9 @@ export async function startInvite({ emails, teamIds, organizationId, roleId }: S
     teamIds,
   });
 
-  const myKeysInfo = await insomniaFetch<ResponseGetMyProjectKeys>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}/my-project-keys`,
+  const myKeysInfo = await getMyProjectKeys({
+    organizationId,
     sessionId,
-    onlyResolveOnSuccess: true,
   });
 
   let memberKeys: MemberProjectKey[] = [];
@@ -165,12 +147,10 @@ export async function startInvite({ emails, teamIds, organizationId, roleId }: S
   }
 
   if (memberKeys.length) {
-    await insomniaFetch({
-      method: 'POST',
-      path: `/v1/organizations/${organizationId}/reconcile-keys`,
+    await reconcileFileKeys({
+      organizationId,
+      memberKeys,
       sessionId,
-      data: { keys: memberKeys },
-      onlyResolveOnSuccess: true,
     });
   }
 

@@ -81,6 +81,11 @@ export const Url = ({
         }
 
         const models = (data.data as LLMModelData[]).filter(model => model.object === 'model');
+        if (models.length === 0) {
+          console.error('No compatible models found in URL response:', data.data);
+          setError('No compatible models found at this URL.');
+          return;
+        }
         setAvailableModels(models);
         saveLLMSettings(false, URL_BACKEND, { url: realUrl, model: 'default' });
       } catch (error) {

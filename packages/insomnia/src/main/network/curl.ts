@@ -7,6 +7,7 @@ import electron, { BrowserWindow } from 'electron';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { services } from '~/insomnia-data';
 import { insecureReadFile } from '~/main/secure-read-file';
 import { readCurlResponse } from '~/models/helpers/response-operations';
 
@@ -148,7 +149,7 @@ const openCurlConnection = async (
   const environment = await models.environment.getById(environmentId || 'n/a');
   const responseEnvironmentId = environment ? environment._id : null;
 
-  const caCert = await models.caCertificate.findByParentId(options.workspaceId);
+  const caCert = await services.caCertificate.getByParentId(options.workspaceId);
   const caCertficatePath = caCert?.path || null;
   const caCertificate = caCertficatePath && (await insecureReadFile(caCertficatePath));
 

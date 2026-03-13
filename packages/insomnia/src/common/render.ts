@@ -1,6 +1,8 @@
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
+import { type McpRequest } from '~/insomnia-data';
+
 import * as models from '../models';
 import {
   type Environment,
@@ -9,7 +11,6 @@ import {
   vaultEnvironmentRuntimePath,
 } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
-import type { McpRequest } from '../models/mcp-request';
 import { isProject } from '../models/project';
 import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';

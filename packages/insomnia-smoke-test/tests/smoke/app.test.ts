@@ -1,26 +1,20 @@
 import { expect } from '@playwright/test';
 
-import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('can send requests', async ({ app, page }) => {
+test('can send requests', async ({ page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
+
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.getByTestId('response-pane');
 
-  const text = await loadFixture('smoke-test-collection.yaml');
-  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-
-  await page.getByLabel('Import').click();
-  await page.locator('[data-test-id="import-from-clipboard"]').click();
-  await page.getByRole('button', { name: 'Scan' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  await insomnia.projectPage.importFixture('smoke-test-collection.yaml');
 
   await page.getByTestId('workspace-context-dropdown').click();
   await page.getByRole('menuitemradio', { name: 'Export' }).click();
   await page.getByRole('button', { name: 'Export' }).click();
   await page.getByText('Which format would you like to export as?').click();
-  await page.locator('.app').press('Escape');
+  await insomnia.pressEscape();
 
   await page.getByLabel('Create in collection').click();
   await page.getByRole('menuitemradio', { name: 'From Curl' }).click();

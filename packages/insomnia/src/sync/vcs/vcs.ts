@@ -5,13 +5,15 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 
 import clone from 'clone';
+import { runVcsGraphQL } from 'insomnia-api';
+
+import { PLAYWRIGHT } from '~/common/constants';
 
 import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
 import type { Operation } from '../../common/database';
 import { generateId } from '../../common/misc';
 import type { BaseModel } from '../../models';
-import { insomniaFetch } from '../../ui/insomnia-fetch';
 import Store from '../store';
 import type { BaseDriver } from '../store/drivers/base';
 import compress from '../store/hooks/compress';
@@ -453,7 +455,6 @@ export class VCS {
     if (!snapshot) {
       throw new Error('Failed to get latest commit for all documents');
     }
-
     return this._getBlobs(snapshot.state.map(s => s.blob));
   }
 
@@ -887,12 +888,11 @@ export class VCS {
 
   async _runGraphQL<T>(query: string, variables: Record<string, any>, name: string): Promise<T> {
     const { sessionId } = await this._assertSession();
-
-    const { data, errors } = await insomniaFetch<{ data: T; errors: [{ message: string }] }>({
-      method: 'POST',
-      path: '/graphql?' + name,
-      data: { query, variables },
+    const { data, errors } = await runVcsGraphQL<T>({
+      query,
+      variables,
       sessionId,
+      name,
     });
 
     if (errors && errors.length) {
@@ -1301,7 +1301,12 @@ export class VCS {
   }
 
   async _getBackendProjectSymmetricKey() {
-    const { privateKey } = await this._assertSession();
+    const { privateKey, symmetricKey } = await this._assertSession();
+
+    if (PLAYWRIGHT) {
+      // use the session symmetric key in playwright tests
+      return symmetricKey;
+    }
 
     const encSymmetricKey = await this._queryBackendProjectKey();
     const symmetricKeyStr = crypt.decryptRSAWithJWK(privateKey, encSymmetricKey);
@@ -1339,7 +1344,7 @@ export class VCS {
   }
 
   async _assertSession() {
-    const { accountId, id, publicKey } = await session.getUserSession();
+    const { accountId, id, publicKey, symmetricKey } = await session.getUserSession();
     const privateKey = await session.getPrivateKey();
     if (!id) {
       throw new Error('Not logged in');
@@ -1350,6 +1355,7 @@ export class VCS {
       sessionId: id,
       privateKey,
       publicKey,
+      symmetricKey,
     };
   }
 

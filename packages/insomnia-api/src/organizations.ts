@@ -4,9 +4,12 @@ interface Branding {
   logo_url: string;
 }
 
-export interface Metadata {
-  organizationType: string;
+export type OrganizationType = 'personal' | 'team' | 'enterprise';
+
+export interface OrganizationMetadata {
+  organizationType: OrganizationType;
   ownerAccountId: string;
+  description?: string;
 }
 
 export interface Organization {
@@ -14,7 +17,7 @@ export interface Organization {
   name: string;
   display_name: string;
   branding?: Branding;
-  metadata: Metadata;
+  metadata: OrganizationMetadata;
 }
 
 export interface OrganizationsResponse {
@@ -204,6 +207,14 @@ export const getOrganizationMemberRoles = ({
   return fetch<Role>({
     method: 'GET',
     path: `/v1/organizations/${organizationId}/members/${userId}/roles`,
+    sessionId,
+  });
+};
+
+export const getOrganizationDetail = ({ organizationId, sessionId }: { organizationId: string; sessionId: string }) => {
+  return fetch<Organization>({
+    method: 'GET',
+    path: `/v1/organizations/${organizationId}`,
     sessionId,
   });
 };

@@ -3,11 +3,10 @@ import { InitializeRequestSchema, type JSONRPCRequest } from '@modelcontextproto
 import { shellPath } from 'shell-path';
 import { parse } from 'shell-quote';
 
+import { type McpResponse, services } from '~/insomnia-data';
 import { type ConnectionContext, writeTimeline } from '~/main/mcp/common';
 import type { OpenMcpStdioClientConnectionOptions } from '~/main/mcp/types';
 import * as models from '~/models';
-import { TRANSPORT_TYPES } from '~/models/mcp-request';
-import type { McpResponse } from '~/models/mcp-response';
 
 export const createStdioTransport = async (
   context: ConnectionContext,
@@ -99,10 +98,10 @@ export const createStdioTransport = async (
         elapsedTime: performance.now() - start,
         timelinePath,
         eventLogPath,
-        transportType: TRANSPORT_TYPES.STDIO,
+        transportType: models.mcpRequest.TRANSPORT_TYPES.STDIO,
       };
       const settings = await models.settings.get();
-      const res = await models.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
+      const res = await services.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
     }
 

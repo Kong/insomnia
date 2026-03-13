@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import { database, initDatabase } from '~/insomnia-data';
-import { nedbDatabase } from '~/insomnia-data/node';
+import { createNedbDatabase } from '~/insomnia-data/node';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { BaseModel } from '../models';
@@ -49,7 +49,7 @@ export async function getSendRequestCallbackMemDb(
 ) {
   // Initialize the DB in-memory and fill it with data if we're given one
   await initDatabase(
-    nedbDatabase,
+    createNedbDatabase(),
     {
       inMemoryOnly: true,
     },
