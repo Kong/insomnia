@@ -91,7 +91,6 @@ import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
 import { NoSelectedProjectView } from '~/ui/components/panes/no-selected-project-view';
-import { OrganizationSelect } from '~/ui/components/project/organization-select';
 import { ProjectEmptyView } from '~/ui/components/project/project-empty-view';
 import {
   ProjectSidebarTree,
@@ -1499,11 +1498,6 @@ const Component = () => {
             collapsible
           >
             <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-              <OrganizationSelect
-                organizationId={organizationId}
-                organizations={organizationData?.organizations || []}
-                onSelect={id => navigate(`/organization/${id}`)}
-              />
               <div className="flex flex-1 flex-col overflow-hidden">
                 <div className="flex items-center justify-between p-(--padding-sm)">
                   <Heading className="text-xs uppercase">Projects</Heading>

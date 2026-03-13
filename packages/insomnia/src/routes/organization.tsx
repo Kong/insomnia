@@ -1,14 +1,7 @@
 import { type Billing, type CurrentPlan, type FeatureList, type Organization, type UserProfile } from 'insomnia-api';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
-import {
-  Button,
-  Link,
-  ToggleButton,
-  Tooltip,
-  TooltipTrigger,
-} from 'react-aria-components';
-import { href, NavLink, Outlet, useLocation, useParams, useRouteLoaderData } from 'react-router';
-import * as reactUse from 'react-use';
+import { Button, Link, Tooltip, TooltipTrigger } from 'react-aria-components';
+import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
 import { userSession } from '~/models';
 import type { Settings } from '~/models/settings';
@@ -29,6 +22,7 @@ import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { showModal } from '~/ui/components/modals';
 import { SettingsModal, showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { PresentUsers } from '~/ui/components/present-users';
+import { OrganizationSelect } from '~/ui/components/project/organization-select';
 import { InsomniaEventStreamProvider } from '~/ui/context/app/insomnia-event-stream-context';
 import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
@@ -154,7 +148,7 @@ const NetworkAndSyncIndicator = ({ asyncTaskStatus, settings, sync }: IndicatorP
 };
 
 const Component = ({ loaderData }: Route.ComponentProps) => {
-  const { user, currentPlan } = loaderData;
+  const { user, currentPlan, organizations } = loaderData;
   const { settings } = useRootLoaderData()!;
 
   const workspaceData = useWorkspaceLoaderData();
@@ -171,6 +165,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const asyncTaskList = location.state?.asyncTaskList as AsyncTask[];
 
   const syncOrgsAndProjectsFetcher = useSyncOrganizationsAndProjectsActionFetcher();
+  const navigate = useNavigate();
 
   const asyncTaskStatus = syncOrgsAndProjectsFetcher.data?.error ? 'error' : syncOrgsAndProjectsFetcher.state;
 
@@ -216,55 +211,55 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     organizationId,
   });
 
-  const [isMinimal, setIsMinimal] = reactUse.useLocalStorage('isMinimal', false);
   return (
     <InsomniaEventStreamProvider>
       <InsomniaTabProvider>
         <div className="h-full w-full">
-          <div
-            className="grid-template-app-layout relative grid h-full w-full divide-x divide-solid divide-(--hl-md) bg-(--color-bg)"
-          >
-            {!isMinimal && (
-              <header className="grid h-[45.25px] grid-cols-3 items-center border-b border-solid border-(--hl-md) [grid-area:Header]">
-                <div className="flex items-center gap-2">
-                  <div className="flex w-[47.5px] shrink-0 justify-center py-[6.5px]">
-                    <InsomniaLogo />
-                  </div>
-                  {!user ? <GitHubStarsButton /> : null}
+          <div className="grid-template-app-layout relative grid h-full w-full divide-x divide-solid divide-(--hl-md) bg-(--color-bg)">
+            <header className="grid h-[45.25px] grid-cols-3 items-center border-b border-solid border-(--hl-md) [grid-area:Header]">
+              <div className="flex items-center px-2">
+                <div className="flex w-[47.5px] shrink-0 justify-center py-[6.5px]">
+                  <InsomniaLogo />
                 </div>
-                <div className="flex items-center justify-center px-[13px]">
-                  <CommandPalette style={{ width: '100%', maxWidth: '540.671875px' }} />
-                </div>
-                <div className="flex min-w-min items-center justify-end gap-[6.5px] pr-[6.5px]">
-                  {user ? (
-                    <Fragment>
-                      <PresentUsers />
-                      <HeaderInviteButton
-                        organizationId={organizationId}
-                        className="border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise)"
-                      />
-                      <HeaderPlanIndicator isMinimal={isMinimal} />
-                      <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
-                    </Fragment>
-                  ) : (
-                    <Fragment>
-                      <NavLink
-                        to={href('/auth/login')}
-                        className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                      >
-                        Login
-                      </NavLink>
-                      <NavLink
-                        className="flex items-center justify-center gap-2 rounded-xs bg-(--color-surprise) px-4 py-1 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:bg-[rgba(var(--color-surprise-rgb),0.9)] focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)]"
-                        to={href('/auth/login')}
-                      >
-                        Sign up for free
-                      </NavLink>
-                    </Fragment>
-                  )}
-                </div>
-              </header>
-            )}
+                <OrganizationSelect
+                  organizationId={organizationId}
+                  organizations={organizations || []}
+                  onSelect={id => navigate(`/organization/${id}`)}
+                />
+                {!user ? <GitHubStarsButton /> : null}
+              </div>
+              <div className="flex items-center justify-center px-[13px]">
+                <CommandPalette style={{ width: '100%', maxWidth: '540.671875px' }} />
+              </div>
+              <div className="flex min-w-min items-center justify-end gap-[6.5px] pr-[6.5px]">
+                {user ? (
+                  <Fragment>
+                    <PresentUsers />
+                    <HeaderInviteButton
+                      organizationId={organizationId}
+                      className="border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise)"
+                    />
+                    <HeaderPlanIndicator isMinimal={false} />
+                    <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={false} />
+                  </Fragment>
+                ) : (
+                  <Fragment>
+                    <NavLink
+                      to={href('/auth/login')}
+                      className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                    >
+                      Login
+                    </NavLink>
+                    <NavLink
+                      className="flex items-center justify-center gap-2 rounded-xs bg-(--color-surprise) px-4 py-1 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:bg-[rgba(var(--color-surprise-rgb),0.9)] focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)]"
+                      to={href('/auth/login')}
+                    >
+                      Sign up for free
+                    </NavLink>
+                  </Fragment>
+                )}
+              </div>
+            </header>
             <div className="overflow-hidden border-b border-(--hl-md) [grid-area:Content]">
               <RunnerProvider>
                 <Outlet />
@@ -274,52 +269,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
               className="relative flex h-[30px] items-center overflow-hidden [grid-area:Statusbar]"
               data-testid="statusbar"
             >
-              <div className="flex h-full w-[24px] shrink-0 items-center justify-center border-r border-solid border-r-(--hl-md)">
-                <TooltipTrigger>
-                  <ToggleButton
-                    className="h-[10px] w-[10px] grow-0 rotate-90 gap-2 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
-                    onChange={flag => {
-                      setIsMinimal(!flag);
-                      window.main.trackSegmentEvent({
-                        event: SegmentEvent.statusbarTopbarToggled,
-                        properties: {
-                          status: !flag ? 'minimal' : 'expanded',
-                        },
-                      });
-                    }}
-                    isSelected={!isMinimal}
-                  >
-                    {({ isSelected }) => {
-                      return (
-                        <svg
-                          width={10}
-                          height={10}
-                          viewBox="0 0 16 16"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="currentColor"
-                        >
-                          {isSelected ? (
-                            <path
-                              fillRule="evenodd"
-                              clipRule="evenodd"
-                              d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm12 13H7V2h7v12z"
-                            />
-                          ) : (
-                            <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
-                          )}
-                        </svg>
-                      );
-                    }}
-                  </ToggleButton>
-                  <Tooltip
-                    placement="top"
-                    offset={8}
-                    className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                  >
-                    Toggle header
-                  </Tooltip>
-                </TooltipTrigger>
-              </div>
               <div className="flex w-full items-center gap-2">
                 <div className="flex h-full shrink grow basis-1/3 items-center">
                   <TooltipTrigger>
@@ -339,7 +288,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       <Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
                     </Tooltip>
                   </TooltipTrigger>
-                  {!isScratchpadWorkspace && hasUntrackedData && !isMinimal ? (
+                  {!isScratchpadWorkspace && hasUntrackedData ? (
                     <div>
                       <Button
                         className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -355,87 +304,25 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       </Button>
                     </div>
                   ) : null}
-                  {!isScratchpadWorkspace && hasUntrackedData && isMinimal ? (
-                    <TooltipTrigger delay={500}>
-                      <Button
-                        className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                        onPress={() => {
-                          window.main.trackSegmentEvent({
-                            event: SegmentEvent.statusbarOrphanedProjectsClicked,
-                          });
-                          showModal(SettingsModal, { tab: 'data' });
-                        }}
-                      >
-                        <Icon icon="exclamation-circle" />
-                      </Button>
-                      <Tooltip
-                        placement="top"
-                        offset={8}
-                        className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                      >
-                        We have detected orphaned projects on your computer, click here to view them.
-                      </Tooltip>
-                    </TooltipTrigger>
-                  ) : null}
-                  {isMinimal && (
+                </div>
+                <div className="min-w-[120px] shrink grow basis-1/3" />
+                <div className="flex shrink grow basis-1/3 justify-end">
+                  <div className="flex items-center gap-2">
                     <NetworkAndSyncIndicator
                       asyncTaskStatus={asyncTaskStatus}
                       settings={settings}
                       sync={syncOrgsAndProjects}
                     />
-                  )}
-                </div>
-                <div className="min-w-[120px] shrink grow basis-1/3">
-                  {isMinimal && <CommandPalette style={{ width: '100%' }} />}
-                </div>
-                <div className="flex shrink grow basis-1/3 justify-end">
-                  <div className="flex items-center gap-2">
-                    {!isMinimal && (
-                      <NetworkAndSyncIndicator
-                        asyncTaskStatus={asyncTaskStatus}
-                        settings={settings}
-                        sync={syncOrgsAndProjects}
-                      />
-                    )}
-                    {!isMinimal && (
-                      <Link>
-                        <a
-                          className="flex items-center gap-1 px-(--padding-md) text-xs text-(--color-font) focus:underline focus:outline-hidden"
-                          href="https://konghq.com/"
-                        >
-                          Made with
-                          <Icon className="text-(--color-surprise-font)" icon="heart" /> by Kong
-                        </a>
-                      </Link>
-                    )}
+                    <Link>
+                      <a
+                        className="flex items-center gap-1 px-(--padding-md) text-xs text-(--color-font) focus:underline focus:outline-hidden"
+                        href="https://konghq.com/"
+                      >
+                        Made with
+                        <Icon className="text-(--color-surprise-font)" icon="heart" /> by Kong
+                      </a>
+                    </Link>
                   </div>
-                  {isMinimal && (
-                    <div className="flex items-center justify-end gap-(--padding-sm) p-2">
-                      {user ? (
-                        <Fragment>
-                          <PresentUsers />
-                          <HeaderInviteButton className="text-(--color-font)" organizationId={organizationId} />
-                          <HeaderPlanIndicator isMinimal={isMinimal} />
-                          <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
-                        </Fragment>
-                      ) : (
-                        <Fragment>
-                          <NavLink
-                            to={href('/auth/login')}
-                            className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                          >
-                            Login
-                          </NavLink>
-                          <NavLink
-                            className="flex items-center justify-center gap-2 rounded-xs bg-(--color-surprise) px-4 py-1 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:bg-[rgba(var(--color-surprise-rgb),0.9)] focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)]"
-                            to={href('/auth/login')}
-                          >
-                            Sign up for free
-                          </NavLink>
-                        </Fragment>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
