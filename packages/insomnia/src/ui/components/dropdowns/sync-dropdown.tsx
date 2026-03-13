@@ -40,12 +40,14 @@ interface Props {
 const ONE_MINUTE_IN_MS = 1000 * 60;
 const cloudSyncIcon = 'earth-americas';
 
-export const SyncDropdown: FC<Props> = () => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
+export const SyncDropdown: FC<Props> = ({ workspace, project }) => {
+  const { organizationId, projectId: routeProjectId, workspaceId: routeWorkspaceId } = useParams() as {
     organizationId: string;
-    projectId: string;
-    workspaceId: string;
+    projectId?: string;
+    workspaceId?: string;
   };
+  const projectId = routeProjectId ?? project._id;
+  const workspaceId = routeWorkspaceId ?? workspace._id;
 
   const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
   const [isSyncStagingModalOpen, setIsSyncStagingModalOpen] = useState(false);
@@ -456,6 +458,9 @@ export const SyncDropdown: FC<Props> = () => {
           branches={localBranches}
           currentBranch={currentBranch}
           remoteBranches={remoteBranches.filter(remoteBranch => !localBranches.includes(remoteBranch))}
+          organizationId={organizationId}
+          projectId={projectId}
+          workspaceId={workspaceId}
           onClose={() => {
             setIsSyncBranchesModalOpen(false);
           }}
@@ -466,11 +471,20 @@ export const SyncDropdown: FC<Props> = () => {
           branch={currentBranch}
           status={status}
           syncItems={syncItems}
+          organizationId={organizationId}
+          projectId={projectId}
+          workspaceId={workspaceId}
           onClose={() => setIsSyncStagingModalOpen(false)}
         />
       )}
       {isSyncHistoryModalOpen && (
-        <SyncHistoryModal history={history} onClose={() => setIsSyncHistoryModalOpen(false)} />
+        <SyncHistoryModal
+          history={history}
+          organizationId={organizationId}
+          projectId={projectId}
+          workspaceId={workspaceId}
+          onClose={() => setIsSyncHistoryModalOpen(false)}
+        />
       )}
     </Fragment>
   );
