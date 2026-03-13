@@ -918,6 +918,11 @@ export interface GitProjectStagingModalCallbackProps {
 
 export interface GitProjectStagingModalOptions {
   mode?: StagingModalMode;
+  /* Why is callbackRef a ref object?
+   * The callbacks passed to the modal (onClose, onPullAfterCommit, onPushAfterPull) may change after the show function is called.
+   * If we were to pass the callbacks directly, the modal would capture the initial callbacks and not reflect any updates to them.
+   * By using a ref object, we can ensure that the modal always has access to the latest version of the callbacks, even if they change after the modal is shown.
+   */
   callbackRef: React.MutableRefObject<GitProjectStagingModalCallbackProps>;
 }
 
@@ -928,43 +933,39 @@ export interface GitProjectStagingModalHandle {
 
 export const GitProjectStagingModal = forwardRef<GitProjectStagingModalHandle>((_, ref) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [mode, setMode] = useState<StagingModalMode>(StagingModalModes.default);
-
-  const refOfCallbackRef = useRef<React.MutableRefObject<GitProjectStagingModalCallbackProps> | null>(null);
+  const [modalOptions, setModalOptions] = useState<GitProjectStagingModalOptions | null>(null);
 
   const hide = useCallback(() => {
     setIsOpen(false);
-    setMode(StagingModalModes.default);
-    refOfCallbackRef.current = null;
+    setModalOptions(null);
   }, []);
 
   useImperativeHandle(ref, () => ({
     show: ({ mode: newMode = StagingModalModes.default, callbackRef }) => {
-      setMode(newMode);
-      refOfCallbackRef.current = callbackRef;
+      setModalOptions({ mode: newMode, callbackRef });
       setIsOpen(true);
     },
     hide,
   }));
 
   const onClose = useCallback(() => {
-    refOfCallbackRef.current?.current.onClose();
+    modalOptions?.callbackRef.current.onClose();
     hide();
-  }, [hide]);
+  }, [hide, modalOptions]);
 
   const onPullAfterCommit = useCallback(() => {
-    refOfCallbackRef.current?.current.onPullAfterCommit();
+    modalOptions?.callbackRef.current.onPullAfterCommit();
     hide();
-  }, [hide]);
+  }, [hide, modalOptions]);
 
   const onPushAfterPull = useCallback(() => {
-    refOfCallbackRef.current?.current.onPushAfterPull();
-  }, []);
+    modalOptions?.callbackRef.current.onPushAfterPull();
+  }, [modalOptions]);
 
   return (
     isOpen && (
       <OriginalGitProjectStagingModal
-        mode={mode}
+        mode={modalOptions?.mode}
         onClose={onClose}
         onPullAfterCommit={onPullAfterCommit}
         onPushAfterPull={onPushAfterPull}
