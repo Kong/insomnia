@@ -150,6 +150,22 @@ input[type='color']::-webkit-color-swatch {
   overflow: hidden;
 }
 
+.project-sidebar-tree-branch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-sidebar-tree-guide-line {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  left: var(--project-tree-guide-left, 0px);
+  background-color: var(--hl-sm);
+}
+
 table.json-diff-viewer {
   colgroup {
     width: 100%;
