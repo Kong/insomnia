@@ -54,5 +54,6 @@ export class PreferencesPage {
    */
   async closePreferences(): Promise<void> {
     await this.page.locator('.app').press('Escape');
+    await this.root.waitFor({ state: 'hidden' });
   }
 }
