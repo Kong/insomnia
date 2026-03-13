@@ -12,7 +12,7 @@ interface OrganizationSelectProps {
 
 export const OrganizationSelect = ({ organizationId, organizations, onSelect }: OrganizationSelectProps) => {
   return (
-    <div className="flex h-10 flex-col items-start justify-center p-(--padding-sm)">
+    <div className="flex h-10 flex-col items-start justify-center py-(--padding-sm)">
       <Select
         aria-label="Organizations"
         onSelectionChange={id => {
