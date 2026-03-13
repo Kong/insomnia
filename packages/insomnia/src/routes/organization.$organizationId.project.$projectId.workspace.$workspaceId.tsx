@@ -364,7 +364,7 @@ export const revalidateWorkspaceActiveRequestByFolder = async (requestGroup: Req
 
 const Component = () => {
   return (
-    <div data-testid="workspace-page">
+    <div className="h-full w-full overflow-hidden" data-testid="workspace-page">
       <Outlet />
     </div>
   );
