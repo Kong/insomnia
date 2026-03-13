@@ -69,7 +69,7 @@ export const GitRepoForm: FC<Props> = ({
     allConnectedReposLoaderFetcherLoad();
   }, [allConnectedReposLoaderFetcherLoad]);
 
-  const allConnectedRepoURIProjectNameMap = allConnectedReposLoaderFetcher.data;
+  const allConnectedRepoURIInfoMap = allConnectedReposLoaderFetcher.data;
 
   const [isCredentialSelectOpen, setIsCredentialSelectOpen] = useState(false);
 
@@ -264,7 +264,7 @@ export const GitRepoForm: FC<Props> = ({
             <>
               {selectedProvider.supportsFetchRepos ? (
                 <GitRepositorySelect
-                  allConnectedRepoURIProjectNameMap={allConnectedRepoURIProjectNameMap}
+                  allConnectedRepoURIInfoMap={allConnectedRepoURIInfoMap}
                   uri={projectData.uri || ''}
                   onSelect={(uri: string) =>
                     setProjectData(prev => ({
