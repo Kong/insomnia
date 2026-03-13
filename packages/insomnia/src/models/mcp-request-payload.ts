@@ -1,4 +1,5 @@
 import { database } from '../common/database';
+import { desanitizeNedbKeys, sanitizeNedbKeys } from '../common/mcp-utils';
 import type { BaseModel } from './types';
 
 export const name = 'MCP Payload';
@@ -29,19 +30,38 @@ export const init = (): BaseMcpPayload => {
   };
 };
 
-export const migrate = (doc: McpPayload) => doc;
+export const migrate = (doc: McpPayload) => {
+  // Desanitize params when reading from NeDB
+  if (doc.params) {
+    doc.params = desanitizeNedbKeys(doc.params);
+  }
+  return doc;
+};
 
 export const create = (patch: Partial<McpPayload> = {}) => {
   if (!patch.parentId) {
     throw new Error(`New McpPayload missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
 
-  return database.docCreate<McpPayload>(type, patch);
+  // Sanitize params before storing to NeDB
+  const sanitizedPatch = { ...patch };
+  if (sanitizedPatch.params) {
+    sanitizedPatch.params = sanitizeNedbKeys(sanitizedPatch.params);
+  }
+
+  return database.docCreate<McpPayload>(type, sanitizedPatch);
 };
 
 export const remove = (obj: McpPayload) => database.remove(obj);
 
-export const update = (obj: McpPayload, patch: Partial<McpPayload> = {}) => database.docUpdate(obj, patch);
+export const update = (obj: McpPayload, patch: Partial<McpPayload> = {}) => {
+  // Sanitize params before storing to NeDB
+  const sanitizedPatch = { ...patch };
+  if (sanitizedPatch.params) {
+    sanitizedPatch.params = sanitizeNedbKeys(sanitizedPatch.params);
+  }
+  return database.docUpdate(obj, sanitizedPatch);
+};
 
 export async function duplicate(request: McpPayload, patch: Partial<McpPayload> = {}) {
   // Only set name and "(Copy)" if the patch does
@@ -52,9 +72,15 @@ export async function duplicate(request: McpPayload, patch: Partial<McpPayload> 
     patch.name = `${request.name} (Copy)`;
   }
 
+  // Sanitize params before storing to NeDB
+  const sanitizedPatch = { ...patch };
+  if (sanitizedPatch.params) {
+    sanitizedPatch.params = sanitizeNedbKeys(sanitizedPatch.params);
+  }
+
   return database.duplicate<McpPayload>(request, {
     name,
-    ...patch,
+    ...sanitizedPatch,
   });
 }
 

@@ -1,6 +1,7 @@
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
   type CallToolRequest,
-  CompatibilityCallToolResultSchema,
+  CallToolResultSchema,
   type CreateMessageResult,
   type GetPromptRequest,
   type ListPromptsRequest,
@@ -14,6 +15,7 @@ import { METHOD_SUBSCRIBE_RESOURCE, METHOD_UNSUBSCRIBE_RESOURCE } from '~/common
 import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 import { getActiveMcpClient, getReadyActiveMcpConnectionContext, writeEventLogAndNotify } from '~/main/mcp/common';
 import type { CommonMcpOptions, McpMessageEventWithoutBase } from '~/main/mcp/types';
+import { invariant } from '~/utils/invariant';
 
 export const listTools = async (options: CommonMcpOptions) => {
   const mcpClient = getActiveMcpClient(options.requestId);
@@ -27,63 +29,51 @@ export const listTools = async (options: CommonMcpOptions) => {
 export const callTool = async (options: CommonMcpOptions & CallToolRequest['params']) => {
   const { requestId, ...params } = options;
   const mcpClient = getActiveMcpClient(requestId);
-  if (mcpClient) {
-    const response = await mcpClient.callTool(params, CompatibilityCallToolResultSchema);
-    trackSegmentEvent(SegmentEvent.mcpToolCalled);
-    return response.content;
-  }
-  return null;
+  invariant(mcpClient, 'MCP Client not found, the connection might not be ready yet');
+  const response = await mcpClient.callTool(params, CallToolResultSchema);
+  trackSegmentEvent(SegmentEvent.mcpToolCalled);
+  return response as CallToolResult;
 };
 
 export const listPrompts = async (options: CommonMcpOptions & ListPromptsRequest['params']) => {
   const mcpClient = getActiveMcpClient(options.requestId);
-  if (mcpClient) {
-    const prompts = await mcpClient.listPrompts();
-    return prompts;
-  }
-  return null;
-};
-
-export const getPrompt = async (options: CommonMcpOptions & GetPromptRequest['params']) => {
-  const { requestId, ...params } = options;
-  const mcpClient = getActiveMcpClient(options.requestId);
-  if (mcpClient) {
-    const prompt = await mcpClient.getPrompt(params);
-    trackSegmentEvent(SegmentEvent.mcpPromptCalled);
-    return prompt;
-  }
-  return null;
+  invariant(mcpClient, 'MCP Client not found, the connection might not be ready yet');
+  const prompts = await mcpClient.listPrompts();
+  return prompts;
 };
 
 export const listResources = async (options: CommonMcpOptions & ListResourcesRequest['params']) => {
   const { requestId, ...params } = options;
   const mcpClient = getActiveMcpClient(options.requestId);
-  if (mcpClient) {
-    const resources = await mcpClient.listResources(params);
-    return resources;
-  }
-  return null;
+  invariant(mcpClient, 'MCP Client not found, the connection might not be ready yet');
+  const resources = await mcpClient.listResources(params);
+  return resources;
 };
 
 export const listResourceTemplates = async (options: CommonMcpOptions & ListResourcesRequest['params']) => {
   const { requestId, ...params } = options;
-  const mcpClient = getActiveMcpClient(requestId);
-  if (mcpClient) {
-    const resourceTemplates = await mcpClient.listResourceTemplates(params);
-    return resourceTemplates;
-  }
-  return null;
+  const mcpClient = getActiveMcpClient(options.requestId);
+  invariant(mcpClient, 'MCP Client not found, the connection might not be ready yet');
+  const resources = await mcpClient.listResourceTemplates(params);
+  return resources;
 };
 
 export const readResource = async (options: CommonMcpOptions & ReadResourceRequest['params']) => {
   const { requestId, ...params } = options;
   const mcpClient = getActiveMcpClient(requestId);
-  if (mcpClient) {
-    const resource = await mcpClient.readResource(params);
-    trackSegmentEvent(SegmentEvent.mcpResourceRead);
-    return resource;
-  }
-  return null;
+  invariant(mcpClient, 'MCP Client not found, the connection might not be ready yet');
+  const resource = await mcpClient.readResource(params);
+  trackSegmentEvent(SegmentEvent.mcpResourceRead);
+  return resource;
+};
+
+export const getPrompt = async (options: CommonMcpOptions & GetPromptRequest['params']) => {
+  const { requestId, ...params } = options;
+  const mcpClient = getActiveMcpClient(options.requestId);
+  invariant(mcpClient, 'MCP Client not found, the connection might not be ready yet');
+  const prompt = await mcpClient.getPrompt(params);
+  trackSegmentEvent(SegmentEvent.mcpPromptCalled);
+  return prompt;
 };
 
 export const subscribeResource = async (options: CommonMcpOptions & SubscribeRequest['params']) => {

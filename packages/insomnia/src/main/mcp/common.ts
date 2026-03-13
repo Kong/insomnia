@@ -9,6 +9,8 @@ import {
   ElicitResultSchema,
   JSONRPCErrorSchema,
   ListRootsResultSchema,
+  type ListToolsResult,
+  type ReadResourceResult,
 } from '@modelcontextprotocol/sdk/types.js';
 import electron from 'electron';
 import { BrowserWindow } from 'electron';
@@ -95,6 +97,8 @@ export type ConnectionContext = {
   environmentId: string | null;
   // Connection options
   options: OpenMcpClientConnectionOptions;
+  toolDefinitions: ListToolsResult['tools'];
+  resourcesCache: Map<string, ReadResourceResult['contents'][number]>;
 } & (ConnectedState | ConnectingState | DisconnectedState);
 
 export const activeConnectionContexts = new Map<string, ConnectionContext | NotReadyConnectionContext>();
@@ -159,6 +163,8 @@ export const createConnectionContext = async (
     options,
     status: 'connecting',
     client: null,
+    toolDefinitions: [],
+    resourcesCache: new Map(),
   };
 
   return context;

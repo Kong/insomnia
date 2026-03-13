@@ -16,7 +16,7 @@ import {
   PREVIEW_MODES,
 } from '../../../common/constants';
 import { METHOD_CALL_TOOL } from '../../../common/mcp-utils';
-import type { McpEvent } from '../../../main/mcp/types';
+import type { McpAppResourceData, McpEvent } from '../../../main/mcp/types';
 import * as models from '../../../models';
 import {
   type McpRequestLoaderData,
@@ -47,7 +47,7 @@ export const MessageEventView = ({ event }: Props) => {
   const isElicitationRequest = ElicitRequestSchema.safeParse(eventData).success;
   const samplingRequestParseResult = CreateMessageRequestSchema.safeParse(eventData);
   const isSamplingRequest = samplingRequestParseResult.success;
-  const [viewMode, setViewMode] = useState<'raw' | 'form'>('raw');
+  const [viewMode, setViewMode] = useState<'raw' | 'form' | 'app'>('raw');
 
   const handleDownloadResponseBody = useCallback(async () => {
     const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
@@ -148,6 +148,26 @@ export const MessageEventView = ({ event }: Props) => {
     }
   }, [requestId, eventData?.id, isElicitationRequest, isSamplingRequest]);
 
+  // // Detect MCP app URL in tool call response
+  // useEffect(() => {
+  //   const getMcpAppResource = async (toolName: string) => {
+  //     const resourceData = await window.main.mcp.ext.app.getResourceData({
+  //       requestId,
+  //       toolName,
+  //     });
+  //     if (resourceData) {
+  //       setAppResourceData(resourceData);
+  //       setViewMode('app');
+  //     }
+  //   };
+  //   if (isCallToolEvent && event.direction === 'OUTGOING') {
+  //     const toolName = event.data.params.name;
+  //     if (toolName) {
+  //       getMcpAppResource(toolName);
+  //     }
+  //   }
+  // }, [isCallToolEvent, requestId, eventData, event]);
+
   return (
     <div className="flex h-full flex-col">
       <div className="box-border flex h-8 flex-row items-center border-b border-(--hl-md)">
@@ -195,6 +215,17 @@ export const MessageEventView = ({ event }: Props) => {
             {isElicitationRequest ? 'Elicitation Form' : 'Sampling Form'}
           </Button>
         )}
+        {/* {isCallToolEvent && appResourceData && (
+          <Button
+            className={`px-2 text-(--color-font) outline-hidden transition-colors duration-300 hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) ${
+              viewMode === 'app' ? 'bg-(--hl-xs) text-(--color-font)' : ''
+            }`}
+            onPress={() => setViewMode('app')}
+          >
+            <Icon icon="window-restore" className="mr-1" />
+            App View
+          </Button>
+        )} */}
       </div>
       {viewMode === 'raw' && (
         <div className="h-full grow">
@@ -223,6 +254,18 @@ export const MessageEventView = ({ event }: Props) => {
           samplingData={samplingRequestParseResult.data}
         />
       )}
+      {/* {viewMode === 'app' && appResourceData && (
+        <div className="h-full grow overflow-auto p-4">
+          <McpAppEmbeddedView
+            appResourceData={appResourceData}
+            requestId={requestId}
+            onInteraction={data => {
+              console.log('🎯 App interaction:', data);
+              // TODO: Re-execute tool with interaction data
+            }}
+          />
+        </div>
+      )} */}
     </div>
   );
 };
