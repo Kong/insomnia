@@ -25,6 +25,7 @@ export interface ConnectActionParams {
   suppressUserAgent: boolean;
   transportType?: McpTransportType;
   query?: Record<string, string>;
+  path?: string;
   env?: Record<string, string>;
 }
 
@@ -92,6 +93,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       cookieJar: rendered.cookieJar,
       authentication: rendered.authentication,
       query: rendered.query || {},
+      path: rendered.path,
     });
   }
   if (models.mcpRequest.isMcpRequest(req)) {

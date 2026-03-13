@@ -11,11 +11,12 @@ import * as models from '../../../models';
 import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isScratchpadOrganizationId } from '../../../models/organization';
 import { isRequest, type Request } from '../../../models/request';
-import type { SocketIORequest } from '../../../models/socket-io-request';
+import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 import { revalidateWorkspaceActiveRequest } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { invariant } from '../../../utils/invariant';
 import { useRequestPatcher } from '../../hooks/use-request';
+import { Input } from '../base/input';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -216,6 +217,16 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   </div>
                 </div>
               </>
+            )}
+            {request && isSocketIORequest(request) && (
+              <Input
+                label="Socket.IO Handshake Path"
+                description="The path where the Socket.IO server is listening. Leave empty to use the default /socket.io/"
+                placeholder="/socket.io/"
+                name="settingPath"
+                defaultValue={request.settingPath || ''}
+                onChange={value => patchRequest(request._id, { settingPath: value })}
+              />
             )}
             {request && isGrpcRequest(request) && (
               <>

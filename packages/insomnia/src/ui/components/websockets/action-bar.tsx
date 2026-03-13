@@ -96,6 +96,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
         return {
           url: rendered.url,
           query,
+          path: request.settingPath,
           headers: rendered.headers,
           authentication: rendered.authentication,
           cookieJar: rendered.workspaceCookieJar,

@@ -135,6 +135,7 @@ interface OpenSocketIORequestOptions {
   headers: RequestHeader[];
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
+  path?: string;
   initialPayload?: string;
 }
 
@@ -312,6 +313,10 @@ const openSocketIOConnection = async (
       socketIOoptions.auth = {
         token: options.authentication.token || '',
       };
+    }
+
+    if (options.path) {
+      socketIOoptions.path = options.path;
     }
 
     const socket = SocketIOClient(url, socketIOoptions);
