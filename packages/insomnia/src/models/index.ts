@@ -1,9 +1,9 @@
+import { models } from '~/insomnia-data';
 import type { AllTypes, BaseModel } from '~/models/types';
 
 import { generateId } from '../common/misc';
 import { typedKeys } from '../utils';
 import * as _apiSpec from './api-spec';
-import * as _caCertificate from './ca-certificate';
 import * as _clientCertificate from './client-certificate';
 import * as _cloudCredential from './cloud-credential';
 import * as _cookieJar from './cookie-jar';
@@ -12,9 +12,6 @@ import * as _gitCredentials from './git-credentials';
 import * as _gitRepository from './git-repository';
 import * as _grpcRequest from './grpc-request';
 import * as _grpcRequestMeta from './grpc-request-meta';
-import * as _mcpRequest from './mcp-request';
-import * as _mcpPayload from './mcp-request-payload';
-import * as _mcpResponse from './mcp-response';
 import * as _mockRoute from './mock-route';
 import * as _mockServer from './mock-server';
 import * as _oAuth2Token from './o-auth-2-token';
@@ -48,7 +45,7 @@ export type { AllTypes, BaseModel };
 // Reference to each model
 export const apiSpec = _apiSpec;
 export const clientCertificate = _clientCertificate;
-export const caCertificate = _caCertificate;
+export const caCertificate = models.caCertificate;
 export const cookieJar = _cookieJar;
 export const environment = _environment;
 export const gitCredentials = _gitCredentials;
@@ -85,9 +82,9 @@ export const workspaceMeta = _workspaceMeta;
 export * as organization from './organization';
 export const userSession = _userSession;
 export const cloudCredential = _cloudCredential;
-export const mcpRequest = _mcpRequest;
-export const mcpResponse = _mcpResponse;
-export const mcpPayload = _mcpPayload;
+export const mcpRequest = models.mcpRequest;
+export const mcpPayload = models.mcpPayload;
+export const mcpResponse = models.mcpResponse;
 
 export function all() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
@@ -207,7 +204,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
 
   // Migrate the model
   // NOTE: Do migration before pruning because we might need to look at those fields
-  const migratedDoc = model.migrate(fullObject);
+  const migratedDoc = ('migrate' in model ? model.migrate : (doc: T) => doc)(fullObject);
   // optional keys do not generated in init method but should allow update.
   // If we put those keys in init method, all related models will show as modified in git sync.
   const modelOptionalKeys: string[] = 'optionalKeys' in model ? model.optionalKeys || [] : [];

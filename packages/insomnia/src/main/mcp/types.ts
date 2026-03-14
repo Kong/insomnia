@@ -4,7 +4,7 @@ import type { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/cl
 import type { ClientRequest, JSONRPCResponse, Notification } from '@modelcontextprotocol/sdk/types.js';
 import type z from 'zod';
 
-import type { TRANSPORT_TYPES } from '~/models/mcp-request';
+import type * as models from '~/models';
 import type { RequestAuthentication, RequestHeader } from '~/models/request';
 
 // Refer the SDK: https://github.com/modelcontextprotocol/typescript-sdk/blob/main/src/shared/protocol.ts#L504
@@ -76,14 +76,14 @@ export interface OpenMcpStdioClientConnectionOptions extends CommonMcpOptions {
   workspaceId: string;
   // TODO: should rename to command or urlOrCommand
   url: string;
-  transportType: typeof TRANSPORT_TYPES.STDIO;
+  transportType: typeof models.mcpRequest.TRANSPORT_TYPES.STDIO;
   env: Record<string, string>;
 }
 
 export interface OpenMcpHTTPClientConnectionOptions extends CommonMcpOptions {
   workspaceId: string;
   url: string;
-  transportType: typeof TRANSPORT_TYPES.HTTP;
+  transportType: typeof models.mcpRequest.TRANSPORT_TYPES.HTTP;
   headers: RequestHeader[];
   authentication: RequestAuthentication;
 }

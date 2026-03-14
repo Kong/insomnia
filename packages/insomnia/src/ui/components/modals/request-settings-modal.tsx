@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useNavigate, useParams } from 'react-router';
 
-import type { McpRequest } from '~/models/mcp-request';
+import type { McpRequest } from '~/insomnia-data';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 

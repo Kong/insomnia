@@ -4,6 +4,7 @@ import { Button as RaButton, Heading, Radio, RadioGroup } from 'react-aria-compo
 import { useParams } from 'react-router';
 import { useLatest } from 'react-use';
 
+import { type McpRequest, models } from '~/insomnia-data';
 import type { McpReadyState } from '~/main/mcp/types';
 import { type Project } from '~/models/project';
 import type { AuthTypeOAuth2 } from '~/models/request';
@@ -27,7 +28,6 @@ import { Button } from '~/ui/components/themed-button';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 
 import { getDataFromKVPair } from '../../../models/environment';
-import { MCP_TRANSPORT_TYPES, type McpRequest, TRANSPORT_TYPES } from '../../../models/mcp-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -44,7 +44,7 @@ interface ActionBarProps {
 }
 
 const getTransportLabel = (transportType: McpRequest['transportType']) =>
-  transportType === TRANSPORT_TYPES.HTTP ? 'HTTP' : 'STDIO';
+  transportType === models.mcpRequest.TRANSPORT_TYPES.HTTP ? 'HTTP' : 'STDIO';
 
 export const McpUrlActionBar = ({
   request,
@@ -162,7 +162,7 @@ export const McpUrlActionBar = ({
 
     const connectParams = await generateConnectParams();
 
-    if (connectParams.transportType === TRANSPORT_TYPES.STDIO) {
+    if (connectParams.transportType === models.mcpRequest.TRANSPORT_TYPES.STDIO) {
       const stdioAccess = await isAllowedToRunSTDIO(request, project, modalRef);
       if (!stdioAccess) {
         console.log('User denied STDIO access');
@@ -240,7 +240,7 @@ export const McpUrlActionBar = ({
           isDisabled={!isDisconnected}
         >
           <DropdownSection>
-            {MCP_TRANSPORT_TYPES.map(transportType => (
+            {models.mcpRequest.MCP_TRANSPORT_TYPES.map(transportType => (
               <DropdownItem key={transportType}>
                 <ItemContent
                   label={getTransportLabel(transportType)}

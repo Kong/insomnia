@@ -6,6 +6,7 @@ import { href, redirect } from 'react-router';
 
 import { getAppVersion, getMockServiceURL, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { userSession } from '~/models';
 import type { MockRoute } from '~/models/mock-route';
@@ -144,7 +145,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         ? []
         : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
       // Create mcp request when MCP workspace is created
-      await models.mcpRequest.create({
+      await services.mcpRequest.create({
         parentId: workspace._id,
         transportType: 'streamable-http',
         url: '',

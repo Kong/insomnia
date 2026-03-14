@@ -4,7 +4,6 @@ import querystring from 'node:querystring';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getBodyBuffer } from '~/models/helpers/response-operations';
-import { isMcpRequestId } from '~/models/mcp-request';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 
 import { version } from '../../../package.json';
@@ -266,7 +265,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
 ): Promise<{ oAuth2Token: OAuth2Token | undefined; closestAuthId: string }> {
   let closestAuthId = requestId;
 
-  if (!isMcpRequestId(requestId)) {
+  if (!models.mcpRequest.isMcpRequestId(requestId)) {
     const activeRequest = await models.request.getById(requestId);
     const requestGroups = (
       await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
@@ -411,7 +410,7 @@ const sendAccessTokenRequest = async (
   // @TODO unpack oauth into regular timeline and remove oauth timeline dialog
   const initializedData = isRequestGroupId(requestOrGroupId)
     ? await fetchRequestGroupData(requestOrGroupId)
-    : isMcpRequestId(requestOrGroupId)
+    : models.mcpRequest.isMcpRequestId(requestOrGroupId)
       ? await fetchMcpRequestData(requestOrGroupId)
       : await fetchRequestData(requestOrGroupId);
 
