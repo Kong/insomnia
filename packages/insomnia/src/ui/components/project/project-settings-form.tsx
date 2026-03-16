@@ -23,8 +23,8 @@ import {
   isOAuthCredential,
   type ProviderEmail,
 } from '~/models/git-credentials';
-import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
+import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
@@ -289,6 +289,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               <GitConnectionInfo
                 gitRepository={gitRepository}
                 providerInfo={selectedProvider}
+                authorName={selectedCredential?.author.name || selectedCredential?.author.email}
                 projectId={project!._id}
               />
               {showEmailSelector ? (
