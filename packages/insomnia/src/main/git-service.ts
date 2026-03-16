@@ -2385,6 +2385,36 @@ async function completeSignInToGitProvider({
   }
 }
 
+async function updateSignInToGitProvider({
+  provider,
+  code,
+  state,
+}: {
+  provider: GitRemoteProviderType;
+  code: string;
+  state: string;
+}) {
+  const gitProvider = gitRemoteProviderRegistry.get(provider);
+
+  invariant(gitProvider, `Git provider ${provider} not found`);
+  invariant(gitProvider.completeOAuth, `Git provider ${provider} does not support OAuth`);
+
+  try {
+    const result = await gitProvider.completeOAuth(code, state);
+
+    if (!result.success) {
+      return { errors: [result.error || `Failed to complete the ${provider} OAuth flow`] };
+    }
+
+    trackSegmentEvent(SegmentEvent.gitAuthenticationUpdated, { provider });
+
+    return {};
+  } catch (error) {
+    console.error(`Failed to complete the ${provider} OAuth flow:`, error);
+    return { errors: [`Failed to complete the ${provider} OAuth flow. ${getErrorMessage(error)}`] };
+  }
+}
+
 async function getGitProviderRepositories({
   credentialsId,
   refresh,
@@ -2502,6 +2532,7 @@ export interface GitServiceAPI {
 
   initSignInToGitProvider: typeof initSignInToGitProvider;
   completeSignInToGitProvider: typeof completeSignInToGitProvider;
+  updateSignInToGitProvider: typeof updateSignInToGitProvider;
   getCurrentBranchByRepositoryId: typeof getCurrentBranchByRepositoryId;
 
   getGitProviderRepositories: typeof getGitProviderRepositories;
@@ -2587,6 +2618,9 @@ export const registerGitServiceAPI = () => {
   );
   ipcMainHandle('git.completeSignInToGitProvider', (_, options: Parameters<typeof completeSignInToGitProvider>[0]) =>
     completeSignInToGitProvider(options),
+  );
+  ipcMainHandle('git.updateSignInToGitProvider', (_, options: Parameters<typeof updateSignInToGitProvider>[0]) =>
+    updateSignInToGitProvider(options),
   );
 
   ipcMainHandle('git.listGitProviders', () => listGitProviders());
