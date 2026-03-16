@@ -1,11 +1,14 @@
-import { database as db, type McpRequest, models } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
+
+import { database as db } from '../../src/database';
+import { models } from '../../src/models';
+import { type McpRequest } from '../../src/models/types';
 
 const { type } = models.mcpRequest;
 
 export function create(patch: Partial<McpRequest> = {}) {
   if (!patch.parentId) {
-    throw new Error('New GrpcRequest missing `parentId`');
+    throw new Error('New McpRequest missing `parentId`');
   }
 
   return db.docCreate<McpRequest>(type, patch);

@@ -1,7 +1,8 @@
-import { database as db } from '~/common/database';
-import { type McpResponse } from '~/insomnia-data';
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
+
+import { database as db } from '../../src/database';
+import { type McpResponse } from '../../src/models/types';
 
 const { type } = models.mcpResponse;
 
