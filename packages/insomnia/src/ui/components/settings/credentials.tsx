@@ -35,6 +35,7 @@ import { useRelatedProjectsByGitCredentialsIdLoaderFetcher } from '~/routes/git-
 import { useGitCredentialsUpdateActionFetcher } from '~/routes/git-credentials.$id.update';
 import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
 import { useInitSignInToGitProviderFetcher } from '~/routes/git-credentials.init-sign-in';
+import { useGitProviderUpdateSignInFetcher } from '~/routes/git-credentials.update-sign-in';
 import { Input } from '~/ui/components/base/input';
 import { GitCustomCredentialForm } from '~/ui/components/git-credentials/git-custom-credential-form';
 import { showModal } from '~/ui/components/modals';
@@ -73,7 +74,7 @@ const GitEditProviderOAuthForm = ({
   const [error, setError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const initSignInFetcher = useInitSignInToGitProviderFetcher();
-  const updateSignInFetcher = useGitProviderCompleteSignInFetcher();
+  const updateSignInFetcher = useGitProviderUpdateSignInFetcher();
   const [isEmailSelectOpen, setIsEmailSelectOpen] = useState(false);
 
   const [selectedAuthorEmail, setSelectedAuthorEmail] = useState(gitCredentialToEdit?.author.email);
