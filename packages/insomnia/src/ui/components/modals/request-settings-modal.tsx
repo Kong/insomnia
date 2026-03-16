@@ -222,7 +222,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
               <Input
                 label="Socket.IO Handshake Path"
                 description="The path where the Socket.IO server is listening. Leave empty to use the default /socket.io/"
-                placeholder="/socket.io/"
+                placeholder="/custom-path/"
                 name="settingPath"
                 defaultValue={request.settingPath || ''}
                 onChange={value => patchRequest(request._id, { settingPath: value })}
