@@ -4,6 +4,7 @@ import { type GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../grpc-reques
 import * as models from '../index';
 import type { Request } from '../request';
 import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '../socket-io-request';
+import type { AllTypes } from '../types';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../websocket-request';
 
 export function findByParentId(
@@ -61,24 +62,20 @@ export function remove(request: Request | GrpcRequest | WebSocketRequest | Socke
   return models.request.remove(request);
 }
 
-export function update<T extends object>(request: T, patch: Partial<T> = {}): Promise<T> {
-  // @ts-expect-error -- TSCONVERSION
+export function update<T extends { type: AllTypes }>(request: T, patch: Partial<T> = {}): Promise<T> {
   if (isGrpcRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
     return models.grpcRequest.update(request, patch);
   }
-  // @ts-expect-error -- TSCONVERSION
   if (isWebSocketRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
     return models.webSocketRequest.update(request, patch);
   }
-  // @ts-expect-error -- TSCONVERSION
   if (isSocketIORequest(request)) {
     // @ts-expect-error -- TSCONVERSION
     return models.socketIORequest.update(request, patch);
   }
 
-  // @ts-expect-error -- TSCONVERSION
   if (models.mcpRequest.isMcpRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
     return services.mcpRequest.update(request, patch);
@@ -88,18 +85,15 @@ export function update<T extends object>(request: T, patch: Partial<T> = {}): Pr
   return models.request.update(request, patch);
 }
 
-export function duplicate<T extends object>(request: T, patch: Partial<T> = {}): Promise<T> {
-  // @ts-expect-error -- TSCONVERSION
+export function duplicate<T extends { type: AllTypes }>(request: T, patch: Partial<T> = {}): Promise<T> {
   if (isGrpcRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
     return models.grpcRequest.duplicate(request, patch);
   }
-  // @ts-expect-error -- TSCONVERSION
   if (isWebSocketRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
     return models.webSocketRequest.duplicate(request, patch);
   }
-  // @ts-expect-error -- TSCONVERSION
   if (isSocketIORequest(request)) {
     // @ts-expect-error -- TSCONVERSION
     return models.socketIORequest.duplicate(request, patch);

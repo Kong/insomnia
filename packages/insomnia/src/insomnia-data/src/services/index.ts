@@ -1,5 +1,3 @@
-// This import resolves to the runtime stub in `node-src/types.ts`, while TypeScript picks up
-// the adjacent `node-src/types.d.ts` for the actual `Services` type.
 import { type Services } from '../../node-src/types';
 
 export type { Services };
