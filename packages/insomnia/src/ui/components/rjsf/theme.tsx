@@ -147,6 +147,7 @@ const BaseInputTemplate = (props: BaseInputTemplateProps) => {
 
   const isInvalid = rawErrors && rawErrors.length > 0;
   const inputProps = getInputProps(schema, type, options);
+  const isMultiline = typeof value === 'string' && value.includes('\n');
 
   return (
     <TextField
@@ -159,16 +160,27 @@ const BaseInputTemplate = (props: BaseInputTemplateProps) => {
       onBlur={e => onBlur && onBlur(id, e.target.value)}
       onFocus={e => onFocus && onFocus(id, e.target.value)}
     >
-      <Input
-        className={cn(`${baseInputClasses}`, {
-          'border-(--color-danger)!': isInvalid,
-          'border-(--hl-xs)': disabled,
-        })}
-        id={id}
-        placeholder={placeholder}
-        onChange={handleChange}
-        {...inputProps}
-      />
+      {isMultiline ? (
+        <textarea
+          id={id}
+          disabled={disabled}
+          className={baseInputClasses}
+          readOnly={readonly}
+          value={value || ''}
+          onChange={e => onChange(e.target.value)}
+        />
+      ) : (
+        <Input
+          className={cn(`${baseInputClasses}`, {
+            'border-(--color-danger)!': isInvalid,
+            'border-(--hl-xs)': disabled,
+          })}
+          id={id}
+          placeholder={placeholder}
+          onChange={handleChange}
+          {...inputProps}
+        />
+      )}
     </TextField>
   );
 };

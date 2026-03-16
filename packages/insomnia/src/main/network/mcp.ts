@@ -13,13 +13,20 @@ import {
   type JSONRPCRequest,
   type JSONRPCResponse,
   ListRootsRequestSchema,
+  ListToolsResultSchema,
+  ReadResourceResultSchema,
   type Request,
   ServerNotificationSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import electron from 'electron';
 
 import { getAppVersion, getProductName, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
-import { getMcpMethodFromMessage, METHOD_NOTIFICATION_CANCELLED } from '~/common/mcp-utils';
+import {
+  getMcpMethodFromMessage,
+  METHOD_LIST_TOOLS,
+  METHOD_NOTIFICATION_CANCELLED,
+  METHOD_READ_RESOURCE,
+} from '~/common/mcp-utils';
 import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 import {
   callTool,
@@ -57,6 +64,7 @@ import {
   updateMcpConnectionState,
   writeEventLogAndNotify,
 } from '~/main/mcp/common';
+import { getResourceData } from '~/main/mcp/ext-app';
 import { isMCPAuthError, McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
 import { createStdioTransport } from '~/main/mcp/transport-stdio';
 import { createStreamableHTTPTransport } from '~/main/mcp/transport-streamable-http';
@@ -144,6 +152,20 @@ const _handleMcpMessage = (context: ConnectionContext, message: JSONRPCMessage) 
       return;
     }
     const method = getMcpMethodFromMessage(message);
+    // update list tool result to context
+    if ('result' in message) {
+      if (method === METHOD_LIST_TOOLS) {
+        // FIXME fix this ts error later
+        context.toolDefinitions = ListToolsResultSchema.parse(message.result).tools;
+      } else if (method === METHOD_READ_RESOURCE) {
+        // update resource cache in context
+        const resourceResult = ReadResourceResultSchema.parse(message.result);
+        resourceResult.contents.forEach(content => {
+          const uri = content.uri;
+          context.resourcesCache.set(uri, content);
+        });
+      }
+    }
     messageEvent = {
       type: 'message',
       method,
@@ -496,6 +518,11 @@ export interface McpBridgeAPI {
     findNotifications: typeof findNotifications;
     findPendingEvents: typeof findPendingEvents;
   };
+  ext: {
+    app: {
+      getResourceData: typeof getResourceData;
+    };
+  };
 }
 
 export const registerMcpHandlers = () => {
@@ -545,6 +572,9 @@ export const registerMcpHandlers = () => {
   );
   ipcMainHandle('mcp.client.cancelRequest', (_, options: Parameters<typeof cancelRequest>[0]) =>
     cancelRequest(options),
+  );
+  ipcMainHandle('mcp.ext.app.getResourceData', (_, options: Parameters<typeof getResourceData>[0]) =>
+    getResourceData(options),
   );
 };
 
