@@ -628,6 +628,7 @@ function getCollection(
                 settingEncodeUrl: data.settings.encodeUrl,
                 settingSendCookies: data.settings.cookies.send,
                 settingStoreCookies: data.settings.cookies.store,
+                settingPath: data.settings.path,
                 pathParameters: data.pathParameters || [],
                 eventListeners: data.eventListeners || [],
               };
@@ -901,6 +902,7 @@ export async function getInsomniaV5DataExport({
                   send: resource.settingSendCookies,
                   store: resource.settingStoreCookies,
                 },
+                path: resource.settingPath,
               },
               authentication: resource.authentication,
               headers: mapHeaders(resource.headers),
