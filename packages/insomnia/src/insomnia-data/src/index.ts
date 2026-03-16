@@ -22,4 +22,3 @@ export const models = {
 
 // services
 export { services, initServices, type Services } from './services';
-export { type ModelMap, type BaseServices, type AllTypes } from './services/base';
