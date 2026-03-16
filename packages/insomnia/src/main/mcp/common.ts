@@ -105,14 +105,6 @@ export const isContextReady = (
   return !!context && 'connectionId' in context;
 };
 
-const getMcpPayloadOrCreateByParentIdAndUrl = async (requestId: string, url: string) => {
-  const existing = await services.mcpPayload.getByParentId(requestId);
-  if (!existing) {
-    return await services.mcpPayload.create({ parentId: requestId, url });
-  }
-  return existing;
-};
-
 /**
  * Create a new connection context with all isolated state
  */
@@ -147,7 +139,7 @@ export const createConnectionContext = async (
   const environmentId = environment ? environment._id : null;
 
   // Create MCP payload model if not exists
-  await getMcpPayloadOrCreateByParentIdAndUrl(requestId, options.url);
+  await services.mcpPayload.getOrCreateByParentIdAndUrl(requestId, options.url);
 
   const context: ConnectionContext = {
     connectionId,

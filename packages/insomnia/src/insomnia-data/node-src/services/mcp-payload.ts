@@ -32,7 +32,6 @@ export async function duplicate(request: McpPayload, patch: Partial<McpPayload> 
 }
 
 export const getById = (_id: string) => database.findOne<McpPayload>(type, { _id });
-export const getByParentId = (parentId: string) => database.find<McpPayload>(type, { parentId });
 
 export const getByParentIdAndUrl = (parentId: string, url: string) =>
   database.findOne<McpPayload>(type, { parentId, url });
