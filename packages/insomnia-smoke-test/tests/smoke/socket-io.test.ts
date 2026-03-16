@@ -23,7 +23,7 @@ test('can make socket.io connection', async ({ app, page }) => {
   await page.click('text=Connect');
   await expect.soft(statusTag).toContainText('Connected', { ignoreCase: true });
   await page.getByRole('tab', { name: 'Console' }).click();
-  await expect.soft(responseBody).toContainText('Connected to http://localhost:4020');
+  await expect.soft(responseBody).toContainText('Connecting to http://localhost:4020');
   await page.click('text=Disconnect');
   await expect.soft(responseBody).toContainText('io client disconnect');
 
