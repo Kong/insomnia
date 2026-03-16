@@ -309,6 +309,12 @@ const Component = () => {
                   id={item._id}
                   textValue={item.name}
                   className="group w-full outline-hidden select-none"
+                  onAuxClick={e => {
+                    if (e.button === 1) {
+                      e.preventDefault();
+                      mockRouteNavigateAction(item._id, true);
+                    }
+                  }}
                   onPress={e => {
                     mockRouteNavigateAction(item._id, isPrimaryClickModifier(e));
                   }}

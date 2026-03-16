@@ -17,7 +17,7 @@ const keyCombinationToTinyKeyString = ({ ctrl, alt, shift, meta, keyCode }: KeyC
   Object.entries(keyboardKeys).find(([, { keyCode: kc }]) => kc === keyCode)?.[1].code;
 
 export function useKeyboardShortcuts(
-  getTarget: () => HTMLElement,
+  getTarget: () => HTMLElement | Window,
   listeners: Partial<Record<KeyboardShortcut, (event: KeyboardEvent) => any>>,
 ) {
   const { settings } = useRootLoaderData()!;
@@ -56,7 +56,7 @@ export function useKeyboardShortcuts(
 export function useDocBodyKeyboardShortcuts(
   listeners: Partial<Record<KeyboardShortcut, (event: KeyboardEvent) => any>>,
 ) {
-  useKeyboardShortcuts(() => document.body, listeners);
+  useKeyboardShortcuts(() => window, listeners);
 }
 
 export function createKeybindingsHandler(

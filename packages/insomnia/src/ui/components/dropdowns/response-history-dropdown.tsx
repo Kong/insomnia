@@ -3,12 +3,12 @@ import React, { useCallback, useRef } from 'react';
 import { Button } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { type McpResponse } from '~/insomnia-data';
 import { useRequestResponseDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete';
 import { useRequestResponseDeleteAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete-all';
 
 import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
-import { isMcpResponse, type McpResponse } from '../../../models/mcp-response';
 import { isRequest, type Request } from '../../../models/request';
 import { type RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
@@ -67,7 +67,7 @@ export const ResponseHistoryDropdown = ({
         window.main.socketIO.close({ requestId });
       }
 
-      if (isMcpResponse(activeResponse)) {
+      if (models.mcpResponse.isMcpResponse(activeResponse)) {
         window.main.mcp.close({ requestId });
       }
 
@@ -86,7 +86,7 @@ export const ResponseHistoryDropdown = ({
       window.main.webSocket.close({ requestId });
     } else if (isSocketIOResponse(activeResponse)) {
       window.main.socketIO.close({ requestId });
-    } else if (isMcpResponse(activeResponse)) {
+    } else if (models.mcpResponse.isMcpResponse(activeResponse)) {
       window.main.mcp.close({ requestId });
     }
     deleteResponsesSubmit({
@@ -104,7 +104,7 @@ export const ResponseHistoryDropdown = ({
         window.main.webSocket.close({ requestId });
       } else if (isSocketIOResponse(activeResponse)) {
         window.main.socketIO.close({ requestId });
-      } else if (isMcpResponse(activeResponse)) {
+      } else if (models.mcpResponse.isMcpResponse(activeResponse)) {
         window.main.mcp.close({ requestId });
       }
     }
@@ -140,7 +140,8 @@ export const ResponseHistoryDropdown = ({
           onClick={() => handleSetActiveResponse(requestId, response)}
           label={
             <div className="leading-10">
-              {isSocketIOResponse(response) ? null : isMcpResponse(response) && response.transportType === 'stdio' ? (
+              {isSocketIOResponse(response) ? null : models.mcpResponse.isMcpResponse(response) &&
+                response.transportType === 'stdio' ? (
                 <StringStatusTag
                   small
                   status={response.status}
@@ -162,14 +163,16 @@ export const ResponseHistoryDropdown = ({
                 tooltipDelay={1000}
               />
               <TimeTag milliseconds={response.elapsedTime} small tooltipDelay={1000} />
-              {!isWebSocketResponse(response) && !isSocketIOResponse(response) && !isMcpResponse(response) && (
-                <SizeTag
-                  bytesRead={response.bytesRead}
-                  bytesContent={response.bytesContent}
-                  small
-                  tooltipDelay={1000}
-                />
-              )}
+              {!isWebSocketResponse(response) &&
+                !isSocketIOResponse(response) &&
+                !models.mcpResponse.isMcpResponse(response) && (
+                  <SizeTag
+                    bytesRead={response.bytesRead}
+                    bytesContent={response.bytesContent}
+                    small
+                    tooltipDelay={1000}
+                  />
+                )}
               {!response.requestVersionId ? (
                 <i
                   className="icon fa fa-info-circle"

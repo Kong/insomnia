@@ -2905,7 +2905,7 @@ input.editable {
 }
 .shortcuts.add-key-comb-modal input.key-comb {
   text-align: center;
-  color: black;
+  color: var(--color-font);
   font-size: var(--font-size-lg);
 }
 .shortcuts.add-key-comb-modal .hidden {

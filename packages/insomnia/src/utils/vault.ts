@@ -1,5 +1,5 @@
 import { getInsomniaVaultKey, PLAYWRIGHT } from '../common/constants';
-import { settings } from '../models';
+import * as settings from '../models/settings';
 
 export const base64encode = (input: string | JsonWebKey) => {
   const inputStr = typeof input === 'string' ? input : JSON.stringify(input);

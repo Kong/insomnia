@@ -1,7 +1,5 @@
 import { useCallback, useEffect } from 'react';
 
-import { isMcpRequestId } from '~/models/mcp-request';
-
 import * as models from '../../models';
 import { isGrpcRequestId } from '../../models/grpc-request';
 import { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequestId } from '../../models/request';
@@ -26,7 +24,7 @@ export const useCloseConnection = ({ organizationId }: { organizationId: string 
       } else if (request && isGraphqlSubscriptionRequest(request)) {
         window.main.webSocket.close({ requestId: id });
       }
-    } else if (isMcpRequestId(id)) {
+    } else if (models.mcpRequest.isMcpRequestId(id)) {
       window.main.mcp.close({ requestId: id });
     }
   };

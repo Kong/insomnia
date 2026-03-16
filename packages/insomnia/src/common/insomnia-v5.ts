@@ -17,7 +17,7 @@ import { parse, stringify } from 'yaml';
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
-import type { McpRequest } from '~/models/mcp-request';
+import type { McpRequest } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 
 import * as models from '../models';
@@ -628,6 +628,7 @@ function getCollection(
                 settingEncodeUrl: data.settings.encodeUrl,
                 settingSendCookies: data.settings.cookies.send,
                 settingStoreCookies: data.settings.cookies.store,
+                settingPath: data.settings.path,
                 pathParameters: data.pathParameters || [],
                 eventListeners: data.eventListeners || [],
               };
@@ -901,6 +902,7 @@ export async function getInsomniaV5DataExport({
                   send: resource.settingSendCookies,
                   store: resource.settingStoreCookies,
                 },
+                path: resource.settingPath,
               },
               authentication: resource.authentication,
               headers: mapHeaders(resource.headers),
