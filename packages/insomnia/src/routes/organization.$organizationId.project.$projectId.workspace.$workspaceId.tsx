@@ -3,9 +3,9 @@ import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
 import { sortMethodMap } from '~/common/sorting';
+import { type CaCertificate, services } from '~/insomnia-data';
 import * as models from '~/models';
 import type { ApiSpec } from '~/models/api-spec';
-import type { CaCertificate } from '~/models/ca-certificate';
 import type { ClientCertificate } from '~/models/client-certificate';
 import type { CookieJar } from '~/models/cookie-jar';
 import type { Environment } from '~/models/environment';
@@ -300,7 +300,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     activeApiSpec,
     activeMockServer,
     clientCertificates,
-    caCertificate: await models.caCertificate.findByParentId(workspaceId),
+    caCertificate: await services.caCertificate.getByParentId(workspaceId),
     projects,
     requestTree,
     // TODO: remove this state hack when the grpc responses go somewhere else

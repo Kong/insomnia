@@ -1,6 +1,6 @@
 import type { Prompt, Resource, ResourceTemplate, Tool } from '@modelcontextprotocol/sdk/types.js';
 
-import type { McpServerPrimitiveTypes } from '../../../models/mcp-request';
+import type { McpServerPrimitiveTypes } from '~/insomnia-data';
 
 interface CommonItemProps {
   itemLevel: number;

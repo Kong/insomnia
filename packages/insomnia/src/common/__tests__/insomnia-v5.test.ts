@@ -8,6 +8,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
+import { services } from '~/insomnia-data';
+
 import { INSOMNIA_SCHEMA_VERSION } from '../../common/insomnia-schema-migrations/schema-version';
 import * as models from '../../models';
 import { EnvironmentKvPairDataType } from '../../models/environment';
@@ -341,7 +343,7 @@ collection: []
         data: {},
       });
 
-      const mcpRequest = await models.mcpRequest.create({
+      const mcpRequest = await services.mcpRequest.create({
         _id: 'mcp-request_test',
         name: 'Test MCP client',
         parentId: workspace._id,
@@ -359,7 +361,7 @@ collection: []
       expect(parsed.mcpRequest.url).toBe('http://mcp.test.com/mcp');
       expect(parsed.mcpRequest.transportType).toBe('streamable-http');
 
-      await models.mcpRequest.update(mcpRequest, {
+      await services.mcpRequest.update(mcpRequest, {
         transportType: 'stdio',
         url: 'npx mcp-client stdio',
         env: [

@@ -3,10 +3,9 @@ import type { Readable } from 'node:stream';
 import zlib from 'node:zlib';
 
 import { database as db } from '~/common/database';
+import { type McpResponse } from '~/insomnia-data';
 import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import * as models from '~/models/index';
-import { isMcpRequestId } from '~/models/mcp-request';
-import { isMcpResponse, type McpResponse, type as mcpResponseType } from '~/models/mcp-response';
 import { type Compression, isResponse, type Response, type as responseType } from '~/models/response';
 import { isSocketIORequestId } from '~/models/socket-io-request';
 import { isSocketIOResponse, type SocketIOResponse, type as socketIOResponseType } from '~/models/socket-io-response';
@@ -35,11 +34,11 @@ export async function removeResponsesForRequest(requestId: string, environmentId
     ? webSocketResponseType
     : isSocketIORequestId(requestId)
       ? socketIOResponseType
-      : isMcpRequestId(requestId)
-        ? mcpResponseType
+      : models.mcpRequest.isMcpRequestId(requestId)
+        ? models.mcpResponse.type
         : responseType;
 
-  if (type === webSocketResponseType || type === socketIOResponseType || type === mcpResponseType) {
+  if (type === webSocketResponseType || type === socketIOResponseType || type === models.mcpResponse.type) {
     const toDelete = await db.find<WebSocketResponse | SocketIOResponse | McpResponse>(type, query);
     for (const doc of toDelete) {
       fs.promises.unlink(doc.eventLogPath);
@@ -59,7 +58,7 @@ export async function removeResponsesForRequest(requestId: string, environmentId
 }
 
 export function removeResponse(response: Response | WebSocketResponse | SocketIOResponse | McpResponse) {
-  if (isWebSocketResponse(response) || isSocketIOResponse(response) || isMcpResponse(response)) {
+  if (isWebSocketResponse(response) || isSocketIOResponse(response) || models.mcpResponse.isMcpResponse(response)) {
     fs.promises.unlink(response.eventLogPath);
     fs.promises.unlink(response.timelinePath);
   } else if (isResponse(response)) {

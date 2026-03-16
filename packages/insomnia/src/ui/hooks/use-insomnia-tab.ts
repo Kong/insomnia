@@ -3,10 +3,9 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { href, matchPath, useLocation, useNavigate, useSearchParams } from 'react-router';
 
 import { database } from '~/common/database';
-import { mcpRequest } from '~/models';
+import { type McpRequest, models, services } from '~/insomnia-data';
 import { type GrpcRequest, isGrpcRequest } from '~/models/grpc-request';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { isMcpRequest, type McpRequest } from '~/models/mcp-request';
 import { isMockRoute, type MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import type { Project } from '~/models/project';
@@ -56,7 +55,7 @@ function inferTabType(resource: TabResource): TabType | null {
     isGrpcRequest(resource) ||
     isWebSocketRequest(resource) ||
     isSocketIORequest(resource) ||
-    isMcpRequest(resource)
+    models.mcpRequest.isMcpRequest(resource)
   ) {
     return 'request';
   }
@@ -268,7 +267,7 @@ export const buildTabFromResource = async (params: AddTabParams, withTab?: boole
   };
 
   if (isWorkspace(resource) && resource.scope === 'mcp') {
-    const mcpRequestData = await mcpRequest.getByParentId(resource._id);
+    const mcpRequestData = await services.mcpRequest.getByParentId(resource._id);
 
     if (!mcpRequestData) {
       showResourceNotFoundToast(`MCP Request not found for workspace: ${resource._id}`);

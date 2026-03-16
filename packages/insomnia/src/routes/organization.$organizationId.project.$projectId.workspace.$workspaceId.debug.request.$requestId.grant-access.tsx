@@ -1,7 +1,7 @@
 import { href } from 'react-router';
 
+import type { McpRequest } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
-import type { McpRequest } from '~/models/mcp-request';
 import * as projectModel from '~/models/project';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';

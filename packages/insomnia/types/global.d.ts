@@ -3,12 +3,15 @@ import type { HiddenBrowserWindowToMainBridgeAPI } from '../src/hidden-window-pr
 import type { RendererToMainBridgeAPI } from '../src/main/ipc/main';
 import type { DatabaseBridgeAPI } from '../src/main/ipc/database';
 import type { DiffMatchPatch, DiffOp } from 'diff-match-patch-ts';
+import type { Services } from '~/insomnia-data';
 
 declare global {
   interface Window {
     main: RendererToMainBridgeAPI;
     bridge: HiddenBrowserWindowToMainBridgeAPI;
     database: DatabaseBridgeAPI;
+    // This is a temporary measure to provide access to services on the global window object. It will be removed in the future once all usages are updated to import services directly from the insomnia-data package.
+    _dataServices?: Services;
     dialog: Pick<Electron.Dialog, 'showOpenDialog' | 'showSaveDialog'>;
     app: Pick<Electron.App, 'getPath' | 'getAppPath'>;
     shell: Pick<Electron.Shell, 'showItemInFolder' | 'openPath'>;
