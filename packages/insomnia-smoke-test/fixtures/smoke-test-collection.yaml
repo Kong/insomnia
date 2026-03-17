@@ -52,6 +52,22 @@ collection:
         send: true
         store: true
       rebuildPath: true
+  - url: http://127.0.0.1:4010/pets/sdk-error
+    name: send JSON request with SDK error
+    meta:
+      id: req_a3f7c2e1b8d04591ae62f0d35c8b1947
+      created: 1636141014553
+      modified: 1636707449232
+      isPrivate: false
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
   - url: http://127.0.0.1:4010/file/dummy.csv
     name: sends dummy.csv request and shows rich response
     meta:

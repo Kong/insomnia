@@ -251,6 +251,19 @@ export function isNotNullOrUndefined<ValueType>(value: ValueType | null | undefi
 
 export const toKebabCase = (value: string) => value.replace(/ /g, '-');
 
+export function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+export function tryParseJson(text: string): Record<string, unknown> | undefined {
+  try {
+    const parsed = JSON.parse(text);
+    return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 // unescape forward slashes in a string if needed
 export function unescapeForwardSlash(str: string): string {
   // Use a regular expression to find runs of one or more backslashes (bs) followed by a slash

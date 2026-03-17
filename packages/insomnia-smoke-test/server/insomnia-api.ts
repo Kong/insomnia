@@ -658,4 +658,34 @@ export default function setup(app: Application) {
       isAllowed: true,
     });
   });
+
+  // Stainless SDK integration
+  // Returns an SDK only for requests to 127.0.0.1:4010/pets/*, so other
+  // local requests (e.g. /echo) fall through to httpsnippet mode.
+  app.get('/integrations/stainless/sdk', (req, res) => {
+    const endpoint = req.query.endpoint as string | undefined;
+    if (endpoint) {
+      const parsed = new URL(endpoint);
+      if (parsed.hostname === '127.0.0.1' && parsed.pathname.startsWith('/pets/')) {
+        const id = parsed.pathname === '/pets/sdk-error' ? 'sdk-error' : 'sdk-smoke-test';
+        res.json({ id, languages: ['typescript', 'python'] });
+        return;
+      }
+    }
+    res.json(null);
+  });
+
+  app.post('/integrations/stainless/sdk/:id/snippet', json(), (req, res) => {
+    const { id } = req.params;
+    if (id === 'sdk-error') {
+      res.status(500).json({ message: 'Internal server error' });
+      return;
+    }
+    const { language } = req.body as { language: string };
+    res.json({
+      code: language === 'python'
+        ? 'client = ApiClient()\nresponse = client.pets.retrieve()'
+        : 'const client = new ApiClient();\nconst response = await client.pets.retrieve();',
+    });
+  });
 }

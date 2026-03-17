@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { chunkArray } from '../../sync/vcs/vcs';
 import {
+  capitalize,
   debounce,
   filterHeaders,
   fuzzyMatch,
@@ -10,6 +11,7 @@ import {
   hasAuthHeader,
   isNotNullOrUndefined,
   toKebabCase,
+  tryParseJson,
 } from '../misc';
 
 describe('hasAuthHeader()', () => {
@@ -254,5 +256,48 @@ describe('toKebabCase', () => {
   it('replease spaces with hyphens', () => {
     expect(toKebabCase('a A')).toEqual('a-A');
     expect(toKebabCase('a A b B c')).toEqual('a-A-b-B-c');
+  });
+});
+
+describe('capitalize()', () => {
+  it('capitalizes the first character', () => {
+    expect(capitalize('hello')).toBe('Hello');
+    expect(capitalize('typescript')).toBe('Typescript');
+  });
+
+  it('leaves an already-capitalized string unchanged', () => {
+    expect(capitalize('Hello')).toBe('Hello');
+  });
+
+  it('handles a single character', () => {
+    expect(capitalize('a')).toBe('A');
+    expect(capitalize('A')).toBe('A');
+  });
+
+  it('handles an empty string', () => {
+    expect(capitalize('')).toBe('');
+  });
+});
+
+describe('tryParseJson()', () => {
+  it('returns a parsed object for valid JSON objects', () => {
+    expect(tryParseJson('{"a":1}')).toEqual({ a: 1 });
+    expect(tryParseJson('{"nested":{"x":true}}')).toEqual({ nested: { x: true } });
+  });
+
+  it('returns undefined for invalid JSON', () => {
+    expect(tryParseJson('not json')).toBeUndefined();
+    expect(tryParseJson('')).toBeUndefined();
+  });
+
+  it('returns undefined for JSON arrays', () => {
+    expect(tryParseJson('[1,2,3]')).toBeUndefined();
+  });
+
+  it('returns undefined for JSON primitives', () => {
+    expect(tryParseJson('42')).toBeUndefined();
+    expect(tryParseJson('"hello"')).toBeUndefined();
+    expect(tryParseJson('true')).toBeUndefined();
+    expect(tryParseJson('null')).toBeUndefined();
   });
 });
