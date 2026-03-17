@@ -1,5 +1,5 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { href, Outlet, redirect, useLoaderData, useMatches, useNavigate, useParams, useRouteLoaderData } from 'react-router';
@@ -13,16 +13,24 @@ import type { GitRepository } from '~/models/git-repository';
 import type { GrpcRequest } from '~/models/grpc-request';
 import { sortProjects } from '~/models/helpers/project';
 import type { McpRequest } from '~/models/mcp-request';
-import { isGitProject, isRemoteProject, type Project } from '~/models/project';
+import { isScratchpadOrganizationId } from '~/models/organization';
+import { isGitProject, isLocalProject, isRemoteProject, type Project } from '~/models/project';
 import type { Request } from '~/models/request';
 import type { RequestGroup } from '~/models/request-group';
 import type { SocketIORequest } from '~/models/socket-io-request';
 import type { WebSocketRequest } from '~/models/websocket-request';
 import { type Workspace, type WorkspaceScope } from '~/models/workspace';
 import { useOrganizationLoaderData } from '~/routes/organization';
+import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
+import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
+import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
+import { LocalProjectBar } from '~/ui/components/dropdowns/local-project-bar';
 import { Icon } from '~/ui/components/icon';
+import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { OrganizationSelect } from '~/ui/components/project/organization-select';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { isPrimaryClickModifier } from '~/ui/utils';
 import { invariant } from '~/utils/invariant';
 
@@ -217,32 +225,46 @@ export function useProjectLoaderData() {
   return useRouteLoaderData<typeof clientLoader>('routes/organization.$organizationId.project.$projectId');
 }
 
-const projectTreeScopes: { scope: WorkspaceScope; label: string; icon: IconProp }[] = [
-  { scope: 'collection', label: 'Collections', icon: 'bars' },
-  { scope: 'environment', label: 'Environments', icon: 'code' },
-  { scope: 'mcp', label: 'MCP Clients', icon: ['fac', 'mcp'] as unknown as IconProp },
-  { scope: 'design', label: 'Documents', icon: 'file' },
-  { scope: 'mock-server', label: 'Mock Servers', icon: 'server' },
-];
+const workspaceScopeOrder: Record<WorkspaceScope, number> = {
+  collection: 0,
+  environment: 1,
+  mcp: 2,
+  design: 3,
+  'mock-server': 4,
+};
 
-export function Component() {
-  const matches = useMatches();
-  const isProjectHomeRoute = matches.some(
-    match => match.id === 'routes/organization.$organizationId.project.$projectId._index',
-  );
+const workspaceScopeIcon: Record<WorkspaceScope, IconProp> = {
+  collection: 'bars',
+  environment: 'code',
+  mcp: ['fac', 'mcp'] as unknown as IconProp,
+  design: 'file',
+  'mock-server': 'server',
+};
+
+function ProjectSidebarShell() {
   const { activeProject, projects, projectFilesByProjectId, collectionTreeByWorkspaceId } =
     useLoaderData() as ProjectRouteLoaderData;
   const { organizationId } = useParams() as { organizationId: string };
   const navigate = useNavigate();
   const tabNavigate = useTabNavigate();
   const organizationData = useOrganizationLoaderData();
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
+  const loadStorageRules = storageRuleFetcher.load;
+  const { storagePromise } = storageRuleFetcher.data || {};
+  const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
+  const activeProjectGitRepository = activeProject?.gitRepositoryId
+    ? projects.find(project => project._id === activeProject._id)?.gitRepository
+    : undefined;
+  useEffect(() => {
+    if (!isScratchpadOrganizationId(organizationId)) {
+      loadStorageRules({ organizationId });
+    }
+  }, [loadStorageRules, organizationId]);
+
   const [expandedProjectIds, setExpandedProjectIds] = reactUse.useLocalStorage<string[]>(
     `${organizationId}:project-tree-expanded-projects`,
     activeProject?._id ? [activeProject._id] : [],
-  );
-  const [expandedCategoryKeys, setExpandedCategoryKeys] = reactUse.useLocalStorage<string[]>(
-    `${organizationId}:project-tree-expanded-categories`,
-    [],
   );
   const [expandedCollectionKeys, setExpandedCollectionKeys] = reactUse.useLocalStorage<string[]>(
     `${organizationId}:project-tree-expanded-collections`,
@@ -252,47 +274,37 @@ export function Component() {
     `${organizationId}:project-tree-expanded-request-groups`,
     [],
   );
-
-  useEffect(() => {
-    if (!activeProject?._id) {
-      return;
-    }
-
-    setExpandedProjectIds(prev => {
-      const previous = prev || [];
-      return previous.includes(activeProject._id) ? previous : [activeProject._id, ...previous];
-    });
-  }, [activeProject?._id, setExpandedProjectIds]);
+  const expandedProjectIdList = Array.isArray(expandedProjectIds) ? expandedProjectIds : [];
+  const expandedCollectionKeyList = Array.isArray(expandedCollectionKeys) ? expandedCollectionKeys : [];
+  const expandedRequestGroupKeyList = Array.isArray(expandedRequestGroupKeys) ? expandedRequestGroupKeys : [];
 
   const toggleProjectExpanded = (id: string) => {
-    setExpandedProjectIds(prev => {
-      const previous = prev || [];
-      return previous.includes(id) ? previous.filter(value => value !== id) : [...previous, id];
-    });
-  };
-
-  const toggleCategoryExpanded = (key: string) => {
-    setExpandedCategoryKeys(prev => {
-      const previous = prev || [];
-      return previous.includes(key) ? previous.filter(value => value !== key) : [...previous, key];
-    });
+    const next = expandedProjectIdList.includes(id)
+      ? expandedProjectIdList.filter(value => value !== id)
+      : [...expandedProjectIdList, id];
+    setExpandedProjectIds(next);
   };
 
   const toggleCollectionExpanded = (key: string) => {
-    setExpandedCollectionKeys(prev => {
-      const previous = prev || [];
-      return previous.includes(key) ? previous.filter(value => value !== key) : [...previous, key];
-    });
+    const next = expandedCollectionKeyList.includes(key)
+      ? expandedCollectionKeyList.filter(value => value !== key)
+      : [...expandedCollectionKeyList, key];
+    setExpandedCollectionKeys(next);
   };
 
   const toggleRequestGroupExpanded = (key: string) => {
-    setExpandedRequestGroupKeys(prev => {
-      const previous = prev || [];
-      return previous.includes(key) ? previous.filter(value => value !== key) : [...previous, key];
-    });
+    const next = expandedRequestGroupKeyList.includes(key)
+      ? expandedRequestGroupKeyList.filter(value => value !== key)
+      : [...expandedRequestGroupKeyList, key];
+    setExpandedRequestGroupKeys(next);
   };
 
   const openFileFromTree = (project: Project, file: ProjectSidebarFile, withTab?: boolean) => {
+    const searchParams = new URLSearchParams();
+    if (file.scope === 'collection') {
+      searchParams.set('doNotSkipToActiveRequest', 'true');
+    }
+
     tabNavigate(
       {
         organization: organizationId,
@@ -303,6 +315,7 @@ export function Component() {
       {
         withTab,
         shouldNavigate: true,
+        searchParams,
       },
     );
   };
@@ -332,50 +345,54 @@ export function Component() {
     );
   };
 
-  if (isProjectHomeRoute) {
-    return <Outlet />;
-  }
-
   return (
-    <PanelGroup
-      autoSaveId="insomnia-project-shell"
-      id="project-shell"
-      className="new-sidebar h-full w-full text-(--color-font)"
-      direction="horizontal"
-    >
-      <Panel
-        id="project-sidebar"
-        className="sidebar theme--sidebar"
-        defaultSize={DEFAULT_SIDEBAR_SIZE}
-        maxSize={40}
-        minSize={10}
-        collapsible
+    <>
+      <PanelGroup
+        autoSaveId="insomnia-project-shell"
+        id="project-shell"
+        className="new-sidebar h-full w-full text-(--color-font)"
+        direction="horizontal"
       >
-        <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-          <OrganizationSelect
-            organizationId={organizationId}
-            organizations={organizationData?.organizations || []}
-            onSelect={id => navigate(`/organization/${id}`)}
-          />
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex items-center justify-between p-(--padding-sm)">
-              <Heading className="text-xs uppercase">Projects ({projects.length})</Heading>
-            </div>
+        <Panel
+          id="project-sidebar"
+          className="sidebar theme--sidebar"
+          defaultSize={DEFAULT_SIDEBAR_SIZE}
+          maxSize={40}
+          minSize={10}
+          collapsible
+        >
+          <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
+            <OrganizationSelect
+              organizationId={organizationId}
+              organizations={organizationData?.organizations || []}
+              onSelect={id => navigate(`/organization/${id}`)}
+            />
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <div className="flex items-center justify-between p-(--padding-sm)">
+                <Heading className="text-xs uppercase">Projects</Heading>
+                <Button
+                  aria-label="Create new Project"
+                  onPress={() => setIsNewProjectModalOpen(true)}
+                  className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                >
+                  <Icon icon="plus-circle" />
+                </Button>
+              </div>
             <div className="flex-1 overflow-y-auto py-1">
-              {projects.map(project => {
-                const isProjectExpanded = Boolean(expandedProjectIds?.includes(project._id));
-                const isActiveProject = project._id === activeProject?._id;
-                const files = projectFilesByProjectId[project._id] || [];
+                {projects.map(project => {
+                  const isProjectExpanded = expandedProjectIdList.includes(project._id);
+                  const isActiveProject = project._id === activeProject?._id;
+                  const files = projectFilesByProjectId[project._id] || [];
 
-                return (
-                  <div key={project._id} className="flex flex-col">
+                  return (
+                    <div key={project._id} className="flex flex-col">
                     <div className="group flex items-center gap-1 px-2 py-1">
                       <Button
                         aria-label={`${isProjectExpanded ? 'Collapse' : 'Expand'} ${project.name}`}
                         onPress={() => toggleProjectExpanded(project._id)}
                         className="flex h-5 w-5 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)"
                       >
-                        <Icon icon={isProjectExpanded ? 'chevron-down' : 'chevron-right'} className="w-3" />
+                        <Icon icon={isProjectExpanded ? 'chevron-down' : 'chevron-right'} className="h-3 w-3" />
                       </Button>
                       <Button
                         aria-label={`Open project ${project.name}`}
@@ -400,178 +417,185 @@ export function Component() {
                     </div>
                     {isProjectExpanded && (
                       <div className="mb-1 flex flex-col">
-                        {projectTreeScopes.map(scopeGroup => {
-                          const categoryKey = `${project._id}:${scopeGroup.scope}`;
-                          const isCategoryExpanded = Boolean(expandedCategoryKeys?.includes(categoryKey));
-                          const scopedFiles = files
-                            .filter(file => file.scope === scopeGroup.scope)
-                            .sort((a, b) => a.name.localeCompare(b.name));
-
-                          return (
-                            <div key={categoryKey} className="flex flex-col">
-                              <div className="group flex items-center gap-1 py-0.5 pl-6 pr-2">
+                        {files
+                          .slice()
+                          .sort((a, b) => {
+                            const scopeDiff = workspaceScopeOrder[a.scope] - workspaceScopeOrder[b.scope];
+                            return scopeDiff !== 0 ? scopeDiff : a.name.localeCompare(b.name);
+                          })
+                          .map(file => {
+                            if (file.scope !== 'collection') {
+                              return (
                                 <Button
-                                  aria-label={`${isCategoryExpanded ? 'Collapse' : 'Expand'} ${scopeGroup.label}`}
-                                  onPress={() => toggleCategoryExpanded(categoryKey)}
-                                  className="flex h-4 w-4 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)"
+                                  key={`${project._id}:${file.id}`}
+                                  aria-label={`Open ${file.name}`}
+                                  onPress={e => openFileFromTree(project, file, isPrimaryClickModifier(e))}
+                                  className="ml-10 mr-2 flex items-center gap-2 rounded-xs px-2 py-1 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
                                 >
-                                  <Icon icon={isCategoryExpanded ? 'chevron-down' : 'chevron-right'} className="w-2.5" />
+                                  <Icon icon={workspaceScopeIcon[file.scope]} className="w-3.5" />
+                                  <span className="truncate">{file.name}</span>
                                 </Button>
-                                <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xs px-2 py-0.5 text-(--hl)">
-                                  <Icon icon={scopeGroup.icon} className="w-3.5" />
-                                  <span className="truncate text-xs">{scopeGroup.label}</span>
-                                  <span className="ml-auto text-xs text-(--hl-md)">{scopedFiles.length}</span>
-                                </div>
-                              </div>
-                              {isCategoryExpanded && (
-                                <div className="flex flex-col">
-                                  {scopedFiles.map(file => {
-                                    if (scopeGroup.scope !== 'collection') {
-                                      return (
-                                        <Button
-                                          key={`${project._id}:${file.id}`}
-                                          aria-label={`Open ${file.name}`}
-                                          onPress={e => openFileFromTree(project, file, isPrimaryClickModifier(e))}
-                                          className="ml-12 mr-2 rounded-xs px-2 py-1 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
-                                        >
-                                          <span className="truncate">{file.name}</span>
-                                        </Button>
-                                      );
-                                    }
+                              );
+                            }
 
-                                    const collectionKey = `${project._id}:${file.id}`;
-                                    const isCollectionExpanded = Boolean(expandedCollectionKeys?.includes(collectionKey));
-                                    const collectionTreeNodes = collectionTreeByWorkspaceId[file.id] || [];
-                                    const rootNodes = collectionTreeNodes
-                                      .filter(node => node.parentId === file.id)
-                                      .sort((a, b) => a.name.localeCompare(b.name));
+                            const collectionKey = `${project._id}:${file.id}`;
+                            const isCollectionExpanded = expandedCollectionKeyList.includes(collectionKey);
+                            const collectionTreeNodes = collectionTreeByWorkspaceId[file.id] || [];
+                            const rootNodes = collectionTreeNodes
+                              .filter(node => node.parentId === file.id)
+                              .sort((a, b) => a.name.localeCompare(b.name));
 
-                                    const renderTreeNodes = (parentId: string, depth: number) => {
-                                      return collectionTreeNodes
-                                        .filter(node => node.parentId === parentId)
-                                        .sort((a, b) => a.name.localeCompare(b.name))
-                                        .map(node => {
-                                          const requestGroupKey = `${project._id}:${file.id}:${node._id}`;
-                                          const isRequestGroupExpanded = Boolean(
-                                            expandedRequestGroupKeys?.includes(requestGroupKey),
-                                          );
-                                          const hasChildren = collectionTreeNodes.some(
-                                            childNode => childNode.parentId === node._id,
-                                          );
+                            const renderTreeNodes = (parentId: string, depth: number) => {
+                              return collectionTreeNodes
+                                .filter(node => node.parentId === parentId)
+                                .sort((a, b) => a.name.localeCompare(b.name))
+                                .map(node => {
+                                  const requestGroupKey = `${project._id}:${file.id}:${node._id}`;
+                                  const isRequestGroupExpanded = expandedRequestGroupKeyList.includes(requestGroupKey);
+                                  const hasChildren = collectionTreeNodes.some(
+                                    childNode => childNode.parentId === node._id,
+                                  );
 
-                                          if (node.nodeType === 'request-group') {
-                                            return (
-                                              <div key={requestGroupKey} className="flex flex-col">
-                                                <div
-                                                  className="group flex items-center gap-1 py-0.5 pr-2"
-                                                  style={{ paddingLeft: `${depth}px` }}
-                                                >
-                                                  <Button
-                                                    aria-label={`${isRequestGroupExpanded ? 'Collapse' : 'Expand'} ${node.name}`}
-                                                    onPress={() => toggleRequestGroupExpanded(requestGroupKey)}
-                                                    className="flex h-4 w-4 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)"
-                                                  >
-                                                    <Icon
-                                                      icon={isRequestGroupExpanded ? 'chevron-down' : 'chevron-right'}
-                                                      className="w-2.5"
-                                                    />
-                                                  </Button>
-                                                  <Button
-                                                    aria-label={`Open folder ${node.name}`}
-                                                    onPress={e =>
-                                                      openCollectionTreeNode({
-                                                        project,
-                                                        workspace: file.workspace,
-                                                        node,
-                                                        withTab: isPrimaryClickModifier(e),
-                                                      })
-                                                    }
-                                                    className="flex min-w-0 flex-1 items-center gap-2 rounded-xs px-2 py-0.5 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
-                                                  >
-                                                    <Icon icon="folder" className="w-3" />
-                                                    <span className="truncate">{node.name}</span>
-                                                  </Button>
-                                                </div>
-                                                {isRequestGroupExpanded && hasChildren && (
-                                                  <div className="flex flex-col">{renderTreeNodes(node._id, depth + 16)}</div>
-                                                )}
-                                              </div>
-                                            );
-                                          }
-
-                                          return (
-                                            <Button
-                                              key={requestGroupKey}
-                                              aria-label={`Open request ${node.name}`}
-                                              onPress={e =>
-                                                openCollectionTreeNode({
-                                                  project,
-                                                  workspace: file.workspace,
-                                                  node,
-                                                  withTab: isPrimaryClickModifier(e),
-                                                })
-                                              }
-                                              className="mr-2 rounded-xs px-2 py-0.5 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
-                                              style={{ marginLeft: `${depth + 18}px` }}
-                                            >
-                                              <span className="truncate">
-                                                {node.requestMethod ? `${node.requestMethod} ` : ''}
-                                                {node.name}
-                                              </span>
-                                            </Button>
-                                          );
-                                        });
-                                    };
-
+                                  if (node.nodeType === 'request-group') {
                                     return (
-                                      <div key={collectionKey} className="flex flex-col">
-                                        <div className="group flex items-center gap-1 py-0.5 pl-12 pr-2">
+                                      <div key={requestGroupKey} className="flex flex-col">
+                                        <div
+                                          className="group flex items-center gap-1 py-0.5 pr-2"
+                                          style={{ paddingLeft: `${depth}px` }}
+                                        >
                                           <Button
-                                            aria-label={`${isCollectionExpanded ? 'Collapse' : 'Expand'} ${file.name}`}
-                                            onPress={() => toggleCollectionExpanded(collectionKey)}
+                                            aria-label={`${isRequestGroupExpanded ? 'Collapse' : 'Expand'} ${node.name}`}
+                                            onPress={() => toggleRequestGroupExpanded(requestGroupKey)}
                                             className="flex h-4 w-4 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)"
                                           >
                                             <Icon
-                                              icon={isCollectionExpanded ? 'chevron-down' : 'chevron-right'}
-                                              className="w-2.5"
+                                              icon={isRequestGroupExpanded ? 'chevron-down' : 'chevron-right'}
+                                              className="h-3 w-3"
                                             />
                                           </Button>
                                           <Button
-                                            aria-label={`Open ${file.name}`}
-                                            onPress={e => openFileFromTree(project, file, isPrimaryClickModifier(e))}
+                                            aria-label={`Open folder ${node.name}`}
+                                            onPress={e =>
+                                              openCollectionTreeNode({
+                                                project,
+                                                workspace: file.workspace,
+                                                node,
+                                                withTab: isPrimaryClickModifier(e),
+                                              })
+                                            }
                                             className="flex min-w-0 flex-1 items-center gap-2 rounded-xs px-2 py-0.5 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
                                           >
-                                            <Icon icon="bars" className="w-3.5" />
-                                            <span className="truncate">{file.name}</span>
-                                            <span className="ml-auto text-[10px] text-(--hl-md)">{rootNodes.length}</span>
+                                            <Icon icon="folder" className="w-3" />
+                                            <span className="truncate">{node.name}</span>
                                           </Button>
                                         </div>
-                                        {isCollectionExpanded && (
-                                          <div className="flex flex-col">{renderTreeNodes(file.id, 66)}</div>
+                                        {isRequestGroupExpanded && hasChildren && (
+                                          <div className="flex flex-col">{renderTreeNodes(node._id, depth + 16)}</div>
                                         )}
                                       </div>
                                     );
-                                  })}
+                                  }
+
+                                  return (
+                                    <Button
+                                      key={requestGroupKey}
+                                      aria-label={`Open request ${node.name}`}
+                                      onPress={e =>
+                                        openCollectionTreeNode({
+                                          project,
+                                          workspace: file.workspace,
+                                          node,
+                                          withTab: isPrimaryClickModifier(e),
+                                        })
+                                      }
+                                      className="mr-2 rounded-xs px-2 py-0.5 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
+                                      style={{ marginLeft: `${depth + 18}px` }}
+                                    >
+                                      <span className="truncate">
+                                        {node.requestMethod ? `${node.requestMethod} ` : ''}
+                                        {node.name}
+                                      </span>
+                                    </Button>
+                                  );
+                                });
+                            };
+
+                            return (
+                              <div key={collectionKey} className="flex flex-col">
+                                <div className="group flex items-center gap-1 py-0.5 pl-6 pr-2">
+                                  <Button
+                                    aria-label={`${isCollectionExpanded ? 'Collapse' : 'Expand'} ${file.name}`}
+                                    onPress={() => toggleCollectionExpanded(collectionKey)}
+                                    className="flex h-4 w-4 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)"
+                                  >
+                                    <Icon
+                                      icon={isCollectionExpanded ? 'chevron-down' : 'chevron-right'}
+                                      className="h-3 w-3"
+                                    />
+                                  </Button>
+                                  <Button
+                                    aria-label={`Open ${file.name}`}
+                                    onPress={e => openFileFromTree(project, file, isPrimaryClickModifier(e))}
+                                    className="flex min-w-0 flex-1 items-center gap-2 rounded-xs px-2 py-0.5 text-left text-xs text-(--hl) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font)"
+                                  >
+                                    <Icon icon={workspaceScopeIcon[file.scope]} className="w-3.5" />
+                                    <span className="truncate">{file.name}</span>
+                                    <span className="ml-auto text-[10px] text-(--hl-md)">{rootNodes.length}</span>
+                                  </Button>
                                 </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                                {isCollectionExpanded && <div className="flex flex-col">{renderTreeNodes(file.id, 50)}</div>}
+                              </div>
+                            );
+                          })}
                       </div>
                     )}
-                  </div>
-                );
-              })}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
+            {activeProject && (
+              <>
+                {isGitProject(activeProject) && (
+                  <GitProjectSyncDropdown
+                    key={activeProjectGitRepository?._id}
+                    gitRepository={activeProjectGitRepository}
+                    activeProject={activeProject}
+                  />
+                )}
+                {isLocalProject(activeProject) && !isGitProject(activeProject) && <LocalProjectBar />}
+                {isRemoteProject(activeProject) && <CloudSyncProjectBar />}
+              </>
+            )}
           </div>
-        </div>
-      </Panel>
-      <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
-      <Panel id="project-content" className="flex flex-col">
-        <Outlet />
-      </Panel>
-    </PanelGroup>
+        </Panel>
+        <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
+        <Panel id="project-content" className="flex flex-col">
+          <Outlet />
+        </Panel>
+      </PanelGroup>
+      {isNewProjectModalOpen && (
+        <ProjectModal
+          isOpen={isNewProjectModalOpen}
+          onOpenChange={setIsNewProjectModalOpen}
+          storageRules={storageRules}
+        />
+      )}
+    </>
   );
+}
+
+export function Component() {
+  const matches = useMatches();
+  const isProjectHomeRoute = matches.some(
+    match => match.id === 'routes/organization.$organizationId.project.$projectId._index',
+  );
+
+  if (isProjectHomeRoute) {
+    return <Outlet />;
+  }
+
+  return <ProjectSidebarShell />;
 }
 
 export default Component;
