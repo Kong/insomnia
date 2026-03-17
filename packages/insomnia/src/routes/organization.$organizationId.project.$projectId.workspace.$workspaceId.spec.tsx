@@ -412,13 +412,15 @@ const Component = ({ params }: Route.ComponentProps) => {
   }, [settings.forceVerticalLayout, direction]);
 
   return (
-    <PanelGroup
-      ref={sidebarPanelRef}
-      autoSaveId="insomnia-sidebar"
-      id="wrapper"
-      className="new-sidebar h-full w-full text-(--color-font)"
-      direction="horizontal"
-    >
+    <div className="flex h-full w-full flex-col">
+      <OrganizationTabList />
+      <PanelGroup
+        ref={sidebarPanelRef}
+        autoSaveId="insomnia-sidebar"
+        id="wrapper"
+        className="new-sidebar h-full w-full text-(--color-font)"
+        direction="horizontal"
+      >
       <Panel
         id="sidebar"
         className="sidebar theme--sidebar"
@@ -928,7 +930,6 @@ const Component = ({ params }: Route.ComponentProps) => {
       </Panel>
       <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
       <Panel className="flex flex-col">
-        <OrganizationTabList />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
             <div className="flex h-full w-full flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
@@ -1060,6 +1061,7 @@ const Component = ({ params }: Route.ComponentProps) => {
         </PanelGroup>
       </Panel>
     </PanelGroup>
+    </div>
   );
 };
 

@@ -805,14 +805,16 @@ const Debug = () => {
   const tabNavigate = useTabNavigate();
 
   return (
-    <PanelGroup
-      ref={sidebarPanelRef}
-      autoSaveId="insomnia-sidebar"
-      id="wrapper"
-      className="new-sidebar h-full w-full text-(--color-font)"
-      direction="horizontal"
-    >
-      <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
+    <div className="flex h-full w-full flex-col">
+      {!panel && <OrganizationTabList currentPage="debug" />}
+      <PanelGroup
+        ref={sidebarPanelRef}
+        autoSaveId="insomnia-sidebar"
+        id="wrapper"
+        className="new-sidebar h-full w-full text-(--color-font)"
+        direction="horizontal"
+      >
+        <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
         <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
           <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
             <div className={`flex w-full h-[${INSOMNIA_TAB_HEIGHT}px]`}>
@@ -895,7 +897,12 @@ const Debug = () => {
               </Button>
             </div>
           </div>
-          <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="px-(--padding-sm) py-(--padding-md)">
+            <p className="text-xs text-(--hl)">
+              Navigate requests from the project sidebar tree. This workspace sidebar now focuses on workspace tools.
+            </p>
+          </div>
+          <div className="hidden flex-1 flex-col overflow-hidden">
             <div className="flex justify-between gap-1 p-(--padding-sm)">
               <SearchField
                 aria-label="Request filter"
@@ -1234,11 +1241,9 @@ const Debug = () => {
           )}
         </div>
       </Panel>
-      <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
-      <Panel className="flex flex-col">
-        {/* Hide tabs when it's on the tutorial panel */}
-        {!panel && <OrganizationTabList currentPage="debug" />}
-        <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
+        <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
+        <Panel className="flex flex-col">
+          <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
           <Routes>
             <RouteComponent
               path="*"
@@ -1302,9 +1307,10 @@ const Debug = () => {
             <RouteComponent path="runner" element={<Runner />} />
             <RouteComponent path="tutorial/:panel" element={<Tutorial />} />
           </Routes>
-        </PanelGroup>
-      </Panel>
-    </PanelGroup>
+          </PanelGroup>
+        </Panel>
+      </PanelGroup>
+    </div>
   );
 };
 

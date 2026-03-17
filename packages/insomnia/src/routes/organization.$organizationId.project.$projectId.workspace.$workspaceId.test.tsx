@@ -280,13 +280,15 @@ const Component = () => {
   }, [settings.forceVerticalLayout, direction]);
 
   return (
-    <PanelGroup
-      ref={sidebarPanelRef}
-      autoSaveId="insomnia-sidebar"
-      id="wrapper"
-      className="new-sidebar h-full w-full text-(--color-font)"
-      direction="horizontal"
-    >
+    <div className="flex h-full w-full flex-col">
+      <OrganizationTabList />
+      <PanelGroup
+        ref={sidebarPanelRef}
+        autoSaveId="insomnia-sidebar"
+        id="wrapper"
+        className="new-sidebar h-full w-full text-(--color-font)"
+        direction="horizontal"
+      >
       <Panel
         id="sidebar"
         className="sidebar theme--sidebar divide-y divide-solid divide-(--hl-md)"
@@ -464,7 +466,6 @@ const Component = () => {
       </Panel>
       <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
       <Panel className="flex flex-col">
-        <OrganizationTabList />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" minSize={10} className="pane-one theme--pane relative overflow-hidden">
             <Routes>
@@ -525,6 +526,7 @@ const Component = () => {
         </PanelGroup>
       </Panel>
     </PanelGroup>
+    </div>
   );
 };
 
