@@ -31,6 +31,7 @@ export interface BaseSocketIORequest {
   settingEncodeUrl: boolean;
   settingStoreCookies: boolean;
   settingSendCookies: boolean;
+  settingPath?: string;
   eventListeners: SocketIOEventListener[];
 }
 
@@ -51,6 +52,7 @@ export const init = (): BaseSocketIORequest => ({
   settingEncodeUrl: true,
   settingStoreCookies: true,
   settingSendCookies: true,
+  settingPath: undefined,
   description: '',
   eventListeners: [],
 });

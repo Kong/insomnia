@@ -3,6 +3,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { href, NavLink, redirect, useParams } from 'react-router';
 
 import { Icon } from '~/basic-components/icon';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
@@ -27,7 +28,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   }
 
   // MCP collection only have one request
-  const activeRequest = await models.mcpRequest.getByParentId(workspaceId);
+  const activeRequest = await services.mcpRequest.getByParentId(workspaceId);
   if (!activeRequest) {
     // INS-1972 when no mcp request is found in the workspace, do nothing here
     return null;

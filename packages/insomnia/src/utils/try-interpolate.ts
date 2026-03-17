@@ -1,6 +1,7 @@
+import type { McpRequest } from '~/insomnia-data';
+
 import { getRenderContext, render } from '../common/render';
 import type { GrpcRequest } from '../models/grpc-request';
-import type { McpRequest } from '../models/mcp-request';
 import type { Request } from '../models/request';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';

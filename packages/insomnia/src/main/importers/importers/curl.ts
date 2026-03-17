@@ -103,8 +103,16 @@ const isBearerAuth = (header?: string, value?: string) =>
   header?.toLowerCase() === 'authorization' && value?.trim().toLowerCase().startsWith('bearer');
 const extractAuth = (pairsByName: PairsByName): RequestAuthentication | {} => {
   const [username, password] = getPairValue(pairsByName, '', ['u', 'user']).split(/:(.*)$/);
-  const [header, value] = getPairValue(pairsByName, '', ['H', 'header']).split(/:(.*)$/);
-  if (isBearerAuth(header, value)) {
+  const allHeaders = [
+    ...((pairsByName.H as string[] | undefined) || []),
+    ...((pairsByName.header as string[] | undefined) || []),
+  ];
+  const bearerAuthHeader = allHeaders.find(h => {
+    const [name, value] = h.split(/:(.*)$/);
+    return isBearerAuth(name, value);
+  });
+  if (bearerAuthHeader) {
+    const [_, value] = bearerAuthHeader.split(/:(.*)$/);
     return { type: 'bearer', token: value.trim().slice(7) };
   }
   return username

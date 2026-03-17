@@ -1,6 +1,7 @@
+import { type McpRequest, services } from '~/insomnia-data';
+
 import { type GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../grpc-request';
 import * as models from '../index';
-import { isMcpRequest, isMcpRequestId, type McpRequest } from '../mcp-request';
 import type { Request } from '../request';
 import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '../socket-io-request';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../websocket-request';
@@ -35,8 +36,8 @@ export function getById(
     return models.socketIORequest.getById(requestId);
   }
 
-  if (isMcpRequestId(requestId)) {
-    return models.mcpRequest.getById(requestId);
+  if (models.mcpRequest.isMcpRequestId(requestId)) {
+    return services.mcpRequest.getById(requestId);
   }
   return models.request.getById(requestId);
 }
@@ -53,8 +54,8 @@ export function remove(request: Request | GrpcRequest | WebSocketRequest | Socke
     return models.socketIORequest.remove(request);
   }
 
-  if (isMcpRequest(request)) {
-    return models.mcpRequest.remove(request);
+  if (models.mcpRequest.isMcpRequest(request)) {
+    return services.mcpRequest.remove(request);
   }
 
   return models.request.remove(request);
@@ -78,9 +79,9 @@ export function update<T extends object>(request: T, patch: Partial<T> = {}): Pr
   }
 
   // @ts-expect-error -- TSCONVERSION
-  if (isMcpRequest(request)) {
+  if (models.mcpRequest.isMcpRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
-    return models.mcpRequest.update(request, patch);
+    return services.mcpRequest.update(request, patch);
   }
 
   // @ts-expect-error -- TSCONVERSION
