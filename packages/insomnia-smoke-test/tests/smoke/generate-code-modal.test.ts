@@ -22,7 +22,7 @@ test.describe('Generate Code Modal', () => {
     await page.getByRole('menuitemradio', { name: 'Generate Code' }).click();
 
     // Stainless banner should NOT be present
-    await expect.soft(page.getByAltText('Stainless')).not.toBeVisible();
+    await expect.soft(page.getByAltText('Stainless')).toBeHidden();
 
     // httpsnippet mode shows target/client dropdowns and footer attribution
     await expect.soft(page.getByRole('button', { name: /shell/i })).toBeVisible();

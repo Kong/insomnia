@@ -1,5 +1,7 @@
 import clone from 'clone';
 import type * as Har from 'har-format';
+
+export type { Request as HarRequest } from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
 import { getBodyBuffer } from '~/models/helpers/response-operations';

@@ -251,10 +251,6 @@ export function isNotNullOrUndefined<ValueType>(value: ValueType | null | undefi
 
 export const toKebabCase = (value: string) => value.replace(/ /g, '-');
 
-export function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
 export function tryParseJson(text: string): Record<string, unknown> | undefined {
   try {
     const parsed = JSON.parse(text);

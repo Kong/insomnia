@@ -1,5 +1,5 @@
 import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
-import { generateSdkSnippet, getSdkByEndpoint, type Sdk } from 'insomnia-api';
+import { generateStainlessSdkSnippet, getStainlessSdkByEndpoint, type StainlessSdk } from 'insomnia-api';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
@@ -7,8 +7,8 @@ import { SegmentEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import stainlessLogo from '~/ui/images/stainless-logo.png';
 
-import { exportHarWithRequest } from '../../../common/har';
-import { capitalize, tryParseJson } from '../../../common/misc';
+import { exportHarWithRequest, type HarRequest } from '../../../common/har';
+import { tryParseJson } from '../../../common/misc';
 import type { Request } from '../../../models/request';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
@@ -46,11 +46,12 @@ export interface State {
   client?: HTTPSnippetClient;
   targets: HTTPSnippetTarget[];
   snippet: string;
-  mode: 'loading' | 'httpsnippet' | 'sdk';
-  sdk?: Sdk;
+  mode: 'httpsnippet' | 'stainless-sdk';
+  loading: boolean;
+  sdk?: StainlessSdk;
   sdkLanguage?: string;
-  sdkLoading: boolean;
   sdkError?: string;
+  sdkBodyWarning?: string;
   sdkBaseUrl?: string;
 }
 export interface GenerateCodeModalHandle {
@@ -58,16 +59,34 @@ export interface GenerateCodeModalHandle {
   hide: () => void;
 }
 
-type HarRequest = NonNullable<Awaited<ReturnType<typeof exportHarWithRequest>>>;
+export function harToSdkParams(sdk: StainlessSdk, language: string, har: HarRequest) {
+  let body: Record<string, unknown> | undefined;
+  let bodyWarning: string | undefined;
 
-export async function fetchSdkSnippet(sdk: Sdk, language: string, har: HarRequest) {
-  const pathname = new URL(har.url).pathname;
-  const parameters = [
-    ...har.queryString.map(({ name, value }) => ({ in: 'query' as const, name, value })),
-    ...har.headers.map(({ name, value }) => ({ in: 'header' as const, name, value })),
-  ];
-  const body = har.postData?.text ? tryParseJson(har.postData.text) : undefined;
-  return generateSdkSnippet({ id: sdk.id, language, method: har.method, path: pathname, parameters, body });
+  if (har.postData) {
+    if (har.postData.params) {
+      body = Object.fromEntries(har.postData.params.map(({ name, value }) => [name, value ?? '']));
+    } else if (har.postData.text) {
+      body = tryParseJson(har.postData.text);
+      if (body === undefined) {
+        bodyWarning = 'Request body could not be represented as a JSON object and was omitted from the snippet generation request.';
+      }
+    }
+  }
+
+  return {
+    id: sdk.id,
+    language,
+    method: har.method,
+    path: new URL(har.url).pathname,
+    parameters: [
+      ...har.queryString.map(({ name, value }) => ({ in: 'query' as const, name, value })),
+      ...har.headers.map(({ name, value }) => ({ in: 'header' as const, name, value })),
+      ...har.cookies.map(({ name, value }) => ({ in: 'cookie' as const, name, value })),
+    ],
+    body,
+    bodyWarning,
+  };
 }
 
 export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((props, ref) => {
@@ -90,15 +109,9 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
       targets: [],
       snippet: '',
       mode: 'httpsnippet',
-      sdkLoading: false,
+      loading: false,
     };
   });
-
-  // Refs to avoid stale closures in callbacks
-  const sdkRef = useRef(state.sdk);
-  sdkRef.current = state.sdk;
-  const requestRef = useRef(state.request);
-  requestRef.current = state.request;
 
   const generateCode = useCallback(
     async (request: Request, target?: HTTPSnippetTarget, client?: HTTPSnippetClient) => {
@@ -128,6 +141,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
         ...prev,
         request,
         mode: 'httpsnippet',
+        loading: false,
         client: clientOrFallback,
         target: targetOrFallback,
         targets,
@@ -144,7 +158,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
 
   const initModal = useCallback(
     async (request: Request) => {
-      setState(prev => ({ ...prev, request, mode: 'loading', sdkError: undefined, snippet: '' }));
+      setState(prev => ({ ...prev, request, loading: true, sdkError: undefined, sdkBodyWarning: undefined, snippet: '' }));
 
       let har: HarRequest | undefined;
       try {
@@ -159,9 +173,9 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
       }
 
       // Check if an SDK is available for this endpoint
-      let sdk: Sdk | null = null;
+      let sdk: StainlessSdk | null = null;
       try {
-        sdk = await getSdkByEndpoint({ endpoint: har.url });
+        sdk = await getStainlessSdkByEndpoint({ endpoint: har.url });
       } catch {
         // SDK lookup failed — fall back to httpsnippet
       }
@@ -178,20 +192,21 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
       const { hostname } = new URL(har.url);
       setState(prev => ({
         ...prev,
-        mode: 'sdk',
+        mode: 'stainless-sdk',
         sdk,
         sdkLanguage: selectedLanguage,
-        sdkLoading: true,
+        loading: true,
         sdkBaseUrl: hostname,
       }));
 
       try {
-        const result = await fetchSdkSnippet(sdk, selectedLanguage, har);
-        setState(prev => ({ ...prev, snippet: result.code, sdkLoading: false }));
+        const { bodyWarning, ...params } = harToSdkParams(sdk, selectedLanguage, har);
+        const result = await generateStainlessSdkSnippet(params);
+        setState(prev => ({ ...prev, snippet: result.code, loading: false, sdkBodyWarning: bodyWarning }));
         window.localStorage.setItem('insomnia::generateCode::sdkLanguage', selectedLanguage);
       } catch (err) {
         console.error('[generate-code-modal] Failed to generate SDK snippet', err);
-        setState(prev => ({ ...prev, sdkError: 'Failed to generate SDK snippet', sdkLoading: false }));
+        setState(prev => ({ ...prev, sdkError: 'Failed to generate SDK snippet', loading: false }));
       }
     },
     [props.environmentId, generateCode],
@@ -199,17 +214,16 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
 
   const onSdkLanguageChange = useCallback(
     async (language: string) => {
-      setState(prev => ({ ...prev, sdkLanguage: language, sdkLoading: true, sdkError: undefined, snippet: '' }));
+      setState(prev => ({ ...prev, sdkLanguage: language, loading: true, sdkError: undefined, sdkBodyWarning: undefined, snippet: '' }));
       try {
-        const sdk = sdkRef.current;
-        if (!sdk) return;
+        if (!state.sdk) return;
 
-        const request = requestRef.current;
-        const har = request ? await exportHarWithRequest(request, props.environmentId) : null;
+        const har = state.request ? await exportHarWithRequest(state.request, props.environmentId) : null;
         if (!har) return;
 
-        const result = await fetchSdkSnippet(sdk, language, har);
-        setState(prev => ({ ...prev, snippet: result.code, sdkLoading: false }));
+        const { bodyWarning, ...params } = harToSdkParams(state.sdk, language, har);
+        const result = await generateStainlessSdkSnippet(params);
+        setState(prev => ({ ...prev, snippet: result.code, loading: false, sdkBodyWarning: bodyWarning }));
         window.localStorage.setItem('insomnia::generateCode::sdkLanguage', language);
         window.main.trackSegmentEvent({
           event: SegmentEvent.generateCodeLanguageChanged,
@@ -217,10 +231,10 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
         });
       } catch (err) {
         console.error('[generate-code-modal] Failed to generate SDK snippet', err);
-        setState(prev => ({ ...prev, sdkError: 'Failed to generate SDK snippet', sdkLoading: false }));
+        setState(prev => ({ ...prev, sdkError: 'Failed to generate SDK snippet', loading: false }));
       }
     },
-    [props.environmentId],
+    [props.environmentId, state.sdk, state.request],
   );
 
   useImperativeHandle(
@@ -240,12 +254,12 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
     [initModal],
   );
 
-  const { target, targets, client, request, snippet, mode, sdk, sdkLanguage, sdkLoading, sdkError, sdkBaseUrl } = state;
+  const { target, targets, client, request, snippet, mode, loading, sdk, sdkLanguage, sdkError, sdkBodyWarning, sdkBaseUrl } = state;
   // NOTE: Just some extra precautions in case the target is messed up
   const clients: HTTPSnippetClient[] = target && Array.isArray(target.clients) ? target.clients : [];
 
   const editorMode =
-    mode === 'sdk' && sdkLanguage
+    mode === 'stainless-sdk' && sdkLanguage
       ? LANGUAGE_MODE_MAP[sdkLanguage] || sdkLanguage
       : target
         ? LANGUAGE_MODE_MAP[target.key] || target.key
@@ -253,7 +267,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
 
   const editorValue = sdkError ? `// Error: ${sdkError}` : snippet;
 
-  const editorKey = mode === 'sdk'
+  const editorKey = mode === 'stainless-sdk'
     ? `sdk-${sdkLanguage || 'unknown'}-${snippet.length}${sdkError ? '-error' : ''}`
     : `http-${target?.key || 'none'}-${client?.key || 'none'}-${snippet.length}`;
 
@@ -265,28 +279,36 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
         style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1fr)',
-          gridTemplateRows: mode === 'sdk' ? 'auto auto minmax(0, 1fr)' : 'auto minmax(0, 1fr)',
+          gridTemplateRows: mode === 'stainless-sdk' ? 'auto auto minmax(0, 1fr)' : 'auto minmax(0, 1fr)',
         }}
       >
-        {mode === 'sdk' && (
-          <div className="flex items-center justify-center gap-4 border-b border-solid border-(--hl-md) bg-(--hl-sm) px-(--padding-md) py-(--padding-sm)">
-            <img src={stainlessLogo} alt="Stainless" className="h-6 w-auto" />
-            <span className="text-sm text-(--color-font)">
-              Code snippets for <strong>{sdkBaseUrl}</strong> powered by our partner{' '}
-              <Link href="https://www.stainless.com/" className="underline" noTheme>Stainless</Link>.
-            </span>
+        {mode === 'stainless-sdk' && (
+          <div className="flex flex-col border-b border-solid border-(--hl-md)">
+            <div className="flex items-center justify-center gap-4 bg-(--hl-sm) px-(--padding-md) py-(--padding-sm)">
+              <img src={stainlessLogo} alt="Stainless" className="h-6 w-auto" />
+              <span className="text-sm text-(--color-font)">
+                Code snippets for <strong>{sdkBaseUrl}</strong> powered by our partner{' '}
+                <Link href="https://www.stainless.com/" className="underline" noTheme>Stainless</Link>.
+              </span>
+            </div>
+            {sdkBodyWarning && (
+              <div className="flex items-center gap-2 bg-[rgba(var(--color-warning-rgb),0.1)] px-(--padding-md) py-(--padding-sm) text-sm text-(--color-font-warning)">
+                <i className="fa fa-exclamation-triangle" />
+                {sdkBodyWarning}
+              </div>
+            )}
           </div>
         )}
         <div className="pad flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {mode === 'loading' ? null : mode === 'sdk' && sdk ? (
+            {loading && !sdk ? null : mode === 'stainless-sdk' && sdk ? (
               <Dropdown
                 aria-label="Select a language"
-                isDisabled={sdkLoading}
+                isDisabled={loading}
                 placement="bottom start"
                 triggerButton={
                   <Button className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)">
-                    {sdkLanguage ? capitalize(sdkLanguage) : 'n/a'}
+                    <span className="capitalize">{sdkLanguage ?? 'n/a'}</span>
                     <i className="fa fa-caret-down" />
                   </Button>
                 }
@@ -294,7 +316,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
                 {sdk.languages.map(lang => (
                   <DropdownItem key={lang} aria-label={lang}>
                     <ItemContent
-                      label={capitalize(lang)}
+                      label={<span className="capitalize">{lang}</span>}
                       onClick={() => onSdkLanguageChange(lang)}
                     />
                   </DropdownItem>
@@ -350,12 +372,12 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           </div>
           <CopyButton content={editorValue} />
         </div>
-        {mode === 'loading' ? (
+        {loading && !sdk ? (
           <div className="text-center pad">Loading...</div>
-        ) : (mode === 'sdk' || target) ? (
+        ) : (mode === 'stainless-sdk' || target) ? (
           <CodeEditor
             id="generate-code-modal-content"
-            placeholder={sdkLoading ? 'Loading SDK snippet...' : 'Generating code snippet...'}
+            placeholder={loading ? 'Loading SDK snippet...' : 'Generating code snippet...'}
             className="border-top"
             key={editorKey}
             mode={editorMode}

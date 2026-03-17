@@ -1,24 +1,6 @@
-// @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-vi.mock('insomnia-api', () => ({
-  generateSdkSnippet: vi.fn(),
-}));
-
-vi.mock('../../../../common/har', () => ({
-  exportHarWithRequest: vi.fn(),
-}));
-
-// The following mocks are needed because importing the modal module transitively
-// loads DOM-dependent code (codemirror, image assets) at module evaluation time.
-vi.mock('~/ui/components/.client/codemirror/code-editor', () => ({
-  CodeEditor: vi.fn(),
-}));
-vi.mock('~/ui/images/stainless-logo.png', () => ({ default: 'stainless-logo.png' }));
-
-import { generateSdkSnippet } from 'insomnia-api';
-
-import { fetchSdkSnippet } from '../generate-code-modal';
+import { harToSdkParams } from '../generate-code-modal';
 
 const mockSdk = { id: 'sdk-123', languages: ['typescript', 'python'] };
 
@@ -33,75 +15,86 @@ const baseHar = {
   bodySize: -1,
 };
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
+describe('harToSdkParams()', () => {
+  it('maps basic GET request correctly', () => {
+    const result = harToSdkParams(mockSdk, 'python', { ...baseHar });
 
-describe('fetchSdkSnippet()', () => {
-  beforeEach(() => {
-    vi.mocked(generateSdkSnippet).mockResolvedValue({ code: 'snippet' });
+    expect(result).toMatchObject({
+      id: 'sdk-123',
+      language: 'python',
+      method: 'GET',
+      path: '/users/list',
+      parameters: [],
+      body: undefined,
+    });
   });
 
-  it('passes correct arguments for a basic GET request', async () => {
-    await fetchSdkSnippet(mockSdk, 'python', { ...baseHar });
-
-    expect(generateSdkSnippet).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 'sdk-123',
-        language: 'python',
-        path: '/users/list',
-        parameters: [],
-        body: undefined,
-      }),
-    );
-  });
-
-  it('maps HAR queryString and headers to parameters', async () => {
-    await fetchSdkSnippet(mockSdk, 'typescript', {
+  it('maps HAR queryString, headers, and cookies to parameters', () => {
+    const result = harToSdkParams(mockSdk, 'typescript', {
       ...baseHar,
       queryString: [{ name: 'page', value: '1' }],
       headers: [{ name: 'Authorization', value: 'Bearer token' }],
+      cookies: [{ name: 'session', value: 'abc123' }],
     });
 
-    expect(generateSdkSnippet).toHaveBeenCalledWith(
-      expect.objectContaining({
-        parameters: expect.arrayContaining([
-          { in: 'query', name: 'page', value: '1' },
-          { in: 'header', name: 'Authorization', value: 'Bearer token' },
-        ]),
-      }),
+    expect(result.parameters).toEqual(
+      expect.arrayContaining([
+        { in: 'query', name: 'page', value: '1' },
+        { in: 'header', name: 'Authorization', value: 'Bearer token' },
+        { in: 'cookie', name: 'session', value: 'abc123' },
+      ]),
     );
   });
 
-  it('parses valid JSON postData into body', async () => {
-    await fetchSdkSnippet(mockSdk, 'typescript', {
+  it('parses valid JSON postData into body', () => {
+    const result = harToSdkParams(mockSdk, 'typescript', {
       ...baseHar,
       method: 'POST',
       postData: { text: '{"name":"Alice","age":30}', mimeType: 'application/json' },
     });
 
-    expect(generateSdkSnippet).toHaveBeenCalledWith(
-      expect.objectContaining({ body: { name: 'Alice', age: 30 } }),
-    );
+    expect(result.body).toEqual({ name: 'Alice', age: 30 });
   });
 
-  it('sets body to undefined when postData is not a JSON object', async () => {
-    await fetchSdkSnippet(mockSdk, 'typescript', {
+  it('sets body to undefined and adds bodyWarning when postData text is not a JSON object', () => {
+    const result = harToSdkParams(mockSdk, 'typescript', {
       ...baseHar,
       method: 'POST',
       postData: { text: '[1,2,3]', mimeType: 'application/json' },
     });
 
-    expect(generateSdkSnippet).toHaveBeenCalledWith(
-      expect.objectContaining({ body: undefined }),
-    );
+    expect(result.body).toBeUndefined();
+    expect(result.bodyWarning).toBeDefined();
   });
 
-  it('returns the code from generateSdkSnippet', async () => {
-    vi.mocked(generateSdkSnippet).mockResolvedValue({ code: 'const x = 1;' });
+  it('sets body to undefined and adds bodyWarning for non-JSON text body', () => {
+    const result = harToSdkParams(mockSdk, 'typescript', {
+      ...baseHar,
+      method: 'POST',
+      postData: { text: 'plain text body', mimeType: 'text/plain' },
+    });
 
-    const result = await fetchSdkSnippet(mockSdk, 'typescript', { ...baseHar });
+    expect(result.body).toBeUndefined();
+    expect(result.bodyWarning).toBeDefined();
+  });
 
-    expect(result.code).toBe('const x = 1;');
+  it('converts form params to a body object', () => {
+    const result = harToSdkParams(mockSdk, 'typescript', {
+      ...baseHar,
+      method: 'POST',
+      postData: {
+        mimeType: 'application/x-www-form-urlencoded',
+        params: [{ name: 'username', value: 'alice' }, { name: 'age', value: '30' }],
+      },
+    });
+
+    expect(result.body).toEqual({ username: 'alice', age: '30' });
+    expect(result.bodyWarning).toBeUndefined();
+  });
+
+  it('has no bodyWarning when there is no postData', () => {
+    const result = harToSdkParams(mockSdk, 'python', { ...baseHar });
+
+    expect(result.bodyWarning).toBeUndefined();
   });
 });

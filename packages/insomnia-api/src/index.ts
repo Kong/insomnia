@@ -8,6 +8,6 @@ export * from './invite';
 export * from './organizations';
 export * from './mock';
 export * from './vcs';
-export * from './stainless';
+export * from './integrations';
 
 export { configureFetch, type FetchConfig, ResponseFailError, isApiError } from './fetch';

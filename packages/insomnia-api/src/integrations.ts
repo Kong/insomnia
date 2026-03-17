@@ -1,29 +1,29 @@
 import { fetch } from './fetch';
 
-export interface Sdk {
+export interface StainlessSdk {
   id: string;
   languages: string[];
 }
 
-export interface SdkSnippet {
+export interface StainlessSdkSnippet {
   code: string;
 }
 
-export const getSdkByEndpoint = (params: { endpoint: string }): Promise<Sdk | null> => {
-  return fetch<Sdk | null>({
+export const getStainlessSdkByEndpoint = (params: { endpoint: string }): Promise<StainlessSdk | null> => {
+  return fetch<StainlessSdk | null>({
     method: 'GET',
     path: `/integrations/stainless/sdk?endpoint=${encodeURIComponent(params.endpoint)}`,
     sessionId: null,
   });
 };
 
-export interface SnippetParameter {
-  in: 'query' | 'header';
+export interface StainlessSdkSnippetParameter {
+  in: 'query' | 'header' | 'cookie';
   name: string;
   value: string;
 }
 
-export const generateSdkSnippet = ({
+export const generateStainlessSdkSnippet = ({
   id,
   language,
   method,
@@ -35,10 +35,10 @@ export const generateSdkSnippet = ({
   language: string;
   method: string;
   path: string;
-  parameters?: SnippetParameter[];
+  parameters?: StainlessSdkSnippetParameter[];
   body?: Record<string, unknown>;
 }) => {
-  return fetch<SdkSnippet>({
+  return fetch<StainlessSdkSnippet>({
     method: 'POST',
     path: `/integrations/stainless/sdk/${id}/snippet`,
     data: { language, method, path, parameters, body },
