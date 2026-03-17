@@ -11,7 +11,6 @@ import {
   TableBody,
   TableHeader,
 } from 'react-aria-components';
-import { useParams } from 'react-router';
 
 import { useRootLoaderData } from '~/root';
 import { useInsomniaSyncRestoreActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.restore';
@@ -24,16 +23,23 @@ import { TimeFromNow } from '../time-from-now';
 
 interface Props {
   history: Snapshot[];
+  organizationId: string;
+  projectId: string;
+  workspaceId: string;
   onClose: () => void;
 }
 
-const RestoreButton = ({ snapshot }: { snapshot: Snapshot }) => {
-  const { projectId, workspaceId, organizationId } = useParams() as {
-    projectId: string;
-    workspaceId: string;
-    organizationId: string;
-  };
-
+const RestoreButton = ({
+  snapshot,
+  organizationId,
+  projectId,
+  workspaceId,
+}: {
+  snapshot: Snapshot;
+  organizationId: string;
+  projectId: string;
+  workspaceId: string;
+}) => {
   const restoreChangesFetcher = useInsomniaSyncRestoreActionFetcher();
 
   return (
@@ -54,7 +60,7 @@ const RestoreButton = ({ snapshot }: { snapshot: Snapshot }) => {
   );
 };
 
-export const SyncHistoryModal = ({ history, onClose }: Props) => {
+export const SyncHistoryModal = ({ history, onClose, organizationId, projectId, workspaceId }: Props) => {
   const { userSession } = useRootLoaderData()!;
   const authorName = (snapshot: Snapshot) => {
     let fullName = '';
@@ -154,7 +160,12 @@ export const SyncHistoryModal = ({ history, onClose }: Props) => {
                         </Cell>
                         <Cell className="border-b border-solid border-(--hl-sm) text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
                           <div className="p-2">
-                            <RestoreButton snapshot={item} />
+                            <RestoreButton
+                              snapshot={item}
+                              organizationId={organizationId}
+                              projectId={projectId}
+                              workspaceId={workspaceId}
+                            />
                           </div>
                         </Cell>
                       </Row>

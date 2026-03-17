@@ -3,6 +3,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
@@ -88,7 +89,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
       const clientCertificate = workspaceClientCertificates.find(
         c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
       );
-      const caCertificateProp = await models.caCertificate.findByParentId(workspaceId);
+      const caCertificateProp = await services.caCertificate.getByParentId(workspaceId);
       const caCertificatePath = caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
 
       const clientCert = clientCertificate?.cert
@@ -150,7 +151,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
         const clientCertificate = workspaceClientCertificates.find(
           c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), request.url, false),
         );
-        const caCertificate = await models.caCertificate.findByParentId(workspaceId);
+        const caCertificate = await services.caCertificate.getByParentId(workspaceId);
         const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
 
         updateTabById?.(requestId, { temporary: false });
@@ -289,7 +290,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                     const clientCertificate = workspaceClientCertificates.find(
                       c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
                     );
-                    const caCertificateProp = await models.caCertificate.findByParentId(workspaceId);
+                    const caCertificateProp = await services.caCertificate.getByParentId(workspaceId);
                     const caCertificatePath =
                       caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
                     const clientCert = clientCertificate?.cert
