@@ -9,6 +9,7 @@ import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOpti
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { services } from '~/insomnia-data';
 
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
@@ -147,7 +148,7 @@ const getCertificates = async ({
   requestId: string;
 }) => {
   // attach certificates to the request
-  const caCert = await models.caCertificate.findByParentId(workspaceId);
+  const caCert = await services.caCertificate.getByParentId(workspaceId);
   const caCertficatePath = !caCert?.disabled ? caCert?.path : '';
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
   // allow to read the file as it is chosen by user

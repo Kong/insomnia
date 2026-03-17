@@ -1,13 +1,13 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.cacert.new';
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const patch = await request.json();
-  await models.caCertificate.create(patch);
+  await services.caCertificate.create(patch);
   return null;
 }
 

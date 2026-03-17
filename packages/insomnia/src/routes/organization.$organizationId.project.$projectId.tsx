@@ -36,6 +36,7 @@ import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizatio
 import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
 import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
 import { LocalProjectBar } from '~/ui/components/dropdowns/local-project-bar';
+import { SyncDropdown } from '~/ui/components/dropdowns/sync-dropdown';
 import { Icon } from '~/ui/components/icon';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
@@ -301,6 +302,12 @@ function ProjectSidebarShell() {
   const activeProjectGitRepository = activeProject?.gitRepositoryId
     ? projects.find(project => project._id === activeProject._id)?.gitRepository
     : undefined;
+  const projectWorkspaces = projectFilesByProjectId[activeProject._id] ?? [];
+  const activeWorkspace =
+    (workspaceId ? projectWorkspaces.find(file => file.id === workspaceId)?.workspace : null) ||
+    projectWorkspaces.find(file => file.scope === 'collection')?.workspace ||
+    projectWorkspaces[0]?.workspace ||
+    null;
   useEffect(() => {
     if (!isScratchpadOrganizationId(organizationId)) {
       loadStorageRules({ organizationId });
@@ -1183,7 +1190,12 @@ function ProjectSidebarShell() {
                   />
                 )}
                 {isLocalProject(activeProject) && !isGitProject(activeProject) && <LocalProjectBar />}
-                {isRemoteProject(activeProject) && <CloudSyncProjectBar />}
+                {isRemoteProject(activeProject) &&
+                  (activeWorkspace ? (
+                    <SyncDropdown key={activeWorkspace._id} workspace={activeWorkspace} project={activeProject} />
+                  ) : (
+                    <CloudSyncProjectBar />
+                  ))}
               </>
             )}
           </div>

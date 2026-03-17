@@ -13,7 +13,6 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useParams } from 'react-router';
 import { stringify } from 'yaml';
 
 import { useInsomniaSyncCreateSnapshotActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.create-snapshot';
@@ -29,6 +28,9 @@ interface Props {
   branch: string;
   status: Status;
   syncItems: StatusCandidate[];
+  organizationId: string;
+  projectId: string;
+  workspaceId: string;
   onClose: () => void;
 }
 
@@ -85,13 +87,7 @@ function getModelTypeById(id: string) {
   return model?.name || 'Unknown';
 }
 
-export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
-  const { projectId, workspaceId, organizationId } = useParams() as {
-    projectId: string;
-    workspaceId: string;
-    organizationId: string;
-  };
-
+export const SyncStagingModal = ({ onClose, status, syncItems, organizationId, projectId, workspaceId }: Props) => {
   const stagedChanges = Object.entries(status.stage).map(([key, entry]) => ({
     ...entry,
     document:
