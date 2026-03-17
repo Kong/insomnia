@@ -219,15 +219,6 @@ export const EnvironmentKVEditor = ({
     const isValidJSONString = checkValidJSONString(value);
     return (
       <>
-        {!disabled && (
-          <div
-            slot="drag"
-            className={`${cellCommonStyle} flex w-6 shrink-0 items-center justify-end border-r-0 border-l`}
-            style={{ padding: 0 }}
-          >
-            <Icon icon="grip-vertical" className="mr-1 cursor-grab" />
-          </div>
-        )}
         <div className={`${cellCommonStyle} relative flex h-full w-[30%] grow pl-1`}>
           <OneLineEditor
             id={`environment-kv-editor-name-${id}`}

@@ -173,12 +173,6 @@ export const KeyValueEditor: FC<Props> = ({
             width: element?.clientWidth,
           }}
         >
-          <div
-            slot="drag"
-            className="invisible flex w-5 shrink-0 cursor-grab items-center justify-center p-2 focus-visible:bg-(--hl-sm)"
-          >
-            <Icon icon="grip-vertical" className="w-2 text-(--hl)" />
-          </div>
           <div className="relative flex h-full w-full flex-1 px-2">
             <OneLineEditor
               id={'key-value-editor__name' + pair.id}
@@ -331,12 +325,6 @@ export const KeyValueEditor: FC<Props> = ({
                 textValue={pair.name + '-' + pair.value}
                 className="flex h-(--line-height-sm) shrink-0 items-center gap-2 bg-(--color-bg) px-2 outline-hidden"
               >
-                <div
-                  slot="drag"
-                  className="invisible flex w-5 shrink-0 cursor-grab items-center justify-center p-2 focus-visible:bg-(--hl-sm)"
-                >
-                  <Icon icon="grip-vertical" className="w-2 text-(--hl)" />
-                </div>
                 <div className="relative flex h-full w-full flex-1 px-2">
                   <OneLineEditor
                     id={'key-value-editor__name' + pair.id}
@@ -440,14 +428,8 @@ export const KeyValueEditor: FC<Props> = ({
                 key={pair.id}
                 textValue={pair.name + '-' + pair.value}
                 style={{ opacity: pair.disabled ? '0.4' : '1' }}
-                className={`relative grid h-(--line-height-sm) shrink-0 gap-2 bg-(--color-bg) px-2 outline-hidden ${showDescription ? 'grid-cols-[max-content_1fr_1fr_1fr_max-content]' : 'grid-cols-[max-content_1fr_1fr_max-content]'}`}
+                className={`relative grid h-(--line-height-sm) shrink-0 gap-2 bg-(--color-bg) px-2 outline-hidden ${showDescription ? 'grid-cols-[1fr_1fr_1fr_max-content]' : 'grid-cols-[1fr_1fr_max-content]'}`}
               >
-                <div
-                  slot="drag"
-                  className="flex w-5 shrink-0 cursor-grab items-center justify-center p-2 focus-visible:bg-(--hl-sm)"
-                >
-                  <Icon icon="grip-vertical" className="w-2 text-(--hl)" />
-                </div>
                 <div onKeyDownCapture={onKeyDownInner}>
                   <OneLineEditor
                     id={'key-value-editor__name' + pair.id}
