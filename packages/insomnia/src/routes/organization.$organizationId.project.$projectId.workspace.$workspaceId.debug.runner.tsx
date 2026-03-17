@@ -164,6 +164,7 @@ export const Runner: FC = () => {
 
   const { updateTabById } = useInsomniaTabContext();
   const { runnerStateMap, updateRunnerState } = useRunnerContext();
+  const [zeroableIterationCount, setZeroableIterationCount] = useState<string>('1');
   const {
     iterationCount = 1,
     delay = 0,
@@ -174,6 +175,10 @@ export const Runner: FC = () => {
     filePath,
   } = runnerStateMap?.[organizationId]?.[runnerId] || {};
   invariant(iterationCount, 'iterationCount should not be null');
+
+  useEffect(() => {
+    setZeroableIterationCount(String(iterationCount));
+  }, [iterationCount]);
 
   const { reqList, requestRows, entityMap } = useRunnerRequestList(organizationId, targetFolderId, runnerId);
 
@@ -482,17 +487,30 @@ export const Runner: FC = () => {
                   <div className="h-full min-w-[500px]">
                     <span className="mr-6 text-sm">
                       <input
-                        value={iterationCount}
+                        value={zeroableIterationCount}
                         name="Iterations"
                         disabled={isRunning}
                         onChange={e => {
+                          // Internal state "iterationCount" and the GUI state "zeroableIterationCount" have different
+                          // valid values: zeroableIterationCount = {iterationCount, ''}
                           try {
-                            if (Number.parseInt(e.target.value, 10) > 0) {
+                            const intValue = Number.parseInt(e.target.value, 10);
+
+                            // An empty string is a valid value to render in the GUI—a user can clear the field in order
+                            // to enter a new value—but not valid for the internal state.
+                            if (e.target.value === '' || intValue === iterationCount) {
+                              setZeroableIterationCount(e.target.value);
+                            }
+
+                            if (intValue > 0) {
                               updateRunnerState(organizationId, runnerId, {
-                                iterationCount: Number.parseInt(e.target.value, 10),
+                                iterationCount: intValue,
                               });
                             }
                           } catch {}
+                        }}
+                        onBlur={() => {
+                          setZeroableIterationCount(String(iterationCount));
                         }}
                         type="number"
                         className={iterationInputStyle}
