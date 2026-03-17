@@ -1,0 +1,68 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Collection B
+meta:
+  id: wrk_64f68b9501cf48c5b4281e28718b7d41
+  created: 1770798273248
+  modified: 1770800059847
+  description: ""
+collection:
+  - url: httpbin.org/get
+    name: Request A
+    meta:
+      id: req_b98ae34cb97642e58194e35ee64ec7b5
+      created: 1770798273251
+      modified: 1770800034297
+      isPrivate: false
+      description: ""
+      sortKey: -1770798273251
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/12.3.1
+        description: ""
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: httpbin.org/post
+    name: Request B
+    meta:
+      id: req_99f7af88b9df4c84b3db5398a9ba79ec
+      created: 1770800036690
+      modified: 1770800049576
+      isPrivate: false
+      description: ""
+      sortKey: -1770800036690
+    method: POST
+    headers:
+      - name: User-Agent
+        value: insomnia/12.3.1
+        description: ""
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_f8aab2fcddb3bb105fe604d102e47e3fe92ead40
+    created: 1770798273249
+    modified: 1770798273249
+environments:
+  name: Base Environment
+  meta:
+    id: env_f8aab2fcddb3bb105fe604d102e47e3fe92ead40
+    created: 1770798273249
+    modified: 1770798273249
+    isPrivate: false

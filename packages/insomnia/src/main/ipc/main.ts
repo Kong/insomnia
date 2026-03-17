@@ -104,7 +104,7 @@ export interface RendererToMainBridgeAPI {
   installPlugin: typeof installPlugin;
   parseImport: typeof convert;
   multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
-  writeFile: (options: { path: string; content: string }) => Promise<string>;
+  writeFile: (options: { path: string; content: string | Buffer }) => Promise<string>;
   secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFileWithEncoding: (options: {
@@ -241,7 +241,7 @@ export function registerMainHandlers() {
   ipcMainHandle('parseImport', async (_, ...args: Parameters<typeof convert>) => {
     return convert(...args);
   });
-  ipcMainHandle('writeFile', async (_, options: { path: string; content: string }) => {
+  ipcMainHandle('writeFile', async (_, options: { path: string; content: string | Buffer }) => {
     try {
       const dir = path.dirname(options.path);
       await fs.promises.mkdir(dir, { recursive: true });

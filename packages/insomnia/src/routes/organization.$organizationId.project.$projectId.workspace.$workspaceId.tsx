@@ -363,7 +363,11 @@ export const revalidateWorkspaceActiveRequestByFolder = async (requestGroup: Req
 };
 
 const Component = () => {
-  return <Outlet />;
+  return (
+    <div className="h-full w-full overflow-hidden" data-testid="workspace-page">
+      <Outlet />
+    </div>
+  );
 };
 
 export default Component;

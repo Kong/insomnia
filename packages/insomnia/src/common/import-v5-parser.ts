@@ -73,21 +73,18 @@ const CookieSchema = z.object({
     .default(() => crypto.randomUUID()),
   key: z.string().optional().default(''),
   value: z.string().optional().default(''),
-  expires: z.preprocess(
-    (val) => {
-      // Handle 'Infinity' string
-      if (val === 'Infinity') return null;
-      
-      // If it's already a Date, check if it's valid
-      if (val instanceof Date) {
-        return Number.isNaN(val.getTime()) ? null : val;
-      }
-      
-      // Let other values pass through to z.coerce.date()
-      return val;
-    },
-    z.coerce.date().nullable().default(null)
-  ),
+  expires: z.preprocess(val => {
+    // Handle 'Infinity' string
+    if (val === 'Infinity') return null;
+
+    // If it's already a Date, check if it's valid
+    if (val instanceof Date) {
+      return Number.isNaN(val.getTime()) ? null : val;
+    }
+
+    // Let other values pass through to z.coerce.date()
+    return val;
+  }, z.coerce.date().nullable().default(null)),
   domain: z.string().optional().default(''),
   path: z.string().optional().default('/'),
   secure: z.boolean().optional().default(false),
@@ -359,6 +356,7 @@ export const SocketIORequestSettingsSchema = z.object({
     store: z.boolean().optional().default(true),
     send: z.boolean().optional().default(true),
   }),
+  path: z.string().optional(),
 });
 
 export const RequestPathParametersSchema = z.array(

@@ -119,9 +119,10 @@ const writeEventLogAndNotify = ({
   });
 };
 
-const buildTimeline = (url: string) => {
+const buildTimeline = (url: string, path?: string) => {
   const timeline = [
-    { value: `Connected to ${url}`, name: 'Text', timestamp: Date.now() },
+    { value: `Connecting to ${url}`, name: 'Text', timestamp: Date.now() },
+    { value: `Handshake path: ${path || '/socket.io'}`, name: 'Text', timestamp: Date.now() },
     { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
   ];
   return timeline;
@@ -135,6 +136,7 @@ interface OpenSocketIORequestOptions {
   headers: RequestHeader[];
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
+  path?: string;
   initialPayload?: string;
 }
 
@@ -314,6 +316,13 @@ const openSocketIOConnection = async (
       };
     }
 
+    if (options.path) {
+      socketIOoptions.path = options.path;
+    }
+
+    const timeline = buildTimeline(url, options.path);
+    timeline.forEach(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+
     const socket = SocketIOClient(url, socketIOoptions);
     SocketIOConnections.set(options.requestId, socket);
     const openedEvents = request.eventListeners.filter(event => event.isOpen && event.eventName);
@@ -342,8 +351,6 @@ const openSocketIOConnection = async (
         writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(infoEvent) + '\n' });
       }
 
-      const timeline = buildTimeline(url);
-      timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
       const responsePatch: Partial<SocketIOResponse> = {
         _id: responseId,
         parentId: request._id,
