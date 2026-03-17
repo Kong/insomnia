@@ -2,8 +2,8 @@ import type { Root } from '@modelcontextprotocol/sdk/types.js';
 import { useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Toolbar } from 'react-aria-components';
 
+import type { McpRequest } from '~/insomnia-data';
 import type { McpReadyState } from '~/main/mcp/types';
-import type { McpRequest } from '~/models/mcp-request';
 import { SegmentEvent } from '~/ui/analytics';
 import { PromptButton } from '~/ui/components/base/prompt-button';
 import { useRequestPatcher } from '~/ui/hooks/use-request';

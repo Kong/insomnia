@@ -1,9 +1,9 @@
 import { href } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { removeResponse } from '~/models/helpers/response-operations';
-import { isMcpRequestId } from '~/models/mcp-request';
 import { isSocketIORequestId } from '~/models/socket-io-request';
 import { isWebSocketRequestId } from '~/models/websocket-request';
 import { invariant } from '~/utils/invariant';
@@ -24,7 +24,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   invariant(workspaceMeta, 'Active workspace meta not found');
   const isWebSocketRequest = isWebSocketRequestId(requestId);
   const isSocketIORequest = isSocketIORequestId(requestId);
-  const isMcpRequest = isMcpRequestId(requestId);
+  const isMcpRequest = models.mcpRequest.isMcpRequestId(requestId);
 
   let responseModel;
   if (isWebSocketRequest) {
@@ -32,7 +32,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   } else if (isSocketIORequest) {
     responseModel = models.socketIOResponse;
   } else if (isMcpRequest) {
-    responseModel = models.mcpResponse;
+    responseModel = services.mcpResponse;
   } else {
     responseModel = models.response;
   }

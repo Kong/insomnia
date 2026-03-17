@@ -28,8 +28,8 @@ import {
   METHOD_LIST_TOOLS,
 } from '~/common/mcp-utils';
 import { fuzzyMatchAll } from '~/common/misc';
+import type { McpRequest, McpServerPrimitiveTypes } from '~/insomnia-data';
 import type { McpEvent, McpMessageEvent } from '~/main/mcp/types';
-import type { McpRequest, McpServerPrimitiveTypes } from '~/models/mcp-request';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {

@@ -17,6 +17,7 @@ import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
+import { type Services, services } from '~/insomnia-data';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
@@ -29,7 +30,6 @@ import type {
 } from '~/plugins/types';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
-import * as models from '../../models';
 import type { PluginTemplateTag } from '../../templating/types';
 import type { SegmentEvent } from '../analytics';
 import { trackPageView, trackSegmentEvent } from '../analytics';
@@ -194,7 +194,18 @@ export function registerMainHandlers() {
     return getExecution(options.requestId);
   });
   ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
-    return models.caCertificate.create(options);
+    return services.caCertificate.create(options);
+  });
+  ipcMainHandle('services.invoke', async (_, serviceName: string, methodName: string, ...args: unknown[]) => {
+    const service = services[serviceName as keyof Services];
+    if (!service) {
+      throw new TypeError(`Unknown service: ${serviceName}`);
+    }
+    const fn = service[methodName as keyof typeof service];
+    if (typeof fn !== 'function') {
+      throw new TypeError(`Unknown service method: ${serviceName}.${methodName}`);
+    }
+    return (fn as (...args: unknown[]) => unknown).call(service, ...args);
   });
   ipcMainHandle('multipartBufferToArray', async (_, options) => {
     return multipartBufferToArray(options);
