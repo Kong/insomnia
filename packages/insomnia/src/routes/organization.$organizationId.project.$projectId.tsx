@@ -29,6 +29,7 @@ import { useRequestGroupUpdateActionFetcher } from '~/routes/organization.$organ
 import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
+import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
@@ -38,6 +39,7 @@ import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sy
 import { LocalProjectBar } from '~/ui/components/dropdowns/local-project-bar';
 import { Icon } from '~/ui/components/icon';
 import { showModal } from '~/ui/components/modals';
+import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { PasteCurlModal } from '~/ui/components/modals/paste-curl-modal';
@@ -276,6 +278,9 @@ function ProjectSidebarShell() {
   const tabNavigate = useTabNavigate();
   const organizationData = useOrganizationLoaderData();
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [projectSettingsTarget, setProjectSettingsTarget] = useState<(Project & { gitRepository?: GitRepository }) | null>(
+    null,
+  );
   const [activeCollectionTarget, setActiveCollectionTarget] = useState<{
     project: Project;
     workspace: Workspace;
@@ -289,6 +294,7 @@ function ProjectSidebarShell() {
   } | null>(null);
   const [isFolderPasteCurlModalOpen, setIsFolderPasteCurlModalOpen] = useState(false);
   const createRequestFetcher = useRequestNewActionFetcher();
+  const deleteProjectFetcher = useProjectDeleteActionFetcher();
   const createRequestGroupFetcher = useRequestGroupNewActionFetcher();
   const createWorkspaceFetcher = useWorkspaceNewActionFetcher();
   const updateWorkspaceFetcher = useWorkspaceUpdateActionFetcher();
@@ -311,6 +317,15 @@ function ProjectSidebarShell() {
       loadStorageRules({ organizationId });
     }
   }, [loadStorageRules, organizationId]);
+
+  useEffect(() => {
+    if (deleteProjectFetcher.data && deleteProjectFetcher.data.error && deleteProjectFetcher.state === 'idle') {
+      showModal(AlertModal, {
+        title: 'Could not delete project',
+        message: deleteProjectFetcher.data.error,
+      });
+    }
+  }, [deleteProjectFetcher.data, deleteProjectFetcher.state]);
 
   const [expandedProjectIds, setExpandedProjectIds] = reactUse.useLocalStorage<string[]>(
     `${organizationId}:project-tree-expanded-projects`,
@@ -431,7 +446,7 @@ function ProjectSidebarShell() {
     });
   };
 
-  const getProjectActions = (project: Project): ProjectSidebarTreeAction[] => [
+  const getProjectActions = (project: Project & { gitRepository?: GitRepository }): ProjectSidebarTreeAction[] => [
     {
       id: 'new-collection',
       label: 'New Collection',
@@ -474,6 +489,34 @@ function ProjectSidebarShell() {
           projectId: project._id,
           scope: 'design',
           name: 'my-spec.yaml',
+        }),
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      onAction: () => setProjectSettingsTarget(project),
+    },
+    {
+      id: 'delete',
+      label: 'Delete',
+      isDanger: true,
+      onAction: () =>
+        showModal(AskModal, {
+          title: 'Delete Project',
+          message: isGitProject(project)
+            ? `You are deleting the Git project "${project.name}". Deleting this project will not delete the remote repository but all your local changes will be lost. Do you really want to continue?`
+            : `You are deleting the project "${project.name}" that may have collaborators. As a result of this, the project will be permanently deleted for every collaborator of the organization. Do you really want to continue?`,
+          yesText: 'Delete',
+          noText: 'Cancel',
+          color: 'danger',
+          onDone: async (isYes: boolean) => {
+            if (isYes) {
+              deleteProjectFetcher.submit({
+                organizationId,
+                projectId: project._id,
+              });
+            }
+          },
         }),
     },
   ];
@@ -949,6 +992,19 @@ function ProjectSidebarShell() {
         <ProjectModal
           isOpen={isNewProjectModalOpen}
           onOpenChange={setIsNewProjectModalOpen}
+          storageRules={storageRules}
+        />
+      )}
+      {projectSettingsTarget && (
+        <ProjectModal
+          isOpen={Boolean(projectSettingsTarget)}
+          onOpenChange={isOpen => {
+            if (!isOpen) {
+              setProjectSettingsTarget(null);
+            }
+          }}
+          project={projectSettingsTarget}
+          gitRepository={projectSettingsTarget.gitRepository}
           storageRules={storageRules}
         />
       )}

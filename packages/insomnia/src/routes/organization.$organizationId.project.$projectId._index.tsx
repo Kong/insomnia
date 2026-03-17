@@ -69,6 +69,7 @@ import { useRequestGroupUpdateActionFetcher } from '~/routes/organization.$organ
 import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
+import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
@@ -83,6 +84,7 @@ import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
 import { showModal } from '~/ui/components/modals';
+import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
@@ -628,6 +630,7 @@ const Component = () => {
   const organizationData = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
+  const deleteProjectFetcher = useProjectDeleteActionFetcher();
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
   const createRequestFetcher = useRequestNewActionFetcher();
   const createRequestGroupFetcher = useRequestGroupNewActionFetcher();
@@ -647,6 +650,15 @@ const Component = () => {
       load({ organizationId });
     }
   }, [organizationId, storageRuleFetcher.load]);
+
+  useEffect(() => {
+    if (deleteProjectFetcher.data && deleteProjectFetcher.data.error && deleteProjectFetcher.state === 'idle') {
+      showModal(AlertModal, {
+        title: 'Could not delete project',
+        message: deleteProjectFetcher.data.error,
+      });
+    }
+  }, [deleteProjectFetcher.data, deleteProjectFetcher.state]);
 
   // TODO(INS-1912): Remove in 12.5
   useEffect(() => {
@@ -696,7 +708,9 @@ const Component = () => {
   } | null>(null);
   const [isFolderPasteCurlModalOpen, setIsFolderPasteCurlModalOpen] = useState(false);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
-  const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
+  const [projectSettingsTarget, setProjectSettingsTarget] = useState<
+    (Project & { gitRepository?: GitRepository }) | null
+  >(null);
   const organization = organizationData?.organizations.find(o => o.id === organizationId);
   const isUserOwner =
     organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
@@ -1065,6 +1079,34 @@ const Component = () => {
           projectId: project._id,
           scope: 'design',
           name: 'my-spec.yaml',
+        }),
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      onAction: () => setProjectSettingsTarget(project),
+    },
+    {
+      id: 'delete',
+      label: 'Delete',
+      isDanger: true,
+      onAction: () =>
+        showModal(AskModal, {
+          title: 'Delete Project',
+          message: isGitProject(project)
+            ? `You are deleting the Git project "${project.name}". Deleting this project will not delete the remote repository but all your local changes will be lost. Do you really want to continue?`
+            : `You are deleting the project "${project.name}" that may have collaborators. As a result of this, the project will be permanently deleted for every collaborator of the organization. Do you really want to continue?`,
+          yesText: 'Delete',
+          noText: 'Cancel',
+          color: 'danger',
+          onDone: async isYes => {
+            if (isYes) {
+              deleteProjectFetcher.submit({
+                organizationId,
+                projectId: project._id,
+              });
+            }
+          },
         }),
     },
   ];
@@ -1654,7 +1696,13 @@ const Component = () => {
                         {getProjectStorageTypeLabel(storageRules)}.
                       </p>
                       <Button
-                        onPress={() => setIsUpdateProjectModalOpen(true)}
+                        onPress={() => {
+                          if (activeProject) {
+                            setProjectSettingsTarget(
+                              projectsWithPresence.find(project => project._id === activeProject._id) || activeProject,
+                            );
+                          }
+                        }}
                         className="flex items-center justify-center rounded-xs border border-solid border-white px-2 py-1"
                       >
                         Update
@@ -1935,12 +1983,16 @@ const Component = () => {
             storageRules={storageRules}
           />
         )}
-        {isUpdateProjectModalOpen && (
+        {projectSettingsTarget && (
           <ProjectModal
-            isOpen={isUpdateProjectModalOpen}
-            onOpenChange={setIsUpdateProjectModalOpen}
-            project={activeProject}
-            gitRepository={activeProjectGitRepository || undefined}
+            isOpen={Boolean(projectSettingsTarget)}
+            onOpenChange={isOpen => {
+              if (!isOpen) {
+                setProjectSettingsTarget(null);
+              }
+            }}
+            project={projectSettingsTarget}
+            gitRepository={projectSettingsTarget.gitRepository}
             storageRules={storageRules}
           />
         )}
