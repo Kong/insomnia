@@ -427,22 +427,6 @@ function filterResourcesInWorkspace(resources: BaseModel[], workspace: Workspace
   return resources.filter(resource => findRootId(resource._id, new Set()) === workspaceId);
 }
 
-const updateIdsInString = (str: string, ResourceIdMap: Map<string, string>) => {
-  let newString = str;
-  for (const [idA, idB] of ResourceIdMap.entries()) {
-    newString = newString.replace(new RegExp(idA, 'g'), idB);
-  }
-  return newString;
-};
-const importRequestWithNewIds = (request: Request, ResourceIdMap: Map<string, string>) => {
-  const transformedRequest = JSON.parse(updateIdsInString(JSON.stringify(request), ResourceIdMap));
-  return {
-    ...transformedRequest,
-    _id: ResourceIdMap.get(request._id),
-    parentId: ResourceIdMap.get(request.parentId),
-  };
-};
-
 export const importResourcesToWorkspace = async ({
   workspaceId,
   overrideBaseEnvironmentData = true,
@@ -548,31 +532,20 @@ export const importResourcesToWorkspace = async ({
     for (const resource of optionalResources) {
       const model = getModel(resource.type);
       if (model) {
-        // Make sure we point to the new proto file
+        const rewritten = models.rewriteReferences(resource, ResourceIdMap);
+        const objectToWrite = {
+          ...rewritten,
+          _id: ResourceIdMap.get(resource._id),
+          parentId: ResourceIdMap.get(resource.parentId),
+        };
         if (isGrpcRequest(resource)) {
-          await models.grpcRequest.create({
-            ...resource,
-            _id: ResourceIdMap.get(resource._id),
-            protoFileId: ResourceIdMap.get(resource.protoFileId),
-            parentId: ResourceIdMap.get(resource.parentId),
-          });
-
-          // Make sure we point unit test to the new request
+          await models.grpcRequest.create(objectToWrite);
         } else if (isUnitTest(resource)) {
-          await models.unitTest.create({
-            ...resource,
-            _id: ResourceIdMap.get(resource._id),
-            requestId: ResourceIdMap.get(resource.requestId),
-            parentId: ResourceIdMap.get(resource.parentId),
-          });
+          await models.unitTest.create(objectToWrite);
         } else if (isRequest(resource)) {
-          await models.request.create(importRequestWithNewIds(resource, ResourceIdMap));
+          await models.request.create(objectToWrite);
         } else {
-          await db.docCreate(model.type, {
-            ...resource,
-            _id: ResourceIdMap.get(resource._id),
-            parentId: ResourceIdMap.get(resource.parentId),
-          });
+          await db.docCreate(model.type, objectToWrite);
         }
       }
     }
@@ -647,28 +620,20 @@ export const importResourcesToNewWorkspace = async ({
         console.warn(`Could not find new parent id for ${resource.name} ${resource._id}`);
         continue;
       }
+      const rewritten = models.rewriteReferences(resource, ResourceIdMap);
+      const objectToWrite = {
+        ...rewritten,
+        _id: ResourceIdMap.get(resource._id),
+        parentId: newParentId,
+      };
       if (isGrpcRequest(resource)) {
-        await models.grpcRequest.create({
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          protoFileId: ResourceIdMap.get(resource.protoFileId),
-          parentId: newParentId,
-        });
+        await models.grpcRequest.create(objectToWrite);
       } else if (isUnitTest(resource)) {
-        await models.unitTest.create({
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          requestId: ResourceIdMap.get(resource.requestId),
-          parentId: newParentId,
-        });
+        await models.unitTest.create(objectToWrite);
       } else if (isRequest(resource)) {
-        await models.request.create(importRequestWithNewIds(resource, ResourceIdMap));
+        await models.request.create(objectToWrite);
       } else {
-        await db.docCreate(model.type, {
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          parentId: newParentId,
-        });
+        await db.docCreate(model.type, objectToWrite);
       }
     }
   }

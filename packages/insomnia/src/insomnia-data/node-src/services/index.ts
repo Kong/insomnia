@@ -1,13 +1,11 @@
-import type { Services } from '~/insomnia-data';
+import * as caCertificateService from './ca-certificate';
+import * as mcpPayloadService from './mcp-payload';
+import * as mcpRequestService from './mcp-request';
+import * as mcpResponseService from './mcp-response';
 
-import { caCertificateService } from './ca-certificate';
-import { mcpPayloadService } from './mcp-payload';
-import { mcpRequestService } from './mcp-request';
-import { mcpResponseService } from './mcp-response';
-
-export const servicesNodeImpl: Services = {
+export const servicesNodeImpl = {
   caCertificate: caCertificateService,
   mcpRequest: mcpRequestService,
   mcpResponse: mcpResponseService,
   mcpPayload: mcpPayloadService,
-};
+} as const;
