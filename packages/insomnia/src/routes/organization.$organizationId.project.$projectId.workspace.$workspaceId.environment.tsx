@@ -1,8 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Breadcrumb,
-  Breadcrumbs,
   Button,
   DropIndicator,
   GridList,
@@ -18,9 +16,8 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { NavLink } from 'react-router';
 
-import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
+import { DEFAULT_SIDEBAR_SIZE, MIN_WORKSPACE_SECONDARY_SIDEBAR_WIDTH } from '~/common/constants';
 import { debounce } from '~/common/misc';
 import { userSession } from '~/models';
 import {
@@ -36,7 +33,6 @@ import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organi
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
 import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
 import { useEnvironmentUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.update';
-import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';
 import {
   EnvironmentEditor,
@@ -51,7 +47,7 @@ import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { InputVaultKeyModal } from '~/ui/components/modals/input-vault-key-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
-import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
+import { WorkspacePaneHeader } from '~/ui/components/workspace/workspace-pane-header';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { decryptVaultKeyFromSession } from '~/utils/vault';
 
@@ -80,7 +76,8 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   const updateEnvironmentFetcher = useEnvironmentUpdateActionFetcher();
   const duplicateEnvironmentFetcher = useEnvironmentDuplicateActionFetcher();
 
-  const { activeProject, baseEnvironment, activeEnvironment, subEnvironments, activeWorkspaceMeta } = routeData;
+  const { activeProject, activeWorkspace, baseEnvironment, activeEnvironment, subEnvironments, activeWorkspaceMeta } =
+    routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
   const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
@@ -302,43 +299,39 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   return (
     <div className="flex h-full w-full flex-col">
       <OrganizationTabList />
+      <WorkspacePaneHeader
+        breadcrumbs={[
+          {
+            id: 'project',
+            label: activeProject.name,
+            to: `/organization/${organizationId}/project/${activeProject._id}`,
+          },
+          {
+            id: 'workspace',
+            label: activeWorkspace.name,
+          },
+        ]}
+      />
       <PanelGroup
         ref={sidebarPanelRef}
-        autoSaveId="insomnia-sidebar"
+        autoSaveId="insomnia-sidebar-secondary"
         id="wrapper"
         className="new-sidebar h-full w-full text-(--color-font)"
         direction="horizontal"
       >
       <Panel
         id="sidebar"
-        className="sidebar theme--sidebar flex flex-col justify-between divide-y divide-solid divide-(--hl-md) overflow-hidden"
+        className="sidebar theme--sidebar flex flex-col overflow-hidden"
+        defaultSize={DEFAULT_SIDEBAR_SIZE}
         maxSize={40}
         minSize={10}
+        style={{ minWidth: MIN_WORKSPACE_SECONDARY_SIDEBAR_WIDTH }}
         collapsible
       >
-        <div className="flex flex-col items-start">
-          <Breadcrumbs
-            className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-(--padding-sm) font-bold`}
-          >
-            <Breadcrumb className="flex h-full items-center gap-2 text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
-              <NavLink
-                data-testid="project"
-                className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
-                to={`/organization/${organizationId}/project/${activeProject._id}`}
-              >
-                <Icon className="text-xs" icon="chevron-left" />
-              </NavLink>
-              <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-1 outline-solid" />
-            </Breadcrumb>
-            <Breadcrumb className="flex h-full items-center gap-2 truncate text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
-              <WorkspaceDropdown />
-            </Breadcrumb>
-          </Breadcrumbs>
-        </div>
         <GridList
           aria-label="Environments"
           items={[baseEnvironment, ...subEnvironments]}
-          className="w-full flex-1 shrink-0 overflow-y-auto py-(--padding-xs) data-empty:py-0"
+          className="w-full flex-1 shrink-0 overflow-y-auto data-empty:py-0"
           disallowEmptySelection
           selectionMode="single"
           selectionBehavior="replace"

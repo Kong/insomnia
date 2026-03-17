@@ -40,7 +40,14 @@ import {
 } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
-import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
+import {
+  DEFAULT_SIDEBAR_SIZE,
+  getProductName,
+  MIN_WORKSPACE_SECONDARY_SIDEBAR_WIDTH,
+  SORT_ORDERS,
+  type SortOrder,
+  sortOrderName,
+} from '~/common/constants';
 import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
@@ -114,6 +121,7 @@ import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-request-pane';
+import { WorkspacePaneHeader } from '~/ui/components/workspace/workspace-pane-header';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useExecutionState } from '~/ui/hooks/use-execution-state';
 import { useFilteredRequests } from '~/ui/hooks/use-filtered-requests';
@@ -375,27 +383,22 @@ const Debug = () => {
   );
 
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
+  const shouldShowSecondarySidebar = isDesign(activeWorkspace);
 
-  function toggleSidebar() {
+  useEffect(() => {
+    if (!shouldShowSecondarySidebar) {
+      return;
+    }
     const layout = sidebarPanelRef.current?.getLayout();
-
     if (!layout) {
       return;
     }
-
-    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
-
-    sidebarPanelRef.current?.setLayout(layout);
-  }
-
-  useEffect(() => {
-    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
-
-    return unsubscribe;
-  }, []);
+    if ((layout[0] ?? 0) < 10) {
+      sidebarPanelRef.current?.setLayout([DEFAULT_SIDEBAR_SIZE, 100 - DEFAULT_SIDEBAR_SIZE]);
+    }
+  }, [shouldShowSecondarySidebar]);
 
   useDocBodyKeyboardShortcuts({
-    sidebar_toggle: toggleSidebar,
     request_togglePin: async () => {
       if (requestId) {
         const meta = isGrpcRequestId(requestId)
@@ -803,106 +806,252 @@ const Debug = () => {
 
   const tabNavigate = useTabNavigate();
 
+  const requestGroupById = useMemo(() => {
+    const map = new Map<string, RequestGroup>();
+    collection.forEach(item => {
+      if (isRequestGroup(item.doc)) {
+        map.set(item.doc._id, item.doc);
+      }
+    });
+    return map;
+  }, [collection]);
+
+  const activeCollectionNode = useMemo(
+    () => collection.find(item => item.doc._id === requestId || item.doc._id === requestGroupId),
+    [collection, requestGroupId, requestId],
+  );
+
+  const paneHeaderBreadcrumbs = useMemo(() => {
+    const breadcrumbs: { id: string; label: string; to?: string }[] = [
+      {
+        id: 'project',
+        label: activeProject.name,
+        to: `/organization/${organizationId}/project/${activeProject._id}`,
+      },
+      {
+        id: 'workspace',
+        label: activeWorkspace.name,
+        to: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`,
+      },
+    ];
+
+    if (requestGroupId && requestGroupById.has(requestGroupId)) {
+      const groupChain: RequestGroup[] = [];
+      let currentGroup = requestGroupById.get(requestGroupId);
+      while (currentGroup) {
+        groupChain.unshift(currentGroup);
+        currentGroup = requestGroupById.get(currentGroup.parentId);
+      }
+      groupChain.forEach(group => {
+        breadcrumbs.push({
+          id: group._id,
+          label: group.name || 'Untitled folder',
+          to: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${group._id}`,
+        });
+      });
+      return breadcrumbs;
+    }
+
+    if (requestId && activeRequest) {
+      const ancestorGroupIds = (activeCollectionNode?.ancestors || []).filter(id => id !== workspaceId);
+      ancestorGroupIds.forEach(groupId => {
+        const group = requestGroupById.get(groupId);
+        if (group) {
+          breadcrumbs.push({
+            id: group._id,
+            label: group.name || 'Untitled folder',
+            to: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${group._id}`,
+          });
+        }
+      });
+
+      breadcrumbs.push({
+        id: activeRequest._id,
+        label: activeRequest.name || 'Untitled request',
+      });
+    }
+
+    return breadcrumbs;
+  }, [
+    activeCollectionNode?.ancestors,
+    activeProject._id,
+    activeProject.name,
+    activeRequest,
+    activeWorkspace.name,
+    organizationId,
+    projectId,
+    requestGroupById,
+    requestGroupId,
+    requestId,
+    workspaceId,
+  ]);
+
   return (
     <div className="flex h-full w-full flex-col">
       {!panel && <OrganizationTabList currentPage="debug" />}
+      <WorkspacePaneHeader
+        breadcrumbs={paneHeaderBreadcrumbs}
+        rightSlot={
+          <Fragment>
+            <EnvironmentPicker
+              isOpen={isEnvironmentPickerOpen}
+              onOpenChange={isOpen => {
+                setIsEnvironmentPickerOpen(isOpen);
+                if (isOpen) {
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.requestEnvironmentClicked,
+                  });
+                }
+              }}
+              onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
+            />
+            <Button
+              onPress={() => {
+                window.main.trackSegmentEvent({
+                  event: SegmentEvent.requestAddCookiesClicked,
+                });
+                setIsCookieModalOpen(true);
+              }}
+              className="flex h-7 items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+            >
+              <Icon icon="cookie-bite" className="w-4 shrink-0" />
+              <span className="truncate">
+                Cookies {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}
+              </span>
+            </Button>
+            <Button
+              onPress={() => {
+                window.main.trackSegmentEvent({
+                  event: SegmentEvent.requestAddCertificatesClicked,
+                });
+                setCertificatesModalOpen(true);
+              }}
+              className="flex h-7 items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+            >
+              <Icon icon="file-contract" className="w-4 shrink-0" />
+              <span className="truncate">
+                Certificates{' '}
+                {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
+                  .length > 0
+                  ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
+                  : ''}
+              </span>
+            </Button>
+          </Fragment>
+        }
+      />
       <PanelGroup
         ref={sidebarPanelRef}
-        autoSaveId="insomnia-sidebar"
+        autoSaveId="insomnia-sidebar-debug"
         id="wrapper"
         className="new-sidebar h-full w-full text-(--color-font)"
         direction="horizontal"
       >
-        <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
-        <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-          <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
-            <div className={`flex w-full h-[${INSOMNIA_TAB_HEIGHT}px]`}>
-              <Breadcrumbs className="m-0 flex h-full w-full list-none items-center gap-2 px-(--padding-sm) font-bold">
-                <Breadcrumb className="flex h-full items-center gap-2 text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
-                  <NavLink
-                    data-testid="project"
-                    className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
-                    to={`/organization/${organizationId}/project/${activeProject._id}`}
-                  >
-                    <Icon className="text-xs" icon="chevron-left" />
-                  </NavLink>
-                  <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-1 outline-solid" />
-                </Breadcrumb>
-                <Breadcrumb className="flex h-full items-center gap-2 truncate text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
-                  <WorkspaceDropdown />
-                </Breadcrumb>
-                <Breadcrumb className="mr-2.5 ml-auto flex h-full items-center gap-2 justify-self-end truncate text-sm text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
-                  <NavLink
-                    data-testid="run-collection-btn-quick"
-                    className="flex h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-[current]:hidden data-focused:outline-hidden"
-                    to={`/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner?folder=`}
-                  >
-                    <Icon icon="play" />
-                    <span className="truncate">Run</span>
-                  </NavLink>
-                </Breadcrumb>
-              </Breadcrumbs>
-            </div>
-            {isDesign(activeWorkspace) && (
+        <Panel
+          id="sidebar"
+          className={`sidebar theme--sidebar ${shouldShowSecondarySidebar ? '' : 'hidden'}`}
+          maxSize={shouldShowSecondarySidebar ? 40 : 0}
+          minSize={shouldShowSecondarySidebar ? 10 : 0}
+          defaultSize={shouldShowSecondarySidebar ? DEFAULT_SIDEBAR_SIZE : 0}
+          style={{ minWidth: shouldShowSecondarySidebar ? MIN_WORKSPACE_SECONDARY_SIDEBAR_WIDTH : 0 }}
+          collapsible={!shouldShowSecondarySidebar}
+        >
+        {shouldShowSecondarySidebar ? (
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {isDesign(activeWorkspace) ? (
+            <div className="border-b border-solid border-(--hl-md) p-(--padding-sm)">
               <DocumentTab organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
-            )}
-            <div className="flex w-full flex-col items-start gap-2 p-(--padding-sm)">
-              <div className="flex w-full items-center justify-between gap-2">
-                <EnvironmentPicker
-                  isOpen={isEnvironmentPickerOpen}
-                  onOpenChange={isOpen => {
-                    setIsEnvironmentPickerOpen(isOpen);
-                    if (isOpen) {
-                      window.main.trackSegmentEvent({
-                        event: SegmentEvent.requestEnvironmentClicked,
-                      });
-                    }
-                  }}
-                  onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
-                />
-              </div>
-              <Button
-                onPress={() => {
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.requestAddCookiesClicked,
-                  });
-                  setIsCookieModalOpen(true);
-                }}
-                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-              >
-                <Icon icon="cookie-bite" className="w-5 shrink-0" />
-                <span className="truncate">
-                  {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies{' '}
-                  {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}
-                </span>
-              </Button>
-              <Button
-                onPress={() => {
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.requestAddCertificatesClicked,
-                  });
-                  setCertificatesModalOpen(true);
-                }}
-                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-              >
-                <Icon icon="file-contract" className="w-5 shrink-0" />
-                <span className="truncate">
-                  {clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates{' '}
-                  {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
-                    .length > 0
-                    ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
-                    : ''}
-                </span>
-              </Button>
             </div>
-          </div>
-          <div className="px-(--padding-sm) py-(--padding-md)">
-            <p className="text-xs text-(--hl)">
-              Navigate requests from the project sidebar tree. This workspace sidebar now focuses on workspace tools.
-            </p>
-          </div>
-          <div className="hidden flex-1 flex-col overflow-hidden">
-            <div className="flex justify-between gap-1 p-(--padding-sm)">
+          ) : null}
+          {!isDesign(activeWorkspace) ? (
+            <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
+              <div className={`flex w-full h-[${INSOMNIA_TAB_HEIGHT}px]`}>
+                <Breadcrumbs className="m-0 flex h-full w-full list-none items-center gap-2 px-(--padding-sm) font-bold">
+                  <Breadcrumb className="flex h-full items-center gap-2 text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
+                    <NavLink
+                      data-testid="project"
+                      className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
+                      to={`/organization/${organizationId}/project/${activeProject._id}`}
+                    >
+                      <Icon className="text-xs" icon="chevron-left" />
+                    </NavLink>
+                    <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-1 outline-solid" />
+                  </Breadcrumb>
+                  <Breadcrumb className="flex h-full items-center gap-2 truncate text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
+                    <WorkspaceDropdown />
+                  </Breadcrumb>
+                  <Breadcrumb className="mr-2.5 ml-auto flex h-full items-center gap-2 justify-self-end truncate text-sm text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
+                    <NavLink
+                      data-testid="run-collection-btn-quick"
+                      className="flex h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-[current]:hidden data-focused:outline-hidden"
+                      to={`/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/${activeWorkspace._id}/debug/runner?folder=`}
+                    >
+                      <Icon icon="play" />
+                      <span className="truncate">Run</span>
+                    </NavLink>
+                  </Breadcrumb>
+                </Breadcrumbs>
+              </div>
+              <div className="flex w-full flex-col items-start gap-2 p-(--padding-sm)">
+                <div className="flex w-full items-center justify-between gap-2">
+                  <EnvironmentPicker
+                    isOpen={isEnvironmentPickerOpen}
+                    onOpenChange={isOpen => {
+                      setIsEnvironmentPickerOpen(isOpen);
+                      if (isOpen) {
+                        window.main.trackSegmentEvent({
+                          event: SegmentEvent.requestEnvironmentClicked,
+                        });
+                      }
+                    }}
+                    onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
+                  />
+                </div>
+                <Button
+                  onPress={() => {
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.requestAddCookiesClicked,
+                    });
+                    setIsCookieModalOpen(true);
+                  }}
+                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                >
+                  <Icon icon="cookie-bite" className="w-5 shrink-0" />
+                  <span className="truncate">
+                    {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies{' '}
+                    {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}
+                  </span>
+                </Button>
+                <Button
+                  onPress={() => {
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.requestAddCertificatesClicked,
+                    });
+                    setCertificatesModalOpen(true);
+                  }}
+                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                >
+                  <Icon icon="file-contract" className="w-5 shrink-0" />
+                  <span className="truncate">
+                    {clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates{' '}
+                    {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
+                      .length > 0
+                      ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
+                      : ''}
+                  </span>
+                </Button>
+              </div>
+            </div>
+          ) : null}
+          {!isDesign(activeWorkspace) ? (
+            <div className="px-(--padding-sm) py-(--padding-md)">
+              <p className="text-xs text-(--hl)">
+                Navigate requests from the project sidebar tree. This workspace sidebar now focuses on workspace tools.
+              </p>
+            </div>
+          ) : null}
+          <div className={`${isDesign(activeWorkspace) ? 'flex' : 'hidden'} flex-1 flex-col overflow-hidden`}>
+            <div className="flex h-[43.59375px] items-center justify-between gap-1 border-b border-solid border-(--hl-md) p-(--padding-sm)">
               <SearchField
                 aria-label="Request filter"
                 className="group relative flex-1"
@@ -919,7 +1068,7 @@ const Debug = () => {
               >
                 <Input
                   placeholder="Filter"
-                  className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+                  className="h-7 w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                 />
                 <div className="absolute top-0 right-0 flex h-full items-center px-2">
                   <Button className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
@@ -929,7 +1078,7 @@ const Debug = () => {
               </SearchField>
               <Select
                 aria-label="Sort order"
-                className="aspect-square h-full"
+                className="size-7"
                 selectedKey={sortOrder}
                 onSelectionChange={order => {
                   if (order) {
@@ -945,7 +1094,7 @@ const Debug = () => {
               >
                 <Button
                   aria-label="Select sort order"
-                  className="flex aspect-square h-full shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 >
                   <Icon icon="sort" />
                 </Button>
@@ -996,7 +1145,7 @@ const Debug = () => {
                       toggle: allExpanded ? 'collapse-all' : 'expand-all',
                     });
                   }}
-                  className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+                  className="flex size-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                 >
                   {({ isSelected }) => (
                     <Icon
@@ -1015,7 +1164,7 @@ const Debug = () => {
               <MenuTrigger>
                 <Button
                   aria-label="Create in collection"
-                  className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                  className="flex size-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 >
                   <Icon icon="plus-circle" />
                 </Button>
@@ -1210,36 +1359,10 @@ const Debug = () => {
 
           {isScratchpadOrganizationId(organizationId) && <ScratchPadTutorialPanel />}
 
-          {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
-          {isImportModalOpen && (
-            <ImportModal
-              onHide={() => setIsImportModalOpen(false)}
-              from={{ type: 'file' }}
-              projectName={activeProject.name ?? getProductName()}
-              workspaceName={activeWorkspace.name}
-              organizationId={organizationId}
-              defaultProjectId={projectId}
-              defaultWorkspaceId={workspaceId}
-            />
-          )}
-          {isCookieModalOpen && <CookiesModal setIsOpen={setIsCookieModalOpen} />}
-          {isCertificatesModalOpen && <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
-          {isPasteCurlModalOpen && (
-            <PasteCurlModal
-              onImport={req => {
-                createRequest({
-                  requestType: 'From Curl',
-                  parentId: workspaceId,
-                  req,
-                });
-              }}
-              defaultValue={pastedCurl}
-              onHide={() => setPasteCurlModalOpen(false)}
-            />
-          )}
         </div>
+        ) : null}
       </Panel>
-        <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
+        {shouldShowSecondarySidebar ? <PanelResizeHandle className="h-full w-px bg-(--hl-md)" /> : null}
         <Panel className="flex flex-col">
           <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
           <Routes>
@@ -1308,6 +1431,33 @@ const Debug = () => {
           </PanelGroup>
         </Panel>
       </PanelGroup>
+      {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
+      {isImportModalOpen && (
+        <ImportModal
+          onHide={() => setIsImportModalOpen(false)}
+          from={{ type: 'file' }}
+          projectName={activeProject.name ?? getProductName()}
+          workspaceName={activeWorkspace.name}
+          organizationId={organizationId}
+          defaultProjectId={projectId}
+          defaultWorkspaceId={workspaceId}
+        />
+      )}
+      {isCookieModalOpen && <CookiesModal setIsOpen={setIsCookieModalOpen} />}
+      {isCertificatesModalOpen && <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
+      {isPasteCurlModalOpen && (
+        <PasteCurlModal
+          onImport={req => {
+            createRequest({
+              requestType: 'From Curl',
+              parentId: workspaceId,
+              req,
+            });
+          }}
+          defaultValue={pastedCurl}
+          onHide={() => setPasteCurlModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

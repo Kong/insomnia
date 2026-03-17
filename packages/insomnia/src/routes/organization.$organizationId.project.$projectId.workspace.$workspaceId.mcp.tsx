@@ -3,6 +3,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { href, NavLink, redirect, useParams } from 'react-router';
 
 import { Icon } from '~/basic-components/icon';
+import { DEFAULT_SIDEBAR_SIZE, MIN_WORKSPACE_SECONDARY_SIDEBAR_WIDTH } from '~/common/constants';
 import * as models from '~/models';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
@@ -62,7 +63,15 @@ const McpWorkspace = () => {
         className="new-sidebar h-full w-full text-(--color-font)"
         direction="horizontal"
       >
-      <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
+      <Panel
+        id="sidebar"
+        className="sidebar theme--sidebar"
+        defaultSize={DEFAULT_SIDEBAR_SIZE}
+        maxSize={40}
+        minSize={10}
+        style={{ minWidth: MIN_WORKSPACE_SECONDARY_SIDEBAR_WIDTH }}
+        collapsible
+      >
         <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
           <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
             <div className={`flex w-full`}>
