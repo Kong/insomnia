@@ -172,6 +172,7 @@ export const MAX_INTERFACE_FONT_SIZE = 24;
 export const MIN_EDITOR_FONT_SIZE = 8;
 export const MAX_EDITOR_FONT_SIZE = 24;
 export const DEFAULT_SIDEBAR_SIZE = 25;
+export const MIN_WORKSPACE_SECONDARY_SIDEBAR_WIDTH = 240;
 
 // Activities
 export type GlobalActivity = 'spec' | 'debug' | 'unittest' | 'home';

@@ -28,6 +28,7 @@ import { useRequestGroupUpdateActionFetcher } from '~/routes/organization.$organ
 import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
+import { useMockServerGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.generate-request-collection';
 import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
@@ -41,15 +42,23 @@ import { Icon } from '~/ui/components/icon';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
+import { ExportRequestsModal } from '~/ui/components/modals/export-requests-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { PasteCurlModal } from '~/ui/components/modals/paste-curl-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
+import { WorkspaceDuplicateModal } from '~/ui/components/modals/workspace-duplicate-modal';
+import { WorkspaceSettingsModal } from '~/ui/components/modals/workspace-settings-modal';
 import {
   ProjectSidebarTree,
   type ProjectSidebarTreeAction,
   type ProjectSidebarTreeNode,
 } from '~/ui/components/project/project-sidebar-tree';
+import {
+  exportGlobalEnvironmentToFile,
+  exportMcpClientToFile,
+  exportMockServerToFile,
+} from '~/ui/components/settings/import-export';
 import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
@@ -285,6 +294,14 @@ function ProjectSidebarShell() {
   } | null>(null);
   const [isCollectionImportModalOpen, setIsCollectionImportModalOpen] = useState(false);
   const [isCollectionPasteCurlModalOpen, setIsCollectionPasteCurlModalOpen] = useState(false);
+  const [workspaceActionTarget, setWorkspaceActionTarget] = useState<{
+    project: Project;
+    workspace: Workspace;
+  } | null>(null);
+  const [isWorkspaceImportModalOpen, setIsWorkspaceImportModalOpen] = useState(false);
+  const [isWorkspaceExportModalOpen, setIsWorkspaceExportModalOpen] = useState(false);
+  const [isWorkspaceDuplicateModalOpen, setIsWorkspaceDuplicateModalOpen] = useState(false);
+  const [isWorkspaceSettingsModalOpen, setIsWorkspaceSettingsModalOpen] = useState(false);
   const [folderPasteCurlTarget, setFolderPasteCurlTarget] = useState<{
     project: Project;
     workspace: Workspace;
@@ -297,6 +314,7 @@ function ProjectSidebarShell() {
   const createWorkspaceFetcher = useWorkspaceNewActionFetcher();
   const updateWorkspaceFetcher = useWorkspaceUpdateActionFetcher();
   const deleteWorkspaceFetcher = useWorkspaceDeleteActionFetcher();
+  const generateCollectionFetcher = useMockServerGenerateRequestCollectionActionFetcher();
   const updateRequestFetcher = useRequestUpdateActionFetcher();
   const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
   const deleteRequestFetcher = useRequestDeleteActionFetcher();
@@ -525,34 +543,101 @@ function ProjectSidebarShell() {
     },
   ];
 
-  const getWorkspaceActions = (project: Project, file: ProjectSidebarFile): ProjectSidebarTreeAction[] => [
-    {
-      id: 'open-new-tab',
-      label: 'Open in New Tab',
-      onAction: () => openFileFromTree(project, file, true),
-    },
-    {
-      id: 'rename',
-      label: 'Rename',
-      onAction: () =>
-        showModal(PromptModal, {
-          title: 'Rename Workspace',
-          defaultValue: file.name,
-          submitName: 'Rename',
-          label: 'Name',
-          selectText: true,
-          onComplete: name =>
-            updateWorkspaceFetcher.submit({
-              organizationId,
-              projectId: project._id,
-              patch: {
-                workspaceId: file.workspace._id,
-                name,
-              },
-            }),
-        }),
-    },
-    {
+  const getWorkspaceActions = (project: Project, file: ProjectSidebarFile): ProjectSidebarTreeAction[] => {
+    const actions: ProjectSidebarTreeAction[] = [
+      {
+        id: 'open-new-tab',
+        label: 'Open in New Tab',
+        onAction: () => openFileFromTree(project, file, true),
+      },
+      {
+        id: 'rename',
+        label: 'Rename',
+        onAction: () =>
+          showModal(PromptModal, {
+            title: 'Rename Workspace',
+            defaultValue: file.name,
+            submitName: 'Rename',
+            label: 'Name',
+            selectText: true,
+            onComplete: name =>
+              updateWorkspaceFetcher.submit({
+                organizationId,
+                projectId: project._id,
+                patch: {
+                  workspaceId: file.workspace._id,
+                  name,
+                },
+              }),
+          }),
+      },
+    ];
+
+    if (file.scope !== 'mcp') {
+      actions.push({
+        id: 'import',
+        label: 'Import',
+        onAction: () => {
+          setWorkspaceActionTarget({ project, workspace: file.workspace });
+          setIsWorkspaceImportModalOpen(true);
+        },
+      }, {
+        id: 'run-collection',
+        label: 'Run Collection',
+        onAction: () =>
+          navigate(
+            `/organization/${organizationId}/project/${project._id}/workspace/${file.workspace._id}/debug/runner?folder=`,
+          ),
+      }, {
+        id: 'duplicate-move',
+        label: 'Duplicate / Move',
+        onAction: () => {
+          setWorkspaceActionTarget({ project, workspace: file.workspace });
+          setIsWorkspaceDuplicateModalOpen(true);
+        },
+      });
+    }
+
+    actions.push({
+      id: 'export',
+      label: 'Export',
+      onAction: () => {
+        if (file.scope === 'mock-server') {
+          return exportMockServerToFile(file.workspace);
+        }
+        if (file.scope === 'environment') {
+          return exportGlobalEnvironmentToFile(file.workspace);
+        }
+        if (file.scope === 'mcp') {
+          return exportMcpClientToFile(file.workspace);
+        }
+
+        setWorkspaceActionTarget({ project, workspace: file.workspace });
+        setIsWorkspaceExportModalOpen(true);
+      },
+    });
+
+    if (file.scope === 'mock-server') {
+      actions.push({
+        id: 'generate-collection',
+        label: 'Generate Collection',
+        onAction: () =>
+          generateCollectionFetcher.submit({
+            organizationId,
+            projectId: project._id,
+            workspaceId: file.workspace._id,
+          }),
+      });
+    }
+
+    actions.push({
+      id: 'settings',
+      label: 'Settings',
+      onAction: () => {
+        setWorkspaceActionTarget({ project, workspace: file.workspace });
+        setIsWorkspaceSettingsModalOpen(true);
+      },
+    }, {
       id: 'delete',
       label: 'Delete',
       isDanger: true,
@@ -573,8 +658,10 @@ function ProjectSidebarShell() {
             }
           },
         }),
-    },
-  ];
+    });
+
+    return actions;
+  };
 
   const getCollectionActions = (project: Project, file: ProjectSidebarFile): ProjectSidebarTreeAction[] => [
     {
@@ -1050,6 +1137,36 @@ function ProjectSidebarShell() {
           }}
           defaultValue=""
           onHide={() => setIsFolderPasteCurlModalOpen(false)}
+        />
+      )}
+      {workspaceActionTarget && isWorkspaceImportModalOpen && (
+        <ImportModal
+          onHide={() => setIsWorkspaceImportModalOpen(false)}
+          from={{ type: 'file' }}
+          projectName={workspaceActionTarget.project.name}
+          workspaceName={workspaceActionTarget.workspace.name}
+          organizationId={organizationId}
+          defaultProjectId={workspaceActionTarget.project._id}
+          defaultWorkspaceId={workspaceActionTarget.workspace._id}
+        />
+      )}
+      {workspaceActionTarget && isWorkspaceExportModalOpen && (
+        <ExportRequestsModal
+          workspaceIdToExport={workspaceActionTarget.workspace._id}
+          onClose={() => setIsWorkspaceExportModalOpen(false)}
+        />
+      )}
+      {workspaceActionTarget && isWorkspaceDuplicateModalOpen && (
+        <WorkspaceDuplicateModal
+          onHide={() => setIsWorkspaceDuplicateModalOpen(false)}
+          workspace={workspaceActionTarget.workspace}
+        />
+      )}
+      {workspaceActionTarget && isWorkspaceSettingsModalOpen && (
+        <WorkspaceSettingsModal
+          workspace={workspaceActionTarget.workspace}
+          project={workspaceActionTarget.project}
+          onClose={() => setIsWorkspaceSettingsModalOpen(false)}
         />
       )}
     </>

@@ -10,7 +10,7 @@ interface Props {
 
 export const DocumentTab = ({ organizationId, projectId, workspaceId, className }: Props) => {
   return (
-    <nav className={`flex h-[40px] w-full items-center ${className} justify-around px-1`}>
+    <nav className={classnames('flex h-7 w-auto items-center justify-center gap-2 rounded-xs px-1', className)}>
       {[
         { id: 'spec', name: 'Spec' },
         { id: 'debug', name: 'Collection' },

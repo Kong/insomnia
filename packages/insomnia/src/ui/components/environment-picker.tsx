@@ -84,6 +84,20 @@ export const EnvironmentPicker = ({
   const activeGlobalBaseEnvironment = selectedGlobalBaseEnvironment;
   const activeBaseEnvironment = baseEnvironment;
   const activeSubEnvironment = subEnvironments.find(e => e._id === activeEnvironment._id);
+  const isGlobalEnvironmentSelected = Boolean(activeGlobalEnvironment);
+  const activeDisplayEnvironment = isGlobalEnvironmentSelected
+    ? activeGlobalEnvironment
+    : activeSubEnvironment || activeBaseEnvironment;
+
+  const activeDisplayEnvironmentIcon = isGlobalEnvironmentSelected
+    ? 'globe-americas'
+    : activeDisplayEnvironment.isPrivate
+      ? 'lock'
+      : isUsingGitSync
+        ? ['fab', 'git-alt']
+        : isUsingInsomniaCloudSync
+          ? 'globe-americas'
+          : 'file-arrow-down';
 
   const navigate = useNavigate();
 
@@ -93,47 +107,14 @@ export const EnvironmentPicker = ({
         aria-label="Manage Environments"
         className="flex max-w-full flex-col items-start gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
       >
-        {activeGlobalEnvironment && activeGlobalBaseEnvironment && (
-          <div className="flex w-full flex-col">
-            <div className="flex w-full items-center gap-2">
-              <Icon
-                icon={
-                  activeGlobalEnvironment.isPrivate
-                    ? 'lock'
-                    : isUsingGitSync
-                      ? ['fab', 'git-alt']
-                      : isUsingInsomniaCloudSync
-                        ? 'globe-americas'
-                        : 'file-arrow-down'
-                }
-                style={{ color: activeGlobalEnvironment.color || '' }}
-                className="w-5 shrink-0"
-              />
-              <span className="truncate">{activeGlobalEnvironment.name}</span>
-            </div>
-            <div className="flex w-full items-center gap-2">
-              <Icon icon="0" className="invisible w-5 shrink-0" />
-              <span className="shrink truncate text-xs text-(--hl)">{activeGlobalBaseEnvironment.workspaceName}</span>
-            </div>
-          </div>
-        )}
         <div className="flex w-full flex-1 items-center gap-2">
           <Icon
-            icon={
-              activeEnvironment.isPrivate
-                ? 'lock'
-                : isUsingGitSync
-                  ? ['fab', 'git-alt']
-                  : isUsingInsomniaCloudSync
-                    ? 'globe-americas'
-                    : 'file-arrow-down'
-            }
-            style={{ color: activeEnvironment.color || '' }}
+            icon={activeDisplayEnvironmentIcon}
+            style={{ color: activeDisplayEnvironment.color || '' }}
             className="w-5 shrink-0"
           />
-          <span className="truncate">
-            {activeSubEnvironment ? activeSubEnvironment.name : activeBaseEnvironment.name}
-          </span>
+          <span className="truncate">{activeDisplayEnvironment.name}</span>
+          <Icon icon="caret-down" className="ml-auto w-4 shrink-0 text-(--hl)" />
         </div>
       </Button>
       <Popover className="z-10! flex max-h-[90vh] min-w-max flex-col" placement="bottom start" offset={8}>

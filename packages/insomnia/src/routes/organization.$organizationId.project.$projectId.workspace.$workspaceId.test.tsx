@@ -1,8 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
-  Breadcrumb,
-  Breadcrumbs,
   Button,
   DropIndicator,
   GridList,
@@ -15,9 +13,9 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { NavLink, Route as RouteComponent, Routes, useFetchers, useLoaderData, useParams } from 'react-router';
+import { Route as RouteComponent, Routes, useFetchers, useLoaderData, useParams } from 'react-router';
 
-import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
+import { DEFAULT_SIDEBAR_SIZE, MIN_WORKSPACE_SECONDARY_SIDEBAR_WIDTH } from '~/common/constants';
 import { database } from '~/common/database';
 import { isNotNullOrUndefined } from '~/common/misc';
 import * as models from '~/models';
@@ -29,7 +27,6 @@ import { TestRunStatus } from '~/routes/organization.$organizationId.project.$pr
 import { useTestSuiteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.update';
 import { useTestSuiteNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.new';
 import { DocumentTab } from '~/ui/components/document-tab';
-import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';
 import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
@@ -42,7 +39,7 @@ import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { CertificatesModal } from '~/ui/components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
-import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
+import { WorkspacePaneHeader } from '~/ui/components/workspace/workspace-pane-header';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { isPrimaryClickModifier } from '~/ui/utils';
 import { invariant } from '~/utils/invariant';
@@ -281,9 +278,53 @@ const Component = () => {
   return (
     <div className="flex h-full w-full flex-col">
       <OrganizationTabList />
+      <WorkspacePaneHeader
+        breadcrumbs={[
+          {
+            id: 'project',
+            label: activeProject.name,
+            to: `/organization/${organizationId}/project/${activeProject._id}`,
+          },
+          {
+            id: 'workspace',
+            label: activeWorkspace.name,
+          },
+        ]}
+        rightSlot={
+          <>
+            <EnvironmentPicker
+              isOpen={isEnvironmentPickerOpen}
+              onOpenChange={setIsEnvironmentPickerOpen}
+              onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
+            />
+            <Button
+              onPress={() => setIsCookieModalOpen(true)}
+              className="flex h-7 items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+            >
+              <Icon icon="cookie-bite" className="w-4 shrink-0" />
+              <span>
+                Cookies {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}
+              </span>
+            </Button>
+            <Button
+              onPress={() => setCertificatesModalOpen(true)}
+              className="flex h-7 items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+            >
+              <Icon icon="file-contract" className="w-4 shrink-0" />
+              <span>
+                Certificates{' '}
+                {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
+                  .length > 0
+                  ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
+                  : ''}
+              </span>
+            </Button>
+          </>
+        }
+      />
       <PanelGroup
         ref={sidebarPanelRef}
-        autoSaveId="insomnia-sidebar"
+        autoSaveId="insomnia-sidebar-secondary"
         id="wrapper"
         className="new-sidebar h-full w-full text-(--color-font)"
         direction="horizontal"
@@ -294,67 +335,17 @@ const Component = () => {
         defaultSize={DEFAULT_SIDEBAR_SIZE}
         maxSize={40}
         minSize={10}
+        style={{ minWidth: MIN_WORKSPACE_SECONDARY_SIDEBAR_WIDTH }}
         collapsible
       >
         <ErrorBoundary showAlert>
-          <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-            <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
-              <div className="flex w-full flex-col items-start">
-                <Breadcrumbs
-                  className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-(--padding-sm) font-bold`}
-                >
-                  <Breadcrumb className="flex h-full items-center gap-2 text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
-                    <NavLink
-                      data-testid="project"
-                      className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
-                      to={`/organization/${organizationId}/project/${activeProject._id}`}
-                    >
-                      <Icon className="text-xs" icon="chevron-left" />
-                    </NavLink>
-                    <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-1 outline-solid" />
-                  </Breadcrumb>
-                  <Breadcrumb className="flex h-full items-center gap-2 truncate text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
-                    <WorkspaceDropdown />
-                  </Breadcrumb>
-                </Breadcrumbs>
-              </div>
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="border-b border-solid border-(--hl-md) p-(--padding-sm)">
               <DocumentTab organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
-              <div className="flex w-full flex-col items-start gap-2 p-(--padding-sm)">
-                <div className="flex w-full items-center justify-between gap-2">
-                  <EnvironmentPicker
-                    isOpen={isEnvironmentPickerOpen}
-                    onOpenChange={setIsEnvironmentPickerOpen}
-                    onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
-                  />
-                </div>
-                <Button
-                  onPress={() => setIsCookieModalOpen(true)}
-                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                >
-                  <Icon icon="cookie-bite" className="w-5 shrink-0" />
-                  <span className="truncate">
-                    {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies{' '}
-                    {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}
-                  </span>
-                </Button>
-                <Button
-                  onPress={() => setCertificatesModalOpen(true)}
-                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                >
-                  <Icon icon="file-contract" className="w-5 shrink-0" />
-                  <span className="truncate">
-                    {clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates{' '}
-                    {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
-                      .length > 0
-                      ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
-                      : ''}
-                  </span>
-                </Button>
-              </div>
             </div>
-            <div className="p-(--padding-sm)">
+            <div className="h-[39.34375px] border-b border-solid border-(--hl-md) px-(--padding-sm) py-(--padding-sm)">
               <Button
-                className="flex items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                className="flex h-[22.75px] w-fit items-center gap-2 rounded-xs px-(--padding-sm) text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 onPress={() => {
                   createUnitTestSuiteFetcher.submit({
                     organizationId,
@@ -364,7 +355,7 @@ const Component = () => {
                   });
                 }}
               >
-                <Icon icon="plus" />
+                <Icon icon="plus" className="w-2.5 shrink-0" />
                 New test suite
               </Button>
             </div>
@@ -376,7 +367,7 @@ const Component = () => {
                 ...suite,
               }))}
               dragAndDropHooks={testSuitesDragAndDrop.dragAndDropHooks}
-              className="flex-1 overflow-y-auto py-(--padding-sm) data-empty:py-0"
+              className="flex-1 overflow-y-auto"
               disallowEmptySelection
               selectedKeys={[testSuiteId]}
               selectionMode="single"
