@@ -111,7 +111,7 @@ export const createNedbDatabase = <O = initOptions>(
         const model = mustGetModel(doc.type);
         idMapping.set(doc._id, generateId(model.prefix));
 
-        const validChildTypes = (descendantMap[doc.type as AllTypes] ?? []).filter(t => models.canDuplicate(t));
+        const validChildTypes = (descendantMap[doc.type] ?? []).filter(t => models.canDuplicate(t));
         for (const childType of validChildTypes) {
           for (const child of await database.find(childType, { parentId: doc._id })) {
             allDocs.push({ doc: child, parentId: doc._id });

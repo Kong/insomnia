@@ -2,11 +2,7 @@
  * Replace any old IDs found in the specified document fields with their new counterparts
  * from `idMapping`.
  * */
-export function replaceIdsInFields<T>(
-  doc: T,
-  fields: (keyof T & string)[],
-  idMapping: Map<string, string>,
-): Partial<T> {
+export function replaceIdsInFields<T>(doc: T, fields: (keyof T)[], idMapping: Map<string, string>): Partial<T> {
   const patch: Partial<T> = {};
 
   for (const field of fields) {
@@ -31,7 +27,7 @@ export function replaceIdsInFields<T>(
     }
 
     if (updated !== serialized) {
-      patch[field] = JSON.parse(updated) as T[keyof T & string];
+      patch[field] = JSON.parse(updated) as T[keyof T];
     }
   }
 
