@@ -69,10 +69,6 @@ export enum SegmentEvent {
   mcpResourceRead = 'MCP Resource Read',
   mcpPromptCalled = 'MCP Prompt Called',
   installPlugin = 'Plugin Installed',
-
-  // TODO(INS-1912): Remove in 12.5
-  tempOrganizationOpened = 'temp_organization_opened',
-  tempProjectOpened = 'temp_project_opened',
 }
 
 function hashString(input: string) {
