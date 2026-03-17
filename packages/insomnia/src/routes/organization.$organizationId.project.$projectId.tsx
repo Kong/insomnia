@@ -20,7 +20,6 @@ import type { RequestGroup } from '~/models/request-group';
 import type { SocketIORequest } from '~/models/socket-io-request';
 import type { WebSocketRequest } from '~/models/websocket-request';
 import { type Workspace, type WorkspaceScope } from '~/models/workspace';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useRequestUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
@@ -46,7 +45,6 @@ import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { PasteCurlModal } from '~/ui/components/modals/paste-curl-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
-import { OrganizationSelect } from '~/ui/components/project/organization-select';
 import {
   ProjectSidebarTree,
   type ProjectSidebarTreeAction,
@@ -277,7 +275,6 @@ function ProjectSidebarShell() {
   };
   const navigate = useNavigate();
   const tabNavigate = useTabNavigate();
-  const organizationData = useOrganizationLoaderData();
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [projectSettingsTarget, setProjectSettingsTarget] = useState<(Project & { gitRepository?: GitRepository }) | null>(
     null,
@@ -916,11 +913,6 @@ function ProjectSidebarShell() {
           collapsible
         >
           <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-            <OrganizationSelect
-              organizationId={organizationId}
-              organizations={organizationData?.organizations || []}
-              onSelect={id => navigate(`/organization/${id}`)}
-            />
             <div className="flex flex-1 flex-col overflow-hidden">
               <div className="flex items-center justify-between p-(--padding-sm)">
                 <Heading className="text-xs uppercase">Projects</Heading>

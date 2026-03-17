@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import type { LoaderFunctionArgs } from 'react-router';
-import { href, redirect, useLoaderData, useNavigate, useParams } from 'react-router';
+import { href, redirect, useLoaderData, useParams } from 'react-router';
 
 import { logout } from '~/account/session';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
@@ -11,14 +11,12 @@ import { sortProjects } from '~/models/helpers/project';
 import { isScratchpadOrganizationId } from '~/models/organization';
 import type { Project } from '~/models/project';
 import { useRootLoaderData } from '~/root';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { getProjectsWithGitRepositories } from '~/routes/organization.$organizationId.project.$projectId._index';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
 import { NoSelectedProjectView } from '~/ui/components/panes/no-selected-project-view';
-import { OrganizationSelect } from '~/ui/components/project/organization-select';
 import { ProjectListSidebar } from '~/ui/components/project/project-list-sidebar';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
@@ -59,11 +57,8 @@ const Component = () => {
   };
 
   const { userSession } = useRootLoaderData()!;
-  const organizationData = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
-  const navigate = useNavigate();
-
   useEffect(() => {
     if (!isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
@@ -111,11 +106,6 @@ const Component = () => {
             collapsible
           >
             <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-              <OrganizationSelect
-                organizationId={organizationId}
-                organizations={organizationData?.organizations || []}
-                onSelect={id => navigate(`/organization/${id}`)}
-              />
               <ProjectListSidebar
                 organizationId={organizationId}
                 projects={projectsWithPresence}
