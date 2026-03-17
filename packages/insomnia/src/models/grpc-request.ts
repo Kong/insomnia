@@ -135,7 +135,7 @@ export function all() {
 export function rewriteReferences(request: GrpcRequest, idMapping: Map<string, string>): GrpcRequest {
   return {
     ...request,
-    protoFileId: request.protoFileId ? (idMapping.get(request.protoFileId) ?? request.protoFileId) : undefined,
+    protoFileId: request.protoFileId ? idMapping.get(request.protoFileId) : undefined,
     ...replaceIdsInFields(request, ['url', 'body', 'metadata'], idMapping),
   };
 }
