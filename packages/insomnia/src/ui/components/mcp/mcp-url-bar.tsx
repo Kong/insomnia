@@ -61,6 +61,8 @@ export const McpUrlActionBar = ({
   const isDisconnected = readyState === 'disconnected';
   const patchRequest = useRequestPatcher();
   const oneLineEditorRef = useRef<OneLineEditorHandle>(null);
+  const previousDefaultValueRef = useRef(defaultValue);
+  const lastSyncedRequestIdRef = useRef<string | null>(null);
   const requestId = request._id;
   const requestTransportType = request.transportType;
   const requestTransportTypeLabel = getTransportLabel(requestTransportType);
@@ -73,6 +75,25 @@ export const McpUrlActionBar = ({
   useLayoutEffect(() => {
     oneLineEditorRef.current?.focusEnd();
   }, []);
+
+  useEffect(() => {
+    // Ensure a fresh MCP request always paints its URL immediately.
+    if (lastSyncedRequestIdRef.current !== requestId) {
+      oneLineEditorRef.current?.setValue(defaultValue || '');
+      previousDefaultValueRef.current = defaultValue;
+      lastSyncedRequestIdRef.current = requestId;
+    }
+  }, [requestId, defaultValue]);
+
+  useEffect(() => {
+    // Handle late URL hydration on initial MCP client load.
+    const previousDefaultValue = previousDefaultValueRef.current;
+    const shouldHydrateEditor = !previousDefaultValue && Boolean(defaultValue);
+    if (shouldHydrateEditor) {
+      oneLineEditorRef.current?.setValue(defaultValue);
+    }
+    previousDefaultValueRef.current = defaultValue;
+  }, [defaultValue]);
 
   const connectRequestFetcher = useRequestConnectActionFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as {

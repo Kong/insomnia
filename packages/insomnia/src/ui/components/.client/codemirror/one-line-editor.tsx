@@ -216,6 +216,10 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
 
       // Actually set the value
       codeMirror.current?.setValue(defaultValue || '');
+      // Ensure placeholder/cursor layout is correct after initial mount/hydration.
+      requestAnimationFrame(() => {
+        codeMirror.current?.refresh();
+      });
       // Clear history so we can't undo the initial set
       codeMirror.current?.clearHistory();
       // Setup nunjucks listeners
