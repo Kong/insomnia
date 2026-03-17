@@ -96,6 +96,9 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
             : 'Unknown';
 
       return (
+        // Using `index` as the key for the row since it's the only unique property available in the current data model. A
+        // stable & unique key avoids rendering quirks.
+        // Ref: https://react.dev/learn/rendering-lists#keeping-list-items-in-order-with-key
         <div key={index} data-testid="test-result-row">
           <div className="my-3 flex w-full text-base">
             <div className="m-auto mx-1 leading-4">
