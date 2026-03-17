@@ -32,6 +32,7 @@ export type HandleChannels =
   | 'curl.readyState'
   | 'curlRequest'
   | 'database.caCertificate.create'
+  | 'services.invoke'
   | 'extractJsonFileFromPostmanDataDumpArchive'
   | 'generateCommitsFromDiff'
   | 'generateMockRouteDataFromSpec'

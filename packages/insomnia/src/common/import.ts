@@ -1,8 +1,8 @@
 import orderedJSON from 'json-order';
 import { z, type ZodError } from 'zod/v4';
 
+import { type McpRequest } from '~/insomnia-data';
 import { insecureReadFile } from '~/main/secure-read-file';
-import { isMcpRequest, type McpRequest } from '~/models/mcp-request';
 
 import { type InsomniaImporter } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
@@ -248,7 +248,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
       const workspaces = resources.filter(isWorkspace);
       const cookieJars = resources.filter(isCookieJar);
       const mockRoutes = resources.filter(isMockRoute);
-      const mcpRequests = resources.filter(isMcpRequest);
+      const mcpRequests = resources.filter(models.mcpRequest.isMcpRequest);
 
       return {
         type,

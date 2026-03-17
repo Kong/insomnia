@@ -2,9 +2,9 @@ import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
 import { href } from 'react-router';
 
 import type { ChangeBufferEvent } from '~/common/database';
+import { type McpTransportType, models } from '~/insomnia-data';
 import type { CookieJar } from '~/models/cookie-jar';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { isMcpRequest, TRANSPORT_TYPES, type TransportType } from '~/models/mcp-request';
 import type { RequestAuthentication, RequestHeader } from '~/models/request';
 import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '~/models/request';
 import { isRequestMeta } from '~/models/request-meta';
@@ -23,7 +23,7 @@ export interface ConnectActionParams {
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
   suppressUserAgent: boolean;
-  transportType?: TransportType;
+  transportType?: McpTransportType;
   query?: Record<string, string>;
   env?: Record<string, string>;
 }
@@ -94,11 +94,11 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       query: rendered.query || {},
     });
   }
-  if (isMcpRequest(req)) {
+  if (models.mcpRequest.isMcpRequest(req)) {
     return window.main.mcp.connect({
       requestId,
       workspaceId,
-      transportType: rendered.transportType || TRANSPORT_TYPES.HTTP,
+      transportType: rendered.transportType || models.mcpRequest.TRANSPORT_TYPES.HTTP,
       url: rendered.url,
       headers: rendered.headers,
       authentication: rendered.authentication,

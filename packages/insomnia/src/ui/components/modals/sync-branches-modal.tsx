@@ -11,7 +11,7 @@ import {
   ModalOverlay,
   TextField,
 } from 'react-aria-components';
-import { href, useParams } from 'react-router';
+import { href } from 'react-router';
 
 import { useInsomniaSyncBranchCheckoutActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.checkout';
 import { useInsomniaSyncBranchCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.create';
@@ -254,16 +254,21 @@ interface Props {
   branches: string[];
   remoteBranches: string[];
   currentBranch: string;
+  organizationId: string;
+  projectId: string;
+  workspaceId: string;
   onClose: () => void;
 }
 
-export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBranch }: Props) => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-  };
-
+export const SyncBranchesModal = ({
+  onClose,
+  branches,
+  remoteBranches,
+  currentBranch,
+  organizationId,
+  projectId,
+  workspaceId,
+}: Props) => {
   const createBranchFetcher = useInsomniaSyncBranchCreateActionFetcher();
 
   function sortBranches(branchA: string, branchB: string) {

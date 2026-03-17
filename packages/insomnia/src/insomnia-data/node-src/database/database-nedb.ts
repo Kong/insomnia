@@ -18,7 +18,6 @@ import type {
 } from '~/insomnia-data';
 import { mustGetModel } from '~/models';
 import type { ApiSpec } from '~/models/api-spec';
-import type { CaCertificate } from '~/models/ca-certificate';
 import type { ClientCertificate } from '~/models/client-certificate';
 import type { CloudProviderCredential } from '~/models/cloud-credential';
 import type { CookieJar } from '~/models/cookie-jar';
@@ -193,7 +192,7 @@ export const createNedbDatabase = <O = initOptions>(
           ...defaultConfig,
           filename: fsPath.join(dbPath, 'insomnia.ApiSpec.db'),
         }),
-        CaCertificate: new NeDB<CaCertificate>({
+        CaCertificate: new NeDB({
           ...defaultConfig,
           filename: fsPath.join(dbPath, 'insomnia.CaCertificate.db'),
         }),

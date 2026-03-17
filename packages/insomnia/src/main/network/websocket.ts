@@ -12,6 +12,7 @@ import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSoc
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { database } from '~/common/database';
+import { services } from '~/insomnia-data';
 
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
@@ -171,7 +172,7 @@ const openWebSocketConnection = async (
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
   const responseEnvironmentId = environment ? environment._id : null;
 
-  const caCert = await models.caCertificate.findByParentId(options.workspaceId);
+  const caCert = await services.caCertificate.getByParentId(options.workspaceId);
   const caCertficatePath = caCert && !caCert.disabled ? caCert.path : null;
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
   // allow to read the file as it is chosen by user

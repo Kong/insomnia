@@ -1,6 +1,6 @@
 import React, { type FC, memo } from 'react';
 
-import { isMcpRequest, type McpRequest } from '~/models/mcp-request';
+import { type McpRequest, models } from '~/insomnia-data';
 
 import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';
 import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
@@ -61,7 +61,7 @@ export const getRequestMethodShortHand = (
     return 'IO';
   }
 
-  if (isMcpRequest(doc)) {
+  if (models.mcpRequest.isMcpRequest(doc)) {
     return 'MCP';
   }
 

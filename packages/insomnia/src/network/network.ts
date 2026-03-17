@@ -4,6 +4,8 @@ import nodePath from 'node:path';
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
+import { type CaCertificate, services } from '~/insomnia-data';
+
 import type {
   ExecutionOption,
   RequestContext,
@@ -17,7 +19,6 @@ import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
-import type { CaCertificate } from '../models/ca-certificate';
 import type { ClientCertificate } from '../models/client-certificate';
 import type { Cookie, CookieJar } from '../models/cookie-jar';
 import {
@@ -152,7 +153,7 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const settings = await models.settings.get();
   invariant(settings, 'failed to create settings');
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
-  const caCert = await models.caCertificate.findByParentId(workspaceId);
+  const caCert = await services.caCertificate.getByParentId(workspaceId);
   const responseId = generateId('res');
   const responsesDir = nodePath.join(
     (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
@@ -217,7 +218,7 @@ export const fetchRequestData = async (
   const settings = await models.settings.get();
   invariant(settings, 'failed to create settings');
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
-  const caCert = await models.caCertificate.findByParentId(workspaceId);
+  const caCert = await services.caCertificate.getByParentId(workspaceId);
 
   const responseId = generateId('res');
   const responsesDir = nodePath.join(
@@ -246,7 +247,7 @@ export const fetchRequestData = async (
 };
 
 export const fetchMcpRequestData = async (mcpRequestId: string) => {
-  const mcpRequest = await models.mcpRequest.getById(mcpRequestId);
+  const mcpRequest = await services.mcpRequest.getById(mcpRequestId);
   invariant(mcpRequest, 'failed to find MCP request ' + mcpRequestId);
 
   const workspace = await models.workspace.getById(mcpRequest.parentId);

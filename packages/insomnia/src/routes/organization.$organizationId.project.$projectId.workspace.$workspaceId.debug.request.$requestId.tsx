@@ -1,15 +1,13 @@
 import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
+import { type McpPayload, type McpRequest, type McpResponse, services } from '~/insomnia-data';
 import type { BaseModel } from '~/models';
 import * as models from '~/models';
 import { type GrpcRequest, isGrpcRequestId } from '~/models/grpc-request';
 import type { GrpcRequestMeta } from '~/models/grpc-request-meta';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
-import { isMcpRequest, type McpRequest } from '~/models/mcp-request';
-import type { McpPayload } from '~/models/mcp-request-payload';
-import type { McpResponse } from '~/models/mcp-response';
 import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import { isGraphqlSubscriptionRequest } from '~/models/request';
@@ -67,18 +65,15 @@ export interface RequestLoaderData {
   mockServerAndRoutes: (MockServer & { routes: MockRoute[] })[];
 }
 
-const getResponseModelName = (request: Request | WebSocketRequest | SocketIORequest | GrpcRequest | McpRequest) => {
+const getResponseModelName = (request: Request | WebSocketRequest | SocketIORequest | GrpcRequest) => {
   const isGraphqlWsRequest = isGraphqlSubscriptionRequest(request);
   if (isWebSocketRequest(request) || isGraphqlWsRequest) {
-    return 'webSocketResponse';
+    return 'webSocketResponse' as const;
   }
   if (isSocketIORequest(request)) {
-    return 'socketIOResponse';
+    return 'socketIOResponse' as const;
   }
-  if (isMcpRequest(request)) {
-    return 'mcpResponse';
-  }
-  return 'response';
+  return 'response' as const;
 };
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
@@ -125,6 +120,29 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
   const { filterResponsesByEnv } = await models.settings.get();
   const isGraphqlWsRequest = isGraphqlSubscriptionRequest(activeRequest);
+
+  // Handle MCP requests early (like gRPC) since MCP response methods are on services
+  if (models.mcpRequest.isMcpRequest(activeRequest)) {
+    const activeResponse = activeRequestMeta.activeResponseId
+      ? await services.mcpResponse.getById(activeRequestMeta.activeResponseId)
+      : await services.mcpResponse.getLatestForRequestId(requestId, activeWorkspaceMeta.activeEnvironmentId);
+    const allResponses = await database.find<McpResponse>(models.mcpResponse.type, { parentId: requestId });
+    const filteredResponses = allResponses.filter(
+      (r: McpResponse) => r.environmentId === activeWorkspaceMeta.activeEnvironmentId,
+    );
+    const responses = (filterResponsesByEnv ? filteredResponses : allResponses).sort((a: BaseModel, b: BaseModel) =>
+      a.created > b.created ? -1 : 1,
+    );
+    const requestPayload = await services.mcpPayload.getByParentIdAndUrl(requestId, activeRequest.url);
+    return {
+      activeRequest,
+      activeRequestMeta,
+      activeResponse: activeResponse || null,
+      requestPayload,
+      responses,
+      requestVersions: await models.requestVersion.findByParentId(requestId),
+    } as McpRequestLoaderData;
+  }
 
   const responseModelName = getResponseModelName(activeRequest);
 
@@ -186,18 +204,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       mockServerAndRoutes,
       requestPayload: socketIOPayload,
     } as SocketIORequestLoaderData;
-  }
-
-  if (isMcpRequest(activeRequest)) {
-    const requestPayload = await models.mcpPayload.getByParentIdAndUrl(requestId, activeRequest.url);
-    return {
-      activeRequest,
-      activeRequestMeta,
-      activeResponse,
-      requestPayload,
-      responses,
-      requestVersions: await models.requestVersion.findByParentId(requestId),
-    } as McpRequestLoaderData;
   }
 
   return {
