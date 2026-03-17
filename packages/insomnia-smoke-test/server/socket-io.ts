@@ -8,7 +8,9 @@ import { Server as SocketIOServer } from 'socket.io';
 export function startSocketIOServer() {
   const app = express();
   const server = createServer(app);
-  const io = new SocketIOServer(server);
+  const io = new SocketIOServer(server, {
+    path: '/custom-path',
+  });
 
   io.on('connection', socket => {
     console.log('socket.io connected:', socket.id);

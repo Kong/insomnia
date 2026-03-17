@@ -134,4 +134,37 @@ test.describe('Cloud Sync', () => {
       body: JSON.stringify({ enabled: false }),
     });
   });
+
+  test('Check delete workspace locally and remotely', async ({ page }) => {
+    //Sync collection project
+    await page.getByLabel('Collection Project').click();
+    // go back
+    await page
+      .locator('[data-icon="chevron-left"]')
+      .filter({ has: page.locator(':visible') })
+      .first()
+      .click();
+    // delete workspace locally
+    await page.getByLabel('My Collection R1').getByTestId('DropdownButton').click();
+    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByText('Remove Local Copy').click();
+    await page.getByRole('button', { name: 'Delete Workspace' }).click();
+    // check workspace is deleted locally
+    await expect.soft(page.getByLabel('Collection Project')).toBeVisible();
+    await expect.soft(page.getByLabel('My Collection R1')).toBeHidden();
+    // Sync collection project again
+    await page.getByLabel('Collection Project').click();
+    // go back
+    await page
+      .locator('[data-icon="chevron-left"]')
+      .filter({ has: page.locator(':visible') })
+      .first()
+      .click();
+    // delete workspace both locally and remotely
+    await page.getByLabel('My Collection R1').getByTestId('DropdownButton').click();
+    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('button', { name: 'Delete Workspace' }).click();
+    // check workspace is deleted remotely
+    await expect.soft(page.getByLabel('Collection Project')).toBeHidden();
+  });
 });

@@ -228,6 +228,14 @@ describe('curl', () => {
         headers: [],
       },
     },
+    {
+      name: 'should handle bearer auth and normal header auth together',
+      curl: `curl http://httpbin.org/get -H 'x-foo: x-bar' -H 'Authorization: Bearer mytoken123' `,
+      expected: {
+        authentication: { type: 'bearer', token: 'mytoken123' },
+        headers: [{ name: 'x-foo', value: 'x-bar' }],
+      },
+    },
   ];
 
   it.each(testCases)('$name', ({ curl, expected }) => {

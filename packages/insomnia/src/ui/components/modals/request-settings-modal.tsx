@@ -5,17 +5,19 @@ import { useNavigate, useParams } from 'react-router';
 import type { McpRequest } from '~/insomnia-data';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
+import { useReadyState } from '~/ui/hooks/use-ready-state';
 
 import { isNotNullOrUndefined } from '../../../common/misc';
 import * as models from '../../../models';
 import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isScratchpadOrganizationId } from '../../../models/organization';
 import { isRequest, type Request } from '../../../models/request';
-import type { SocketIORequest } from '../../../models/socket-io-request';
+import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 import { revalidateWorkspaceActiveRequest } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { invariant } from '../../../utils/invariant';
 import { useRequestPatcher } from '../../hooks/use-request';
+import { Input } from '../base/input';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -25,6 +27,27 @@ import { Icon } from '../icon';
 export interface RequestSettingsModalOptions {
   request: Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest;
 }
+
+export const SocketIOPathSettings = ({
+  request,
+  patchRequest,
+}: {
+  request: SocketIORequest;
+  patchRequest: (id: string, patch: Partial<SocketIORequest>) => void;
+}) => {
+  const readyState = useReadyState({ requestId: request._id, protocol: 'socketIO' });
+  return (
+    <Input
+      label="Socket.IO Handshake Path"
+      description="The path where the Socket.IO server is listening. Leave empty to use the default /socket.io/"
+      placeholder="/custom-path/"
+      name="settingPath"
+      defaultValue={request.settingPath || ''}
+      isDisabled={readyState}
+      onChange={value => patchRequest(request._id, { settingPath: value })}
+    />
+  );
+};
 
 export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSettingsModalOptions) => {
   const modalRef = useRef<ModalHandle>(null);
@@ -216,6 +239,9 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   </div>
                 </div>
               </>
+            )}
+            {request && isSocketIORequest(request) && (
+              <SocketIOPathSettings request={request} patchRequest={patchRequest} />
             )}
             {request && isGrpcRequest(request) && (
               <>

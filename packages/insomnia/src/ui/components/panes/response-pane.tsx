@@ -1,11 +1,9 @@
-import { extension as mimeExtension } from 'mime-types';
 import { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
 import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
 import { useRootLoaderData } from '~/root';
 import { SegmentEvent } from '~/ui/analytics';
-import { jsonPrettify } from '~/utils/prettify/json';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -33,6 +31,7 @@ import { BlankPane } from './blank-pane';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 import { RequestTestResultPane } from './request-test-result-pane';
+import { downloadResponseBody } from './response-pane-utils';
 
 interface Props {
   activeRequestId: string;
@@ -67,32 +66,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const { isExecuting, steps } = useExecutionState({ requestId: activeRequest._id });
 
   const handleDownloadResponseBody = useCallback(
-    async (prettify: boolean) => {
-      if (!activeResponse || !activeRequest) {
-        console.warn('Nothing to download');
-        return;
-      }
-
-      const { contentType } = activeResponse;
-      const extension = mimeExtension(contentType) || 'unknown';
-      const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
-        title: 'Save Response Body',
-        buttonLabel: 'Save',
-        defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
-      });
-
-      if (canceled) {
-        return;
-      }
-      if (prettify && contentType.includes('json')) {
-        await window.main.writeFile({
-          path: outputPath,
-          content: jsonPrettify(activeResponse.bodyBuffer?.toString('utf8')) || '',
-        });
-        return;
-      }
-      await window.main.writeFile({ path: outputPath, content: activeResponse.bodyBuffer?.toString('utf8') || '' });
-    },
+    (prettify: boolean) => downloadResponseBody(activeRequest, activeResponse, prettify),
     [activeRequest, activeResponse],
   );
 

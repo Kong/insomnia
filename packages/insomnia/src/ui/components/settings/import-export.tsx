@@ -966,7 +966,7 @@ const ExportSection = ({
         onPress={handleExportProjectToFile}
         data-testid="export-project-button"
       >
-        Export the "{projectName}" ${strings.project.singular}
+        {`Export the "${projectName}" ${strings.project.singular}`}
       </Button>
     </>
   );
