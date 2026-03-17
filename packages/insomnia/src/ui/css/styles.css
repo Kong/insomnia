@@ -90,7 +90,7 @@ html {
     'Header Header' auto
     'Content Content' 1fr
     'Statusbar Statusbar' 30px [row-end]
-    / 50px 1fr;
+    / 47.5px 1fr;
 
   &.with-banner {
     grid-template:
@@ -106,7 +106,7 @@ html {
         'Banner Banner' 30px
         'Navbar Content' 1fr
         'Statusbar Statusbar' 30px [row-end]
-        / 50px 1fr;
+        / 47.5px 1fr;
     }
   }
 
@@ -115,7 +115,7 @@ html {
       'Header Header' auto
       'Navbar Content' 1fr
       'Statusbar Statusbar' 30px [row-end]
-      / 50px 1fr;
+      / 47.5px 1fr;
   }
 }
 

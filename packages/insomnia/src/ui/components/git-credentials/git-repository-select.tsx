@@ -11,13 +11,13 @@ export const GitRepositorySelect = ({
   uri,
   onSelect,
   credentialsId,
-  allConnectedRepoURIProjectNameMap,
+  allConnectedRepoURIInfoMap,
   providerType,
 }: {
   onSelect: (repoUri: string) => void;
   uri?: string;
   credentialsId?: string;
-  allConnectedRepoURIProjectNameMap?: Record<string, string> | undefined;
+  allConnectedRepoURIInfoMap?: Record<string, { organizationName: string; projectName: string }> | undefined;
   providerType?: GitRemoteProviderType;
 }) => {
   const getGitProviderRepositoriesFetcher = useGitProviderRepositoriesLoaderFetcher();
@@ -128,9 +128,8 @@ export const GitRepositorySelect = ({
             name: string;
           }> className="flex min-w-max flex-col p-2 text-sm select-none focus:outline-hidden">
             {item => {
-              const isDisabled =
-                allConnectedRepoURIProjectNameMap &&
-                Object.prototype.hasOwnProperty.call(allConnectedRepoURIProjectNameMap, item.id);
+              const connectedInfo = allConnectedRepoURIInfoMap?.[item.id];
+              const isDisabled = Boolean(connectedInfo);
               return (
                 <ListBoxItem
                   isDisabled={isDisabled}
@@ -139,10 +138,10 @@ export const GitRepositorySelect = ({
                 >
                   {isDisabled && <Icon icon="lock" className="group-aria-disabled:opacity-30" />}
                   <span className="truncate group-aria-disabled:opacity-30">{item.name}</span>
-                  {isDisabled && (
+                  {connectedInfo && (
                     /* If you use hidden here, if the drop down is a long list and you scroll to the disabled item and hover on it, the scroll bar will scroll to the top. So we use invisible instead */
                     <span className="invisible rounded border border-solid border-(--hl-xl) px-2 py-1 text-(--color-font) group-hover:visible">
-                      Already connected to: {allConnectedRepoURIProjectNameMap[item.id]}
+                      Already connected to: {connectedInfo.organizationName} / {connectedInfo.projectName}
                     </span>
                   )}
                 </ListBoxItem>
