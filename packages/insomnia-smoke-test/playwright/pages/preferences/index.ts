@@ -32,21 +32,11 @@ export class PreferencesPage {
   // ===========================================================================
 
   /**
-   * Opens Insomnia Preferences via the statusbar preferences button.
-   */
-  async openPreferences(tab?: PreferencesTab): Promise<void> {
-    await this.page.getByTestId('settings-button').click();
-    if (tab) {
-      await this.openTab(tab);
-    }
-  }
-
-  /**
    * Opens a specific tab in the preferences modal.
    * @param tabName - The name of the tab to open (e.g., 'Data', 'General', 'Themes')
    */
-  async openTab(tabName: PreferencesTab): Promise<void> {
-    await this.page.getByRole('tab', { name: tabName }).click();
+  async switchToPreferenceTab(tabName: PreferencesTab): Promise<void> {
+    await this.root.getByRole('tab', { name: tabName }).click();
   }
 
   /**

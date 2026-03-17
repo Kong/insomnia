@@ -24,13 +24,13 @@ test.describe('Export', () => {
     const projectName = 'Export Test Project';
     await insomnia.projectPage.createProject(projectName, 'local');
     await insomnia.projectPage.importMultipleFixtures(FIXTURE_FILES);
-    const filesGrid = page.getByLabel('Files');
-    await expect.soft(filesGrid.getByLabel('Collection A')).toBeVisible();
-    await expect.soft(filesGrid.getByLabel('Collection B')).toBeVisible();
+    await expect.soft(insomnia.projectPage.workspaceList.workspaceLocator('Collection A')).toBeVisible();
+    await expect.soft(insomnia.projectPage.workspaceList.workspaceLocator('Collection B')).toBeVisible();
     const tempDir = createTempExportDir();
 
     try {
-      await insomnia.preferencesPage.openPreferences('Data');
+      await insomnia.statusbar.openPreferences();
+      await insomnia.preferencesPage.switchToPreferenceTab('Data');
       await insomnia.preferencesPage.dataTab.exportProjectData(tempDir, 'yaml');
       await waitForExportFiles(tempDir, 2);
       await insomnia.preferencesPage.closePreferences();
@@ -73,7 +73,8 @@ test.describe('Export', () => {
     const tempDir = createTempExportDir();
 
     try {
-      await insomnia.preferencesPage.openPreferences('Data');
+      await insomnia.statusbar.openPreferences();
+      await insomnia.preferencesPage.switchToPreferenceTab('Data');
       await insomnia.preferencesPage.dataTab.exportAllData(tempDir);
       await insomnia.preferencesPage.closePreferences();
       const exportedFiles = getExportedFiles(tempDir).filter((file: string) => !file.includes('scratchpad'));
@@ -116,7 +117,8 @@ test.describe('Export', () => {
     const exportFilePath = path.join(tempDir, `${projectName}.har`);
 
     try {
-      await insomnia.preferencesPage.openPreferences('Data');
+      await insomnia.statusbar.openPreferences();
+      await insomnia.preferencesPage.switchToPreferenceTab('Data');
 
       await insomnia.preferencesPage.dataTab.exportProjectData(exportFilePath, 'har');
       await waitForExportFiles(tempDir, 1);

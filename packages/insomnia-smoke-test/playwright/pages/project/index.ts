@@ -75,9 +75,7 @@ export class ProjectPage extends BasePage {
    */
   async createProject(name = 'My Project', storageType: ProjectStorageType = 'local'): Promise<void> {
     await this.page.getByRole('button', { name: 'Create new Project' }).click();
-    if (name !== 'My Project') {
-      await this.setProjectName(name);
-    }
+    await this.setProjectName(name);
     await this.selectStorageType(storageType);
     await this.page.getByRole('button', { name: 'Create', exact: true }).click();
   }
@@ -117,19 +115,6 @@ export class ProjectPage extends BasePage {
     }
   }
 
-  // ===========================================================================
-  // Export (from workspace card dropdown)
-  // ===========================================================================
-
-  /**
-   * Opens the workspace card dropdown menu.
-   * @param workspaceName - The name of the workspace
-   */
-  async openWorkspaceCardDropdown(workspaceName: string): Promise<void> {
-    const workspaceCard = this.workspaceList.workspaceLocator(workspaceName);
-    await workspaceCard.getByLabel('Workspace actions menu button').click();
-  }
-
   /**
    * Exports a workspace from the workspace card dropdown.
    * Note: After calling this method, use waitForExportFiles() utility to ensure the file is written.
@@ -146,7 +131,7 @@ export class ProjectPage extends BasePage {
     await mockSaveDialogForFile(this.app, exportPath);
 
     // Open workspace card dropdown
-    await this.openWorkspaceCardDropdown(workspaceName);
+    await this.workspaceList.openWorkspaceCardDropdown(workspaceName);
 
     // Click Export option
     await this.page.getByRole('menuitem', { name: 'Export' }).click();

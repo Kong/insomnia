@@ -44,7 +44,7 @@ export class WorkspacePage extends BasePage {
   /**
    * Opens the workspace dropdown menu.
    */
-  async openWorkspaceDropdown(): Promise<void> {
+  private async openWorkspaceDropdown(): Promise<void> {
     await this.page.getByTestId('workspace-context-dropdown').click();
   }
 

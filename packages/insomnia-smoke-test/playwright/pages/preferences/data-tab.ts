@@ -53,7 +53,7 @@ export class PreferencesDataTab extends BasePage {
   /**
    * Waits for the export complete alert modal.
    */
-  async waitForExportCompleteAlert(): Promise<void> {
+  private async waitForExportCompleteAlert(): Promise<void> {
     await this.page.getByText('Export Complete').waitFor({ state: 'visible', timeout: 10_000 });
     await this.page.getByRole('button', { name: 'Ok' }).click();
   }
