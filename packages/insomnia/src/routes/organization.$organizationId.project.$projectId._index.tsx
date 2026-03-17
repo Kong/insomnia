@@ -70,6 +70,8 @@ import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organ
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useMockServerGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.generate-request-collection';
+import { useProjectSidebarTreeMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.sidebar-tree.move';
+import { useProjectMoveWorkspaceActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move-workspace';
 import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
@@ -102,6 +104,7 @@ import { ProjectEmptyView } from '~/ui/components/project/project-empty-view';
 import {
   ProjectSidebarTree,
   type ProjectSidebarTreeAction,
+  type ProjectSidebarTreeDropPayload,
   type ProjectSidebarTreeNode,
 } from '~/ui/components/project/project-sidebar-tree';
 import {
@@ -112,7 +115,7 @@ import {
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { TimeFromNow } from '~/ui/components/time-from-now';
-import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
+import { showResourceNotFoundToast, showToast } from '~/ui/components/toast-notification';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
@@ -169,6 +172,7 @@ interface CollectionTreeNode {
   name: string;
   nodeType: 'request-group' | 'request';
   requestMethod?: string;
+  metaSortKey?: number;
   doc: RequestGroup | RequestLike;
 }
 
@@ -427,6 +431,7 @@ async function getCollectionTreeByWorkspaceId({
       parentId: requestGroup.parentId,
       name: requestGroup.name,
       nodeType: 'request-group',
+      metaSortKey: requestGroup.metaSortKey,
       doc: requestGroup,
     });
   });
@@ -443,6 +448,7 @@ async function getCollectionTreeByWorkspaceId({
       name: requestNode.name,
       nodeType: 'request',
       requestMethod: 'method' in requestNode ? requestNode.method : undefined,
+      metaSortKey: 'metaSortKey' in requestNode ? requestNode.metaSortKey : undefined,
       doc: requestNode,
     });
   });
@@ -645,6 +651,8 @@ const Component = () => {
   const updateRequestFetcher = useRequestUpdateActionFetcher();
   const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
   const deleteRequestFetcher = useRequestDeleteActionFetcher();
+  const moveWorkspaceFetcher = useProjectMoveWorkspaceActionFetcher();
+  const moveCollectionNodeFetcher = useProjectSidebarTreeMoveActionFetcher();
   const updateRequestGroupFetcher = useRequestGroupUpdateActionFetcher();
   const duplicateRequestGroupFetcher = useRequestGroupDuplicateActionFetcher();
   const deleteRequestGroupFetcher = useRequestGroupDeleteActionFetcher();
@@ -702,13 +710,20 @@ const Component = () => {
     `${organizationId}:project-tree-expanded-collections`,
     [],
   );
+  const [workspaceOrderByProjectId, setWorkspaceOrderByProjectId] = reactUse.useLocalStorage<Record<string, string[]>>(
+    `${organizationId}:project-tree-workspace-order`,
+    {},
+  );
   const [expandedRequestGroupKeys, setExpandedRequestGroupKeys] = reactUse.useLocalStorage<string[]>(
     `${organizationId}:project-tree-expanded-request-groups`,
     [],
   );
+  const [projectOrder, setProjectOrder] = reactUse.useLocalStorage<string[]>(`${organizationId}:project-tree-order`, []);
   const expandedProjectIdList = Array.isArray(expandedProjectIds) ? expandedProjectIds : [];
   const expandedCollectionKeyList = Array.isArray(expandedCollectionKeys) ? expandedCollectionKeys : [];
   const expandedRequestGroupKeyList = Array.isArray(expandedRequestGroupKeys) ? expandedRequestGroupKeys : [];
+  const workspaceOrderMap = workspaceOrderByProjectId && typeof workspaceOrderByProjectId === 'object' ? workspaceOrderByProjectId : {};
+  const projectOrderList = Array.isArray(projectOrder) ? projectOrder : [];
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
   const [collectionActionTarget, setCollectionActionTarget] = useState<{
     project: Project & { gitRepository?: GitRepository };
@@ -848,6 +863,48 @@ const Component = () => {
         project.gitRepository?.hasUnpushedChanges,
     };
   });
+
+  const orderedProjectsWithPresence = useMemo(() => {
+    const activeProjectIds = new Set(projectsWithPresence.map(project => project._id));
+    const normalizedOrder = projectOrderList.filter(projectId => activeProjectIds.has(projectId));
+    const missingIds = projectsWithPresence
+      .map(project => project._id)
+      .filter(projectId => !normalizedOrder.includes(projectId));
+    const fullOrder = [...normalizedOrder, ...missingIds];
+    const rankById = new Map(fullOrder.map((projectId, index) => [projectId, index]));
+
+    return projectsWithPresence
+      .slice()
+      .sort((a, b) => (rankById.get(a._id) ?? Number.MAX_SAFE_INTEGER) - (rankById.get(b._id) ?? Number.MAX_SAFE_INTEGER));
+  }, [projectOrderList, projectsWithPresence]);
+
+  useEffect(() => {
+    const activeProjectIds = new Set(projectsWithPresence.map(project => project._id));
+    const normalizedOrder = projectOrderList.filter(projectId => activeProjectIds.has(projectId));
+    const missingIds = projectsWithPresence
+      .map(project => project._id)
+      .filter(projectId => !normalizedOrder.includes(projectId));
+    const nextOrder = [...normalizedOrder, ...missingIds];
+
+    if (nextOrder.join('|') !== projectOrderList.join('|')) {
+      setProjectOrder(nextOrder);
+    }
+  }, [projectOrderList, projectsWithPresence, setProjectOrder]);
+
+  useEffect(() => {
+    const nextOrderMap = { ...workspaceOrderMap };
+
+    orderedProjectsWithPresence.forEach(project => {
+      const workspaceIds = (projectFilesWithRemoteByProjectId[project._id] || []).map(file => file.id);
+      const existing = (workspaceOrderMap[project._id] || []).filter(id => workspaceIds.includes(id));
+      const missing = workspaceIds.filter(id => !existing.includes(id));
+      nextOrderMap[project._id] = [...existing, ...missing];
+    });
+
+    if (JSON.stringify(nextOrderMap) !== JSON.stringify(workspaceOrderMap)) {
+      setWorkspaceOrderByProjectId(nextOrderMap);
+    }
+  }, [orderedProjectsWithPresence, projectFilesWithRemoteByProjectId, setWorkspaceOrderByProjectId, workspaceOrderMap]);
 
   const navigate = useNavigate();
 
@@ -1022,6 +1079,198 @@ const Component = () => {
         shouldNavigate: true,
       },
     );
+  };
+
+  const getProjectById = (id: string) => projectsWithPresence.find(project => project._id === id);
+
+  const getStorageLabel = (project: Project) => {
+    if (isGitProject(project)) {
+      return 'Git';
+    }
+
+    if (isRemoteProject(project)) {
+      return 'Cloud';
+    }
+
+    return 'Local';
+  };
+
+  const showCrossProjectMoveConfirmation = ({
+    sourceProjectId,
+    targetProjectId,
+    onConfirm,
+  }: {
+    sourceProjectId: string;
+    targetProjectId: string;
+    onConfirm: () => void;
+  }) => {
+    if (sourceProjectId === targetProjectId) {
+      onConfirm();
+      return;
+    }
+
+    const sourceProject = getProjectById(sourceProjectId);
+    const targetProject = getProjectById(targetProjectId);
+
+    if (!sourceProject || !targetProject) {
+      return;
+    }
+
+    const sourceStorage = getStorageLabel(sourceProject);
+    const targetStorage = getStorageLabel(targetProject);
+
+    showModal(AskModal, {
+      title: 'Move to Another Project',
+      message: `Move this item from ${sourceProject.name} (${sourceStorage}) to ${targetProject.name} (${targetStorage})? This changes where data is stored and may create uncommitted changes.`,
+      yesText: 'Move',
+      noText: 'Cancel',
+      onDone: async isYes => {
+        if (isYes) {
+          onConfirm();
+        }
+      },
+    });
+  };
+
+  const handleProjectReorder = (payload: ProjectSidebarTreeDropPayload) => {
+    const currentOrder = orderedProjectsWithPresence.map(project => project._id);
+    const sourceIndex = currentOrder.indexOf(payload.source.id);
+    const targetIndex = currentOrder.indexOf(payload.target.id);
+
+    if (sourceIndex === -1 || targetIndex === -1) {
+      return;
+    }
+
+    const nextOrder = currentOrder.filter(id => id !== payload.source.id);
+    const insertionIndex = payload.position === 'before' ? targetIndex : targetIndex + 1;
+    nextOrder.splice(Math.min(insertionIndex, nextOrder.length), 0, payload.source.id);
+    setProjectOrder(nextOrder);
+  };
+
+  const reorderWorkspaceRows = ({
+    sourceWorkspaceId,
+    sourceProjectId,
+    targetWorkspaceId,
+    targetProjectId,
+    position,
+  }: {
+    sourceWorkspaceId: string;
+    sourceProjectId: string;
+    targetWorkspaceId: string;
+    targetProjectId: string;
+    position: 'before' | 'after';
+  }) => {
+    const nextOrderMap = { ...workspaceOrderMap };
+
+    const sourceIds = (projectFilesWithRemoteByProjectId[sourceProjectId] || []).map(file => file.id);
+    const targetIds = (projectFilesWithRemoteByProjectId[targetProjectId] || []).map(file => file.id);
+
+    const sourceOrder = (nextOrderMap[sourceProjectId] || sourceIds).filter(id => sourceIds.includes(id));
+    const targetOrder = (nextOrderMap[targetProjectId] || targetIds).filter(id => targetIds.includes(id));
+
+    const cleanedSource = sourceOrder.filter(id => id !== sourceWorkspaceId);
+    const baseTarget = (sourceProjectId === targetProjectId ? cleanedSource : targetOrder).filter(
+      id => id !== sourceWorkspaceId,
+    );
+    const targetIndex = baseTarget.indexOf(targetWorkspaceId);
+
+    if (targetIndex === -1) {
+      return;
+    }
+
+    const insertAt = position === 'before' ? targetIndex : targetIndex + 1;
+    const nextTarget = baseTarget.slice();
+    nextTarget.splice(Math.min(insertAt, nextTarget.length), 0, sourceWorkspaceId);
+
+    nextOrderMap[targetProjectId] = nextTarget;
+    if (sourceProjectId !== targetProjectId) {
+      nextOrderMap[sourceProjectId] = cleanedSource;
+    }
+
+    setWorkspaceOrderByProjectId(nextOrderMap);
+  };
+
+  const handleValidTreeDrop = (payload: ProjectSidebarTreeDropPayload) => {
+    const { source, target, position } = payload;
+
+    if (source.type === 'project' && target.type === 'project') {
+      handleProjectReorder(payload);
+      return;
+    }
+
+    if (source.type === 'workspace' && target.type === 'project') {
+      showCrossProjectMoveConfirmation({
+        sourceProjectId: source.projectId,
+        targetProjectId: target.projectId,
+        onConfirm: () => {
+          moveWorkspaceFetcher.submit(organizationId, target.projectId, source.id);
+          const sourceIds = (projectFilesWithRemoteByProjectId[source.projectId] || []).map(file => file.id);
+          const targetIds = (projectFilesWithRemoteByProjectId[target.projectId] || []).map(file => file.id);
+          const nextOrderMap = { ...workspaceOrderMap };
+          nextOrderMap[source.projectId] = (nextOrderMap[source.projectId] || sourceIds).filter(id => id !== source.id);
+          const targetOrder = (nextOrderMap[target.projectId] || targetIds).filter(id => id !== source.id);
+          nextOrderMap[target.projectId] = [...targetOrder, source.id];
+          setWorkspaceOrderByProjectId(nextOrderMap);
+        },
+      });
+      return;
+    }
+
+    if (source.type === 'workspace' && target.type === 'workspace' && (position === 'before' || position === 'after')) {
+      showCrossProjectMoveConfirmation({
+        sourceProjectId: source.projectId,
+        targetProjectId: target.projectId,
+        onConfirm: () => {
+          if (source.projectId !== target.projectId) {
+            moveWorkspaceFetcher.submit(organizationId, target.projectId, source.id);
+          }
+          reorderWorkspaceRows({
+            sourceWorkspaceId: source.id,
+            sourceProjectId: source.projectId,
+            targetWorkspaceId: target.id,
+            targetProjectId: target.projectId,
+            position,
+          });
+        },
+      });
+      return;
+    }
+
+    if ((source.type === 'request' || source.type === 'request-group') && target.type !== 'project') {
+      if (target.type !== 'workspace' && target.type !== 'request' && target.type !== 'request-group') {
+        return;
+      }
+      const sourceType = source.type === 'request' ? 'request' : 'request-group';
+      const targetType =
+        target.type === 'workspace' ? 'workspace' : target.type === 'request' ? 'request' : 'request-group';
+
+      showCrossProjectMoveConfirmation({
+        sourceProjectId: source.projectId,
+        targetProjectId: target.projectId,
+        onConfirm: () => {
+          moveCollectionNodeFetcher.submit({
+            organizationId,
+            projectId,
+            params: {
+              sourceId: source.id,
+              sourceType,
+              targetId: target.id,
+              targetType,
+              dropPosition: position,
+            },
+          });
+        },
+      });
+    }
+  };
+
+  const handleInvalidTreeDrop = ({ reason }: ProjectSidebarTreeDropPayload & { reason: string }) => {
+    showToast({
+      icon: 'exclamation-triangle',
+      status: 'warning',
+      title: 'Move not allowed',
+      description: reason,
+    });
   };
 
   const createCollectionRequest = ({
@@ -1646,10 +1895,11 @@ const Component = () => {
                 </div>
                 <div className="flex-1 overflow-y-auto overflow-x-hidden py-1">
                   <ProjectSidebarTree
-                    projects={projectsWithPresence}
+                    projects={orderedProjectsWithPresence}
                     projectFilesByProjectId={projectFilesWithRemoteByProjectId}
                     collectionTreeByWorkspaceId={collectionTreeByWorkspaceId}
                     workspaceScopeOrder={workspaceScopeOrder}
+                    workspaceOrderByProjectId={workspaceOrderMap}
                     workspaceScopeIcon={workspaceScopeIcon}
                     expandedProjectIds={expandedProjectIdList}
                     expandedCollectionKeys={expandedCollectionKeyList}
@@ -1689,6 +1939,8 @@ const Component = () => {
                     getCollectionActions={getCollectionActions}
                     getFolderActions={getFolderActions}
                     getRequestActions={getRequestActions}
+                    onValidDrop={handleValidTreeDrop}
+                    onInvalidDrop={handleInvalidTreeDrop}
                   />
                 </div>
               </div>

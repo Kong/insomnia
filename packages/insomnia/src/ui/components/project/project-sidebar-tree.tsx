@@ -1,5 +1,6 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
-import type { CSSProperties, ReactNode } from 'react';
+import type { CSSProperties, DragEvent, HTMLAttributes, ReactNode } from 'react';
+import { useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
 import type { Workspace } from '~/models/workspace';
@@ -13,30 +14,31 @@ export const PROJECT_SIDEBAR_TREE_TOKENS = {
 } as const;
 
 const PROJECT_SIDEBAR_TREE_STYLE_TOKENS = {
-  projectRowPaddingLeft: '0.5rem', // px-2
-  workspaceRowPaddingLeft: '1.5rem', // pl-6
-  caretCenterOffset: '0.625rem', // h-5 / 2
+  projectRowPaddingLeft: '0.5rem',
+  workspaceRowPaddingLeft: '1.5rem',
+  caretCenterOffset: '0.625rem',
 } as const;
 
 const MENU_CLASS =
   'min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden';
 const MENU_ITEM_CLASS =
   'flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden';
-const ROW_BASE_CLASS = 'group flex w-full min-w-0 items-center gap-1 rounded-xs py-1 pr-2';
+const ROW_BASE_CLASS = 'group relative flex w-full min-w-0 items-center gap-1 rounded-xs py-1 pr-2';
 const CARET_BUTTON_CLASS =
   'flex h-5 w-5 items-center justify-center rounded-xs text-(--hl) transition-colors hover:bg-(--hl-xs)';
 const ACTION_BUTTON_CLASS =
   'pointer-events-none flex h-6 w-6 shrink-0 items-center justify-center rounded-xs text-(--hl) opacity-0 transition-all group-hover:pointer-events-auto group-hover:opacity-100 group-focus:pointer-events-auto group-focus:opacity-100 hover:bg-(--hl-xs) focus:pointer-events-auto focus:opacity-100 data-pressed:pointer-events-auto data-pressed:opacity-100';
 const LABEL_BUTTON_BASE_CLASS =
   'flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-left text-md transition-colors';
-
-const getRowClass = (active: boolean, extra = '') =>
-  `${ROW_BASE_CLASS} ${active ? 'bg-(--hl-sm)' : 'hover:bg-(--hl-xs)'} ${extra}`.trim();
+const getRowClass = (active: boolean, dropInside: boolean, extra = '') =>
+  `${ROW_BASE_CLASS} ${dropInside ? 'bg-(--hl-sm)' : active ? 'bg-(--hl-sm)' : 'hover:bg-(--hl-xs)'} ${extra}`.trim();
 
 const getLabelClass = (active: boolean, extra = '') =>
   `${LABEL_BUTTON_BASE_CLASS} ${active ? 'text-(--color-font)' : 'text-(--hl) hover:text-(--color-font)'} ${extra}`.trim();
 
 type TreeNodeType = 'request-group' | 'request';
+export type ProjectSidebarTreeDragType = 'project' | 'workspace' | 'request-group' | 'request';
+export type ProjectSidebarTreeDropPosition = 'before' | 'after' | 'inside';
 
 export interface ProjectSidebarTreeNode {
   _id: string;
@@ -44,7 +46,8 @@ export interface ProjectSidebarTreeNode {
   name: string;
   nodeType: TreeNodeType;
   requestMethod?: string;
-  doc: unknown;
+  metaSortKey?: number;
+  doc: any;
 }
 
 export interface ProjectSidebarWorkspaceFile {
@@ -66,6 +69,22 @@ export interface ProjectSidebarTreeAction {
   onAction: () => void;
 }
 
+export interface ProjectSidebarTreeDragEntity {
+  type: ProjectSidebarTreeDragType;
+  id: string;
+  name: string;
+  projectId: string;
+  workspaceId?: string;
+  workspaceScope?: string;
+  ancestorIds?: string[];
+}
+
+export interface ProjectSidebarTreeDropPayload {
+  source: ProjectSidebarTreeDragEntity;
+  target: ProjectSidebarTreeDragEntity;
+  position: ProjectSidebarTreeDropPosition;
+}
+
 interface ProjectSidebarTreeProps<
   TProject extends ProjectSidebarTreeProject,
   TFile extends ProjectSidebarWorkspaceFile,
@@ -76,6 +95,7 @@ interface ProjectSidebarTreeProps<
   workspaceScopeOrder: Record<string, number>;
   workspaceScopeIcon: Record<string, IconProp>;
   expandedProjectIds: string[];
+  workspaceOrderByProjectId?: Record<string, string[]>;
   expandedCollectionKeys: string[];
   expandedRequestGroupKeys: string[];
   activeProjectId?: string;
@@ -100,6 +120,13 @@ interface ProjectSidebarTreeProps<
   getCollectionActions: (project: TProject, file: TFile) => ProjectSidebarTreeAction[];
   getFolderActions: (project: TProject, file: TFile, node: ProjectSidebarTreeNode) => ProjectSidebarTreeAction[];
   getRequestActions: (project: TProject, file: TFile, node: ProjectSidebarTreeNode) => ProjectSidebarTreeAction[];
+  onValidDrop: (payload: ProjectSidebarTreeDropPayload) => void;
+  onInvalidDrop: (payload: ProjectSidebarTreeDropPayload & { reason: string }) => void;
+}
+
+interface DropTarget {
+  target: ProjectSidebarTreeDragEntity;
+  position: ProjectSidebarTreeDropPosition;
 }
 
 function TreeActionMenu({ label, actions }: { label: string; actions: ProjectSidebarTreeAction[] }) {
@@ -139,6 +166,100 @@ function TreeBranchGuide({ left, children }: { left: string; children: ReactNode
   );
 }
 
+function compareCollectionNodeOrder(a: ProjectSidebarTreeNode, b: ProjectSidebarTreeNode) {
+  if (typeof a.metaSortKey === 'number' && typeof b.metaSortKey === 'number') {
+    return a.metaSortKey - b.metaSortKey;
+  }
+
+  if (typeof a.metaSortKey === 'number') {
+    return -1;
+  }
+
+  if (typeof b.metaSortKey === 'number') {
+    return 1;
+  }
+
+  return a.name.localeCompare(b.name);
+}
+
+function getDropPosition(
+  event: DragEvent,
+  allowInside: boolean,
+): ProjectSidebarTreeDropPosition {
+  if (!allowInside) {
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    return event.clientY - rect.top < rect.height / 2 ? 'before' : 'after';
+  }
+
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  const y = event.clientY - rect.top;
+
+  if (y < rect.height * 0.25) {
+    return 'before';
+  }
+
+  if (y > rect.height * 0.75) {
+    return 'after';
+  }
+
+  return 'inside';
+}
+
+function validateDrop(
+  source: ProjectSidebarTreeDragEntity,
+  target: ProjectSidebarTreeDragEntity,
+  position: ProjectSidebarTreeDropPosition,
+): { valid: boolean; reason?: string } {
+  if (source.id === target.id && source.type === target.type) {
+    return { valid: false, reason: 'Cannot move an item onto itself.' };
+  }
+
+  if (source.type === 'project') {
+    if (target.type !== 'project' || position === 'inside') {
+      return { valid: false, reason: 'Projects can only be reordered with other projects.' };
+    }
+    return { valid: true };
+  }
+
+  if (source.type === 'workspace') {
+    if (target.type === 'project' && position === 'inside') {
+      return { valid: true };
+    }
+
+    if (target.type === 'workspace' && position !== 'inside') {
+      return { valid: true };
+    }
+
+    return { valid: false, reason: 'Workspaces can only be moved to a project or reordered with another workspace.' };
+  }
+
+  if (source.type === 'request' || source.type === 'request-group') {
+    const targetIsCollectionRoot =
+      target.type === 'workspace' && target.workspaceScope === 'collection' && position === 'inside';
+
+    const targetIsFolder = target.type === 'request-group';
+    const targetIsRequest = target.type === 'request';
+
+    if (!targetIsCollectionRoot && !targetIsFolder && !targetIsRequest) {
+      return { valid: false, reason: 'Requests and folders can only be moved inside collections.' };
+    }
+
+    if (targetIsRequest && position === 'inside') {
+      return { valid: false, reason: 'Cannot drop inside a request.' };
+    }
+
+    if (source.type === 'request-group' && position === 'inside' && target.type === 'request-group') {
+      if (target.ancestorIds?.includes(source.id)) {
+        return { valid: false, reason: 'Cannot move a folder into one of its descendants.' };
+      }
+    }
+
+    return { valid: true };
+  }
+
+  return { valid: false, reason: 'This drag operation is not supported.' };
+}
+
 export function ProjectSidebarTree<
   TProject extends ProjectSidebarTreeProject,
   TFile extends ProjectSidebarWorkspaceFile,
@@ -147,6 +268,7 @@ export function ProjectSidebarTree<
   projectFilesByProjectId,
   collectionTreeByWorkspaceId,
   workspaceScopeOrder,
+  workspaceOrderByProjectId,
   workspaceScopeIcon,
   expandedProjectIds,
   expandedCollectionKeys,
@@ -171,17 +293,160 @@ export function ProjectSidebarTree<
   getCollectionActions,
   getFolderActions,
   getRequestActions,
+  onValidDrop,
+  onInvalidDrop,
 }: ProjectSidebarTreeProps<TProject, TFile>) {
+  const [draggedEntity, setDraggedEntity] = useState<ProjectSidebarTreeDragEntity | null>(null);
+  const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
+
+  const handleDrop = (
+    source: ProjectSidebarTreeDragEntity,
+    target: ProjectSidebarTreeDragEntity,
+    position: ProjectSidebarTreeDropPosition,
+  ) => {
+    const validation = validateDrop(source, target, position);
+
+    if (validation.valid) {
+      onValidDrop({ source, target, position });
+    } else {
+      onInvalidDrop({ source, target, position, reason: validation.reason || 'Invalid drop target.' });
+    }
+
+    setDropTarget(null);
+    setDraggedEntity(null);
+  };
+
+  const bindRowDnD = (
+    entity: ProjectSidebarTreeDragEntity,
+    allowInside: boolean,
+  ): HTMLAttributes<HTMLDivElement> => {
+    const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+      if (!draggedEntity) {
+        return;
+      }
+      if (draggedEntity.type === 'project' && entity.type !== 'project') {
+        return;
+      }
+
+      event.preventDefault();
+      const position = getDropPosition(event, allowInside);
+      const isExpandedProjectTarget = entity.type === 'project' && expandedProjectIds.includes(entity.id);
+
+      if (draggedEntity.type === 'project' && isExpandedProjectTarget && position !== 'before') {
+        setDropTarget(null);
+        return;
+      }
+
+      setDropTarget({ target: entity, position });
+    };
+
+    const handleDropEvent = (event: DragEvent<HTMLDivElement>) => {
+      if (!draggedEntity) {
+        return;
+      }
+      if (draggedEntity.type === 'project' && entity.type !== 'project') {
+        return;
+      }
+
+      event.preventDefault();
+      const position = getDropPosition(event, allowInside);
+      const isExpandedProjectTarget = entity.type === 'project' && expandedProjectIds.includes(entity.id);
+
+      if (draggedEntity.type === 'project' && isExpandedProjectTarget && position !== 'before') {
+        return;
+      }
+
+      handleDrop(draggedEntity, entity, position);
+    };
+
+    return {
+    draggable: true,
+    onDragStart: event => {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', entity.id);
+      setDraggedEntity(entity);
+    },
+    onDragOver: handleDragOver,
+    onDrop: handleDropEvent,
+    onDragOverCapture: handleDragOver,
+    onDropCapture: handleDropEvent,
+    onDragEnd: () => {
+      setDropTarget(null);
+      setDraggedEntity(null);
+    },
+  };
+  };
+
+  const bindProjectTailDropZone = (
+    entity: ProjectSidebarTreeDragEntity,
+  ): HTMLAttributes<HTMLDivElement> => ({
+    onDragOver: event => {
+      if (!draggedEntity || draggedEntity.type !== 'project') {
+        return;
+      }
+
+      event.preventDefault();
+      setDropTarget({ target: entity, position: 'after' });
+    },
+    onDrop: event => {
+      if (!draggedEntity || draggedEntity.type !== 'project') {
+        return;
+      }
+
+      event.preventDefault();
+      handleDrop(draggedEntity, entity, 'after');
+    },
+  });
+
+  const getDropState = (entity: ProjectSidebarTreeDragEntity) => {
+    if (!dropTarget || dropTarget.target.id !== entity.id || dropTarget.target.type !== entity.type) {
+      return {
+        isDropBefore: false,
+        isDropAfter: false,
+        isDropInside: false,
+        isValid: true,
+      };
+    }
+
+    const validation = draggedEntity ? validateDrop(draggedEntity, dropTarget.target, dropTarget.position) : { valid: true };
+
+    return {
+      isDropBefore: dropTarget.position === 'before',
+      isDropAfter: dropTarget.position === 'after',
+      isDropInside: dropTarget.position === 'inside',
+      isValid: validation.valid,
+    };
+  };
+
+  const renderDropLine = (show: boolean, top: boolean, isValid: boolean) =>
+    show ? (
+      <span
+        className={`pointer-events-none absolute ${top ? 'top-0' : 'bottom-0'} left-6 right-2 h-[2px] rounded-full ${isValid ? 'bg-(--color-surprise)' : 'bg-(--color-danger)'}`}
+      />
+    ) : null;
+
   return (
     <>
       {projects.map(project => {
         const isProjectExpanded = expandedProjectIds.includes(project._id);
         const isActiveProject = project._id === activeProjectId;
         const files = projectFilesByProjectId[project._id] || [];
+        const projectEntity: ProjectSidebarTreeDragEntity = {
+          type: 'project',
+          id: project._id,
+          name: project.name,
+          projectId: project._id,
+        };
+        const projectDropState = getDropState(projectEntity);
 
         return (
           <div key={project._id} className="flex flex-col">
-            <div className={getRowClass(isActiveProject, 'px-2')}>
+            <div
+              {...bindRowDnD(projectEntity, true)}
+              className={getRowClass(isActiveProject, projectDropState.isDropInside, 'px-2 gap-0')}
+            >
+              {renderDropLine(projectDropState.isDropBefore, true, projectDropState.isValid)}
+              {renderDropLine(!isProjectExpanded && projectDropState.isDropAfter, false, projectDropState.isValid)}
               <Button
                 aria-label={`${isProjectExpanded ? 'Collapse' : 'Expand'} ${project.name}`}
                 onPress={() => onToggleProjectExpanded(project._id)}
@@ -208,16 +473,47 @@ export function ProjectSidebarTree<
                   {files
                     .slice()
                     .sort((a, b) => {
+                      const workspaceOrder = workspaceOrderByProjectId?.[project._id] || [];
+                      const rankA = workspaceOrder.indexOf(a.id);
+                      const rankB = workspaceOrder.indexOf(b.id);
+
+                      if (rankA !== -1 || rankB !== -1) {
+                        if (rankA === -1) {
+                          return 1;
+                        }
+
+                        if (rankB === -1) {
+                          return -1;
+                        }
+
+                        return rankA - rankB;
+                      }
+
                       const scopeDiff = (workspaceScopeOrder[a.scope] || 99) - (workspaceScopeOrder[b.scope] || 99);
                       return scopeDiff !== 0 ? scopeDiff : a.name.localeCompare(b.name);
                     })
                     .map(file => {
+                      const workspaceEntity: ProjectSidebarTreeDragEntity = {
+                        type: 'workspace',
+                        id: file.id,
+                        name: file.name,
+                        projectId: project._id,
+                        workspaceId: file.id,
+                        workspaceScope: file.scope,
+                      };
+                      const workspaceDropState = getDropState(workspaceEntity);
+
                       if (file.scope !== 'collection') {
                         const isWorkspaceActive = activeWorkspaceId === file.workspace?._id;
 
                         return (
                           <div key={`${project._id}:${file.id}`} className="min-w-0">
-                            <div className={getRowClass(isWorkspaceActive, 'pl-6')}>
+                            <div
+                              {...bindRowDnD(workspaceEntity, false)}
+                              className={getRowClass(isWorkspaceActive, workspaceDropState.isDropInside, 'pl-6')}
+                            >
+                              {renderDropLine(workspaceDropState.isDropBefore, true, workspaceDropState.isValid)}
+                              {renderDropLine(workspaceDropState.isDropAfter, false, workspaceDropState.isValid)}
                               <span className="h-5 w-5 shrink-0" />
                               <Button
                                 aria-label={`Open ${file.name}`}
@@ -239,26 +535,44 @@ export function ProjectSidebarTree<
                       const collectionKey = `${project._id}:${file.id}`;
                       const isCollectionExpanded = expandedCollectionKeys.includes(collectionKey);
                       const collectionTreeNodes = collectionTreeByWorkspaceId[file.id] || [];
-                      const rootNodes = collectionTreeNodes.filter(node => node.parentId === file.id);
+                      const rootNodes = collectionTreeNodes
+                        .filter(node => node.parentId === file.id)
+                        .sort(compareCollectionNodeOrder);
                       const isCollectionActive =
                         activeWorkspaceId === file.workspace?._id && !activeRequestId && !activeRequestGroupId;
 
-                      const renderTreeNodes = (parentId: string, depth: number): ReactNode[] =>
+                      const renderTreeNodes = (parentId: string, depth: number, ancestorIds: string[] = []): ReactNode[] =>
                         collectionTreeNodes
                           .filter(node => node.parentId === parentId)
-                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .sort(compareCollectionNodeOrder)
                           .map(node => {
                             const requestGroupKey = `${project._id}:${file.id}:${node._id}`;
                             const isRequestGroupExpanded = expandedRequestGroupKeys.includes(requestGroupKey);
                             const hasChildren = collectionTreeNodes.some(childNode => childNode.parentId === node._id);
+                            const nodeEntity: ProjectSidebarTreeDragEntity = {
+                              type: node.nodeType,
+                              id: node._id,
+                              name: node.name,
+                              projectId: project._id,
+                              workspaceId: file.id,
+                              workspaceScope: file.scope,
+                              ancestorIds,
+                            };
+                            const nodeDropState = getDropState(nodeEntity);
 
                             if (node.nodeType === 'request-group') {
                               return (
                                 <div key={requestGroupKey} className="flex flex-col">
                                   <div
-                                    className={getRowClass(activeRequestGroupId === node._id)}
+                                    {...bindRowDnD(nodeEntity, true)}
+                                    className={getRowClass(
+                                      activeRequestGroupId === node._id,
+                                      nodeDropState.isDropInside,
+                                    )}
                                     style={{ paddingLeft: `${depth}px` }}
                                   >
+                                    {renderDropLine(nodeDropState.isDropBefore, true, nodeDropState.isValid)}
+                                    {renderDropLine(nodeDropState.isDropAfter, false, nodeDropState.isValid)}
                                     <Button
                                       aria-label={`${isRequestGroupExpanded ? 'Collapse' : 'Expand'} ${node.name}`}
                                       onPress={() => onToggleRequestGroupExpanded(requestGroupKey)}
@@ -292,6 +606,7 @@ export function ProjectSidebarTree<
                                         {renderTreeNodes(
                                           node._id,
                                           depth + PROJECT_SIDEBAR_TREE_TOKENS.folderChildDepthOffset,
+                                          [...ancestorIds, node._id],
                                         )}
                                       </TreeBranchGuide>
                                     ) : (
@@ -309,7 +624,13 @@ export function ProjectSidebarTree<
                             }
 
                             return (
-                              <div key={requestGroupKey} className={getRowClass(activeRequestId === node._id)}>
+                              <div
+                                key={requestGroupKey}
+                                {...bindRowDnD(nodeEntity, false)}
+                                className={getRowClass(activeRequestId === node._id, nodeDropState.isDropInside)}
+                              >
+                                {renderDropLine(nodeDropState.isDropBefore, true, nodeDropState.isValid)}
+                                {renderDropLine(nodeDropState.isDropAfter, false, nodeDropState.isValid)}
                                 <Button
                                   aria-label={`Open request ${node.name}`}
                                   onPress={e => onOpenCollectionNode(project, file, node, isPrimaryClickModifier(e))}
@@ -337,7 +658,12 @@ export function ProjectSidebarTree<
 
                       return (
                         <div key={collectionKey} className="flex flex-col">
-                          <div className={getRowClass(isCollectionActive, 'pl-6')}>
+                          <div
+                            {...bindRowDnD(workspaceEntity, true)}
+                            className={getRowClass(isCollectionActive, workspaceDropState.isDropInside, 'pl-6')}
+                          >
+                            {renderDropLine(workspaceDropState.isDropBefore, true, workspaceDropState.isValid)}
+                            {renderDropLine(workspaceDropState.isDropAfter, false, workspaceDropState.isValid)}
                             <Button
                               aria-label={`${isCollectionExpanded ? 'Collapse' : 'Expand'} ${file.name}`}
                               onPress={() => onToggleCollectionExpanded(collectionKey)}
@@ -374,6 +700,13 @@ export function ProjectSidebarTree<
                         </div>
                       );
                     })}
+                  <div
+                    {...bindProjectTailDropZone(projectEntity)}
+                    className="relative h-4"
+                    aria-hidden
+                  >
+                    {renderDropLine(projectDropState.isDropAfter, false, projectDropState.isValid)}
+                  </div>
                 </div>
               </TreeBranchGuide>
             )}
