@@ -25,4 +25,13 @@ export class WorkspaceListComponent {
   async openWorkspace(name: string): Promise<void> {
     await this.workspaceLocator(name).click();
   }
+
+  /**
+   * Opens the workspace card dropdown menu.
+   * @param workspaceName - The name of the workspace
+   */
+  async openWorkspaceCardDropdown(workspaceName: string): Promise<void> {
+    const workspaceCard = this.workspaceLocator(workspaceName);
+    await workspaceCard.getByLabel('Workspace actions menu button').click();
+  }
 }

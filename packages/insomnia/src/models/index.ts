@@ -173,6 +173,14 @@ export function canDuplicate(type: string) {
   return model ? model.canDuplicate : false;
 }
 
+export function rewriteReferences<T extends BaseModel>(doc: T, idMapping: Map<string, string>): T {
+  const model = getModel(doc.type);
+  if (!model) return doc;
+  return 'rewriteReferences' in model
+    ? (model.rewriteReferences as unknown as (doc: T, idMapping: Map<string, string>) => T)(doc, idMapping)
+    : doc;
+}
+
 export async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
   const model = getModel(type);
 

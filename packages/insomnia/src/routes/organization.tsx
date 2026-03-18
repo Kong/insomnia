@@ -44,7 +44,6 @@ import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { sortOrganizations } from '~/ui/organization-utils';
-import { trackTempOrganizationOpened } from '~/ui/temp-segment-tracking';
 import { AsyncTask, getInitialRouteForOrganization } from '~/utils/router';
 
 import type { Route } from './+types/organization';
@@ -212,13 +211,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
       untrackedProjectsFetcher.load();
     }
   }, [organizationId, untrackedProjectsFetcher]);
-
-  // TODO(INS-1912): Remove in 12.5
-  useEffect(() => {
-    if (organizationId) {
-      trackTempOrganizationOpened(organizationId);
-    }
-  }, [organizationId]);
 
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
   const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
