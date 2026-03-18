@@ -1,8 +1,8 @@
 import type { Root } from '@modelcontextprotocol/sdk/types.js';
 
+import type { BaseModel } from './base-types';
 import { type EnvironmentKvPairData } from './environment';
 import type { RequestAuthentication, RequestHeader } from './request';
-import type { BaseModel } from './base-types';
 
 export const name = 'MCP Request';
 export const type = 'McpRequest';

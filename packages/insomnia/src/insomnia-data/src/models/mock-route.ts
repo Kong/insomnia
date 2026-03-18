@@ -1,5 +1,5 @@
-import type { RequestHeader } from './request';
 import type { BaseModel } from './base-types';
+import type { RequestHeader } from './request';
 
 export const name = 'Mock Route';
 

@@ -1,6 +1,6 @@
+import type { BaseModel } from './base-types';
 import type { EnvironmentKvPairData, EnvironmentType } from './environment';
 import type { RequestAuthentication, RequestHeader } from './request';
-import type { BaseModel } from './base-types';
 import { replaceIdsInFields } from './utils/replace-ids-in-fields';
 
 export const name = 'Folder';

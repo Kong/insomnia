@@ -1,4 +1,4 @@
-import { type CloudProviderCredential, type Request, type RequestGroup, type Response, type Workspace } from '~/insomnia-data';
+import type { CloudProviderCredential, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
 
 import packageJson from '../../package.json';
 import type { NodeCurlRequestOptions } from '../plugins/context/network';

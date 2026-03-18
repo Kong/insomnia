@@ -1,6 +1,6 @@
+import type { BaseModel } from './base-types';
 import { type McpTransportType, TRANSPORT_TYPES } from './mcp-request';
 import type { ResponseHeader } from './response';
-import type { BaseModel } from './base-types';
 
 export const name = 'Mcp Response';
 export const type = 'McpResponse';
