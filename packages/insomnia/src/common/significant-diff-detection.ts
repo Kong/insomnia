@@ -291,7 +291,6 @@ export function findSystemChangeLines(
     for (const event of events) {
       const wasOverlapping = changeCount > 0 && systemCount > 0;
 
-      // eslint-disable-next-line default-case
       switch (event.eventType) {
         case EVENT_TYPE.CHANGE_START: {
           changeCount++;
@@ -307,6 +306,9 @@ export function findSystemChangeLines(
         }
         case EVENT_TYPE.CHANGE_END: {
           changeCount--;
+          break;
+        }
+        default: {
           break;
         }
       }
