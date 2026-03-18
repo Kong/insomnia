@@ -255,22 +255,21 @@ export function findSystemChangeLines(
     interface Event {
       eventType: EventType;
       lineNumber: number;
-      oriIntervalObj: { start: number; end: number };
     }
 
     const events: Event[] = [];
 
     changeIntervals.forEach(interval => {
       events.push(
-        { eventType: EVENT_TYPE.CHANGE_START, lineNumber: interval.start, oriIntervalObj: interval },
-        { eventType: EVENT_TYPE.CHANGE_END, lineNumber: interval.end, oriIntervalObj: interval },
+        { eventType: EVENT_TYPE.CHANGE_START, lineNumber: interval.start },
+        { eventType: EVENT_TYPE.CHANGE_END, lineNumber: interval.end },
       );
     });
 
     systemLineIntervals.forEach(interval => {
       events.push(
-        { eventType: EVENT_TYPE.SYSTEM_START, lineNumber: interval.start, oriIntervalObj: interval },
-        { eventType: EVENT_TYPE.SYSTEM_END, lineNumber: interval.end, oriIntervalObj: interval },
+        { eventType: EVENT_TYPE.SYSTEM_START, lineNumber: interval.start },
+        { eventType: EVENT_TYPE.SYSTEM_END, lineNumber: interval.end },
       );
     });
 
