@@ -30,9 +30,7 @@ import YAML from 'yaml';
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce, isNotNullOrUndefined } from '~/common/misc';
-import * as models from '~/models/index';
-import { isScratchpadOrganizationId } from '~/models/organization';
-import { isGitProject } from '~/models/project';
+import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -67,27 +65,27 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   if (!project) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
   }
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   if (!workspace) {
     showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
 
-  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  const apiSpec = await services.apiSpec.getByParentId(workspaceId);
   if (!apiSpec) {
     showResourceNotFoundToast(`API Specification not found for workspace: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
 
-  const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
+  const gitRepositoryId = models.project.isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
   // we don't run the lint here because it is expensive and slows first render too much
   // TODO: add this in once we run this loader outside the renderer
   const rulesetPath = gitRepositoryId
@@ -171,7 +169,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
 
   useEffect(() => {
-    if (!isScratchpadOrganizationId(organizationId)) {
+    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
       load({ organizationId });
     }

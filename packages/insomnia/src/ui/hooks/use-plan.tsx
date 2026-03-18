@@ -1,16 +1,14 @@
 import { type PersonalPlanType } from 'insomnia-api';
 import { useParams } from 'react-router';
 
-import { formatCurrentPlanType } from '~/models/organization';
+import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
-
-import { isOwnerOfOrganization } from '../../models/organization';
 
 export const usePlanData = () => {
   let isOwner = false;
   let planType: PersonalPlanType = 'free';
-  let planDisplayName = formatCurrentPlanType(planType);
+  let planDisplayName = models.organization.formatCurrentPlanType(planType);
   let isFreePlan = true;
   let isTeamPlan = false;
   let isEnterprisePlan = false;
@@ -27,7 +25,7 @@ export const usePlanData = () => {
     const currentOrg = organizationData.organizations.find(organization => organization.id === organizationId);
     const accountId = userSession.accountId;
     if (currentOrg && accountId) {
-      isOwner = isOwnerOfOrganization({
+      isOwner = models.organization.isOwnerOfOrganization({
         organization: currentOrg,
         accountId: userSession.accountId,
       });
@@ -36,7 +34,7 @@ export const usePlanData = () => {
     isFreePlan = planType.includes('free');
     isTeamPlan = planType.includes('team');
     isEnterprisePlan = planType.includes('enterprise');
-    planDisplayName = formatCurrentPlanType(planType);
+    planDisplayName = models.organization.formatCurrentPlanType(planType);
   }
   return {
     isOwner,

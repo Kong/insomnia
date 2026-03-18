@@ -2,7 +2,7 @@ import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { useEffect, useState } from 'react';
 
 import { Icon } from '~/basic-components/icon';
-import type { GitRepository } from '~/models/git-repository';
+import { type GitRepository } from '~/insomnia-data';
 
 export const GitConnectionInfo = ({
   gitRepository,

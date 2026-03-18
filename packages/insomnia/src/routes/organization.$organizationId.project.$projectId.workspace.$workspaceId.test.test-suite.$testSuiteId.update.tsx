@@ -1,8 +1,7 @@
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import * as models from '~/models';
-import type { UnitTestSuite } from '~/models/unit-test-suite';
+import { models, services, type UnitTestSuite } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -19,7 +18,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   invariant(unitTestSuite, 'Test Suite not found');
 
-  await models.unitTestSuite.update(unitTestSuite, data);
+  await services.unitTestSuite.update(unitTestSuite, data);
 
   return null;
 }

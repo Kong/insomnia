@@ -15,12 +15,7 @@ import {
 } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
-import {
-  type GitCredentials,
-  type GitCredentialsV2,
-  type GitRemoteProviderType,
-  isGitCredentialsV2,
-} from '~/models/git-credentials';
+import { type GitCredentials, type GitCredentialsV2, type GitRemoteProviderType,models } from '~/insomnia-data';
 import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
 import { useGitCredentialsDeleteActionFetcher } from '~/routes/git-credentials.$id.delete';
 import { useRelatedProjectsByGitCredentialsIdLoaderFetcher } from '~/routes/git-credentials.$id.related-projects';
@@ -191,7 +186,7 @@ export const GitCredentialModal = ({
                 </>
               )}
               {gitCredentialToEdit &&
-                isGitCredentialsV2(gitCredentialToEdit) &&
+                models.gitCredentials.isGitCredentialsV2(gitCredentialToEdit) &&
                 gitCredentialToEdit.provider === 'custom' &&
                 provider?.type === 'custom' && (
                   <GitCustomCredentialForm
@@ -370,7 +365,7 @@ const GitCredentialsList = () => {
                   <span>{item.author.email}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {isGitCredentialsV2(item) && provider && !provider.supportsOAuth && (
+                  {models.gitCredentials.isGitCredentialsV2(item) && provider && !provider.supportsOAuth && (
                     <Button
                       className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
                       onPress={() => {

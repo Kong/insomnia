@@ -44,25 +44,8 @@ import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sort
 import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
+import { type Environment, type GrpcRequest, models, type Project, type Request, type RequestGroup, services, type SocketIORequest, type WebSocketRequest, type Workspace } from '~/insomnia-data';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
-import * as models from '~/models';
-import type { Environment } from '~/models/environment';
-import { type GrpcRequest, isGrpcRequest, isGrpcRequestId } from '~/models/grpc-request';
-import { getByParentId as getGrpcRequestMetaByParentId } from '~/models/grpc-request-meta';
-import { isScratchpadOrganizationId } from '~/models/organization';
-import type { Project } from '~/models/project';
-import {
-  isEventStreamRequest,
-  isGraphqlSubscriptionRequest,
-  isRequest,
-  isRequestId,
-  type Request,
-} from '~/models/request';
-import { isRequestGroup, isRequestGroupId, type RequestGroup } from '~/models/request-group';
-import { getByParentId as getRequestMetaByParentId } from '~/models/request-meta';
-import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '~/models/socket-io-request';
-import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '~/models/websocket-request';
-import { isDesign, type Workspace } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
 import {
   type Child,
@@ -162,21 +145,21 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
 
-    const activeProject = await models.project.getById(projectId);
+    const activeProject = await services.project.getById(projectId);
     if (!activeProject) {
       showResourceNotFoundToast(`Project not found: ${projectId}`);
       throw redirect(href('/organization/:organizationId/project', { organizationId }));
     }
 
-    const activeWorkspace = await models.workspace.getById(workspaceId);
+    const activeWorkspace = await services.workspace.getById(workspaceId);
     if (!activeWorkspace) {
       showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
       throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
     }
 
-    const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+    const activeWorkspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
     const activeRequestId = activeWorkspaceMeta.activeRequestId;
-    const activeRequest = activeRequestId ? await models.request.getById(activeRequestId) : null;
+    const activeRequest = activeRequestId ? await services.request.getById(activeRequestId) : null;
     // TODO(george): we should remove this after enabling the sidebar for the runner
     const startOfQuery = request.url.indexOf('?');
     const urlWithoutQuery = startOfQuery > 0 ? request.url.slice(0, startOfQuery) : request.url;
@@ -224,7 +207,7 @@ const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
 const getRequestNameOrFallback = (
   doc: Request | RequestGroup | GrpcRequest | WebSocketRequest | SocketIORequest,
 ): string => {
-  return !isRequestGroup(doc) ? doc.name || doc.url || 'Untitled request' : doc.name || 'Untitled folder';
+  return !models.requestGroup.isRequestGroup(doc) ? doc.name || doc.url || 'Untitled request' : doc.name || 'Untitled folder';
 };
 
 const RequestTiming = ({ requestId }: { requestId: string }) => {
@@ -302,7 +285,7 @@ const Debug = () => {
     const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [event, doc] = change;
-        if (isGrpcRequest(doc) && event === 'insert') {
+        if (models.grpcRequest.isGrpcRequest(doc) && event === 'insert') {
           setGrpcStates(grpcStates => [...grpcStates, { requestId: doc._id, ...INITIAL_GRPC_REQUEST_STATE }]);
         }
       }
@@ -399,9 +382,9 @@ const Debug = () => {
     sidebar_toggle: toggleSidebar,
     request_togglePin: async () => {
       if (requestId) {
-        const meta = isGrpcRequestId(requestId)
-          ? await getGrpcRequestMetaByParentId(requestId)
-          : await getRequestMetaByParentId(requestId);
+        const meta = models.grpcRequest.isGrpcRequestId(requestId)
+          ? await services.grpcRequestMeta.getByParentId(requestId)
+          : await services.requestMeta.getByParentId(requestId);
         patchRequestMeta(requestId, { pinned: !meta?.pinned });
       }
     },
@@ -481,7 +464,7 @@ const Debug = () => {
     environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
     request_showGenerateCodeEditor: () => {
-      if (activeRequest && isRequest(activeRequest)) {
+      if (activeRequest && models.request.isRequest(activeRequest)) {
         showModal(GenerateCodeModal, { request: activeRequest });
       }
     },
@@ -505,10 +488,10 @@ const Debug = () => {
 
   const isRealtimeRequest =
     activeRequest &&
-    (isWebSocketRequest(activeRequest) ||
-      isEventStreamRequest(activeRequest) ||
-      isGraphqlSubscriptionRequest(activeRequest) ||
-      isSocketIORequest(activeRequest));
+    (models.webSocketRequest.isWebSocketRequest(activeRequest) ||
+      models.request.isEventStreamRequest(activeRequest) ||
+      models.request.isGraphqlSubscriptionRequest(activeRequest) ||
+      models.socketIORequest.isSocketIORequest(activeRequest));
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -551,14 +534,14 @@ const Debug = () => {
 
       // If the item we move is a folder we cannot move it inside it's ancestor folders so we must check the ancestry
       const isMovingFolderInsideItsChildren =
-        isRequestGroup(dropItem.doc) && targetItem.ancestors?.includes(dropItem.doc._id);
+        models.requestGroup.isRequestGroup(dropItem.doc) && targetItem.ancestors?.includes(dropItem.doc._id);
       if (isMovingFolderInsideItsChildren) {
         return;
       }
 
       let metaSortKey = 0;
       // If the target is a folder and we insert after it we want to add that item to the folder
-      const isMovingItemInsideFolder = isRequestGroup(targetItem.doc) && event.target.dropPosition === 'after';
+      const isMovingItemInsideFolder = models.requestGroup.isRequestGroup(targetItem.doc) && event.target.dropPosition === 'after';
       if (isMovingItemInsideFolder) {
         // there is no item before we move the item to the beginning
         // If there are children find the first child key and use a lower one
@@ -842,7 +825,7 @@ const Debug = () => {
                 </Breadcrumb>
               </Breadcrumbs>
             </div>
-            {isDesign(activeWorkspace) && (
+            {models.workspace.isDesign(activeWorkspace) && (
               <DocumentTab organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
             )}
             <div className="flex w-full flex-col items-start gap-2 p-(--padding-sm)">
@@ -1097,7 +1080,7 @@ const Debug = () => {
                   >
                     <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
                       <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
-                      {isRequest(item.doc) && (
+                      {models.request.isRequest(item.doc) && (
                         <span
                           className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${
                             {
@@ -1114,17 +1097,17 @@ const Debug = () => {
                           {getMethodShortHand(item.doc)}
                         </span>
                       )}
-                      {isWebSocketRequest(item.doc) && (
+                      {models.webSocketRequest.isWebSocketRequest(item.doc) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                           WS
                         </span>
                       )}
-                      {isSocketIORequest(item.doc) && (
+                      {models.socketIORequest.isSocketIORequest(item.doc) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                           IO
                         </span>
                       )}
-                      {isGrpcRequest(item.doc) && (
+                      {models.grpcRequest.isGrpcRequest(item.doc) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
                           gRPC
                         </span>
@@ -1135,7 +1118,7 @@ const Debug = () => {
                         ariaLabel="request name"
                         className="flex-1 px-1"
                         onSubmit={newName => {
-                          if (isRequestGroup(item.doc)) {
+                          if (models.requestGroup.isRequestGroup(item.doc)) {
                             patchGroup(item.doc._id, { name: newName });
                           } else {
                             patchRequest(item.doc._id, { name: newName });
@@ -1168,11 +1151,11 @@ const Debug = () => {
                 {virtualItem => {
                   const item = visibleCollection[virtualItem.index];
                   let label = item.doc.name;
-                  if (isRequest(item.doc)) {
+                  if (models.request.isRequest(item.doc)) {
                     label = `${getMethodShortHand(item.doc)} ${label}`;
-                  } else if (isWebSocketRequest(item.doc)) {
+                  } else if (models.webSocketRequest.isWebSocketRequest(item.doc)) {
                     label = `WS ${label}`;
-                  } else if (isGrpcRequest(item.doc)) {
+                  } else if (models.grpcRequest.isGrpcRequest(item.doc)) {
                     label = `gRPC ${label}`;
                   }
 
@@ -1202,7 +1185,7 @@ const Debug = () => {
             </div>
           </div>
 
-          {isScratchpadOrganizationId(organizationId) && <ScratchPadTutorialPanel />}
+          {models.organization.isScratchpadOrganizationId(organizationId) && <ScratchPadTutorialPanel />}
 
           <WorkspaceSyncDropdown />
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
@@ -1247,8 +1230,8 @@ const Debug = () => {
                   <Panel id="pane-one" order={1} minSize={10} className="pane-one theme--pane">
                     {workspaceId ? (
                       <ErrorBoundary showAlert>
-                        {isRequestGroupId(requestGroupId) && <RequestGroupPane settings={settings} />}
-                        {isGrpcRequestId(requestId) && grpcState && (
+                        {models.requestGroup.isRequestGroupId(requestGroupId) && <RequestGroupPane settings={settings} />}
+                        {models.grpcRequest.isGrpcRequestId(requestId) && grpcState && (
                           <GrpcRequestPane
                             key={grpcState.requestId}
                             grpcState={grpcState}
@@ -1256,9 +1239,9 @@ const Debug = () => {
                             reloadRequests={reloadRequests}
                           />
                         )}
-                        {isWebSocketRequestId(requestId) && <WebSocketRequestPane environment={activeEnvironment} />}
-                        {isSocketIORequestId(requestId) && <SocketIORequestPane environment={activeEnvironment} />}
-                        {isRequestId(requestId) && (
+                        {models.webSocketRequest.isWebSocketRequestId(requestId) && <WebSocketRequestPane environment={activeEnvironment} />}
+                        {models.socketIORequest.isSocketIORequestId(requestId) && <SocketIORequestPane environment={activeEnvironment} />}
+                        {models.request.isRequestId(requestId) && (
                           <RequestPane
                             environmentId={activeEnvironment ? activeEnvironment._id : ''}
                             settings={settings}
@@ -1285,11 +1268,11 @@ const Debug = () => {
                       />
                       <Panel id="pane-two" order={2} minSize={10} className="pane-two theme--pane">
                         <ErrorBoundary showAlert>
-                          {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+                          {activeRequest && models.grpcRequest.isGrpcRequest(activeRequest) && grpcState && (
                             <GrpcResponsePane grpcState={grpcState} />
                           )}
                           {isRealtimeRequest && <RealtimeResponsePane requestId={activeRequest._id} />}
-                          {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
+                          {activeRequest && models.request.isRequest(activeRequest) && !isRealtimeRequest && (
                             <ResponsePane activeRequestId={activeRequest._id} />
                           )}
                         </ErrorBoundary>
@@ -1446,7 +1429,7 @@ const CollectionGridListItem = ({
   const tabNavigate = useTabNavigate();
   const groupMetaPatcher = useRequestGroupMetaPatcher();
 
-  const action = isRequestGroup(item.doc)
+  const action = models.requestGroup.isRequestGroup(item.doc)
     ? `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}/update`
     : `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}/update`;
 
@@ -1476,7 +1459,7 @@ const CollectionGridListItem = ({
   return (
     <GridListItem
       id={item.doc._id}
-      className={`group absolute top-0 left-0 w-full outline-hidden select-none ${isRequestGroup(item.doc) ? 'data-drop-target:bg-(--hl-md)' : 'border-solid data-drop-target:border-b data-drop-target:border-(--color-surprise)'}`}
+      className={`group absolute top-0 left-0 w-full outline-hidden select-none ${models.requestGroup.isRequestGroup(item.doc) ? 'data-drop-target:bg-(--hl-md)' : 'border-solid data-drop-target:border-b data-drop-target:border-(--color-surprise)'}`}
       textValue={label}
       data-testid={item.doc.name}
       style={style}
@@ -1498,7 +1481,7 @@ const CollectionGridListItem = ({
       onPress={e => {
         const id = item.doc._id;
         // Toggle collapse if it's a request group
-        if (isRequestGroupId(id)) {
+        if (models.requestGroup.isRequestGroupId(id)) {
           groupMetaPatcher(id, { collapsed: !item.collapsed });
         }
 
@@ -1536,7 +1519,7 @@ const CollectionGridListItem = ({
           className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors data-[selected=true]:bg-(--color-surprise)"
         />
         <Button slot="drag" className="hidden" />
-        {isRequest(item.doc) && (
+        {models.request.isRequest(item.doc) && (
           <span
             aria-hidden
             role="presentation"
@@ -1555,7 +1538,7 @@ const CollectionGridListItem = ({
             {getMethodShortHand(item.doc)}
           </span>
         )}
-        {isWebSocketRequest(item.doc) && (
+        {models.webSocketRequest.isWebSocketRequest(item.doc) && (
           <span
             aria-hidden
             role="presentation"
@@ -1564,7 +1547,7 @@ const CollectionGridListItem = ({
             WS
           </span>
         )}
-        {isSocketIORequest(item.doc) && (
+        {models.socketIORequest.isSocketIORequest(item.doc) && (
           <span
             aria-hidden
             role="presentation"
@@ -1573,7 +1556,7 @@ const CollectionGridListItem = ({
             IO
           </span>
         )}
-        {isGrpcRequest(item.doc) && (
+        {models.grpcRequest.isGrpcRequest(item.doc) && (
           <span
             aria-hidden
             role="presentation"
@@ -1582,7 +1565,7 @@ const CollectionGridListItem = ({
             gRPC
           </span>
         )}
-        {isRequestGroup(item.doc) && (
+        {models.requestGroup.isRequestGroup(item.doc) && (
           <span>
             <Icon className="w-6 shrink-0" icon={item.collapsed ? 'folder' : 'folder-open'} />
           </span>
@@ -1595,18 +1578,18 @@ const CollectionGridListItem = ({
           ariaLabel={label}
           className="flex-1 hover:bg-transparent!"
           onSubmit={newName => {
-            if (isRequestGroup(item.doc)) {
+            if (models.requestGroup.isRequestGroup(item.doc)) {
               patchGroup(item.doc._id, { name: newName });
             } else {
               patchRequest(item.doc._id, { name: newName });
             }
           }}
         />
-        {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
-        {isSocketIORequest(item.doc) && <SocketIOSpinner requestId={item.doc._id} />}
-        {isGraphqlSubscriptionRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
-        {isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
-        {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
+        {models.webSocketRequest.isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+        {models.socketIORequest.isSocketIORequest(item.doc) && <SocketIOSpinner requestId={item.doc._id} />}
+        {models.request.isGraphqlSubscriptionRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+        {models.request.isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
+        {models.request.isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
         {item.pinned && (
           <Icon
             className="text-(--font-size-sm)"
@@ -1614,7 +1597,7 @@ const CollectionGridListItem = ({
             onDoubleClick={() => patchRequestMeta(item.doc._id, { pinned: !item.pinned })}
           />
         )}
-        {isRequestGroup(item.doc) ? (
+        {models.requestGroup.isRequestGroup(item.doc) ? (
           <RequestGroupActionsDropdown
             requestGroup={item.doc}
             onRename={() => setIsEditable(true)}

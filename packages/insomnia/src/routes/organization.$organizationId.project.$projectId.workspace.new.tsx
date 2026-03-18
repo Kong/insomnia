@@ -7,12 +7,7 @@ import { href, redirect } from 'react-router';
 import { getAppVersion, getMockServiceURL, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
 import { services } from '~/insomnia-data';
-import * as models from '~/models';
-import { userSession } from '~/models';
-import type { MockRoute } from '~/models/mock-route';
-import type { MockServer } from '~/models/mock-server';
-import { isGitProject, isLocalProject } from '~/models/project';
-import { isCollection, isEnvironment, scopeToActivity, type WorkspaceScope } from '~/models/workspace';
+import { type MockRoute, type MockServer, models, type WorkspaceScope } from '~/insomnia-data';
 import type { MockRouteData } from '~/plugins/types';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initialize-backend-project';
@@ -47,7 +42,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { organizationId, projectId } = params;
   try {
     const workspaceData = (await request.json()) as NewWorkspaceData;
-    const project = await models.project.getById(projectId);
+    const project = await services.project.getById(projectId);
 
     invariant(project, 'Project not found');
 
@@ -100,20 +95,20 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     const workspaceName = name || (scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
 
-    const workspace = await models.workspace.create({
+    const workspace = await services.workspace.create({
       name: workspaceName,
       scope,
       parentId: projectId,
     });
 
-    if (isGitProject(project)) {
-      const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+    if (models.project.isGitProject(project)) {
+      const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
 
       const fileName = workspaceData.fileName || workspace.name;
 
       const safeToUseFileNameWithExtension = safeToUseInsomniaFileNameWithExt(fileName);
 
-      await models.workspaceMeta.update(workspaceMeta, {
+      await services.workspaceMeta.update(workspaceMeta, {
         gitFilePath: path.join(workspaceData.folderPath || '', safeToUseFileNameWithExtension),
       });
     }
@@ -136,11 +131,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     if (scope === 'design') {
-      await models.apiSpec.getOrCreateForParentId(workspace._id);
+      await services.apiSpec.getOrCreateForParentId(workspace._id);
     }
 
     if (workspaceData.scope === 'mcp') {
-      const settings = await models.settings.getOrCreate();
+      const settings = await services.settings.getOrCreate();
       const defaultHeaders = settings.disableAppVersionUserAgent
         ? []
         : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
@@ -160,14 +155,19 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     // Create default env, cookie jar, and meta
-    await models.environment.getOrCreateForParentId(workspace._id);
-    await models.cookieJar.getOrCreateForParentId(workspace._id);
-    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+    await services.environment.getOrCreateForParentId(workspace._id);
+    await services.cookieJar.getOrCreateForParentId(workspace._id);
+    const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
 
     await database.flushChanges(flushId);
 
-    const { id } = await models.userSession.getOrCreate();
-    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project)) {
+    const { id } = await services.userSession.getOrCreate();
+    if (
+      id &&
+      !workspaceMeta.gitRepositoryId &&
+      !models.project.isGitProject(project) &&
+      !models.project.isLocalProject(project)
+    ) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs,
@@ -178,11 +178,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     let event = SegmentEvent.documentCreate;
     let environmentType: string | undefined;
 
-    if (isCollection(workspace)) {
+    if (models.workspace.isCollection(workspace)) {
       event = SegmentEvent.collectionCreate;
-    } else if (isEnvironment(workspace)) {
+    } else if (models.workspace.isEnvironment(workspace)) {
       event = SegmentEvent.environmentCreate;
-      const environment = await models.environment.getById(workspace._id);
+      const environment = await services.environment.getById(workspace._id);
       environmentType = environment?.isPrivate ? 'private' : 'global';
     } else if (scope === 'mcp') {
       event = SegmentEvent.mcpClientWorkspaceCreate;
@@ -198,7 +198,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     });
 
     if (workspaceData.withRequest) {
-      const settings = await models.settings.getOrCreate();
+      const settings = await services.settings.getOrCreate();
       const defaultHeaders = settings.disableAppVersionUserAgent
         ? []
         : [
@@ -211,7 +211,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           ];
 
       const activeRequestId = (
-        await models.request.create({
+        await services.request.create({
           parentId: workspace._id,
           method: METHOD_GET,
           name: 'My first request',
@@ -236,7 +236,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         organizationId,
         projectId,
         workspaceId: workspace._id,
-      })}/${scopeToActivity(workspace.scope)}`,
+      })}/${models.workspace.scopeToActivity(workspace.scope)}`,
     );
   } catch (err) {
     console.error('Error creating workspace:', err);
@@ -287,9 +287,9 @@ async function createMockServer(
       mockServerPatch.url = workspaceData.mockServerUrl!;
     }
 
-    await models.environment.getOrCreateForParentId(workspace._id);
-    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-    const mockServer = await models.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
+    await services.environment.getOrCreateForParentId(workspace._id);
+    const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
+    const mockServer = await services.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
 
     const mockServerUrl = `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
       organizationId,
@@ -327,14 +327,14 @@ async function createMockServer(
 
       if (result.error && result.error !== '') {
         try {
-          await models.workspace.remove(workspace);
+          await services.workspace.remove(workspace);
         } catch (removeError) {
           console.error('Failed to rollback workspace creation:', removeError);
         }
         return result.error;
       }
 
-      const { id: sessionId } = await userSession.getOrCreate();
+      const { id: sessionId } = await services.userSession.getOrCreate();
       await createMockRoutes(result.routes, mockServer, sessionId, organizationId);
     }
 
@@ -342,7 +342,7 @@ async function createMockServer(
 
     const generationDurationMs = Date.now() - generationStartTime;
 
-    const { id } = await models.userSession.getOrCreate();
+    const { id } = await services.userSession.getOrCreate();
     if (id && !workspaceMeta.gitRepositoryId) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
@@ -384,7 +384,7 @@ async function createMockServer(
     return undefined;
   } catch (error) {
     try {
-      await models.workspace.remove(workspace);
+      await services.workspace.remove(workspace);
     } catch (removeError) {
       console.error('Failed to rollback workspace creation:', removeError);
     }
@@ -438,7 +438,7 @@ async function createMockRoutes(
       mockRouteCreateData.mimeType = route.mimeType;
     }
 
-    const mockRoute = await models.mockRoute.create(mockRouteCreateData);
+    const mockRoute = await services.mockRoute.create(mockRouteCreateData);
 
     try {
       const compoundId = mockRoute.parentId + mockRoute.name;

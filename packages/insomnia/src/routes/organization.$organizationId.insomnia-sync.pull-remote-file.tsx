@@ -1,7 +1,6 @@
 import { href, redirect } from 'react-router';
 
-import * as models from '~/models';
-import { scopeToActivity } from '~/models/workspace';
+import { models, services } from '~/insomnia-data';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { pullBackendProject } from '~/sync/vcs/pull-backend-project';
 import { invariant } from '~/utils/invariant';
@@ -31,7 +30,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     invariant(backendProject, 'Backend project not found');
 
-    const project = await models.project.getByRemoteId(remoteId);
+    const project = await services.project.getByRemoteId(remoteId);
 
     invariant(project?.remoteId, 'Project is not a remote project');
 
@@ -46,10 +45,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       remoteProject: project,
     });
 
-    const workspace = await models.workspace.getById(workspaceId);
+    invariant(workspaceId, 'Workspace ID not found after pulling backend project');
+    const workspace = await services.workspace.getById(workspaceId);
 
     invariant(workspace, 'Workspace not found');
-    const activity = scopeToActivity(workspace?.scope);
+    const activity = models.workspace.scopeToActivity(workspace?.scope);
 
     return redirect(`/organization/${organizationId}/project/${project._id}/workspace/${workspaceId}/${activity}`);
   } catch (e) {

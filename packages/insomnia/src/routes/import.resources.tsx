@@ -1,10 +1,8 @@
 import { href } from 'react-router';
 
 import { importResourcesToProject, importResourcesToWorkspace } from '~/common/import';
-import * as models from '~/models';
+import { models, services, type Workspace } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { isRemoteProject } from '~/models/project';
-import type { Workspace } from '~/models/workspace';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
@@ -34,7 +32,7 @@ export const importScannedResources = async ({
   invariant(organizationId && typeof organizationId === 'string', 'OrganizationId is required.');
   invariant(projectId && typeof projectId === 'string', 'ProjectId is required.');
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found.');
 
   return await (typeof workspaceId === 'string' && workspaceId
@@ -94,19 +92,19 @@ export const useImportResourcesFetcher = createFetcherSubmitHook(
 // If we put this function in import.ts which is depended by Inso CLI, Inso CLI will fail to build because it doesn't have access to the browser environment.
 // So we put this function here and pass it to importResourcesToProject func to avoid the dependency issue.
 export async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
-  const project = await models.project.getById(newWorkspace.parentId);
+  const project = await services.project.getById(newWorkspace.parentId);
   invariant(project, 'Project not found');
-  const userSession = await models.userSession.getOrCreate();
+  const userSession = await services.userSession.getOrCreate();
 
-  if (userSession.id && isRemoteProject(project)) {
+  if (userSession.id && models.project.isRemoteProject(project)) {
     const storageRules = await fetchAndCacheOrganizationStorageRule(project.parentId);
     invariant(storageRules, 'Storage rules not found');
 
     if (storageRules.enableCloudSync) {
       // Create default env, cookie jar, and meta
-      await models.environment.getOrCreateForParentId(newWorkspace._id);
-      await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
-      await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
+      await services.environment.getOrCreateForParentId(newWorkspace._id);
+      await services.cookieJar.getOrCreateForParentId(newWorkspace._id);
+      await services.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
       try {
         const vcs = VCSInstance().newInstance();
         await initializeLocalBackendProjectAndMarkForSync({

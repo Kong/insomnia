@@ -6,13 +6,12 @@ import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
-import { initDatabase, initServices } from '~/insomnia-data';
+import { initDatabase, initServices, services } from '~/insomnia-data';
 import { database as clientDatabase } from '~/ui/database.client';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
-import * as models from './models';
 import { initNewOAuthSession } from './network/o-auth-2/get-token';
 import { init as initPlugins } from './plugins';
 import { applyColorScheme } from './plugins/misc';
@@ -128,7 +127,7 @@ if (insomniaSession) {
   }
 }
 
-const appSettings = await models.settings.getOrCreate();
+const appSettings = await services.settings.getOrCreate();
 
 if (appSettings.clearOAuth2SessionOnRestart) {
   initNewOAuthSession();

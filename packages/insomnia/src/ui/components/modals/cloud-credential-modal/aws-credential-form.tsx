@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 
+import type { AWSCredentialType } from '~/insomnia-data';
 import {
-  AWSCredentialType,
   type AWSFileCredential,
   type AWSTemporaryCredential,
   type CloudProviderCredential,
   type CloudProviderName,
-} from '../../../../models/cloud-credential';
+  models,
+} from '~/insomnia-data';
+
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { FilePicker } from './file-picker';
@@ -22,7 +24,7 @@ export interface AWSCredentialFormProps {
 const initialFormValue: { name: string; credentials: Required<AWSCloudCredential>['credentials'] } = {
   name: '',
   credentials: {
-    type: AWSCredentialType.temp,
+    type: models.cloudCredential.AWSCredentialType.temp,
     accessKeyId: '',
     secretAccessKey: '',
     sessionToken: '',
@@ -41,10 +43,12 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
   const { type, region } = credentials;
   const [hideValueItemNames, setHideValueItemNames] = useState(['accessKeyId', 'secretAccessKey', 'sessionToken']);
   const [credentialFilePath, setCredentialFilePath] = useState(
-    type === AWSCredentialType.file || type === AWSCredentialType.sso ? credentials.filePath : '',
+    type === models.cloudCredential.AWSCredentialType.file || type === models.cloudCredential.AWSCredentialType.sso
+      ? credentials.filePath
+      : '',
   );
   const [configFilePath, setConfigFilePath] = useState(
-    type === AWSCredentialType.sso ? credentials.configFilePath : '',
+    type === models.cloudCredential.AWSCredentialType.sso ? credentials.configFilePath : '',
   );
   const [credentialType, setCredentialType] = useState<AWSCredentialType>(type);
 
@@ -79,7 +83,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
         } = Object.fromEntries(formData.entries()) as Record<string, string>;
         const commonData = { name, provider: providerType };
         let newData;
-        if (type === AWSCredentialType.temp) {
+        if (type === models.cloudCredential.AWSCredentialType.temp) {
           newData = {
             ...commonData,
             credentials: {
@@ -90,7 +94,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
               region,
             },
           };
-        } else if (type === AWSCredentialType.file) {
+        } else if (type === models.cloudCredential.AWSCredentialType.file) {
           newData = {
             ...commonData,
             credentials: {
@@ -136,9 +140,9 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
               id="awsCredentialType-temp"
               name="type"
               className="mr-2"
-              value={AWSCredentialType.temp}
-              checked={credentialType === AWSCredentialType.temp}
-              onChange={() => setCredentialType(AWSCredentialType.temp)}
+              value={models.cloudCredential.AWSCredentialType.temp}
+              checked={credentialType === models.cloudCredential.AWSCredentialType.temp}
+              onChange={() => setCredentialType(models.cloudCredential.AWSCredentialType.temp)}
             />
             <label className="mr-8 w-48 pt-0" htmlFor="awsCredentialType-temp">
               Temporary Credential
@@ -148,9 +152,9 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
               id="awsCredentialType-file"
               name="type"
               className="mr-2"
-              value={AWSCredentialType.file}
-              checked={credentialType === AWSCredentialType.file}
-              onChange={() => setCredentialType(AWSCredentialType.file)}
+              value={models.cloudCredential.AWSCredentialType.file}
+              checked={credentialType === models.cloudCredential.AWSCredentialType.file}
+              onChange={() => setCredentialType(models.cloudCredential.AWSCredentialType.file)}
             />
             <label className="mr-8 w-48 pt-0" htmlFor="awsCredentialType-file">
               Credential File
@@ -160,15 +164,15 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
               id="awsCredentialType-sso"
               name="type"
               className="mr-2"
-              value={AWSCredentialType.sso}
-              checked={credentialType === AWSCredentialType.sso}
-              onChange={() => setCredentialType(AWSCredentialType.sso)}
+              value={models.cloudCredential.AWSCredentialType.sso}
+              checked={credentialType === models.cloudCredential.AWSCredentialType.sso}
+              onChange={() => setCredentialType(models.cloudCredential.AWSCredentialType.sso)}
             />
             <label className="pt-0" htmlFor="awsCredentialType-sso">
               SSO Credential
             </label>
           </div>
-          {credentialType === AWSCredentialType.temp && (
+          {credentialType === models.cloudCredential.AWSCredentialType.temp && (
             <>
               <TextField
                 className="flex flex-col gap-2"
@@ -247,7 +251,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
               </TextField>
             </>
           )}
-          {credentialType === AWSCredentialType.sso && (
+          {credentialType === models.cloudCredential.AWSCredentialType.sso && (
             <>
               <div className="mt-2">
                 <label>
@@ -273,7 +277,8 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
               </div>
             </>
           )}
-          {(credentialType === AWSCredentialType.file || credentialType === AWSCredentialType.sso) && (
+          {(credentialType === models.cloudCredential.AWSCredentialType.file ||
+            credentialType === models.cloudCredential.AWSCredentialType.sso) && (
             <>
               <div className="mt-2">
                 <label>
@@ -299,7 +304,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
               </div>
               <TextField className="flex flex-col gap-2" defaultValue={(credentials as AWSFileCredential).section}>
                 <Label className="col-span-4">
-                  {credentialType === AWSCredentialType.file ? 'Section Name:' : 'Profile Name:'}
+                  {credentialType === models.cloudCredential.AWSCredentialType.file ? 'Section Name:' : 'Profile Name:'}
                 </Label>
                 <Input
                   required
@@ -307,7 +312,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
                   type="text"
                   name="section"
                   placeholder={
-                    credentialType === AWSCredentialType.file
+                    credentialType === models.cloudCredential.AWSCredentialType.file
                       ? 'Section name of the credential in the file'
                       : 'Profile name of the configuration to use in the config file'
                   }

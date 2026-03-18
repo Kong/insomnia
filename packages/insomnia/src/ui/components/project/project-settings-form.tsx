@@ -17,12 +17,7 @@ import { useParams } from 'react-router';
 import { Banner } from '~/basic-components/banner';
 import { Divider } from '~/basic-components/divider';
 import { LearnMoreLink } from '~/basic-components/link';
-import {
-  type GitCredentials,
-  isGitCredentialsV2,
-  isOAuthCredential,
-  type ProviderEmail,
-} from '~/models/git-credentials';
+import { type GitCredentials, type GitRepository, models, type Project, type ProviderEmail } from '~/insomnia-data';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
 import type { GitProviderOption } from '~/sync/git/providers/types';
@@ -35,29 +30,21 @@ import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 
-import type { GitRepository } from '../../../models/git-repository';
-import {
-  EMPTY_GIT_PROJECT_ID,
-  getDefaultProjectStorageType,
-  isGitProject,
-  isRemoteProject,
-  type Project,
-} from '../../../models/project';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
 
 const FORMID = 'git-repo-form';
 
 function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
-  if (storageType === 'git' && !isGitProject(project)) {
+  if (storageType === 'git' && !models.project.isGitProject(project)) {
     return true;
   }
 
-  if (storageType === 'local' && (isRemoteProject(project) || isGitProject(project))) {
+  if (storageType === 'local' && (models.project.isRemoteProject(project) || models.project.isGitProject(project))) {
     return true;
   }
 
-  if (storageType === 'remote' && !isRemoteProject(project)) {
+  if (storageType === 'remote' && !models.project.isRemoteProject(project)) {
     return true;
   }
 
@@ -92,7 +79,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   const isLightTheme = useIsLightTheme();
 
   const [storageType, setStorageType] = useState<'local' | 'remote' | 'git'>(
-    getDefaultProjectStorageType(storageRules, project),
+    models.project.getDefaultProjectStorageType(storageRules, project),
   );
 
   const { activeView, setActiveView } = useActiveView();
@@ -159,14 +146,14 @@ export const ProjectSettingsForm: FC<Props> = ({
   const showGitConnectionInfo =
     storageType === 'git' &&
     !isSwitchingStorageType(project!, storageType) &&
-    project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID &&
+    project?.gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID &&
     gitRepository?.credentialsId &&
     selectedProvider;
 
   const showGitRepoForm =
     storageType === 'git' &&
     ((isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) ||
-      (!isSwitchingStorageType(project!, storageType) && project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID));
+      (!isSwitchingStorageType(project!, storageType) && project?.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID));
 
   const emailsFetcher = useGitProviderEmailsLoaderFetcher();
   const isLoadingEmails = emailsFetcher.state !== 'idle';
@@ -176,7 +163,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     if (fetchedEmails.length > 0) {
       return fetchedEmails;
     }
-    if (selectedCredential && isGitCredentialsV2(selectedCredential) && isOAuthCredential(selectedCredential)) {
+    if (selectedCredential && models.gitCredentials.isGitCredentialsV2(selectedCredential) && models.gitCredentials.isOAuthCredential(selectedCredential)) {
       return selectedCredential.credentials?.emails || [];
     }
     return [];
@@ -184,8 +171,8 @@ export const ProjectSettingsForm: FC<Props> = ({
 
   const canFetchEmails =
     selectedCredential &&
-    isGitCredentialsV2(selectedCredential) &&
-    isOAuthCredential(selectedCredential) &&
+    models.gitCredentials.isGitCredentialsV2(selectedCredential) &&
+    models.gitCredentials.isOAuthCredential(selectedCredential) &&
     selectedProvider?.supportsFetchEmails;
 
   const showEmailSelector = showGitConnectionInfo && canFetchEmails;
@@ -240,16 +227,16 @@ export const ProjectSettingsForm: FC<Props> = ({
             <Banner
               type="info"
               className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
-              title={isGitProject(project!) ? 'Removing Git Sync connection' : 'Converting to Cloud Sync project'}
+              title={models.project.isGitProject(project!) ? 'Removing Git Sync connection' : 'Converting to Cloud Sync project'}
               message={
-                isGitProject(project!)
+                models.project.isGitProject(project!)
                   ? 'Changing this project to a Cloud Sync project will remove the connection to your repo. This does not delete the project files on the remote repo.'
                   : 'Anything added in the project will be securely synced to the Insomnia cloud and enables you to collaborate on projects with others. '
               }
               footer={
                 <LearnMoreLink
                   href={`https://developer.konghq.com/insomnia/storage/${
-                    isGitProject(project!)
+                    models.project.isGitProject(project!)
                       ? '#what-happens-if-i-change-a-git-sync-project-into-a-cloud-sync-project'
                       : '#can-i-change-a-local-vault-project-into-a-cloud-sync-project'
                   }`}
@@ -263,16 +250,16 @@ export const ProjectSettingsForm: FC<Props> = ({
             <Banner
               type="info"
               className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
-              title={isGitProject(project!) ? 'Removing Git Sync connection' : 'Converting to Local Vault project'}
+              title={models.project.isGitProject(project!) ? 'Removing Git Sync connection' : 'Converting to Local Vault project'}
               message={
-                isGitProject(project!)
+                models.project.isGitProject(project!)
                   ? 'Changing this project to a Local Vault project will remove the connection to your repo. This does not delete the project files on the remote repo.'
                   : 'Your files will now be stored on your local machine. You will no longer be able to collaborate with others on this project.'
               }
               footer={
                 <LearnMoreLink
                   href={`https://developer.konghq.com/insomnia/storage/${
-                    isGitProject(project!)
+                    models.project.isGitProject(project!)
                       ? '#can-i-change-a-git-sync-project-into-a-local-vault-project'
                       : '#can-i-change-a-cloud-sync-project-into-a-local-vault-project'
                   }`}
@@ -418,7 +405,7 @@ export const ProjectSettingsForm: FC<Props> = ({
             {storageType === 'git' &&
             !projectData.connectRepositoryLater &&
             (isSwitchingStorageType(project!, storageType) ||
-              project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID ||
+              project?.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID ||
               !gitRepository?.credentialsId) ? (
               <Button
                 isDisabled={!isGitSyncEnabled && isSwitchingStorageType(project!, storageType)}

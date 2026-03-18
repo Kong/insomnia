@@ -1,8 +1,7 @@
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import * as models from '~/models';
-import type { UnitTest } from '~/models/unit-test';
+import { models, services, type UnitTest } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -17,7 +16,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   });
   invariant(unitTest, 'Test not found');
 
-  await models.unitTest.remove(unitTest);
+  await services.unitTest.remove(unitTest);
   window.main.trackSegmentEvent({ event: SegmentEvent.unitTestDelete });
 
   return null;

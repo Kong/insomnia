@@ -3,17 +3,19 @@ import { OverlayContainer } from 'react-aria';
 import { useNavigate, useParams } from 'react-router';
 
 import type { McpRequest } from '~/insomnia-data';
+import {
+  type GrpcRequest,
+  models,
+  type Request,
+  services,
+  type SocketIORequest,
+  type WebSocketRequest,
+} from '~/insomnia-data';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 
 import { isNotNullOrUndefined } from '../../../common/misc';
-import * as models from '../../../models';
-import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isScratchpadOrganizationId } from '../../../models/organization';
-import { isRequest, type Request } from '../../../models/request';
-import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
-import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 import { revalidateWorkspaceActiveRequest } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { invariant } from '../../../utils/invariant';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -59,7 +61,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized && !isScratchpadOrganizationId(organizationId)) {
+    if (isIdleAndUninitialized && !models.organization.isScratchpadOrganizationId(organizationId)) {
       workspacesFetcher.load({
         organizationId,
         projectId,
@@ -108,7 +110,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     patchRequest(request._id, { [event.currentTarget.name]: event.currentTarget.checked ? true : false });
   };
   const updateReflectonApi = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    invariant(isGrpcRequest(request), 'Must be gRPC request');
+    invariant(models.grpcRequest.isGrpcRequest(request), 'Must be gRPC request');
     patchRequest(request._id, {
       reflectionApi: {
         ...request.reflectionApi,
@@ -136,7 +138,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                 />
               </label>
             </div>
-            {request && isWebSocketRequest(request) && (
+            {request && models.webSocketRequest.isWebSocketRequest(request) && (
               <>
                 <>
                   <div className="pad-top pad-bottom">
@@ -240,10 +242,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                 </div>
               </>
             )}
-            {request && isSocketIORequest(request) && (
-              <SocketIOPathSettings request={request} patchRequest={patchRequest} />
-            )}
-            {request && isGrpcRequest(request) && (
+            {request && models.grpcRequest.isGrpcRequest(request) && (
               <>
                 <div className="form-control form-control--thin pad-top-sm">
                   <label>
@@ -326,7 +325,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                 </p>
               </>
             )}
-            {request && isRequest(request) && (
+            {request && models.request.isRequest(request) && (
               <>
                 <>
                   <div className="pad-top pad-bottom">
@@ -404,7 +403,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                         defaultValue={request.settingFollowRedirects}
                         name="settingFollowRedirects"
                         onChange={async event => {
-                          await models.request.update(request, {
+                          await services.request.update(request, {
                             [event.currentTarget.name]: event.currentTarget.value,
                           });
                         }}

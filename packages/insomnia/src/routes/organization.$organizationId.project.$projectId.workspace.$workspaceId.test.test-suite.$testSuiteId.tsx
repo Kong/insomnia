@@ -17,12 +17,7 @@ import { useParams, useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
 import { documentationLinks } from '~/common/documentation';
-import * as models from '~/models';
-import { isGrpcRequest } from '~/models/grpc-request';
-import { isRequest, type Request } from '~/models/request';
-import type { UnitTest } from '~/models/unit-test';
-import type { UnitTestSuite } from '~/models/unit-test-suite';
-import { isWebSocketRequest } from '~/models/websocket-request';
+import { models, type Request, services, type UnitTest, type UnitTestSuite } from '~/insomnia-data';
 import { useRunAllTestsActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.run-all-tests';
 import { useTestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.delete';
 import { useTestRunActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.run';
@@ -136,7 +131,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
 
                 return (
                   <Fragment>
-                    {isRequest(request) && (
+                    {models.request.isRequest(request) && (
                       <span
                         className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${
                           {
@@ -153,12 +148,12 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
                         {getMethodShortHand(request)}
                       </span>
                     )}
-                    {isWebSocketRequest(request) && (
+                    {models.webSocketRequest.isWebSocketRequest(request) && (
                       <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                         WS
                       </span>
                     )}
-                    {isGrpcRequest(request) && (
+                    {models.grpcRequest.isGrpcRequest(request) && (
                       <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
                         gRPC
                       </span>
@@ -188,7 +183,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
                 >
                   {({ isSelected }) => (
                     <Fragment>
-                      {isRequest(request) && (
+                      {models.request.isRequest(request) && (
                         <span
                           className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${
                             {
@@ -205,12 +200,12 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
                           {getMethodShortHand(request)}
                         </span>
                       )}
-                      {isWebSocketRequest(request) && (
+                      {models.webSocketRequest.isWebSocketRequest(request) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                           WS
                         </span>
                       )}
-                      {isGrpcRequest(request) && (
+                      {models.grpcRequest.isGrpcRequest(request) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
                           gRPC
                         </span>
@@ -322,19 +317,19 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { workspaceId, testSuiteId } = params;
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
   const workspaceEntities = await database.getWithDescendants(workspace, [models.request.type]);
-  const requests: Request[] = workspaceEntities.filter(isRequest);
+  const requests: Request[] = workspaceEntities.filter(models.request.isRequest);
 
   const unitTestSuite = await database.findOne<UnitTestSuite>(models.unitTestSuite.type, {
     _id: testSuiteId,
   });
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
 
   if (workspaceMeta && workspaceMeta?.activeUnitTestSuiteId !== testSuiteId) {
-    await models.workspaceMeta.update(workspaceMeta, {
+    await services.workspaceMeta.update(workspaceMeta, {
       activeUnitTestSuiteId: testSuiteId,
     });
   }

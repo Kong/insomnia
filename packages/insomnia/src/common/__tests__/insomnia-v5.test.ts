@@ -8,12 +8,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
-import { services } from '~/insomnia-data';
+import { models, type Request, services } from '~/insomnia-data';
 
 import { INSOMNIA_SCHEMA_VERSION } from '../../common/insomnia-schema-migrations/schema-version';
-import * as models from '../../models';
-import { EnvironmentKvPairDataType } from '../../models/environment';
-import type { Request } from '../../models/request';
 import { database as db } from '../database';
 import {
   getInsomniaV5DataExport,
@@ -41,7 +38,7 @@ describe('Insomnia v5 Import/Export - Comprehensive Tests', () => {
       scope: 'collection',
     });
 
-    await models.settings.getOrCreate();
+    await services.settings.getOrCreate();
   });
 
   describe('insomniaSchemaTypeToScope', () => {
@@ -369,13 +366,13 @@ collection: []
             id: 'var1',
             name: 'foo',
             value: 'bar',
-            type: EnvironmentKvPairDataType.STRING,
+            type: models.environment.EnvironmentKvPairDataType.STRING,
           },
           {
             id: 'var2',
             name: 'foo1',
             value: 'bar1',
-            type: EnvironmentKvPairDataType.STRING,
+            type: models.environment.EnvironmentKvPairDataType.STRING,
           },
         ],
         roots: [

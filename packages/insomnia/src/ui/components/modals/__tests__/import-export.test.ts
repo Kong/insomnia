@@ -8,7 +8,7 @@ import * as models from '../../../../models';
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(async () => {
     await models.project.all();
-    await models.settings.getOrCreate();
+    await services.settings.getOrCreate();
   });
 
   it('exports a single workspace and some requests only as an HTTP Archive', async () => {

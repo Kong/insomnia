@@ -1,16 +1,16 @@
 import { getVault } from 'insomnia-api';
 import { type ActionFunctionArgs, href } from 'react-router';
 
-import { userSession as sessionModel } from '~/models';
+import { services } from '~/insomnia-data';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 export async function clientAction(_args: ActionFunctionArgs) {
   try {
-    const userSession = await sessionModel.getOrCreate();
+    const userSession = await services.userSession.getOrCreate();
     const { id: sessionId } = userSession;
     const { salt: vaultSalt } = await getVault({ sessionId });
     if (vaultSalt) {
-      await sessionModel.update(userSession, { vaultSalt });
+      await services.userSession.update(userSession, { vaultSalt });
       return vaultSalt;
     }
   } catch (error) {

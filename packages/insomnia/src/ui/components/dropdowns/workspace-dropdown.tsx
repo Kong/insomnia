@@ -21,6 +21,7 @@ import {
 } from 'react-aria-components';
 import { href, useNavigate, useParams } from 'react-router';
 
+import { models, type Workspace } from '~/insomnia-data';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 
@@ -28,11 +29,6 @@ import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import * as models from '../../../models';
-import { isRemoteProject } from '../../../models/project';
-import { isRequest } from '../../../models/request';
-import { isRequestGroup } from '../../../models/request-group';
-import { isMcp, isScratchpad, type Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -96,8 +92,8 @@ export const WorkspaceDropdown: FC<{}> = () => {
         };
 
         const docs = await db.getWithDescendants(workspace, [models.request.type]);
-        const requests = docs.filter(isRequest).filter(doc => !doc.isPrivate);
-        const requestGroups = docs.filter(isRequestGroup);
+        const requests = docs.filter(models.request.isRequest).filter(doc => !doc.isPrivate);
+        const requestGroups = docs.filter(models.requestGroup.isRequestGroup);
         await action(context, {
           requestGroups,
           requests,
@@ -119,7 +115,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
     setActionPlugins(actionPlugins);
   }, []);
 
-  const isScratchpadWorkspace = isScratchpad(activeWorkspace);
+  const isScratchpadWorkspace = models.workspace.isScratchpad(activeWorkspace);
   const scratchpadActionList: {
     name: string;
     id: string;
@@ -190,7 +186,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
       action: () => void;
     }[];
   }[] = [
-    ...(isMcp(activeWorkspace)
+    ...(models.workspace.isMcp(activeWorkspace)
       ? []
       : [
           {
@@ -237,7 +233,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
       id: 'actions',
       icon: 'cog',
       items: [
-        ...(isMcp(activeWorkspace)
+        ...(models.workspace.isMcp(activeWorkspace)
           ? []
           : [
               {
@@ -455,7 +451,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
                     <p>
                       This will permanently delete the{' '}
                       {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>}{' '}
-                      {getWorkspaceLabel(activeWorkspace).singular} {isRemoteProject(activeProject) ? 'remotely' : ''}.
+                      {getWorkspaceLabel(activeWorkspace).singular} {models.project.isRemoteProject(activeProject) ? 'remotely' : ''}.
                     </p>
                     {deleteWorkspaceFetcher.data && deleteWorkspaceFetcher.data.error && (
                       <p className="notice error margin-bottom-sm no-margin-top">{deleteWorkspaceFetcher.data.error}</p>

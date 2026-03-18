@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -11,11 +11,11 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   invariant(typeof cookieJarId === 'string', 'Cookie Jar ID is required');
 
-  const cookieJar = await models.cookieJar.getById(cookieJarId);
+  const cookieJar = await services.cookieJar.getById(cookieJarId);
 
   invariant(cookieJar, 'Cookie Jar not found');
 
-  const updatedCookieJar = await models.cookieJar.update(cookieJar, patch);
+  const updatedCookieJar = await services.cookieJar.update(cookieJar, patch);
 
   return updatedCookieJar;
 }

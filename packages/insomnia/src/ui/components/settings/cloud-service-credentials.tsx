@@ -1,15 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
+import { type CloudProviderCredential, type CloudProviderName,models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useDeleteCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.delete';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../common/constants';
-import {
-  type CloudProviderCredential,
-  type CloudProviderName,
-  getProviderDisplayName,
-} from '../../../models/cloud-credential';
 import { executePluginMainAction } from '../../../plugins';
 import { getBundlePlugins } from '../../../plugins';
 import { usePlanData } from '../../hooks/use-plan';
@@ -30,22 +26,22 @@ interface createCredentialItemType {
 const createCredentialItemList: createCredentialItemType[] = [
   {
     id: 'aws',
-    name: getProviderDisplayName('aws'),
+    name: models.cloudCredential.getProviderDisplayName('aws'),
     icon: <i className="fa-brands fa-aws ml-1" />,
   },
   {
     id: 'gcp',
-    name: getProviderDisplayName('gcp'),
+    name: models.cloudCredential.getProviderDisplayName('gcp'),
     icon: <SvgIcon icon="gcp-logo" className="ml-1" />,
   },
   {
     id: 'hashicorp',
-    name: getProviderDisplayName('hashicorp'),
+    name: models.cloudCredential.getProviderDisplayName('hashicorp'),
     icon: <SvgIcon icon="hashicorp" className="ml-1" />,
   },
   {
     id: 'azure',
-    name: getProviderDisplayName('azure'),
+    name: models.cloudCredential.getProviderDisplayName('azure'),
     icon: <SvgIcon icon="azure-logo" className="ml-1" />,
   },
 ];

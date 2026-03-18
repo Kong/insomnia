@@ -5,11 +5,8 @@ import { href, redirect, useLoaderData, useNavigate, useParams } from 'react-rou
 
 import { logout } from '~/account/session';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import { userSession } from '~/models';
-import type { GitRepository } from '~/models/git-repository';
+import { type GitRepository, models, type Project,services } from '~/insomnia-data';
 import { sortProjects } from '~/models/helpers/project';
-import { isScratchpadOrganizationId } from '~/models/organization';
-import type { Project } from '~/models/project';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { getProjectsWithGitRepositories } from '~/routes/organization.$organizationId.project.$projectId._index';
@@ -35,7 +32,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
 
-  const { id: sessionId } = await userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.getOrCreate();
 
   if (!sessionId) {
     await logout();
@@ -65,7 +62,7 @@ const Component = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isScratchpadOrganizationId(organizationId)) {
+    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
       load({ organizationId });
     }

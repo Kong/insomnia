@@ -4,13 +4,12 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import type { Settings } from '~/insomnia-data';
+import { models, type RequestParameter } from '~/insomnia-data';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
-import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import { getCombinedPathParametersFromUrl, type RequestParameter } from '../../../models/request';
-import type { Settings } from '../../../models/settings';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
@@ -84,7 +83,10 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   if (!activeRequest) {
     return <PlaceholderRequestPane />;
   }
-  const pathParameters = getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters || []);
+  const pathParameters = models.request.getCombinedPathParametersFromUrl(
+    activeRequest.url,
+    activeRequest.pathParameters || [],
+  );
 
   const onPathParameterChange = (pathParameters: RequestParameter[]) => {
     patchRequest(requestId, { pathParameters });

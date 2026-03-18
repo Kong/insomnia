@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -14,12 +14,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const environmentId = formData.get('environmentId');
   invariant(typeof environmentId === 'string', 'Environment ID is required');
 
-  const environment = await models.environment.getById(environmentId);
-  const baseEnvironment = await models.environment.getByParentId(workspaceId);
+  const environment = await services.environment.getById(environmentId);
+  const baseEnvironment = await services.environment.getByParentId(workspaceId);
   invariant(environment?._id !== baseEnvironment?._id, 'Cannot delete base environment');
   invariant(environment, 'Environment not found');
 
-  await models.environment.remove(environment);
+  await services.environment.remove(environment);
 
   return null;
 }

@@ -3,9 +3,7 @@ import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
-import * as models from '~/models';
-import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
-import type { WorkspaceMeta } from '~/models/workspace-meta';
+import { models, services, type WorkspaceMeta } from '~/insomnia-data';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
@@ -37,12 +35,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   const { organizationId, projectId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  const gitRepository = project.gitRepositoryId ? await models.gitRepository.getById(project.gitRepositoryId) : null;
+  const gitRepository = project.gitRepositoryId ? await services.gitRepository.getById(project.gitRepositoryId) : null;
 
-  const user = await models.userSession.getOrCreate();
+  const user = await services.userSession.getOrCreate();
   const sessionId = user.id;
 
   try {
@@ -85,7 +83,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         throw error;
       }
 
-      await models.project.update(project, { name });
+      await services.project.update(project, { name });
 
       showToast({
         title: 'Project updated',
@@ -138,7 +136,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         throw error;
       }
 
-      await models.project.update(project, { name, remoteId: null });
+      await services.project.update(project, { name, remoteId: null });
 
       showToast({
         title: 'Project updated',
@@ -166,12 +164,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         });
 
         if (project.gitRepositoryId) {
-          const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
+          const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
 
-          gitRepository && (await models.gitRepository.remove(gitRepository));
+          gitRepository && (await services.gitRepository.remove(gitRepository));
         }
 
-        await models.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
+        await services.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
 
         project.gitRepositoryId && reportGitProjectCount(organizationId, sessionId);
 
@@ -255,7 +253,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       }
 
       if (projectData.connectRepositoryLater) {
-        await models.project.update(project, { name, gitRepositoryId: EMPTY_GIT_PROJECT_ID });
+        await services.project.update(project, { name, gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID });
       } else {
         invariant(projectData.credentialsId, 'Credentials ID is required to clone git repository');
         const { errors } = await window.main.git.cloneGitRepo({
@@ -268,7 +266,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           selectedAuthorEmail,
         });
 
-        const projectWorkspaces = await models.workspace.findByParentId(project._id);
+        const projectWorkspaces = await services.workspace.findByParentId(project._id);
         const bufferId = await database.bufferChanges();
         const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
           parentId: { $in: projectWorkspaces.map(w => w._id) },
@@ -276,7 +274,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
         for (const workspaceMeta of workspaceMetas) {
           if (!workspaceMeta.gitFilePath) {
-            await models.workspaceMeta.update(workspaceMeta, {
+            await services.workspaceMeta.update(workspaceMeta, {
               gitFilePath: `insomnia.${workspaceMeta.parentId}.yaml`,
             });
           }
@@ -313,7 +311,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     // connect to git repo
     if (
       storageType === 'git' &&
-      (project.gitRepositoryId === EMPTY_GIT_PROJECT_ID || !gitRepository?.credentialsId) &&
+      (project.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID || !gitRepository?.credentialsId) &&
       !projectData.connectRepositoryLater
     ) {
       invariant(projectData.credentialsId, 'Credentials ID is required to clone git repository');
@@ -337,10 +335,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     // convert from git to local
     if (storageType === 'local' && project.gitRepositoryId) {
-      const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
+      const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
 
-      gitRepository && (await models.gitRepository.remove(gitRepository));
-      await models.project.update(project, { name, gitRepositoryId: null });
+      gitRepository && (await services.gitRepository.remove(gitRepository));
+      await services.project.update(project, { name, gitRepositoryId: null });
 
       reportGitProjectCount(organizationId, sessionId);
 
@@ -356,10 +354,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     // update existing git repository settings (author email override)
     if (storageType === 'git' && gitRepository?.credentialsId) {
-      models.gitRepository.update(gitRepository, { selectedAuthorEmail });
+      services.gitRepository.update(gitRepository, { selectedAuthorEmail });
 
       if (name !== project.name) {
-        await models.project.update(project, { name });
+        await services.project.update(project, { name });
       }
 
       showToast({
@@ -373,7 +371,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     // local project rename
-    await models.project.update(project, { name });
+    await services.project.update(project, { name });
 
     window.main.trackSegmentEvent({
       event: SegmentEvent.projectUpdated,

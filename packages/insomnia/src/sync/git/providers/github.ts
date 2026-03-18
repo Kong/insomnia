@@ -4,9 +4,7 @@ import type { GitAuth } from 'isomorphic-git';
 import { v4 } from 'uuid';
 
 import { getApiBaseURL, getAppWebsiteBaseURL, PLAYWRIGHT } from '~/common/constants';
-import * as models from '~/models';
-import type { GitCredentials } from '~/models/git-credentials';
-import { isGitCredentialsV2 } from '~/models/git-credentials';
+import { type GitCredentials,models, services } from '~/insomnia-data';
 
 import type {
   GitHubProviderConfig,
@@ -109,7 +107,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
    * Fetch repositories accessible by the credential
    */
   async fetchRepositories(credentials: GitCredentials, refresh?: boolean): Promise<ProviderRepository[]> {
-    if (!isGitCredentialsV2(credentials) || credentials.provider !== 'github') {
+    if (!models.gitCredentials.isGitCredentialsV2(credentials) || credentials.provider !== 'github') {
       throw new Error('Invalid credential type for GitHub provider');
     }
 
@@ -172,7 +170,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
    * Fetch user emails from GitHub
    */
   async fetchUserEmails(credential: GitCredentials): Promise<ProviderEmail[]> {
-    if (!isGitCredentialsV2(credential) || credential.provider !== 'github') {
+    if (!models.gitCredentials.isGitCredentialsV2(credential) || credential.provider !== 'github') {
       throw new Error('Invalid credential type for GitHub provider');
     }
 
@@ -296,7 +294,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
       const userProfileEmail = user.email ?? '';
       const email = emails.find(e => e.primary)?.email ?? userProfileEmail ?? '';
 
-      await models.gitCredentials.create({
+      await services.gitCredentials.create({
         name: 'GitHub Credential',
         credentials: {
           token: data.access_token,
@@ -328,7 +326,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
    * Converts GitHub OAuth token to format expected by isomorphic-git
    */
   authCallback(credential: GitCredentials): GitAuth {
-    if (!isGitCredentialsV2(credential) || credential.provider !== 'github') {
+    if (!models.gitCredentials.isGitCredentialsV2(credential) || credential.provider !== 'github') {
       throw new Error('Invalid credential type for GitHub provider');
     }
 

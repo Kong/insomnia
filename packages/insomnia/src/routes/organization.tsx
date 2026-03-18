@@ -15,10 +15,7 @@ import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoa
 import * as reactUse from 'react-use';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
-import { userSession } from '~/models';
-import { isOwnerOfOrganization, isPersonalOrganization } from '~/models/organization';
-import type { Settings } from '~/models/settings';
-import { isScratchpad } from '~/models/workspace';
+import { models, services, type Settings } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
@@ -56,7 +53,7 @@ export interface OrganizationLoaderData {
 }
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const { id, accountId } = await userSession.getOrCreate();
+  const { id, accountId } = await services.userSession.getOrCreate();
   if (id) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
     const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as UserProfile;
@@ -171,7 +168,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const workspaceData = useWorkspaceLoaderData();
 
   const navigate = useNavigate();
-  const isScratchpadWorkspace = workspaceData?.activeWorkspace && isScratchpad(workspaceData.activeWorkspace);
+  const isScratchpadWorkspace =
+    workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData.activeWorkspace);
   const untrackedProjectsFetcher = useUntrackedProjectsLoaderFetcher();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
@@ -309,8 +307,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                               });
                             }}
                           >
-                            {isPersonalOrganization(organization) &&
-                            isOwnerOfOrganization({
+                            {models.organization.isPersonalOrganization(organization) &&
+                            models.organization.isOwnerOfOrganization({
                               organization,
                               accountId: userSession.accountId || '',
                             }) ? (

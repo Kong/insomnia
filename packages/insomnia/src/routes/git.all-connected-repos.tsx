@@ -1,15 +1,10 @@
-import type { Organization } from 'insomnia-api';
 import { href } from 'react-router';
 
-import { database } from '~/common/database';
-import * as models from '~/models';
-import { userSession } from '~/models';
-import type { Project } from '~/models/project';
-import { isEmptyGitProject } from '~/models/project';
+import { database, models, type Organization, type Project, services } from '~/insomnia-data';
 import { createFetcherLoadHook } from '~/utils/router';
 
 export async function clientLoader() {
-  const { accountId } = await userSession.getOrCreate();
+  const { accountId } = await services.userSession.getOrCreate();
   const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
   const allProjects = (
     await Promise.all(
@@ -24,13 +19,13 @@ export async function clientLoader() {
   const organizationMap = Object.fromEntries(organizations.map(o => [o.id, o]));
 
   const allConnectedGitProjects = allProjects.filter(
-    project => models.project.isGitProject(project) && !isEmptyGitProject(project),
+    project => models.project.isGitProject(project) && !models.project.isEmptyGitProject(project),
   );
   const gitRepoURIInfoMap: Record<string, { organizationName: string; projectName: string }> = {};
   await Promise.all(
     allConnectedGitProjects.map(async ({ gitRepositoryId, name, parentId }) => {
       if (gitRepositoryId) {
-        const gitRepository = await models.gitRepository.getById(gitRepositoryId);
+        const gitRepository = await services.gitRepository.getById(gitRepositoryId);
         if (gitRepository) {
           gitRepoURIInfoMap[gitRepository.uri] = {
             organizationName: organizationMap[parentId]?.name || '',

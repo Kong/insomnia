@@ -9,12 +9,10 @@ import {
 import { fetchTeamProjects } from 'insomnia-api';
 
 import { projectLock } from '~/common/project';
+import { models, type Project,services } from '~/insomnia-data';
 
 import { database } from '../common/database';
-import { project, userSession } from '../models';
 import { updateLocalProjectToRemote } from '../models/helpers/project';
-import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../models/organization';
-import type { Project } from '../models/project';
 import { VCSInstance } from '../sync/vcs/insomnia-sync';
 import {
   migrateProjectsIntoOrganization,
@@ -28,8 +26,8 @@ const inMemoryStorageRuleCache: Map<string, StorageRules> = new Map<string, Stor
 export function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
   const home = organizations.find(
     organization =>
-      isPersonalOrganization(organization) &&
-      isOwnerOfOrganization({
+      models.organization.isPersonalOrganization(organization) &&
+      models.organization.isOwnerOfOrganization({
         organization,
         accountId,
       }),
@@ -37,8 +35,8 @@ export function sortOrganizations(accountId: string, organizations: Organization
   const myOrgs = organizations
     .filter(
       organization =>
-        !isPersonalOrganization(organization) &&
-        isOwnerOfOrganization({
+        !models.organization.isPersonalOrganization(organization) &&
+        models.organization.isOwnerOfOrganization({
           organization,
           accountId,
         }),
@@ -47,7 +45,7 @@ export function sortOrganizations(accountId: string, organizations: Organization
   const notMyOrgs = organizations
     .filter(
       organization =>
-        !isOwnerOfOrganization({
+        !models.organization.isOwnerOfOrganization({
           organization,
           accountId,
         }),
@@ -128,7 +126,7 @@ export async function fetchAndCacheOrganizationStorageRule(
 ): Promise<StorageRules> {
   invariant(organizationId, 'Organization ID is required');
 
-  if (isScratchpadOrganizationId(organizationId)) {
+  if (models.organization.isScratchpadOrganizationId(organizationId)) {
     return {
       enableCloudSync: false,
       enableLocalVault: true,
@@ -142,7 +140,7 @@ export async function fetchAndCacheOrganizationStorageRule(
       return storageRules;
     }
   }
-  const { id: sessionId } = await userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.getOrCreate();
 
   // Otherwise fetch from the API
   return await getOrganizationStorageRule({
@@ -168,7 +166,7 @@ interface TeamProject {
 }
 
 async function getAllTeamProjects(organizationId: string) {
-  const { id: sessionId } = await userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.getOrCreate();
   if (!sessionId) {
     return [];
   }
@@ -189,7 +187,7 @@ async function syncTeamProjects({
   // assumption: api teamProjects is the source of truth for migrated projects
   // once migrated orgs become the source of truth for projects
   // its important that migration be completed before this code is run
-  const existingRemoteProjects = await database.find<Project>(project.type, {
+  const existingRemoteProjects = await database.find<Project>(models.project.type, {
     remoteId: { $in: teamProjects.map(p => p.id) },
   });
 
@@ -199,7 +197,7 @@ async function syncTeamProjects({
   // this will create a new project for any remote projects that don't exist in the current organization
   await Promise.all(
     remoteProjectsThatNeedToBeCreated.map(async prj => {
-      await project.create({
+      await services.project.create({
         remoteId: prj.id,
         name: prj.name,
         parentId: organizationId,
@@ -207,7 +205,7 @@ async function syncTeamProjects({
     }),
   );
 
-  const remoteProjectsThatNeedToBeUpdated = await database.find<Project>(project.type, {
+  const remoteProjectsThatNeedToBeUpdated = await database.find<Project>(models.project.type, {
     // Remote ID is in the list of remote projects
     remoteId: { $in: teamProjects.map(p => p.id) },
   });
@@ -216,7 +214,7 @@ async function syncTeamProjects({
     remoteProjectsThatNeedToBeUpdated.map(async prj => {
       const remoteProject = teamProjects.find(p => p.id === prj.remoteId);
       if (remoteProject && remoteProject.name !== prj.name) {
-        await project.update(prj, {
+        await services.project.update(prj, {
           name: remoteProject.name,
         });
       }
@@ -224,7 +222,7 @@ async function syncTeamProjects({
   );
 
   // Turn remote projects from the current organization that are not in the list of remote projects into local projects.
-  const removedRemoteProjects = await database.find<Project>(project.type, {
+  const removedRemoteProjects = await database.find<Project>(models.project.type, {
     // filter by this organization so no legacy data can be accidentally removed, because legacy had null parentId
     parentId: organizationId,
     // Remote ID is not in the list of remote projects.
@@ -238,7 +236,7 @@ async function syncTeamProjects({
 
   await Promise.all(
     removedRemoteProjects.map(async prj => {
-      await project.update(prj, {
+      await services.project.update(prj, {
         remoteId: null,
       });
     }),
@@ -246,10 +244,10 @@ async function syncTeamProjects({
 }
 
 export const syncProjects = projectLock.wrapWithLock(async (organizationId: string) => {
-  const user = await userSession.getOrCreate();
+  const user = await services.userSession.getOrCreate();
   const teamProjects = await getAllTeamProjects(organizationId);
   // ensure we don't sync projects in the wrong place
-  if (Array.isArray(teamProjects) && user.id && !isScratchpadOrganizationId(organizationId)) {
+  if (Array.isArray(teamProjects) && user.id && !models.organization.isScratchpadOrganizationId(organizationId)) {
     await syncTeamProjects({
       organizationId,
       teamProjects,

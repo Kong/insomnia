@@ -1,7 +1,7 @@
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { BaseModel } from '../../../models';
-import * as models from '../../../models';
+import { type BaseModel, models } from '~/insomnia-data';
+
 import type { ChangeBufferEvent } from '../..';
 import { database as db } from '../..';
 import { repairDatabase } from './repair-database';

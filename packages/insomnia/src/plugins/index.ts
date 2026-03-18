@@ -3,19 +3,22 @@ import path from 'node:path';
 
 import electron from 'electron';
 
+import {
+  type GrpcRequest,
+  models,
+  type Request,
+  type RequestGroup,
+  services,
+  type SocketIORequest,
+  type WebSocketRequest,
+  type Workspace,
+} from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { ParsedApiSpec } from '../common/api-specs';
 import { getAppBundlePlugins, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import type { PluginConfigMap } from '../common/settings';
-import * as models from '../models';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { SocketIORequest } from '../models/socket-io-request';
-import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace } from '../models/workspace';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
@@ -198,7 +201,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
   }
 
   if (!plugins) {
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
     const allConfigs: PluginConfigMap = settings.pluginConfig;
     const extraPaths = settings.pluginPath
       .split(':')
@@ -385,7 +388,7 @@ export function getPluginCommonContext({
       openInBrowser: (url: string) => window.main.openInBrowser(url),
       models: {
         request: {
-          getById: models.request.getById,
+          getById: services.request.getById,
           getAncestors: async (request: any) => {
             const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(request, [
               models.requestGroup.type,
@@ -395,26 +398,26 @@ export function getPluginCommonContext({
           },
         },
         cloudCredential: {
-          getById: models.cloudCredential.getById,
-          update: models.cloudCredential.update,
+          getById: services.cloudCredential.getById,
+          update: services.cloudCredential.update,
         },
         workspace: {
-          getById: models.workspace.getById,
+          getById: services.workspace.getById,
         },
         oAuth2Token: {
-          getByRequestId: models.oAuth2Token.getByParentId,
+          getByRequestId: services.oAuth2Token.getByParentId,
         },
         cookieJar: {
           getOrCreateForParentId: (parentId: string) => {
-            return models.cookieJar.getOrCreateForParentId(parentId);
+            return services.cookieJar.getOrCreateForParentId(parentId);
           },
         },
         response: {
-          getLatestForRequestId: models.response.getLatestForRequestId,
+          getLatestForRequestId: services.response.getLatestForRequestId,
           getBodyBuffer,
         },
         settings: {
-          get: models.settings.get,
+          get: services.settings.get,
         },
       },
     },

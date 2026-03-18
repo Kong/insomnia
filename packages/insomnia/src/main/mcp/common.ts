@@ -27,7 +27,7 @@ import {
   unsupportedMethodPrefix,
 } from '~/common/mcp-utils';
 import { generateId } from '~/common/misc';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import type {
   CommonMcpOptions,
   McpClient,
@@ -40,7 +40,6 @@ import type {
   OpenMcpClientConnectionOptions,
 } from '~/main/mcp/types';
 import { insecureReadFile } from '~/main/secure-read-file';
-import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
 
 interface ConnectingState {
@@ -131,10 +130,10 @@ export const createConnectionContext = async (
   const mcpRequestAbortControllers = new Map();
 
   // Get environment
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(workspaceId));
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await services.environment.getOrCreateForParentId(workspaceId));
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
   const environmentId = environment ? environment._id : null;
 

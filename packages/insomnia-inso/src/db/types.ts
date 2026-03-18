@@ -1,9 +1,4 @@
-import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
-import type { CloudProviderCredential } from 'insomnia/src/models/cloud-credential';
-import type { CookieJar } from 'insomnia/src/models/cookie-jar';
-import type { Settings } from 'insomnia/src/models/settings';
-
-import type { CaCertificate } from '~/insomnia-data';
+import type { CaCertificate, ClientCertificate, CloudProviderCredential, CookieJar, Settings } from '~/insomnia-data';
 
 import type {
   ApiSpec,

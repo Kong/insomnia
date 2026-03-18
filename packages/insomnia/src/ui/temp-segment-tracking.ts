@@ -1,8 +1,5 @@
 import { database } from '~/common/database';
-import * as models from '~/models';
-import type { Environment } from '~/models/environment';
-import { isGitProject, isLocalProject, isRemoteProject, type Project } from '~/models/project';
-import type { Workspace } from '~/models/workspace';
+import { type Environment, models, type Project, type Workspace } from '~/insomnia-data';
 import { hasTrackedToday, markTrackedToday, SegmentEvent } from '~/ui/analytics';
 
 const TEMP_ORG_OPENED_PREFIX = 'temp_org_opened:';
@@ -36,9 +33,9 @@ export async function trackTempOrganizationOpened(organizationId: string): Promi
 
   const properties: OrganizationOpenedProperties = {
     project_count_total: projects.length,
-    project_count_local: projects.filter(p => isLocalProject(p) && !isGitProject(p)).length,
-    project_count_cloud: projects.filter(p => isRemoteProject(p)).length,
-    project_count_git: projects.filter(p => isGitProject(p)).length,
+    project_count_local: projects.filter(p => models.project.isLocalProject(p) && !models.project.isGitProject(p)).length,
+    project_count_cloud: projects.filter(p => models.project.isRemoteProject(p)).length,
+    project_count_git: projects.filter(p => models.project.isGitProject(p)).length,
   };
 
   window.main.trackSegmentEvent({ event: SegmentEvent.tempOrganizationOpened, properties });

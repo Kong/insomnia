@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import { gitCredentials, gitRepository } from '~/models';
+import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -9,16 +9,16 @@ import type { Route } from './+types/git-credentials.$id.delete';
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { id } = params;
   console.log('ACTION:Deleting git credential', id);
-  const credential = await gitCredentials.getById(id);
+  const credential = await services.gitCredentials.getById(id);
   invariant(credential, 'Git credential not found');
 
-  const connectedRepositories = await gitRepository.getAllByCredentialId(id);
+  const connectedRepositories = await services.gitRepository.getAllByCredentialId(id);
 
   for (const repo of connectedRepositories) {
-    await gitRepository.update(repo, { credentialsId: null });
+    await services.gitRepository.update(repo, { credentialsId: null });
   }
 
-  await gitCredentials.remove(credential);
+  await services.gitCredentials.remove(credential);
 }
 
 export const useGitCredentialsDeleteActionFetcher = createFetcherSubmitHook(

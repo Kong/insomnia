@@ -2,24 +2,7 @@ import type { Organization } from 'insomnia-api';
 
 import { database } from '~/common/database';
 import { fuzzyMatch } from '~/common/misc';
-import {
-  environment,
-  grpcRequest,
-  project,
-  request,
-  requestGroup,
-  userSession,
-  webSocketRequest,
-  workspace,
-} from '~/models';
-import type { Environment } from '~/models/environment';
-import type { GrpcRequest } from '~/models/grpc-request';
-import { isScratchpadOrganizationId } from '~/models/organization';
-import { isRemoteProject, type Project } from '~/models/project';
-import type { Request } from '~/models/request';
-import type { RequestGroup } from '~/models/request-group';
-import type { WebSocketRequest } from '~/models/websocket-request';
-import { scopeToActivity, type Workspace } from '~/models/workspace';
+import { type Environment, type GrpcRequest, models, type Project, type Request, type RequestGroup, services, type WebSocketRequest, type Workspace } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 
@@ -45,21 +28,21 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     );
   };
 
-  const { accountId } = await userSession.getOrCreate();
+  const { accountId } = await services.userSession.getOrCreate();
 
   const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
 
-  const allOrganizationsIds = isScratchpadOrganizationId(organizationId)
+  const allOrganizationsIds = models.organization.isScratchpadOrganizationId(organizationId)
     ? [organizationId]
     : allOrganizations.map(org => org.id);
 
-  const allProjects = await database.find<Project>(project.type, {
+  const allProjects = await database.find<Project>(models.project.type, {
     parentId: { $in: allOrganizationsIds },
   });
 
   const allProjectIds = allProjects.map(project => project._id);
 
-  const allOrganizationWorkspaces = await database.find<Workspace>(workspace.type, {
+  const allOrganizationWorkspaces = await database.find<Workspace>(models.workspace.type, {
     parentId: { $in: allProjectIds },
   });
 
@@ -93,7 +76,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
   });
 
   const getRequestGroups = async ({ $in }: { $in: string[]; root?: boolean }): Promise<RequestGroup[]> => {
-    const requestGroups = await database.find<RequestGroup>(requestGroup.type, {
+    const requestGroups = await database.find<RequestGroup>(models.requestGroup.type, {
       parentId: {
         $in,
       },
@@ -133,7 +116,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     $in: workspaceIds,
   });
 
-  const requests = await database.find<Request>(request.type, {
+  const requests = await database.find<Request>(models.request.type, {
     parentId: {
       $in: [...workspaceIds, ...allRequestGroups.map(requestGroup => requestGroup._id)],
     },
@@ -148,7 +131,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     });
   }
 
-  const grpcRequests = await database.find<GrpcRequest>(grpcRequest.type, {
+  const grpcRequests = await database.find<GrpcRequest>(models.grpcRequest.type, {
     parentId: {
       $in: [...workspaceIds, ...allRequestGroups.map(requestGroup => requestGroup._id)],
     },
@@ -163,7 +146,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     });
   }
 
-  const webSocketRequests = await database.find<WebSocketRequest>(webSocketRequest.type, {
+  const webSocketRequests = await database.find<WebSocketRequest>(models.webSocketRequest.type, {
     parentId: {
       $in: [...workspaceIds, ...allRequestGroups.map(requestGroup => requestGroup._id)],
     },
@@ -180,11 +163,11 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
 
   const allRequests = [...requests, ...grpcRequests, ...webSocketRequests];
 
-  const [baseEnvironment] = await database.find<Environment>(environment.type, {
+  const [baseEnvironment] = await database.find<Environment>(models.environment.type, {
     parentId: workspaceId,
   });
 
-  const subEnvironments = await database.find<Environment>(environment.type, {
+  const subEnvironments = await database.find<Environment>(models.environment.type, {
     parentId: baseEnvironment?._id,
   });
 
@@ -234,11 +217,11 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
         const parentProject = allProjects.find(project => project._id === workspace.parentId);
         return {
           id: workspace._id,
-          url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+          url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${models.workspace.scopeToActivity(workspace.scope)}`,
           name: workspace.name,
           item: {
             ...workspace,
-            teamProjectId: parentProject && isRemoteProject(parentProject) ? parentProject.remoteId : '',
+            teamProjectId: parentProject && models.project.isRemoteProject(parentProject) ? parentProject.remoteId : '',
           },
           organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
           projectName: allProjects.find(project => project._id === projectId)?.name || '',
@@ -275,11 +258,11 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
         const parentProject = allProjects.find(project => project._id === workspace.parentId);
         return {
           id: workspace._id,
-          url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+          url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${models.workspace.scopeToActivity(workspace.scope)}`,
           name: workspace.name,
           item: {
             ...workspace,
-            teamProjectId: parentProject && isRemoteProject(parentProject) ? parentProject.remoteId : '',
+            teamProjectId: parentProject && models.project.isRemoteProject(parentProject) ? parentProject.remoteId : '',
           },
           organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
           projectName: allProjects.find(project => project._id === projectId)?.name || '',

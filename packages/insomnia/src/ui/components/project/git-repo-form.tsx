@@ -12,6 +12,7 @@ import {
 } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
+import { type GitCredentials,models } from '~/insomnia-data';
 import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import type { GitProviderOption, ProviderEmail } from '~/sync/git/providers/types';
@@ -22,7 +23,6 @@ import { GitRemoteBranchSelect } from '~/ui/components/git-credentials/git-remot
 import { GitRepositorySelect } from '~/ui/components/git-credentials/git-repository-select';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
-import { type GitCredentials, isGitCredentialsV2, isOAuthCredential } from '../../../models/git-credentials';
 import { ErrorBoundary } from '../error-boundary';
 import type { ActiveView, ProjectData } from './utils';
 
@@ -35,7 +35,7 @@ const getDisplayValue = (fullUri: string | undefined, prefix: string | undefined
 };
 
 const getCredentialEmails = (credential: GitCredentials | undefined) => {
-  if (credential && isGitCredentialsV2(credential) && isOAuthCredential(credential)) {
+  if (credential && models.gitCredentials.isGitCredentialsV2(credential) && models.gitCredentials.isOAuthCredential(credential)) {
     return credential.credentials?.emails || [];
   }
   return [];
@@ -79,7 +79,7 @@ export const GitRepoForm: FC<Props> = ({
   const needToSetupCredentials = credentials.length === 0;
   const baseURI =
     (selectedCredential &&
-      isGitCredentialsV2(selectedCredential) &&
+      models.gitCredentials.isGitCredentialsV2(selectedCredential) &&
       selectedCredential.provider === 'custom' &&
       selectedCredential.credentials?.baseURI) ||
     '';

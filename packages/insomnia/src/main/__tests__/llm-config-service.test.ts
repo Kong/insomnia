@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import * as models from '../../models';
+import { models } from '~/insomnia-data';
+
 import {
   clearActiveBackend,
   getActiveBackend,
@@ -10,12 +11,14 @@ import {
   updateBackendConfig,
 } from '../llm-config-service';
 
-vi.mock('../../models', () => ({
-  pluginData: {
-    getByKey: vi.fn(),
-    upsertByKey: vi.fn(),
-    removeByKey: vi.fn(),
-    all: vi.fn(),
+vi.mock('~/insomnia-data', () => ({
+  models: {
+    pluginData: {
+      getByKey: vi.fn(),
+      upsertByKey: vi.fn(),
+      removeByKey: vi.fn(),
+      all: vi.fn(),
+    },
   },
 }));
 
@@ -107,13 +110,9 @@ describe('llm-config-service', () => {
       expect(models.pluginData.upsertByKey).toHaveBeenCalledWith(
         'insomnia-llm',
         'url.url',
-        'https://api.example.com/v1'
+        'https://api.example.com/v1',
       );
-      expect(models.pluginData.upsertByKey).toHaveBeenCalledWith(
-        'insomnia-llm',
-        'url.model',
-        'gpt-4'
-      );
+      expect(models.pluginData.upsertByKey).toHaveBeenCalledWith('insomnia-llm', 'url.model', 'gpt-4');
     });
 
     it('should save baseURL field to storage', async () => {
@@ -125,7 +124,7 @@ describe('llm-config-service', () => {
       expect(models.pluginData.upsertByKey).toHaveBeenCalledWith(
         'insomnia-llm',
         'url.baseURL',
-        'https://custom-llm.com'
+        'https://custom-llm.com',
       );
     });
 
@@ -134,11 +133,7 @@ describe('llm-config-service', () => {
         url: 'https://new-url.com/v1',
       });
 
-      expect(models.pluginData.upsertByKey).toHaveBeenCalledWith(
-        'insomnia-llm',
-        'url.url',
-        'https://new-url.com/v1'
-      );
+      expect(models.pluginData.upsertByKey).toHaveBeenCalledWith('insomnia-llm', 'url.url', 'https://new-url.com/v1');
       expect(models.pluginData.upsertByKey).toHaveBeenCalledTimes(1);
     });
 
@@ -184,9 +179,7 @@ describe('llm-config-service', () => {
     });
 
     it('should include backend with only url field set', async () => {
-      vi.mocked(models.pluginData.all).mockResolvedValue([
-        mockPluginData('url.url', 'https://api.example.com/v1'),
-      ]);
+      vi.mocked(models.pluginData.all).mockResolvedValue([mockPluginData('url.url', 'https://api.example.com/v1')]);
 
       const configs = await getAllConfigurations();
 
@@ -200,11 +193,7 @@ describe('llm-config-service', () => {
     it('should set url as active backend', async () => {
       await setActiveBackend('url');
 
-      expect(models.pluginData.upsertByKey).toHaveBeenCalledWith(
-        'insomnia-llm',
-        'model.active',
-        'url'
-      );
+      expect(models.pluginData.upsertByKey).toHaveBeenCalledWith('insomnia-llm', 'model.active', 'url');
     });
 
     it('should get url as active backend', async () => {
@@ -226,10 +215,7 @@ describe('llm-config-service', () => {
     it('should clear active backend', async () => {
       await clearActiveBackend();
 
-      expect(models.pluginData.removeByKey).toHaveBeenCalledWith(
-        'insomnia-llm',
-        'model.active'
-      );
+      expect(models.pluginData.removeByKey).toHaveBeenCalledWith('insomnia-llm', 'model.active');
     });
   });
 });

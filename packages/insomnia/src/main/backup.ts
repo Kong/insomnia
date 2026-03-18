@@ -3,15 +3,15 @@ import path from 'node:path';
 
 import electron from 'electron';
 
+import { services } from '~/insomnia-data';
 import { getUpdateUrl } from '~/main/updates';
 
 import { version } from '../../package.json';
 import { getClientString } from '../common/constants';
-import * as models from '../models';
 
 export async function backupIfNewerVersionAvailable() {
   try {
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
     console.log('[main] Checking for newer version than', version);
     const url = getUpdateUrl(settings.updateChannel);
     if (!url) {

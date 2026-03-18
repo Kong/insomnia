@@ -7,28 +7,30 @@ import fsPath from 'node:path';
 import NeDB from '@seald-io/nedb';
 
 import { generateId } from '~/common/misc';
-import type {
-  ChangeBufferEvent,
-  ChangeListener,
-  ChangeType,
-  DataStoreOptions,
-  IDatabase,
-  Operation,
-  Query,
+import {
+  type AllTypes,
+  type ApiSpec,
+  type BaseModel,
+  type ChangeBufferEvent,
+  type ChangeListener,
+  type ChangeType,
+  type ClientCertificate,
+  type CloudProviderCredential,
+  type CookieJar,
+  type DataStoreOptions,
+  type Environment,
+  type GitRepository,
+  type IDatabase,
+  models,
+  type Operation,
+  type Query,
+  type Workspace,
+  type WorkspaceMeta,
 } from '~/insomnia-data';
-import { mustGetModel } from '~/models';
-import type { ApiSpec } from '~/models/api-spec';
-import type { ClientCertificate } from '~/models/client-certificate';
-import type { CloudProviderCredential } from '~/models/cloud-credential';
-import type { CookieJar } from '~/models/cookie-jar';
-import { type Environment } from '~/models/environment';
-import type { GitRepository } from '~/models/git-repository';
-import type { AllTypes, BaseModel } from '~/models/index';
-import * as models from '~/models/index';
-import type { Workspace } from '~/models/workspace';
-import type { WorkspaceMeta } from '~/models/workspace-meta';
 
 import { repairDatabase } from './repair-database';
+
+const { mustGetModel } = models;
 
 const getTempPath = (name: string) => {
   return name === 'temp' ? os.tmpdir() : fsPath.join(os.tmpdir(), 'insomnia-send-request');
@@ -373,8 +375,11 @@ export const createNedbDatabase = <O = initOptions>(
 
       // NOTE: Only repair the DB if we're not running in memory. Repairing here causes tests to hang indefinitely for some reason.
       // TODO: Figure out why this makes tests hang
+      // TODO!
       if (!config.inMemoryOnly) {
-        await repairDatabase();
+        setTimeout(async () => {
+          await repairDatabase();
+        }, 10);
       }
     },
 

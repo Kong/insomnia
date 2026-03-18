@@ -1,9 +1,12 @@
-import { database } from '~/insomnia-data';
-import type { CookieJar } from '~/models/cookie-jar';
-import { type Environment } from '~/models/environment';
-import type { GitRepository } from '~/models/git-repository';
-import * as models from '~/models/index';
-import type { Workspace } from '~/models/workspace';
+import {
+  type CookieJar,
+  database,
+  type Environment,
+  type GitRepository,
+  models,
+  services,
+  type Workspace,
+} from '~/insomnia-data';
 
 /**
  * Run various database repair scripts
@@ -28,11 +31,11 @@ export async function repairDatabase() {
  * It will apply the workspace name to it
  */
 async function _applyApiSpecName(workspace: Workspace) {
-  const apiSpec = await models.apiSpec.getByParentId(workspace._id);
+  const apiSpec = await services.apiSpec.getByParentId(workspace._id);
   const existsAndFilenameIsDefaultOrMissing =
     apiSpec && (!apiSpec.fileName || apiSpec.fileName === models.apiSpec.init().fileName);
   if (existsAndFilenameIsDefaultOrMissing) {
-    await models.apiSpec.update(apiSpec, { fileName: workspace.name });
+    await services.apiSpec.update(apiSpec, { fileName: workspace.name });
   }
 }
 

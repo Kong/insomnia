@@ -2,11 +2,9 @@ import path from 'node:path';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { type Cookie, models, type Request, type Response } from '~/insomnia-data';
+
 import { database as db } from '../../common/database';
-import * as models from '../../models';
-import type { Cookie } from '../../models/cookie-jar';
-import type { Request } from '../../models/request';
-import type { Response } from '../../models/response';
 import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
 import { getRenderedRequestAndContext } from '../render';
 
@@ -14,7 +12,7 @@ describe('export', () => {
   beforeEach(async () => {
     await db.init({ inMemoryOnly: true }, true);
     await models.project.all();
-    await models.settings.getOrCreate();
+    await services.settings.getOrCreate();
   });
 
   describe('exportHar()', () => {

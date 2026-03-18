@@ -1,6 +1,7 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 
-import { isDesign, isEnvironment, isMcp, isMockServer, type Workspace, type WorkspaceScope } from '../models/workspace';
+import { models, type Workspace, type WorkspaceScope } from '~/insomnia-data';
+
 import { strings } from './strings';
 
 export type ProjectScopeKeys = WorkspaceScope | 'unsynced';
@@ -45,19 +46,19 @@ export const scopeToTextColorMap: Record<ProjectScopeKeys, string> = {
 };
 
 export const getWorkspaceLabel = (workspace: Workspace) => {
-  if (isDesign(workspace)) {
+  if (models.workspace.isDesign(workspace)) {
     return strings.document;
   }
 
-  if (isMockServer(workspace)) {
+  if (models.workspace.isMockServer(workspace)) {
     return strings.mock;
   }
 
-  if (isEnvironment(workspace)) {
+  if (models.workspace.isEnvironment(workspace)) {
     return strings.environment;
   }
 
-  if (isMcp(workspace)) {
+  if (models.workspace.isMcp(workspace)) {
     return strings.mcp;
   }
 

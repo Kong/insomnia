@@ -1,12 +1,9 @@
 import React, { type FC, memo } from 'react';
 
 import { type McpRequest, models } from '~/insomnia-data';
+import { type GrpcRequest, type Request, type SocketIORequest, type WebSocketRequest } from '~/insomnia-data';
 
 import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';
-import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isEventStreamRequest, isRequest, type Request } from '../../../models/request';
-import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
-import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 
 interface Props {
   method: string;
@@ -18,7 +15,7 @@ function removeVowels(str: string) {
 }
 
 export const getMethodShortHand = (doc: Request) => {
-  if (isEventStreamRequest(doc)) {
+  if (models.request.isEventStreamRequest(doc)) {
     return 'SSE';
   }
   const isGraphQL = doc.body?.mimeType === CONTENT_TYPE_GRAPHQL;
@@ -45,19 +42,19 @@ export const getRequestMethodShortHand = (
   if (!doc) {
     return '';
   }
-  if (isRequest(doc)) {
+  if (models.request.isRequest(doc)) {
     return getMethodShortHand(doc);
   }
 
-  if (isWebSocketRequest(doc)) {
+  if (models.webSocketRequest.isWebSocketRequest(doc)) {
     return 'WS';
   }
 
-  if (isGrpcRequest(doc)) {
+  if (models.grpcRequest.isGrpcRequest(doc)) {
     return 'gRPC';
   }
 
-  if (isSocketIORequest(doc)) {
+  if (models.socketIORequest.isSocketIORequest(doc)) {
     return 'IO';
   }
 

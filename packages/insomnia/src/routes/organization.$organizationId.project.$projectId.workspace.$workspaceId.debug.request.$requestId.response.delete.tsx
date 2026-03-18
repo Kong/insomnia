@@ -1,11 +1,8 @@
 import { href } from 'react-router';
 
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
+import { models, services } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { removeResponse } from '~/models/helpers/response-operations';
-import { isSocketIORequestId } from '~/models/socket-io-request';
-import { isWebSocketRequestId } from '~/models/websocket-request';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -20,32 +17,32 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { responseId } = await request.json();
   invariant(typeof responseId === 'string', 'Response ID is required');
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
   invariant(workspaceMeta, 'Active workspace meta not found');
-  const isWebSocketRequest = isWebSocketRequestId(requestId);
-  const isSocketIORequest = isSocketIORequestId(requestId);
+  const isWebSocketRequest = models.webSocketRequest.isWebSocketRequestId(requestId);
+  const isSocketIORequest = models.socketIORequest.isSocketIORequestId(requestId);
   const isMcpRequest = models.mcpRequest.isMcpRequestId(requestId);
 
-  let responseModel;
+  let responseService;
   if (isWebSocketRequest) {
-    responseModel = models.webSocketResponse;
+    responseService = services.webSocketResponse;
   } else if (isSocketIORequest) {
-    responseModel = models.socketIOResponse;
+    responseService = services.socketIOResponse;
   } else if (isMcpRequest) {
-    responseModel = services.mcpResponse;
+    responseService = services.mcpResponse;
   } else {
-    responseModel = models.response;
+    responseService = services.response;
   }
 
-  const res = await responseModel.getById(responseId);
+  const res = await responseService.getById(responseId);
   invariant(res, 'Response not found');
 
   await removeResponse(res);
-  const response = await responseModel.getLatestForRequestId(requestId, workspaceMeta.activeEnvironmentId);
+  const response = await responseService.getLatestForRequestId(requestId, workspaceMeta.activeEnvironmentId);
   if (response?.requestVersionId) {
-    await models.requestVersion.restore(response.requestVersionId);
+    await services.requestVersion.restore(response.requestVersionId);
   }
-  await models.requestMeta.updateOrCreateByParentId(requestId, {
+  await services.requestMeta.updateOrCreateByParentId(requestId, {
     activeResponseId: response?._id || null,
   });
 

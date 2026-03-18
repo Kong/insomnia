@@ -4,17 +4,20 @@ import { Button } from 'react-aria-components';
 import { useParams } from 'react-router';
 
 import { type McpResponse } from '~/insomnia-data';
+import {
+  models,
+  type Request,
+  type RequestVersion,
+  type Response,
+  services,
+  type SocketIOResponse,
+  type WebSocketRequest,
+  type WebSocketResponse,
+} from '~/insomnia-data';
 import { useRequestResponseDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete';
 import { useRequestResponseDeleteAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete-all';
 
 import { decompressObject } from '../../../common/misc';
-import * as models from '../../../models/index';
-import { isRequest, type Request } from '../../../models/request';
-import { type RequestVersion } from '../../../models/request-version';
-import type { Response } from '../../../models/response';
-import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socket-io-response';
-import type { WebSocketRequest } from '../../../models/websocket-request';
-import { isWebSocketResponse, type WebSocketResponse } from '../../../models/websocket-response';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -59,11 +62,11 @@ export const ResponseHistoryDropdown = ({
 
   const handleSetActiveResponse = useCallback(
     async (requestId: string, activeResponse: ResponseType) => {
-      if (isWebSocketResponse(activeResponse)) {
+      if (models.webSocketResponse.isWebSocketResponse(activeResponse)) {
         window.main.webSocket.close({ requestId });
       }
 
-      if (isSocketIOResponse(activeResponse)) {
+      if (models.socketIOResponse.isSocketIOResponse(activeResponse)) {
         window.main.socketIO.close({ requestId });
       }
 
@@ -72,7 +75,7 @@ export const ResponseHistoryDropdown = ({
       }
 
       if (activeResponse.requestVersionId) {
-        await models.requestVersion.restore(activeResponse.requestVersionId);
+        await services.requestVersion.restore(activeResponse.requestVersionId);
       }
 
       await patchRequestMeta(requestId, { activeResponseId: activeResponse._id });
@@ -82,9 +85,9 @@ export const ResponseHistoryDropdown = ({
 
   const deleteResponsesSubmit = deleteAllReponsesFetcher.submit;
   const handleDeleteResponses = useCallback(async () => {
-    if (isWebSocketResponse(activeResponse)) {
+    if (models.webSocketResponse.isWebSocketResponse(activeResponse)) {
       window.main.webSocket.close({ requestId });
-    } else if (isSocketIOResponse(activeResponse)) {
+    } else if (models.socketIOResponse.isSocketIOResponse(activeResponse)) {
       window.main.socketIO.close({ requestId });
     } else if (models.mcpResponse.isMcpResponse(activeResponse)) {
       window.main.mcp.close({ requestId });
@@ -100,9 +103,9 @@ export const ResponseHistoryDropdown = ({
   const deleteResponseSubmit = deleteReponseFetcher.submit;
   const handleDeleteResponse = useCallback(async () => {
     if (activeResponse) {
-      if (isWebSocketResponse(activeResponse)) {
+      if (models.webSocketResponse.isWebSocketResponse(activeResponse)) {
         window.main.webSocket.close({ requestId });
-      } else if (isSocketIOResponse(activeResponse)) {
+      } else if (models.socketIOResponse.isSocketIOResponse(activeResponse)) {
         window.main.socketIO.close({ requestId });
       } else if (models.mcpResponse.isMcpResponse(activeResponse)) {
         window.main.mcp.close({ requestId });
@@ -140,8 +143,9 @@ export const ResponseHistoryDropdown = ({
           onClick={() => handleSetActiveResponse(requestId, response)}
           label={
             <div className="leading-10">
-              {isSocketIOResponse(response) ? null : models.mcpResponse.isMcpResponse(response) &&
-                response.transportType === 'stdio' ? (
+              {models.socketIOResponse.isSocketIOResponse(response) ? null : models.mcpResponse.isMcpResponse(
+                  response,
+                ) && response.transportType === 'stdio' ? (
                 <StringStatusTag
                   small
                   status={response.status}
@@ -159,12 +163,12 @@ export const ResponseHistoryDropdown = ({
               <URLTag
                 small
                 url={request?.url || ''}
-                method={request && isRequest(request) ? request.method : ''}
+                method={request && models.request.isRequest(request) ? request.method : ''}
                 tooltipDelay={1000}
               />
               <TimeTag milliseconds={response.elapsedTime} small tooltipDelay={1000} />
-              {!isWebSocketResponse(response) &&
-                !isSocketIOResponse(response) &&
+              {!models.webSocketResponse.isWebSocketResponse(response) &&
+                !models.socketIOResponse.isSocketIOResponse(response) &&
                 !models.mcpResponse.isMcpResponse(response) && (
                   <SizeTag
                     bytesRead={response.bytesRead}

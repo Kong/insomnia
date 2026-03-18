@@ -3,6 +3,7 @@ import React, { Fragment, useRef, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { type Request, type RequestGroup, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
@@ -12,9 +13,6 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import * as models from '../../../models';
-import type { Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -113,7 +111,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
       color: 'danger',
       onDone: async (isYes: boolean) => {
         if (isYes) {
-          models.stats.incrementDeletedRequestsForDescendents(requestGroup);
+          services.stats.incrementDeletedRequestsForDescendents(requestGroup);
           deleteRequestGroupFetcher.submit({ organizationId, projectId, workspaceId, id: requestGroup._id });
         }
       },
@@ -130,7 +128,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
         ...(pluginStore.init(plugin) as Record<string, any>),
         ...(pluginNetwork.init() as Record<string, any>),
       };
-      const requests = await models.request.findByParentId(requestGroup._id);
+      const requests = await services.request.findByParentId(requestGroup._id);
       requests.sort((a, b) => a.metaSortKey - b.metaSortKey);
       await action(context, {
         requestGroup,

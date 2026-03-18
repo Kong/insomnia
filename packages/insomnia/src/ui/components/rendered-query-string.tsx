@@ -2,20 +2,11 @@ import classNames from 'classnames';
 import { type FC, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-aria-components';
 
+import { models, type Request, type RequestAuthentication, type RequestGroup, type RequestParameter, type SocketIORequest, type WebSocketRequest } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
-import * as models from '../../models';
-import {
-  PATH_PARAMETER_REGEX,
-  type Request,
-  type RequestAuthentication,
-  type RequestParameter,
-} from '../../models/request';
-import { isRequestGroup, type RequestGroup } from '../../models/request-group';
-import type { SocketIORequest } from '../../models/socket-io-request';
-import type { WebSocketRequest } from '../../models/websocket-request';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../network/authentication';
 import { getOrInheritAuthentication } from '../../network/network';
 import { RenderError } from '../../templating/render-error';
@@ -48,7 +39,7 @@ async function getQueryParamsFromAuth(
   const ancestors = await db.withAncestors<Request | WebSocketRequest | SocketIORequest | RequestGroup>(request, [
     models.requestGroup.type,
   ]);
-  const requestGroups = ancestors.filter(isRequestGroup);
+  const requestGroups = ancestors.filter(models.requestGroup.isRequestGroup);
   const auth = getOrInheritAuthentication({ request, requestGroups });
   const closestAuth = getAuthObjectOrNull(auth);
   if (!closestAuth) {
@@ -88,7 +79,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         if (pathParameters) {
           // Replace path parameters in URL with their rendered values
           // Path parameters are path segments that start with a colon, e.g. :id
-          url = url.replace(PATH_PARAMETER_REGEX, match => {
+          url = url.replace(models.request.PATH_PARAMETER_REGEX, match => {
             const pathParam = match.replace('/:', '');
             const param = pathParameters?.find(p => p.name === pathParam);
 

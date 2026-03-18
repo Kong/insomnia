@@ -20,6 +20,7 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { type Environment, type EnvironmentKvPairData, type EnvironmentType, models } from '~/insomnia-data';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
 import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
@@ -27,14 +28,6 @@ import { useEnvironmentUpdateActionFetcher } from '~/routes/organization.$organi
 import { invariant } from '~/utils/invariant';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
-import {
-  type Environment,
-  type EnvironmentKvPairData,
-  EnvironmentKvPairDataType,
-  EnvironmentType,
-  getDataFromKVPair,
-} from '../../../models/environment';
-import { isRemoteProject } from '../../../models/project';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { responseTagRegex } from '../../../templating/utils';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
@@ -69,7 +62,9 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
 
   const { baseEnvironment, activeEnvironment, subEnvironments, activeProject, activeWorkspaceMeta } = routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
-  const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
+  const isUsingInsomniaCloudSync = Boolean(
+    models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
+  );
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
   const selectedEnvironment = [baseEnvironment, ...subEnvironments].find(env => env._id === selectedEnvironmentId);
@@ -81,7 +76,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
   }, [selectedEnvironment]);
   // Do not allowed to switch to json environment if contains secret item
   const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(
-    d => d.type === EnvironmentKvPairDataType.SECRET,
+    d => d.type === models.environment.EnvironmentKvPairDataType.SECRET,
   );
 
   const environmentActionsList: {
@@ -188,7 +183,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
 
   const handleKVPairChange = (kvPairData: EnvironmentKvPairData[]) => {
     if (selectedEnvironment) {
-      const environmentData = getDataFromKVPair(kvPairData);
+      const environmentData = models.environment.getDataFromKVPair(kvPairData);
       updateEnvironmentFetcher.submit({
         organizationId,
         projectId,
@@ -496,10 +491,12 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                             toggleSwitchEnvironmentType,
                           );
                         }}
-                        isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
+                        isSelected={selectedEnvironment?.environmentType !== models.environment.EnvironmentType.KVPAIR}
                         className="flex w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                         aria-label={
-                          selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR ? 'Table Edit' : 'Raw Edit'
+                          selectedEnvironment?.environmentType !== models.environment.EnvironmentType.KVPAIR
+                            ? 'Table Edit'
+                            : 'Raw Edit'
                         }
                       >
                         {({ isSelected }) => (
@@ -516,7 +513,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                   </div>
                   {/* legacy JSON environment do not have environmentType property*/}
                   {selectedEnvironment &&
-                    (selectedEnvironment.environmentType === EnvironmentType.JSON ||
+                    (selectedEnvironment.environmentType === models.environment.EnvironmentType.JSON ||
                       !selectedEnvironment.environmentType) && (
                       <EnvironmentEditor
                         ref={environmentEditorRef}
@@ -528,13 +525,14 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                         }}
                       />
                     )}
-                  {selectedEnvironment && selectedEnvironment.environmentType === EnvironmentType.KVPAIR && (
-                    <EnvironmentKVEditor
-                      key={selectedEnvironment._id}
-                      data={selectedEnvironment.kvPairData || []}
-                      onChange={handleKVPairChange}
-                    />
-                  )}
+                  {selectedEnvironment &&
+                    selectedEnvironment.environmentType === models.environment.EnvironmentType.KVPAIR && (
+                      <EnvironmentKVEditor
+                        key={selectedEnvironment._id}
+                        data={selectedEnvironment.kvPairData || []}
+                        onChange={handleKVPairChange}
+                      />
+                    )}
                 </div>
               </div>
               <div className="flex items-center justify-between gap-2">

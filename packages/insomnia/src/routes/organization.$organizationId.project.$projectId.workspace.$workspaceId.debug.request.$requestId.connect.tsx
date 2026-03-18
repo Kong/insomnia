@@ -3,13 +3,8 @@ import { href } from 'react-router';
 
 import type { ChangeBufferEvent } from '~/common/database';
 import { type McpTransportType, models } from '~/insomnia-data';
-import type { CookieJar } from '~/models/cookie-jar';
+import { type CookieJar, type RequestAuthentication, type RequestHeader } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
-import type { RequestAuthentication, RequestHeader } from '~/models/request';
-import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '~/models/request';
-import { isRequestMeta } from '~/models/request-meta';
-import { isSocketIORequest } from '~/models/socket-io-request';
-import { isWebSocketRequestId } from '~/models/websocket-request';
 import { getAuthHeader } from '~/network/authentication';
 import type { RenderedRequest } from '~/templating/types';
 import { invariant } from '~/utils/invariant';
@@ -37,7 +32,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   invariant(workspaceId, 'Workspace ID is required');
   const rendered = (await request.json()) as ConnectActionParams;
 
-  if (isWebSocketRequestId(requestId)) {
+  if (models.webSocketRequest.isWebSocketRequestId(requestId)) {
     window.main.webSocket.open({
       requestId,
       workspaceId,
@@ -47,7 +42,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       cookieJar: rendered.cookieJar,
     });
   }
-  if (isGraphqlSubscriptionRequest(req)) {
+  if (models.request.isGraphqlSubscriptionRequest(req)) {
     window.main.webSocket.open({
       requestId,
       workspaceId,
@@ -70,7 +65,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       cookieJar: rendered.cookieJar,
     });
   }
-  if (isEventStreamRequest(req)) {
+  if (models.request.isEventStreamRequest(req)) {
     const renderedRequest = { ...req, ...rendered } as RenderedRequest;
     const authHeader = await getAuthHeader(renderedRequest, rendered.url);
     window.main.curl.open({
@@ -84,7 +79,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       suppressUserAgent: rendered.suppressUserAgent,
     });
   }
-  if (isSocketIORequest(req)) {
+  if (models.socketIORequest.isSocketIORequest(req)) {
     window.main.socketIO.open({
       requestId,
       workspaceId,
@@ -112,7 +107,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [event, doc] = change;
-        if (isRequestMeta(doc) && doc.parentId === requestId && event === 'update') {
+        if (models.requestMeta.isRequestMeta(doc) && doc.parentId === requestId && event === 'update') {
           resolve(null);
           unsubscribe();
           return;

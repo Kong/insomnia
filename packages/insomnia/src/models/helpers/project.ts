@@ -1,15 +1,16 @@
 import { createTeamProject, isApiError } from 'insomnia-api';
 
-import { database } from '../../common/database';
+import { database, models, type Project, services, type Workspace } from '~/insomnia-data';
+
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
 } from '../../sync/vcs/initialize-backend-project';
 import type { VCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
-import { isDefaultOrganizationProject, type Project, update as updateProject } from '../project';
-import { type Workspace } from '../workspace';
-import { getOrCreateByParentId as getOrCreateWorkspaceMeta } from '../workspace-meta';
+
+const { isDefaultOrganizationProject } = models.project;
+
 export const sortProjects = (projects: Project[]) => [
   ...projects.filter(p => isDefaultOrganizationProject(p)).sort((a, b) => a.name.localeCompare(b.name)),
   ...projects.filter(p => !isDefaultOrganizationProject(p)).sort((a, b) => a.name.localeCompare(b.name)),
@@ -32,7 +33,10 @@ export async function updateLocalProjectToRemote({
       organizationId,
       name: project.name,
     });
-    const updatedProject = await updateProject(project, { name: newCloudProject.name, remoteId: newCloudProject.id });
+    const updatedProject = await services.project.update(project, {
+      name: newCloudProject.name,
+      remoteId: newCloudProject.id,
+    });
 
     // For each workspace in the local project
     const projectWorkspaces = await database.find<Workspace>('Workspace', {
@@ -40,7 +44,7 @@ export async function updateLocalProjectToRemote({
     });
 
     for (const workspace of projectWorkspaces) {
-      const workspaceMeta = await getOrCreateWorkspaceMeta(workspace._id);
+      const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
 
       // Initialize Sync on the workspace if it's not using Git sync
       try {

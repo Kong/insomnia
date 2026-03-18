@@ -4,25 +4,8 @@ import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
 import { sortMethodMap } from '~/common/sorting';
 import { type CaCertificate, services } from '~/insomnia-data';
-import * as models from '~/models';
-import type { ApiSpec } from '~/models/api-spec';
-import type { ClientCertificate } from '~/models/client-certificate';
-import type { CookieJar } from '~/models/cookie-jar';
-import type { Environment } from '~/models/environment';
-import type { GitRepository } from '~/models/git-repository';
-import type { GrpcRequest } from '~/models/grpc-request';
-import type { GrpcRequestMeta } from '~/models/grpc-request-meta';
+import { type ApiSpec, type ClientCertificate, type CookieJar, type Environment, type GitRepository, type GrpcRequest, type GrpcRequestMeta, type MockServer, models, type Project, type Request, type RequestGroup, type RequestGroupMeta, type RequestMeta, type SocketIORequest, type WebSocketRequest, type Workspace, type WorkspaceMeta } from '~/insomnia-data';
 import { sortProjects } from '~/models/helpers/project';
-import type { MockServer } from '~/models/mock-server';
-import { isGitProject, type Project } from '~/models/project';
-import type { Request } from '~/models/request';
-import { isRequestGroup, type RequestGroup } from '~/models/request-group';
-import type { RequestGroupMeta } from '~/models/request-group-meta';
-import type { RequestMeta } from '~/models/request-meta';
-import type { SocketIORequest } from '~/models/socket-io-request';
-import type { WebSocketRequest } from '~/models/websocket-request';
-import { type Workspace } from '~/models/workspace';
-import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
@@ -67,28 +50,28 @@ export interface Child {
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const activeProject = await models.project.getById(projectId);
+  const activeProject = await services.project.getById(projectId);
   if (!activeProject) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
   }
 
-  const activeWorkspace = await models.workspace.getById(workspaceId);
+  const activeWorkspace = await services.workspace.getById(workspaceId);
   if (!activeWorkspace) {
     showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
 
-  const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const activeWorkspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
 
-  const gitRepositoryId = isGitProject(activeProject)
+  const gitRepositoryId = models.project.isGitProject(activeProject)
     ? activeProject.gitRepositoryId
     : activeWorkspaceMeta.gitRepositoryId;
-  const gitRepository = await models.gitRepository.getById(gitRepositoryId || '');
+  const gitRepository = await services.gitRepository.getById(gitRepositoryId || '');
 
-  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  const baseEnvironment = await services.environment.getOrCreateForParentId(workspaceId);
 
-  const subEnvironments = (await models.environment.findByParentId(baseEnvironment._id)).sort(
+  const subEnvironments = (await services.environment.findByParentId(baseEnvironment._id)).sort(
     (e1, e2) => e1.metaSortKey - e2.metaSortKey,
   );
 
@@ -126,11 +109,11 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     _id: activeWorkspaceMeta.activeGlobalEnvironmentId,
   });
 
-  const activeCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+  const activeCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
 
-  const activeApiSpec = await models.apiSpec.getByParentId(workspaceId);
-  const activeMockServer = await models.mockServer.getByParentId(workspaceId);
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const activeApiSpec = await services.apiSpec.getByParentId(workspaceId);
+  const activeMockServer = await services.mockServer.getByParentId(workspaceId);
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
 
   const organizationProjects =
     (await database.find<Project>(models.project.type, {
@@ -146,7 +129,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   // first recursion to get all the folders ids in order to use nedb search by an array
   const flattenFoldersIntoList = async (id: string): Promise<string[]> => {
     const parentIds: string[] = [id];
-    const folderIds = (await models.requestGroup.findByParentId(id)).map(r => r._id);
+    const folderIds = (await services.requestGroup.findByParentId(id)).map(r => r._id);
     if (folderIds.length) {
       await Promise.all(folderIds.map(async folderIds => parentIds.push(...(await flattenFoldersIntoList(folderIds)))));
     }
@@ -197,10 +180,10 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
       levelReqs.sort(sortFunction).map(async (doc): Promise<Child> => {
         const hidden = parentIsCollapsed;
 
-        const pinned = (!isRequestGroup(doc) && grpcAndRequestMetas.find(m => m.parentId === doc._id)?.pinned) || false;
+        const pinned = (!models.requestGroup.isRequestGroup(doc) && grpcAndRequestMetas.find(m => m.parentId === doc._id)?.pinned) || false;
         const collapsed =
           parentIsCollapsed ||
-          (isRequestGroup(doc) && requestGroupMetas.find(m => m.parentId === doc._id)?.collapsed) ||
+          (models.requestGroup.isRequestGroup(doc) && requestGroupMetas.find(m => m.parentId === doc._id)?.collapsed) ||
           false;
 
         const docAncestors = [...ancestors, parentId];
@@ -237,7 +220,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     const tree = requestTree;
 
     const build = (node: Child) => {
-      if (isRequestGroup(node.doc)) {
+      if (models.requestGroup.isRequestGroup(node.doc)) {
         collection.push(node);
         node.children.forEach(child => build(child));
       } else {
@@ -249,7 +232,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     return collection;
   }
 
-  const userSession = await models.userSession.getOrCreate();
+  const userSession = await services.userSession.getOrCreate();
   const isLoggedInIsCloudProjectAndIsNotGitRepo = userSession.id && activeProject.remoteId && !gitRepository;
   let vcsVersion = null;
   if (isLoggedInIsCloudProjectAndIsNotGitRepo) {
@@ -265,7 +248,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     }
   }
 
-  const workspaces = await models.workspace.findByParentId(projectId);
+  const workspaces = await services.workspace.findByParentId(projectId);
 
   const collection = flattenTree();
 
@@ -339,9 +322,9 @@ export const useWorkspaceLoaderFetcher = createFetcherLoadHook(
 );
 
 export const revalidateWorkspaceActiveRequest = async (requestId: string, workspaceId: string) => {
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
   if (workspaceMeta?.activeRequestId === requestId) {
-    await models.workspaceMeta.update(workspaceMeta, { activeRequestId: null });
+    await services.workspaceMeta.update(workspaceMeta, { activeRequestId: null });
   }
 };
 
@@ -353,10 +336,10 @@ export const revalidateWorkspaceActiveRequestByFolder = async (requestGroup: Req
     models.socketIORequest.type,
     models.requestGroup.type,
   ]);
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
   for (const doc of docs) {
     if (workspaceMeta?.activeRequestId === doc._id) {
-      await models.workspaceMeta.update(workspaceMeta, { activeRequestId: null });
+      await services.workspaceMeta.update(workspaceMeta, { activeRequestId: null });
       return;
     }
   }

@@ -1,13 +1,13 @@
-import { type BaseModel, request, requestGroup, workspace } from '../../models';
+import { models, type BaseModel } from '~/insomnia-data';
 
 export const data: Record<string, Partial<BaseModel>[]> = {
-  [workspace.type]: [
+  [models.workspace.type]: [
     {
       _id: 'wrk_1',
       name: 'Wrk 1',
     },
   ],
-  [requestGroup.type]: [
+  [models.requestGroup.type]: [
     {
       _id: 'fld_1',
       parentId: 'wrk_1',
@@ -24,7 +24,7 @@ export const data: Record<string, Partial<BaseModel>[]> = {
       name: 'Fld 3',
     },
   ],
-  [request.type]: [
+  [models.request.type]: [
     {
       _id: 'req_1',
       parentId: 'fld_1',

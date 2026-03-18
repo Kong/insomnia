@@ -18,23 +18,31 @@ import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
 import type { McpRequest } from '~/insomnia-data';
+import {
+  type ApiSpec,
+  type BaseModel,
+  type CookieJar,
+  type Environment,
+  type EnvironmentKvPairData,
+  type GrpcRequest,
+  type MockRoute,
+  type MockServer,
+  models,
+  type Request,
+  type RequestBody,
+  type RequestGroup,
+  type RequestHeader,
+  type RequestParameter,
+  services,
+  type SocketIORequest,
+  type UnitTest,
+  type UnitTestSuite,
+  type WebSocketRequest,
+  type Workspace,
+  type WorkspaceScope,
+} from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 
-import * as models from '../models';
-import type { ApiSpec } from '../models/api-spec';
-import type { CookieJar } from '../models/cookie-jar';
-import type { EnvironmentKvPairData } from '../models/environment';
-import { type Environment, maskVaultEnvironmentData } from '../models/environment';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { MockRoute } from '../models/mock-route';
-import type { MockServer } from '../models/mock-server';
-import type { Request, RequestBody, RequestHeader, RequestParameter } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { SocketIORequest } from '../models/socket-io-request';
-import type { UnitTest } from '../models/unit-test';
-import type { UnitTestSuite } from '../models/unit-test-suite';
-import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace, WorkspaceScope } from '../models/workspace';
 import { database } from './database';
 import {
   type Insomnia_GRPCRequest,
@@ -54,7 +62,7 @@ import {
  * Type helper that adds the export type field to any BaseModel
  * This is used to ensure all exported models have the correct _type field for v5 format
  */
-type WithExportType<T extends models.BaseModel> = T & { _type: AllExportTypes };
+type WithExportType<T extends BaseModel> = T & { _type: AllExportTypes };
 
 /**
  * Maps request headers from internal format to v5 export format
@@ -785,7 +793,7 @@ export async function getInsomniaV5DataExport({
   requestIds?: string[];
 }) {
   try {
-    const workspace = await models.workspace.getById(workspaceId);
+    const workspace = await services.workspace.getById(workspaceId);
 
     if (!workspace) {
       throw new Error('Workspace not found');
@@ -973,7 +981,7 @@ export async function getInsomniaV5DataExport({
         },
         data: baseEnvironment.data,
         color: baseEnvironment.color,
-        subEnvironments: subEnvironments.map(maskVaultEnvironmentData).map(subEnvironment => ({
+        subEnvironments: subEnvironments.map(models.environment.maskVaultEnvironmentData).map(subEnvironment => ({
           name: subEnvironment.name,
           meta: {
             id: subEnvironment._id,

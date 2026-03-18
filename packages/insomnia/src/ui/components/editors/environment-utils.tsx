@@ -1,11 +1,5 @@
-import {
-  type Environment,
-  type EnvironmentKvPairData,
-  EnvironmentType,
-  getKVPairFromData,
-  vaultEnvironmentPath,
-  vaultEnvironmentRuntimePath,
-} from '../../../models/environment';
+import { type Environment, type EnvironmentKvPairData, type EnvironmentType, models } from '~/insomnia-data';
+
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -24,12 +18,12 @@ export const ensureKeyIsValid = (key: string, isRoot: boolean): string | null =>
     return `"${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}" is a reserved key`;
   }
 
-  if (key === vaultEnvironmentPath && isRoot) {
-    return `"${vaultEnvironmentPath}" is a reserved key`;
+  if (key === models.environment.vaultEnvironmentPath && isRoot) {
+    return `"${models.environment.vaultEnvironmentPath}" is a reserved key`;
   }
 
-  if (key === vaultEnvironmentRuntimePath && isRoot) {
-    return `"${vaultEnvironmentRuntimePath}" is a reserved key`;
+  if (key === models.environment.vaultEnvironmentRuntimePath && isRoot) {
+    return `"${models.environment.vaultEnvironmentRuntimePath}" is a reserved key`;
   }
 
   return null;
@@ -70,9 +64,13 @@ export function handleToggleEnvironmentType(
   isValidJSON: boolean,
   updateEnvironmentTypeRequest: (type: EnvironmentType, kvPairData: EnvironmentKvPairData[]) => void,
 ) {
-  const newEnvironmentType = isSelected ? EnvironmentType.JSON : EnvironmentType.KVPAIR;
+  const newEnvironmentType = isSelected
+    ? models.environment.EnvironmentType.JSON
+    : models.environment.EnvironmentType.KVPAIR;
   // clear kvPairData when switch to json view, otherwise convert json data to kvPairData
-  const kvPairData = isSelected ? [] : getKVPairFromData(environment.data, environment.dataPropertyOrder);
+  const kvPairData = isSelected
+    ? []
+    : models.environment.getKVPairFromData(environment.data, environment.dataPropertyOrder);
   const foundDisabledItem = isSelected && environment.kvPairData?.some(pair => !pair.enabled);
   const foundDuplicateNameItem =
     isSelected &&
@@ -81,7 +79,7 @@ export function handleToggleEnvironmentType(
         ?.slice(idx + 1)
         .some(newPair => pair.name.trim() === newPair.name.trim() && newPair.enabled),
     );
-  if (!isValidJSON && newEnvironmentType === EnvironmentType.KVPAIR) {
+  if (!isValidJSON && newEnvironmentType === models.environment.EnvironmentType.KVPAIR) {
     showModal(AlertModal, {
       title: 'Error',
       message: 'Please modify and fix the JSON string error before switch to Table view',

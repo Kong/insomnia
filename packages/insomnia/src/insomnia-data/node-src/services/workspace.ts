@@ -1,0 +1,40 @@
+import { database as db, models, type Workspace } from '~/insomnia-data';
+
+const { isProjectId } = models.project;
+const { type } = models.workspace;
+
+export function getById(id?: string) {
+  return db.findOne<Workspace>(type, { _id: id });
+}
+
+export function findByParentId(parentId: string) {
+  return db.find<Workspace>(type, { parentId });
+}
+
+function expectParentToBeProject(parentId?: string | null) {
+  if (parentId && !isProjectId(parentId)) {
+    throw new Error('Expected the parent of a Workspace to be a Project');
+  }
+}
+
+export async function create(patch: Partial<Workspace> = {}) {
+  expectParentToBeProject(patch.parentId);
+  return db.docCreate<Workspace>(type, patch);
+}
+
+export async function all() {
+  return await db.find<Workspace>(type);
+}
+
+export function count() {
+  return db.count(type);
+}
+
+export function update(workspace: Workspace, patch: Partial<Workspace>) {
+  expectParentToBeProject(patch.parentId);
+  return db.docUpdate(workspace, patch);
+}
+
+export function remove(workspace: Workspace) {
+  return db.remove(workspace);
+}

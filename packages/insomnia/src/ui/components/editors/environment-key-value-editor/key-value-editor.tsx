@@ -13,15 +13,10 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 
+import { type EnvironmentKvPairData, type EnvironmentKvPairDataType, models } from '~/insomnia-data';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { generateId } from '../../../../common/misc';
-import {
-  decryptSecretValue,
-  encryptSecretValue,
-  type EnvironmentKvPairData,
-  EnvironmentKvPairDataType,
-} from '../../../../models/environment';
 import { base64decode } from '../../../../utils/vault';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
@@ -46,7 +41,7 @@ const createNewPair = (enabled = true): EnvironmentKvPairData => ({
   id: generateId('envPair'),
   name: '',
   value: '',
-  type: EnvironmentKvPairDataType.STRING,
+  type: models.environment.EnvironmentKvPairDataType.STRING,
   enabled,
 });
 
@@ -84,17 +79,17 @@ export const EnvironmentKVEditor = ({
 
   const commonItemTypes = [
     {
-      id: EnvironmentKvPairDataType.STRING,
+      id: models.environment.EnvironmentKvPairDataType.STRING,
       name: 'Text',
     },
   ];
   if (!textOnly) {
     commonItemTypes.push({
-      id: EnvironmentKvPairDataType.JSON,
+      id: models.environment.EnvironmentKvPairDataType.JSON,
       name: 'JSON',
     });
   }
-  const secretItemType = [{ id: EnvironmentKvPairDataType.SECRET, name: 'Secret' }];
+  const secretItemType = [{ id: models.environment.EnvironmentKvPairDataType.SECRET, name: 'Secret' }];
   // Use private environment to store vault secrets if vault key is available
   const kvPairItemTypes = isPrivate && !!vaultKey ? commonItemTypes.concat(secretItemType) : commonItemTypes;
 
@@ -148,7 +143,7 @@ export const EnvironmentKVEditor = ({
       changedItem['enabled'] = true;
       changedItem[changedPropertyName] = newValue;
       // update value to emptfy object json string when switch to json type and current value is empty string
-      if (newValue === EnvironmentKvPairDataType.JSON && changedItem.value.trim() === '') {
+      if (newValue === models.environment.EnvironmentKvPairDataType.JSON && changedItem.value.trim() === '') {
         changedItem.value = JSON.stringify({});
       }
     }
@@ -162,7 +157,7 @@ export const EnvironmentKVEditor = ({
       if (originType === newType) {
         return;
       }
-      if (originType === EnvironmentKvPairDataType.SECRET) {
+      if (originType === models.environment.EnvironmentKvPairDataType.SECRET) {
         const newTypeDisplayText = kvPairItemTypes.find(item => item.id === newType)?.name;
         // need confirm if user changes from secret type which will decrypt and reveal value;
         showModal(AskModal, {
@@ -175,13 +170,13 @@ export const EnvironmentKVEditor = ({
             if (yes) {
               handleItemChange(id, 'type', newType);
               // decrypt and save the value
-              handleItemChange(id, 'value', decryptSecretValue(originValue, symmetricKey));
+              handleItemChange(id, 'value', models.environment.decryptSecretValue(originValue, symmetricKey));
             }
           },
         });
-      } else if (newType === EnvironmentKvPairDataType.SECRET) {
+      } else if (newType === models.environment.EnvironmentKvPairDataType.SECRET) {
         // encrypt value if set to secret type
-        handleItemChange(id, 'value', encryptSecretValue(originValue, symmetricKey));
+        handleItemChange(id, 'value', models.environment.encryptSecretValue(originValue, symmetricKey));
         handleItemChange(id, 'type', newType);
       } else {
         handleItemChange(id, 'type', newType);
@@ -263,7 +258,7 @@ export const EnvironmentKVEditor = ({
           )}
         </div>
         <div className={`${cellCommonStyle} relative w-[50%]`}>
-          {type === EnvironmentKvPairDataType.STRING && (
+          {type === models.environment.EnvironmentKvPairDataType.STRING && (
             <OneLineEditor
               id={`environment-kv-editor-value-${id}`}
               placeholder={'Input Value'}
@@ -272,7 +267,7 @@ export const EnvironmentKVEditor = ({
               onChange={newValue => handleItemChange(id, 'value', newValue)}
             />
           )}
-          {type === EnvironmentKvPairDataType.JSON && (
+          {type === models.environment.EnvironmentKvPairDataType.JSON && (
             <ItemButton
               className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               tabIndex={-1}
@@ -308,14 +303,14 @@ export const EnvironmentKVEditor = ({
               Click to Edit
             </ItemButton>
           )}
-          {type === EnvironmentKvPairDataType.SECRET && (
+          {type === models.environment.EnvironmentKvPairDataType.SECRET && (
             <PasswordInput
               itemId={id}
               enabled={enabled && !disabled}
               placeholder="Input Secret"
-              value={decryptSecretValue(value, symmetricKey)}
+              value={models.environment.decryptSecretValue(value, symmetricKey)}
               onChange={newValue => {
-                const encryptedValue = encryptSecretValue(newValue, symmetricKey);
+                const encryptedValue = models.environment.encryptSecretValue(newValue, symmetricKey);
                 handleItemChange(id, 'value', encryptedValue);
               }}
             />
@@ -340,7 +335,9 @@ export const EnvironmentKVEditor = ({
                 selectionMode="single"
                 selectedKeys={[type]}
                 // Only valid json string or empty string allowed to convert to JSON type
-                disabledKeys={isValidJSONString || value.trim() === '' ? [] : [EnvironmentKvPairDataType.JSON]}
+                disabledKeys={
+                  isValidJSONString || value.trim() === '' ? [] : [models.environment.EnvironmentKvPairDataType.JSON]
+                }
                 items={kvPairItemTypes}
               >
                 {item => (

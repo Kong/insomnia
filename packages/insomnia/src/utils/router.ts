@@ -2,11 +2,9 @@ import type { Organization } from 'insomnia-api';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
+import { models, type Project, services } from '~/insomnia-data';
+
 import { database } from '../common/database';
-import * as models from '../models';
-import { findPersonalOrganization, SCRATCHPAD_ORGANIZATION_ID } from '../models/organization';
-import { type Project, SCRATCHPAD_PROJECT_ID } from '../models/project';
-import { scopeToActivity, SCRATCHPAD_WORKSPACE_ID } from '../models/workspace';
 export const enum AsyncTask {
   SyncOrganization,
   MigrateProjects,
@@ -47,19 +45,19 @@ export const getInitialRouteForOrganization = async ({
     const match = getMatchParams(prevOrganizationLocation);
 
     if (match && match.params.organizationId && match.params.projectId) {
-      const existingProject = await models.project.getById(match.params.projectId);
+      const existingProject = await services.project.getById(match.params.projectId);
 
       if (existingProject) {
         console.log('Redirecting to last visited project', existingProject._id);
 
         if (match.params.workspaceId && navigateToWorkspace) {
-          const existingWorkspace = await models.workspace.getById(match.params.workspaceId);
+          const existingWorkspace = await services.workspace.getById(match.params.workspaceId);
           if (existingWorkspace) {
             return `${href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId`, {
               organizationId: match.params.organizationId,
               projectId: existingProject._id,
               workspaceId: existingWorkspace._id,
-            })}/${scopeToActivity(existingWorkspace.scope)}`;
+            })}/${models.workspace.scopeToActivity(existingWorkspace.scope)}`;
           }
         }
 
@@ -100,12 +98,12 @@ export const getInitialEntry = async () => {
 
     const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
 
-    const user = await models.userSession.getOrCreate();
+    const user = await services.userSession.getOrCreate();
     if (user.id) {
       const organizations = JSON.parse(
         localStorage.getItem(`${user.accountId}:organizations`) || '[]',
       ) as Organization[];
-      const personalOrganization = findPersonalOrganization(organizations, user.accountId);
+      const personalOrganization = models.organization.findPersonalOrganization(organizations, user.accountId);
       // If the personal org is not found in local storage go fetch from org index loader
       if (!personalOrganization) {
         return href('/organization');
@@ -135,15 +133,15 @@ export const getInitialEntry = async () => {
     }
 
     return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
-      organizationId: SCRATCHPAD_ORGANIZATION_ID,
-      projectId: SCRATCHPAD_PROJECT_ID,
-      workspaceId: SCRATCHPAD_WORKSPACE_ID,
+      organizationId: models.organization.SCRATCHPAD_ORGANIZATION_ID,
+      projectId: models.project.SCRATCHPAD_PROJECT_ID,
+      workspaceId: models.workspace.SCRATCHPAD_WORKSPACE_ID,
     });
   } catch {
     return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
-      organizationId: SCRATCHPAD_ORGANIZATION_ID,
-      projectId: SCRATCHPAD_PROJECT_ID,
-      workspaceId: SCRATCHPAD_WORKSPACE_ID,
+      organizationId: models.organization.SCRATCHPAD_ORGANIZATION_ID,
+      projectId: models.project.SCRATCHPAD_PROJECT_ID,
+      workspaceId: models.workspace.SCRATCHPAD_WORKSPACE_ID,
     });
   }
 };

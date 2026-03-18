@@ -9,7 +9,16 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import { configureFetch } from 'insomnia-api';
 
 import { getCurrentSessionId } from '~/account/session';
-import { database, initDatabase, initServices } from '~/insomnia-data';
+import {
+  database,
+  initDatabase,
+  initServices,
+  models,
+  type Project,
+  type RemoteProject,
+  services,
+  type Stats,
+} from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
 import { registerPathHandlers } from '~/main/ipc/path';
@@ -37,9 +46,6 @@ import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
-import * as models from './models/index';
-import type { Project, RemoteProject } from './models/project';
-import type { Stats } from './models/stats';
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
 // ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)
@@ -291,14 +297,14 @@ const _launchApp = async () => {
   To avoid that, create them explicitly prior to any initialization steps
  */
 async function _createModelInstances() {
-  await models.stats.get();
-  await models.settings.getOrCreate();
+  await services.stats.get();
+  await services.settings.getOrCreate();
   try {
-    const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
-    const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
+    const scratchpadProject = await services.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
+    const scratchPad = await services.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
       console.log('[main] Initializing Scratch Pad Project');
-      await models.project.create({
+      await services.project.create({
         _id: models.project.SCRATCHPAD_PROJECT_ID,
         name: getProductName(),
         remoteId: null,
@@ -308,7 +314,7 @@ async function _createModelInstances() {
 
     if (!scratchPad) {
       console.log('[main] Initializing Scratch Pad');
-      await models.workspace.create({
+      await services.workspace.create({
         _id: models.workspace.SCRATCHPAD_WORKSPACE_ID,
         name: 'Scratch Pad',
         parentId: models.project.SCRATCHPAD_PROJECT_ID,
@@ -348,8 +354,8 @@ function getOperatingSystem(): string {
 
 async function _trackStats() {
   // Handle the stats
-  const oldStats = await models.stats.get();
-  const stats: Stats = await models.stats.update({
+  const oldStats = await services.stats.get();
+  const stats: Stats = await services.stats.update({
     currentLaunch: Date.now(),
     lastLaunch: oldStats.currentLaunch,
     currentVersion: getAppVersion(),
@@ -368,7 +374,7 @@ async function _trackStats() {
     parentId: { $ne: null },
   });
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
 
   trackSegmentEvent(SegmentEvent.appStarted, {
     localProjects,

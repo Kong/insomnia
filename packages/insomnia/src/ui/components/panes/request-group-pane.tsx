@@ -1,8 +1,8 @@
 import React, { type FC, useRef, useState } from 'react';
 import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 
-import { type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from '../../../models/environment';
-import type { Settings } from '../../../models/settings';
+import { type EnvironmentKvPairData, type EnvironmentType, models, type Settings } from '~/insomnia-data';
+
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestGroupLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
@@ -49,7 +49,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
 
   const handleKVPairChange = (kvPairData: EnvironmentKvPairData[]) => {
     if (activeRequestGroup) {
-      const environmentData = getDataFromKVPair(kvPairData);
+      const environmentData = models.environment.getDataFromKVPair(kvPairData);
       patchGroup(activeRequestGroup._id, {
         environment: environmentData.data,
         environmentPropertyOrder: environmentData.dataPropertyOrder,
@@ -215,7 +215,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
                     );
                   }
                 }}
-                isSelected={activeRequestGroup?.environmentType !== EnvironmentType.KVPAIR}
+                isSelected={activeRequestGroup?.environmentType !== models.environment.EnvironmentType.KVPAIR}
                 className="ml-2 flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs py-1 pl-2 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
               >
                 {({ isSelected }) => (
@@ -232,7 +232,8 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
           </div>
           <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
             <div className="flex h-[calc(100%-var(--line-height-md))] flex-col">
-              {activeRequestGroup && activeRequestGroup.environmentType === EnvironmentType.KVPAIR ? (
+              {activeRequestGroup &&
+              activeRequestGroup.environmentType === models.environment.EnvironmentType.KVPAIR ? (
                 <EnvironmentKVEditor
                   key={activeRequestGroup ? activeRequestGroup._id : 'n/a'}
                   data={activeRequestGroup?.kvPairData || []}

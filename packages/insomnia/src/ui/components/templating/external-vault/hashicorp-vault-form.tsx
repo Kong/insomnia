@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { type CloudProviderCredential, HashiCorpCredentialType } from '~/models/cloud-credential';
+import { type CloudProviderCredential,models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import type { NunjucksParsedTag } from '~/templating/types';
 
@@ -45,7 +45,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
   ) => {
     // append default configs when not exist
     const defaultConfig =
-      credentialType === HashiCorpCredentialType.cloudVaultSecrets
+      credentialType === models.cloudCredential.HashiCorpCredentialType.cloudVaultSecrets
         ? {}
         : { kvVersion: defaultKVVersion, sendNamespaceViaHeader: true };
     const newConfig = {
@@ -58,8 +58,8 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
 
   return (
     <>
-      {(credentialType === HashiCorpCredentialType.onPrem ||
-        credentialType === HashiCorpCredentialType.cloudVaultDedicated) && (
+      {(credentialType === models.cloudCredential.HashiCorpCredentialType.onPrem ||
+        credentialType === models.cloudCredential.HashiCorpCredentialType.cloudVaultDedicated) && (
         <>
           <div className="form-row">
             <div className="form-control">
@@ -93,7 +93,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
               </div>
             </div>
           </div>
-          {credentialType === HashiCorpCredentialType.cloudVaultDedicated && (
+          {credentialType === models.cloudCredential.HashiCorpCredentialType.cloudVaultDedicated && (
             <div className="form-row">
               <div className="flex items-center gap-1">
                 <input
@@ -171,7 +171,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
           </div>
         </>
       )}
-      {credentialType === HashiCorpCredentialType.cloudVaultSecrets && (
+      {credentialType === models.cloudCredential.HashiCorpCredentialType.cloudVaultSecrets && (
         <>
           <div className="form-row">
             <div className="form-control">

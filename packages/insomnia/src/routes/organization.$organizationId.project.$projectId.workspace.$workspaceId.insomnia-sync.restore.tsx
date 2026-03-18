@@ -2,8 +2,7 @@ import { href, redirect } from 'react-router';
 
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
-import * as models from '~/models';
-import { scopeToActivity } from '~/models/workspace';
+import { models, services } from '~/insomnia-data';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { getSyncItems, remoteCompareCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
@@ -31,7 +30,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     };
   }
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
   return redirect(
@@ -39,7 +38,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       organizationId,
       projectId,
       workspaceId,
-    })}/${scopeToActivity(workspace?.scope)}`,
+    })}/${models.workspace.scopeToActivity(workspace?.scope)}`,
   );
 }
 

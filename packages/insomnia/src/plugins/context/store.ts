@@ -1,4 +1,5 @@
-import * as models from '../../models';
+import { services } from '~/insomnia-data';
+
 import type { Plugin } from '../index';
 
 export interface PluginStore {
@@ -19,25 +20,25 @@ export function init(plugin: Pick<Plugin, 'name'>): { store: PluginStore } {
   return {
     store: {
       async hasItem(key: string) {
-        const doc = await models.pluginData.getByKey(plugin.name, key);
+        const doc = await services.pluginData.getByKey(plugin.name, key);
         return doc !== undefined && doc !== null;
       },
 
       async setItem(key: string, value: string) {
-        await models.pluginData.upsertByKey(plugin.name, key, String(value));
+        await services.pluginData.upsertByKey(plugin.name, key, String(value));
       },
 
       async getItem(key: string) {
-        const doc = await models.pluginData.getByKey(plugin.name, key);
+        const doc = await services.pluginData.getByKey(plugin.name, key);
         return doc ? doc.value : null;
       },
 
       async removeItem(key: string) {
-        await models.pluginData.removeByKey(plugin.name, key);
+        await services.pluginData.removeByKey(plugin.name, key);
       },
 
       async clear() {
-        await models.pluginData.removeAll(plugin.name);
+        await services.pluginData.removeAll(plugin.name);
       },
 
       async all(): Promise<
@@ -46,7 +47,7 @@ export function init(plugin: Pick<Plugin, 'name'>): { store: PluginStore } {
           value: string;
         }[]
       > {
-        const docs = (await models.pluginData.all(plugin.name)) || [];
+        const docs = (await services.pluginData.all(plugin.name)) || [];
         return docs.map(d => ({
           value: d.value,
           key: d.key,

@@ -4,6 +4,8 @@ import React, { type FC, useCallback } from 'react';
 import { Toolbar } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { models, type Request, type RequestBodyParameter } from '~/insomnia-data';
+
 import {
   CONTENT_TYPE_FILE,
   CONTENT_TYPE_FORM_DATA,
@@ -13,7 +15,6 @@ import {
 } from '../../../../common/constants';
 import { documentationLinks } from '../../../../common/documentation';
 import { getContentTypeHeader } from '../../../../common/misc';
-import { isEventStreamRequest, type Request, type RequestBodyParameter } from '../../../../models/request';
 import { useRequestPatcher } from '../../../hooks/use-request';
 import { ContentTypeDropdown } from '../../dropdowns/content-type-dropdown';
 import { AskModal } from '../../modals/ask-modal';
@@ -152,7 +153,7 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
           onChange={handleRawChange}
         />
       );
-    } else if (isEventStreamRequest(request)) {
+    } else if (models.request.isEventStreamRequest(request)) {
       return (
         <EmptyStatePane
           icon={<i className="fa fa-paper-plane" />}

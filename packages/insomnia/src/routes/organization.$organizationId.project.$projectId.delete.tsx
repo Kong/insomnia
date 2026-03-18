@@ -3,7 +3,7 @@ import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';
@@ -14,10 +14,10 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  const user = await models.userSession.getOrCreate();
+  const user = await services.userSession.getOrCreate();
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to delete a project');
 
@@ -33,12 +33,12 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     }
 
     if (project.gitRepositoryId) {
-      const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
-      gitRepository && (await models.gitRepository.remove(gitRepository));
+      const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
+      gitRepository && (await services.gitRepository.remove(gitRepository));
     }
 
-    await models.stats.incrementDeletedRequestsForDescendents(project);
-    await models.project.remove(project);
+    await services.stats.incrementDeletedRequestsForDescendents(project);
+    await services.project.remove(project);
 
     await database.flushChanges(bufferId);
 

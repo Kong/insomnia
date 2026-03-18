@@ -1,9 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
-import { isGrpcRequestId } from '~/models/grpc-request';
-import type { GrpcRequestMeta } from '~/models/grpc-request-meta';
-import type { RequestMeta } from '~/models/request-meta';
+import { type GrpcRequestMeta, models, type RequestMeta,services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -13,11 +10,11 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   const { requestId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
   const patch = (await request.json()) as Partial<RequestMeta | GrpcRequestMeta>;
-  if (isGrpcRequestId(requestId)) {
-    await models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
+  if (models.grpcRequest.isGrpcRequestId(requestId)) {
+    await services.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
     return null;
   }
-  await models.requestMeta.updateOrCreateByParentId(requestId, patch);
+  await services.requestMeta.updateOrCreateByParentId(requestId, patch);
   return null;
 }
 

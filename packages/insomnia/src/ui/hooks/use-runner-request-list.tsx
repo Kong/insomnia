@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef } from 'react';
 
+import { models, type Request } from '~/insomnia-data';
 import type { RequestRow } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
 import { invariant } from '~/utils/invariant';
 
-import { isRequest, type Request } from '../../models/request';
-import { isRequestGroup } from '../../models/request-group';
 import {
   type Child,
   useWorkspaceLoaderData,
@@ -19,14 +18,14 @@ export const useRunnerRequestList = (organizationId: string, targetFolderId: str
     return collection
       .filter(item => {
         entityMapRef.current.set(item.doc._id, item);
-        return isRequest(item.doc);
+        return models.request.isRequest(item.doc);
       })
       .map((item: Child) => {
         const ancestors: { id: string; name: string }[] = [];
         if (item.ancestors) {
           item.ancestors.forEach(ancestorId => {
             const ancestor = entityMapRef.current.get(ancestorId);
-            if (ancestor && isRequestGroup(ancestor?.doc)) {
+            if (ancestor && models.requestGroup.isRequestGroup(ancestor?.doc)) {
               ancestors.push({ id: ancestor?.doc._id, name: ancestor?.doc.name });
             }
           });

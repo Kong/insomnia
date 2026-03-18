@@ -20,8 +20,7 @@ import { fromUrl } from 'hosted-git-info';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
-import { type GitRemoteProviderType, isGitCredentialsV2 } from '~/models/git-credentials';
-import { EMPTY_GIT_PROJECT_ID, isEmptyGitProject } from '~/models/project';
+import { type BaseModel, type GitRemoteProviderType, type GitRepository, models, services, type WorkspaceScope } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
   gitRemoteProviderRegistry,
@@ -35,9 +34,6 @@ import { database } from '../common/database';
 import { InsomniaFileSchema, InsomniaFileTypeValues } from '../common/import-v5-parser';
 import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
-import * as models from '../models';
-import type { GitRepository } from '../models/git-repository';
-import { isWorkspace, type WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
 import { fsClient } from '../sync/git/fs-client';
 import GitVCS, {
   fetchRemoteBranches,
@@ -151,26 +147,26 @@ export function parseGitToHttpsURL(url: string) {
 
 async function getGitRepository({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
   if (workspaceId) {
-    const workspace = await models.workspace.getById(workspaceId);
+    const workspace = await services.workspace.getById(workspaceId);
     invariant(workspace, 'Workspace not found');
-    const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+    const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
     invariant(workspaceMeta, 'Workspace meta not found');
     if (!workspaceMeta.gitRepositoryId) {
       throw new Error('Workspace is not linked to a git repository');
     }
 
-    const gitRepository = await models.gitRepository.getById(workspaceMeta.gitRepositoryId);
+    const gitRepository = await services.gitRepository.getById(workspaceMeta.gitRepositoryId);
     invariant(gitRepository, 'Git Repository not found');
 
     return gitRepository;
   }
 
   invariant(projectId, 'Project ID is required');
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(project.gitRepositoryId, 'Project is not linked to a git repository');
-  invariant(project.gitRepositoryId && !isEmptyGitProject(project), 'Project is not linked to a git repository');
-  const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
+  invariant(project.gitRepositoryId && !models.project.isEmptyGitProject(project), 'Project is not linked to a git repository');
+  const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
   invariant(gitRepository, 'Git Repository not found');
   return gitRepository;
 }
@@ -270,7 +266,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
         gitDirectory: GIT_INTERNAL_DIR,
       });
 
-      await models.gitRepository.update(gitRepository, {
+      await services.gitRepository.update(gitRepository, {
         needsFullClone: false,
       });
     } else {
@@ -415,7 +411,7 @@ export const gitChangesLoader = async ({
 
     const { changes, hasUncommittedChanges } = await getGitChanges();
 
-    await models.gitRepository.update(gitRepository, {
+    await services.gitRepository.update(gitRepository, {
       hasUncommittedChanges,
     });
 
@@ -451,7 +447,7 @@ export const canPushLoader = async ({
     const gitRepository = await getGitRepository({ workspaceId, projectId });
     hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentialsId);
 
-    await models.gitRepository.update(gitRepository, {
+    await services.gitRepository.update(gitRepository, {
       hasUnpushedChanges,
     });
 
@@ -570,7 +566,7 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
       }
 
       // Parse the YAML file to get the document
-      const doc: models.BaseModel = YAML.parse(fileContents);
+      const doc: BaseModel = YAML.parse(fileContents);
 
       // Validate that the document ID matches the file path
       if (!legacyInsomniaFile.filePath.includes(doc._id)) {
@@ -583,7 +579,7 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
       }
 
       // Special handling for workspaces: ensure they're associated with the correct project
-      if (isWorkspace(doc)) {
+      if (models.workspace.isWorkspace(doc)) {
         console.log('[git] setting workspace parent to be that of the active project', {
           original: doc.parentId,
           new: projectId,
@@ -594,10 +590,10 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
         doc.parentId = projectId;
 
         // Create workspace metadata and set the new Git file path
-        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
+        const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(doc._id);
 
         const gitFilePath = `insomnia.${doc._id}.yaml`;
-        await models.workspaceMeta.update(workspaceMeta, { gitFilePath });
+        await services.workspaceMeta.update(workspaceMeta, { gitFilePath });
 
         // Track the change for Git staging
         changes.push({
@@ -789,9 +785,9 @@ export const cloneGitRepoAction = async ({
 
     let provider = 'custom';
     if (credentialsId) {
-      const credentials = await models.gitCredentials.getById(credentialsId);
+      const credentials = await services.gitCredentials.getById(credentialsId);
       invariant(credentials, 'Git Credentials not found');
-      if (!isGitCredentialsV2(credentials)) {
+      if (!models.gitCredentials.isGitCredentialsV2(credentials)) {
         throw new Error('Invalid Git Credentials');
       }
       provider = credentials.provider;
@@ -809,7 +805,7 @@ export const cloneGitRepoAction = async ({
 
       let providerName = 'custom';
       if (repoSettingsPatch.credentialsId) {
-        const credentials = await models.gitCredentials.getById(repoSettingsPatch.credentialsId);
+        const credentials = await services.gitCredentials.getById(repoSettingsPatch.credentialsId);
         invariant(credentials, 'Git Credentials not found');
         providerName = credentials.provider;
       }
@@ -854,14 +850,14 @@ export const cloneGitRepoAction = async ({
       }
       const bufferId = await database.bufferChanges();
 
-      const gitRepository = await models.gitRepository.create(repoSettingsPatch);
+      const gitRepository = await services.gitRepository.create(repoSettingsPatch);
 
       async function getProject() {
         if (cloneIntoProjectId) {
-          const project = await models.project.getById(cloneIntoProjectId);
+          const project = await services.project.getById(cloneIntoProjectId);
           invariant(project, 'Project not found');
 
-          await models.project.update(project, {
+          await services.project.update(project, {
             remoteId: null,
             gitRepositoryId: gitRepository._id,
           });
@@ -869,7 +865,7 @@ export const cloneGitRepoAction = async ({
           return project;
         }
 
-        const project = await models.project.create({
+        const project = await services.project.create({
           name: name || gitRepository.uri.split('/').pop() || 'New Git Project',
           parentId: organizationId,
           gitRepositoryId: gitRepository._id,
@@ -893,7 +889,7 @@ export const cloneGitRepoAction = async ({
           ref,
         });
 
-        await models.gitRepository.update(gitRepository, {
+        await services.gitRepository.update(gitRepository, {
           needsFullClone: false,
         });
       } else {
@@ -915,10 +911,10 @@ export const cloneGitRepoAction = async ({
         await migrateLegacyInsomniaFolderToFile({ projectId: project._id });
       }
 
-      const updateRepository = await models.gitRepository.getById(gitRepository._id);
+      const updateRepository = await services.gitRepository.getById(gitRepository._id);
       invariant(updateRepository, 'Git Repository not found');
 
-      await models.gitRepository.update(updateRepository, {
+      await services.gitRepository.update(updateRepository, {
         cachedGitLastCommitTime: Date.now(),
         cachedGitRepositoryBranch: await GitVCS.getCurrentBranch(),
       });
@@ -936,7 +932,7 @@ export const cloneGitRepoAction = async ({
       };
     }
 
-    const project = await models.project.getById(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
 
     trackSegmentEvent(SegmentEvent.vcsSyncStart, {
@@ -985,18 +981,18 @@ export const cloneGitRepoAction = async ({
     // Stop the DB from pushing updates to the UI temporarily
     const bufferId = await database.bufferChanges();
     let workspaceId = '';
-    let scope: 'design' | 'collection' = WorkspaceScopeKeys.design;
+    let scope: 'design' | 'collection' = models.workspace.WorkspaceScopeKeys.design;
     // If no workspace exists we create a new one
     if (!(await containsInsomniaWorkspaceDir(inMemoryFsClient))) {
       // Create a new workspace
 
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         name: repoSettingsPatch.uri?.split('/').pop(),
         scope: scope,
         parentId: project._id,
         description: `Insomnia Workspace for ${repoSettingsPatch.uri}}`,
       });
-      await models.apiSpec.getOrCreateForParentId(workspace._id);
+      await services.apiSpec.getOrCreateForParentId(workspace._id);
 
       trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
         ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
@@ -1006,9 +1002,9 @@ export const cloneGitRepoAction = async ({
 
       workspaceId = workspace._id;
 
-      const newRepo = await models.gitRepository.create(repoSettingsPatch);
-      const meta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-      await models.workspaceMeta.update(meta, {
+      const newRepo = await services.gitRepository.create(repoSettingsPatch);
+      const meta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
+      await services.workspaceMeta.update(meta, {
         gitRepositoryId: newRepo._id,
       });
     } else {
@@ -1046,12 +1042,12 @@ export const cloneGitRepoAction = async ({
       const workspace = YAML.parse(workspaceJson.toString());
       workspaceId = workspace._id;
       scope =
-        workspace.scope === WorkspaceScopeKeys.collection ? WorkspaceScopeKeys.collection : WorkspaceScopeKeys.design;
+        workspace.scope === models.workspace.WorkspaceScopeKeys.collection ? models.workspace.WorkspaceScopeKeys.collection : models.workspace.WorkspaceScopeKeys.design;
       // Check if the workspace already exists
-      const existingWorkspace = await models.workspace.getById(workspace._id);
+      const existingWorkspace = await services.workspace.getById(workspace._id);
 
       if (existingWorkspace) {
-        const project = await models.project.getById(existingWorkspace.parentId);
+        const project = await services.project.getById(existingWorkspace.parentId);
         if (!project) {
           return {
             errors: [
@@ -1072,9 +1068,9 @@ export const cloneGitRepoAction = async ({
       }
 
       // Store GitRepository settings and set it as active
-      const gitRepository = await models.gitRepository.create(repoSettingsPatch);
-      const meta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-      await models.workspaceMeta.update(meta, {
+      const gitRepository = await services.gitRepository.create(repoSettingsPatch);
+      const meta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
+      await services.workspaceMeta.update(meta, {
         gitRepositoryId: gitRepository._id,
       });
 
@@ -1095,7 +1091,7 @@ export const cloneGitRepoAction = async ({
           gitDirectory: GIT_INTERNAL_DIR,
         });
 
-        await models.gitRepository.update(gitRepository, {
+        await services.gitRepository.update(gitRepository, {
           needsFullClone: false,
         });
       } else {
@@ -1155,21 +1151,21 @@ export const updateGitRepoAction = async ({
     const gitURI = parseGitToHttpsURL(uri);
 
     if (workspaceId) {
-      const workspace = await models.workspace.getById(workspaceId);
+      const workspace = await services.workspace.getById(workspaceId);
       invariant(workspace, 'Workspace not found');
 
-      const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+      const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
       gitRepositoryId = workspaceMeta?.gitRepositoryId;
     } else if (projectId) {
-      const project = await models.project.getById(projectId);
+      const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       gitRepositoryId = project.gitRepositoryId;
     }
 
     let gitRepository: GitRepository | undefined;
 
-    if (gitRepositoryId && gitRepositoryId !== EMPTY_GIT_PROJECT_ID) {
-      gitRepository = await models.gitRepository.getById(gitRepositoryId);
+    if (gitRepositoryId && gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID) {
+      gitRepository = await services.gitRepository.getById(gitRepositoryId);
       invariant(gitRepository, 'GitRepository not found');
     } else {
       const newRepo: Partial<GitRepository> = {
@@ -1180,17 +1176,17 @@ export const updateGitRepoAction = async ({
       if (selectedAuthorEmail !== undefined) {
         newRepo.selectedAuthorEmail = selectedAuthorEmail;
       }
-      gitRepository = await models.gitRepository.create(newRepo);
+      gitRepository = await services.gitRepository.create(newRepo);
     }
 
     if (workspaceId) {
-      await models.workspaceMeta.updateByParentId(workspaceId, {
+      await services.workspaceMeta.updateByParentId(workspaceId, {
         gitRepositoryId: gitRepository._id,
       });
     } else if (projectId) {
-      const project = await models.project.getById(projectId);
+      const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
-      await models.project.update(project, {
+      await services.project.update(project, {
         gitRepositoryId: gitRepository._id,
       });
     }
@@ -1223,7 +1219,7 @@ export const updateGitRepoAction = async ({
       updatePatch.selectedAuthorEmail = selectedAuthorEmail;
     }
 
-    await models.gitRepository.update(gitRepository, updatePatch);
+    await services.gitRepository.update(gitRepository, updatePatch);
     await database.flushChanges();
 
     return null;
@@ -1242,20 +1238,20 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
   const flushId = await database.bufferChanges();
 
   if (workspaceId) {
-    const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+    const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
     invariant(workspaceMeta, 'Workspace meta not found');
-    await models.workspaceMeta.update(workspaceMeta, {
+    await services.workspaceMeta.update(workspaceMeta, {
       gitRepositoryId: null,
     });
   } else if (projectId) {
-    const project = await models.project.getById(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
-    await models.project.update(project, {
-      gitRepositoryId: EMPTY_GIT_PROJECT_ID,
+    await services.project.update(project, {
+      gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID,
     });
   }
 
-  await models.gitRepository.remove(repo);
+  await services.gitRepository.remove(repo);
   await database.flushChanges(flushId);
 
   return null;
@@ -1281,7 +1277,7 @@ export const commitToGitRepoAction = async ({
 
     let providerName = 'custom';
     if (gitRepository?.credentialsId) {
-      const credentials = await models.gitCredentials.getById(gitRepository.credentialsId);
+      const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
       invariant(credentials, 'Git Credentials not found');
       providerName = credentials.provider;
     }
@@ -1294,7 +1290,7 @@ export const commitToGitRepoAction = async ({
 
     const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentialsId);
     // update workspace meta with git sync data, use for show unpushed changes on collection card
-    await models.gitRepository.update(gitRepository, {
+    await services.gitRepository.update(gitRepository, {
       hasUnpushedChanges,
       cachedGitLastCommitTime: Date.now(),
     });
@@ -1395,7 +1391,7 @@ export const commitAndPushToGitRepoAction = async ({
 
     let providerName = 'custom';
     if (repo.credentialsId) {
-      const credentials = await models.gitCredentials.getById(repo.credentialsId);
+      const credentials = await services.gitCredentials.getById(repo.credentialsId);
       invariant(credentials, 'Git Credentials not found');
       providerName = credentials.provider;
     }
@@ -1433,7 +1429,7 @@ export const commitAndPushToGitRepoAction = async ({
   const bufferId = await database.bufferChanges();
   let providerName = 'custom';
   if (repo.credentialsId) {
-    const credentials = await models.gitCredentials.getById(repo.credentialsId);
+    const credentials = await services.gitCredentials.getById(repo.credentialsId);
     invariant(credentials, 'Git Credentials not found');
     providerName = credentials.provider;
   }
@@ -1448,7 +1444,7 @@ export const commitAndPushToGitRepoAction = async ({
 
     const hasUnpushedChanges = await GitVCS.canPush(repo.credentialsId);
 
-    await models.gitRepository.update(repo, {
+    await services.gitRepository.update(repo, {
       hasUnpushedChanges,
       cachedGitLastCommitTime: Date.now(),
     });
@@ -1511,7 +1507,7 @@ export const createNewGitBranchAction = async ({
   try {
     let providerName = 'custom';
     if (gitRepository?.credentialsId) {
-      const credentials = await models.gitCredentials.getById(gitRepository.credentialsId);
+      const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
       invariant(credentials, 'Git Credentials not found');
       providerName = credentials.provider;
     }
@@ -1532,7 +1528,7 @@ export const createNewGitBranchAction = async ({
       hasUnpushedChanges = false;
     }
 
-    await models.gitRepository.update(gitRepository, {
+    await services.gitRepository.update(gitRepository, {
       hasUncommittedChanges,
       hasUnpushedChanges,
       cachedGitRepositoryBranch: branch,
@@ -1587,7 +1583,7 @@ export const checkoutGitBranchAction = async ({
       hasUnpushedChanges = false;
     }
 
-    await models.gitRepository.update(gitRepository, {
+    await services.gitRepository.update(gitRepository, {
       cachedGitLastCommitTime,
       cachedGitRepositoryBranch: branch,
       cachedGitLastAuthor: author?.name || null,
@@ -1651,7 +1647,7 @@ export const mergeGitBranch = async ({
   const gitRepository = await getGitRepository({ workspaceId, projectId });
   let providerName = 'custom';
   if (gitRepository?.credentialsId) {
-    const credentials = await models.gitCredentials.getById(gitRepository.credentialsId);
+    const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
     invariant(credentials, 'Git Credentials not found');
     providerName = credentials.provider;
   }
@@ -1678,7 +1674,7 @@ export const mergeGitBranch = async ({
 
     const author = log[0] ? log[0].commit.author : null;
     const cachedGitLastCommitTime = author ? author.timestamp * 1000 : Date.now();
-    await models.gitRepository.update(gitRepository, {
+    await services.gitRepository.update(gitRepository, {
       cachedGitLastCommitTime,
       cachedGitRepositoryBranch: await GitVCS.getCurrentBranch(),
     });
@@ -1726,7 +1722,7 @@ export const deleteGitBranchAction = async ({
 
     let providerName = 'custom';
     if (repo.credentialsId) {
-      const credentials = await models.gitCredentials.getById(repo.credentialsId);
+      const credentials = await services.gitCredentials.getById(repo.credentialsId);
       invariant(credentials, 'Git Credentials not found');
       providerName = credentials.provider;
     }
@@ -1794,7 +1790,7 @@ export const pushToGitRemoteAction = async ({
 
   let providerName = 'custom';
   if (gitRepository?.credentialsId) {
-    const credentials = await models.gitCredentials.getById(gitRepository.credentialsId);
+    const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
     invariant(credentials, 'Git Credentials not found');
     providerName = credentials.provider;
   }
@@ -1808,7 +1804,7 @@ export const pushToGitRemoteAction = async ({
       repoId: gitRepository._id,
     });
 
-    await models.gitRepository.update(gitRepository, {
+    await services.gitRepository.update(gitRepository, {
       hasUnpushedChanges: false,
     });
     await database.flushChanges(bufferId);
@@ -1866,7 +1862,7 @@ export async function fetchGitRemoteBranches({
       return { branches: [] };
     }
 
-    const credentials = await models.gitCredentials.getById(credentialsId);
+    const credentials = await services.gitCredentials.getById(credentialsId);
 
     if (!credentials) {
       return { branches: [] };
@@ -1892,7 +1888,7 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
   try {
     const gitRepository = await getGitRepository({ projectId, workspaceId });
     invariant(gitRepository.credentialsId, 'Git Credentials ID is required');
-    const credentials = await models.gitCredentials.getById(gitRepository.credentialsId);
+    const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
     invariant(credentials, 'Git Credentials not found');
 
     const bufferId = await database.bufferChanges();
@@ -1907,7 +1903,7 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
 
     const author = log[0] ? log[0].commit.author : null;
     const cachedGitLastCommitTime = author ? author.timestamp * 1000 : Date.now();
-    await models.gitRepository.update(gitRepository, {
+    await services.gitRepository.update(gitRepository, {
       cachedGitLastCommitTime,
       cachedGitRepositoryBranch: await GitVCS.getCurrentBranch(),
     });
@@ -1931,7 +1927,7 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     const gitRepository = await getGitRepository({ projectId, workspaceId });
     let providerName = 'custom';
     if (gitRepository?.credentialsId) {
-      const credentials = await models.gitCredentials.getById(gitRepository.credentialsId);
+      const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
       invariant(credentials, 'Git Credentials not found');
       providerName = credentials.provider;
     }
@@ -1976,7 +1972,7 @@ export const continueMerge = async ({
 
     const author = log[0] ? log[0].commit.author : null;
     const cachedGitLastCommitTime = author ? author.timestamp * 1000 : Date.now();
-    await models.gitRepository.update(gitRepository, {
+    await services.gitRepository.update(gitRepository, {
       cachedGitLastCommitTime,
       cachedGitRepositoryBranch: await GitVCS.getCurrentBranch(),
     });
@@ -2033,7 +2029,7 @@ export const discardChangesAction = async ({
 
     await GitVCS.discardChanges(files);
 
-    await models.gitRepository.update(gitRepository, {
+    await services.gitRepository.update(gitRepository, {
       cachedGitLastCommitTime: Date.now(),
     });
 
@@ -2071,7 +2067,7 @@ export const gitStatusAction = async ({
     const { hasUncommittedChanges, changes } = await getGitChanges();
     const localChanges = changes.staged.length + changes.unstaged.length;
 
-    await models.gitRepository.update(gitRepository, {
+    await services.gitRepository.update(gitRepository, {
       hasUncommittedChanges,
     });
 
@@ -2270,9 +2266,9 @@ const getRepositoryDirectoryTree = async ({
   repositoryTree: FileTree;
   folderList: Record<string, string[]>;
 }> => {
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
 
-  if (project && isEmptyGitProject(project)) {
+  if (project && models.project.isEmptyGitProject(project)) {
     return {
       repositoryTree: {
         id: '',
@@ -2396,9 +2392,9 @@ async function getGitProviderRepositories({
   errors: string[];
 }> {
   try {
-    const credentials = await models.gitCredentials.getById(credentialsId);
+    const credentials = await services.gitCredentials.getById(credentialsId);
     invariant(credentials, 'Git credentials not found');
-    invariant(isGitCredentialsV2(credentials), 'Invalid Git credentials');
+    invariant(models.gitCredentials.isGitCredentialsV2(credentials), 'Invalid Git credentials');
 
     // Use the appropriate provider for fetching repositories
     const provider = gitRemoteProviderRegistry.get(credentials.provider);
@@ -2423,9 +2419,9 @@ async function getGitProviderEmails({ credentialsId }: { credentialsId: string }
   errors: string[];
 }> {
   try {
-    const credentials = await models.gitCredentials.getById(credentialsId);
+    const credentials = await services.gitCredentials.getById(credentialsId);
     invariant(credentials, 'Git credentials not found');
-    invariant(isGitCredentialsV2(credentials), 'Invalid Git credentials');
+    invariant(models.gitCredentials.isGitCredentialsV2(credentials), 'Invalid Git credentials');
 
     const provider = gitRemoteProviderRegistry.get(credentials.provider);
     if (!provider?.supportsFetchEmails || !provider.fetchUserEmails) {
@@ -2438,7 +2434,7 @@ async function getGitProviderEmails({ credentialsId }: { credentialsId: string }
     const emails = await provider.fetchUserEmails(credentials);
 
     if (credentials.credentials) {
-      await models.gitCredentials.update(credentials, {
+      await services.gitCredentials.update(credentials, {
         credentials: {
           ...credentials.credentials,
           emails,

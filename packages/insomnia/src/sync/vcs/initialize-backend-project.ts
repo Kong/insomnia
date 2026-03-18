@@ -1,8 +1,6 @@
+import { type BaseModel, models, type Project, services, type Workspace } from '~/insomnia-data';
+
 import { database } from '../../common/database';
-import * as models from '../../models';
-import { type BaseModel, canSync } from '../../models';
-import type { Project } from '../../models/project';
-import type { Workspace } from '../../models/workspace';
 import type { StatusCandidate } from '../types';
 import type { VCS } from './vcs';
 
@@ -17,7 +15,7 @@ export const initializeLocalBackendProjectAndMarkForSync = async ({
   await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
   // Everything unstaged
-  const candidates = (await database.getWithDescendants(workspace)).filter(canSync).map(
+  const candidates = (await database.getWithDescendants(workspace)).filter(models.canSync).map(
     (doc: BaseModel): StatusCandidate => ({
       key: doc._id,
       name: doc.name || '',
@@ -33,7 +31,7 @@ export const initializeLocalBackendProjectAndMarkForSync = async ({
   await vcs.takeSnapshot('Initial Snapshot');
 
   // Mark for pushing to the active project
-  await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: true });
+  await services.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: true });
 };
 
 export const pushSnapshotOnInitialize = async ({
@@ -54,7 +52,7 @@ export const pushSnapshotOnInitialize = async ({
   const hasProject = vcs.hasBackendProject();
 
   if (projectIsForWorkspace && projectRemoteId && hasProject) {
-    await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });
+    await services.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });
     await vcs.push({ teamId: parentId, teamProjectId: projectRemoteId });
   }
 };

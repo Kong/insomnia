@@ -4,14 +4,13 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { type Environment, models, type RequestPathParameter } from '~/insomnia-data';
 import { getAuthObjectOrNull } from '~/network/authentication';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { AuthWrapper } from '~/ui/components/editors/auth/auth-wrapper';
 
-import type { Environment } from '../../../models/environment';
-import { getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
 import {
   type SocketIORequestLoaderData,
   useRequestLoaderData,
@@ -67,7 +66,7 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
   const [dismissPathParameterTip, setDismissPathParameterTip] = reactUse.useLocalStorage('dismissPathParameterTip', '');
 
   // Path parameters are path segments that start with a colon (:)
-  const pathParameters = getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters || []);
+  const pathParameters = models.request.getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters || []);
 
   const onPathParameterChange = (pathParameters: RequestPathParameter[]) => {
     patchRequest(requestId, { pathParameters });

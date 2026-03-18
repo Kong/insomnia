@@ -2,22 +2,26 @@ import type { BinaryToTextEncoding } from 'node:crypto';
 
 import type { Cookie } from 'tough-cookie';
 
-import type { McpRequest } from '~/insomnia-data';
+import type { services } from '~/insomnia-data';
+import {
+  type CloudProviderCredential,
+  type CookieJar,
+  type Environment,
+  type GrpcRequest,
+  type McpRequest,
+  type OAuth2Token,
+  type Project,
+  type Request,
+  type RequestGroup,
+  type Response,
+  type Services,
+  type SocketIORequest,
+  type UserUploadEnvironment,
+  type WebSocketRequest,
+  type Workspace,
+} from '~/insomnia-data';
 import type { getBodyBuffer } from '~/models/helpers/response-operations';
 
-import type { CloudProviderCredential } from '../models/cloud-credential';
-import type { CookieJar } from '../models/cookie-jar';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { OAuth2Token } from '../models/o-auth-2-token';
-import type { Project } from '../models/project';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { getLatestForRequestId, Response } from '../models/response';
-import type { get as getSettings } from '../models/settings';
-import type { SocketIORequest } from '../models/socket-io-request';
-import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace } from '../models/workspace';
 import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
 import type { PluginStore } from '../plugins/context/store';
 import type { extractNunjucksTagFromCoords } from './utils';
@@ -291,11 +295,11 @@ export interface PluginTemplateTagContext {
         getCookiesForUrl: (parentId: string, url: string) => Promise<Cookie[]>;
       };
       response: {
-        getLatestForRequestId: typeof getLatestForRequestId;
+        getLatestForRequestId: Services['response']['getLatestForRequestId'];
         getBodyBuffer: typeof getBodyBuffer;
       };
       settings: {
-        get: typeof getSettings;
+        get: typeof services.settings.get;
       };
     };
   };

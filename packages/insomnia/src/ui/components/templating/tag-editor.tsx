@@ -5,18 +5,21 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
+import {
+  type BaseModel,
+  type CloudProviderCredential,
+  models,
+  type Request,
+  type RequestGroup,
+  services,
+  type Workspace,
+} from '~/insomnia-data';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../../common/database';
 import { docsAfterResponseScript } from '../../../common/documentation';
 import { delay, fnOrString } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
-import * as models from '../../../models';
-import { type CloudProviderCredential, type as cloudCredentialModelType } from '../../../models/cloud-credential';
-import type { BaseModel } from '../../../models/index';
-import { isRequest, type Request } from '../../../models/request';
-import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
-import type { Workspace } from '../../../models/workspace';
 import * as plugins from '../../../plugins';
 import * as pluginStore from '../../../plugins/context/store';
 import * as templating from '../../../templating';
@@ -57,10 +60,10 @@ const sortRequests = (_models: (Request | RequestGroup)[], parentId: string) => 
     .filter(model => model.parentId === parentId)
     .sort(metaSortKeySort)
     .forEach(model => {
-      if (isRequest(model)) {
+      if (models.request.isRequest(model)) {
         sortedModels.push(model);
       }
-      if (isRequestGroup(model)) {
+      if (models.requestGroup.isRequestGroup(model)) {
         sortedModels = sortedModels.concat(sortRequests(_models, model._id));
       }
     });
@@ -82,7 +85,7 @@ export const TagEditor: FC<Props> = props => {
 
   const refreshModels = useCallback(async () => {
     setState(state => ({ ...state, loadingDocs: true }));
-    const allDocs: Record<string, models.BaseModel[]> = {};
+    const allDocs: Record<string, BaseModel[]> = {};
     for (const type of models.types()) {
       allDocs[type] = [];
     }
@@ -91,7 +94,7 @@ export const TagEditor: FC<Props> = props => {
       allDocs[doc.type].push(doc);
     }
     // add global Cloud Credential data
-    allDocs[cloudCredentialModelType] = await models.cloudCredential.all();
+    allDocs[models.cloudCredential.type] = await services.cloudCredential.all();
     allDocs[models.request.type] = sortRequests(
       // @ts-expect-error -- type unsoundness
       (allDocs[models.request.type] || []).concat(allDocs[models.requestGroup.type] || []),
@@ -398,7 +401,7 @@ export const TagEditor: FC<Props> = props => {
             const modelName = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
             let targetDoc = state.allDocs[modelName];
             // hard coded here to filter cloud credential data by the provider
-            if (modelName === cloudCredentialModelType) {
+            if (modelName === models.cloudCredential.type) {
               const providerNameFromArgs = activeTagData.args[0].value;
               targetDoc = targetDoc.filter(doc => (doc as CloudProviderCredential).provider === providerNameFromArgs);
             }
@@ -412,7 +415,7 @@ export const TagEditor: FC<Props> = props => {
                 {targetDoc.map((doc: any) => {
                   let namePrefix: string | null = null;
                   // Show parent folder with name if it's a request
-                  if (isRequest(doc)) {
+                  if (models.request.isRequest(doc)) {
                     const requests = state.allDocs[models.request.type] || [];
                     const request = requests.find(r => r._id === doc._id) as Request;
                     const method = request && typeof request.method === 'string' ? request.method : 'GET';

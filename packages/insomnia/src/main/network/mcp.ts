@@ -20,7 +20,7 @@ import electron from 'electron';
 
 import { getAppVersion, getProductName, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { getMcpMethodFromMessage, METHOD_NOTIFICATION_CANCELLED } from '~/common/mcp-utils';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 import {
   callTool,
@@ -69,7 +69,6 @@ import type {
   OpenMcpClientConnectionOptions,
   OpenMcpHTTPClientConnectionOptions,
 } from '~/main/mcp/types';
-import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
 
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
@@ -190,7 +189,7 @@ const createErrorResponse = async (
   },
 ) => {
   const { requestId, responseId, environmentId, timelinePath, options } = context;
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,
@@ -204,7 +203,7 @@ const createErrorResponse = async (
   };
 
   const res = await services.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
-  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+  services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 export const isOpenMcpHTTPClientConnectionOptions = (

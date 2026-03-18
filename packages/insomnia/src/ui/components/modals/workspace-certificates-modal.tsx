@@ -19,6 +19,7 @@ import {
 import { useParams } from 'react-router';
 
 import type { CaCertificate } from '~/insomnia-data';
+import { type ClientCertificate } from '~/insomnia-data';
 import { useCaCertDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.cacert.delete';
 import { useCACertNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.cacert.new';
 import { useCACertUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.cacert.update';
@@ -27,7 +28,6 @@ import { useClientCertNewActionFetcher } from '~/routes/organization.$organizati
 import { useClientCertUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.clientcert.update';
 import { Tooltip } from '~/ui/components/tooltip';
 
-import type { ClientCertificate } from '../../../models/client-certificate';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Icon } from '../icon';
 import { PasswordViewer } from '../viewers/password-viewer';

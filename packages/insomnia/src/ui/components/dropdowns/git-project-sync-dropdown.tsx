@@ -15,8 +15,7 @@ import {
 import { useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { isScratchpadOrganizationId } from '~/models/organization';
-import type { GitProject } from '~/models/project';
+import { type GitProject, type GitRepository,models } from '~/insomnia-data';
 import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
 import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
 import { useGitProjectPushActionFetcher } from '~/routes/git.push';
@@ -30,7 +29,6 @@ import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 
-import type { GitRepository } from '../../../models/git-repository';
 import type { MergeConflict } from '../../../sync/types';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
@@ -73,7 +71,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
 
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   useEffect(() => {
-    if (!isScratchpadOrganizationId(organizationId)) {
+    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
       load({ organizationId });
     }

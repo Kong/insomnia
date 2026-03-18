@@ -7,6 +7,7 @@ import React, { type FC, Fragment, useCallback, useState } from 'react';
 import { Button, Dialog, Heading, Label, Modal, ModalOverlay, Radio, RadioGroup } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
+import { type ApiSpec, type MockServer, models, type Project, type Workspace } from '~/insomnia-data';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
@@ -14,11 +15,6 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import type { ApiSpec } from '../../../models/api-spec';
-import type { MockServer } from '../../../models/mock-server';
-import { isRemoteProject, type Project } from '../../../models/project';
-import type { Workspace } from '../../../models/workspace';
-import { isMcp, WorkspaceScopeKeys } from '../../../models/workspace';
 import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -51,7 +47,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 
   const refresh = useCallback(async () => {
     // Only load document plugins if the scope is design, for now
-    if (workspace.scope === WorkspaceScopeKeys.design) {
+    if (workspace.scope === models.workspace.WorkspaceScopeKeys.design) {
       setActionPlugins(await getDocumentActions());
     }
   }, [workspace.scope]);
@@ -145,7 +141,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
         <DropdownItem aria-label="Open in New Tab">
           <ItemContent label="Open in New Tab" icon="external-link-alt" onClick={openInNewTab} />
         </DropdownItem>
-        {!isMcp(workspace) && (
+        {!models.workspace.isMcp(workspace) && (
           <DropdownItem aria-label="Duplicate / Move">
             <ItemContent label="Duplicate / Move" icon="copy" onClick={() => setIsDuplicateModalOpen(true)} />
           </DropdownItem>
@@ -175,7 +171,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           />
         </DropdownItem>
         <DropdownSection aria-label="Meta section">
-          {!isMcp(workspace) ? (
+          {!models.workspace.isMcp(workspace) ? (
             <DropdownItem aria-label="Import">
               <ItemContent
                 label="Import"
@@ -303,7 +299,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                       This will permanently delete the{' '}
                       {<strong style={{ whiteSpace: 'pre-wrap' }}>{workspace?.name}</strong>}{' '}
                       {getWorkspaceLabel(workspace).singular}
-                      {isRemoteProject(project) && (
+                      {models.project.isRemoteProject(project) && (
                         <RadioGroup name="localOnly" defaultValue="false" className="mb-2 flex flex-col gap-2">
                           <Label className="text-sm text-(--hl)">How do you want to delete it?</Label>
                           <div className="flex gap-2">

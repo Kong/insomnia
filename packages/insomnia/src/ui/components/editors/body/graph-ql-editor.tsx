@@ -22,6 +22,7 @@ import ReactDOM from 'react-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import * as reactUse from 'react-use';
 
+import { type Request,services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
@@ -29,8 +30,6 @@ import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
-import * as models from '../../../../models';
-import type { Request } from '../../../../models/request';
 import {
   fetchRequestData,
   responseTransform,
@@ -121,7 +120,7 @@ const fetchGraphQLSchemaForRequest = async ({
     return;
   }
 
-  const req = await models.request.getById(requestId);
+  const req = await services.request.getById(requestId);
 
   if (!req) {
     return;

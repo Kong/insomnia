@@ -6,13 +6,7 @@ import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har'
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
 import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
 import { strings } from 'insomnia/src/common/strings';
-import { type Environment } from 'insomnia/src/models/environment';
 import * as requestOperations from 'insomnia/src/models/helpers/request-operations';
-import * as models from 'insomnia/src/models/index';
-import { type BaseModel, environment } from 'insomnia/src/models/index';
-import { isScratchpadOrganizationId } from 'insomnia/src/models/organization';
-import type { Project } from 'insomnia/src/models/project';
-import { isScratchpad, type Workspace } from 'insomnia/src/models/workspace';
 import { SegmentEvent } from 'insomnia/src/ui/analytics';
 import { Icon } from 'insomnia/src/ui/components/icon';
 import { showError, showModal } from 'insomnia/src/ui/components/modals';
@@ -25,6 +19,7 @@ import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
+import { type BaseModel, type Environment, models, type Project, type Workspace } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
@@ -152,11 +147,11 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
 
   showSelectExportTypeModal({
     onDone: async selectedFormat => {
-      const baseEnvironments = await database.find<Environment>(environment.type, {
+      const baseEnvironments = await database.find<Environment>(models.environment.type, {
         parentId: { $in: workspacesForActiveProject.map(w => w._id) },
       });
 
-      const subEnvironments = await database.find<Environment>(environment.type, {
+      const subEnvironments = await database.find<Environment>(models.environment.type, {
         parentId: { $in: baseEnvironments.map(w => w._id) },
       });
       const shouldPrompt = subEnvironments.some(e => e.isPrivate);
@@ -269,11 +264,11 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
     return;
   }
 
-  const baseEnvironments = await database.find<Environment>(environment.type, {
+  const baseEnvironments = await database.find<Environment>(models.environment.type, {
     parentId: workspace._id,
   });
 
-  const subEnvironments = await database.find<Environment>(environment.type, {
+  const subEnvironments = await database.find<Environment>(models.environment.type, {
     parentId: { $in: baseEnvironments.map(w => w._id) },
   });
   const shouldPrompt = subEnvironments.some(e => e.isPrivate);
@@ -312,11 +307,11 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
           requests.push(request);
         }
       }
-      const [baseEnvironment] = await database.find<Environment>(environment.type, {
+      const [baseEnvironment] = await database.find<Environment>(models.environment.type, {
         parentId: workspaceId,
       });
 
-      const subEnvironments = await database.find<Environment>(environment.type, {
+      const subEnvironments = await database.find<Environment>(models.environment.type, {
         parentId: baseEnvironment?._id,
       });
       const shouldPrompt = subEnvironments.some(e => e.isPrivate);
@@ -421,11 +416,11 @@ export async function exportWorkspaceData({
 export async function exportAllData({ dirPath }: { dirPath: string }): Promise<void> {
   const workspaces = await database.find<Workspace>(models.workspace.type);
 
-  const baseEnvironments = await database.find<Environment>(environment.type, {
+  const baseEnvironments = await database.find<Environment>(models.environment.type, {
     parentId: { $in: workspaces.map(w => w._id) },
   });
 
-  const subEnvironments = await database.find<Environment>(environment.type, {
+  const subEnvironments = await database.find<Environment>(models.environment.type, {
     parentId: { $in: baseEnvironments.map(w => w._id) },
   });
   const shouldPrompt = subEnvironments.some(e => e.isPrivate);
@@ -667,7 +662,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized && organizationId && projectId && !isScratchpadOrganizationId(organizationId)) {
+    if (isIdleAndUninitialized && organizationId && projectId && !models.organization.isScratchpadOrganizationId(organizationId)) {
       workspacesFetcher.load({
         organizationId,
         projectId,
@@ -695,7 +690,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
     hideSettingsModal();
   };
   const isLoggedIn = userSession.id || organizationId || activeProject;
-  const isScratchPadWorkspace = isScratchpad(workspaceData?.activeWorkspace);
+  const isScratchPadWorkspace = models.workspace.isScratchpad(workspaceData?.activeWorkspace);
   const hasUntrackedWorkspaces = untrackedWorkspaces.length > 0;
   const hasUntrackedProjects = untrackedProjects.length > 0;
   const showImportButtons =
@@ -832,7 +827,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
               {activeProject && (
                 <Button
                   className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                  isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
+                  isDisabled={workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData?.activeWorkspace)}
                   onPress={() => setIsImportModalOpen(true)}
                 >
                   <Icon icon="file-import" />
@@ -842,7 +837,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
               {features.bulkImport.enabled ? (
                 <Button
                   className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                  isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
+                  isDisabled={workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData?.activeWorkspace)}
                   onPress={() => setIsImportProjectsModalOpen(true)}
                 >
                   <Icon icon="file-import" />
@@ -942,7 +937,7 @@ const ExportSection = ({
   setIsExportModalOpen: (value: boolean) => void;
   handleExportProjectToFile: () => void;
 }) => {
-  if (isScratchpad(workspace)) {
+  if (models.workspace.isScratchpad(workspace)) {
     return (
       <Button
         className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"

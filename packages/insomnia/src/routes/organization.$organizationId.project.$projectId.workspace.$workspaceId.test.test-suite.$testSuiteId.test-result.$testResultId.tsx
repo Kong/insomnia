@@ -2,8 +2,7 @@ import { Heading } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
-import * as models from '~/models';
-import type { UnitTestResult } from '~/models/unit-test-result';
+import { models, type UnitTestResult } from '~/insomnia-data';
 import { Icon } from '~/ui/components/icon';
 import { invariant } from '~/utils/invariant';
 

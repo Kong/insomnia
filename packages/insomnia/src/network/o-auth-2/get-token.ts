@@ -3,6 +3,18 @@ import querystring from 'node:querystring';
 
 import { v4 as uuidv4 } from 'uuid';
 
+import {
+  type AuthTypeOAuth2,
+  models,
+  type OAuth2ResponseType,
+  type OAuth2Token,
+  type Request,
+  type RequestGroup,
+  type RequestHeader,
+  type RequestParameter,
+  type Response,
+  services,
+} from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 
@@ -10,12 +22,6 @@ import { version } from '../../../package.json';
 import { getOauthRedirectUrl } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { escapeRegex } from '../../common/misc';
-import * as models from '../../models';
-import type { OAuth2Token } from '../../models/o-auth-2-token';
-import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParameter } from '../../models/request';
-import type { Request } from '../../models/request';
-import { isRequestGroup, isRequestGroupId, type RequestGroup } from '../../models/request-group';
-import type { Response } from '../../models/response';
 import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../ui/event-bus';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
@@ -105,14 +111,14 @@ export const getOAuth2Token = async (
       const responseUrl = new URL(redirectedTo);
       if (responseUrl.searchParams.has('error')) {
         const params = Object.fromEntries(responseUrl.searchParams);
-        const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
-        return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(params));
+        const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
+        return services.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(params));
       }
       const hash = responseUrl.hash.slice(1);
       invariant(hash, 'No hash found in response URL from OAuth2 provider');
       const data = Object.fromEntries(new URLSearchParams(hash));
-      const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
-      return models.oAuth2Token.update(
+      const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
+      return services.oAuth2Token.update(
         old,
         transformNewAccessTokenToOauthModel({
           ...data,
@@ -233,7 +239,7 @@ export const getOAuth2Token = async (
     }
 
     const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
-    const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
+    const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
 
     if (authentication.useDefaultBrowser) {
       uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
@@ -241,7 +247,7 @@ export const getOAuth2Token = async (
       });
     }
 
-    return models.oAuth2Token.update(
+    return services.oAuth2Token.update(
       old,
       transformNewAccessTokenToOauthModel(await oauthResponseToAccessToken(authentication.accessTokenUrl, response)),
     );
@@ -266,10 +272,10 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   let closestAuthId = requestId;
 
   if (!models.mcpRequest.isMcpRequestId(requestId)) {
-    const activeRequest = await models.request.getById(requestId);
+    const activeRequest = await services.request.getById(requestId);
     const requestGroups = (
       await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
-    ).filter(isRequestGroup) as RequestGroup[];
+    ).filter(models.requestGroup.isRequestGroup) as RequestGroup[];
     const closestFolderAuth = [...requestGroups]
       .reverse()
       .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
@@ -278,7 +284,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
     closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
   }
 
-  const token = await models.oAuth2Token.getByParentId(closestAuthId);
+  const token = await services.oAuth2Token.getByParentId(closestAuthId);
   if (!token) {
     return { oAuth2Token: undefined, closestAuthId };
   }
@@ -318,8 +324,8 @@ async function getExistingAccessTokenAndRefreshIfExpired(
     // If the refresh token was rejected due an unauthorized request, we will
     // return a null access_token to trigger an authentication request to fetch
     // brand new refresh and access tokens.
-    const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
-    models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
+    const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
+    services.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
     return { oAuth2Token: undefined, closestAuthId };
   }
   const isSuccessful = statusCode >= 200 && statusCode < 300;
@@ -332,8 +338,11 @@ async function getExistingAccessTokenAndRefreshIfExpired(
       // brand new refresh and access tokens.
       if (body?.error === 'invalid_grant') {
         console.log(`[oauth2] Refresh token rejected due to invalid_grant error: ${body.error_description}`);
-        const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
-        const token = await models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
+        const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
+        const token = await services.oAuth2Token.update(
+          old,
+          transformNewAccessTokenToOauthModel({ access_token: null }),
+        );
         return { oAuth2Token: token, closestAuthId };
       }
     }
@@ -345,8 +354,8 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   if (!data) {
     return { oAuth2Token: undefined, closestAuthId };
   }
-  const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
-  const oAuth2Token = await models.oAuth2Token.update(
+  const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
+  const oAuth2Token = await services.oAuth2Token.update(
     old,
     transformNewAccessTokenToOauthModel({
       ...data,
@@ -408,7 +417,7 @@ const sendAccessTokenRequest = async (
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
   console.log(`[network] Sending with settings req=${requestOrGroupId}`);
   // @TODO unpack oauth into regular timeline and remove oauth timeline dialog
-  const initializedData = isRequestGroupId(requestOrGroupId)
+  const initializedData = models.requestGroup.isRequestGroupId(requestOrGroupId)
     ? await fetchRequestGroupData(requestOrGroupId)
     : models.mcpRequest.isMcpRequestId(requestOrGroupId)
       ? await fetchMcpRequestData(requestOrGroupId)
@@ -426,27 +435,22 @@ const sendAccessTokenRequest = async (
   if (!settings.disableAppVersionUserAgent) {
     defaultHeaders.push(defaultUserAgentHeader);
   }
-  const newRequest: Request = await models.initModel(
-    models.request.type,
-    {
-      // Do not inherit authentication from parent request or group since this is a special request
-      authentication: {
-        type: 'none',
-        disabled: false,
-      },
-      headers: [...defaultHeaders, ...headers],
-      url: setDefaultProtocol(authentication.accessTokenUrl),
-      method: 'POST',
-      body: {
-        mimeType: 'application/x-www-form-urlencoded',
-        params,
-      },
+  const newRequest: Request = await services.request.create({
+    // Do not inherit authentication from parent request or group since this is a special request
+    authentication: {
+      type: 'none',
+      disabled: false,
     },
-    {
-      _id: requestOrGroupId + '.other',
-      parentId: requestOrGroupId,
+    headers: [...defaultHeaders, ...headers],
+    url: setDefaultProtocol(authentication.accessTokenUrl),
+    method: 'POST',
+    body: {
+      mimeType: 'application/x-www-form-urlencoded',
+      params,
     },
-  );
+    _id: requestOrGroupId + '.other',
+    parentId: requestOrGroupId,
+  });
 
   const renderResult = await tryToInterpolateRequest({ request: newRequest, environment: environment._id });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
@@ -461,7 +465,7 @@ const sendAccessTokenRequest = async (
   );
   const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
 
-  return await models.response.create(responsePatch);
+  return await services.response.create(responsePatch);
 };
 export const encodePKCE = (buffer: Buffer) => {
   return (

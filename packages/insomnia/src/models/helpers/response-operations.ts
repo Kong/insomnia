@@ -2,23 +2,27 @@ import fs from 'node:fs';
 import type { Readable } from 'node:stream';
 import zlib from 'node:zlib';
 
-import { database as db } from '~/common/database';
-import { type McpResponse } from '~/insomnia-data';
-import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
-import * as models from '~/models/index';
-import { type Compression, isResponse, type Response, type as responseType } from '~/models/response';
-import { isSocketIORequestId } from '~/models/socket-io-request';
-import { isSocketIOResponse, type SocketIOResponse, type as socketIOResponseType } from '~/models/socket-io-response';
-import { isWebSocketRequestId } from '~/models/websocket-request';
 import {
-  isWebSocketResponse,
-  type as webSocketResponseType,
+  type Compression,
+  database as db,
+  type McpResponse,
+  models,
+  type Response,
+  services,
+  type SocketIOResponse,
   type WebSocketResponse,
-} from '~/models/websocket-response';
+} from '~/insomnia-data';
+import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import { deserializeNDJSON } from '~/utils/ndjson';
 
+const { type: responseType, isResponse } = models.response;
+const { isSocketIORequestId } = models.socketIORequest;
+const { isWebSocketRequestId } = models.webSocketRequest;
+const { isSocketIOResponse, type: socketIOResponseType } = models.socketIOResponse;
+const { isWebSocketResponse, type: webSocketResponseType } = models.webSocketResponse;
+
 export async function removeResponsesForRequest(requestId: string, environmentId?: string | null) {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   const query: Record<string, any> = {
     parentId: requestId,
   };

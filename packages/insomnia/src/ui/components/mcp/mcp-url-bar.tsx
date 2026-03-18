@@ -5,9 +5,8 @@ import { useParams } from 'react-router';
 import { useLatest } from 'react-use';
 
 import { type McpRequest, models } from '~/insomnia-data';
+import { type AuthTypeOAuth2, type Project } from '~/insomnia-data';
 import type { McpReadyState } from '~/main/mcp/types';
-import { type Project } from '~/models/project';
-import type { AuthTypeOAuth2 } from '~/models/request';
 import { _buildBearerHeader } from '~/network/authentication';
 import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
 import { getBearerAuthHeader } from '~/network/bearer-auth/get-header';
@@ -27,7 +26,6 @@ import { AskModal } from '~/ui/components/modals/ask-modal';
 import { Button } from '~/ui/components/themed-button';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 
-import { getDataFromKVPair } from '../../../models/environment';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -105,7 +103,7 @@ export const McpUrlActionBar = ({
         url: request.url,
         headers: request.headers,
         authentication: request.authentication,
-        env: getDataFromKVPair(request.env).data,
+        env: models.environment.getDataFromKVPair(request.env).data,
       },
     });
 

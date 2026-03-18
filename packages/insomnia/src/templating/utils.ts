@@ -1,7 +1,7 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 
-import { userSession } from '../models';
-import { decryptSecretValue, vaultEnvironmentMaskValue } from '../models/environment';
+import { models, services } from '~/insomnia-data';
+
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
 import objectPath from './third_party/object-path';
@@ -242,14 +242,14 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
   const shouldDecrypt = renderPurpose === 'preview' || renderPurpose === 'send' || renderPurpose === 'script';
   if (typeof vaultEnvironmentData === 'object') {
     if (shouldDecrypt) {
-      const { vaultKey, vaultSalt } = await userSession.getOrCreate();
+      const { vaultKey, vaultSalt } = await services.userSession.getOrCreate();
       const isVaultEnabled = !!vaultSalt;
       if (isVaultEnabled && vaultKey) {
         const symmetricKey = (await decryptVaultKeyFromSession(vaultKey, true)) as JsonWebKey;
         // decrypt all secret values under vaultEnvironmentPath property in context
         Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
           const encryptedValue = vaultEnvironmentData[vaultContextKey];
-          vaultEnvironmentData[vaultContextKey] = decryptSecretValue(encryptedValue, symmetricKey);
+          vaultEnvironmentData[vaultContextKey] = models.environment.decryptSecretValue(encryptedValue, symmetricKey);
         });
       } else if (isVaultEnabled && !vaultKey) {
         // remove all values under vaultEnvironmentPath if no vault key found
@@ -258,7 +258,7 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
     } else {
       // mask all secret values under vaultEnvironmentPath property in context
       Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
-        vaultEnvironmentData[vaultContextKey] = vaultEnvironmentMaskValue;
+        vaultEnvironmentData[vaultContextKey] = models.environment.vaultEnvironmentMaskValue;
       });
     }
   }

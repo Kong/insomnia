@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
+import { type CloudProviderCredential,models } from '~/insomnia-data';
 import { useUpdateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.update';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../../common/constants';
-import { type CloudProviderCredential, getProviderDisplayName } from '../../../../models/cloud-credential';
 import { executePluginMainAction } from '../../../../plugins';
 import { Icon } from '../../icon';
 import { AWSCredentialForm } from './aws-credential-form';
@@ -26,7 +26,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState('');
   const [manulInputUrl, setManualInputUrl] = useState('');
-  const providerDisplayName = getProviderDisplayName(provider);
+  const providerDisplayName = models.cloudCredential.getProviderDisplayName(provider);
 
   const updateCloudCredentialsFetcher = useUpdateCloudCredentialActionFetcher();
   const createCloudCredentialsFetcher = useCreateCloudCredentialActionFetcher();

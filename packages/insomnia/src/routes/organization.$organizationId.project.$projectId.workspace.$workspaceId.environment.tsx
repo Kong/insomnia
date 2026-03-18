@@ -22,15 +22,7 @@ import { NavLink } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
-import { userSession } from '~/models';
-import {
-  type Environment,
-  type EnvironmentKvPairData,
-  EnvironmentKvPairDataType,
-  EnvironmentType,
-  getDataFromKVPair,
-} from '~/models/environment';
-import { isRemoteProject } from '~/models/project';
+import { type Environment, type EnvironmentKvPairData, type EnvironmentType, models, services } from '~/insomnia-data';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
@@ -59,7 +51,7 @@ import { decryptVaultKeyFromSession } from '~/utils/vault';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment';
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const user = await userSession.get();
+  const user = await services.userSession.get();
 
   const vaultKey = user.vaultKey ? await decryptVaultKeyFromSession(user.vaultKey, false) : '';
 
@@ -83,7 +75,9 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
 
   const { activeProject, baseEnvironment, activeEnvironment, subEnvironments, activeWorkspaceMeta } = routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
-  const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
+  const isUsingInsomniaCloudSync = Boolean(
+    models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
+  );
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
   const allEnvironment = useMemo(() => {
@@ -99,11 +93,13 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   const selectedEnvironment = allEnvironment.find(env => env._id === selectedEnvironmentId);
   // Do not allowed to switch to json environment if contains secret item
   const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(
-    d => d.type === EnvironmentKvPairDataType.SECRET,
+    d => d.type === models.environment.EnvironmentKvPairDataType.SECRET,
   );
   // Check if there's any environment contains secret item
   const containsSecret = allEnvironment.some(
-    env => env.isPrivate && env.kvPairData?.some(pairData => pairData.type === EnvironmentKvPairDataType.SECRET),
+    env =>
+      env.isPrivate &&
+      env.kvPairData?.some(pairData => pairData.type === models.environment.EnvironmentKvPairDataType.SECRET),
   );
   const shouldShowVaultKeyModal = containsSecret && !loaderData.vaultKey;
   const [showInputVaultKeyModal, setShowModal] = useState(shouldShowVaultKeyModal);
@@ -212,7 +208,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
 
   const handleKVPairChange = (kvPairData: EnvironmentKvPairData[]) => {
     if (selectedEnvironment) {
-      const environmentData = getDataFromKVPair(kvPairData);
+      const environmentData = models.environment.getDataFromKVPair(kvPairData);
       updateEnvironmentFetcher.submit({
         organizationId,
         projectId,
@@ -558,9 +554,13 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                     toggleSwitchEnvironmentType,
                   );
                 }}
-                isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
+                isSelected={selectedEnvironment?.environmentType !== models.environment.EnvironmentType.KVPAIR}
                 className="flex w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
-                aria-label={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR ? 'Table Edit' : 'Raw Edit'}
+                aria-label={
+                  selectedEnvironment?.environmentType !== models.environment.EnvironmentType.KVPAIR
+                    ? 'Table Edit'
+                    : 'Raw Edit'
+                }
               >
                 {({ isSelected }) => (
                   <Fragment>
@@ -576,7 +576,8 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
           </div>
           {/* legacy JSON environment do not have environmentType property*/}
           {selectedEnvironment &&
-            (selectedEnvironment.environmentType === EnvironmentType.JSON || !selectedEnvironment.environmentType) && (
+            (selectedEnvironment.environmentType === models.environment.EnvironmentType.JSON ||
+              !selectedEnvironment.environmentType) && (
               <EnvironmentEditor
                 ref={environmentEditorRef}
                 key={selectedEnvironment._id}
@@ -587,7 +588,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                 }}
               />
             )}
-          {selectedEnvironment && selectedEnvironment.environmentType === EnvironmentType.KVPAIR && (
+          {selectedEnvironment && selectedEnvironment.environmentType === models.environment.EnvironmentType.KVPAIR && (
             <EnvironmentKVEditor
               key={selectedEnvironment._id}
               data={selectedEnvironment.kvPairData || []}

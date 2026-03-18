@@ -3,6 +3,7 @@ import React, { Fragment, useCallback, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { type Environment, type GrpcRequest, models, type Request, type RequestGroup, services, type SocketIORequest, type WebSocketRequest } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
@@ -13,13 +14,6 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { Environment } from '../../../models/environment';
-import type { GrpcRequest } from '../../../models/grpc-request';
-import { isRequest, type Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
-import type { SocketIORequest } from '../../../models/socket-io-request';
-import { incrementDeletedRequests } from '../../../models/stats';
-import type { WebSocketRequest } from '../../../models/websocket-request';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -136,7 +130,7 @@ export const RequestActionsDropdown = ({
   };
 
   const generateCode = () => {
-    if (isRequest(request)) {
+    if (models.request.isRequest(request)) {
       window.main.trackSegmentEvent({
         event: SegmentEvent.generateCodeClicked,
       });
@@ -181,7 +175,7 @@ export const RequestActionsDropdown = ({
       color: 'danger',
       onDone: async (isYes: boolean) => {
         if (isYes) {
-          incrementDeletedRequests();
+          services.stats.incrementDeletedRequests();
           deleteRequestFetcher.submit({
             organizationId,
             projectId,
@@ -194,7 +188,7 @@ export const RequestActionsDropdown = ({
   };
 
   // Can only generate code for regular requests, not gRPC requests
-  const canGenerateCode = isRequest(request);
+  const canGenerateCode = models.request.isRequest(request);
 
   const codeGenerationActions: {
     name: string;

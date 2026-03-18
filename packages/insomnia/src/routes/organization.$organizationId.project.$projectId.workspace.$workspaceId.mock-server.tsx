@@ -24,8 +24,7 @@ import {
 } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import * as models from '~/models';
-import type { MockRoute } from '~/models/mock-route';
+import { type MockRoute,services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useMockRouteDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.delete';
@@ -59,24 +58,24 @@ export interface MockServerLoaderData {
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { workspaceId, projectId, organizationId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   if (!project) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
   }
 
-  const activeWorkspace = await models.workspace.getById(workspaceId);
+  const activeWorkspace = await services.workspace.getById(workspaceId);
   if (!activeWorkspace) {
     showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
 
-  const activeMockServer = await models.mockServer.getByParentId(workspaceId);
+  const activeMockServer = await services.mockServer.getByParentId(workspaceId);
   if (!activeMockServer) {
     showResourceNotFoundToast(`Mock Server not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
-  const mockRoutes = await models.mockRoute.findByParentId(activeMockServer._id);
+  const mockRoutes = await services.mockRoute.findByParentId(activeMockServer._id);
 
   return {
     mockServerId: activeMockServer._id,

@@ -1,7 +1,6 @@
 import type { GitAuth } from 'isomorphic-git';
 
-import type { GitCredentials } from '~/models/git-credentials';
-import { isGitCredentialsV2 } from '~/models/git-credentials';
+import { type GitCredentials,models } from '~/insomnia-data';
 
 import type { CustomProviderConfig, GitRemoteProvider, ValidationResult } from './types';
 
@@ -61,7 +60,7 @@ export class CustomProvider implements GitRemoteProvider<CustomProviderConfig> {
    * Uses basic authentication with username and personal access token
    */
   authCallback(credential: GitCredentials): Promise<GitAuth> | GitAuth {
-    if (!isGitCredentialsV2(credential) || credential.provider !== 'custom') {
+    if (!models.gitCredentials.isGitCredentialsV2(credential) || credential.provider !== 'custom') {
       throw new Error('Invalid credential type for Custom provider');
     }
 

@@ -4,14 +4,16 @@ import { Button, Input, Label, TextField } from 'react-aria-components';
 import {
   type CloudProviderCredential,
   type CloudProviderName,
-  HashiCorpCredentialType,
+  type HashiCorpCredentialType,
   HashiCorpVaultAuthMethod,
   type HCPCredential,
   type HCPVaultDedicatedAppRoleCredential,
   type HCPVaultDedicatedTokenCredential,
+  models,
   type VaultAppRoleCredential,
   type VaultTokenCredential,
-} from '../../../../models/cloud-credential';
+} from '~/insomnia-data';
+
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 
@@ -27,8 +29,8 @@ export interface HashiCorpCredentialFormProps {
 const initialFormValue = {
   name: '',
   credentials: {
-    type: HashiCorpCredentialType.onPrem,
-    authMethod: HashiCorpVaultAuthMethod.appRole,
+    type: models.cloudCredential.HashiCorpCredentialType.onPrem,
+    authMethod: models.cloudCredential.HashiCorpVaultAuthMethod.appRole,
     serverAddress: '',
   },
 };
@@ -90,7 +92,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
           provider: providerType,
         };
         const newData =
-          type === HashiCorpCredentialType.cloudVaultSecrets
+          type === models.cloudCredential.HashiCorpCredentialType.cloudVaultSecrets
             ? {
                 ...commonData,
                 credentials: {
@@ -106,8 +108,8 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
                   authMethod: authMethod as HashiCorpVaultAuthMethod,
                   serverAddress,
                   ...(authMethod === HashiCorpVaultAuthMethod.token && { access_token }),
-                  ...(authMethod === HashiCorpVaultAuthMethod.appRole && { role_id, secret_id }),
-                  ...(type === HashiCorpCredentialType.cloudVaultDedicated && { namespace }),
+                  ...(authMethod === models.cloudCredential.HashiCorpVaultAuthMethod.appRole && { role_id, secret_id }),
+                  ...(type === models.cloudCredential.HashiCorpCredentialType.cloudVaultDedicated && { namespace }),
                 },
               };
         onSubmit(newData as HashiCorpCredential);
@@ -131,9 +133,9 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
             id="hashiCorpEnvironmentTypeChoice-onPrem"
             name="type"
             className="mr-2"
-            value={HashiCorpCredentialType.onPrem}
-            checked={credentialType === HashiCorpCredentialType.onPrem}
-            onChange={() => setCredentialType(HashiCorpCredentialType.onPrem)}
+            value={models.cloudCredential.HashiCorpCredentialType.onPrem}
+            checked={credentialType === models.cloudCredential.HashiCorpCredentialType.onPrem}
+            onChange={() => setCredentialType(models.cloudCredential.HashiCorpCredentialType.onPrem)}
           />
           <label className="mr-8 w-32 pt-0" htmlFor="hashiCorpEnvironmentTypeChoice-onPrem">
             On-Premises
@@ -144,9 +146,9 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
             id="hashiCorpEnvironmentTypeChoice-cloud-vaultDedicated"
             name="type"
             className="mr-2"
-            value={HashiCorpCredentialType.cloudVaultDedicated}
-            checked={credentialType === HashiCorpCredentialType.cloudVaultDedicated}
-            onChange={() => setCredentialType(HashiCorpCredentialType.cloudVaultDedicated)}
+            value={models.cloudCredential.HashiCorpCredentialType.cloudVaultDedicated}
+            checked={credentialType === models.cloudCredential.HashiCorpCredentialType.cloudVaultDedicated}
+            onChange={() => setCredentialType(models.cloudCredential.HashiCorpCredentialType.cloudVaultDedicated)}
           />
           <label className="mr-8 w-32 pt-0" htmlFor="hashiCorpEnvironmentTypeChoice-cloud-vaultDedicated">
             Vault Dedicated
@@ -157,17 +159,17 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
             id="hashiCorpEnvironmentTypeChoice-cloud-vaultSecrets"
             name="type"
             className="mr-2"
-            value={HashiCorpCredentialType.cloudVaultSecrets}
-            checked={credentialType === HashiCorpCredentialType.cloudVaultSecrets}
-            onChange={() => setCredentialType(HashiCorpCredentialType.cloudVaultSecrets)}
+            value={models.cloudCredential.HashiCorpCredentialType.cloudVaultSecrets}
+            checked={credentialType === models.cloudCredential.HashiCorpCredentialType.cloudVaultSecrets}
+            onChange={() => setCredentialType(models.cloudCredential.HashiCorpCredentialType.cloudVaultSecrets)}
           />
           <label className="pt-0" htmlFor="hashiCorpEnvironmentTypeChoice-cloud-vaultSecrets">
             Vault Secrets
           </label>
         </div>
       </div>
-      {(credentialType === HashiCorpCredentialType.onPrem ||
-        credentialType === HashiCorpCredentialType.cloudVaultDedicated) && (
+      {(credentialType === models.cloudCredential.HashiCorpCredentialType.onPrem ||
+        credentialType === models.cloudCredential.HashiCorpCredentialType.cloudVaultDedicated) && (
         <>
           <div>
             <label>Auth Method:</label>
@@ -177,9 +179,9 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
                 id="authMethodChoice-appRole"
                 name="authMethod"
                 className="mr-2"
-                value={HashiCorpVaultAuthMethod.appRole}
-                checked={credentialAuthMethod === HashiCorpVaultAuthMethod.appRole}
-                onChange={() => setAuthMethod(HashiCorpVaultAuthMethod.appRole)}
+                value={models.cloudCredential.HashiCorpVaultAuthMethod.appRole}
+                checked={credentialAuthMethod === models.cloudCredential.HashiCorpVaultAuthMethod.appRole}
+                onChange={() => setAuthMethod(models.cloudCredential.HashiCorpVaultAuthMethod.appRole)}
               />
               <label className="mr-8 w-32 pt-0" htmlFor="authMethodChoice-appRole">
                 AppRole
@@ -190,9 +192,9 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
                 id="authMethodChoice-token"
                 name="authMethod"
                 className="mr-2"
-                value={HashiCorpVaultAuthMethod.token}
-                checked={credentialAuthMethod === HashiCorpVaultAuthMethod.token}
-                onChange={() => setAuthMethod(HashiCorpVaultAuthMethod.token)}
+                value={models.cloudCredential.HashiCorpVaultAuthMethod.token}
+                checked={credentialAuthMethod === models.cloudCredential.HashiCorpVaultAuthMethod.token}
+                onChange={() => setAuthMethod(models.cloudCredential.HashiCorpVaultAuthMethod.token)}
               />
               <label className="pt-0" htmlFor="authMethodChoice-token">
                 Token
@@ -223,7 +225,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
               Invalid server address, please check and input again
             </p>
           )}
-          {credentialAuthMethod === HashiCorpVaultAuthMethod.token && (
+          {credentialAuthMethod === models.cloudCredential.HashiCorpVaultAuthMethod.token && (
             <TextField
               className="flex flex-col gap-2"
               defaultValue={(credentials as VaultTokenCredential).access_token}
@@ -250,7 +252,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
               </div>
             </TextField>
           )}
-          {credentialAuthMethod === HashiCorpVaultAuthMethod.appRole && (
+          {credentialAuthMethod === models.cloudCredential.HashiCorpVaultAuthMethod.appRole && (
             <>
               <TextField className="flex flex-col gap-2" defaultValue={(credentials as VaultAppRoleCredential).role_id}>
                 <Label className="col-span-4">Role Id:</Label>
@@ -289,7 +291,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
               </TextField>
             </>
           )}
-          {credentialType === HashiCorpCredentialType.cloudVaultDedicated && (
+          {credentialType === models.cloudCredential.HashiCorpCredentialType.cloudVaultDedicated && (
             <TextField
               className="flex flex-col gap-2"
               defaultValue={(credentials as HashiCorpVaultDedicatedCredential).namespace}
@@ -313,7 +315,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
           )}
         </>
       )}
-      {credentialType === HashiCorpCredentialType.cloudVaultSecrets && (
+      {credentialType === models.cloudCredential.HashiCorpCredentialType.cloudVaultSecrets && (
         <>
           <TextField className="flex flex-col gap-2" defaultValue={(credentials as HCPCredential).client_id}>
             <Label className="col-span-4">Client Id:</Label>

@@ -8,6 +8,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { services } from '~/insomnia-data';
+
 import {
   getPreviewModeName,
   PREVIEW_MODE_FRIENDLY,
@@ -17,7 +19,6 @@ import {
 } from '../../../common/constants';
 import { METHOD_CALL_TOOL } from '../../../common/mcp-utils';
 import type { McpEvent } from '../../../main/mcp/types';
-import * as models from '../../../models';
 import {
   type McpRequestLoaderData,
   useRequestLoaderData,
@@ -76,7 +77,7 @@ export const MessageEventView = ({ event }: Props) => {
     }
     const requestId = activeResponse.parentId;
     await patchRequestMeta(requestId, { responseFilter });
-    const meta = await models.requestMeta.getByParentId(requestId);
+    const meta = await services.requestMeta.getByParentId(requestId);
     if (!meta) {
       return;
     }

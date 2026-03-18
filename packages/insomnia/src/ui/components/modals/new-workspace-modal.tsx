@@ -21,32 +21,30 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { type ApiSpec, models, type Project, type WorkspaceScope } from '~/insomnia-data';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { Badge } from '~/ui/components/base/badge';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
-import { type ApiSpec } from '../../../models/api-spec';
-import { isGitProject, type Project } from '../../../models/project';
-import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { SegmentEvent } from '../../analytics';
 import { Icon } from '../icon';
 
 const titleByScope: Record<WorkspaceScope, string> = {
-  [WorkspaceScopeKeys.collection]: 'Request Collection',
-  [WorkspaceScopeKeys.environment]: 'Environment',
-  [WorkspaceScopeKeys.mockServer]: 'Mock Server',
-  [WorkspaceScopeKeys.design]: 'Design Document',
-  [WorkspaceScopeKeys.mcp]: 'MCP Client',
+  [models.workspace.WorkspaceScopeKeys.collection]: 'Request Collection',
+  [models.workspace.WorkspaceScopeKeys.environment]: 'Environment',
+  [models.workspace.WorkspaceScopeKeys.mockServer]: 'Mock Server',
+  [models.workspace.WorkspaceScopeKeys.design]: 'Design Document',
+  [models.workspace.WorkspaceScopeKeys.mcp]: 'MCP Client',
 };
 
 const defaultNameByScope: Record<WorkspaceScope, string> = {
-  [WorkspaceScopeKeys.collection]: 'My Collection',
-  [WorkspaceScopeKeys.environment]: 'My Environment',
-  [WorkspaceScopeKeys.mockServer]: 'My Mock Server',
-  [WorkspaceScopeKeys.design]: 'My Design Document',
-  [WorkspaceScopeKeys.mcp]: 'My MCP Client',
+  [models.workspace.WorkspaceScopeKeys.collection]: 'My Collection',
+  [models.workspace.WorkspaceScopeKeys.environment]: 'My Environment',
+  [models.workspace.WorkspaceScopeKeys.mockServer]: 'My Mock Server',
+  [models.workspace.WorkspaceScopeKeys.design]: 'My Design Document',
+  [models.workspace.WorkspaceScopeKeys.mcp]: 'My MCP Client',
 };
 
 export const NewWorkspaceModal = ({
@@ -113,7 +111,7 @@ export const NewWorkspaceModal = ({
   const gitRepoTreeFetcher = useGitProjectRepositoryTreeLoaderFetcher();
 
   useEffect(() => {
-    if (createNewWorkspaceFetcher.state !== 'idle' && scope === WorkspaceScopeKeys.mockServer) {
+    if (createNewWorkspaceFetcher.state !== 'idle' && scope === models.workspace.WorkspaceScopeKeys.mockServer) {
       setProgressMessage(0);
       const interval = setInterval(() => {
         setProgressMessage(prev => (prev + 1) % progressMessages.length);
@@ -127,7 +125,7 @@ export const NewWorkspaceModal = ({
 
   useEffect(() => {
     if (
-      scope === WorkspaceScopeKeys.mockServer &&
+      scope === models.workspace.WorkspaceScopeKeys.mockServer &&
       createNewWorkspaceFetcher.state === 'idle' &&
       createNewWorkspaceFetcher.data &&
       !createNewWorkspaceFetcher.data.error
@@ -137,13 +135,13 @@ export const NewWorkspaceModal = ({
   }, [createNewWorkspaceFetcher.state, createNewWorkspaceFetcher.data, scope, onOpenChange]);
 
   useEffect(() => {
-    if (isGitProject(project) && isOpen && gitRepoTreeFetcher.state === 'idle' && !gitRepoTreeFetcher.data) {
+    if (models.project.isGitProject(project) && isOpen && gitRepoTreeFetcher.state === 'idle' && !gitRepoTreeFetcher.data) {
       gitRepoTreeFetcher.load({ projectId: project._id });
     }
   }, [gitRepoTreeFetcher, isOpen, project]);
 
   useEffect(() => {
-    if (isOpen && scope === WorkspaceScopeKeys.mockServer) {
+    if (isOpen && scope === models.workspace.WorkspaceScopeKeys.mockServer) {
       window.main.trackSegmentEvent({
         event: SegmentEvent.mockCreateModalOpened,
       });
@@ -173,7 +171,7 @@ export const NewWorkspaceModal = ({
       className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
-        className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) ${isGitProject(project) ? 'min-h-[420px]' : 'min-h-[220px]'}`}
+        className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) ${models.project.isGitProject(project) ? 'min-h-[420px]' : 'min-h-[220px]'}`}
       >
         <Dialog
           aria-label="Create or update dialog"
@@ -231,7 +229,7 @@ export const NewWorkspaceModal = ({
                   />
                   <FieldError className="text-xs text-red-500" />
                 </TextField>
-                {isGitProject(project) && (
+                {models.project.isGitProject(project) && (
                   <>
                     <TextField
                       name="fileName"
@@ -706,7 +704,7 @@ export const NewWorkspaceModal = ({
                 >
                   {createNewWorkspaceFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
                   <span>
-                    {createNewWorkspaceFetcher.state !== 'idle' && scope === WorkspaceScopeKeys.mockServer
+                    {createNewWorkspaceFetcher.state !== 'idle' && scope === models.workspace.WorkspaceScopeKeys.mockServer
                       ? progressMessages[progressMessage]
                       : 'Create'}
                   </span>

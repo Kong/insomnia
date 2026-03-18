@@ -4,8 +4,7 @@ import type { IRuleResult } from '@stoplight/spectral-core';
 import { href, redirect } from 'react-router';
 
 import { importResourcesToWorkspace, scanResources } from '~/common/import';
-import * as models from '~/models';
-import { isGitProject } from '~/models/project';
+import { models, services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -15,21 +14,21 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  const apiSpec = await services.apiSpec.getByParentId(workspaceId);
   invariant(apiSpec, 'No API Specification was found');
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
 
   invariant(workspace, 'Workspace not found');
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
 
   const isLintError = (result: IRuleResult) => result.severity === 0;
 
-  const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
+  const gitRepositoryId = models.project.isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
 
   const rulesetPath = gitRepositoryId
     ? path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)

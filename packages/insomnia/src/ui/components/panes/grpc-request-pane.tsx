@@ -4,6 +4,7 @@ import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { services } from '~/insomnia-data';
+import { type GrpcRequest, type GrpcRequestHeader, models, type RequestGroup } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
@@ -13,10 +14,7 @@ import { database as db } from '../../../common/database';
 import { generateId } from '../../../common/misc';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage } from '../../../common/render';
 import type { GrpcMethodType } from '../../../main/ipc/grpc';
-import * as models from '../../../models';
-import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
 import { getOrInheritHeaders } from '../../../network/network';
 import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -74,7 +72,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
     } else if (activeRequest.url && activeRequest.reflectionApi) {
       const requestGroups = (
         await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])
-      ).filter(isRequestGroup);
+      ).filter(models.requestGroup.isRequestGroup);
       const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
         request: activeRequest,
         environmentId,
@@ -85,7 +83,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
         },
       });
 
-      const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+      const workspaceClientCertificates = await services.clientCertificate.findByParentId(workspaceId);
       const clientCertificate = workspaceClientCertificates.find(
         c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
       );
@@ -136,7 +134,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
       try {
         const requestGroups = (
           await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])
-        ).filter(isRequestGroup);
+        ).filter(models.requestGroup.isRequestGroup);
         const request = await getRenderedGrpcRequest({
           // split off the metadata from the request
           request: {
@@ -147,7 +145,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           purpose: 'send',
           skipBody: canClientStream(methodType),
         });
-        const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+        const workspaceClientCertificates = await services.clientCertificate.findByParentId(workspaceId);
         const clientCertificate = workspaceClientCertificates.find(
           c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), request.url, false),
         );
@@ -276,7 +274,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                   try {
                     const requestGroups = (
                       await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])
-                    ).filter(isRequestGroup);
+                    ).filter(models.requestGroup.isRequestGroup);
                     let rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
                       request: activeRequest,
                       environmentId,
@@ -286,7 +284,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                         reflectionApi: activeRequest.reflectionApi,
                       },
                     });
-                    const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+                    const workspaceClientCertificates = await services.clientCertificate.findByParentId(workspaceId);
                     const clientCertificate = workspaceClientCertificates.find(
                       c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
                     );

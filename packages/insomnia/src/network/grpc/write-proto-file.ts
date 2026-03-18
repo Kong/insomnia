@@ -2,12 +2,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { type BaseModel, models, type ProtoDirectory, type ProtoFile, type Workspace } from '~/insomnia-data';
+
 import { database as db } from '../../common/database';
-import type { BaseModel } from '../../models';
-import * as models from '../../models';
-import { isProtoDirectory, type ProtoDirectory } from '../../models/proto-directory';
-import { isProtoFile, type ProtoFile } from '../../models/proto-file';
-import { isWorkspace, type Workspace } from '../../models/workspace';
 
 interface WriteResult {
   filePath: string;
@@ -23,7 +20,7 @@ const recursiveWriteProtoDirectory = async (
   const dirPath = path.join(currentDirPath, dir.name);
   fs.mkdirSync(dirPath, { recursive: true });
   // Get and write proto files
-  const files = descendants.filter(isProtoFile).filter(f => f.parentId === dir._id);
+  const files = descendants.filter(models.protoFile.isProtoFile).filter(f => f.parentId === dir._id);
   await Promise.all(
     files.map(protoFile => {
       const fullPath = path.join(dirPath, protoFile.name);
@@ -36,7 +33,7 @@ const recursiveWriteProtoDirectory = async (
   // Get and write subdirectories
   const createdDirs = await Promise.all(
     descendants
-      .filter(f => isProtoDirectory(f) && f.parentId === dir._id)
+      .filter(f => models.protoDirectory.isProtoDirectory(f) && f.parentId === dir._id)
       .map(f => recursiveWriteProtoDirectory(f, descendants, dirPath)),
   );
   return [dirPath, ...createdDirs.flat()];
@@ -48,7 +45,7 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
     models.protoDirectory.type,
     models.workspace.type,
   ]);
-  const ancestorDirectories = ancestors.filter(isProtoDirectory);
+  const ancestorDirectories = ancestors.filter(models.protoDirectory.isProtoDirectory);
 
   // Is this file part of a directory?
   if (ancestorDirectories.length) {
@@ -56,9 +53,9 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
     // Find the root ancestor directory
     const rootAncestorProtoDirectory = ancestors.find(
       // @ts-expect-error -- TSCONVERSION ancestor workspace can be undefined
-      c => isProtoDirectory(c) && c.parentId === ancestors.find(isWorkspace)._id,
+      c => models.protoDirectory.isProtoDirectory(c) && c.parentId === ancestors.find(models.workspace.isWorkspace)._id,
     );
-    if (!ancestors.find(isWorkspace) || !rootAncestorProtoDirectory) {
+    if (!ancestors.find(models.workspace.isWorkspace) || !rootAncestorProtoDirectory) {
       // should never happen
       return {
         filePath: path.join(

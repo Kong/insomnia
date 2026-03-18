@@ -1,8 +1,5 @@
-import * as models from '~/models';
+import { database as db, type McpResponse, models, services } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
-
-import { database as db } from '../../src/database';
-import { type McpResponse } from '../../src/models/types';
 
 const { type } = models.mcpResponse;
 
@@ -26,14 +23,14 @@ export async function create(patch: Partial<McpResponse> = {}, maxResponses = 20
   const { parentId } = patch;
   // Create request version snapshot
   const request = await requestOperations.getById(parentId);
-  const requestVersion = request ? await models.requestVersion.create(request) : null;
+  const requestVersion = request ? await services.requestVersion.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
   // Filter responses by environment if setting is enabled
   const query: Record<string, any> = {
     parentId,
   };
 
-  if ((await models.settings.get()).filterResponsesByEnv && 'environmentId' in patch) {
+  if ((await services.settings.get()).filterResponsesByEnv && 'environmentId' in patch) {
     query.environmentId = patch.environmentId;
   }
 
@@ -71,7 +68,7 @@ export async function updateOrCreate(patch: Partial<McpResponse>, maxResponses =
 export async function getLatestForRequestId(requestId: string, environmentId: string | null) {
   // Filter responses by environment if setting is enabled
 
-  const shouldFilter = (await models.settings.get()).filterResponsesByEnv;
+  const shouldFilter = (await services.settings.get()).filterResponsesByEnv;
 
   const response = await db.findOne<McpResponse>(
     type,

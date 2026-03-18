@@ -1,5 +1,6 @@
+import { services } from '~/insomnia-data';
+
 import { getInsomniaVaultKey, PLAYWRIGHT } from '../common/constants';
-import * as settings from '../models/settings';
 
 export const base64encode = (input: string | JsonWebKey) => {
   const inputStr = typeof input === 'string' ? input : JSON.stringify(input);
@@ -44,7 +45,7 @@ export async function decryptVaultKeyFromSession(vaultKey: string, toJsonWebKey:
 const getVaultSecretKey = (accountId: string) => `vault_${accountId}`;
 
 export const saveVaultKeyIfNecessary = async (accountId: string, vaultKey: string) => {
-  const userSetting = await settings.getOrCreate();
+  const userSetting = await services.settings.getOrCreate();
   const { saveVaultKeyLocally } = userSetting;
   if (saveVaultKeyLocally) {
     await window.main.secretStorage.setSecret(getVaultSecretKey(accountId), vaultKey);

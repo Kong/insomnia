@@ -26,7 +26,7 @@ describe('sendCurlAndWriteTimeline()', () => {
 
   it('sends a generic request', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const settings = await services.settings.getOrCreate();
     const cookies = [
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -139,7 +139,7 @@ describe('sendCurlAndWriteTimeline()', () => {
 
   it('sends a urlencoded', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -212,7 +212,7 @@ describe('sendCurlAndWriteTimeline()', () => {
 
   it('skips sending and storing cookies with setting', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const settings = await services.settings.getOrCreate();
     const cookies = [
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -316,7 +316,7 @@ describe('sendCurlAndWriteTimeline()', () => {
 
   it('sends a file', async () => {
     const workspace = await models.workspace.create();
-    let settings = await models.settings.getOrCreate();
+    let settings = await services.settings.getOrCreate();
     settings = await models.settings.update(settings, { dataFolders: [nodePath.resolve(__dirname)] });
     await models.cookieJar.create({
       parentId: workspace._id,
@@ -384,7 +384,7 @@ describe('sendCurlAndWriteTimeline()', () => {
 
   it('sends multipart form data', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const settings = await services.settings.getOrCreate();
     await models.cookieJar.create({
       parentId: workspace._id,
     });
@@ -480,7 +480,7 @@ describe('sendCurlAndWriteTimeline()', () => {
 
   it('uses unix socket', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -524,7 +524,7 @@ describe('sendCurlAndWriteTimeline()', () => {
 
   it('uses works with HEAD', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -567,7 +567,7 @@ describe('sendCurlAndWriteTimeline()', () => {
 
   it('uses works with "unix" host', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -610,7 +610,7 @@ describe('sendCurlAndWriteTimeline()', () => {
 
   it('uses netrc', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -659,7 +659,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       return;
     }
     const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const settings = await services.settings.getOrCreate();
     const cookies = [
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -774,7 +774,7 @@ describe('sendCurlAndWriteTimeline()', () => {
 
   it('sets HTTP version', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,

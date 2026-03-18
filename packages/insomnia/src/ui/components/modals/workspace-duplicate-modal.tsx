@@ -2,6 +2,7 @@ import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } f
 import { OverlayContainer } from 'react-aria';
 import { href, useParams } from 'react-router';
 
+import { type BaseModel, models, type Project, type Workspace } from '~/insomnia-data';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.move';
 
@@ -10,9 +11,6 @@ import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { sortProjects } from '../../../models/helpers/project';
-import * as models from '../../../models/index';
-import type { Project } from '../../../models/project';
-import type { Workspace } from '../../../models/workspace';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -31,7 +29,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
   };
   const organizationData = useOrganizationLoaderData();
   const [selectedOrgId, setSelectedOrgId] = useState(organizationId);
-  const [projectOptions, setProjectOptions] = useState<models.BaseModel[]>([]);
+  const [projectOptions, setProjectOptions] = useState<BaseModel[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [newWorkspaceName, setNewWorkspaceName] = useState(workspace.name);
   useEffect(() => {

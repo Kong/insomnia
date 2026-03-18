@@ -1,8 +1,9 @@
 import React, { type FC } from 'react';
 
+import { services } from '~/insomnia-data';
+
 import { CONTENT_TYPE_JSON } from '../../../common/constants';
 import type { SocketIOEvent, SocketIOMessageEvent } from '../../../main/network/socket-io';
-import * as models from '../../../models';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -50,7 +51,7 @@ export const MessageEventView: FC<Props<SocketIOMessageEvent>> = ({ event }) => 
     }
     const requestId = activeResponse.parentId;
     await patchRequestMeta(requestId, { responseFilter });
-    const meta = await models.requestMeta.getByParentId(requestId);
+    const meta = await services.requestMeta.getByParentId(requestId);
     if (!meta) {
       return;
     }

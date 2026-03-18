@@ -12,18 +12,12 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { isGrpcRequest } from '~/models/grpc-request';
-import { isSocketIORequest } from '~/models/socket-io-request';
-import { isWebSocketRequest } from '~/models/websocket-request';
+import { type BaseModel, type MockRoute, models, type Request, services } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
-import * as models from '../../../models/index';
-import type { MockRoute } from '../../../models/mock-route';
-import { isRequest, type Request } from '../../../models/request';
-import { isRequestGroup } from '../../../models/request-group';
 import { INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';
@@ -140,7 +134,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   );
 
   const handleUpdate = useCallback(
-    async (doc: models.BaseModel, patches: Partial<models.BaseModel>[] = []) => {
+    async (doc: BaseModel, patches: Partial<BaseModel>[] = []) => {
       const patchObj: Record<string, any> = {};
       patches.forEach(patch => {
         Object.assign(patchObj, patch);
@@ -187,15 +181,20 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
       // move request or requestGroup to another collection
       if (patchObj.parentId && !patchObj.metaSortKey && (patchObj.parentId as string).startsWith('wrk_')) {
-        const workspace = await models.workspace.getById(patchObj.parentId);
+        const workspace = await services.workspace.getById(patchObj.parentId);
         if (workspace) {
-          if (isRequest(doc) || isWebSocketRequest(doc) || isGrpcRequest(doc) || isSocketIORequest(doc)) {
+          if (
+            models.request.isRequest(doc) ||
+            models.webSocketRequest.isWebSocketRequest(doc) ||
+            models.grpcRequest.isGrpcRequest(doc) ||
+            models.socketIORequest.isSocketIORequest(doc)
+          ) {
             updateTabById?.(doc._id, {
               workspaceId: workspace._id,
               workspaceName: workspace.name,
               url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${doc._id}`,
             });
-          } else if (isRequestGroup(doc)) {
+          } else if (models.requestGroup.isRequestGroup(doc)) {
             const folderEntities = await database.getWithDescendants(doc, [
               models.request.type,
               models.grpcRequest.type,
@@ -209,7 +208,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
                 fields: {
                   workspaceId: workspace._id,
                   workspaceName: workspace.name,
-                  url: isRequestGroup(entity)
+                  url: models.requestGroup.isRequestGroup(entity)
                     ? `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request-group/${entity._id}`
                     : `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${entity._id}`,
                 },

@@ -6,10 +6,10 @@ import { promisify } from 'node:util';
 
 import { app, net } from 'electron';
 
+import { services } from '~/insomnia-data';
 import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 
 import { isDevelopment } from '../common/constants';
-import * as models from '../models';
 import { validatePluginName } from '../utils/plugin';
 
 // Promisified version of execFile to use async/await
@@ -414,7 +414,7 @@ export function safeTrim(value: unknown): string | undefined {
  * Pulls settings from the application models.
  */
 export async function getYarnEnvValues(): Promise<Record<string, string>> {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
 
   const yarnEnv: Record<string, string> = {
     NODE_ENV: 'production',

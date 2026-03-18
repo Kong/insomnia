@@ -4,17 +4,8 @@ import { href, matchPath, useLocation, useNavigate, useSearchParams } from 'reac
 
 import { database } from '~/common/database';
 import { type McpRequest, models, services } from '~/insomnia-data';
-import { type GrpcRequest, isGrpcRequest } from '~/models/grpc-request';
+import { type GrpcRequest, type MockRoute, type MockServer, type Project, type Request, type RequestGroup, type SocketIORequest, type UnitTestSuite, type WebSocketRequest, type Workspace } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { isMockRoute, type MockRoute } from '~/models/mock-route';
-import type { MockServer } from '~/models/mock-server';
-import type { Project } from '~/models/project';
-import { isRequest, type Request } from '~/models/request';
-import { isRequestGroup, type RequestGroup } from '~/models/request-group';
-import { isSocketIORequest, type SocketIORequest } from '~/models/socket-io-request';
-import { isUnitTestSuite, type UnitTestSuite } from '~/models/unit-test-suite';
-import { isWebSocketRequest, type WebSocketRequest } from '~/models/websocket-request';
-import { isDesign, isEnvironment, isMockServer, isWorkspace, type Workspace } from '~/models/workspace';
 import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
@@ -51,31 +42,31 @@ interface AddTabParams {
 // Utility function to infer tab type from resource
 function inferTabType(resource: TabResource): TabType | null {
   if (
-    isRequest(resource) ||
-    isGrpcRequest(resource) ||
-    isWebSocketRequest(resource) ||
-    isSocketIORequest(resource) ||
+    models.request.isRequest(resource) ||
+    models.grpcRequest.isGrpcRequest(resource) ||
+    models.webSocketRequest.isWebSocketRequest(resource) ||
+    models.socketIORequest.isSocketIORequest(resource) ||
     models.mcpRequest.isMcpRequest(resource)
   ) {
     return 'request';
   }
-  if (isRequestGroup(resource)) {
+  if (models.requestGroup.isRequestGroup(resource)) {
     return 'folder';
   }
-  if (isMockRoute(resource)) {
+  if (models.mockRoute.isMockRoute(resource)) {
     return 'mockRoute';
   }
-  if (isUnitTestSuite(resource)) {
+  if (models.unitTestSuite.isUnitTestSuite(resource)) {
     return 'testSuite';
   }
-  if (isWorkspace(resource)) {
-    if (isDesign(resource)) {
+  if (models.workspace.isWorkspace(resource)) {
+    if (models.workspace.isDesign(resource)) {
       return 'document';
     }
-    if (isMockServer(resource)) {
+    if (models.workspace.isMockServer(resource)) {
       return 'mockServer';
     }
-    if (isEnvironment(resource)) {
+    if (models.workspace.isEnvironment(resource)) {
       return 'environment';
     }
     return 'collection';
@@ -266,7 +257,7 @@ export const buildTabFromResource = async (params: AddTabParams, withTab?: boole
     workspaceName,
   };
 
-  if (isWorkspace(resource) && resource.scope === 'mcp') {
+  if (models.workspace.isWorkspace(resource) && resource.scope === 'mcp') {
     const mcpRequestData = await services.mcpRequest.getByParentId(resource._id);
 
     if (!mcpRequestData) {
@@ -285,12 +276,12 @@ export const buildTabFromResource = async (params: AddTabParams, withTab?: boole
     });
   }
 
-  if (isRequest(resource) || isGrpcRequest(resource) || isWebSocketRequest(resource) || isSocketIORequest(resource)) {
+  if (models.request.isRequest(resource) || models.grpcRequest.isGrpcRequest(resource) || models.webSocketRequest.isWebSocketRequest(resource) || models.socketIORequest.isSocketIORequest(resource)) {
     baseTab.tag = getRequestMethodShortHand(resource);
     baseTab.method = (resource as Request).method || '';
   }
 
-  if (isMockRoute(resource)) {
+  if (models.mockRoute.isMockRoute(resource)) {
     baseTab.tag = formatMethodName(resource.method);
     baseTab.method = resource.method;
   }

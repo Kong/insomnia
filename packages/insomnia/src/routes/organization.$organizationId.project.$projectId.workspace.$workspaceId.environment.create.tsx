@@ -1,7 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
-import { EnvironmentType } from '~/models/environment';
+import { models, services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -11,13 +10,13 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { workspaceId } = params;
 
-  const { isPrivate, environmentType = EnvironmentType.KVPAIR } = await request.json();
+  const { isPrivate, environmentType = models.environment.EnvironmentType.KVPAIR } = await request.json();
 
-  const baseEnvironment = await models.environment.getByParentId(workspaceId);
+  const baseEnvironment = await services.environment.getByParentId(workspaceId);
 
   invariant(baseEnvironment, 'Base environment not found');
 
-  const environment = await models.environment.create({
+  const environment = await services.environment.create({
     parentId: baseEnvironment._id,
     environmentType,
     isPrivate,

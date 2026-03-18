@@ -1,9 +1,7 @@
 import { href } from 'react-router';
 
+import { models, type WebSocketRequest } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { getPathParametersFromUrl, isRequest } from '~/models/request';
-import type { WebSocketRequest } from '~/models/websocket-request';
-import { isWebSocketRequest } from '~/models/websocket-request';
 import { SegmentEvent } from '~/ui/analytics';
 import { updateMimeType } from '~/ui/components/dropdowns/content-type-dropdown';
 import { invariant } from '~/utils/invariant';
@@ -18,13 +16,13 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   invariant(req, 'Request not found');
   const patch = await request.json();
 
-  const isRequestURLChanged = (isRequest(req) || isWebSocketRequest(req)) && patch.url && patch.url !== req.url;
+  const isRequestURLChanged = (models.request.isRequest(req) || models.webSocketRequest.isWebSocketRequest(req)) && patch.url && patch.url !== req.url;
 
   if (isRequestURLChanged) {
     const { url } = patch as Request | WebSocketRequest;
 
     // Check the URL for path parameters and store them in the request
-    const urlPathParameters = getPathParametersFromUrl(url);
+    const urlPathParameters = models.request.getPathParametersFromUrl(url);
 
     const pathParameters = urlPathParameters.map(name => ({
       name,
@@ -35,7 +33,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
 
   // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
-  const isMimeTypeChanged = isRequest(req) && patch.body && patch.body.mimeType !== req.body.mimeType;
+  const isMimeTypeChanged = models.request.isRequest(req) && patch.body && patch.body.mimeType !== req.body.mimeType;
   if (isMimeTypeChanged) {
     await requestOperations.update(req, { ...patch, ...updateMimeType(req, patch.body?.mimeType) });
     return null;

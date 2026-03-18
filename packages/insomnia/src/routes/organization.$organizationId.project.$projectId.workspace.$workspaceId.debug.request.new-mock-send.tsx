@@ -1,7 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
-import type { Request } from '~/models/request';
+import { type Request,services } from '~/insomnia-data';
 import {
   fetchRequestData,
   responseTransform,
@@ -19,13 +18,13 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   invariant(typeof patch.url === 'string', 'URL is required');
   invariant(typeof patch.method === 'string', 'method is required');
   invariant(typeof patch.parentId === 'string', 'mock route ID is required');
-  const mockRoute = await models.mockRoute.getById(patch.parentId);
+  const mockRoute = await services.mockRoute.getById(patch.parentId);
   invariant(mockRoute, 'mock route not found');
   // Get or create a testing request for this mock route
-  const childRequests = await models.request.findByParentId(mockRoute._id);
-  const testRequest = childRequests[0] || (await models.request.create({ parentId: mockRoute._id, isPrivate: true }));
+  const childRequests = await services.request.findByParentId(mockRoute._id);
+  const testRequest = childRequests[0] || (await services.request.create({ parentId: mockRoute._id, isPrivate: true }));
   invariant(testRequest, 'mock route is missing a testing request');
-  const req = await models.request.update(testRequest, patch);
+  const req = await services.request.update(testRequest, patch);
 
   const { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId } =
     await fetchRequestData(req._id);
@@ -54,7 +53,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   );
 
   const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
-  await models.response.create(response);
+  await services.response.create(response);
   window.main.completeExecutionStep({ requestId: req._id });
   return null;
 }

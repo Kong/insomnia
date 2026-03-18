@@ -1,6 +1,5 @@
-import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
-import { isRequest, type Request } from '../models/request';
-import { isRequestGroup, type RequestGroup } from '../models/request-group';
+import { type GrpcRequest, models, type Request, type RequestGroup } from '~/insomnia-data';
+
 import { type DashboardSortOrder, HTTP_METHODS, type SortOrder } from './constants';
 
 type SortableModel = Request | RequestGroup | GrpcRequest;
@@ -41,17 +40,17 @@ export const descendingModifiedSort: SortFunction<{ lastModifiedTimestamp: numbe
 export const httpMethodSort: SortFunction<Pick<SortableModel, 'type' | 'metaSortKey' | '_id'>> = (a, b) => {
   // Sort Requests and GrpcRequests to top, in that order
   if (a.type !== b.type) {
-    if (isRequest(a) || isRequest(b)) {
-      return isRequest(a) ? -1 : 1;
+    if (models.request.isRequest(a) || models.request.isRequest(b)) {
+      return models.request.isRequest(a) ? -1 : 1;
     }
 
-    if (isGrpcRequest(a) || isGrpcRequest(b)) {
-      return isGrpcRequest(a) ? -1 : 1;
+    if (models.grpcRequest.isGrpcRequest(a) || models.grpcRequest.isGrpcRequest(b)) {
+      return models.grpcRequest.isGrpcRequest(a) ? -1 : 1;
     }
   }
 
   // Sort Requests by HTTP method
-  if (isRequest(a)) {
+  if (models.request.isRequest(a)) {
     const aIndex = HTTP_METHODS.indexOf(a.method);
     // @ts-expect-error -- TSCONVERSION
     const bIndex = HTTP_METHODS.indexOf(b.method);
@@ -74,16 +73,16 @@ export const httpMethodSort: SortFunction<Pick<SortableModel, 'type' | 'metaSort
 };
 
 export const ascendingTypeSort: SortFunction<Pick<SortableModel, 'type' | 'metaSortKey' | '_id'>> = (a, b) => {
-  if (a.type !== b.type && (isRequestGroup(a) || isRequestGroup(b))) {
-    return isRequestGroup(b) ? -1 : 1;
+  if (a.type !== b.type && (models.requestGroup.isRequestGroup(a) || models.requestGroup.isRequestGroup(b))) {
+    return models.requestGroup.isRequestGroup(b) ? -1 : 1;
   }
 
   return metaSortKeySort(a, b);
 };
 
 export const descendingTypeSort: SortFunction<Pick<SortableModel, 'type' | 'metaSortKey' | '_id'>> = (a, b) => {
-  if (a.type !== b.type && (isRequestGroup(a) || isRequestGroup(b))) {
-    return isRequestGroup(a) ? -1 : 1;
+  if (a.type !== b.type && (models.requestGroup.isRequestGroup(a) || models.requestGroup.isRequestGroup(b))) {
+    return models.requestGroup.isRequestGroup(a) ? -1 : 1;
   }
 
   return metaSortKeySort(a, b);

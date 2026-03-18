@@ -1,7 +1,7 @@
 import { href, redirect } from 'react-router';
 
 import { getMockServiceBinURL } from '~/common/constants';
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -11,18 +11,18 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
-  const mockServer = await models.mockServer.getByParentId(workspaceId);
+  const mockServer = await services.mockServer.getByParentId(workspaceId);
   invariant(mockServer, 'Mock Server not found');
 
-  const mockRoutes = await models.mockRoute.findByParentId(mockServer._id);
+  const mockRoutes = await services.mockRoute.findByParentId(mockServer._id);
 
-  const collectionWorkspace = await models.workspace.create({
+  const collectionWorkspace = await services.workspace.create({
     name: `${mockServer.name} Collection`,
     parentId: projectId,
     scope: 'collection',
@@ -30,7 +30,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   const baseUrl = getMockServiceBinURL(mockServer, '').replace(/\/$/, '');
 
-  await models.environment.create({
+  await services.environment.create({
     name: 'Base Environment',
     parentId: collectionWorkspace._id,
     data: {
@@ -38,15 +38,15 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     },
   });
 
-  const requestFolder = await models.requestGroup.create({
+  const requestFolder = await services.requestGroup.create({
     name: 'Mock Server Requests',
     parentId: collectionWorkspace._id,
   });
 
-  await models.requestGroupMeta.create({ parentId: requestFolder._id, collapsed: false });
+  await services.requestGroupMeta.create({ parentId: requestFolder._id, collapsed: false });
 
   for (const mockRoute of mockRoutes) {
-    await models.request.create({
+    await services.request.create({
       name: `${mockRoute.name}`,
       url: '{{ mockbin_base_url }}' + mockRoute.name,
       method: mockRoute.method.toUpperCase(),
