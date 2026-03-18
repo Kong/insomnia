@@ -16,6 +16,12 @@ import {
 } from '../common/constants';
 import * as models from '../models/index';
 
+let _currentOrganizationId: string | undefined;
+
+export function setCurrentOrganizationId(id: string | undefined): void {
+  _currentOrganizationId = id;
+}
+
 const analytics = new Analytics({
   writeKey: getSegmentWriteKey(),
   httpClient: {
@@ -97,6 +103,7 @@ export async function trackSegmentEvent(event: SegmentEvent, properties?: Record
         {
           event,
           properties: {
+            ...(_currentOrganizationId && { organization_id: _currentOrganizationId }),
             ...properties,
             platform: 'app',
           },

@@ -212,6 +212,11 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     }
   }, [organizationId, untrackedProjectsFetcher]);
 
+  useEffect(() => {
+    window.main.setCurrentOrganizationId(organizationId);
+    return () => window.main.setCurrentOrganizationId(undefined);
+  }, [organizationId]);
+
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
   const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
   const hasUntrackedData = untrackedProjects.length > 0 || untrackedWorkspaces.length > 0;
