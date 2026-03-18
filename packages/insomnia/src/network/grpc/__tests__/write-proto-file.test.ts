@@ -4,7 +4,8 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import * as models from '../../../models';
+import { services } from '~/insomnia-data';
+
 import { writeProtoFile } from '../write-proto-file';
 
 describe('writeProtoFile', () => {
@@ -43,8 +44,8 @@ describe('writeProtoFile', () => {
   describe('individual files', () => {
     it('can write individual file', async () => {
       // Arrange
-      const w = await models.workspace.create();
-      const pf = await models.protoFile.create({
+      const w = await services.workspace.create();
+      const pf = await services.protoFile.create({
         parentId: w._id,
         protoText: 'text',
       });
@@ -66,8 +67,8 @@ describe('writeProtoFile', () => {
 
     it('doesnt write individual file if it already exists', async () => {
       // Arrange
-      const w = await models.workspace.create();
-      const pf = await models.protoFile.create({
+      const w = await services.workspace.create();
+      const pf = await services.protoFile.create({
         parentId: w._id,
         protoText: 'text',
       });
@@ -91,12 +92,12 @@ describe('writeProtoFile', () => {
   describe('nested files', () => {
     it('can write file contained in a single folder', async () => {
       // Arrange
-      const w = await models.workspace.create();
-      const pd = await models.protoDirectory.create({
+      const w = await services.workspace.create();
+      const pd = await services.protoDirectory.create({
         parentId: w._id,
         name: 'dirName',
       });
-      const pf = await models.protoFile.create({
+      const pf = await services.protoFile.create({
         parentId: pd._id,
         name: 'hello.proto',
         protoText: 'text',
@@ -119,21 +120,21 @@ describe('writeProtoFile', () => {
 
     it('can write files contained in nested folders', async () => {
       // Arrange
-      const w = await models.workspace.create();
-      const pdRoot = await models.protoDirectory.create({
+      const w = await services.workspace.create();
+      const pdRoot = await services.protoDirectory.create({
         parentId: w._id,
         name: 'rootDir',
       });
-      const pdNested = await models.protoDirectory.create({
+      const pdNested = await services.protoDirectory.create({
         parentId: pdRoot._id,
         name: 'nestedDir',
       });
-      const pfRoot = await models.protoFile.create({
+      const pfRoot = await services.protoFile.create({
         parentId: pdRoot._id,
         name: 'root.proto',
         protoText: 'root',
       });
-      const pfNested = await models.protoFile.create({
+      const pfNested = await services.protoFile.create({
         parentId: pdNested._id,
         name: 'nested.proto',
         protoText: 'nested',
@@ -167,21 +168,21 @@ describe('writeProtoFile', () => {
 
     it('should not write file if it already exists', async () => {
       // Arrange
-      const w = await models.workspace.create();
-      const pdRoot = await models.protoDirectory.create({
+      const w = await services.workspace.create();
+      const pdRoot = await services.protoDirectory.create({
         parentId: w._id,
         name: 'rootDir',
       });
-      const pdNested = await models.protoDirectory.create({
+      const pdNested = await services.protoDirectory.create({
         parentId: pdRoot._id,
         name: 'nestedDir',
       });
-      const pfRoot = await models.protoFile.create({
+      const pfRoot = await services.protoFile.create({
         parentId: pdRoot._id,
         name: 'root.proto',
         protoText: 'root',
       });
-      const pfNested = await models.protoFile.create({
+      const pfNested = await services.protoFile.create({
         parentId: pdNested._id,
         name: 'nested.proto',
         protoText: 'nested',

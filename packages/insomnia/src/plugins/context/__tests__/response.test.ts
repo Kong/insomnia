@@ -4,7 +4,8 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import * as models from '../../../models/index';
+import { models } from '~/insomnia-data';
+
 import * as plugin from '../response';
 
 describe('init()', () => {

@@ -276,7 +276,7 @@ describe('importRaw()', () => {
       data: {
         from: 'baseEnv',
       },
-      environmentType: services.environment.EnvironmentType.KVPAIR,
+      environmentType: models.environment.EnvironmentType.KVPAIR,
       kvPairData: baseEnvironmentPair,
     });
 
@@ -346,7 +346,7 @@ describe('importRaw()', () => {
       data: {
         from: 'baseEnv',
       },
-      environmentType: services.environment.EnvironmentType.KVPAIR,
+      environmentType: models.environment.EnvironmentType.KVPAIR,
       kvPairData: baseEnvironmentPair,
     });
 

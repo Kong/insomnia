@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { type Cookie, models, type Request, type Response } from '~/insomnia-data';
+import { type Cookie, models, type Request, type Response, services } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
 import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
@@ -11,17 +11,17 @@ import { getRenderedRequestAndContext } from '../render';
 describe('export', () => {
   beforeEach(async () => {
     await db.init({ inMemoryOnly: true }, true);
-    await models.project.all();
+    await services.project.all();
     await services.settings.getOrCreate();
   });
 
   describe('exportHar()', () => {
     it('exports single requests', async () => {
-      const wrk = await models.workspace.create({
+      const wrk = await services.workspace.create({
         _id: 'wrk_1',
         name: 'Workspace',
       });
-      const req1 = await models.request.create({
+      const req1 = await services.request.create({
         _id: 'req_1',
         name: 'Request 1',
         parentId: wrk._id,
@@ -48,7 +48,7 @@ describe('export', () => {
           },
         ],
       });
-      await models.response.create({
+      await services.response.create({
         parentId: req1._id,
         statusCode: 200,
         statusMessage: 'OK',
@@ -141,11 +141,11 @@ describe('export', () => {
     });
 
     it('exports multiple requests', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_1',
         name: 'Workspace',
       });
-      const baseReq = await models.request.create({
+      const baseReq = await services.request.create({
         _id: 'req_0',
         type: models.request.type,
         name: 'Request',
@@ -160,37 +160,37 @@ describe('export', () => {
           },
         ],
       });
-      const req1 = await models.request.duplicate(baseReq);
+      const req1 = await services.request.duplicate(baseReq);
       req1._id = 'req_1';
       req1.name = 'Request 1';
       req1.headers.push({
         name: 'X-Request',
         value: '1',
       });
-      await models.request.create(req1);
-      const req2 = await models.request.duplicate(baseReq);
+      await services.request.create(req1);
+      const req2 = await services.request.duplicate(baseReq);
       req2._id = 'req_2';
       req2.name = 'Request 2';
       req2.headers.push({
         name: 'X-Request',
         value: '2',
       });
-      await models.request.create(req2);
-      const req3 = await models.request.duplicate(baseReq);
+      await services.request.create(req2);
+      const req3 = await services.request.duplicate(baseReq);
       req3._id = 'req_3';
       req3.name = 'Request 3';
       req3.headers.push({
         name: 'X-Request',
         value: '3',
       });
-      await models.request.create(req3);
-      const envBase = await models.environment.getOrCreateForParentId(workspace._id);
-      await models.environment.update(envBase, {
+      await services.request.create(req3);
+      const envBase = await services.environment.getOrCreateForParentId(workspace._id);
+      await services.environment.update(envBase, {
         data: {
           envvalue: '',
         },
       });
-      const envPublic = await models.environment.create({
+      const envPublic = await services.environment.create({
         _id: 'env_1',
         name: 'Public',
         parentId: envBase._id,
@@ -198,7 +198,7 @@ describe('export', () => {
           envvalue: 'public',
         },
       });
-      const envPrivate = await models.environment.create({
+      const envPrivate = await services.environment.create({
         _id: 'env_2',
         name: 'Private',
         isPrivate: true,
@@ -207,17 +207,17 @@ describe('export', () => {
           envvalue: 'private',
         },
       });
-      await models.response.create({
+      await services.response.create({
         _id: 'res_1',
         parentId: req1._id,
         statusCode: 204,
       });
-      await models.response.create({
+      await services.response.create({
         _id: 'res_2',
         parentId: req2._id,
         statusCode: 404,
       });
-      await models.response.create({
+      await services.response.create({
         _id: 'res_3',
         parentId: req3._id,
         statusCode: 500,
@@ -390,7 +390,7 @@ describe('export', () => {
 
   describe('exportHarWithRequest()', () => {
     it('renders does it correctly', async () => {
-      const workspace = await models.workspace.create();
+      const workspace = await services.workspace.create();
       const cookies: Cookie[] = [
         {
           id: '',
@@ -406,8 +406,8 @@ describe('export', () => {
           lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
         },
       ];
-      const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
-      await models.cookieJar.update(cookieJar, {
+      const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+      await services.cookieJar.update(cookieJar, {
         parentId: workspace._id,
         cookies,
       });
@@ -483,7 +483,7 @@ describe('export', () => {
     });
 
     it('export multipart request with file', async () => {
-      const workspace = await models.workspace.create();
+      const workspace = await services.workspace.create();
       const request: Request = {
         ...models.request.init(),
         _id: 'req_123',

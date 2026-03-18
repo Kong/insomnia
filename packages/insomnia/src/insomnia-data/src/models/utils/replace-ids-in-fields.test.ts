@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { replaceIdsInFields } from '../replace-ids-in-fields';
+import { replaceIdsInFields } from './replace-ids-in-fields';
 
 describe('replaceIdsInFields', () => {
   const idMapping = new Map([

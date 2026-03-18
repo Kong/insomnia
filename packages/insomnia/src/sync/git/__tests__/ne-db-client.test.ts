@@ -11,8 +11,8 @@ import { createBuilder } from '@develohpanda/fluent-builder';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
 
-import { database as db } from '../../../common/database';
-import * as models from '../../../models';
+import { database as db, models, services } from '~/insomnia-data';
+
 import { workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';
 import { NeDBClient } from '../ne-db-client';
@@ -32,13 +32,13 @@ describe('NeDBClient', () => {
     await db.init({ inMemoryOnly: true }, true);
 
     // Create test project
-    await models.project.create({
+    await services.project.create({
       _id: 'proj_test',
       name: 'Test Project',
     });
 
     // Create test workspace
-    await models.workspace.create({
+    await services.workspace.create({
       _id: 'wrk_test',
       name: 'Test Workspace',
       parentId: 'proj_test',
@@ -46,7 +46,7 @@ describe('NeDBClient', () => {
     });
 
     // Create test requests
-    await models.request.create({
+    await services.request.create({
       _id: 'req_test_1',
       name: 'Test Request 1',
       parentId: 'wrk_test',
@@ -55,7 +55,7 @@ describe('NeDBClient', () => {
       metaSortKey: 0,
     });
 
-    await models.request.create({
+    await services.request.create({
       _id: 'req_test_2',
       name: 'Test Request 2',
       parentId: 'wrk_test',
@@ -65,7 +65,7 @@ describe('NeDBClient', () => {
     });
 
     // Create private request (should not be accessible)
-    await models.request.create({
+    await services.request.create({
       _id: 'req_private',
       name: 'Private Request',
       parentId: 'wrk_test',
@@ -76,7 +76,7 @@ describe('NeDBClient', () => {
     });
 
     // Create environment
-    await models.environment.create({
+    await services.environment.create({
       _id: 'env_test',
       name: 'Test Environment',
       parentId: 'wrk_test',
