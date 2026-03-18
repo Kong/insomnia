@@ -1,6 +1,7 @@
+// @vitest-environment node
 import { describe, expect, it } from 'vitest';
 
-import { harToSdkParams } from '../generate-code-modal';
+import { harToSdkParams } from '../generate-code-modal.utils';
 
 const mockSdk = { id: 'sdk-123', languages: ['typescript', 'python'] };
 

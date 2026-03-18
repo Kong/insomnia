@@ -8,7 +8,6 @@ import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codem
 import stainlessLogo from '~/ui/images/stainless-logo.png';
 
 import { exportHarWithRequest, type HarRequest } from '../../../common/har';
-import { tryParseJson } from '../../../common/misc';
 import type { Request } from '../../../models/request';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
@@ -17,6 +16,7 @@ import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
+import { harToSdkParams } from './generate-code-modal.utils';
 
 // Maps language/target keys to CodeMirror modes where the name differs
 const LANGUAGE_MODE_MAP: Record<string, string> = {
@@ -59,35 +59,6 @@ export interface GenerateCodeModalHandle {
   hide: () => void;
 }
 
-export function harToSdkParams(sdk: StainlessSdk, language: string, har: HarRequest) {
-  let body: Record<string, unknown> | undefined;
-  let bodyWarning: string | undefined;
-
-  if (har.postData) {
-    if (har.postData.params) {
-      body = Object.fromEntries(har.postData.params.map(({ name, value }) => [name, value ?? '']));
-    } else if (har.postData.text) {
-      body = tryParseJson(har.postData.text);
-      if (body === undefined) {
-        bodyWarning = 'Request body could not be represented as a JSON object and was omitted from the snippet generation request.';
-      }
-    }
-  }
-
-  return {
-    id: sdk.id,
-    language,
-    method: har.method,
-    path: new URL(har.url).pathname,
-    parameters: [
-      ...har.queryString.map(({ name, value }) => ({ in: 'query' as const, name, value })),
-      ...har.headers.map(({ name, value }) => ({ in: 'header' as const, name, value })),
-      ...har.cookies.map(({ name, value }) => ({ in: 'cookie' as const, name, value })),
-    ],
-    body,
-    bodyWarning,
-  };
-}
 
 export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((props, ref) => {
   const modalRef = useRef<ModalHandle>(null);
