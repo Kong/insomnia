@@ -66,9 +66,14 @@ export const encryptSecretValue = (rawValue: string, symmetricKey: JsonWebKey) =
     // invalid symmetricKey
     return rawValue;
   }
-  const encryptResult = encryptAES(symmetricKey, rawValue);
-  const encryptedValue = base64encode(encryptResult);
-  return encryptedValue;
+  try {
+    const encryptResult = encryptAES(symmetricKey, rawValue);
+    const encryptedValue = base64encode(encryptResult);
+    return encryptedValue;
+  } catch {
+    // return original value if encryption fails
+    return rawValue;
+  }
 };
 
 export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWebKey) => {
