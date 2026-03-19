@@ -5,6 +5,7 @@ import clone from 'clone';
 import orderedJSON from 'json-order';
 
 import { type CaCertificate, services } from '~/insomnia-data';
+import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type {
   ExecutionOption,
@@ -24,7 +25,6 @@ import type { Cookie, CookieJar } from '../models/cookie-jar';
 import {
   type Environment,
   EnvironmentType,
-  getKVPairFromData,
   type UserUploadEnvironment,
   vaultEnvironmentPath,
 } from '../models/environment';

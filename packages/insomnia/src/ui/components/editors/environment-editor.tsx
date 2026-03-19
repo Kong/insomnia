@@ -2,9 +2,9 @@ import orderedJSON from 'json-order';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+import { checkNestedKeys } from '~/utils/environment-utils';
 
 import { isWindows, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
-import { checkNestedKeys } from './environment-utils';
 
 export interface EnvironmentInfo {
   object: Record<string, any>;

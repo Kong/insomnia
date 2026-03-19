@@ -1,3 +1,4 @@
+import { type AESMessage, decryptAES, encryptAES } from '../account/crypt';
 import { getInsomniaVaultKey, PLAYWRIGHT } from '../common/constants';
 import * as settings from '../models/settings';
 
@@ -58,4 +59,28 @@ export const getVaultKeyFromStorage = async (accountId: string) => {
 
 export const deleteVaultKeyFromStorage = async (accountId: string) => {
   await window.main.secretStorage.deleteSecret(getVaultSecretKey(accountId));
+};
+
+export const encryptSecretValue = (rawValue: string, symmetricKey: JsonWebKey) => {
+  if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
+    // invalid symmetricKey
+    return rawValue;
+  }
+  const encryptResult = encryptAES(symmetricKey, rawValue);
+  const encryptedValue = base64encode(encryptResult);
+  return encryptedValue;
+};
+
+export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWebKey) => {
+  if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
+    // invalid symmetricKey
+    return encryptedValue;
+  }
+  try {
+    const jsonWebKey = base64decode(encryptedValue, true) as AESMessage;
+    return decryptAES(symmetricKey, jsonWebKey);
+  } catch {
+    // return origin value if failed to decrypt
+    return encryptedValue;
+  }
 };

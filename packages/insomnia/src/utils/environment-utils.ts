@@ -1,15 +1,16 @@
+import orderedJSON from 'json-order';
+
+import { JSON_ORDER_SEPARATOR } from '../common/constants';
+import { generateId } from '../common/misc';
 import {
   type Environment,
   type EnvironmentKvPairData,
-  EnvironmentType,
-  getKVPairFromData,
+  EnvironmentKvPairDataType,
+  vaultEnvironmentMaskValue,
   vaultEnvironmentPath,
   vaultEnvironmentRuntimePath,
-} from '../../../models/environment';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
-import { showModal } from '../modals';
-import { AlertModal } from '../modals/alert-modal';
-import { AskModal } from '../modals/ask-modal';
+} from '../models/environment';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../templating';
 
 // NeDB field names cannot begin with '$' or contain a period '.'
 // Docs: https://github.com/DeNA/nedb#inserting-documents
@@ -64,45 +65,74 @@ export function checkNestedKeys(obj: Record<string, any>, isRoot = true): string
   return null;
 }
 
-export function handleToggleEnvironmentType(
-  isSelected: boolean,
-  environment: Pick<Environment, 'data' | 'dataPropertyOrder' | 'kvPairData'>,
-  isValidJSON: boolean,
-  updateEnvironmentTypeRequest: (type: EnvironmentType, kvPairData: EnvironmentKvPairData[]) => void,
-) {
-  const newEnvironmentType = isSelected ? EnvironmentType.JSON : EnvironmentType.KVPAIR;
-  // clear kvPairData when switch to json view, otherwise convert json data to kvPairData
-  const kvPairData = isSelected ? [] : getKVPairFromData(environment.data, environment.dataPropertyOrder);
-  const foundDisabledItem = isSelected && environment.kvPairData?.some(pair => !pair.enabled);
-  const foundDuplicateNameItem =
-    isSelected &&
-    environment.kvPairData?.some((pair, idx) =>
-      environment.kvPairData
-        ?.slice(idx + 1)
-        .some(newPair => pair.name.trim() === newPair.name.trim() && newPair.enabled),
-    );
-  if (!isValidJSON && newEnvironmentType === EnvironmentType.KVPAIR) {
-    showModal(AlertModal, {
-      title: 'Error',
-      message: 'Please modify and fix the JSON string error before switch to Table view',
-    });
-  } else if (foundDisabledItem || foundDuplicateNameItem) {
-    showModal(AskModal, {
-      title: 'Change Environment Type',
-      message: (
-        <>
-          {foundDisabledItem && <p>All disabled items will be lost.</p>}
-          {foundDuplicateNameItem && <p>Items with same name will be lost except the last one.</p>}
-          <p>Are you sure to continue?</p>
-        </>
-      ),
-      onDone: async (saidYes: boolean) => {
-        if (saidYes) {
-          updateEnvironmentTypeRequest(newEnvironmentType, kvPairData);
-        }
-      },
-    });
-  } else {
-    updateEnvironmentTypeRequest(newEnvironmentType, kvPairData);
-  }
+export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: Record<string, any> | null) {
+  const ordered = orderedJSON.order(data, dataPropertyOrder, JSON_ORDER_SEPARATOR);
+  const kvPair: EnvironmentKvPairData[] = [];
+  Object.keys(ordered).forEach(key => {
+    const val = ordered[key];
+    // get all secret items from vaultEnvironmentPath
+    if (key === vaultEnvironmentPath && typeof val === 'object') {
+      Object.keys(val).forEach(secretKey => {
+        kvPair.push({
+          id: generateId('envPair'),
+          name: secretKey,
+          value: val[secretKey],
+          type: EnvironmentKvPairDataType.SECRET,
+          enabled: true,
+        });
+      });
+    } else {
+      const isValidObject = val && typeof val === 'object' && data !== null;
+      kvPair.push({
+        id: generateId('envPair'),
+        name: key,
+        value: isValidObject ? JSON.stringify(val) : String(val),
+        type: isValidObject ? EnvironmentKvPairDataType.JSON : EnvironmentKvPairDataType.STRING,
+        enabled: true,
+      });
+    }
+  });
+  return kvPair;
 }
+
+export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
+  const data: Record<string, any> = {};
+  kvPair.forEach(pair => {
+    const { name, value, type, enabled } = pair;
+    if (enabled) {
+      if (type === EnvironmentKvPairDataType.SECRET) {
+        if (!data[vaultEnvironmentPath]) {
+          // create object storing all secret items
+          data[vaultEnvironmentPath] = {};
+        }
+        data[vaultEnvironmentPath][name] = value;
+      } else {
+        data[name] = type === EnvironmentKvPairDataType.JSON ? JSON.parse(value) : value;
+      }
+    }
+  });
+  return {
+    data,
+    dataPropertyOrder: null,
+  };
+}
+
+// mask vault environment variable if necessary
+export const maskVaultEnvironmentData = (environment: Environment) => {
+  if (environment.isPrivate) {
+    const { data, kvPairData } = environment;
+    const shouldMask = kvPairData?.some(pair => pair.type === EnvironmentKvPairDataType.SECRET);
+    if (shouldMask) {
+      kvPairData?.forEach(pair => {
+        const { type } = pair;
+        if (type === EnvironmentKvPairDataType.SECRET) {
+          pair.value = vaultEnvironmentMaskValue;
+        }
+      });
+      Object.keys(data[vaultEnvironmentPath]).forEach(vaultKey => {
+        data[vaultEnvironmentPath][vaultKey] = vaultEnvironmentMaskValue;
+      });
+    }
+  }
+  return environment;
+};
