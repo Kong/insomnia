@@ -6,6 +6,7 @@ import electron from 'electron';
 
 import { invariant } from '~/utils/invariant';
 
+import { SECURITY_SETTINGS_PATH_LABEL } from '../common/misc';
 import * as models from '../models/index';
 
 export const isPathAllowed = (filePath: string, userAllowList: string[]) => {
@@ -29,7 +30,7 @@ export const secureReadFile = async (filePath: string): Promise<string> => {
 
   invariant(
     isAllowed,
-    `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia Preferences → Security`,
+    `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in ${SECURITY_SETTINGS_PATH_LABEL}`,
   );
 
   return fs.promises.readFile(securedPath, { encoding: 'utf8' });

@@ -9,7 +9,7 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../../common/database';
 import { docsAfterResponseScript } from '../../../common/documentation';
-import { delay, fnOrString } from '../../../common/misc';
+import { delay, fnOrString, SECURITY_SETTINGS_PATH_LABEL } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
 import * as models from '../../../models';
 import { type CloudProviderCredential, type as cloudCredentialModelType } from '../../../models/cloud-credential';
@@ -254,7 +254,7 @@ export const TagEditor: FC<Props> = props => {
   let previewElement;
   if (error) {
     // detects a string to replace with a link to settings
-    const linkText = 'Insomnia Preferences → Security';
+    const linkText = SECURITY_SETTINGS_PATH_LABEL;
     previewElement = error.endsWith(linkText) ? (
       <div className="danger min-h-[115px] rounded-md border border-solid border-(--hl-md) bg-(--hl-xxs) p-(--padding-sm)">
         {error.slice(0, error.length - linkText.length)}
