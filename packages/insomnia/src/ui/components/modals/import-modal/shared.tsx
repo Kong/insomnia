@@ -181,6 +181,30 @@ export const SupportedFormats = () => {
   );
 };
 
+const WORKSPACE_SCOPE_LABELS: Record<string, { singular: string; plural: string }> = {
+  'mcp': { singular: 'MCP Client', plural: 'MCP Clients' },
+  'design': { singular: 'Document', plural: 'Documents' },
+  'collection': { singular: 'Collection', plural: 'Collections' },
+  'environment': { singular: 'Environment', plural: 'Environments' },
+  'mock-server': { singular: 'Mock Server', plural: 'Mock Servers' },
+};
+
+export function isApiSpecScanResult(scanResult: ScanResult) {
+  return (
+    (scanResult.apiSpecs?.length ?? 0) > 0 || scanResult.type?.id === 'openapi3' || scanResult.type?.id === 'swagger2'
+  );
+}
+
+function getWorkspaceCountsByScope(workspaces: { scope?: string }[], scanResult: ScanResult) {
+  const defaultScope = isApiSpecScanResult(scanResult) ? 'design' : 'collection';
+  const counts = new Map<string, number>();
+  for (const w of workspaces) {
+    const scope = w.scope ?? defaultScope;
+    counts.set(scope, (counts.get(scope) ?? 0) + 1);
+  }
+  return Array.from(counts.entries(), ([scope, count]) => ({ scope, count }));
+}
+
 export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const keyRandom = useMemo(() => Math.random(), [scanResults]);
@@ -242,13 +266,18 @@ export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] })
                 </tr>
               ) : (
                 <Fragment>
-                  {scanResult.workspaces && scanResult.workspaces?.length > 0 && (
-                    <tr key={scanResult.workspaces[0]._id} className="table--no-outline-row">
-                      <td>
-                        {scanResult.workspaces.length} {scanResult.workspaces.length === 1 ? 'Workspace' : 'Workspaces'}
-                      </td>
-                    </tr>
-                  )}
+                  {scanResult.workspaces &&
+                    scanResult.workspaces.length > 0 &&
+                    getWorkspaceCountsByScope(scanResult.workspaces, scanResult).map(({ scope, count }) => (
+                      <tr key={scope} className="table--no-outline-row">
+                        <td>
+                          {count}{' '}
+                          {count === 1
+                            ? (WORKSPACE_SCOPE_LABELS[scope]?.singular ?? 'Workspace')
+                            : (WORKSPACE_SCOPE_LABELS[scope]?.plural ?? 'Workspaces')}
+                        </td>
+                      </tr>
+                    ))}
                   {scanResult.requests && scanResult.requests?.length > 0 && (
                     <tr key={scanResult.requests[0]._id} className="table--no-outline-row">
                       <td>

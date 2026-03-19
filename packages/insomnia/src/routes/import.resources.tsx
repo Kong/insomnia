@@ -1,10 +1,19 @@
 import { href } from 'react-router';
 
-import { importResourcesToProject, importResourcesToWorkspace } from '~/common/import';
+import { database as db } from '~/common/database';
+import {
+  clearResourceCache,
+  findExistingImportedSpec,
+  findRequestInExistingWorkspace,
+  importResourcesToProject,
+  importResourcesToWorkspace,
+  resolveOperationId,
+} from '~/common/import';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { isRemoteProject } from '~/models/project';
+import { isRequest, type as requestType } from '~/models/request';
 import type { Workspace } from '~/models/workspace';
 import {
   initializeLocalBackendProjectAndMarkForSync,
@@ -21,6 +30,9 @@ interface ImportScannedResourcesParams {
   organizationId: string;
   projectId: string;
   workspaceId?: string;
+  endpoint?: string;
+  operationId?: string;
+  skipImportIfDuplicate?: boolean;
   options?: {
     overrideBaseEnvironmentData?: boolean;
   };
@@ -61,14 +73,72 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(typeof organizationId === 'string', 'OrganizationId is required.');
     invariant(typeof projectId === 'string', 'ProjectId is required.');
 
-    const result = await importScannedResources({
+    const opInfo = data.operationId ? resolveOperationId(data.operationId) : undefined;
+
+    if (!workspaceId && data.skipImportIfDuplicate) {
+      const existing = await findExistingImportedSpec(projectId);
+      if (existing) {
+        const matchedRequest = await findRequestInExistingWorkspace(
+          existing.workspace,
+          data.endpoint,
+          data.operationId,
+        );
+        clearResourceCache();
+        return {
+          done: true,
+          singleImportedWorkspace: existing.workspace,
+          singleImportedRequest: matchedRequest,
+        };
+      }
+    }
+
+    const importedWorkspaces = await importScannedResources({
       organizationId,
       projectId,
       workspaceId,
       options,
     });
+
+    // endpoint here is formatted as {method},{path}
+    // example: GET,https://rest.rodeo/api
+    if (data.endpoint && Array.isArray(importedWorkspaces) && importedWorkspaces.length > 0) {
+      const [method, path] = data.endpoint.split(',', 2);
+      for (const ws of importedWorkspaces) {
+        invariant(ws, 'Workspace not found');
+        if (ws.scope !== 'design') continue;
+        const allDocs = await db.getWithDescendants(ws, [requestType]);
+        const match = allDocs.find(d => {
+          if (!isRequest(d) || d.method.toUpperCase() !== method.toUpperCase()) {
+            return false;
+          }
+          return d.url.toLowerCase().endsWith(path.toLowerCase());
+        });
+        if (match && isRequest(match)) {
+          return { done: true, singleImportedWorkspace: ws, singleImportedRequest: match };
+        }
+      }
+    }
+
+    // operationId is an OAS operationId like "get-users"
+    if (data.operationId && opInfo && Array.isArray(importedWorkspaces) && importedWorkspaces.length > 0) {
+      for (const ws of importedWorkspaces) {
+        invariant(ws, 'Workspace not found');
+        const allDocs = await db.getWithDescendants(ws, [requestType]);
+        const match = allDocs.find(d => {
+          if (!isRequest(d) || d.method.toUpperCase() !== opInfo.method.toUpperCase()) {
+            return false;
+          }
+          return d.name?.toLowerCase() === opInfo.name.toLowerCase();
+        });
+        if (match && isRequest(match)) {
+          return { done: true, singleImportedWorkspace: ws, singleImportedRequest: match };
+        }
+      }
+    }
+
     // When navigating, we are interested in knowing if there was only one workspace and only one request
-    const singleImportedWorkspace = Array.isArray(result) && result.length === 1 && result[0];
+    const singleImportedWorkspace =
+      Array.isArray(importedWorkspaces) && importedWorkspaces.length === 1 && importedWorkspaces[0];
     const requests = singleImportedWorkspace && (await requestOperations.findByParentId(singleImportedWorkspace._id));
     const singleImportedRequest = Array.isArray(requests) && requests.length === 1 && requests.at(0);
     return { done: true, singleImportedWorkspace, singleImportedRequest };

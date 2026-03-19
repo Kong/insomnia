@@ -22,7 +22,6 @@ import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import type { Settings, UserSession } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import type { RequestBody, RequestParameter } from '~/models/request';
 import { executePluginMainAction, reloadPlugins } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
@@ -39,13 +38,12 @@ import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
-import { ImportModal, type ImportSourceType } from '~/ui/components/modals/import-modal/import-modal';
+import { ImportModal, type ImportSource, validateCurl } from '~/ui/components/modals/import-modal/import-modal';
 import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/root';
 
@@ -311,7 +309,7 @@ const Root = () => {
     projectId: string;
   };
 
-  const [importObject, setImportObject] = useState({ type: 'clipboard', defaultValue: '' } as ImportSourceType);
+  const [importObject, setImportObject] = useState<ImportSource>({ type: 'clipboard', defaultValue: '' });
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: logoutSubmit } = useLogoutFetcher();
@@ -362,126 +360,31 @@ const Root = () => {
             type: 'uri',
             defaultValue: params.uri,
             origin: sanitizeUrlAndExtractOrigin(params.origin),
+            endpoint: params.endpoint,
+            operationId: params.operationId,
+            autoScan: true,
+          });
+        }
+        if (params.mcp) {
+          return setImportObject({
+            type: 'mcp',
+            defaultValue: params.mcp,
+            origin: sanitizeUrlAndExtractOrigin(params.origin),
+            autoScan: true,
           });
         }
         if (params.curl) {
-          // Validate and auto-import if curl is valid, skipping the import UI
-          if (organizationId && projectId) {
-            try {
-              const parseResult = await window.main.parseImport({ contentStr: params.curl }, { importerId: 'curl' });
-              let importedRequest = parseResult.data?.resources?.[0];
-              invariant(parseResult.data?.resources?.length === 1, 'Cannot auto import multiple requests');
-              if (importedRequest?.url) {
-                // set defaults
-                importedRequest = {
-                  url: '',
-                  body: '',
-                  parameters: [],
-                  headers: [],
-                  authentication: {},
-                  ...importedRequest,
-                  method: (importedRequest.method || 'GET').toUpperCase(),
-                };
-                // use label to create mcp client, search for existing collection with matching name, or make new collection
-                let importedWorkspace = null;
-                if (params.scope === 'mcp') {
-                  importedWorkspace = await models.workspace.create({
-                    parentId: projectId,
-                    name: params.label || 'Imported MCP Client',
-                    scope: 'mcp',
-                  });
-                } else {
-                  const workspaces = await models.workspace.findByParentId(projectId);
-                  importedWorkspace = workspaces.find(
-                    workspace => workspace.name === params.label && workspace.scope === 'collection',
-                  );
-                  if (!importedWorkspace) {
-                    importedWorkspace = await models.workspace.create({
-                      parentId: projectId,
-                      name: params.label || 'Imported Collection',
-                    });
-                  }
-                }
-                invariant(importedWorkspace, 'Failed to create workspace for imported request');
-                await models.environment.getOrCreateForParentId(importedWorkspace._id);
-                await models.cookieJar.getOrCreateForParentId(importedWorkspace._id);
-
-                const newRequest = await (params.scope === 'mcp'
-                  ? models.mcpRequest.create({
-                      parentId: importedWorkspace._id,
-                      name: params.label || 'Imported MCP Request',
-                      url: importedRequest.url,
-                      headers: importedRequest.headers,
-                      authentication: importedRequest.authentication,
-                    })
-                  : models.request.create({
-                      parentId: importedWorkspace._id,
-                      name: params.label || 'Imported Request',
-                      url: importedRequest.url,
-                      method: importedRequest.method,
-                      headers: importedRequest.headers,
-                      authentication: importedRequest.authentication,
-                      parameters: importedRequest.parameters as RequestParameter[],
-                      body: importedRequest.body as RequestBody,
-                    }));
-
-                window.main.trackSegmentEvent({
-                  event: SegmentEvent.importCompleted,
-                  properties: {
-                    requests: 1,
-                  },
-                });
-
-                return navigate(
-                  `/organization/${organizationId}/project/${projectId}/workspace/${importedWorkspace._id}/debug/request/${newRequest._id}`,
-                );
-              }
-            } catch (err) {
-              console.error('[deep-link] Failed to auto-import curl:', err);
-            }
-          }
+          const validation = await validateCurl(params.curl);
+          const isValid = validation !== 'Invalid cURL request'; // brittle
           return setImportObject({
             type: 'curl',
             defaultValue: params.curl,
             origin: sanitizeUrlAndExtractOrigin(params.origin),
-            label: params.label,
-            scope: params.scope,
+            endpoint: params.endpoint,
+            operationId: params.operationId,
+            autoScan: isValid,
           });
         }
-      }
-      if (urlWithoutParams === 'insomnia://plugins/install') {
-        if (!params.name || params.name.trim() === '') {
-          return showError({
-            title: 'Plugin Install',
-            message: 'Plugin name is required',
-          });
-        }
-
-        return showModal(AskModal, {
-          title: 'Plugin Install',
-          message: (
-            <p className="text-(--hl)">
-              Do you want to install <i className="font-bold text-(--hl)">{params.name}</i>?
-            </p>
-          ),
-          yesText: 'Install',
-          noText: 'Cancel',
-          onDone: async (isYes: boolean) => {
-            if (isYes) {
-              try {
-                // TODO (pavkout): Remove second parameter when we will decide about the @scoped packages name validation
-                await window.main.installPlugin(params.name.trim(), true);
-                showModal(SettingsModal, { tab: 'plugins' });
-              } catch (err) {
-                showError({
-                  title: 'Plugin Install',
-                  message: 'Failed to install plugin',
-                  error: err.message,
-                });
-              }
-            }
-          },
-        });
       }
       if (urlWithoutParams === 'insomnia://plugins/theme') {
         const parsedTheme = JSON.parse(decodeURIComponent(params.theme));
@@ -662,7 +565,6 @@ const Root = () => {
       {importObject.defaultValue && (
         <ImportModal
           onHide={() => setImportObject({ type: 'clipboard', defaultValue: '' })}
-          projectName="Insomnia"
           defaultProjectId={projectId}
           organizationId={organizationId}
           from={importObject}

@@ -70,7 +70,7 @@ test.describe('Cloud Sync', () => {
     // Ensure body is restored
     await page.getByRole('tab', { name: 'Body' }).click();
     await page.getByRole('button', { name: 'Send' }).click();
-    await expect.soft(page.getByText('foo=bar')).toBeHidden();
+    await expect.soft(page.getByTestId('response-pane').getByText('foo=bar')).toBeHidden();
 
     // go back and select mcp project
     await page
