@@ -71,7 +71,7 @@ export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: 
   Object.keys(ordered).forEach(key => {
     const val = ordered[key];
     // get all secret items from vaultEnvironmentPath
-    if (key === vaultEnvironmentPath && typeof val === 'object') {
+    if (key === vaultEnvironmentPath && typeof val === 'object' && !Array.isArray(val)) {
       Object.keys(val).forEach(secretKey => {
         kvPair.push({
           id: generateId('envPair'),
@@ -129,9 +129,16 @@ export const maskVaultEnvironmentData = (environment: Environment) => {
           pair.value = vaultEnvironmentMaskValue;
         }
       });
-      Object.keys(data[vaultEnvironmentPath]).forEach(vaultKey => {
-        data[vaultEnvironmentPath][vaultKey] = vaultEnvironmentMaskValue;
-      });
+      if (
+        data &&
+        typeof data === 'object' &&
+        data[vaultEnvironmentPath] &&
+        typeof data[vaultEnvironmentPath] === 'object'
+      ) {
+        Object.keys(data[vaultEnvironmentPath]).forEach(vaultKey => {
+          data[vaultEnvironmentPath][vaultKey] = vaultEnvironmentMaskValue;
+        });
+      }
     }
   }
   return environment;
