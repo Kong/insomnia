@@ -102,36 +102,53 @@ export const createNedbDatabase = <O = initOptions>(
     /** duplicate doc and its descendents recursively */
     duplicate: async function <T extends BaseModel>(originalDoc: T, patch: Partial<T> = {}) {
       const flushId = await database.bufferChanges();
+      const descendantMap = models.getAllDescendantMap();
 
-      async function next<T extends BaseModel>(docToCopy: T, patch: Partial<T>) {
-        const model = mustGetModel(docToCopy.type);
-        const overrides = {
-          _id: generateId(model.prefix),
-          modified: Date.now(),
-          created: Date.now(),
-          type: docToCopy.type, // Ensure this is not overwritten by the patch
-        };
+      const idMapping = new Map<string, string>();
+      const allDocs: { doc: BaseModel; parentId: string }[] = [];
 
-        // 1. Copy the doc
-        const newDoc = { ...docToCopy, ...patch, ...overrides };
+      async function collectDescendants(doc: BaseModel): Promise<void> {
+        const model = mustGetModel(doc.type);
+        idMapping.set(doc._id, generateId(model.prefix));
 
-        const createdDoc = await nedbBucket[docToCopy.type].insertAsync(newDoc);
-        // 2. Get all the children
-        for (const type of Object.keys(nedbBucket) as AllTypes[]) {
-          // Note: We never want to duplicate a response
-          if (!models.canDuplicate(type)) {
-            continue;
-          }
-
-          for (const doc of await database.find(type, { parentId: docToCopy._id })) {
-            await next(doc, { parentId: createdDoc._id });
+        const validChildTypes = (descendantMap[doc.type] ?? []).filter(t => models.canDuplicate(t));
+        for (const childType of validChildTypes) {
+          for (const child of await database.find(childType, { parentId: doc._id })) {
+            allDocs.push({ doc: child, parentId: doc._id });
+            await collectDescendants(child);
           }
         }
+      }
+      await collectDescendants(originalDoc);
 
-        return createdDoc;
+      const updateTime = Date.now();
+
+      // Duplicate the root document
+      const rootRewritten: T = models.rewriteReferences(originalDoc, idMapping);
+      const rootDoc = {
+        ...rootRewritten,
+        ...patch,
+        _id: idMapping.get(originalDoc._id)!,
+        modified: updateTime,
+        created: updateTime,
+        type: originalDoc.type,
+      };
+      const createdDoc = (await nedbBucket[originalDoc.type].insertAsync(rootDoc)) as T;
+
+      // Duplicate all descendants
+      for (const { doc, parentId } of allDocs) {
+        const rewritten = models.rewriteReferences(doc, idMapping);
+        const newDoc = {
+          ...rewritten,
+          _id: idMapping.get(doc._id)!,
+          parentId: idMapping.get(parentId)!,
+          modified: updateTime,
+          created: updateTime,
+          type: doc.type,
+        };
+        await nedbBucket[doc.type].insertAsync(newDoc);
       }
 
-      const createdDoc = await next(originalDoc, patch);
       await database.flushChanges(flushId);
       return createdDoc;
     },

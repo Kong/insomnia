@@ -766,6 +766,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                 <Button
                   className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={handleExportProjectToFile}
+                  data-testid="export-project-button"
                 >
                   {`Export files from the "${projectName}" ${strings.project.singular}`}
                 </Button>
@@ -963,6 +964,7 @@ const ExportSection = ({
       <Button
         className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         onPress={handleExportProjectToFile}
+        data-testid="export-project-button"
       >
         {`Export the "${projectName}" ${strings.project.singular}`}
       </Button>

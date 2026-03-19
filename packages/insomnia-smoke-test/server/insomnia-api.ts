@@ -72,6 +72,9 @@ let organizationFeatures = {
     gitSync: {
       enabled: true,
     },
+    bulkImport: {
+      enabled: true,
+    },
   },
 };
 

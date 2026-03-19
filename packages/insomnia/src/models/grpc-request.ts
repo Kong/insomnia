@@ -1,4 +1,5 @@
 import { database as db } from '../common/database';
+import { replaceIdsInFields } from './helpers/replace-ids-in-fields';
 import type { BaseModel } from './types';
 
 export const name = 'gRPC Request';
@@ -129,4 +130,12 @@ export async function duplicate(request: GrpcRequest, patch: Partial<GrpcRequest
 
 export function all() {
   return db.find<GrpcRequest>(type);
+}
+
+export function rewriteReferences(request: GrpcRequest, idMapping: Map<string, string>): GrpcRequest {
+  return {
+    ...request,
+    protoFileId: request.protoFileId ? idMapping.get(request.protoFileId) : undefined,
+    ...replaceIdsInFields(request, ['url', 'body', 'metadata'], idMapping),
+  };
 }

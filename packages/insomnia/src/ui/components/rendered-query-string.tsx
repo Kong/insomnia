@@ -6,6 +6,7 @@ import { SegmentEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
+import { SECURITY_SETTINGS_PATH_LABEL } from '../../common/misc';
 import * as models from '../../models';
 import {
   PATH_PARAMETER_REGEX,
@@ -148,7 +149,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
   const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
 
   // detects a string to replace with a link to settings
-  const linkText = 'Insomnia Preferences → Security';
+  const linkText = SECURITY_SETTINGS_PATH_LABEL;
   const hasLink = previewString.endsWith(linkText);
   const modifiedString = hasLink ? previewString.slice(0, previewString.length - linkText.length) : previewString;
 

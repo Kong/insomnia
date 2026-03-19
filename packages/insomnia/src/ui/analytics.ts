@@ -73,9 +73,6 @@ export enum SegmentEvent {
   filterCreatedProjects = 'Filter Created Projects',
   filterCreatedRequests = 'Filter Created Requests',
   filterCreatedResponseBody = 'Filter Created Response Body',
-  // TODO(INS-1912): Remove in 12.5
-  tempOrganizationOpened = 'temp_organization_opened',
-  tempProjectOpened = 'temp_project_opened',
 
   // INS-2120: Segment events to track common actions
   homepageFiltered = 'homepage-filtered',

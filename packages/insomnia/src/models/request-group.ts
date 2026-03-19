@@ -1,5 +1,6 @@
 import { database as db } from '../common/database';
 import type { EnvironmentKvPairData, EnvironmentType } from './environment';
+import { replaceIdsInFields } from './helpers/replace-ids-in-fields';
 import type { RequestAuthentication, RequestHeader } from './request';
 import type { BaseModel } from './types';
 
@@ -106,3 +107,14 @@ export async function duplicate(requestGroup: RequestGroup, patch: Partial<Reque
 }
 
 export const isRequestGroupId = (id?: string | null) => id?.startsWith(prefix);
+
+export function rewriteReferences(group: RequestGroup, idMapping: Map<string, string>): RequestGroup {
+  return {
+    ...group,
+    ...replaceIdsInFields(
+      group,
+      ['authentication', 'headers', 'preRequestScript', 'afterResponseScript', 'environment', 'kvPairData'],
+      idMapping,
+    ),
+  };
+}
