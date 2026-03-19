@@ -246,20 +246,6 @@ const InviteModal: FC<{
                         />
                       ))}
                     </ListBox>
-                    <PaginationBar
-                      isPrevDisabled={page === 0}
-                      isNextDisabled={total <= ItemsPerPage || total <= (page + 1) * ItemsPerPage}
-                      isHidden={total <= ItemsPerPage && page === 0}
-                      onPrevPress={() => {
-                        collaboratorsListLoader.load({ organizationId, page: page - 1, per_page: ItemsPerPage });
-                        setSearchParams(getSearchParamsString(searchParams, { page: page - 1 }));
-                      }}
-                      onNextPress={() => {
-                        collaboratorsListLoader.load({ organizationId, page: page + 1, per_page: ItemsPerPage });
-
-                        setSearchParams(getSearchParamsString(searchParams, { page: page + 1 }));
-                      }}
-                    />
                     {error && (
                       <div className="mt-[16px] flex justify-center">
                         <p className="text-[12px] text-(--color-danger)">{error}</p>
@@ -268,6 +254,20 @@ const InviteModal: FC<{
                   </>
                 )}
               </div>
+              <PaginationBar
+                isPrevDisabled={page === 0}
+                isNextDisabled={total <= ItemsPerPage || total <= (page + 1) * ItemsPerPage}
+                isHidden={total <= ItemsPerPage && page === 0}
+                onPrevPress={() => {
+                  collaboratorsListLoader.load({ organizationId, page: page - 1, per_page: ItemsPerPage });
+                  setSearchParams(getSearchParamsString(searchParams, { page: page - 1 }));
+                }}
+                onNextPress={() => {
+                  collaboratorsListLoader.load({ organizationId, page: page + 1, per_page: ItemsPerPage });
+
+                  setSearchParams(getSearchParamsString(searchParams, { page: page + 1 }));
+                }}
+              />
             </div>
           )}
         </Dialog>
