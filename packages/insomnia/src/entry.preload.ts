@@ -207,6 +207,7 @@ const main: Window['main'] = {
   secretStorage,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
+  setCurrentOrganizationId: organizationId => ipcRenderer.send('analytics.setOrganizationId', organizationId),
   showNunjucksContextMenu: options => ipcRenderer.send('show-nunjucks-context-menu', options),
   showContextMenu: options => ipcRenderer.send('showContextMenu', options),
   database: {

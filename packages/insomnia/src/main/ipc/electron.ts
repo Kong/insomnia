@@ -141,6 +141,7 @@ export const ipcMainHandle = (
 ) => ipcMain.handle(channel, listener);
 export type MainOnChannels =
   | 'addExecutionStep'
+  | 'analytics.setOrganizationId'
   | 'cancelCurlRequest'
   | 'clear'
   | 'completeExecutionStep'
