@@ -2,9 +2,13 @@ import { format } from 'date-fns';
 import type { TemplateTag } from 'insomnia/src/plugins';
 import type { PluginTemplateTag } from 'insomnia/src/templating/types';
 import { invariant } from 'insomnia/src/utils/invariant';
+import JSONBig from 'json-bigint';
 import { JSONPath } from 'jsonpath-plus';
 
 import { fakerFunctions } from './faker-functions';
+
+const JSONBigStringParser = JSONBig({ storeAsString: true });
+
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
   {
     templateTag: {
@@ -702,7 +706,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             let results;
 
             try {
-              bodyJSON = JSON.parse(body);
+              bodyJSON = JSONBigStringParser.parse(body) as null | boolean | number | string | object | unknown[];
             } catch (err) {
               throw new Error(`Invalid JSON: ${err.message}`);
             }
