@@ -27,7 +27,7 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node (PR merge tree)
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
@@ -51,22 +51,48 @@ jobs:
       - name: Unit Tests
         run: npm test
 
+      - name: Checkout base branch (cycle comparison)
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: insomnia-base
+
+      - name: Setup Node (base branch tree)
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: insomnia-base/.nvmrc
+          cache: npm
+          cache-dependency-path: insomnia-base/package-lock.json
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kong'
+
+      - name: Install packages (base branch tree)
+        if: github.event_name == 'pull_request' && always()
+        working-directory: insomnia-base
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
       - name: Check Circular References
+        if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@v7
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: github.event_name == 'pull_request' && always()
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const fs = require('fs');
             const path = require('path');
-            const { execSync } = require('child_process');
 
-            // Function to analyze circular references
-            async function analyzeCircularReferences() {
+            const workspaceRoot = process.env.GITHUB_WORKSPACE;
+            const prPackagesDir = path.join(workspaceRoot, 'packages');
+            const basePackagesDir = path.join(workspaceRoot, 'insomnia-base', 'packages');
+
+            async function analyzeCircularReferences(rootDir) {
               const madge = require('madge');
-              const res = await madge(process.cwd(), {
+              const res = await madge(rootDir, {
                 fileExtensions: ['ts', 'tsx'],
               });
               return res.circular();
@@ -169,62 +195,20 @@ jobs:
             }
 
             try {
-              // Get base branch (the target branch of the PR)
               const baseBranch = context.payload.pull_request.base.ref;
               console.log(`Base branch (PR target): ${baseBranch}`);
+              console.log(`PR packages dir: ${prPackagesDir}`);
+              console.log(`Base packages dir: ${basePackagesDir}`);
 
-              // Save current state
-              const currentBranch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
-              const hasUncommittedChanges = execSync('git status --porcelain').toString().trim().length > 0;
-
-              console.log(`Current branch: ${currentBranch}`);
-
-              // Stash any uncommitted changes
-              if (hasUncommittedChanges) {
-                console.log('Stashing uncommitted changes...');
-                execSync('git stash push -u -m "Temporary stash for circular reference check"');
-              }
-
-              // Change to packages directory for analysis
-              process.chdir('packages');
-
-              // Analyze current PR
-              console.log('Analyzing circular references in PR...');
-              const prCircularRefs = await analyzeCircularReferences();
+              console.log('Analyzing circular references in PR (merge) tree...');
+              const prCircularRefs = await analyzeCircularReferences(prPackagesDir);
               const prCount = prCircularRefs.length;
               console.log(`PR: Found ${prCount} circular references`);
 
-              // Switch to base branch
-              console.log(`Switching to ${baseBranch} branch...`);
-              process.chdir('..');
-              execSync(`git fetch origin ${baseBranch}`);
-              execSync(`git checkout origin/${baseBranch}`);
-
-              // Reinstall dependencies for base branch (in case package.json changed)
-              console.log('Installing dependencies for base branch...');
-              execSync('npm ci --quiet --engine-strict=false', { stdio: 'ignore' });
-
-              // Analyze base branch
-              console.log(`Analyzing circular references in ${baseBranch}...`);
-              process.chdir('packages');
-              const baseCircularRefs = await analyzeCircularReferences();
+              console.log(`Analyzing circular references in ${baseBranch} tree...`);
+              const baseCircularRefs = await analyzeCircularReferences(basePackagesDir);
               const baseCount = baseCircularRefs.length;
               console.log(`Base: Found ${baseCount} circular references`);
-
-              // Switch back to PR branch
-              console.log('Switching back to PR branch...');
-              process.chdir('..');
-              execSync(`git checkout ${currentBranch}`);
-
-              // Restore stashed changes
-              if (hasUncommittedChanges) {
-                console.log('Restoring uncommitted changes...');
-                execSync('git stash pop');
-              }
-
-              // Reinstall dependencies for PR branch
-              console.log('Restoring dependencies for PR branch...');
-              execSync('npm ci --quiet', { stdio: 'ignore' });
 
               // Generate report
               const diff = prCount - baseCount;
