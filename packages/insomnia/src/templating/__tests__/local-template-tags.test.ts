@@ -87,6 +87,38 @@ describe('response tag', () => {
       expect(result).toBe('11111111111111111111');
     });
   });
+
+  describe('JSONPath body attribute - floating point numbers', () => {
+    it('handles a basic float', async () => {
+      const ctx = makeResponseContext('{"price": 3.14}');
+      const result = await responseTag.run(ctx, 'body', 'req_1', '$.price', 'never', 60);
+      expect(result).toBe('3.14');
+    });
+
+    it('handles a negative float', async () => {
+      const ctx = makeResponseContext('{"temp": -273.15}');
+      const result = await responseTag.run(ctx, 'body', 'req_1', '$.temp', 'never', 60);
+      expect(result).toBe('-273.15');
+    });
+
+    it('handles a float with many decimal places', async () => {
+      const ctx = makeResponseContext('{"ratio": 0.123456789012345}');
+      const result = await responseTag.run(ctx, 'body', 'req_1', '$.ratio', 'never', 60);
+      expect(result).toBe('0.123456789012345');
+    });
+
+    it('handles a float in scientific notation', async () => {
+      const ctx = makeResponseContext('{"val": 1.5e10}');
+      const result = await responseTag.run(ctx, 'body', 'req_1', '$.val', 'never', 60);
+      expect(result).toBe('15000000000');
+    });
+
+    it('handles zero', async () => {
+      const ctx = makeResponseContext('{"n": 0.0}');
+      const result = await responseTag.run(ctx, 'body', 'req_1', '$.n', 'never', 60);
+      expect(result).toBe('0');
+    });
+  });
 });
 
 describe('base64 tag', () => {
