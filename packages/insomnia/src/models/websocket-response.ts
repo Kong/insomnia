@@ -1,3 +1,5 @@
+import { services } from '~/insomnia-data';
+
 import { database as db } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
 import * as models from './index';
@@ -87,7 +89,7 @@ export async function create(patch: Partial<WebSocketResponse> = {}, maxResponse
     parentId,
   };
 
-  if ((await models.settings.get()).filterResponsesByEnv && 'environmentId' in patch) {
+  if ((await services.settings.get()).filterResponsesByEnv && 'environmentId' in patch) {
     query.environmentId = patch.environmentId;
   }
 
@@ -111,7 +113,7 @@ export async function create(patch: Partial<WebSocketResponse> = {}, maxResponse
 export async function getLatestForRequestId(requestId: string, environmentId: string | null) {
   // Filter responses by environment if setting is enabled
 
-  const shouldFilter = (await models.settings.get()).filterResponsesByEnv;
+  const shouldFilter = (await services.settings.get()).filterResponsesByEnv;
 
   const response = await db.findOne<WebSocketResponse>(
     type,

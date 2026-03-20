@@ -2,7 +2,7 @@ import type { BinaryToTextEncoding } from 'node:crypto';
 
 import type { Cookie } from 'tough-cookie';
 
-import type { McpRequest } from '~/insomnia-data';
+import type { McpRequest, Services } from '~/insomnia-data';
 import type { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { CloudProviderCredential } from '../models/cloud-credential';
@@ -14,7 +14,6 @@ import type { Project } from '../models/project';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { getLatestForRequestId, Response } from '../models/response';
-import type { get as getSettings } from '../models/settings';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
@@ -295,7 +294,7 @@ export interface PluginTemplateTagContext {
         getBodyBuffer: typeof getBodyBuffer;
       };
       settings: {
-        get: typeof getSettings;
+        get: Services['settings']['get'];
       };
     };
   };

@@ -159,7 +159,7 @@ const openCurlConnection = async (
     }
     const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
     const start = performance.now();
     const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
     const filteredClientCertificates = filterClientCertificates(clientCertificates, options.url, 'https:');
@@ -264,7 +264,7 @@ const openCurlConnection = async (
           settingStoreCookies: request.settingStoreCookies,
           bodyCompression: null,
         };
-        const settings = await models.settings.get();
+        const settings = await services.settings.get();
         const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
         models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
@@ -343,7 +343,7 @@ const createErrorResponse = async (
   timelinePath: string,
   message: string,
 ) => {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,

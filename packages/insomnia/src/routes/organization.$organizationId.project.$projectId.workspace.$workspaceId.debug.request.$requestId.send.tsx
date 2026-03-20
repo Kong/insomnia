@@ -7,6 +7,7 @@ import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getContentDispositionHeader } from '~/common/misc';
+import { services } from '~/insomnia-data';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
@@ -351,7 +352,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     if (requestMeta?.activeResponseId) {
       const response = await models.response.getById(requestMeta.activeResponseId);
       if (response) {
-        const settings = await models.settings.getOrCreate();
+        const settings = await services.settings.getOrCreate();
         const activeRequest = await models.request.getById(requestId);
 
         if (activeRequest) {

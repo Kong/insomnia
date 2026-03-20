@@ -3,7 +3,7 @@ import type { Readable } from 'node:stream';
 import zlib from 'node:zlib';
 
 import { database as db } from '~/common/database';
-import { type McpResponse } from '~/insomnia-data';
+import { type McpResponse, services } from '~/insomnia-data';
 import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import * as models from '~/models/index';
 import { type Compression, isResponse, type Response, type as responseType } from '~/models/response';
@@ -18,7 +18,7 @@ import {
 import { deserializeNDJSON } from '~/utils/ndjson';
 
 export async function removeResponsesForRequest(requestId: string, environmentId?: string | null) {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   const query: Record<string, any> = {
     parentId: requestId,
   };

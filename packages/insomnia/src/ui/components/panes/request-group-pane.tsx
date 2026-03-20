@@ -1,11 +1,11 @@
 import React, { type FC, useRef, useState } from 'react';
 import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 
+import type { Settings } from '~/insomnia-data';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
 import { getDataFromKVPair } from '~/utils/environment-utils';
 
 import { type EnvironmentKvPairData, EnvironmentType } from '../../../models/environment';
-import type { Settings } from '../../../models/settings';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestGroupLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';

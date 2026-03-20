@@ -118,7 +118,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     } as GrpcRequestLoaderData;
   }
   const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
-  const { filterResponsesByEnv } = await models.settings.get();
+  const { filterResponsesByEnv } = await services.settings.get();
   const isGraphqlWsRequest = isGraphqlSubscriptionRequest(activeRequest);
 
   // Handle MCP requests early (like gRPC) since MCP response methods are on services

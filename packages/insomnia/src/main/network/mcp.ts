@@ -190,7 +190,7 @@ const createErrorResponse = async (
   },
 ) => {
   const { requestId, responseId, environmentId, timelinePath, options } = context;
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,

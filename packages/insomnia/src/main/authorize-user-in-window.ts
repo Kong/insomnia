@@ -1,6 +1,6 @@
 import { BrowserWindow, dialog } from 'electron';
 
-import * as models from '../models';
+import { services } from '~/insomnia-data';
 
 export enum ChromiumVerificationResult {
   BLIND_TRUST = 0,
@@ -32,7 +32,7 @@ export function authorizeUserInWindow({
     let finalUrl: string | null = null;
 
     // Fetch user setting to determine whether to validate SSL certificates during auth
-    const { validateAuthSSL, proxyEnabled, httpProxy, httpsProxy, noProxy } = await models.settings.get();
+    const { validateAuthSSL, proxyEnabled, httpProxy, httpsProxy, noProxy } = await services.settings.get();
 
     // Create a child window
     const child = new BrowserWindow({

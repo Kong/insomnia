@@ -6,13 +6,12 @@ import { app, autoUpdater, BrowserWindow, dialog } from 'electron';
 import log from 'electron-log';
 import { autoUpdater as electronUpdater } from 'electron-updater';
 
-import type { Settings } from '~/models/settings';
+import { services, type Settings } from '~/insomnia-data';
 
 import appConfig from '../../config/config.json';
 import packageJSON from '../../package.json';
 import { CHECK_FOR_UPDATES_INTERVAL, isDevelopment } from '../common/constants';
 import { delay } from '../common/misc';
-import * as models from '../models/index';
 import { invariant } from '../utils/invariant';
 import { ipcMainOn } from './ipc/electron';
 
@@ -70,7 +69,7 @@ export const init = async () => {
   // nsis installer uses electron-updater package rather than electron.autoUpdater
   const isNsis = await isNsisInstaller();
   const checkForUpdates = isNsis ? initNsisUpdater() : initAutoUpdater();
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   const updateSupported = isUpdateSupported();
   // perhaps disable this method of upgrading just in case it trigger before backup is complete
   // on app start
@@ -80,7 +79,7 @@ export const init = async () => {
     }
     // on an interval (3h)
     setInterval(async () => {
-      const settings = await models.settings.get();
+      const settings = await services.settings.get();
       if (settings.updateAutomatically) {
         checkForUpdates(settings);
       }
@@ -95,7 +94,7 @@ export const init = async () => {
 
     await delay(300); // Pacing
 
-    checkForUpdates(await models.settings.get());
+    checkForUpdates(await services.settings.get());
   });
 };
 

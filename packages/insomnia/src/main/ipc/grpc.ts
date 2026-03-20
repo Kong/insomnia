@@ -28,6 +28,8 @@ import * as protoLoader from '@grpc/proto-loader';
 import electron, { type IpcMainEvent } from 'electron';
 import * as grpcReflection from 'grpc-reflection-js';
 
+import { services } from '~/insomnia-data';
+
 import { version } from '../../../package.json';
 import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from '../../models/grpc-request';
@@ -304,7 +306,7 @@ export const getSelectedMethod = async (
     invariant(methods, 'No methods found');
     return methods.find(c => c.path === request.protoMethodName);
   }
-  const settings = await models.settings.getOrCreate();
+  const settings = await services.settings.getOrCreate();
   const methods = await getMethodsFromReflection(
     request.url,
     request.metadata,

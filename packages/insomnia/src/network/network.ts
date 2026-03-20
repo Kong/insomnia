@@ -4,7 +4,7 @@ import nodePath from 'node:path';
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
-import { type CaCertificate, services } from '~/insomnia-data';
+import { type CaCertificate, services, type Settings } from '~/insomnia-data';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type {
@@ -40,7 +40,6 @@ import {
   type RequestParameter,
 } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
-import type { Settings } from '../models/settings';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
@@ -150,7 +149,7 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(workspace._id));
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   invariant(settings, 'failed to create settings');
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await services.caCertificate.getByParentId(workspaceId);
@@ -215,7 +214,7 @@ export const fetchRequestData = async (
     }
   }
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   invariant(settings, 'failed to create settings');
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await services.caCertificate.getByParentId(workspaceId);
@@ -261,7 +260,7 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   const environment = activeEnvironment || baseEnvironment;
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   invariant(settings, 'failed to create settings');
 
   const responseId = generateId('res');
