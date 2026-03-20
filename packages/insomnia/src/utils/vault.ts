@@ -1,5 +1,7 @@
+import { services } from '~/insomnia-data';
+
+import { type AESMessage, decryptAES, encryptAES } from '../account/crypt';
 import { getInsomniaVaultKey, PLAYWRIGHT } from '../common/constants';
-import * as settings from '../models/settings';
 
 export const base64encode = (input: string | JsonWebKey) => {
   const inputStr = typeof input === 'string' ? input : JSON.stringify(input);
@@ -44,7 +46,7 @@ export async function decryptVaultKeyFromSession(vaultKey: string, toJsonWebKey:
 const getVaultSecretKey = (accountId: string) => `vault_${accountId}`;
 
 export const saveVaultKeyIfNecessary = async (accountId: string, vaultKey: string) => {
-  const userSetting = await settings.getOrCreate();
+  const userSetting = await services.settings.getOrCreate();
   const { saveVaultKeyLocally } = userSetting;
   if (saveVaultKeyLocally) {
     await window.main.secretStorage.setSecret(getVaultSecretKey(accountId), vaultKey);
@@ -58,4 +60,33 @@ export const getVaultKeyFromStorage = async (accountId: string) => {
 
 export const deleteVaultKeyFromStorage = async (accountId: string) => {
   await window.main.secretStorage.deleteSecret(getVaultSecretKey(accountId));
+};
+
+export const encryptSecretValue = (rawValue: string, symmetricKey: JsonWebKey) => {
+  if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
+    // invalid symmetricKey
+    return rawValue;
+  }
+  try {
+    const encryptResult = encryptAES(symmetricKey, rawValue);
+    const encryptedValue = base64encode(encryptResult);
+    return encryptedValue;
+  } catch {
+    // return original value if encryption fails
+    return rawValue;
+  }
+};
+
+export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWebKey) => {
+  if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
+    // invalid symmetricKey
+    return encryptedValue;
+  }
+  try {
+    const jsonWebKey = base64decode(encryptedValue, true) as AESMessage;
+    return decryptAES(symmetricKey, jsonWebKey);
+  } catch {
+    // return origin value if failed to decrypt
+    return encryptedValue;
+  }
 };

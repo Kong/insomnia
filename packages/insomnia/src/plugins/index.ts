@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import electron from 'electron';
 
+import { services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { ParsedApiSpec } from '../common/api-specs';
@@ -198,7 +199,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
   }
 
   if (!plugins) {
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
     const allConfigs: PluginConfigMap = settings.pluginConfig;
     const extraPaths = settings.pluginPath
       .split(':')
@@ -414,7 +415,7 @@ export function getPluginCommonContext({
           getBodyBuffer,
         },
         settings: {
-          get: models.settings.get,
+          get: services.settings.get,
         },
       },
     },

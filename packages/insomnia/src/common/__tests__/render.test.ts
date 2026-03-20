@@ -1,6 +1,8 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { services } from '~/insomnia-data';
+
 import * as models from '../../models';
 import { environmentModelSchema, requestGroupModelSchema } from '../../models/__schemas__/model-schemas';
 import type { Environment } from '../../models/environment';
@@ -13,7 +15,7 @@ const reqGroupBuilder = createBuilder(requestGroupModelSchema);
 describe('render tests', () => {
   beforeEach(async () => {
     await models.project.all();
-    await models.settings.getOrCreate();
+    await services.settings.getOrCreate();
     envBuilder.reset();
     reqGroupBuilder.reset();
   });

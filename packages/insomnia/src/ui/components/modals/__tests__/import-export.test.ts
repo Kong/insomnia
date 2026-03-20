@@ -1,6 +1,8 @@
 import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har';
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { services } from '~/insomnia-data';
+
 import { database as db } from '../../../../common/database';
 import * as models from '../../../../models';
 
@@ -8,7 +10,7 @@ import * as models from '../../../../models';
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(async () => {
     await models.project.all();
-    await models.settings.getOrCreate();
+    await services.settings.getOrCreate();
   });
 
   it('exports a single workspace and some requests only as an HTTP Archive', async () => {

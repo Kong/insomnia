@@ -9,7 +9,7 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import { configureFetch } from 'insomnia-api';
 
 import { getCurrentSessionId } from '~/account/session';
-import { database, initDatabase, initServices } from '~/insomnia-data';
+import { database, initDatabase, initServices, services } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
 import { registerPathHandlers } from '~/main/ipc/path';
@@ -292,7 +292,7 @@ const _launchApp = async () => {
  */
 async function _createModelInstances() {
   await models.stats.get();
-  await models.settings.getOrCreate();
+  await services.settings.getOrCreate();
   try {
     const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
     const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
@@ -368,7 +368,7 @@ async function _trackStats() {
     parentId: { $ne: null },
   });
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
 
   trackSegmentEvent(SegmentEvent.appStarted, {
     localProjects,

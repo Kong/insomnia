@@ -140,7 +140,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     if (workspaceData.scope === 'mcp') {
-      const settings = await models.settings.getOrCreate();
+      const settings = await services.settings.getOrCreate();
       const defaultHeaders = settings.disableAppVersionUserAgent
         ? []
         : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
@@ -198,7 +198,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     });
 
     if (workspaceData.withRequest) {
-      const settings = await models.settings.getOrCreate();
+      const settings = await services.settings.getOrCreate();
       const defaultHeaders = settings.disableAppVersionUserAgent
         ? []
         : [
