@@ -1,6 +1,7 @@
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
 import type { MockServer } from '../models/mock-server';
+import { getPlatform, isLinux as isLinuxPlatform, isMacintosh, isWindows as isWindowsPlatform } from './platform';
 import type { KeyCombination } from './settings';
 
 // Vite is filtering out process.env variables that are not prefixed with VITE_.
@@ -28,11 +29,11 @@ export const getAppDefaultLightTheme = () => appConfig.lightTheme;
 export const getAppDefaultDarkTheme = () => appConfig.darkTheme;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
-export const getAppPlatform = () => process.platform;
+export const getAppPlatform = () => getPlatform();
 export const getAppBundlePlugins = () => appConfig.bundlePlugins;
-export const isMac = () => getAppPlatform() === 'darwin';
-export const isLinux = () => getAppPlatform() === 'linux';
-export const isWindows = () => getAppPlatform() === 'win32';
+export const isMac = () => isMacintosh;
+export const isLinux = () => isLinuxPlatform;
+export const isWindows = () => isWindowsPlatform;
 export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () =>
