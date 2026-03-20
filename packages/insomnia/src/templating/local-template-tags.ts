@@ -706,6 +706,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             let results;
 
             try {
+              // Using JSONBig instead of JSON.parse because JSON can contain numbers larger than those representable by
+              // IEEE 754 and cause them to be rounded or transformed into scientific notation. Interpreting them as
+              // strings in the context of this tag allows for predictable piping from response to request.
               bodyJSON = JSONBigStringParser.parse(body) as null | boolean | number | string | object | unknown[];
             } catch (err) {
               throw new Error(`Invalid JSON: ${err.message}`);
