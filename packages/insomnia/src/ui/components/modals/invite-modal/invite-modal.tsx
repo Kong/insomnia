@@ -155,12 +155,12 @@ const InviteModal: FC<{
       isDismissable={false}
       isOpen={true}
       onOpenChange={setIsOpen}
-      className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-(--color-bg)"
+      className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-start justify-center bg-(--color-bg) pt-[70px]"
     >
-      <Modal className="theme--dialog fixed top-[100px] h-fit w-full max-w-[900px] rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
-        <Dialog className="relative outline-hidden">
+      <Modal className="theme--dialog flex max-h-[calc(var(--visual-viewport-height)-140px)] w-full max-w-[900px] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
+        <Dialog className="relative flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
-            <>
+            <div className="flex h-full flex-col overflow-hidden">
               <Heading slot="title" className="mb-[24px] text-[22px] leading-[34px]">
                 Invite collaborators
               </Heading>
@@ -207,66 +207,68 @@ const InviteModal: FC<{
                   )}
                 </Group>
               </div>
-              {collaboratorListError && (
-                <div className="flex h-[200px] items-center justify-center">
-                  <p className="text-[12px] text-(--color-danger) first-letter:capitalize">{collaboratorListError}</p>
-                </div>
-              )}
-              {collaborators?.length === 0 && page === 0 ? (
-                !collaboratorListError && (
+              <div className="flex-1 overflow-y-auto">
+                {collaboratorListError && (
                   <div className="flex h-[200px] items-center justify-center">
-                    <p className="text-[14px] text-(--color-font)">
-                      {queryInputString
-                        ? `No member or team found for the search: "${queryInputString}"`
-                        : 'No members or teams'}
-                    </p>
+                    <p className="text-[12px] text-(--color-danger) first-letter:capitalize">{collaboratorListError}</p>
                   </div>
-                )
-              ) : (
-                <>
-                  <ListBox aria-label="Invitation list" className="flex flex-col gap-1">
-                    {collaborators?.map((member: Collaborator) => (
-                      <MemberListItem
-                        key={member.id}
-                        organizationId={organizationId}
-                        member={member}
-                        currentUserAccountId={currentUserAccountId}
-                        currentUserRoleInOrg={currentUserRoleInOrg}
-                        allRoles={allRoles}
-                        isCurrentUserOrganizationOwner={isCurrentUserOrganizationOwner}
-                        orgFeatures={orgFeatures}
-                        permissionRef={permissionRef}
-                        revalidateCurrentUserRoleAndPermissionsInOrg={revalidateCurrentUserRoleAndPermissionsInOrg}
-                        onResetCurrentPage={resetCurrentPage}
-                        onError={setError}
-                        onRemoveMember={() => {
-                          collaboratorsCheckSeatsLoaderLoad({ organizationId });
-                        }}
-                      />
-                    ))}
-                  </ListBox>
-                  <PaginationBar
-                    isPrevDisabled={page === 0}
-                    isNextDisabled={total <= ItemsPerPage || total <= (page + 1) * ItemsPerPage}
-                    isHidden={total <= ItemsPerPage && page === 0}
-                    onPrevPress={() => {
-                      collaboratorsListLoader.load({ organizationId, page: page - 1, per_page: ItemsPerPage });
-                      setSearchParams(getSearchParamsString(searchParams, { page: page - 1 }));
-                    }}
-                    onNextPress={() => {
-                      collaboratorsListLoader.load({ organizationId, page: page + 1, per_page: ItemsPerPage });
-
-                      setSearchParams(getSearchParamsString(searchParams, { page: page + 1 }));
-                    }}
-                  />
-                  {error && (
-                    <div className="mt-[16px] flex justify-center">
-                      <p className="text-[12px] text-(--color-danger)">{error}</p>
+                )}
+                {collaborators?.length === 0 && page === 0 ? (
+                  !collaboratorListError && (
+                    <div className="flex h-[200px] items-center justify-center">
+                      <p className="text-[14px] text-(--color-font)">
+                        {queryInputString
+                          ? `No member or team found for the search: "${queryInputString}"`
+                          : 'No members or teams'}
+                      </p>
                     </div>
-                  )}
-                </>
-              )}
-            </>
+                  )
+                ) : (
+                  <>
+                    <ListBox aria-label="Invitation list" className="flex flex-col gap-1">
+                      {collaborators?.map((member: Collaborator) => (
+                        <MemberListItem
+                          key={member.id}
+                          organizationId={organizationId}
+                          member={member}
+                          currentUserAccountId={currentUserAccountId}
+                          currentUserRoleInOrg={currentUserRoleInOrg}
+                          allRoles={allRoles}
+                          isCurrentUserOrganizationOwner={isCurrentUserOrganizationOwner}
+                          orgFeatures={orgFeatures}
+                          permissionRef={permissionRef}
+                          revalidateCurrentUserRoleAndPermissionsInOrg={revalidateCurrentUserRoleAndPermissionsInOrg}
+                          onResetCurrentPage={resetCurrentPage}
+                          onError={setError}
+                          onRemoveMember={() => {
+                            collaboratorsCheckSeatsLoaderLoad({ organizationId });
+                          }}
+                        />
+                      ))}
+                    </ListBox>
+                    {error && (
+                      <div className="mt-[16px] flex justify-center">
+                        <p className="text-[12px] text-(--color-danger)">{error}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+              <PaginationBar
+                isPrevDisabled={page === 0}
+                isNextDisabled={total <= ItemsPerPage || total <= (page + 1) * ItemsPerPage}
+                isHidden={total <= ItemsPerPage && page === 0}
+                onPrevPress={() => {
+                  collaboratorsListLoader.load({ organizationId, page: page - 1, per_page: ItemsPerPage });
+                  setSearchParams(getSearchParamsString(searchParams, { page: page - 1 }));
+                }}
+                onNextPress={() => {
+                  collaboratorsListLoader.load({ organizationId, page: page + 1, per_page: ItemsPerPage });
+
+                  setSearchParams(getSearchParamsString(searchParams, { page: page + 1 }));
+                }}
+              />
+            </div>
           )}
         </Dialog>
       </Modal>

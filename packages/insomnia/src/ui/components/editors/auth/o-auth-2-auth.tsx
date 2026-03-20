@@ -236,6 +236,82 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
   };
 };
 
+/**
+ * Returns a copy of an OAuth object with fields only suitable for selected type.
+ * See: https://github.com/Kong/insomnia/issues/5151
+ */
+const getActiveOAuth2AuthFields = (authentication: AuthTypeOAuth2): AuthTypeOAuth2 => {
+  const { grantType } = authentication;
+  const base: Partial<AuthTypeOAuth2> = {
+    type: authentication.type,
+    disabled: authentication.disabled,
+    grantType: authentication.grantType,
+    tokenPrefix: authentication.tokenPrefix,
+  };
+
+  switch (grantType) {
+    case GRANT_TYPE_AUTHORIZATION_CODE: {
+      return {
+        ...base,
+        authorizationUrl: authentication.authorizationUrl,
+        accessTokenUrl: authentication.accessTokenUrl,
+        clientId: authentication.clientId,
+        clientSecret: authentication.clientSecret,
+        usePkce: authentication.usePkce,
+        pkceMethod: authentication.pkceMethod,
+        redirectUrl: authentication.redirectUrl,
+        useDefaultBrowser: authentication.useDefaultBrowser,
+        scope: authentication.scope,
+        state: authentication.state,
+        credentialsInBody: authentication.credentialsInBody,
+        audience: authentication.audience,
+        resource: authentication.resource,
+        origin: authentication.origin,
+      } as AuthTypeOAuth2;
+    }
+    case GRANT_TYPE_CLIENT_CREDENTIALS: {
+      return {
+        ...base,
+        accessTokenUrl: authentication.accessTokenUrl,
+        clientId: authentication.clientId,
+        clientSecret: authentication.clientSecret,
+        scope: authentication.scope,
+        credentialsInBody: authentication.credentialsInBody,
+        audience: authentication.audience,
+        resource: authentication.resource,
+      } as AuthTypeOAuth2;
+    }
+    case GRANT_TYPE_PASSWORD: {
+      return {
+        ...base,
+        accessTokenUrl: authentication.accessTokenUrl,
+        clientId: authentication.clientId,
+        clientSecret: authentication.clientSecret,
+        username: authentication.username,
+        password: authentication.password,
+        scope: authentication.scope,
+        credentialsInBody: authentication.credentialsInBody,
+        audience: authentication.audience,
+      } as AuthTypeOAuth2;
+    }
+    case GRANT_TYPE_IMPLICIT: {
+      return {
+        ...base,
+        authorizationUrl: authentication.authorizationUrl,
+        clientId: authentication.clientId,
+        redirectUrl: authentication.redirectUrl,
+        responseType: authentication.responseType,
+        scope: authentication.scope,
+        state: authentication.state,
+        audience: authentication.audience,
+      } as AuthTypeOAuth2;
+    }
+    default: {
+      return authentication;
+    }
+  }
+};
+
 const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { type: 'oauth2' }>) => {
   const {
     clientId,
@@ -548,7 +624,8 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
               setLoading(true);
 
               try {
-                const renderedAuthentication = (await handleRender(authentication)) as AuthTypeOAuth2;
+                const activeAuth = getActiveOAuth2AuthFields(authentication as AuthTypeOAuth2);
+                const renderedAuthentication = (await handleRender(activeAuth)) as AuthTypeOAuth2;
                 const t = await getOAuth2Token(_id, renderedAuthentication, true);
                 setToken(t);
                 setLoading(false);

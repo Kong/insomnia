@@ -32,7 +32,7 @@ import type {
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import type { PluginTemplateTag } from '../../templating/types';
 import type { SegmentEvent } from '../analytics';
-import { trackPageView, trackSegmentEvent } from '../analytics';
+import { setCurrentOrganizationId, trackPageView, trackSegmentEvent } from '../analytics';
 import {
   authorizeUserInDefaultBrowser,
   cancelAuthorizationInDefaultBrowser,
@@ -128,6 +128,7 @@ export interface RendererToMainBridgeAPI {
   secretStorage: secretStorageBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
+  setCurrentOrganizationId: (organizationId: string | undefined) => void;
   showNunjucksContextMenu: (options: {
     key: string;
     nunjucksTag?: { template: string; range: MarkerRange };
@@ -338,6 +339,9 @@ export function registerMainHandlers() {
   });
   ipcMainOn('trackPageView', (_, options: { name: string }): void => {
     trackPageView(options.name);
+  });
+  ipcMainOn('analytics.setOrganizationId', (_, organizationId: string | undefined): void => {
+    setCurrentOrganizationId(organizationId);
   });
 
   ipcMainHandle('installPlugin', (_, lookupName: string, allowScopedPackageNames = false) => {
