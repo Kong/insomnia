@@ -37,6 +37,8 @@ jobs:
 
       - name: Install packages
         run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       # ############################################################
       # SETUP RELEASE_VERSION and RELEASE_BRANCH
