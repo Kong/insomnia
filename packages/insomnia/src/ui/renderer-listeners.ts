@@ -1,6 +1,6 @@
+import { services } from '~/insomnia-data';
 import { type RAToastContent, showToast } from '~/ui/components/toast-notification';
 
-import * as models from '../models';
 import * as plugins from '../plugins';
 import * as themes from '../plugins/misc';
 import * as templating from '../templating';
@@ -12,7 +12,7 @@ window.main.on('toggle-preferences', () => {
 });
 
 window.main.on('reload-plugins', async () => {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   await plugins.reloadPlugins();
   await themes.applyColorScheme(settings);
   templating.reload();

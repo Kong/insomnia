@@ -1,8 +1,9 @@
+import { services } from '~/insomnia-data';
+
 import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import { database as db } from '../common/database';
 import * as requestOperations from '../models/helpers/request-operations';
 import * as requestVersionModel from './request-version';
-import * as settingsModel from './settings';
 import type { BaseModel } from './types';
 
 export const name = 'Response';
@@ -109,7 +110,7 @@ export async function getLatestForRequestId(
   environmentId: string | null,
 ): Promise<Response | undefined> {
   // Filter responses by environment if setting is enabled
-  const shouldFilter = (await settingsModel.get()).filterResponsesByEnv;
+  const shouldFilter = (await services.settings.get()).filterResponsesByEnv;
 
   const response = await db.findOne<Response>(
     type,
@@ -134,7 +135,7 @@ export async function create(patch: Partial<Response> = {}, maxResponses = 20): 
   const requestVersion = request ? await requestVersionModel.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
   // Filter responses by environment if setting is enabled
-  const settings = await settingsModel.get();
+  const settings = await services.settings.get();
   const shouldQueryByEnvId = 'environmentId' in patch && settings.filterResponsesByEnv;
   const query = {
     parentId,

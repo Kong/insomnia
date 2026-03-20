@@ -4,10 +4,10 @@ import path from 'node:path';
 
 import electron from 'electron';
 
+import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 
 import { SECURITY_SETTINGS_PATH_LABEL } from '../common/misc';
-import * as models from '../models/index';
 
 export const isPathAllowed = (filePath: string, userAllowList: string[]) => {
   const allowList = getSecuredFolderAllowList(userAllowList);
@@ -25,7 +25,7 @@ const getSecuredFolderAllowList = (userAllowList: string[]) => {
 };
 // For reading files specified by plugins, environment variables, and scripts which could come from an imported collection
 export const secureReadFile = async (filePath: string): Promise<string> => {
-  const settings = await models.settings.getOrCreate();
+  const settings = await services.settings.getOrCreate();
   const { isAllowed, securedPath } = isPathAllowed(filePath, settings.dataFolders);
 
   invariant(

@@ -1,7 +1,7 @@
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
-import { type McpRequest } from '~/insomnia-data';
+import { type McpRequest, services } from '~/insomnia-data';
 
 import * as models from '../models';
 import {
@@ -290,7 +290,7 @@ export async function render<T>(
         // explicitly configure rendering to happen on the same thread/process as the rest of the app, in
         // which case it's okay to render locally.
 
-        const settings = await models.settings.get();
+        const settings = await services.settings.get();
         const pluginsAreRestrictedToRunInWorker = settings?.pluginsAllowElevatedAccess === false;
         const currentProcessIsRendererAndPluginsAreRestricted =
           process.type === 'renderer' && pluginsAreRestrictedToRunInWorker;
@@ -473,7 +473,7 @@ export async function getRenderContext({
     getKeySource(transientVariables.data || {}, inKey, transientVariables.name || 'scriptLocalVariables');
   }
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
 
   // Add meta data helper function
   const baseContext: BaseRenderContext = {

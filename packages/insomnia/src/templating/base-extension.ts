@@ -5,6 +5,7 @@ import os from 'node:os';
 import iconv from 'iconv-lite';
 
 import { jarFromCookies } from '~/common/cookies';
+import { services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import { database as db } from '../common/database';
@@ -166,7 +167,7 @@ export default class BaseExtension {
             getBodyBuffer,
           },
           settings: {
-            get: models.settings.get,
+            get: services.settings.get,
           },
         },
       },

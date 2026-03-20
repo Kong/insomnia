@@ -217,7 +217,7 @@ const createErrorResponse = async (
   timelinePath: string,
   message: string,
 ) => {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,
@@ -292,7 +292,7 @@ const openSocketIOConnection = async (
       url: options.url,
       requestId: options.requestId,
     });
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
 
     const socketIOoptions: Partial<ManagerOptions & SocketOptions> = {
       extraHeaders: lowerCasedEnabledHeaders,

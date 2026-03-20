@@ -41,7 +41,7 @@ describe('Insomnia v5 Import/Export - Comprehensive Tests', () => {
       scope: 'collection',
     });
 
-    await models.settings.getOrCreate();
+    await services.settings.getOrCreate();
   });
 
   describe('insomniaSchemaTypeToScope', () => {

@@ -1,7 +1,7 @@
 import type { queueAsPromised } from 'fastq';
 import * as fastq from 'fastq';
 
-import type { Settings } from '~/models/settings';
+import type { Settings } from '~/insomnia-data';
 
 import type { RequestContext, RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import type { ClientCertificate } from '../models/client-certificate';

@@ -1,12 +1,6 @@
 import * as crypto from 'node:crypto';
 
-import orderedJSON from 'json-order';
-
-import * as crypt from '../account/crypt';
-import { JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
-import { generateId } from '../common/misc';
-import { base64decode, base64encode } from '../utils/vault';
 import type { Project } from './project';
 import * as project from './project';
 import { type BaseModel } from './types';
@@ -59,106 +53,10 @@ export type Environment = BaseModel & BaseEnvironment;
 // This is a representation of the data taken from a csv or json file AKA iterationData
 export type UserUploadEnvironment = Pick<Environment, 'data' | 'dataPropertyOrder' | 'name'>;
 
-export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: Record<string, any> | null) {
-  const ordered = orderedJSON.order(data, dataPropertyOrder, JSON_ORDER_SEPARATOR);
-  const kvPair: EnvironmentKvPairData[] = [];
-  Object.keys(ordered).forEach(key => {
-    const val = ordered[key];
-    // get all secret items from vaultEnvironmentPath
-    if (key === vaultEnvironmentPath && typeof val === 'object') {
-      Object.keys(val).forEach(secretKey => {
-        kvPair.push({
-          id: generateId('envPair'),
-          name: secretKey,
-          value: val[secretKey],
-          type: EnvironmentKvPairDataType.SECRET,
-          enabled: true,
-        });
-      });
-    } else {
-      const isValidObject = val && typeof val === 'object' && data !== null;
-      kvPair.push({
-        id: generateId('envPair'),
-        name: key,
-        value: isValidObject ? JSON.stringify(val) : String(val),
-        type: isValidObject ? EnvironmentKvPairDataType.JSON : EnvironmentKvPairDataType.STRING,
-        enabled: true,
-      });
-    }
-  });
-  return kvPair;
-}
-
-export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
-  const data: Record<string, any> = {};
-  kvPair.forEach(pair => {
-    const { name, value, type, enabled } = pair;
-    if (enabled) {
-      if (type === EnvironmentKvPairDataType.SECRET) {
-        if (!data[vaultEnvironmentPath]) {
-          // create object storing all secret items
-          data[vaultEnvironmentPath] = {};
-        }
-        data[vaultEnvironmentPath][name] = value;
-      } else {
-        data[name] = type === EnvironmentKvPairDataType.JSON ? JSON.parse(value) : value;
-      }
-    }
-  });
-  return {
-    data,
-    dataPropertyOrder: null,
-  };
-}
-
-// mask vault environment variable if necessary
-export const maskVaultEnvironmentData = (environment: Environment) => {
-  if (environment.isPrivate) {
-    const { data, kvPairData } = environment;
-    const shouldMask = kvPairData?.some(pair => pair.type === EnvironmentKvPairDataType.SECRET);
-    if (shouldMask) {
-      kvPairData?.forEach(pair => {
-        const { type } = pair;
-        if (type === EnvironmentKvPairDataType.SECRET) {
-          pair.value = vaultEnvironmentMaskValue;
-        }
-      });
-      Object.keys(data[vaultEnvironmentPath]).forEach(vaultKey => {
-        data[vaultEnvironmentPath][vaultKey] = vaultEnvironmentMaskValue;
-      });
-    }
-  }
-  return environment;
-};
-
-export const encryptSecretValue = (rawValue: string, symmetricKey: JsonWebKey) => {
-  if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
-    // invalid symmetricKey
-    return rawValue;
-  }
-  const encryptResult = crypt.encryptAES(symmetricKey, rawValue);
-  const encryptedValue = base64encode(encryptResult);
-  return encryptedValue;
-};
-
-export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWebKey) => {
-  if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
-    // invalid symmetricKey
-    return encryptedValue;
-  }
-  try {
-    const jsonWebKey = base64decode(encryptedValue, true) as crypt.AESMessage;
-    return crypt.decryptAES(symmetricKey, jsonWebKey);
-  } catch {
-    // return origin value if failed to decrypt
-    return encryptedValue;
-  }
-};
-
 // remove all secret items when user reset vault key
-export const removeAllSecrets = async (orgnizationIds: string[]) => {
+export const removeAllSecrets = async (organizationIds: string[]) => {
   const allProjects = await db.find<Project>(project.type, {
-    parentId: { $in: orgnizationIds },
+    parentId: { $in: organizationIds },
   });
   const allProjectIds = allProjects.map(project => project._id);
   const allGlobalEnvironmentWorkspaces = await db.find<Workspace>(workspace.type, {
@@ -176,8 +74,8 @@ export const removeAllSecrets = async (orgnizationIds: string[]) => {
     },
   });
   const allGlobalEnvironments = allGlobalBaseEnvironments.concat(allGlobalSubEnvironments);
-  const allGloablPrivateEnvironments = allGlobalEnvironments.filter(env => env.isPrivate);
-  allGloablPrivateEnvironments.forEach(async privateEnv => {
+  const allGlobalPrivateEnvironments = allGlobalEnvironments.filter(env => env.isPrivate);
+  allGlobalPrivateEnvironments.forEach(async privateEnv => {
     const { kvPairData, data } = privateEnv;
     if (vaultEnvironmentPath in data) {
       const { [vaultEnvironmentPath]: secretData, ...restData } = data;
