@@ -71,7 +71,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     projectLoaderData?.files
       .map(w => w.workspace)
       .filter(isNotNullOrUndefined)
-      .filter(w => w.scope !== 'mock-server') || [];
+      .filter(w => w.scope !== 'mock-server' && w.scope !== 'environment') || [];
   const [workspaceToCopyTo, setWorkspaceToCopyTo] = useState('');
   useEffect(() => {
     modalRef.current?.show();
