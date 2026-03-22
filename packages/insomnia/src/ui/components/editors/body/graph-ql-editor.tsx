@@ -28,8 +28,10 @@ import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codem
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
+import { deserializeNDJSON } from '../../../../utils/ndjson';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
+import type { ResponseTimelineEntry } from '../../../../models/response';
 import type { Request } from '../../../../models/request';
 import {
   fetchRequestData,
@@ -46,6 +48,7 @@ import type { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
+import { ResponseTimelineViewer } from '../../response-timeline';
 import { TimeFromNow } from '../../time-from-now';
 import { prettifyGraphql } from './prettify-graphql.mjs';
 
@@ -174,6 +177,7 @@ const fetchGraphQLSchemaForRequest = async ({
       return {
         schemaFetchError: {
           message: 'No response body received when fetching schema',
+          response: res, // Include response data for debugging even if no response body
         },
       };
     }
@@ -182,6 +186,7 @@ const fetchGraphQLSchemaForRequest = async ({
       return {
         schemaFetchError: {
           message: `Got status ${statusCode} fetching schema from "${renderedURL}"`,
+          response: response,  // ← Added this to make timeline data accessible
         },
       };
     }
@@ -189,13 +194,19 @@ const fetchGraphQLSchemaForRequest = async ({
     if (bodyBuffer) {
       const { data, errors } = JSON.parse(bodyBuffer.toString());
       if (errors?.length) {
-        return { schemaFetchError: errors[0] };
+        return { 
+          schemaFetchError: {
+            ...errors[0],
+            response: response, // Include response data for GraphQL errors too
+          },
+        };
       }
       return { schema: buildClientSchema(data) };
     }
     return {
       schemaFetchError: {
         message: 'Something went wrong, no data was received from introspection query',
+        response: response,
       },
     };
   } catch (err) {
@@ -284,7 +295,20 @@ export const GraphQLEditor: FC<Props> = ({
   >();
   const [schemaIsFetching, setSchemaIsFetching] = useState<boolean | null>(null);
   const [schemaLastFetchTime, setSchemaLastFetchTime] = useState<number>(0);
+  const [showIntrospectionTrace, setShowIntrospectionTrace] = useState<boolean>(false);
+  const [introspectionTimeline, setIntrospectionTimeline] = useState<ResponseTimelineEntry[]>([]);
   const editorRef = useRef<CodeEditorHandle>(null);
+
+  const readTimelineFromPath = async (timelinePath: string): Promise<ResponseTimelineEntry[]> => {
+    try {
+      const file = await window.main.insecureReadFile({ path: timelinePath });
+      const timelineString = file.toString();
+      return deserializeNDJSON(timelineString);
+    } catch (err) {
+      console.warn('Failed to read timeline data:', err);
+      return [];
+    }
+  };
 
   useEffect(() => {
     if (!automaticFetch) {
@@ -802,11 +826,40 @@ export const GraphQLEditor: FC<Props> = ({
                 className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
               >
                 {schemaFetchError.message}
+                {schemaFetchError.response?.timelinePath && (
+                  <div className="mt-2 text-xs text-(--hl-lg)">
+                    💡 Timeline data available for debugging
+                  </div>
+                )}
               </Tooltip>
             </TooltipTrigger>
+            {schemaFetchError.response?.timelinePath && (
+              <Button 
+                className="ml-2 flex h-full items-center justify-center gap-2 px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+                onPress={async () => {
+                  if (schemaFetchError.response?.timelinePath) {
+                    if (showIntrospectionTrace) {
+                      setShowIntrospectionTrace(false);
+                    } else {
+                      const timeline = await readTimelineFromPath(schemaFetchError.response.timelinePath);
+                      setIntrospectionTimeline(timeline);
+                      setShowIntrospectionTrace(true);
+                    }
+                  }
+                }}
+              >
+                <Icon icon={showIntrospectionTrace ? "eye-slash" : "eye"} />
+                <span>{showIntrospectionTrace ? 'Hide' : 'Show'} Trace</span>
+              </Button>
+            )}
           </Group>
         )}
       </Toolbar>
+      {showIntrospectionTrace && introspectionTimeline.length > 0 && (
+        <div className="border-t border-solid border-(--hl-md)">
+          <ResponseTimelineViewer timeline={introspectionTimeline} />
+        </div>
+      )}
       {graphQLExplorerPortal}
     </>
   );
