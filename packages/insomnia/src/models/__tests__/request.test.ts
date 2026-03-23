@@ -8,6 +8,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { services } from '~/insomnia-data';
+
 import * as models from '../index';
 import type {
   AuthTypeAPIKey,
@@ -31,7 +33,7 @@ import type {
 describe('Request Model - Comprehensive Tests', () => {
   beforeEach(async () => {
     await models.project.all();
-    await models.settings.getOrCreate();
+    await services.settings.getOrCreate();
 
     // Create test project for all tests
     try {

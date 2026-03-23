@@ -5,6 +5,8 @@ import * as Sentry from '@sentry/electron/main';
 import { net } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
+import { services } from '~/insomnia-data';
+
 import {
   getApiBaseURL,
   getAppVersion,
@@ -15,6 +17,12 @@ import {
 } from '../common/constants';
 import { platform } from '../common/platform';
 import * as models from '../models/index';
+
+let _currentOrganizationId: string | undefined;
+
+export function setCurrentOrganizationId(id: string | undefined): void {
+  _currentOrganizationId = id;
+}
 
 const analytics = new Analytics({
   writeKey: getSegmentWriteKey(),
@@ -31,8 +39,8 @@ const analytics = new Analytics({
 });
 
 const getDeviceId = async () => {
-  const settings = await models.settings.get();
-  return settings.deviceId || (await models.settings.update(settings, { deviceId: uuidv4() })).deviceId;
+  const settings = await services.settings.get();
+  return settings.deviceId || (await services.settings.update(settings, { deviceId: uuidv4() })).deviceId;
 };
 
 export enum SegmentEvent {
@@ -69,10 +77,6 @@ export enum SegmentEvent {
   mcpResourceRead = 'MCP Resource Read',
   mcpPromptCalled = 'MCP Prompt Called',
   installPlugin = 'Plugin Installed',
-
-  // TODO(INS-1912): Remove in 12.5
-  tempOrganizationOpened = 'temp_organization_opened',
-  tempProjectOpened = 'temp_project_opened',
 }
 
 function hashString(input: string) {
@@ -83,7 +87,7 @@ export async function trackSegmentEvent(event: SegmentEvent, properties?: Record
   if (PLAYWRIGHT) {
     return;
   }
-  const settings = await models.settings.getOrCreate();
+  const settings = await services.settings.getOrCreate();
   const userSession = await models.userSession.getOrCreate();
   if (!userSession?.hashedAccountId) {
     userSession.hashedAccountId = userSession?.accountId ? hashString(userSession.accountId) : '';
@@ -101,6 +105,7 @@ export async function trackSegmentEvent(event: SegmentEvent, properties?: Record
         {
           event,
           properties: {
+            ...(_currentOrganizationId && { organization_id: _currentOrganizationId }),
             ...properties,
             platform: 'app',
           },
@@ -136,7 +141,7 @@ export async function trackPageView(name: string) {
   if (PLAYWRIGHT) {
     return;
   }
-  const settings = await models.settings.getOrCreate();
+  const settings = await services.settings.getOrCreate();
   const userSession = await models.userSession.getOrCreate();
   if (!userSession?.hashedAccountId) {
     userSession.hashedAccountId = userSession?.accountId ? hashString(userSession.accountId) : '';

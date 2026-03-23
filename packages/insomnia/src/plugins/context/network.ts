@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import { services } from '~/insomnia-data';
 import { readCurlResponse } from '~/models/helpers/response-operations';
 
 import { RESPONSE_CODE_REASONS } from '../../common/constants';
@@ -75,7 +76,7 @@ export function init(): {
       // using node-curl to send a request directly, without context render and database write for request and response
       async sendRequestWithoutSideEffects(options: NodeCurlRequestOptions): Promise<NodeCurlResponseType> {
         const requestId = uuidv4();
-        const settings = await models.settings.get();
+        const settings = await services.settings.get();
         const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
         const { request: originRequest, caCertficatePath = null } = options;
         const curlRequest =

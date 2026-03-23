@@ -26,7 +26,6 @@ import * as _requestMeta from './request-meta';
 import * as _requestVersion from './request-version';
 import * as _response from './response';
 import * as _runnerTestResult from './runner-test-result';
-import * as _settings from './settings';
 import * as _socketIOPayload from './socket-io-payload';
 import * as _socketIORequest from './socket-io-request';
 import * as _socketIoResponse from './socket-io-response';
@@ -61,7 +60,7 @@ export const requestMeta = _requestMeta;
 export const requestVersion = _requestVersion;
 export const runnerTestResult = _runnerTestResult;
 export const response = _response;
-export const settings = _settings;
+export const settings = models.settings;
 export const project = _project;
 export const stats = _stats;
 export const unitTest = _unitTest;
@@ -171,6 +170,14 @@ export function mustGetModel(type: string) {
 export function canDuplicate(type: string) {
   const model = getModel(type);
   return model ? model.canDuplicate : false;
+}
+
+export function rewriteReferences<T extends BaseModel>(doc: T, idMapping: Map<string, string>): T {
+  const model = getModel(doc.type);
+  if (!model) return doc;
+  return 'rewriteReferences' in model
+    ? (model.rewriteReferences as unknown as (doc: T, idMapping: Map<string, string>) => T)(doc, idMapping)
+    : doc;
 }
 
 export async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {

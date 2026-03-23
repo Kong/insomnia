@@ -239,6 +239,81 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 0, 0, 4, expectedTestOrder, 1);
   });
 
+  test('delay input can be cleared to enter a new value', async ({ page }) => {
+    await page.getByTestId('run-collection-btn-quick').click();
+
+    const delayInput = page.locator('input[name="Delay"]');
+
+    // default value should be 0
+    await expect.soft(delayInput).toHaveValue('0');
+
+    // clear the input
+    await delayInput.clear();
+    await expect.soft(delayInput).toHaveValue('');
+
+    // type a new value
+    await delayInput.fill('500');
+    await expect.soft(delayInput).toHaveValue('500');
+  });
+
+  test('running with cleared delay input uses last valid value', async ({ page }) => {
+    await page.getByTestId('run-collection-btn-quick').click();
+
+    const delayInput = page.locator('input[name="Delay"]');
+
+    // set a valid delay
+    await delayInput.fill('100');
+    await expect.soft(delayInput).toHaveValue('100');
+
+    // clear the input without entering a new value
+    await delayInput.clear();
+    await expect.soft(delayInput).toHaveValue('');
+
+    // blur the input - it should restore to last valid value
+    await delayInput.blur();
+    await expect.soft(delayInput).toHaveValue('100');
+  });
+
+  test('iterations input can be cleared to enter a new value', async ({ page }) => {
+    await page.getByTestId('run-collection-btn-quick').click();
+
+    const iterationsInput = page.locator('input[name="Iterations"]');
+
+    // default value should be 1
+    await expect.soft(iterationsInput).toHaveValue('1');
+
+    // clear the input
+    await iterationsInput.clear();
+    await expect.soft(iterationsInput).toHaveValue('');
+
+    // type a new value
+    await iterationsInput.fill('3');
+    await expect.soft(iterationsInput).toHaveValue('3');
+  });
+
+  test('running with cleared iterations input uses last valid value', async ({ page }) => {
+    await page.getByTestId('run-collection-btn-quick').click();
+
+    const iterationsInput = page.locator('input[name="Iterations"]');
+
+    // set a valid iteration count
+    await iterationsInput.fill('2');
+    await expect.soft(iterationsInput).toHaveValue('2');
+
+    // clear the input without entering a new value
+    await iterationsInput.clear();
+    await expect.soft(iterationsInput).toHaveValue('');
+
+    // select a request and run
+    await page.locator('.runner-request-list-req1').click();
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
+
+    // should have run 2 iterations (last valid value)
+    await expect.soft(page.getByTestId('runner-test-result-iteration-1')).toBeVisible();
+    await expect.soft(page.getByTestId('runner-test-result-iteration-2')).toBeVisible();
+    await expect.soft(page.getByTestId('runner-test-result-iteration-3')).toBeHidden();
+  });
+
   test('settings: can turn off logs', async ({ page }) => {
     await page.getByTestId('run-collection-btn-quick').click();
 

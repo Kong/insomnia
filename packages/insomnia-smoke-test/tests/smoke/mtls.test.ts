@@ -76,8 +76,7 @@ test('can use client certificate for mTLS', async ({ app, page }) => {
     .soft(
       page
         .getByLabel('Request Collection')
-        .getByRole('row', { name: 'pet 2' })
-        .first()
+        .getByTestId('pet 2')
         .locator('[data-selected="true"]')
         .first(),
     )

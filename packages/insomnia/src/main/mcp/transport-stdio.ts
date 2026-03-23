@@ -100,7 +100,7 @@ export const createStdioTransport = async (
         eventLogPath,
         transportType: models.mcpRequest.TRANSPORT_TYPES.STDIO,
       };
-      const settings = await models.settings.get();
+      const settings = await services.settings.get();
       const res = await services.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
     }

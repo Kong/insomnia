@@ -7,6 +7,7 @@ import iconv from 'iconv-lite';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
+import { services } from '~/insomnia-data';
 import { getBodyBuffer, readCurlResponse } from '~/models/helpers/response-operations';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
@@ -149,7 +150,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return await models.cloudCredential.update(body.originCredential, body.patch);
   },
   'settings.get': async () => {
-    return await models.settings.get();
+    return await services.settings.get();
   },
   'openInBrowser': async (body: { url: string }) => {
     const { url } = body;
@@ -186,7 +187,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     };
   }) => {
     const requestId = uuidv4();
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
     const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
     const { request: originRequest, caCertficatePath = null } = body.options;
     const response = await curlRequest({

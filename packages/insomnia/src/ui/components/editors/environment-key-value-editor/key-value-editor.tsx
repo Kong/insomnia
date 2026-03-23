@@ -14,22 +14,18 @@ import {
 } from 'react-aria-components';
 
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { checkNestedKeys, ensureKeyIsValid } from '~/utils/environment-utils';
 
 import { generateId } from '../../../../common/misc';
-import {
-  decryptSecretValue,
-  encryptSecretValue,
-  type EnvironmentKvPairData,
-  EnvironmentKvPairDataType,
-} from '../../../../models/environment';
+import { type EnvironmentKvPairData, EnvironmentKvPairDataType } from '../../../../models/environment';
 import { base64decode } from '../../../../utils/vault';
+import { decryptSecretValue, encryptSecretValue } from '../../../../utils/vault';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
 import { showModal } from '../../modals';
 import { AskModal } from '../../modals/ask-modal';
 import { CodePromptModal, type CodePromptModalHandle } from '../../modals/code-prompt-modal';
 import { Tooltip } from '../../tooltip';
-import { checkNestedKeys, ensureKeyIsValid } from '../environment-utils';
 import { PasswordInput } from './password-input';
 
 interface EditorProps {

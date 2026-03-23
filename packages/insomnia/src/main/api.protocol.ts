@@ -5,8 +5,9 @@ import { parse as urlParse } from 'node:url';
 import { Curl, CurlAuth, CurlFeature, CurlProxy, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import { app, net, protocol, session } from 'electron';
 
+import { services } from '~/insomnia-data';
+
 import { getApiBaseURL } from '../common/constants';
-import { get as getSettings } from '../models/settings';
 import * as _userSession from '../models/user-session';
 import { setDefaultProtocol } from './network/libcurl-promise';
 import { resolveDbByKey } from './templating-worker-database';
@@ -52,7 +53,7 @@ export async function registerInsomniaProtocols() {
       const apiURL = getApiBaseURL();
       const url = new URL(`${apiURL}/${originalRequest.url.replace(`${insomniaStreamScheme}://`, '')}`);
       const urlStr = url.toString();
-      const settings = await getSettings();
+      const settings = await services.settings.get();
       // systemProxy follows the PAC return value format.
       // https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file#return_value_format
       let systemProxyStr = await session.defaultSession.resolveProxy(urlStr);

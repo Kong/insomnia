@@ -1,4 +1,5 @@
 import { database } from '../common/database';
+import { replaceIdsInFields } from './helpers/replace-ids-in-fields';
 import type { RequestAuthentication, RequestHeader, RequestParameter, RequestPathParameter } from './request';
 import type { BaseModel } from './types';
 
@@ -102,3 +103,7 @@ export const getById = (_id: string) => database.findOne<WebSocketRequest>(type,
 export const findByParentId = (parentId: string) => database.find<WebSocketRequest>(type, { parentId });
 
 export const all = () => database.find<WebSocketRequest>(type);
+
+export function rewriteReferences(request: WebSocketRequest, idMapping: Map<string, string>): WebSocketRequest {
+  return { ...request, ...replaceIdsInFields(request, ['url', 'headers', 'authentication', 'parameters', 'pathParameters'], idMapping) };
+}

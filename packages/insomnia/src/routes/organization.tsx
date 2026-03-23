@@ -15,9 +15,9 @@ import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoa
 import * as reactUse from 'react-use';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
+import type { Settings } from '~/insomnia-data';
 import { userSession } from '~/models';
 import { isOwnerOfOrganization, isPersonalOrganization } from '~/models/organization';
-import type { Settings } from '~/models/settings';
 import { isScratchpad } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -44,7 +44,6 @@ import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { sortOrganizations } from '~/ui/organization-utils';
-import { trackTempOrganizationOpened } from '~/ui/temp-segment-tracking';
 import { AsyncTask, getInitialRouteForOrganization } from '~/utils/router';
 
 import type { Route } from './+types/organization';
@@ -213,11 +212,9 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     }
   }, [organizationId, untrackedProjectsFetcher]);
 
-  // TODO(INS-1912): Remove in 12.5
   useEffect(() => {
-    if (organizationId) {
-      trackTempOrganizationOpened(organizationId);
-    }
+    window.main.setCurrentOrganizationId(organizationId);
+    return () => window.main.setCurrentOrganizationId(undefined);
   }, [organizationId]);
 
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];

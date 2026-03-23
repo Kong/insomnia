@@ -1,5 +1,7 @@
 import { logout as logoutAPI, whoami } from 'insomnia-api';
 
+import { services } from '~/insomnia-data';
+
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
 import { database } from '../common/database';
 import {
@@ -8,7 +10,6 @@ import {
   gitRepository,
   pluginData,
   project,
-  settings,
   userSession,
   workspaceMeta,
 } from '../models';
@@ -202,12 +203,12 @@ async function _removeAllCredentials() {
     removals.push(_removeGitRepository(repo));
   }
 
-  const proxySettings = await settings.get();
+  const proxySettings = await services.settings.get();
   if (proxySettings.httpProxy?.includes('@')) {
-    removals.push(settings.update(proxySettings, { httpProxy: '' }));
+    removals.push(services.settings.update(proxySettings, { httpProxy: '' }));
   }
   if (proxySettings.httpsProxy?.includes('@')) {
-    removals.push(settings.update(proxySettings, { httpsProxy: '' }));
+    removals.push(services.settings.update(proxySettings, { httpsProxy: '' }));
   }
 
   await Promise.all(removals);

@@ -20,6 +20,7 @@ import { database as db } from '../common/database';
 import type { OAuth1SignatureMethod } from '../network/o-auth-1/constants';
 import { getOperationType } from '../utils/graph-ql';
 import { deconstructQueryStringToParams } from '../utils/url/querystring';
+import { replaceIdsInFields } from './helpers/replace-ids-in-fields';
 import type { BaseModel } from './types';
 
 export const name = 'Request';
@@ -472,4 +473,24 @@ function migrateAuthType(request: Request) {
   }
 
   return request;
+}
+
+export function rewriteReferences(request: Request, idMapping: Map<string, string>): Request {
+  return {
+    ...request,
+    ...replaceIdsInFields(
+      request,
+      [
+        'url',
+        'body',
+        'parameters',
+        'pathParameters',
+        'headers',
+        'authentication',
+        'preRequestScript',
+        'afterResponseScript',
+      ],
+      idMapping,
+    ),
+  };
 }
