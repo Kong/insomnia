@@ -70,7 +70,6 @@ const GitEditProviderOAuthForm = ({
   onComplete?: () => void;
   onCancel?: () => void;
 }) => {
-  console.log({ edit: gitCredentialToEdit });
   const [error, setError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const initSignInFetcher = useInitSignInToGitProviderFetcher();
@@ -83,11 +82,11 @@ const GitEditProviderOAuthForm = ({
 
   const availableEmails = getCredentialEmails(gitCredentialToEdit);
 
-  // useEffect(() => {
-  //   if (completeSignInFetcher.data && !completeSignInError) {
-  //     onComplete?.();
-  //   }
-  // }, [completeSignInFetcher.data, completeSignInError, onComplete]);
+  useEffect(() => {
+    if (updateSignInFetcher.data && !updateSignInError) {
+      onComplete?.();
+    }
+  }, [updateSignInFetcher.data, updateSignInError, onComplete]);
 
   const updateCredentialFetcher = useGitCredentialsUpdateActionFetcher();
   const isEditing = !!gitCredentialToEdit;
@@ -96,18 +95,35 @@ const GitEditProviderOAuthForm = ({
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
+
+    const name = (formData.get('authorName') as string) || '';
+    const email = (formData.get('authorEmail') as string) || '';
+
+    // Updates use shallow merge in the DB layer: a patch must not replace `credentials` with only
+    // `selectedEmail` or we lose token, refreshToken, emails, etc. Merge from the existing credential.
+    const credentialsPatch =
+      gitCredentialToEdit && isGitCredentialsV2(gitCredentialToEdit) && isOAuthCredential(gitCredentialToEdit)
+        ? {
+            ...gitCredentialToEdit.credentials,
+            selectedEmail: email,
+          }
+        : {
+            selectedEmail: email,
+          };
+
     const credentialData = {
-      provider: 'custom' as const,
+      provider: provider.type as GitRemoteProviderType,
       author: {
-        name: (formData.get('authorName') as string) || '',
-        email: (formData.get('authorEmail') as string) || '',
+        name,
+        email,
+        avatarUrl: gitCredentialToEdit?.author.avatarUrl,
       },
-      name: 'Github Credential',
+      credentials: credentialsPatch,
     };
 
-    (await isEditing) &&
+    isEditing &&
       gitCredentialToEdit?._id &&
-      updateCredentialFetcher.submit(gitCredentialToEdit._id, credentialData);
+      updateCredentialFetcher.submit(gitCredentialToEdit._id, credentialData as Partial<GitCredentialsV2>);
     onComplete?.();
   };
 
@@ -147,6 +163,7 @@ const GitEditProviderOAuthForm = ({
               isOpen={isEmailSelectOpen}
               aria-label="Author Email"
               selectedKey={selectedAuthorEmail}
+              name="authorEmail"
               onSelectionChange={email => {
                 setSelectedAuthorEmail(email?.toString());
               }}
@@ -582,7 +599,6 @@ const GitCredentialsList = () => {
       >
         {item => {
           const provider = credentialsFetcher.data?.providers.find(p => p.type === item.provider);
-          console.log({ item, provider });
           return (
             <GridListItem
               id={item._id}
