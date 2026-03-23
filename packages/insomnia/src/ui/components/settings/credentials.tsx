@@ -624,7 +624,7 @@ const GitCredentialsList = () => {
                   <span>{item.author.email}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {isGitCredentialsV2(item) && provider && provider.supportsOAuth && (
+                  {isGitCredentialsV2(item) && provider && (
                     <Button
                       className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
                       onPress={() => {
