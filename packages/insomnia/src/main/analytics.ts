@@ -7,13 +7,13 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {
   getApiBaseURL,
-  getAppPlatform,
   getAppVersion,
   getClientString,
   getProductName,
   getSegmentWriteKey,
   PLAYWRIGHT,
 } from '../common/constants';
+import { platform } from '../common/platform';
 import * as models from '../models/index';
 
 const analytics = new Analytics({
@@ -176,7 +176,6 @@ export async function trackPageView(name: string) {
 // Private Functions //
 // ~~~~~~~~~~~~~~~~~ //
 function _getOsName() {
-  const platform = getAppPlatform();
   switch (platform) {
     case 'darwin': {
       return 'mac';

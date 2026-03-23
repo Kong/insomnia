@@ -18,7 +18,8 @@ import { runGitCredentialsMigration } from '~/sync/git/migrations';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { userDataFolder } from '../config/config.json';
-import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
+import { getAppVersion, getProductName, isDevelopment } from './common/constants';
+import { isMac } from './common/platform';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
@@ -185,7 +186,7 @@ app.on('quit', () => {
 });
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
-  if (!isMac()) {
+  if (!isMac) {
     app.quit();
   }
 });

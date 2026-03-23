@@ -1,7 +1,7 @@
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
 import type { MockServer } from '../models/mock-server';
-import { getPlatform, isLinux as isLinuxPlatform, isMac as isMacOS, isWindows as isWindowsPlatform } from './platform';
+import { isLinux, isMac, isWindows, platform } from './platform';
 
 // Vite is filtering out process.env variables that are not prefixed with VITE_.
 const ENV = 'env';
@@ -28,11 +28,7 @@ export const getAppDefaultLightTheme = () => appConfig.lightTheme;
 export const getAppDefaultDarkTheme = () => appConfig.darkTheme;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
-export const getAppPlatform = () => getPlatform();
 export const getAppBundlePlugins = () => appConfig.bundlePlugins;
-export const isMac = () => isMacOS;
-export const isLinux = () => isLinuxPlatform;
-export const isWindows = () => isWindowsPlatform;
 export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () =>
@@ -53,19 +49,19 @@ export const getBrowserUserAgent = () =>
 
 export function updatesSupported() {
   // Updates are not supported on Linux
-  if (isLinux()) {
+  if (isLinux) {
     return false;
   }
 
   // Updates are not supported for Windows portable binaries
-  if (isWindows() && process.env['PORTABLE_EXECUTABLE_DIR']) {
+  if (isWindows && process.env['PORTABLE_EXECUTABLE_DIR']) {
     return false;
   }
 
   return true;
 }
 
-export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
+export const getClientString = () => `${getAppEnvironment()}::${platform}::${getAppVersion()}`;
 
 // Global Stuff
 export const DEBOUNCE_MILLIS = 100;
@@ -93,7 +89,7 @@ export enum EditorKeyMap {
 
 // Hotkey
 // For an explanation of mnemonics on linux and windows see https://github.com/Kong/insomnia/pull/1221#issuecomment-443543435 & https://docs.microsoft.com/en-us/cpp/windows/defining-mnemonics-access-keys?view=msvc-160#mnemonics-access-keys
-export const MNEMONIC_SYM = isMac() ? '' : '&';
+export const MNEMONIC_SYM = isMac ? '' : '&';
 
 // Oauth redirect URL
 export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.insomnia.rest/oauth/redirect';
