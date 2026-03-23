@@ -918,7 +918,6 @@ const Component = ({ params }: Route.ComponentProps) => {
               isOpen={isNewMockServerModalOpen}
               project={activeProject}
               storageRules={storageRules}
-              currentPlan={organizationData?.currentPlan}
               scope="mock-server"
               sourceApiSpec={apiSpec}
               onOpenChange={setNewMockServerModalOpen}
