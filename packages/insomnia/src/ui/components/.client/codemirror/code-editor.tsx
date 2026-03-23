@@ -46,7 +46,7 @@ import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1_000_000; // Around 1MB
 const LONG_LINE_THRESHOLD = 10_000; // Collapse lines longer than 10,000 characters
-const LONG_LINE_VISIBLE_CHARS = 25; // Show first/last 25 chars if meets LONG_LINE_THRESHOLD
+const LONG_LINE_VISIBLE_CHARS = 20; // Show first/last 20 chars if meets LONG_LINE_THRESHOLD
 
 export const shouldIndentWithTabs = ({ mode, indentWithTabs }: { mode?: string; indentWithTabs?: boolean }) => {
   // YAML is not valid when indented with Tabs
