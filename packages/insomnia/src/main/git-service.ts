@@ -2380,7 +2380,7 @@ async function completeSignInToGitProvider({
 
     return {};
   } catch (error) {
-    console.error(`Failed to complete the ${provider} OAuth flow:`, error);
+    console.error('Failed to complete OAuth flow:', provider, error);
     return { errors: [`Failed to complete the ${provider} OAuth flow. ${getErrorMessage(error)}`] };
   }
 }
@@ -2410,7 +2410,7 @@ async function updateSignInToGitProvider({
 
     return {};
   } catch (error) {
-    console.error(`Failed to complete the ${provider} OAuth flow:`, error);
+    console.error('Failed to complete OAuth flow:', provider, error);
     return { errors: [`Failed to complete the ${provider} OAuth flow. ${getErrorMessage(error)}`] };
   }
 }
