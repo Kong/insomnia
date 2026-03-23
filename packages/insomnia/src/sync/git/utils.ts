@@ -9,6 +9,17 @@ import { gitCredentials, gitRepository } from '../../models';
 
 export const addDotGit = (url: string): string => (url.endsWith('.git') ? url : `${url}.git`);
 
+/**
+ * OAuth2 token responses often include `expires_in` (seconds until access token expires).
+ * We store an absolute ms timestamp on git credentials as `credentials.expiresAt`.
+ */
+export function expiresAtFromOAuthExpiresIn(expiresInSeconds?: number): number | undefined {
+  if (typeof expiresInSeconds !== 'number' || !Number.isFinite(expiresInSeconds) || expiresInSeconds <= 0) {
+    return undefined;
+  }
+  return Date.now() + Math.floor(expiresInSeconds) * 1000;
+}
+
 const onMessage: MessageCallback = message => {
   console.log(`[git-event] ${message}`);
 };
