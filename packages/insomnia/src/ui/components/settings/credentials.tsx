@@ -396,8 +396,6 @@ export const GitCredentialModal = ({
   } | null;
   gitCredentialToEdit?: GitCredentials | null;
 }) => {
-  console.log({ gitCredentialToEdit, provider });
-
   return (
     <ModalOverlay
       isOpen={isOpen}
