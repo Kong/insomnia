@@ -384,8 +384,8 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
       }
 
       const tokenResponse = (await gitLabResponse.json()) as GitLabOAuthTokenResponse;
-      const { access_token, refresh_token } = tokenResponse;
-      const accessTokenExpiresAt = expiresAtFromOAuthExpiresIn(tokenResponse.expires_in);
+      const { access_token, refresh_token, expires_in } = tokenResponse;
+      const accessTokenExpiresAt = expiresAtFromOAuthExpiresIn(expires_in);
 
       gitlabStatesCache.delete(state);
 
@@ -393,12 +393,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
       const user = await this.fetchUserWithToken(access_token);
       const emails = await this.fetchEmailsWithToken(access_token, user);
 
-      const email =
-        emails.find(e => e.primary)?.email ??
-        user.commit_email ??
-        user.public_email ??
-        user.email ??
-        '';
+      const email = emails.find(e => e.primary)?.email ?? user.commit_email ?? user.public_email ?? user.email ?? '';
 
       const author = {
         email,
@@ -431,8 +426,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
         .sort((a, b) => (b.modified ?? 0) - (a.modified ?? 0));
 
       const existing =
-        matchingByEmail[0] ||
-        (existingGitLabCredentials.length === 1 ? existingGitLabCredentials[0] : undefined);
+        matchingByEmail[0] || (existingGitLabCredentials.length === 1 ? existingGitLabCredentials[0] : undefined);
 
       const credential = await (existing
         ? models.gitCredentials.update(existing, {
@@ -444,9 +438,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
               refreshToken: refresh_token,
               emails,
               selectedEmail: email || existing.credentials.selectedEmail,
-              ...(accessTokenExpiresAt !== undefined
-                ? { expiresAt: accessTokenExpiresAt }
-                : {}),
+              ...(accessTokenExpiresAt !== undefined ? { expiresAt: accessTokenExpiresAt } : {}),
             },
           })
         : models.gitCredentials.create({
