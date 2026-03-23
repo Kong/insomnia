@@ -30,6 +30,7 @@ import YAML from 'yaml';
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce, isNotNullOrUndefined } from '~/common/misc';
+import { services } from '~/insomnia-data';
 import * as models from '~/models/index';
 import { isScratchpadOrganizationId } from '~/models/organization';
 import { isGitProject } from '~/models/project';
@@ -79,7 +80,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
 
-  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  const apiSpec = await services.apiSpec.getByParentId(workspaceId);
   if (!apiSpec) {
     showResourceNotFoundToast(`API Specification not found for workspace: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));

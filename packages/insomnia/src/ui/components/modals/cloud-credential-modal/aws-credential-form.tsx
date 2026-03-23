@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 
 import {
-  AWSCredentialType,
   type AWSFileCredential,
   type AWSTemporaryCredential,
   type CloudProviderCredential,
   type CloudProviderName,
-} from '../../../../models/cloud-credential';
+  models,
+} from '~/insomnia-data';
+
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { FilePicker } from './file-picker';
@@ -19,6 +20,7 @@ export interface AWSCredentialFormProps {
   isLoading: boolean;
   errorMessage?: string;
 }
+const { AWSCredentialType } = models.cloudCredential;
 const initialFormValue: { name: string; credentials: Required<AWSCloudCredential>['credentials'] } = {
   name: '',
   credentials: {
@@ -46,7 +48,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
   const [configFilePath, setConfigFilePath] = useState(
     type === AWSCredentialType.sso ? credentials.configFilePath : '',
   );
-  const [credentialType, setCredentialType] = useState<AWSCredentialType>(type);
+  const [credentialType, setCredentialType] = useState(type);
 
   const showOrHideItemValue = (name: string) => {
     if (hideValueItemNames.includes(name)) {
@@ -83,7 +85,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
           newData = {
             ...commonData,
             credentials: {
-              type: type as AWSCredentialType.temp,
+              type,
               accessKeyId,
               secretAccessKey,
               sessionToken,
@@ -94,7 +96,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
           newData = {
             ...commonData,
             credentials: {
-              type: type as AWSCredentialType.file,
+              type,
               region,
               section,
               ...(typeof filePath === 'string' && filePath.length > 0 && { filePath }),
@@ -105,7 +107,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
           newData = {
             ...commonData,
             credentials: {
-              type: type as AWSCredentialType.sso,
+              type,
               region,
               section,
               ...(typeof filePath === 'string' && filePath.length > 0 && { filePath }),

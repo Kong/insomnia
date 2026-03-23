@@ -6,9 +6,7 @@ import type { GitAuth } from 'isomorphic-git';
 import { v4 } from 'uuid';
 
 import { getApiBaseURL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI, PLAYWRIGHT } from '~/common/constants';
-import * as models from '~/models';
-import type { BaseGitCredentialsV2, GitCredentials } from '~/models/git-credentials';
-import { isGitCredentialsV2 } from '~/models/git-credentials';
+import { type BaseGitCredentialsV2, type GitCredentials, models, services } from '~/insomnia-data';
 
 import type {
   GitLabProviderConfig,
@@ -20,6 +18,8 @@ import type {
   ProviderUser,
   ValidationResult,
 } from './types';
+
+const { isGitCredentialsV2 } = models.gitCredentials;
 
 /**
  * OAuth state cache for security validation with PKCE verifiers
@@ -402,7 +402,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
         },
       } satisfies BaseGitCredentialsV2;
 
-      const credential = await models.gitCredentials.create(credentialData);
+      const credential = await services.gitCredentials.create(credentialData);
 
       // Clear any renewal tracking since we have fresh tokens
       renewalTracker.delete(credential._id);
@@ -483,7 +483,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
       const { access_token, refresh_token } = (await response.json()) as GitLabOAuthTokenResponse;
 
       // Update the credential in the database with new tokens
-      const updatedCredential = await models.gitCredentials.update(credential, {
+      const updatedCredential = await services.gitCredentials.update(credential, {
         credentials: {
           token: access_token,
           refreshToken: refresh_token,

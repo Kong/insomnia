@@ -7,14 +7,13 @@ import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getContentDispositionHeader } from '~/common/misc';
-import { services } from '~/insomnia-data';
+import { type ResponseInfo, type RunnerResultPerRequestPerIteration, services } from '~/insomnia-data';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
 import type { Environment, UserUploadEnvironment } from '~/models/environment';
 import { getBodyStream } from '~/models/helpers/response-operations';
 import type { RequestMeta } from '~/models/request-meta';
-import type { ResponseInfo, RunnerResultPerRequestPerIteration } from '~/models/runner-test-result';
 import {
   defaultSendActionRuntime,
   fetchRequestData,

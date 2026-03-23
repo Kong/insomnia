@@ -396,8 +396,8 @@ export function getPluginCommonContext({
           },
         },
         cloudCredential: {
-          getById: models.cloudCredential.getById,
-          update: models.cloudCredential.update,
+          getById: services.cloudCredential.getById,
+          update: services.cloudCredential.update,
         },
         workspace: {
           getById: models.workspace.getById,

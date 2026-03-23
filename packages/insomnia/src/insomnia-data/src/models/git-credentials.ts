@@ -1,5 +1,4 @@
-import { database as db } from '../common/database';
-import type { BaseModel } from './types';
+import type { BaseModel } from '~/models/types';
 
 export type OauthProviderName = 'gitlab' | 'github';
 
@@ -140,39 +139,6 @@ export function isGitCredentialsV2(gitCredential: GitCredentials): gitCredential
  */
 export function isGitCredentialsV1(credential: GitCredentials): credential is GitCredentialsV1 {
   return !isGitCredentialsV2(credential);
-}
-
-/**
- * Migrate legacy credential to new unified structure
- */
-export function migrate(doc: GitCredentials): GitCredentials {
-  return doc;
-}
-
-export function create(patch: BaseGitCredentialsV2) {
-  return db.docCreate<GitCredentialsV2>(type, patch);
-}
-
-export async function getById(id: string) {
-  const doc = await db.findOne<GitCredentials>(type, { _id: id });
-  return doc ? migrate(doc) : null;
-}
-
-export function update(credentials: GitCredentialsV2, patch: Partial<GitCredentialsV2>) {
-  return db.docUpdate<GitCredentialsV2>(credentials, patch);
-}
-
-export function remove(credentials: GitCredentials) {
-  return db.remove(credentials);
-}
-
-export async function all() {
-  const docs = await db.find<GitCredentials>(type);
-  return docs.map(migrate);
-}
-
-export function removeAll() {
-  return db.removeWhere<GitCredentials>(type, {});
 }
 
 /**

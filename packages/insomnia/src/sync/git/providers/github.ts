@@ -4,9 +4,7 @@ import type { GitAuth } from 'isomorphic-git';
 import { v4 } from 'uuid';
 
 import { getApiBaseURL, getAppWebsiteBaseURL, PLAYWRIGHT } from '~/common/constants';
-import * as models from '~/models';
-import type { GitCredentials } from '~/models/git-credentials';
-import { isGitCredentialsV2 } from '~/models/git-credentials';
+import { type GitCredentials, models, services } from '~/insomnia-data';
 
 import type {
   GitHubProviderConfig,
@@ -18,6 +16,8 @@ import type {
   ProviderUser,
   ValidationResult,
 } from './types';
+
+const { isGitCredentialsV2 } = models.gitCredentials;
 
 /**
  * OAuth state cache for security validation
@@ -296,7 +296,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
       const userProfileEmail = user.email ?? '';
       const email = emails.find(e => e.primary)?.email ?? userProfileEmail ?? '';
 
-      await models.gitCredentials.create({
+      await services.gitCredentials.create({
         name: 'GitHub Credential',
         credentials: {
           token: data.access_token,

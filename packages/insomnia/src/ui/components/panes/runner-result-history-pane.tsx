@@ -12,7 +12,8 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 
-import type { RunnerTestResult } from '../../..//models/runner-test-result';
+import type { RunnerTestResult } from '~/insomnia-data';
+
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { getTimeAndUnit } from '../tags/time-tag';

@@ -3,6 +3,7 @@ import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
@@ -40,7 +41,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  const gitRepository = project.gitRepositoryId ? await models.gitRepository.getById(project.gitRepositoryId) : null;
+  const gitRepository = project.gitRepositoryId ? await services.gitRepository.getById(project.gitRepositoryId) : null;
 
   const user = await models.userSession.getOrCreate();
   const sessionId = user.id;
@@ -166,9 +167,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         });
 
         if (project.gitRepositoryId) {
-          const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
+          const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
 
-          gitRepository && (await models.gitRepository.remove(gitRepository));
+          gitRepository && (await services.gitRepository.remove(gitRepository));
         }
 
         await models.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
@@ -337,9 +338,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     // convert from git to local
     if (storageType === 'local' && project.gitRepositoryId) {
-      const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
+      const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
 
-      gitRepository && (await models.gitRepository.remove(gitRepository));
+      gitRepository && (await services.gitRepository.remove(gitRepository));
       await models.project.update(project, { name, gitRepositoryId: null });
 
       reportGitProjectCount(organizationId, sessionId);
@@ -356,7 +357,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     // update existing git repository settings (author email override)
     if (storageType === 'git' && gitRepository?.credentialsId) {
-      models.gitRepository.update(gitRepository, { selectedAuthorEmail });
+      services.gitRepository.update(gitRepository, { selectedAuthorEmail });
 
       if (name !== project.name) {
         await models.project.update(project, { name });

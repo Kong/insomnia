@@ -3,13 +3,16 @@ import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
 import { sortMethodMap } from '~/common/sorting';
-import { type CaCertificate, services } from '~/insomnia-data';
+import {
+  type ApiSpec,
+  type CaCertificate,
+  type ClientCertificate,
+  type GitRepository,
+  services,
+} from '~/insomnia-data';
 import * as models from '~/models';
-import type { ApiSpec } from '~/models/api-spec';
-import type { ClientCertificate } from '~/models/client-certificate';
 import type { CookieJar } from '~/models/cookie-jar';
 import type { Environment } from '~/models/environment';
-import type { GitRepository } from '~/models/git-repository';
 import type { GrpcRequest } from '~/models/grpc-request';
 import type { GrpcRequestMeta } from '~/models/grpc-request-meta';
 import { sortProjects } from '~/models/helpers/project';
@@ -84,7 +87,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   const gitRepositoryId = isGitProject(activeProject)
     ? activeProject.gitRepositoryId
     : activeWorkspaceMeta.gitRepositoryId;
-  const gitRepository = await models.gitRepository.getById(gitRepositoryId || '');
+  const gitRepository = await services.gitRepository.getById(gitRepositoryId || '');
 
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
 
@@ -128,9 +131,9 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
 
   const activeCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
-  const activeApiSpec = await models.apiSpec.getByParentId(workspaceId);
+  const activeApiSpec = await services.apiSpec.getByParentId(workspaceId);
   const activeMockServer = await models.mockServer.getByParentId(workspaceId);
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
 
   const organizationProjects =
     (await database.find<Project>(models.project.type, {

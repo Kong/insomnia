@@ -15,12 +15,7 @@ import {
 } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
-import {
-  type GitCredentials,
-  type GitCredentialsV2,
-  type GitRemoteProviderType,
-  isGitCredentialsV2,
-} from '~/models/git-credentials';
+import { type GitCredentials, type GitCredentialsV2, type GitRemoteProviderType, models } from '~/insomnia-data';
 import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
 import { useGitCredentialsDeleteActionFetcher } from '~/routes/git-credentials.$id.delete';
 import { useRelatedProjectsByGitCredentialsIdLoaderFetcher } from '~/routes/git-credentials.$id.related-projects';
@@ -37,6 +32,8 @@ const getErrorResult = (data: any) => {
   }
   return null;
 };
+
+const { isGitCredentialsV2 } = models.gitCredentials;
 
 const GitProviderOAuthForm = ({
   provider,

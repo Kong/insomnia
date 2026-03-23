@@ -1,13 +1,12 @@
 import orderedJSON from 'json-order';
 import { z, type ZodError } from 'zod/v4';
 
-import { type McpRequest } from '~/insomnia-data';
+import { type ApiSpec, type McpRequest, services } from '~/insomnia-data';
 import { insecureReadFile } from '~/main/secure-read-file';
 
 import { type InsomniaImporter } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
 import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
-import { type ApiSpec, isApiSpec } from '../models/api-spec';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';
 import {
   type Environment,
@@ -32,6 +31,8 @@ import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
+
+const { isApiSpec } = models.apiSpec;
 
 export type AllExportTypes =
   | 'request'
@@ -584,7 +585,7 @@ export const importResourcesToNewWorkspace = async ({
       parentId: projectId,
     });
 
-    await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
+    await services.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
       contents: resourceCacheItem.content as string | undefined,
       contentType: 'yaml',
       fileName: workspaceToImport?.name,

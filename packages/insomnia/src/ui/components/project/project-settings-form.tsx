@@ -17,12 +17,7 @@ import { useParams } from 'react-router';
 import { Banner } from '~/basic-components/banner';
 import { Divider } from '~/basic-components/divider';
 import { LearnMoreLink } from '~/basic-components/link';
-import {
-  type GitCredentials,
-  isGitCredentialsV2,
-  isOAuthCredential,
-  type ProviderEmail,
-} from '~/models/git-credentials';
+import { type GitCredentials, type GitRepository, models, type ProviderEmail } from '~/insomnia-data';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
 import type { GitProviderOption } from '~/sync/git/providers/types';
@@ -35,7 +30,6 @@ import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 
-import type { GitRepository } from '../../../models/git-repository';
 import {
   EMPTY_GIT_PROJECT_ID,
   getDefaultProjectStorageType,
@@ -47,6 +41,7 @@ import { useProjectUpdateActionFetcher } from '../../../routes/organization.$org
 import { Icon } from '../icon';
 
 const FORMID = 'git-repo-form';
+const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
 function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
   if (storageType === 'git' && !isGitProject(project)) {

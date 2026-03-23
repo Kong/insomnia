@@ -7,14 +7,13 @@ import iconv from 'iconv-lite';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
-import { services } from '~/insomnia-data';
+import { type CloudProviderCredential, services } from '~/insomnia-data';
 import { getBodyBuffer, readCurlResponse } from '~/models/helpers/response-operations';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import * as models from '../models';
-import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { Request as DBRequest } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
@@ -141,13 +140,13 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     }));
   },
   'cloudCredential.getById': async (body: { id: string }) => {
-    return await models.cloudCredential.getById(body.id);
+    return await services.cloudCredential.getById(body.id);
   },
   'cloudCredential.update': async (body: {
     originCredential: CloudProviderCredential;
     patch: Partial<CloudProviderCredential>;
   }) => {
-    return await models.cloudCredential.update(body.originCredential, body.patch);
+    return await services.cloudCredential.update(body.originCredential, body.patch);
   },
   'settings.get': async () => {
     return await services.settings.get();
