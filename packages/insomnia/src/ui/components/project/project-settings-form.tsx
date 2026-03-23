@@ -23,9 +23,9 @@ import {
   isOAuthCredential,
   type ProviderEmail,
 } from '~/models/git-credentials';
-import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useGitProjectRepoFetcher } from '~/routes/git.repo';
+import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
@@ -47,6 +47,7 @@ import {
 } from '../../../models/project';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
+
 
 const FORMID = 'git-repo-form';
 
