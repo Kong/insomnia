@@ -7,14 +7,13 @@ export type {
   CloudProviderName,
   AWSFileCredential,
   AWSTemporaryCredential,
-  AWSCredentialType,
   HCPCredential,
   HCPVaultDedicatedAppRoleCredential,
   HCPVaultDedicatedTokenCredential,
   VaultAppRoleCredential,
   VaultTokenCredential,
 } from './cloud-credential';
-export { HashiCorpCredentialType, HashiCorpVaultAuthMethod } from './cloud-credential';
+export { AWSCredentialType, HashiCorpCredentialType, HashiCorpVaultAuthMethod } from './cloud-credential';
 export type {
   GitCredentials,
   GitCredentialsV2,

@@ -36,7 +36,7 @@ const getDisplayValue = (fullUri: string | undefined, prefix: string | undefined
 
 const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
-const getCredentialEmails = (credential: GitCredentials | undefined): ProviderEmail[] => {
+const getCredentialEmails = (credential: GitCredentials | undefined) => {
   if (credential && isGitCredentialsV2(credential) && isOAuthCredential(credential)) {
     return credential.credentials?.emails || [];
   }
