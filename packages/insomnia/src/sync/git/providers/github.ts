@@ -322,15 +322,17 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
         (c): c is GitHubCredentialV2 => isGitCredentialsV2(c) && c.provider === 'github',
       );
 
-      const matchingByEmail = existingGitHubCredentials
-        .filter(c => {
-          return (
-            c.author.email === email ||
-            c.credentials.selectedEmail === email ||
-            c.credentials.emails?.some(e => e.email === email)
-          );
-        })
-        .sort((a, b) => (b.modified ?? 0) - (a.modified ?? 0));
+      const matchingByEmail = email
+        ? existingGitHubCredentials
+            .filter(c => {
+              return (
+                c.author.email === email ||
+                c.credentials.selectedEmail === email ||
+                c.credentials.emails?.some(e => e.email === email)
+              );
+            })
+            .sort((a, b) => (b.modified ?? 0) - (a.modified ?? 0))
+        : [];
 
       const existing =
         matchingByEmail[0] ||
