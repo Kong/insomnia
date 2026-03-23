@@ -25,6 +25,3 @@ export const platform: Platform = _platform;
 export const isMac: boolean = _platform === 'darwin';
 export const isWindows: boolean = _platform === 'win32';
 export const isLinux: boolean = _platform === 'linux';
-
-// Export getter function (for compatibility with constants.ts)
-export const getPlatform = (): Platform => platform;
