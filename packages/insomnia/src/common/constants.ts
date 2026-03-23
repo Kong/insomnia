@@ -1,8 +1,7 @@
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
 import type { MockServer } from '../models/mock-server';
-import { getPlatform, isLinux as isLinuxPlatform, isMacintosh, isWindows as isWindowsPlatform } from './platform';
-import type { KeyCombination } from './settings';
+import { getPlatform, isLinux as isLinuxPlatform, isMac as isMacOS, isWindows as isWindowsPlatform } from './platform';
 
 // Vite is filtering out process.env variables that are not prefixed with VITE_.
 const ENV = 'env';
@@ -31,7 +30,7 @@ export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
 export const getAppPlatform = () => getPlatform();
 export const getAppBundlePlugins = () => appConfig.bundlePlugins;
-export const isMac = () => isMacintosh;
+export const isMac = () => isMacOS;
 export const isLinux = () => isLinuxPlatform;
 export const isWindows = () => isWindowsPlatform;
 export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
@@ -95,43 +94,6 @@ export enum EditorKeyMap {
 // Hotkey
 // For an explanation of mnemonics on linux and windows see https://github.com/Kong/insomnia/pull/1221#issuecomment-443543435 & https://docs.microsoft.com/en-us/cpp/windows/defining-mnemonics-access-keys?view=msvc-160#mnemonics-access-keys
 export const MNEMONIC_SYM = isMac() ? '' : '&';
-
-export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) => {
-  const mac = isMac();
-  switch (key) {
-    case 'ctrl': {
-      return mac ? '⌃' : 'Ctrl';
-    }
-
-    case 'alt': {
-      return mac ? '⌥' : 'Alt';
-    }
-
-    case 'shift': {
-      return mac ? '⇧' : 'Shift';
-    }
-
-    case 'meta': {
-      if (mac) {
-        return '⌘';
-      }
-
-      if (isWindows()) {
-        // Note: Although this unicode character for the Windows doesn't exist, the Unicode character U+229E ⊞ SQUARED PLUS is very commonly used for this purpose. For example, Wikipedia uses it as a simulation of the windows logo.  Though, Windows itself uses `Windows` or `Win`, so we'll go with `Win` here.
-        // see: https://en.wikipedia.org/wiki/Windows_key
-        return 'Win';
-      }
-
-      // Note: To avoid using a Microsoft trademark, much Linux documentation refers to the key as "Super". This can confuse some users who still consider it a "Windows key". In KDE Plasma documentation it is called the Meta key even though the X11 "Super" shift bit is used.
-      // see: https://en.wikipedia.org/wiki/Super_key_(keyboard_button)
-      return 'Super';
-    }
-
-    default: {
-      throw new Error(key + 'unrecognized key');
-    }
-  }
-};
 
 // Oauth redirect URL
 export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.insomnia.rest/oauth/redirect';

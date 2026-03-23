@@ -22,7 +22,7 @@ const _platform: Platform = nodeProcess?.platform ? (nodeProcess.platform as Pla
 
 // Export constants (VSCode style)
 export const platform: Platform = _platform;
-export const isMacintosh: boolean = _platform === 'darwin';
+export const isMac: boolean = _platform === 'darwin';
 export const isWindows: boolean = _platform === 'win32';
 export const isLinux: boolean = _platform === 'linux';
 
