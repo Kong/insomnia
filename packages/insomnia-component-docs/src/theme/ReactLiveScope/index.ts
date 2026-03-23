@@ -4,7 +4,6 @@ import { Icon } from 'insomnia/src/basic-components/icon';
 import { LearnMoreLink } from 'insomnia/src/basic-components/link';
 import { Tab, Tabs } from 'insomnia/src/basic-components/tabs';
 import { Checkbox, CheckboxGroup } from 'insomnia/src/ui/components/base/checkbox';
-import { Dropdown } from 'insomnia/src/ui/components/base/dropdown';
 import { Input } from 'insomnia/src/ui/components/base/input';
 import { InputNumber } from 'insomnia/src/ui/components/base/input-number';
 import { Select } from 'insomnia/src/ui/components/base/select';
@@ -29,7 +28,6 @@ const ReactLiveScope = {
   Switch,
   Checkbox,
   CheckboxGroup,
-  Dropdown,
 };
 
 export default ReactLiveScope;
