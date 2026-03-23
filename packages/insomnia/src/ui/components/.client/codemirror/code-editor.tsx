@@ -45,6 +45,8 @@ import { getCachedEditorState, setCachedEditorState } from './editor-state-cache
 import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1_000_000; // Around 1MB
+const LONG_LINE_THRESHOLD = 10_000; // Collapse lines longer than 10,000 characters
+const LONG_LINE_VISIBLE_CHARS = 25; // Show first/last 25 chars if meets LONG_LINE_THRESHOLD
 
 export const shouldIndentWithTabs = ({ mode, indentWithTabs }: { mode?: string; indentWithTabs?: boolean }) => {
   // YAML is not valid when indented with Tabs
@@ -74,6 +76,60 @@ const widget = (cm: CodeMirror.EditorFromTextArea | null, from: CodeMirror.Posit
     return '\u2194';
   }
 };
+
+function setEditorValueWithTruncation(
+  editor: CodeMirror.EditorFromTextArea | null,
+  fullText: string,
+  threshold = LONG_LINE_THRESHOLD,
+) {
+  if (!editor) {
+    return;
+  }
+  // split the origin text by line with different line breaks across Different OS
+  const lines = fullText.split(/\r\n?|\n/);
+  const longLinesMap: Record<number, string> = {};
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].length > threshold) {
+      // save the original long line in a map for later restoration
+      longLinesMap[i] = lines[i];
+      // truncate the line, preserving both the start and end
+      lines[i] = lines[i].slice(0, LONG_LINE_VISIBLE_CHARS) + lines[i].slice(-LONG_LINE_VISIBLE_CHARS);
+    }
+  }
+  editor.setValue(lines.join('\n'));
+
+  const makeToggleWidget = (lineNum: number, originalText: string): HTMLSpanElement => {
+    const el = document.createElement('span');
+    el.className = 'line-collapse-widget';
+    el.style.cssText =
+      'display:inline-block;padding:0 6px;margin:0 2px;background:var(--hl-md);color:var(--color-font);' +
+      'border-radius:3px;font-size:0.85em;cursor:pointer;vertical-align:baseline;';
+
+    el.textContent = '\u2026 Show full value \u2026';
+    el.title = 'Expanding long values can affect performance';
+    el.onclick = () => {
+      editor.replaceRange(
+        originalText,
+        { line: lineNum, ch: 0 },
+        { line: lineNum, ch: editor.getLine(lineNum).length },
+      );
+    };
+
+    return el;
+  };
+
+  Object.keys(longLinesMap).forEach(lineStr => {
+    const lineNum = Number.parseInt(lineStr, 10);
+    const originalText = longLinesMap[lineNum];
+    editor.setBookmark(
+      { line: lineNum, ch: LONG_LINE_VISIBLE_CHARS },
+      { widget: makeToggleWidget(lineNum, originalText), insertLeft: true },
+    );
+  });
+}
+
+// Global object used for storing and persisting editor scroll, lint and folding margin states
+const editorStates: Record<string, EditorState> = {};
 export interface CodeEditorProps {
   autoPrettify?: boolean;
   className?: string;
@@ -107,6 +163,7 @@ export interface CodeEditorProps {
   pinToBottom?: boolean;
   placeholder?: string;
   readOnly?: boolean;
+  truncateLongLines?: boolean;
   style?: object;
   // NOTE: for caching scroll and marks
   historyKey?: string;
@@ -184,6 +241,7 @@ export const CodeEditor = memo(
         pinToBottom,
         placeholder,
         readOnly,
+        truncateLongLines,
         style,
         historyKey,
         updateFilter,
@@ -221,6 +279,7 @@ export const CodeEditor = memo(
       );
       const { handleRender, handleGetRenderContext } = useNunjucks();
       const isNunjucksEnabled = enableNunjucks && handleRender;
+      const shouldTruncateLongLines = !!readOnly && !!truncateLongLines;
 
       const maybePrettifyAndSetValue = useCallback(
         (code?: string, forcePrettify?: boolean, filter?: string) => {
@@ -290,9 +349,11 @@ export const CodeEditor = memo(
           if (currentCode === code) {
             return;
           }
-          codeMirror.current?.setValue(code || '');
+          shouldTruncateLongLines
+            ? setEditorValueWithTruncation(codeMirror.current, code)
+            : codeMirror.current?.setValue(code || '');
         },
-        [autoPrettify, mode, indentChars, updateFilter],
+        [autoPrettify, shouldTruncateLongLines, updateFilter, indentChars, mode],
       );
 
       useDocBodyKeyboardShortcuts({
@@ -376,6 +437,7 @@ export const CodeEditor = memo(
           styleActiveLine: !noStyleActiveLine,
           indentWithTabs,
           showCursorWhenSelecting: false,
+          maxHighlightLength: 1000,
           cursorScrollMargin: 12,
           // Only set keyMap if we're not read-only. This is so things like ctrl-a work on read-only mode.
           keyMap: !readOnly && settings.editorKeyMap ? settings.editorKeyMap : 'default',
@@ -681,7 +743,10 @@ export const CodeEditor = memo(
       useImperativeHandle(
         ref,
         () => ({
-          setValue: value => codeMirror.current?.setValue(value),
+          setValue: value =>
+            shouldTruncateLongLines
+              ? setEditorValueWithTruncation(codeMirror.current, value)
+              : codeMirror.current?.setValue(value || ''),
           getValue: () => codeMirror.current?.getValue() || '',
           selectAll: () =>
             codeMirror.current?.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 }),
