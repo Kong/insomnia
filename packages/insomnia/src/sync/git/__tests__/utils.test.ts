@@ -47,9 +47,9 @@ describe('expiresAtFromOAuthExpiresIn', () => {
     vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
 
     const expectedNow = Date.now();
-    expect(expiresAtFromOAuthExpiresIn(30)).toBe(expectedNow + 30_000);
+    expect(expiresAtFromOAuthExpiresIn(30)).toBe(expectedNow + 30 * 1000);
     // Floors fractional values to whole seconds before conversion.
-    expect(expiresAtFromOAuthExpiresIn(1.9)).toBe(expectedNow + 1_000);
+    expect(expiresAtFromOAuthExpiresIn(1.9)).toBe(expectedNow + 1 * 1000);
   });
 
   it('returns undefined for invalid values', () => {
