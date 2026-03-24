@@ -150,7 +150,7 @@ export default class BaseExtension {
             getById: models.workspace.getById,
           },
           oAuth2Token: {
-            getByRequestId: models.oAuth2Token.getByParentId,
+            getByRequestId: services.oAuth2Token.getByParentId,
           },
           cookieJar: {
             getOrCreateForParentId: (parentId: string) => {

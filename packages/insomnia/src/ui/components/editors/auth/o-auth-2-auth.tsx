@@ -1,11 +1,12 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
+import type { OAuth2Token } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
+
 import { getOauthRedirectUrl } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
-import * as models from '../../../../models';
-import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { AuthTypeOAuth2, OAuth2ResponseType, RequestAuthentication } from '../../../../models/request';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
@@ -503,8 +504,8 @@ const OAuth2TokenInput: FC<{
   const { _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const onChange = async ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => {
     await (token
-      ? models.oAuth2Token.update(token, { [property]: value })
-      : models.oAuth2Token.create({ [property]: value, parentId: _id }));
+      ? services.oAuth2Token.update(token, { [property]: value })
+      : services.oAuth2Token.create({ [property]: value, parentId: _id }));
   };
 
   const expiryLabel = useMemo(() => {
@@ -580,7 +581,7 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
   const [token, setToken] = useState<OAuth2Token | undefined>();
   useEffect(() => {
     const fn = async () => {
-      const token = await models.oAuth2Token.getByParentId(_id);
+      const token = await services.oAuth2Token.getByParentId(_id);
       setToken(token);
     };
     fn();
@@ -609,7 +610,7 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
             onClick={() => {
               if (token) {
                 setToken(undefined);
-                models.oAuth2Token.remove(token);
+                services.oAuth2Token.remove(token);
               }
             }}
           >
@@ -633,7 +634,7 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
                 // Clear existing tokens if there's an error
                 if (token) {
                   setToken(undefined);
-                  models.oAuth2Token.remove(token);
+                  services.oAuth2Token.remove(token);
                 }
                 setError(err.message);
                 setLoading(false);

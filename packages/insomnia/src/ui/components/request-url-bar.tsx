@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { SECURITY_SETTINGS_PATH_LABEL } from '~/common/misc';
+import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import {
   type ConnectActionParams,
@@ -183,7 +184,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const sendOrConnect = useCallback(
       async (shouldPromptForPathAfterResponse?: boolean, ignoreUndefinedEnvVariable?: boolean) => {
         updateTabById?.(requestId, { temporary: false });
-        models.stats.incrementExecutedRequests();
+        services.stats.incrementExecutedRequests();
         // reset timeout
         setCurrentTimeout(undefined);
 

@@ -4,13 +4,12 @@ import { href } from 'react-router';
 import { database } from '~/common/database';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import { userSession } from '~/models';
 import type { Project } from '~/models/project';
 import { isEmptyGitProject } from '~/models/project';
 import { createFetcherLoadHook } from '~/utils/router';
 
 export async function clientLoader() {
-  const { accountId } = await userSession.getOrCreate();
+  const { accountId } = await services.userSession.getOrCreate();
   const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
   const allProjects = (
     await Promise.all(

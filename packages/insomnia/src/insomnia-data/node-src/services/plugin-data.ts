@@ -1,37 +1,6 @@
-import { database as db } from '../common/database';
-import type { BaseModel } from './types';
+import { database as db, models, type PluginData } from '~/insomnia-data';
 
-export const name = 'PluginData';
-
-export const type = 'PluginData';
-
-export const prefix = 'plg';
-
-export const canDuplicate = false;
-
-export const canSync = false;
-
-interface BasePluginData {
-  plugin: string;
-  key: string;
-  value: string;
-}
-
-export type PluginData = BaseModel & BasePluginData;
-
-export const isPluginData = (model: Pick<BaseModel, 'type'>): model is PluginData => model.type === type;
-
-export function init(): BasePluginData {
-  return {
-    plugin: '',
-    key: '',
-    value: '',
-  };
-}
-
-export function migrate(doc: PluginData) {
-  return doc;
-}
+const { type } = models.pluginData;
 
 export function create(patch: Partial<PluginData> = {}) {
   return db.docCreate<PluginData>(type, patch);

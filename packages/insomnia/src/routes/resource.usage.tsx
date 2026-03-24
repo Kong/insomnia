@@ -8,7 +8,7 @@ import {
 } from 'insomnia-api';
 import { href } from 'react-router';
 
-import { userSession } from '~/models';
+import { services } from '~/insomnia-data';
 import { createFetcherLoadHook } from '~/utils/router';
 
 async function getCurrentEnterprise(sessionId: string) {
@@ -24,7 +24,7 @@ function getLicenseUsage(sessionId: string, enterpriseId?: string | null) {
 }
 
 export async function clientLoader() {
-  const { id: sessionId, accountId } = await userSession.get();
+  const { id: sessionId, accountId } = await services.userSession.get();
 
   if (!sessionId) {
     return {

@@ -1,13 +1,13 @@
 import { startTrial } from 'insomnia-api';
 
-import { userSession } from '~/models';
+import { services } from '~/insomnia-data';
 import { syncCurrentPlan } from '~/ui/organization-utils';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/settings.update';
 
 export async function clientAction(_args: Route.ClientActionArgs) {
-  const { id: sessionId, accountId } = await userSession.get();
+  const { id: sessionId, accountId } = await services.userSession.get();
 
   if (!sessionId || !accountId) {
     return {

@@ -3,11 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { generateId } from '../../../common/misc';
 import { isGrpcRequest, isGrpcRequestId } from '../../grpc-request';
 import * as models from '../../index';
-import { isProtoDirectory } from '../../proto-directory';
-import { isProtoFile } from '../../proto-file';
 import { isRequest } from '../../request';
 import { isRequestGroup } from '../../request-group';
 import { isDesign, isWorkspace, WorkspaceScopeKeys } from '../../workspace';
+
+const { isProtoDirectory } = models.protoDirectory;
+const { isProtoFile } = models.protoFile;
 
 const allTypes = models.types();
 const allPrefixes = models.all().map(model => model.prefix);

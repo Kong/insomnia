@@ -9,6 +9,7 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import { configureFetch } from 'insomnia-api';
 
 import { getCurrentSessionId } from '~/account/session';
+import type { Stats } from '~/insomnia-data';
 import { database, initDatabase, initServices, services } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
@@ -40,7 +41,6 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import type { Project, RemoteProject } from './models/project';
-import type { Stats } from './models/stats';
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
 // ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)
@@ -292,7 +292,7 @@ const _launchApp = async () => {
   To avoid that, create them explicitly prior to any initialization steps
  */
 async function _createModelInstances() {
-  await models.stats.get();
+  await services.stats.get();
   await services.settings.getOrCreate();
   try {
     const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
@@ -349,8 +349,8 @@ function getOperatingSystem(): string {
 
 async function _trackStats() {
   // Handle the stats
-  const oldStats = await models.stats.get();
-  const stats: Stats = await models.stats.update({
+  const oldStats = await services.stats.get();
+  const stats: Stats = await services.stats.update({
     currentLaunch: Date.now(),
     lastLaunch: oldStats.currentLaunch,
     currentVersion: getAppVersion(),

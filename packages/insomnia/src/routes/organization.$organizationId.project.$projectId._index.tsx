@@ -38,7 +38,6 @@ import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort, sortMethodMap } from '~/common/sorting';
 import { type ApiSpec, type GitRepository, services } from '~/insomnia-data';
 import * as models from '~/models';
-import { userSession } from '~/models';
 import { sortProjects } from '~/models/helpers/project';
 import type { MockServer } from '~/models/mock-server';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '~/models/organization';
@@ -357,7 +356,7 @@ const CheckAllProjectSyncStatus = async (projects: Project[]) => {
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
-  const { id: sessionId } = await userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.getOrCreate();
   const fallbackLearningFeature = {
     active: false,
     title: '',

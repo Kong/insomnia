@@ -8,8 +8,14 @@ import * as gitRepository from './git-repository';
 import * as mcpPayload from './mcp-payload';
 import * as mcpRequest from './mcp-request';
 import * as mcpResponse from './mcp-response';
+import * as oAuth2Token from './o-auth-2-token';
+import * as pluginData from './plugin-data';
+import * as protoDirectory from './proto-directory';
+import * as protoFile from './proto-file';
 import * as runnerTestResult from './runner-test-result';
 import * as settings from './settings';
+import * as stats from './stats';
+import * as userSession from './user-session';
 
 export const models = {
   apiSpec,
@@ -21,6 +27,12 @@ export const models = {
   mcpPayload,
   mcpRequest,
   mcpResponse,
+  oAuth2Token,
+  pluginData,
+  protoDirectory,
+  protoFile,
   runnerTestResult,
   settings,
+  stats,
+  userSession,
 } as const;

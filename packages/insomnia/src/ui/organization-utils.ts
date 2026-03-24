@@ -9,9 +9,10 @@ import {
 import { fetchTeamProjects } from 'insomnia-api';
 
 import { projectLock } from '~/common/project';
+import { services } from '~/insomnia-data';
 
 import { database } from '../common/database';
-import { project, userSession } from '../models';
+import { project } from '../models';
 import { updateLocalProjectToRemote } from '../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../models/organization';
 import type { Project } from '../models/project';
@@ -142,7 +143,7 @@ export async function fetchAndCacheOrganizationStorageRule(
       return storageRules;
     }
   }
-  const { id: sessionId } = await userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.getOrCreate();
 
   // Otherwise fetch from the API
   return await getOrganizationStorageRule({
@@ -168,7 +169,7 @@ interface TeamProject {
 }
 
 async function getAllTeamProjects(organizationId: string) {
-  const { id: sessionId } = await userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.getOrCreate();
   if (!sessionId) {
     return [];
   }
@@ -246,7 +247,7 @@ async function syncTeamProjects({
 }
 
 export const syncProjects = projectLock.wrapWithLock(async (organizationId: string) => {
-  const user = await userSession.getOrCreate();
+  const user = await services.userSession.getOrCreate();
   const teamProjects = await getAllTeamProjects(organizationId);
   // ensure we don't sync projects in the wrong place
   if (Array.isArray(teamProjects) && user.id && !isScratchpadOrganizationId(organizationId)) {

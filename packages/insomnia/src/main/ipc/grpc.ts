@@ -31,7 +31,6 @@ import * as grpcReflection from 'grpc-reflection-js';
 import { services } from '~/insomnia-data';
 
 import { version } from '../../../package.json';
-import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from '../../models/grpc-request';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
 import { writeProtoFile } from '../../network/grpc/write-proto-file';
@@ -89,7 +88,7 @@ const loadMethodsFromFilePath = async (filePath: string, includeDirs: string[]):
   return getMethodsFromPackageDefinition(definition);
 };
 const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
-  const protoFile = await models.protoFile.getById(protoFileId);
+  const protoFile = await services.protoFile.getById(protoFileId);
   invariant(protoFile, `Proto file ${protoFileId} not found`);
   const { filePath, dirs } = await writeProtoFile(protoFile);
   const methods = await loadMethodsFromFilePath(filePath, dirs);
@@ -299,7 +298,7 @@ export const getSelectedMethod = async (
   ipcParams: GrpcIpcRequestParams,
 ): Promise<MethodDefs | undefined> => {
   if (request.protoFileId) {
-    const protoFile = await models.protoFile.getById(request.protoFileId);
+    const protoFile = await services.protoFile.getById(request.protoFileId);
     invariant(protoFile?.protoText, `No proto file found for gRPC request ${request._id}`);
     const { filePath, dirs } = await writeProtoFile(protoFile);
     const methods = await loadMethodsFromFilePath(filePath, dirs);
@@ -455,7 +454,7 @@ export const start = (event: IpcMainEvent, ipcParams: GrpcIpcRequestParams) => {
           throw new Error(`Unsupported method type: ${methodType}`);
         }
         // Update request stats
-        models.stats.incrementExecutedRequests();
+        services.stats.incrementExecutedRequests();
         event.reply('grpc.start', request._id);
       } catch (error) {
         // TODO: How do we want to handle this case, where the message cannot be parsed?
