@@ -103,6 +103,9 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     // example: GET,https://rest.rodeo/api
     if (data.endpoint && Array.isArray(importedWorkspaces) && importedWorkspaces.length > 0) {
       const [method, path] = data.endpoint.split(',', 2);
+      if (!method || !path) {
+        return { done: false };
+      }
       for (const ws of importedWorkspaces) {
         invariant(ws, 'Workspace not found');
         if (ws.scope !== 'design') continue;

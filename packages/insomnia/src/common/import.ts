@@ -834,6 +834,9 @@ export async function findRequestInExistingWorkspace(
   const requests = allDocs.filter(isRequest);
   if (endpoint) {
     const [method, path] = endpoint.split(',', 2);
+    if (!method || !path) {
+      return undefined;
+    }
     const normalizedPath = pathWithParamsAsPathParameters(path);
     return requests.find(
       r =>
