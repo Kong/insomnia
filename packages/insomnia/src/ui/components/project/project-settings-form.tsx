@@ -24,9 +24,11 @@ import {
   type ProviderEmail,
 } from '~/models/git-credentials';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
+import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
+import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
@@ -45,6 +47,7 @@ import {
 } from '../../../models/project';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
+
 
 const FORMID = 'git-repo-form';
 
@@ -119,6 +122,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   });
 
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
+  const gitRepoDataFetcher = useGitProjectRepoFetcher();
   const updateProjectFetcher = useProjectUpdateActionFetcher();
 
   const insomniaFiles =
@@ -196,6 +200,23 @@ export const ProjectSettingsForm: FC<Props> = ({
       emailsFetcher.load({ credentialsId: selectedCredential._id });
     }
   }, [canFetchEmails, selectedCredential, emailsFetcher]);
+
+  // Load git repo metadata (and surface auth errors) for HTTP 4xx fallback when expiresAt is unknown.
+  useEffect(() => {
+    if (
+      showGitConnectionInfo &&
+      gitRepository?.uri &&
+      gitRepository?._id &&
+      project?._id &&
+      gitRepoDataFetcher.state === 'idle' &&
+      !gitRepoDataFetcher.data
+    ) {
+      gitRepoDataFetcher.load({ projectId: project._id });
+    }
+  }, [showGitConnectionInfo, gitRepository?.uri, gitRepository?._id, project?._id, gitRepoDataFetcher]);
+
+  const gitRepoLoadErrors =
+    gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data ? gitRepoDataFetcher.data.errors : undefined;
 
   return (
     <>
@@ -289,7 +310,14 @@ export const ProjectSettingsForm: FC<Props> = ({
               <GitConnectionInfo
                 gitRepository={gitRepository}
                 providerInfo={selectedProvider}
+                authorName={selectedCredential?.author.name || selectedCredential?.author.email}
                 projectId={project!._id}
+              />
+              <GitOauthAuthBanner
+                selectedCredential={selectedCredential}
+                gitRepository={gitRepository}
+                repoLoadErrors={gitRepoLoadErrors}
+                provider={selectedProvider}
               />
               {showEmailSelector ? (
                 <div className="flex flex-col gap-2">

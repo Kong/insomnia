@@ -1,41 +1,281 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
   GridList,
   GridListItem,
   Heading,
+  Label,
+  ListBox,
+  ListBoxItem,
   Menu,
   MenuItem,
   MenuTrigger,
   Modal,
   ModalOverlay,
   Popover,
+  Select,
+  SelectValue,
 } from 'react-aria-components';
 
+import { Button as BasicButton } from '~/basic-components/button';
 import { Icon } from '~/basic-components/icon';
 import {
   type GitCredentials,
   type GitCredentialsV2,
   type GitRemoteProviderType,
   isGitCredentialsV2,
+  isOAuthCredential,
+  type ProviderEmail,
 } from '~/models/git-credentials';
 import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
 import { useGitCredentialsDeleteActionFetcher } from '~/routes/git-credentials.$id.delete';
 import { useRelatedProjectsByGitCredentialsIdLoaderFetcher } from '~/routes/git-credentials.$id.related-projects';
+import { useGitCredentialsUpdateActionFetcher } from '~/routes/git-credentials.$id.update';
 import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
 import { useInitSignInToGitProviderFetcher } from '~/routes/git-credentials.init-sign-in';
+import { useGitProviderUpdateSignInFetcher } from '~/routes/git-credentials.update-sign-in';
+import { Input } from '~/ui/components/base/input';
 import { GitCustomCredentialForm } from '~/ui/components/git-credentials/git-custom-credential-form';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { CloudServiceCredentialList } from '~/ui/components/settings/cloud-service-credentials';
-
 const getErrorResult = (data: any) => {
   if (data && 'errors' in data && Array.isArray(data.errors) && data.errors.length > 0) {
     return data.errors.join(', ');
   }
   return null;
+};
+
+const getCredentialEmails = (credential: GitCredentials | undefined | null) => {
+  if (credential && isGitCredentialsV2(credential) && isOAuthCredential(credential)) {
+    return credential.credentials?.emails || [];
+  }
+  return [];
+};
+
+const GitEditProviderOAuthForm = ({
+  provider,
+  gitCredentialToEdit,
+  onComplete,
+  onCancel,
+}: {
+  provider: {
+    type: GitRemoteProviderType;
+    displayName: string;
+    iconName?: IconProp;
+  };
+  gitCredentialToEdit?: GitCredentials | null;
+  onComplete?: () => void;
+  onCancel?: () => void;
+}) => {
+  const [error, setError] = useState('');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const initSignInFetcher = useInitSignInToGitProviderFetcher();
+  const updateSignInFetcher = useGitProviderUpdateSignInFetcher();
+  const [isEmailSelectOpen, setIsEmailSelectOpen] = useState(false);
+
+  const [selectedAuthorEmail, setSelectedAuthorEmail] = useState(gitCredentialToEdit?.author.email);
+  const initSignInError = getErrorResult(initSignInFetcher.data);
+  const updateSignInError = getErrorResult(updateSignInFetcher.data);
+
+  const availableEmails = getCredentialEmails(gitCredentialToEdit);
+
+  useEffect(() => {
+    if (updateSignInFetcher.data && !updateSignInError) {
+      onComplete?.();
+    }
+  }, [updateSignInFetcher.data, updateSignInError, onComplete]);
+
+  const updateCredentialFetcher = useGitCredentialsUpdateActionFetcher();
+  const isEditing = !!gitCredentialToEdit;
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const formData = new FormData(form);
+
+    const name = (formData.get('authorName') as string) || '';
+    const email = (formData.get('authorEmail') as string) || '';
+
+    // Updates use shallow merge in the DB layer: a patch must not replace `credentials` with only
+    // `selectedEmail` or we lose token, refreshToken, emails, etc. Merge from the existing credential.
+    const credentialsPatch =
+      gitCredentialToEdit && isGitCredentialsV2(gitCredentialToEdit) && isOAuthCredential(gitCredentialToEdit)
+        ? {
+            ...gitCredentialToEdit.credentials,
+            selectedEmail: email,
+          }
+        : {
+            selectedEmail: email,
+          };
+
+    const credentialData = {
+      provider: provider.type as GitRemoteProviderType,
+      author: {
+        name,
+        email,
+        avatarUrl: gitCredentialToEdit?.author.avatarUrl,
+      },
+      credentials: credentialsPatch,
+    };
+
+    isEditing &&
+      gitCredentialToEdit?._id &&
+      updateCredentialFetcher.submit(gitCredentialToEdit._id, credentialData as Partial<GitCredentialsV2>);
+    onComplete?.();
+  };
+
+  return (
+    <div className="flex flex-col justify-center py-4">
+      {!isAuthenticating && (
+        <form onSubmit={handleSubmit}>
+          <div className="flex items-center gap-2">
+            {provider?.iconName && <Icon icon={provider.iconName} className="size-5" />}
+            <span className="font-semibold text-nowrap">{provider?.displayName}</span>
+            {gitCredentialToEdit?.author.avatarUrl ? (
+              <img
+                src={gitCredentialToEdit?.author.avatarUrl}
+                alt={gitCredentialToEdit?.author.name || 'Avatar'}
+                className="h-6 w-6 rounded-full"
+              />
+            ) : (
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-(--hl-sm) text-xs font-bold text-(--color-font-muted)">
+                {gitCredentialToEdit?.author.name ? gitCredentialToEdit?.author.name.charAt(0).toUpperCase() : '?'}
+              </div>
+            )}
+            <span>{gitCredentialToEdit?.author.name}</span>
+            <Button
+              className="text-(--color-surprise)"
+              onPress={() => {
+                setIsAuthenticating(true);
+                initSignInFetcher.submit({ provider: provider.type });
+              }}
+            >
+              Reauthorize
+            </Button>
+          </div>
+          <div className="mt-4 flex w-full flex-col gap-2">
+            <Input name="authorName" isRequired label="Author Name" defaultValue={gitCredentialToEdit?.author.name} />
+            <Select
+              onOpenChange={setIsEmailSelectOpen}
+              isOpen={isEmailSelectOpen}
+              aria-label="Author Email"
+              selectedKey={selectedAuthorEmail}
+              name="authorEmail"
+              onSelectionChange={email => {
+                setSelectedAuthorEmail(email?.toString());
+              }}
+            >
+              <Label className="mb-2 px-0.5 pt-0 text-sm">Author Email</Label>
+              <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
+                <SelectValue<ProviderEmail> className="flex items-center justify-center gap-2 truncate">
+                  {({ selectedItem }) => {
+                    if (selectedItem) {
+                      return (
+                        <Fragment>
+                          <span>{selectedItem.email}</span>
+                          {selectedItem.primary && <span className="text-xs text-(--hl-lg)">(primary)</span>}
+                        </Fragment>
+                      );
+                    }
+                    return gitCredentialToEdit?.author.email || 'Select an email';
+                  }}
+                </SelectValue>
+                <Icon icon="caret-down" />
+              </Button>
+              <Popover className="isolate flex w-(--trigger-width) min-w-max flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none">
+                <ListBox items={availableEmails} className="min-w-max overflow-y-auto py-2 focus:outline-hidden">
+                  {item => (
+                    <ListBoxItem
+                      id={item.email}
+                      key={item.email}
+                      className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                      aria-label={item.email}
+                      textValue={item.email}
+                      value={item}
+                    >
+                      {({ isSelected }) => (
+                        <Fragment>
+                          <span>{item.email}</span>
+                          {item.primary && <span className="text-xs text-(--hl-lg)">(primary)</span>}
+                          {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
+                        </Fragment>
+                      )}
+                    </ListBoxItem>
+                  )}
+                </ListBox>
+              </Popover>
+            </Select>
+          </div>
+          <div className="mt-6 flex justify-end gap-2">
+            <BasicButton primary type="submit">
+              Update Credential
+            </BasicButton>
+            <BasicButton onPress={onCancel}>Cancel</BasicButton>
+          </div>
+        </form>
+      )}
+      {isAuthenticating && (
+        <form
+          onSubmit={event => {
+            event.preventDefault();
+            event.stopPropagation();
+            const formData = new FormData(event.currentTarget);
+            const link = formData.get('link');
+            if (typeof link === 'string') {
+              let parsedURL: URL;
+              try {
+                parsedURL = new URL(link);
+              } catch {
+                setError('Invalid URL');
+                return;
+              }
+
+              const code = parsedURL.searchParams.get('code');
+              const state = parsedURL.searchParams.get('state');
+
+              if (!(typeof code === 'string') || !(typeof state === 'string')) {
+                setError('Incomplete URL');
+                return;
+              }
+
+              updateSignInFetcher.submit({ provider: provider.type, code, state });
+            }
+          }}
+        >
+          <label className="form-control form-control--outlined">
+            <div>If you aren't redirected to the app you can manually paste the authentication url here:</div>
+            <div className="flex justify-between gap-2">
+              <input name="link" />
+              <Button
+                type="submit"
+                name="add-token"
+                className="flex h-(--line-height-xs) items-center justify-center rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
+              >
+                Authenticate
+              </Button>
+            </div>
+          </label>
+          {error && (
+            <p className="notice error margin-bottom-sm">
+              <Button className="pull-right icon" onPress={() => setError('')}>
+                <Icon icon="times" className="size-4" />
+              </Button>
+              {error}
+            </p>
+          )}
+          {(initSignInError || updateSignInError) && (
+            <p className="margin-bottom-sm flex items-start gap-2 rounded-xs border border-solid border-(--color-danger) bg-(--color-danger-bg) p-2 text-(--color-danger)">
+              <Icon icon="exclamation-triangle" className="mt-1 size-4" />
+              <span>{initSignInError || updateSignInError}</span>
+            </p>
+          )}
+        </form>
+      )}
+    </div>
+  );
 };
 
 const GitProviderOAuthForm = ({
@@ -190,6 +430,18 @@ export const GitCredentialModal = ({
                   )}
                 </>
               )}
+              {gitCredentialToEdit &&
+                isGitCredentialsV2(gitCredentialToEdit) &&
+                gitCredentialToEdit.provider !== 'custom' &&
+                provider &&
+                provider.type !== 'custom' && (
+                  <GitEditProviderOAuthForm
+                    onComplete={onClose}
+                    onCancel={close}
+                    provider={provider}
+                    gitCredentialToEdit={gitCredentialToEdit}
+                  />
+                )}
               {gitCredentialToEdit &&
                 isGitCredentialsV2(gitCredentialToEdit) &&
                 gitCredentialToEdit.provider === 'custom' &&
@@ -370,7 +622,7 @@ const GitCredentialsList = () => {
                   <span>{item.author.email}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {isGitCredentialsV2(item) && provider && !provider.supportsOAuth && (
+                  {isGitCredentialsV2(item) && provider && (
                     <Button
                       className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
                       onPress={() => {

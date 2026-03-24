@@ -5,8 +5,9 @@ import { v4 } from 'uuid';
 
 import { getApiBaseURL, getAppWebsiteBaseURL, PLAYWRIGHT } from '~/common/constants';
 import * as models from '~/models';
-import type { GitCredentials } from '~/models/git-credentials';
+import type { GitCredentials, GitCredentialsV2 } from '~/models/git-credentials';
 import { isGitCredentialsV2 } from '~/models/git-credentials';
+import { expiresAtFromOAuthExpiresIn } from '~/sync/git/utils';
 
 import type {
   GitHubProviderConfig,
@@ -24,6 +25,8 @@ import type {
  * Stores states that are generated for the OAuth flow to verify callback legitimacy
  */
 const githubStatesCache = new Set<string>();
+
+type GitHubCredentialV2 = Extract<GitCredentialsV2, { provider: 'github' }>;
 
 /**
  * GitHub API Response Types
@@ -58,6 +61,8 @@ interface GitHubUserApiResponse {
 
 interface GitHubOAuthTokenResponse {
   access_token: string;
+  /** Seconds until access token expires — only present if the token issuer returns it (not always for GitHub). */
+  expires_in?: number;
 }
 
 /**
@@ -285,6 +290,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
       }
 
       const data = (await response.json()) as GitHubOAuthTokenResponse;
+      const accessTokenExpiresAt = expiresAtFromOAuthExpiresIn(data.expires_in);
       githubStatesCache.delete(state);
 
       // Fetch user details
@@ -296,19 +302,62 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
       const userProfileEmail = user.email ?? '';
       const email = emails.find(e => e.primary)?.email ?? userProfileEmail ?? '';
 
-      await models.gitCredentials.create({
-        name: 'GitHub Credential',
-        credentials: {
-          token: data.access_token,
-          emails,
-        },
-        provider: 'github',
-        author: {
-          email,
-          name: user.name || user.username,
-          avatarUrl: user.avatarUrl,
-        },
-      });
+      const author = {
+        email,
+        name: user.name || user.username,
+        avatarUrl: user.avatarUrl,
+      };
+
+      const credentials = {
+        token: data.access_token,
+        emails,
+        // Ensure the credential has a selectedEmail for consistent matching later.
+        selectedEmail: email || undefined,
+        ...(accessTokenExpiresAt !== undefined ? { expiresAt: accessTokenExpiresAt } : {}),
+      };
+
+      // Upsert: update the existing GitHub credential when we can reliably identify it.
+      // Otherwise, create a new credential to avoid overwriting a different account.
+      const existingGitHubCredentials = (await models.gitCredentials.all()).filter(
+        (c): c is GitHubCredentialV2 => isGitCredentialsV2(c) && c.provider === 'github',
+      );
+
+      const matchingByEmail = email
+        ? existingGitHubCredentials
+            .filter(c => {
+              return (
+                c.author.email === email ||
+                c.credentials.selectedEmail === email ||
+                c.credentials.emails?.some(e => e.email === email)
+              );
+            })
+            .sort((a, b) => (b.modified ?? 0) - (a.modified ?? 0))
+        : [];
+
+      const existing =
+        matchingByEmail[0] ||
+        (existingGitHubCredentials.length === 1 ? existingGitHubCredentials[0] : undefined);
+
+      await (existing
+        ? models.gitCredentials.update(existing, {
+            name: 'GitHub Credential',
+            author,
+            credentials: {
+              ...existing.credentials,
+              token: data.access_token,
+              emails,
+              selectedEmail: email || existing.credentials.selectedEmail,
+              ...(accessTokenExpiresAt !== undefined
+                ? { expiresAt: accessTokenExpiresAt }
+                : {}),
+            },
+          })
+        : models.gitCredentials.create({
+            name: 'GitHub Credential',
+            credentials,
+            provider: 'github',
+            author,
+          }));
 
       return {
         success: true,
