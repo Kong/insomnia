@@ -6,7 +6,9 @@ import type { GitAuth } from 'isomorphic-git';
 import { v4 } from 'uuid';
 
 import { getApiBaseURL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI, PLAYWRIGHT } from '~/common/constants';
-import { type BaseGitCredentialsV2, type GitCredentials, models, services } from '~/insomnia-data';
+import type { BaseGitCredentialsV2, GitCredentials, GitCredentialsV2 } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
+import { expiresAtFromOAuthExpiresIn } from '~/sync/git/utils';
 
 import type {
   GitLabProviderConfig,
@@ -26,6 +28,8 @@ const { isGitCredentialsV2 } = models.gitCredentials;
  * Maps state -> code_verifier for GitLab PKCE flow
  */
 const gitlabStatesCache = new Map<string, string>();
+
+type GitLabCredentialV2 = Extract<GitCredentialsV2, { provider: 'gitlab' }>;
 
 /**
  * Token renewal tracking to prevent infinite loops
@@ -119,6 +123,8 @@ interface GitLabUserApiResponse {
 interface GitLabOAuthTokenResponse {
   access_token: string;
   refresh_token: string;
+  /** Seconds until access token expires (OAuth2 standard). */
+  expires_in?: number;
 }
 
 /**
@@ -378,7 +384,9 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
         throw new Error(`Failed to exchange code for token: ${gitLabResponse.statusText}`);
       }
 
-      const { access_token, refresh_token } = (await gitLabResponse.json()) as GitLabOAuthTokenResponse;
+      const tokenResponse = (await gitLabResponse.json()) as GitLabOAuthTokenResponse;
+      const { access_token, refresh_token, expires_in } = tokenResponse;
+      const accessTokenExpiresAt = expiresAtFromOAuthExpiresIn(expires_in);
 
       gitlabStatesCache.delete(state);
 
@@ -386,23 +394,60 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
       const user = await this.fetchUserWithToken(access_token);
       const emails = await this.fetchEmailsWithToken(access_token, user);
 
-      // Create or update credential in database
-      const credentialData = {
-        name: 'GitLab Credential',
-        provider: 'gitlab',
-        author: {
-          email: user.commit_email ?? user.public_email ?? user.email ?? '',
-          name: user.name || user.username || '',
-          avatarUrl: user.avatar_url,
-        },
-        credentials: {
-          token: access_token,
-          refreshToken: refresh_token,
-          emails,
-        },
-      } satisfies BaseGitCredentialsV2;
+      const email = emails.find(e => e.primary)?.email ?? user.commit_email ?? user.public_email ?? user.email ?? '';
 
-      const credential = await services.gitCredentials.create(credentialData);
+      const author = {
+        email,
+        name: user.name || user.username || '',
+        avatarUrl: user.avatar_url,
+      };
+
+      const credentials = {
+        token: access_token,
+        refreshToken: refresh_token,
+        emails,
+        selectedEmail: email || undefined,
+        ...(accessTokenExpiresAt !== undefined ? { expiresAt: accessTokenExpiresAt } : {}),
+      };
+
+      // Upsert: update the existing GitLab credential when we can reliably identify it.
+      // Otherwise, create a new credential to avoid overwriting a different account.
+      const existingGitLabCredentials = (await services.gitCredentials.all()).filter(
+        (c): c is GitLabCredentialV2 => isGitCredentialsV2(c) && c.provider === 'gitlab',
+      );
+
+      const matchingByEmail = existingGitLabCredentials
+        .filter(c => {
+          return (
+            c.author.email === email ||
+            c.credentials.selectedEmail === email ||
+            c.credentials.emails?.some(e => e.email === email)
+          );
+        })
+        .sort((a, b) => (b.modified ?? 0) - (a.modified ?? 0));
+
+      const existing =
+        matchingByEmail[0] || (existingGitLabCredentials.length === 1 ? existingGitLabCredentials[0] : undefined);
+
+      const credential = await (existing
+        ? services.gitCredentials.update(existing, {
+            name: 'GitLab Credential',
+            author,
+            credentials: {
+              ...existing.credentials,
+              token: access_token,
+              refreshToken: refresh_token,
+              emails,
+              selectedEmail: email || existing.credentials.selectedEmail,
+              ...(accessTokenExpiresAt !== undefined ? { expiresAt: accessTokenExpiresAt } : {}),
+            },
+          })
+        : services.gitCredentials.create({
+            name: 'GitLab Credential',
+            credentials,
+            provider: 'gitlab',
+            author,
+          } satisfies BaseGitCredentialsV2));
 
       // Clear any renewal tracking since we have fresh tokens
       renewalTracker.delete(credential._id);
@@ -480,13 +525,17 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
         throw new Error(`Failed to refresh token: ${response.statusText} - ${errorText}`);
       }
 
-      const { access_token, refresh_token } = (await response.json()) as GitLabOAuthTokenResponse;
+      const tokenResponse = (await response.json()) as GitLabOAuthTokenResponse;
+      const { access_token, refresh_token } = tokenResponse;
+      const accessTokenExpiresAt = expiresAtFromOAuthExpiresIn(tokenResponse.expires_in);
 
       // Update the credential in the database with new tokens
       const updatedCredential = await services.gitCredentials.update(credential, {
         credentials: {
+          ...credential.credentials,
           token: access_token,
           refreshToken: refresh_token,
+          ...(accessTokenExpiresAt !== undefined ? { expiresAt: accessTokenExpiresAt } : {}),
         },
       });
 
