@@ -131,7 +131,7 @@ export const createConnectionContext = async (
   const mcpRequestAbortControllers = new Map();
 
   // Get environment
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
   const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(workspaceId));

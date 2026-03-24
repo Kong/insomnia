@@ -73,7 +73,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
   }
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   if (!workspace) {
     showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
@@ -85,7 +85,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
 
   const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
   // we don't run the lint here because it is expensive and slows first render too much

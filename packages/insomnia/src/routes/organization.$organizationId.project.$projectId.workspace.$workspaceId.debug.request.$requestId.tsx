@@ -1,15 +1,20 @@
 import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
-import { type McpPayload, type McpRequest, type McpResponse, services } from '~/insomnia-data';
+import type {
+  GrpcRequest,
+  GrpcRequestMeta,
+  McpPayload,
+  McpRequest,
+  McpResponse,
+  MockRoute,
+  MockServer,
+} from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import type { BaseModel } from '~/models';
 import * as models from '~/models';
-import { type GrpcRequest, isGrpcRequestId } from '~/models/grpc-request';
-import type { GrpcRequestMeta } from '~/models/grpc-request-meta';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
-import type { MockRoute } from '~/models/mock-route';
-import type { MockServer } from '~/models/mock-server';
 import { isGraphqlSubscriptionRequest } from '~/models/request';
 import { type Request } from '~/models/request';
 import { type RequestMeta } from '~/models/request-meta';
@@ -79,7 +84,7 @@ const getResponseModelName = (request: Request | WebSocketRequest | SocketIORequ
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, requestId, workspaceId } = params;
 
-  const activeWorkspace = await models.workspace.getById(workspaceId);
+  const activeWorkspace = await services.workspace.getById(workspaceId);
   if (!activeWorkspace) {
     showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
@@ -105,13 +110,13 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       }),
     );
   }
-  const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const activeWorkspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
   // NOTE: loaders shouldnt mutate data, this should be moved somewhere else
-  await models.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: requestId });
-  if (isGrpcRequestId(requestId)) {
+  await services.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: requestId });
+  if (models.grpcRequest.isGrpcRequestId(requestId)) {
     return {
       activeRequest,
-      activeRequestMeta: await models.grpcRequestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() }),
+      activeRequestMeta: await services.grpcRequestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() }),
       activeResponse: null,
       responses: [],
       requestVersions: [],
@@ -173,7 +178,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   }
 
   // Q(gatzjames): load mock servers here or somewhere else?
-  const mockServers = await models.mockServer.findByProjectId(projectId);
+  const mockServers = await services.mockServer.findByProjectId(projectId);
   const mockRoutes = await database.find<MockRoute>(models.mockRoute.type, {
     parentId: { $in: mockServers.map(s => s._id) },
   });

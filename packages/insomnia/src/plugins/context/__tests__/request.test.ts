@@ -19,7 +19,7 @@ describe('init()', () => {
   beforeEach(async () => {
     await db.init({ inMemoryOnly: true }, true, () => {});
 
-    await models.workspace.create({
+    await services.workspace.create({
       _id: 'wrk_1',
       name: 'My Workspace',
     });
@@ -100,7 +100,7 @@ describe('request.*', () => {
   beforeEach(async () => {
     await db.init({ inMemoryOnly: true }, true, () => {});
 
-    await models.workspace.create({
+    await services.workspace.create({
       _id: 'wrk_1',
       name: 'My Workspace',
     });

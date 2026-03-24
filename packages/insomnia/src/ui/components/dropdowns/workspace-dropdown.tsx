@@ -24,6 +24,7 @@ import {
 } from 'react-aria-components';
 import { href, useNavigate, useParams } from 'react-router';
 
+import type { Workspace } from '~/insomnia-data';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 
@@ -35,7 +36,6 @@ import * as models from '../../../models';
 import { isRemoteProject } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
-import { isMcp, isScratchpad, type Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -122,7 +122,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
     setActionPlugins(actionPlugins);
   }, []);
 
-  const isScratchpadWorkspace = isScratchpad(activeWorkspace);
+  const isScratchpadWorkspace = models.workspace.isScratchpad(activeWorkspace);
   const scratchpadActionList: {
     name: string;
     id: string;
@@ -193,7 +193,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
       action: () => void;
     }[];
   }[] = [
-    ...(isMcp(activeWorkspace)
+    ...(models.workspace.isMcp(activeWorkspace)
       ? []
       : [
           {
@@ -240,7 +240,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
       id: 'actions',
       icon: 'cog',
       items: [
-        ...(isMcp(activeWorkspace)
+        ...(models.workspace.isMcp(activeWorkspace)
           ? []
           : [
               {

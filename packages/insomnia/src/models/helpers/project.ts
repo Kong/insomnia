@@ -1,5 +1,8 @@
 import { createTeamProject, isApiError } from 'insomnia-api';
 
+import type { Workspace } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
+
 import { database } from '../../common/database';
 import {
   initializeLocalBackendProjectAndMarkForSync,
@@ -8,8 +11,6 @@ import {
 import type { VCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
 import { isDefaultOrganizationProject, type Project, update as updateProject } from '../project';
-import { type Workspace } from '../workspace';
-import { getOrCreateByParentId as getOrCreateWorkspaceMeta } from '../workspace-meta';
 export const sortProjects = (projects: Project[]) => [
   ...projects.filter(p => isDefaultOrganizationProject(p)).sort((a, b) => a.name.localeCompare(b.name)),
   ...projects.filter(p => !isDefaultOrganizationProject(p)).sort((a, b) => a.name.localeCompare(b.name)),
@@ -40,7 +41,7 @@ export async function updateLocalProjectToRemote({
     });
 
     for (const workspace of projectWorkspaces) {
-      const workspaceMeta = await getOrCreateWorkspaceMeta(workspace._id);
+      const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
 
       // Initialize Sync on the workspace if it's not using Git sync
       try {

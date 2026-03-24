@@ -6,7 +6,7 @@ import * as models from '../index';
 import { WorkspaceScopeKeys } from '../workspace';
 describe('migrate()', () => {
   it('migrates client certificates properly', async () => {
-    const workspace = await models.workspace.create({
+    const workspace = await services.workspace.create({
       name: 'My Workspace',
       certificates: [
         {
@@ -65,26 +65,26 @@ describe('migrate()', () => {
   });
 
   it('translates the scope correctly', async () => {
-    const specW = await models.workspace.create({
+    const specW = await services.workspace.create({
       // @ts-expect-error intentionally incorrect - old scope type
       scope: 'spec',
     });
-    const debugW = await models.workspace.create({
+    const debugW = await services.workspace.create({
       // @ts-expect-error intentionally incorrect - old scope type
       scope: 'debug',
     });
-    const nullW = await models.workspace.create({
+    const nullW = await services.workspace.create({
       // @ts-expect-error intentionally incorrect - old scope type
       scope: null,
     });
-    const somethingElseW = await models.workspace.create({
+    const somethingElseW = await services.workspace.create({
       // @ts-expect-error intentionally incorrect - old scope type
       scope: 'something',
     });
-    const designW = await models.workspace.create({
+    const designW = await services.workspace.create({
       scope: WorkspaceScopeKeys.design,
     });
-    const collectionW = await models.workspace.create({
+    const collectionW = await services.workspace.create({
       scope: WorkspaceScopeKeys.collection,
     });
     await models.workspace.migrate(specW);

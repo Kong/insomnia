@@ -22,31 +22,32 @@ import {
 import { useParams } from 'react-router';
 
 import type { ApiSpec } from '~/insomnia-data';
+import type { WorkspaceScope } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { Badge } from '~/ui/components/base/badge';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
 import { isGitProject, type Project } from '../../../models/project';
-import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { SegmentEvent } from '../../analytics';
 import { Icon } from '../icon';
 
 const titleByScope: Record<WorkspaceScope, string> = {
-  [WorkspaceScopeKeys.collection]: 'Request Collection',
-  [WorkspaceScopeKeys.environment]: 'Environment',
-  [WorkspaceScopeKeys.mockServer]: 'Mock Server',
-  [WorkspaceScopeKeys.design]: 'Design Document',
-  [WorkspaceScopeKeys.mcp]: 'MCP Client',
+  [models.workspace.WorkspaceScopeKeys.collection]: 'Request Collection',
+  [models.workspace.WorkspaceScopeKeys.environment]: 'Environment',
+  [models.workspace.WorkspaceScopeKeys.mockServer]: 'Mock Server',
+  [models.workspace.WorkspaceScopeKeys.design]: 'Design Document',
+  [models.workspace.WorkspaceScopeKeys.mcp]: 'MCP Client',
 };
 
 const defaultNameByScope: Record<WorkspaceScope, string> = {
-  [WorkspaceScopeKeys.collection]: 'My Collection',
-  [WorkspaceScopeKeys.environment]: 'My Environment',
-  [WorkspaceScopeKeys.mockServer]: 'My Mock Server',
-  [WorkspaceScopeKeys.design]: 'My Design Document',
-  [WorkspaceScopeKeys.mcp]: 'My MCP Client',
+  [models.workspace.WorkspaceScopeKeys.collection]: 'My Collection',
+  [models.workspace.WorkspaceScopeKeys.environment]: 'My Environment',
+  [models.workspace.WorkspaceScopeKeys.mockServer]: 'My Mock Server',
+  [models.workspace.WorkspaceScopeKeys.design]: 'My Design Document',
+  [models.workspace.WorkspaceScopeKeys.mcp]: 'My MCP Client',
 };
 
 export const NewWorkspaceModal = ({

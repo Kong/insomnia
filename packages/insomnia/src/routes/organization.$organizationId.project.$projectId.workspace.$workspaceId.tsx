@@ -3,20 +3,22 @@ import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
 import { sortMethodMap } from '~/common/sorting';
-import {
-  type ApiSpec,
-  type CaCertificate,
-  type ClientCertificate,
-  type GitRepository,
-  services,
+import type {
+  ApiSpec,
+  CaCertificate,
+  ClientCertificate,
+  GitRepository,
+  GrpcRequest,
+  GrpcRequestMeta,
+  MockServer,
+  Workspace,
+  WorkspaceMeta,
 } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import type { CookieJar } from '~/models/cookie-jar';
 import type { Environment } from '~/models/environment';
-import type { GrpcRequest } from '~/models/grpc-request';
-import type { GrpcRequestMeta } from '~/models/grpc-request-meta';
 import { sortProjects } from '~/models/helpers/project';
-import type { MockServer } from '~/models/mock-server';
 import { isGitProject, type Project } from '~/models/project';
 import type { Request } from '~/models/request';
 import { isRequestGroup, type RequestGroup } from '~/models/request-group';
@@ -24,8 +26,6 @@ import type { RequestGroupMeta } from '~/models/request-group-meta';
 import type { RequestMeta } from '~/models/request-meta';
 import type { SocketIORequest } from '~/models/socket-io-request';
 import type { WebSocketRequest } from '~/models/websocket-request';
-import { type Workspace } from '~/models/workspace';
-import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
@@ -76,13 +76,13 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
   }
 
-  const activeWorkspace = await models.workspace.getById(workspaceId);
+  const activeWorkspace = await services.workspace.getById(workspaceId);
   if (!activeWorkspace) {
     showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
 
-  const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const activeWorkspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
 
   const gitRepositoryId = isGitProject(activeProject)
     ? activeProject.gitRepositoryId
@@ -132,8 +132,8 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   const activeCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
   const activeApiSpec = await services.apiSpec.getByParentId(workspaceId);
-  const activeMockServer = await models.mockServer.getByParentId(workspaceId);
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
+  const activeMockServer = await services.mockServer.getByParentId(workspaceId);
 
   const organizationProjects =
     (await database.find<Project>(models.project.type, {
@@ -268,7 +268,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     }
   }
 
-  const workspaces = await models.workspace.findByParentId(projectId);
+  const workspaces = await services.workspace.findByParentId(projectId);
 
   const collection = flattenTree();
 
@@ -342,9 +342,9 @@ export const useWorkspaceLoaderFetcher = createFetcherLoadHook(
 );
 
 export const revalidateWorkspaceActiveRequest = async (requestId: string, workspaceId: string) => {
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
   if (workspaceMeta?.activeRequestId === requestId) {
-    await models.workspaceMeta.update(workspaceMeta, { activeRequestId: null });
+    await services.workspaceMeta.update(workspaceMeta, { activeRequestId: null });
   }
 };
 
@@ -356,10 +356,10 @@ export const revalidateWorkspaceActiveRequestByFolder = async (requestGroup: Req
     models.socketIORequest.type,
     models.requestGroup.type,
   ]);
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
   for (const doc of docs) {
     if (workspaceMeta?.activeRequestId === doc._id) {
-      await models.workspaceMeta.update(workspaceMeta, { activeRequestId: null });
+      await services.workspaceMeta.update(workspaceMeta, { activeRequestId: null });
       return;
     }
   }

@@ -4,9 +4,13 @@ import * as clientCertificateService from './client-certificate';
 import * as cloudCredentialService from './cloud-credential';
 import * as gitCredentialsService from './git-credentials';
 import * as gitRepositoryService from './git-repository';
+import * as grpcRequestService from './grpc-request';
+import * as grpcRequestMetaService from './grpc-request-meta';
 import * as mcpPayloadService from './mcp-payload';
 import * as mcpRequestService from './mcp-request';
 import * as mcpResponseService from './mcp-response';
+import * as mockRouteService from './mock-route';
+import * as mockServerService from './mock-server';
 import * as oAuth2TokenService from './o-auth-2-token';
 import * as pluginDataService from './plugin-data';
 import * as protoDirectoryService from './proto-directory';
@@ -15,6 +19,8 @@ import * as runnerTestResultService from './runner-test-result';
 import * as settingsService from './settings';
 import * as statsService from './stats';
 import * as userSessionService from './user-session';
+import * as workspaceService from './workspace';
+import * as workspaceMetaService from './workspace-meta';
 
 // Services are consumed from renderer via preload -> IPC (`ipcRenderer.invoke`), so this contract
 // must stay async across runtimes even if a main-process implementation could be synchronous.
@@ -37,4 +43,10 @@ export const servicesNodeImpl = {
   settings: settingsService,
   stats: statsService,
   userSession: userSessionService,
+  grpcRequest: grpcRequestService,
+  grpcRequestMeta: grpcRequestMetaService,
+  workspace: workspaceService,
+  workspaceMeta: workspaceMetaService,
+  mockRoute: mockRouteService,
+  mockServer: mockServerService,
 } satisfies Record<string, Record<string, (...args: never[]) => Promise<unknown>>>;

@@ -1,5 +1,6 @@
 import { href, Outlet, redirect } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test._index';
@@ -9,7 +10,7 @@ export default Outlet;
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
   if (workspaceMeta?.activeUnitTestSuiteId) {
     const unitTestSuite = await models.unitTestSuite.getById(workspaceMeta.activeUnitTestSuiteId);
 

@@ -30,7 +30,7 @@ describe('init()', () => {
 describe('create()', () => {
   it('creates a valid GrpcRequest', async () => {
     Date.now = vi.fn().mockReturnValue(1_478_795_580_200);
-    const request = await models.grpcRequest.create({
+    const request = await services.grpcRequest.create({
       name: 'My request',
       parentId: 'fld_124',
     });
@@ -59,13 +59,13 @@ describe('create()', () => {
       type: 'GrpcRequest',
     };
     expect(request).toEqual(expected);
-    expect(await models.grpcRequest.getById(expected._id)).toEqual(expected);
+    expect(await services.grpcRequest.getById(expected._id)).toEqual(expected);
   });
 
   it('fails when missing parentId', async () => {
     Date.now = vi.fn().mockReturnValue(1_478_795_580_200);
     expect(() =>
-      models.grpcRequest.create({
+      services.grpcRequest.create({
         name: 'no parentId',
       }),
     ).toThrow('New GrpcRequest missing `parentId`');

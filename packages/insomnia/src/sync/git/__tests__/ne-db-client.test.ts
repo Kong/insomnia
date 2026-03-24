@@ -38,7 +38,7 @@ describe('NeDBClient', () => {
     });
 
     // Create test workspace
-    await models.workspace.create({
+    await services.workspace.create({
       _id: 'wrk_test',
       name: 'Test Workspace',
       parentId: 'proj_test',

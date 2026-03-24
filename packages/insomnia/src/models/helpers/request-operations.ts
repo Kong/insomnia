@@ -1,6 +1,6 @@
-import { type McpRequest, services } from '~/insomnia-data';
+import type { GrpcRequest, McpRequest } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 
-import { type GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../grpc-request';
 import * as models from '../index';
 import type { Request } from '../request';
 import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '../socket-io-request';
@@ -11,7 +11,7 @@ export function findByParentId(
 ): Promise<(Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest)[]> {
   return Promise.all([
     models.request.findByParentId(parentId),
-    models.grpcRequest.findByParentId(parentId),
+    services.grpcRequest.findByParentId(parentId),
     models.webSocketRequest.findByParentId(parentId),
     models.socketIORequest.findByParentId(parentId),
   ]).then(([requests, grpcRequests, webSocketRequests, socketIORequests]) => [
@@ -25,8 +25,8 @@ export function findByParentId(
 export function getById(
   requestId: string,
 ): Promise<Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest | undefined> {
-  if (isGrpcRequestId(requestId)) {
-    return models.grpcRequest.getById(requestId);
+  if (models.grpcRequest.isGrpcRequestId(requestId)) {
+    return services.grpcRequest.getById(requestId);
   }
   if (isWebSocketRequestId(requestId)) {
     return models.webSocketRequest.getById(requestId);
@@ -43,8 +43,8 @@ export function getById(
 }
 
 export function remove(request: Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest) {
-  if (isGrpcRequest(request)) {
-    return models.grpcRequest.remove(request);
+  if (models.grpcRequest.isGrpcRequest(request)) {
+    return services.grpcRequest.remove(request);
   }
   if (isWebSocketRequest(request)) {
     return models.webSocketRequest.remove(request);
@@ -63,9 +63,9 @@ export function remove(request: Request | GrpcRequest | WebSocketRequest | Socke
 
 export function update<T extends object>(request: T, patch: Partial<T> = {}): Promise<T> {
   // @ts-expect-error -- TSCONVERSION
-  if (isGrpcRequest(request)) {
+  if (models.grpcRequest.isGrpcRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
-    return models.grpcRequest.update(request, patch);
+    return services.grpcRequest.update(request, patch);
   }
   // @ts-expect-error -- TSCONVERSION
   if (isWebSocketRequest(request)) {
@@ -90,9 +90,9 @@ export function update<T extends object>(request: T, patch: Partial<T> = {}): Pr
 
 export function duplicate<T extends object>(request: T, patch: Partial<T> = {}): Promise<T> {
   // @ts-expect-error -- TSCONVERSION
-  if (isGrpcRequest(request)) {
+  if (models.grpcRequest.isGrpcRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
-    return models.grpcRequest.duplicate(request, patch);
+    return services.grpcRequest.duplicate(request, patch);
   }
   // @ts-expect-error -- TSCONVERSION
   if (isWebSocketRequest(request)) {

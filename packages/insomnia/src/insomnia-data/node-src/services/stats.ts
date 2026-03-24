@@ -1,11 +1,10 @@
+import type { Workspace } from '~/insomnia-data';
 import { database as db, type Stats } from '~/insomnia-data';
 import * as models from '~/models';
 import type { Project } from '~/models/project';
 import type { RequestGroup } from '~/models/request-group';
-import type { Workspace } from '~/models/workspace';
 
 const { type } = models.stats;
-const { isGrpcRequest } = models.grpcRequest;
 const { isRequest } = models.request;
 const { isWebSocketRequest } = models.webSocketRequest;
 const { isSocketIORequest } = models.socketIORequest;
@@ -73,7 +72,8 @@ export async function incrementCreatedRequestsForDescendents(doc: Workspace | Re
     models.socketIORequest.type,
   ]);
   const requests =
-    docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc)) || isSocketIORequest(doc);
+    docs.filter(doc => isRequest(doc) || models.grpcRequest.isGrpcRequest(doc) || isWebSocketRequest(doc)) ||
+    isSocketIORequest(doc);
   await incrementRequestStats({
     createdRequests: requests.length,
   });
@@ -87,7 +87,8 @@ export async function incrementDeletedRequestsForDescendents(doc: Workspace | Re
     models.socketIORequest.type,
   ]);
   const requests =
-    docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc)) || isSocketIORequest(doc);
+    docs.filter(doc => isRequest(doc) || models.grpcRequest.isGrpcRequest(doc) || isWebSocketRequest(doc)) ||
+    isSocketIORequest(doc);
   await incrementRequestStats({
     deletedRequests: requests.length,
   });

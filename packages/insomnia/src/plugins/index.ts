@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import electron from 'electron';
 
+import type { GrpcRequest, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { fetchFromTemplateWorkerDatabase } from '~/templating/base-extension-worker';
@@ -12,12 +13,10 @@ import { getAppBundlePlugins, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import type { PluginConfigMap } from '../common/settings';
 import * as models from '../models';
-import type { GrpcRequest } from '../models/grpc-request';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace } from '../models/workspace';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
@@ -404,7 +403,7 @@ export function getPluginCommonContext({
           update: services.cloudCredential.update,
         },
         workspace: {
-          getById: models.workspace.getById,
+          getById: services.workspace.getById,
         },
         oAuth2Token: {
           getByRequestId: services.oAuth2Token.getByParentId,

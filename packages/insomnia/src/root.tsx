@@ -158,7 +158,7 @@ export const useRootLoaderData = () => {
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await services.settings.get();
-  const workspaceCount = await models.workspace.count();
+  const workspaceCount = await services.workspace.count();
   const userSession = await services.userSession.getOrCreate();
   const cloudCredentials = await services.cloudCredential.all();
 

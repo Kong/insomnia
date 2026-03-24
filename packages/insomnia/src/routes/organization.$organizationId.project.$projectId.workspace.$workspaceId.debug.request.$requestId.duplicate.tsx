@@ -16,7 +16,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   invariant(req, 'Request not found');
 
   if (parentId) {
-    const workspace = await models.workspace.getById(parentId);
+    const workspace = await services.workspace.getById(parentId);
     invariant(workspace, 'Workspace is required');
     // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
     // Move to top of sort order

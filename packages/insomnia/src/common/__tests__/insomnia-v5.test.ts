@@ -34,7 +34,7 @@ describe('Insomnia v5 Import/Export - Comprehensive Tests', () => {
       name: 'Test Project',
     });
 
-    await models.workspace.create({
+    await services.workspace.create({
       _id: 'wrk_test',
       name: 'Test Workspace',
       parentId: 'proj_test',
@@ -159,7 +159,7 @@ collection: []
 
   describe('getInsomniaV5DataExport', () => {
     it('exports workspace with requests correctly', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_export_test',
         name: 'Export Test Workspace',
         parentId: 'proj_test',
@@ -205,7 +205,7 @@ collection: []
     });
 
     it('handles empty workspace gracefully', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_empty_test',
         name: 'Empty Workspace',
         parentId: 'proj_test',
@@ -231,7 +231,7 @@ collection: []
     });
 
     it('filters requests when requestIds are provided', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_filter_test',
         name: 'Filter Workspace',
         parentId: 'proj_test',
@@ -273,7 +273,7 @@ collection: []
     });
 
     it('handles design workspace correctly', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_design_test',
         name: 'Design Workspace',
         parentId: 'proj_test',
@@ -304,14 +304,14 @@ collection: []
     });
 
     it('handles mock server scope', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_mock',
         name: 'Mock Workspace',
         parentId: 'proj_test',
         scope: 'mock-server',
       });
 
-      await models.mockServer.create({
+      await services.mockServer.create({
         _id: 'mock_1',
         name: 'Test Server',
         parentId: workspace._id,
@@ -329,7 +329,7 @@ collection: []
     });
 
     it('handles mcp client scope', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_mcp',
         name: 'MCP Workspace',
         parentId: 'proj_test',

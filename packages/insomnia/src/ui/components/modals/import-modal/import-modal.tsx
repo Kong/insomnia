@@ -6,7 +6,7 @@ import { Heading, Link } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
-import { scopeToActivity } from '~/models/workspace';
+import { models } from '~/insomnia-data';
 import { useImportResourcesFetcher } from '~/routes/import.resources';
 import { useScanResourcesFetcher } from '~/routes/import.scan';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
@@ -288,7 +288,7 @@ export const ImportModal: FC<ImportModalProps> = ({
       }
       if (workspace) {
         navigate(
-          `/organization/${organizationId}/project/${targetProjectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+          `/organization/${organizationId}/project/${defaultProjectId}/workspace/${workspace._id}/${models.workspace.scopeToActivity(workspace.scope)}`,
         );
         return modalRef.current?.hide();
       }
