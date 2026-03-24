@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { isMap, isScalar, isSeq, LineCounter, parse, parseDocument } from 'yaml';
+import { isMap, isScalar, isSeq, LineCounter, parse, type ParsedNode, parseDocument } from 'yaml';
 
 import { normalizeScripts } from '~/common/insomnia-schema-migrations/v5.1';
 
@@ -182,6 +182,11 @@ export function hasSignificantChanges(
   }
 }
 
+interface Interval {
+  start: number;
+  end: number;
+}
+
 /**
  * Find lines that represent "system changes" within line change intervals.
  * The meta property and its children are considered system changes.
@@ -190,53 +195,9 @@ export function findSystemChangeLines(
   modifiedYaml: string,
   lineChangeIntervals: { modifiedStartLineNumber: number; modifiedEndLineNumber: number }[],
 ) {
-  const intersectIntervals: { start: number; end: number }[] = [];
+  const intersectIntervals: Interval[] = [];
 
   try {
-    // Get all line numbers (1-based, inclusive) spanned by a YAML AST node
-    function getNodeLineInterval(node: any, lineCounter: LineCounter) {
-      if (!node?.range) return;
-      const [start, , end] = node.range as [number, number, number];
-      const startLine = lineCounter.linePos(start).line;
-      const endLine = end > start ? lineCounter.linePos(end - 1).line : startLine;
-      if (endLine < startLine) return;
-      return { start: startLine, end: endLine };
-    }
-
-    // Recursively find all line numbers belonging to 'meta' keys in a YAML string
-    function findMetaLineIntervals(yamlString: string) {
-      const lineCounter = new LineCounter();
-      const doc = parseDocument(yamlString, { lineCounter });
-      const retIntervals: { start: number; end: number }[] = [];
-
-      function walk(node: any) {
-        if (isMap(node)) {
-          for (const pair of node.items) {
-            if (isScalar(pair.key) && pair.key.value === 'meta') {
-              // Collect the 'meta' key line + all value lines
-              const intervalOfKey = getNodeLineInterval(pair.key, lineCounter);
-              if (intervalOfKey) {
-                retIntervals.push(intervalOfKey);
-              }
-              const intervalOfValue = getNodeLineInterval(pair.value, lineCounter);
-              if (intervalOfValue) {
-                retIntervals.push(intervalOfValue);
-              }
-            } else {
-              walk(pair.value);
-            }
-          }
-        } else if (isSeq(node)) {
-          for (const item of node.items) {
-            walk(item);
-          }
-        }
-      }
-
-      walk(doc.contents);
-      return retIntervals;
-    }
-
     const changeIntervals = lineChangeIntervals.map(({ modifiedStartLineNumber, modifiedEndLineNumber }) => ({
       start: modifiedStartLineNumber,
       end: modifiedEndLineNumber,
@@ -338,4 +299,48 @@ export function findSystemChangeLines(
   }
 
   return intersectIntervals;
+}
+
+// Get all line numbers (1-based, inclusive) spanned by a YAML AST node
+function getNodeLineInterval(node: ParsedNode | null | undefined, lineCounter: LineCounter) {
+  if (!node?.range) return;
+  const [start, , end] = node.range as [number, number, number];
+  const startLine = lineCounter.linePos(start).line;
+  const endLine = end > start ? lineCounter.linePos(end - 1).line : startLine;
+  if (endLine < startLine) return;
+  return { start: startLine, end: endLine };
+}
+
+// Recursively find all line numbers belonging to 'meta' keys in a YAML string
+function findMetaLineIntervals(yamlString: string) {
+  const lineCounter = new LineCounter();
+  const doc = parseDocument(yamlString, { lineCounter });
+  const retIntervals: Interval[] = [];
+
+  function walk(node: ParsedNode | null | undefined) {
+    if (isMap(node)) {
+      for (const pair of node.items) {
+        if (isScalar(pair.key) && pair.key.value === 'meta') {
+          // Collect the 'meta' key line + all value lines
+          const intervalOfKey = getNodeLineInterval(pair.key, lineCounter);
+          if (intervalOfKey) {
+            retIntervals.push(intervalOfKey);
+          }
+          const intervalOfValue = getNodeLineInterval(pair.value, lineCounter);
+          if (intervalOfValue) {
+            retIntervals.push(intervalOfValue);
+          }
+        } else {
+          walk(pair.value);
+        }
+      }
+    } else if (isSeq(node)) {
+      for (const item of node.items) {
+        walk(item);
+      }
+    }
+  }
+
+  walk(doc.contents);
+  return retIntervals;
 }
