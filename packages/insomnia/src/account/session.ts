@@ -168,7 +168,7 @@ async function _unsetSessionData() {
  *
  * If any cloud credential is authenticated (key/token provided), it is cleared.
  *
- * All Git provider (GitHub, GitLab) credentials are deleted.
+ * All Git provider (GitHub, GitLab, Bitbucket) credentials are deleted.
  *
  * If any custom git repositories are authenticated, the workspace is disconnected and the git
  * repository is deleted from the database (but it does not remove a checkout from the filesystem).

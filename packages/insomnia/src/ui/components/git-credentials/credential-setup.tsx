@@ -26,6 +26,11 @@ export const GitCredentialSetup = ({ providers }: Props) => {
     setShowOAuthModal(true);
   };
 
+  const startBitbucketOAuth = () => {
+    setProvider(providers.find(item => item.type === 'bitbucket'));
+    setShowOAuthModal(true);
+  };
+
   if (showCustomCredentialForm) {
     return <GitCustomCredentialForm onCancel={() => setShowCustomCredentialForm(false)} />;
   }
@@ -42,6 +47,9 @@ export const GitCredentialSetup = ({ providers }: Props) => {
           </Button>
           <Button className="text-xs" onPress={startGitlabOAuth} icon={<Icon icon={['fab', 'gitlab']} />}>
             Login with Gitlab
+          </Button>
+          <Button className="text-xs" onPress={startBitbucketOAuth} icon={<Icon icon={['fab', 'bitbucket']} />}>
+            Login with Bitbucket
           </Button>
         </div>
         <Button

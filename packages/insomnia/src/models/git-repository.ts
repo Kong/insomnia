@@ -1,7 +1,7 @@
 import { database as db } from '../common/database';
 import type { BaseModel } from './types';
 
-export type OauthProviderName = 'gitlab' | 'github' | 'custom';
+export type OauthProviderName = 'gitlab' | 'github' | 'custom' | 'bitbucket';
 
 export type GitRepository = BaseModel & BaseGitRepository;
 

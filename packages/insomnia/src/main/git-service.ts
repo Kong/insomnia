@@ -9,7 +9,7 @@
  * - Repository management (clone, init, update, reset)
  * - Branch operations (create, checkout, merge, delete)
  * - Sync operations (push, pull, fetch)
- * - OAuth integration with GitHub and GitLab
+ * - OAuth integration with GitHub/GitLab/Bitbucket
  * - Legacy migration support
  *
  */
